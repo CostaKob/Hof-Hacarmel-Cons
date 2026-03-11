@@ -136,6 +136,112 @@ export type Database = {
         }
         Relationships: []
       }
+      report_lines: {
+        Row: {
+          created_at: string
+          enrollment_id: string
+          id: string
+          notes: string | null
+          report_id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enrollment_id: string
+          id?: string
+          notes?: string | null
+          report_id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enrollment_id?: string
+          id?: string
+          notes?: string | null
+          report_id?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_lines_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "report_lines_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reports: {
+        Row: {
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          kilometers: number
+          notes: string | null
+          report_date: string
+          school_id: string
+          submitted_at: string
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          kilometers?: number
+          notes?: string | null
+          report_date: string
+          school_id: string
+          submitted_at?: string
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          kilometers?: number
+          notes?: string | null
+          report_date?: string
+          school_id?: string
+          submitted_at?: string
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           address: string | null
@@ -162,6 +268,112 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      student_notes: {
+        Row: {
+          author_user_id: string | null
+          content: string
+          created_at: string
+          enrollment_id: string | null
+          id: string
+          student_id: string
+        }
+        Insert: {
+          author_user_id?: string | null
+          content: string
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          student_id: string
+        }
+        Update: {
+          author_user_id?: string | null
+          content?: string
+          created_at?: string
+          enrollment_id?: string | null
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_notes_author_user_id_fkey"
+            columns: ["author_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_notes_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_notes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by_user_id: string | null
+          enrollment_id: string
+          id: string
+          month_reference: string | null
+          notes: string | null
+          payment_date: string
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          reference_number: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by_user_id?: string | null
+          enrollment_id: string
+          id?: string
+          month_reference?: string | null
+          notes?: string | null
+          payment_date: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          reference_number?: string | null
+          transaction_type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by_user_id?: string | null
+          enrollment_id?: string
+          id?: string
+          month_reference?: string | null
+          notes?: string | null
+          payment_date?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          reference_number?: string | null
+          transaction_type?: Database["public"]["Enums"]["transaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_payments_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payments_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       students: {
         Row: {
