@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      instruments: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -37,6 +55,140 @@ export type Database = {
           phone?: string | null
         }
         Relationships: []
+      }
+      schools: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          date_of_birth: string | null
+          first_name: string
+          id: string
+          is_active: boolean
+          last_name: string
+          national_id: string | null
+          parent_email: string | null
+          parent_email_2: string | null
+          parent_name: string | null
+          parent_name_2: string | null
+          parent_phone: string | null
+          parent_phone_2: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean
+          last_name: string
+          national_id?: string | null
+          parent_email?: string | null
+          parent_email_2?: string | null
+          parent_name?: string | null
+          parent_name_2?: string | null
+          parent_phone?: string | null
+          parent_phone_2?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean
+          last_name?: string
+          national_id?: string | null
+          parent_email?: string | null
+          parent_email_2?: string | null
+          parent_name?: string | null
+          parent_name_2?: string | null
+          parent_phone?: string | null
+          parent_phone_2?: string | null
+        }
+        Relationships: []
+      }
+      teachers: {
+        Row: {
+          address: string | null
+          birth_date: string | null
+          city: string | null
+          created_at: string
+          email: string | null
+          first_name: string
+          id: string
+          is_active: boolean
+          last_name: string
+          national_id: string | null
+          phone: string | null
+          user_id: string | null
+        }
+        Insert: {
+          address?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name: string
+          id?: string
+          is_active?: boolean
+          last_name: string
+          national_id?: string | null
+          phone?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          address?: string | null
+          birth_date?: string | null
+          city?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string
+          id?: string
+          is_active?: boolean
+          last_name?: string
+          national_id?: string | null
+          phone?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teachers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
