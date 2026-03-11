@@ -23,7 +23,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "teacher" | "secretary"
+      attendance_status:
+        | "present"
+        | "double_lesson"
+        | "justified_absence"
+        | "unjustified_absence"
+      enrollment_role: "primary" | "secondary"
+      lesson_type: "individual" | "group"
+      payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
+      transaction_type: "payment" | "credit"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +159,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "teacher", "secretary"],
+      attendance_status: [
+        "present",
+        "double_lesson",
+        "justified_absence",
+        "unjustified_absence",
+      ],
+      enrollment_role: ["primary", "secondary"],
+      lesson_type: ["individual", "group"],
+      payment_method: ["cash", "check", "transfer", "credit_card", "other"],
+      transaction_type: ["payment", "credit"],
+    },
   },
 } as const
