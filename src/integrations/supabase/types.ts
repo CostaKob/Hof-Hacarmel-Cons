@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      enrollments: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          enrollment_role: Database["public"]["Enums"]["enrollment_role"]
+          id: string
+          instrument_id: string
+          is_active: boolean
+          lesson_duration_minutes: number
+          lesson_type: Database["public"]["Enums"]["lesson_type"]
+          price_per_lesson: number | null
+          school_id: string
+          start_date: string
+          student_id: string
+          teacher_id: string
+          teacher_rate_per_lesson: number | null
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
+          id?: string
+          instrument_id: string
+          is_active?: boolean
+          lesson_duration_minutes: number
+          lesson_type?: Database["public"]["Enums"]["lesson_type"]
+          price_per_lesson?: number | null
+          school_id: string
+          start_date: string
+          student_id: string
+          teacher_id: string
+          teacher_rate_per_lesson?: number | null
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
+          id?: string
+          instrument_id?: string
+          is_active?: boolean
+          lesson_duration_minutes?: number
+          lesson_type?: Database["public"]["Enums"]["lesson_type"]
+          price_per_lesson?: number | null
+          school_id?: string
+          start_date?: string
+          student_id?: string
+          teacher_id?: string
+          teacher_rate_per_lesson?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enrollments_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instruments: {
         Row: {
           created_at: string
@@ -136,6 +216,78 @@ export type Database = {
           parent_phone_2?: string | null
         }
         Relationships: []
+      }
+      teacher_instruments: {
+        Row: {
+          created_at: string
+          id: string
+          instrument_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrument_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrument_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_instruments_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_instruments_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_schools: {
+        Row: {
+          created_at: string
+          id: string
+          school_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          school_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          school_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_schools_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_schools_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teachers: {
         Row: {
