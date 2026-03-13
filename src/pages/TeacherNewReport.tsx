@@ -67,7 +67,7 @@ const TeacherNewReport = () => {
   // Filter enrollments by school if selected
   const enrollments = useMemo(() => {
     if (!allEnrollments) return [];
-    if (!schoolId) return allEnrollments;
+    if (!schoolId || schoolId === "all") return allEnrollments;
     return allEnrollments.filter((e) => e.school_id === schoolId);
   }, [allEnrollments, schoolId]);
 
