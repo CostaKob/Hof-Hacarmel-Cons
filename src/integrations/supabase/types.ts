@@ -593,6 +593,7 @@ export type Database = {
         | "double_lesson"
         | "justified_absence"
         | "unjustified_absence"
+        | "vacation"
       enrollment_role: "primary" | "secondary"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
@@ -730,6 +731,7 @@ export const Constants = {
         "double_lesson",
         "justified_absence",
         "unjustified_absence",
+        "vacation",
       ],
       enrollment_role: ["primary", "secondary"],
       lesson_type: ["individual", "group"],

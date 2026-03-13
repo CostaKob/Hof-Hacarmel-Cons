@@ -10,6 +10,7 @@ const STATUS_LABELS: Record<string, string> = {
   double_lesson: "שיעור כפול",
   justified_absence: "היעדרות מוצדקת",
   unjustified_absence: "היעדרות בלתי מוצדקת",
+  vacation: "חופש",
 };
 
 const ROLE_LABELS: Record<string, string> = {

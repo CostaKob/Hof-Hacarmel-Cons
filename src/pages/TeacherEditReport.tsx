@@ -39,6 +39,7 @@ const STATUS_OPTIONS: { value: AttendanceStatus; label: string }[] = [
   { value: "double_lesson", label: "שיעור כפול" },
   { value: "justified_absence", label: "היעדרות מוצדקת" },
   { value: "unjustified_absence", label: "היעדרות בלתי מוצדקת" },
+  { value: "vacation", label: "חופש" },
 ];
 
 const ROLE_LABELS: Record<string, string> = {

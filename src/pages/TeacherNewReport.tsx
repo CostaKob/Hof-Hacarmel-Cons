@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   useTeacherProfile,
   useTeacherSchools,
-  useTeacherEnrollmentsBySchool,
+  useTeacherEnrollments,
   useKilometersForDate,
 } from "@/hooks/useTeacherData";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,12 +37,8 @@ const STATUS_OPTIONS: { value: AttendanceStatus; label: string }[] = [
   { value: "double_lesson", label: "שיעור כפול" },
   { value: "justified_absence", label: "היעדרות מוצדקת" },
   { value: "unjustified_absence", label: "היעדרות בלתי מוצדקת" },
+  { value: "vacation", label: "חופש" },
 ];
-
-const ROLE_LABELS: Record<string, string> = {
-  primary: "ראשי",
-  secondary: "משני",
-};
 
 const MAX_DAILY_KM = 55;
 
@@ -57,6 +53,7 @@ const TeacherNewReport = () => {
   const { user } = useAuth();
   const { data: teacher } = useTeacherProfile();
   const { data: teacherSchools } = useTeacherSchools(teacher?.id);
+  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id);
 
   const [schoolId, setSchoolId] = useState<string>("");
   const [reportDate, setReportDate] = useState<Date>(new Date());
@@ -65,16 +62,22 @@ const TeacherNewReport = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const dateStr = format(reportDate, "yyyy-MM-dd");
-  const { data: enrollments } = useTeacherEnrollmentsBySchool(teacher?.id, schoolId || undefined);
-  const { data: usedKm, refetch: refetchKm } = useKilometersForDate(teacher?.id, dateStr);
+  const { data: usedKm } = useKilometersForDate(teacher?.id, dateStr);
+
+  // Filter enrollments by school if selected
+  const enrollments = useMemo(() => {
+    if (!allEnrollments) return [];
+    if (!schoolId || schoolId === "all") return allEnrollments;
+    return allEnrollments.filter((e) => e.school_id === schoolId);
+  }, [allEnrollments, schoolId]);
 
   const [lines, setLines] = useState<Record<string, LineState>>({});
 
-  // Reset lines when school changes
-  const enrollmentIds = useMemo(() => (enrollments ?? []).map((e) => e.id).join(","), [enrollments]);
+  // Rebuild lines when enrollments change
+  const enrollmentIds = useMemo(() => enrollments.map((e) => e.id).join(","), [enrollments]);
 
   useMemo(() => {
-    if (!enrollments) return;
+    if (!enrollments.length && !allEnrollments?.length) return;
     const newLines: Record<string, LineState> = {};
     enrollments.forEach((e) => {
       newLines[e.id] = lines[e.id] ?? { selected: false, status: "present", notes: "" };
@@ -88,9 +91,21 @@ const TeacherNewReport = () => {
 
   const selectedCount = Object.values(lines).filter((l) => l.selected).length;
 
+  // Determine school_id for the report — if filter set use it, otherwise derive from selected lines
+  const getReportSchoolId = (): string | null => {
+    if (schoolId && schoolId !== "all") return schoolId;
+    // All selected lines must belong to same school
+    const selectedEnrollments = enrollments.filter((e) => lines[e.id]?.selected);
+    if (selectedEnrollments.length === 0) return null;
+    const schools = new Set(selectedEnrollments.map((e) => e.school_id));
+    if (schools.size > 1) return null; // multiple schools
+    return selectedEnrollments[0].school_id;
+  };
+
   const handleSubmit = async () => {
-    if (!schoolId) {
-      toast.error("יש לבחור בית ספר");
+    const reportSchoolId = getReportSchoolId();
+    if (!reportSchoolId) {
+      toast.error("יש לבחור בית ספר, או לסמן תלמידים מבית ספר אחד בלבד");
       return;
     }
     if (selectedCount === 0) {
@@ -129,7 +144,7 @@ const TeacherNewReport = () => {
       .from("reports")
       .insert({
         teacher_id: teacher.id,
-        school_id: schoolId,
+        school_id: reportSchoolId,
         report_date: dateStr,
         kilometers: finalKm,
         notes: notes.trim() || null,
@@ -185,23 +200,6 @@ const TeacherNewReport = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* School */}
-              <div className="space-y-2">
-                <Label>בית ספר *</Label>
-                <Select value={schoolId} onValueChange={setSchoolId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחר בית ספר" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teacherSchools?.map((ts) => (
-                      <SelectItem key={ts.school_id} value={ts.school_id}>
-                        {ts.schools?.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               {/* Date */}
               <div className="space-y-2">
                 <Label>תאריך דיווח *</Label>
@@ -243,6 +241,24 @@ const TeacherNewReport = () => {
                 )}
               </div>
 
+              {/* School filter */}
+              <div className="space-y-2">
+                <Label>סינון לפי בית ספר</Label>
+                <Select value={schoolId} onValueChange={setSchoolId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="כל בתי הספר" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל בתי הספר</SelectItem>
+                    {teacherSchools?.map((ts) => (
+                      <SelectItem key={ts.school_id} value={ts.school_id}>
+                        {ts.schools?.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Notes */}
               <div className="space-y-2">
                 <Label>הערות</Label>
@@ -258,97 +274,94 @@ const TeacherNewReport = () => {
         </Card>
 
         {/* Enrollment Lines */}
-        {schoolId && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                שורות דיווח
-                {selectedCount > 0 && (
-                  <Badge variant="secondary" className="mr-2">{selectedCount} נבחרו</Badge>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!enrollments || enrollments.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-4">
-                  אין רישומים פעילים בבית ספר זה
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {enrollments.map((enrollment) => {
-                    const line = lines[enrollment.id];
-                    if (!line) return null;
-                    return (
-                      <div
-                        key={enrollment.id}
-                        className={cn(
-                          "rounded-lg border p-3 space-y-3 transition-colors",
-                          line.selected ? "border-primary bg-primary/5" : "border-border"
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            checked={line.selected}
-                            onCheckedChange={(v) => updateLine(enrollment.id, { selected: !!v })}
-                            className="mt-1"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-foreground">
-                              {enrollment.students?.first_name} {enrollment.students?.last_name}
-                            </p>
-                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                              <span>{enrollment.instruments?.name}</span>
-                              <span>·</span>
-                              <span>{enrollment.lesson_duration_minutes} דק׳</span>
-                              <Badge variant="outline" className="text-xs">
-                                {ROLE_LABELS[enrollment.enrollment_role] ?? enrollment.enrollment_role}
-                              </Badge>
-                            </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              שורות דיווח
+              {selectedCount > 0 && (
+                <Badge variant="secondary" className="mr-2">{selectedCount} נבחרו</Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {enrollments.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-4">
+                אין רישומים פעילים
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {enrollments.map((enrollment) => {
+                  const line = lines[enrollment.id];
+                  if (!line) return null;
+                  return (
+                    <div
+                      key={enrollment.id}
+                      className={cn(
+                        "rounded-lg border p-3 space-y-3 transition-colors",
+                        line.selected ? "border-primary bg-primary/5" : "border-border"
+                      )}
+                    >
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          checked={line.selected}
+                          onCheckedChange={(v) => updateLine(enrollment.id, { selected: !!v })}
+                          className="mt-1"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-foreground">
+                            {enrollment.students?.first_name} {enrollment.students?.last_name}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                            <span>{enrollment.instruments?.name}</span>
+                            <span>·</span>
+                            <span>{enrollment.lesson_duration_minutes} דק׳</span>
+                            <span>·</span>
+                            <span>{enrollment.schools?.name}</span>
                           </div>
                         </div>
-
-                        {line.selected && (
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pr-7">
-                            <div className="space-y-1">
-                              <Label className="text-xs">סטטוס נוכחות</Label>
-                              <Select
-                                value={line.status}
-                                onValueChange={(v) =>
-                                  updateLine(enrollment.id, { status: v as AttendanceStatus })
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {STATUS_OPTIONS.map((opt) => (
-                                    <SelectItem key={opt.value} value={opt.value}>
-                                      {opt.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-xs">הערות שורה</Label>
-                              <Input
-                                value={line.notes}
-                                onChange={(e) =>
-                                  updateLine(enrollment.id, { notes: e.target.value })
-                                }
-                                placeholder="הערות..."
-                              />
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+
+                      {line.selected && (
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pr-7">
+                          <div className="space-y-1">
+                            <Label className="text-xs">סטטוס נוכחות</Label>
+                            <Select
+                              value={line.status}
+                              onValueChange={(v) =>
+                                updateLine(enrollment.id, { status: v as AttendanceStatus })
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {STATUS_OPTIONS.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs">הערות שורה</Label>
+                            <Input
+                              value={line.notes}
+                              onChange={(e) =>
+                                updateLine(enrollment.id, { notes: e.target.value })
+                              }
+                              placeholder="הערות..."
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Submit */}
         <div className="flex justify-end">
