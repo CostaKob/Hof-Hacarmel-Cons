@@ -217,14 +217,21 @@ const TeacherEditReport = () => {
     let isFirst = true;
     let firstNewReportId: string | null = null;
 
-    for (const [sid, items] of bySchool) {
+    if (bySchool.size === 0) {
+      // No students selected — create a single report to preserve the workday
+      const fallbackSchoolId = allDayReports[0]?.school_id ?? allEnrollments?.[0]?.school_id;
+      if (!fallbackSchoolId) {
+        toast.error("לא נמצא בית ספר לשמירת יום העבודה");
+        setSubmitting(false);
+        return;
+      }
       const { data: newReport, error: reportError } = await supabase
         .from("reports")
         .insert({
           teacher_id: teacher.id,
-          school_id: sid,
+          school_id: fallbackSchoolId,
           report_date: dateStr,
-          kilometers: isFirst ? finalKm : 0,
+          kilometers: finalKm,
           notes: notes.trim() || null,
           created_by_user_id: user.id,
         })
@@ -236,23 +243,45 @@ const TeacherEditReport = () => {
         setSubmitting(false);
         return;
       }
+      firstNewReportId = newReport.id;
+    } else {
+      for (const [sid, items] of bySchool) {
+        const { data: newReport, error: reportError } = await supabase
+          .from("reports")
+          .insert({
+            teacher_id: teacher.id,
+            school_id: sid,
+            report_date: dateStr,
+            kilometers: isFirst ? finalKm : 0,
+            notes: notes.trim() || null,
+            created_by_user_id: user.id,
+          })
+          .select("id")
+          .single();
 
-      if (isFirst) firstNewReportId = newReport.id;
+        if (reportError) {
+          toast.error("שגיאה בשמירת הדיווח");
+          setSubmitting(false);
+          return;
+        }
 
-      const lineInserts = items.map(({ enrollmentId, line }) => ({
-        report_id: newReport.id,
-        enrollment_id: enrollmentId,
-        status: line.status,
-        notes: line.notes.trim() || null,
-      }));
+        if (isFirst) firstNewReportId = newReport.id;
 
-      const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
-      if (linesError) {
-        toast.error("שגיאה בשמירת שורות הדיווח");
-        setSubmitting(false);
-        return;
+        const lineInserts = items.map(({ enrollmentId, line }) => ({
+          report_id: newReport.id,
+          enrollment_id: enrollmentId,
+          status: line.status,
+          notes: line.notes.trim() || null,
+        }));
+
+        const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
+        if (linesError) {
+          toast.error("שגיאה בשמירת שורות הדיווח");
+          setSubmitting(false);
+          return;
+        }
+        isFirst = false;
       }
-      isFirst = false;
     }
 
     queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
