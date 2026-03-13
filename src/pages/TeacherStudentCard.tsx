@@ -23,6 +23,7 @@ const TeacherStudentCard = () => {
   const { data: teacher } = useTeacherProfile();
   const { data: enrollment, isLoading } = useEnrollmentDetails(enrollmentId);
   const { data: notes } = useStudentNotes(enrollment?.student_id, teacher?.id);
+  const { data: reportLines, isLoading: linesLoading } = useEnrollmentReportLines(enrollmentId);
 
   const [noteContent, setNoteContent] = useState("");
   const [isGeneralNote, setIsGeneralNote] = useState(false);
