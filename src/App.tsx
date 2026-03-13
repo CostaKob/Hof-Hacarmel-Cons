@@ -14,6 +14,7 @@ import TeacherStudentCard from "./pages/TeacherStudentCard";
 import TeacherReports from "./pages/TeacherReports";
 import TeacherNewReport from "./pages/TeacherNewReport";
 import TeacherReportView from "./pages/TeacherReportView";
+import TeacherEditReport from "./pages/TeacherEditReport";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import NotFound from "./pages/NotFound";
 
