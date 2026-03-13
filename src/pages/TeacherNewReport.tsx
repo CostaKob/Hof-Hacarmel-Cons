@@ -98,21 +98,7 @@ const TeacherNewReport = () => {
 
   const selectedCount = Object.values(lines).filter((l) => l.selected).length;
 
-  const getReportSchoolId = (): string | null => {
-    if (schoolId && schoolId !== "all") return schoolId;
-    const selectedEnrollments = enrollments.filter((e) => lines[e.id]?.selected);
-    if (selectedEnrollments.length === 0) return null;
-    const schools = new Set(selectedEnrollments.map((e) => e.school_id));
-    if (schools.size > 1) return null;
-    return selectedEnrollments[0].school_id;
-  };
-
   const handleSubmit = async () => {
-    const reportSchoolId = getReportSchoolId();
-    if (!reportSchoolId) {
-      toast.error("יש לבחור בית ספר, או לסמן תלמידים מבית ספר אחד בלבד");
-      return;
-    }
     if (selectedCount === 0) {
       toast.error("יש לסמן לפחות רישום אחד");
       return;
@@ -121,6 +107,7 @@ const TeacherNewReport = () => {
 
     setSubmitting(true);
 
+    // Km validation
     const { data: freshKmData } = await supabase
       .from("reports")
       .select("kilometers")
@@ -143,43 +130,56 @@ const TeacherNewReport = () => {
       return;
     }
 
-    const { data: report, error: reportError } = await supabase
-      .from("reports")
-      .insert({
-        teacher_id: teacher.id,
-        school_id: reportSchoolId,
-        report_date: dateStr,
-        kilometers: finalKm,
-        notes: notes.trim() || null,
-        created_by_user_id: user.id,
-      })
-      .select("id")
-      .single();
-
-    if (reportError) {
-      toast.error("שגיאה בשמירת הדיווח");
-      setSubmitting(false);
-      return;
+    // Group selected enrollments by school
+    const selectedEntries = Object.entries(lines).filter(([, l]) => l.selected);
+    const bySchool = new Map<string, { enrollmentId: string; line: LineState }[]>();
+    for (const [enrollmentId, line] of selectedEntries) {
+      const enrollment = enrollments.find((e) => e.id === enrollmentId);
+      if (!enrollment) continue;
+      const sid = enrollment.school_id;
+      if (!bySchool.has(sid)) bySchool.set(sid, []);
+      bySchool.get(sid)!.push({ enrollmentId, line });
     }
 
-    const lineInserts = Object.entries(lines)
-      .filter(([, l]) => l.selected)
-      .map(([enrollmentId, l]) => ({
+    // Create one report per school, km only on the first
+    let isFirst = true;
+    for (const [sid, items] of bySchool) {
+      const { data: report, error: reportError } = await supabase
+        .from("reports")
+        .insert({
+          teacher_id: teacher.id,
+          school_id: sid,
+          report_date: dateStr,
+          kilometers: isFirst ? finalKm : 0,
+          notes: notes.trim() || null,
+          created_by_user_id: user.id,
+        })
+        .select("id")
+        .single();
+
+      if (reportError) {
+        toast.error("שגיאה בשמירת הדיווח");
+        setSubmitting(false);
+        return;
+      }
+
+      const lineInserts = items.map(({ enrollmentId, line }) => ({
         report_id: report.id,
         enrollment_id: enrollmentId,
-        status: l.status,
-        notes: l.notes.trim() || null,
+        status: line.status,
+        notes: line.notes.trim() || null,
       }));
 
-    const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
-
-    if (linesError) {
-      toast.error("שגיאה בשמירת שורות הדיווח");
-      setSubmitting(false);
-      return;
+      const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
+      if (linesError) {
+        toast.error("שגיאה בשמירת שורות הדיווח");
+        setSubmitting(false);
+        return;
+      }
+      isFirst = false;
     }
 
-    toast.success("הדיווח נשמר בהצלחה");
+    toast.success("יום העבודה נשמר בהצלחה");
     navigate("/teacher/reports");
   };
 
