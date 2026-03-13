@@ -27,6 +27,7 @@ import TeacherReports from "./pages/TeacherReports";
 import TeacherNewReport from "./pages/TeacherNewReport";
 import TeacherReportView from "./pages/TeacherReportView";
 import TeacherEditReport from "./pages/TeacherEditReport";
+import TeacherChangePassword from "./pages/TeacherChangePassword";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -76,6 +77,7 @@ const App = () => (
             <Route path="/teacher/reports/new" element={<TeacherRoute><TeacherNewReport /></TeacherRoute>} />
             <Route path="/teacher/reports/:reportId" element={<TeacherRoute><TeacherReportView /></TeacherRoute>} />
             <Route path="/teacher/reports/:reportId/edit" element={<TeacherRoute><TeacherEditReport /></TeacherRoute>} />
+            <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
             {/* Secretary */}
             <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />

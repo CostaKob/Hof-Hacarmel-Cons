@@ -1,16 +1,18 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pencil } from "lucide-react";
+import { Pencil, KeyRound, UserCheck, UserX } from "lucide-react";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
+import { toast } from "sonner";
 
 const AdminTeacherCard = () => {
   const { teacherId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: teacher, isLoading } = useQuery({
     queryKey: ["admin-teacher", teacherId],
@@ -51,8 +53,50 @@ const AdminTeacherCard = () => {
     enabled: !!teacherId,
   });
 
+  const resetPasswordMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("reset-teacher-password", {
+        body: { teacher_id: teacherId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success("הסיסמה אופסה ל-1234 בהצלחה");
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "שגיאה באיפוס הסיסמה");
+    },
+  });
+
+  const createLoginMutation = useMutation({
+    mutationFn: async () => {
+      if (!teacher?.email) throw new Error("לא הוגדר אימייל למורה");
+      const { data, error } = await supabase.functions.invoke("create-teacher-user", {
+        body: { email: teacher.email, teacher_id: teacherId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher", teacherId] });
+      if (data?.warning) {
+        toast.warning(data.warning);
+      } else {
+        toast.success("חשבון כניסה נוצר בהצלחה (סיסמה: 1234)");
+      }
+    },
+    onError: (err: Error) => {
+      toast.error(err.message || "שגיאה ביצירת חשבון כניסה");
+    },
+  });
+
   if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground">טוען...</p></AdminLayout>;
   if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground">מורה לא נמצא</p></AdminLayout>;
+
+  const hasLogin = !!teacher.user_id;
 
   const DetailRow = ({ label, value }: { label: string; value?: string | null }) =>
     value ? (
@@ -83,6 +127,57 @@ const AdminTeacherCard = () => {
             <DetailRow label="אימייל" value={teacher.email} />
             <DetailRow label="כתובת" value={teacher.address} />
             <DetailRow label="עיר" value={teacher.city} />
+          </CardContent>
+        </Card>
+
+        {/* Login Account Section */}
+        <Card>
+          <CardHeader><CardTitle>חשבון כניסה</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-2">
+              {hasLogin ? (
+                <>
+                  <UserCheck className="h-5 w-5 text-primary" />
+                  <span className="font-medium text-foreground">יש חשבון כניסה</span>
+                </>
+              ) : (
+                <>
+                  <UserX className="h-5 w-5 text-muted-foreground" />
+                  <span className="font-medium text-muted-foreground">אין חשבון כניסה</span>
+                </>
+              )}
+            </div>
+            {hasLogin && teacher.email && (
+              <div className="flex justify-between border-b py-2">
+                <span className="text-muted-foreground">אימייל מקושר</span>
+                <span className="font-medium text-foreground">{teacher.email}</span>
+              </div>
+            )}
+            <div className="flex gap-2 pt-2">
+              {hasLogin ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => resetPasswordMutation.mutate()}
+                  disabled={resetPasswordMutation.isPending}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-1234"}
+                </Button>
+              ) : teacher.email ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => createLoginMutation.mutate()}
+                  disabled={createLoginMutation.isPending}
+                >
+                  <UserCheck className="h-4 w-4" />
+                  {createLoginMutation.isPending ? "יוצר..." : "צור חשבון כניסה"}
+                </Button>
+              ) : (
+                <p className="text-sm text-muted-foreground">יש להגדיר אימייל למורה כדי ליצור חשבון כניסה</p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
