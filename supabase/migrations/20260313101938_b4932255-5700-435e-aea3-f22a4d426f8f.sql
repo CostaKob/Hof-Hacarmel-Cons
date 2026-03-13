@@ -1,0 +1,1 @@
+ALTER TABLE public.reports ALTER COLUMN school_id DROP NOT NULL;
