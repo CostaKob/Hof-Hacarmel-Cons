@@ -4,7 +4,6 @@ import { format, parseISO } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useTeacherProfile,
-  useTeacherSchools,
   useTeacherEnrollmentsBySchool,
   useReportDetails,
   useReportLines,
@@ -42,10 +41,7 @@ const STATUS_OPTIONS: { value: AttendanceStatus; label: string }[] = [
   { value: "vacation", label: "חופש" },
 ];
 
-const ROLE_LABELS: Record<string, string> = {
-  primary: "ראשי",
-  secondary: "משני",
-};
+
 
 const MAX_DAILY_KM = 55;
 
@@ -62,7 +58,6 @@ const TeacherEditReport = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: teacher } = useTeacherProfile();
-  const { data: teacherSchools } = useTeacherSchools(teacher?.id);
   const { data: report, isLoading: reportLoading } = useReportDetails(reportId);
   const { data: existingLines, isLoading: linesLoading } = useReportLines(reportId);
 
@@ -313,7 +308,7 @@ const TeacherEditReport = () => {
           : "תלמיד",
       instrumentName: enrollment?.instruments?.name ?? existingLine?.enrollments?.instruments?.name ?? "",
       duration: enrollment?.lesson_duration_minutes ?? existingLine?.enrollments?.lesson_duration_minutes ?? 0,
-      role: enrollment?.enrollment_role ?? existingLine?.enrollments?.enrollment_role ?? "",
+      schoolName: enrollment?.schools?.name ?? existingLine?.enrollments?.schools?.name ?? "",
     };
   });
 
@@ -336,22 +331,6 @@ const TeacherEditReport = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label>בית ספר *</Label>
-                <Select value={schoolId} onValueChange={setSchoolId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחר בית ספר" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teacherSchools?.map((ts) => (
-                      <SelectItem key={ts.school_id} value={ts.school_id}>
-                        {ts.schools?.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
               <div className="space-y-2">
                 <Label>תאריך דיווח *</Label>
                 <Popover>
@@ -440,9 +419,8 @@ const TeacherEditReport = () => {
                               <span>{row.instrumentName}</span>
                               <span>·</span>
                               <span>{row.duration} דק׳</span>
-                              <Badge variant="outline" className="text-xs">
-                                {ROLE_LABELS[row.role] ?? row.role}
-                              </Badge>
+                              <span>·</span>
+                              <span>{row.schoolName}</span>
                               {line.existingLineId && (
                                 <Badge variant="secondary" className="text-xs">קיים</Badge>
                               )}
