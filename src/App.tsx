@@ -71,6 +71,7 @@ const App = () => (
             <Route path="/admin/instruments" element={<AdminRoute><AdminInstruments /></AdminRoute>} />
             <Route path="/admin/instruments/new" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
             <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
+            <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
             {/* Teacher routes */}
             <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
             <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
