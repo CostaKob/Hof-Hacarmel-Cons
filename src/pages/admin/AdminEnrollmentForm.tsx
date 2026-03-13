@@ -29,6 +29,8 @@ interface EnrollmentFormData {
 
 const AdminEnrollmentForm = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const presetStudentId = searchParams.get("student_id");
   const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
