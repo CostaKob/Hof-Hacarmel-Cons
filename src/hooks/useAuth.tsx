@@ -8,8 +8,9 @@ export type AppRole = Database["public"]["Enums"]["app_role"];
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  role: AppRole | null;
+  roles: AppRole[];
   loading: boolean;
+  hasRole: (role: AppRole) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
