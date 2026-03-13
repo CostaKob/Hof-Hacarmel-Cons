@@ -49,6 +49,7 @@ const AdminEnrollmentForm = () => {
   });
 
   const isActive = watch("is_active");
+  const selectedTeacherId = watch("teacher_id");
 
   const { data: students = [] } = useQuery({
     queryKey: ["admin-students-select"],
@@ -76,6 +77,26 @@ const AdminEnrollmentForm = () => {
       return data;
     },
   });
+
+  // Fetch teacher's linked instruments
+  const { data: teacherInstruments = [] } = useQuery({
+    queryKey: ["admin-teacher-instruments", selectedTeacherId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_instruments")
+        .select("instrument_id")
+        .eq("teacher_id", selectedTeacherId!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedTeacherId,
+  });
+
+  const teacherInstrumentIds = new Set(teacherInstruments.map((ti) => ti.instrument_id));
+  const hasTeacherInstruments = selectedTeacherId && teacherInstrumentIds.size > 0;
+  const filteredInstruments = hasTeacherInstruments
+    ? instruments.filter((i) => teacherInstrumentIds.has(i.id))
+    : instruments;
 
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-schools-select"],
@@ -154,6 +175,7 @@ const AdminEnrollmentForm = () => {
     label: string;
     required: boolean;
     options: { value: string; label: string }[];
+    warning?: string;
   }[] = [
     {
       name: "student_id",
@@ -171,7 +193,8 @@ const AdminEnrollmentForm = () => {
       name: "instrument_id",
       label: "כלי נגינה",
       required: true,
-      options: instruments.map((i) => ({ value: i.id, label: i.name })),
+      options: filteredInstruments.map((i) => ({ value: i.id, label: i.name })),
+      warning: selectedTeacherId && !hasTeacherInstruments ? "לא הוגדרו עדיין כלי נגינה למורה זה." : undefined,
     },
     {
       name: "school_id",
@@ -232,6 +255,7 @@ const AdminEnrollmentForm = () => {
                   )}
                 />
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
+                {f.warning && <p className="text-sm text-amber-600">{f.warning}</p>}
               </div>
             ))}
           </CardContent>

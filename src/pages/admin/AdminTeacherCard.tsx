@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pencil } from "lucide-react";
+import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
 
 const AdminTeacherCard = () => {
   const { teacherId } = useParams();
@@ -44,32 +45,6 @@ const AdminTeacherCard = () => {
         .order("report_date", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!teacherId,
-  });
-
-  const { data: instruments = [] } = useQuery({
-    queryKey: ["admin-teacher-instruments", teacherId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_instruments")
-        .select("*, instruments(name)")
-        .eq("teacher_id", teacherId!);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!teacherId,
-  });
-
-  const { data: schools = [] } = useQuery({
-    queryKey: ["admin-teacher-schools", teacherId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_schools")
-        .select("*, schools(name)")
-        .eq("teacher_id", teacherId!);
       if (error) throw error;
       return data;
     },
@@ -126,35 +101,7 @@ const AdminTeacherCard = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader><CardTitle>כלי נגינה ({instruments.length})</CardTitle></CardHeader>
-          <CardContent>
-            {instruments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">לא שויכו כלי נגינה</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {instruments.map((i: any) => (
-                  <Badge key={i.id} variant="secondary">{i.instruments?.name}</Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>בתי ספר ({schools.length})</CardTitle></CardHeader>
-          <CardContent>
-            {schools.length === 0 ? (
-              <p className="text-sm text-muted-foreground">לא שויכו בתי ספר</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {schools.map((s: any) => (
-                  <Badge key={s.id} variant="secondary">{s.schools?.name}</Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <TeacherInstrumentsSection teacherId={teacherId!} />
       </div>
     </AdminLayout>
   );
