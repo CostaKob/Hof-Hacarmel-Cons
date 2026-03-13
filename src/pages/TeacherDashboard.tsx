@@ -29,7 +29,7 @@ const TeacherDashboard = () => {
       <header className="bg-primary px-5 pb-8 pt-6 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center justify-between">
           <div className="flex items-center gap-3">
-            <AppLogo size="sm" showTitle={false} />
+            <AppLogo size="sm" />
             <div>
               <h1 className="text-xl font-bold">שלום, {teacher?.first_name} 👋</h1>
               <p className="mt-0.5 text-sm opacity-80">ברוך הבא לאזור האישי שלך</p>

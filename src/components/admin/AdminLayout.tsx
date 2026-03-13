@@ -40,7 +40,7 @@ const AdminLayout = ({ children, title, backPath }: AdminLayoutProps) => {
                 <ArrowRight className="h-5 w-5" />
               </Button>
             )}
-            <AppLogo size="sm" showTitle={false} />
+            <AppLogo size="sm" />
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
           <nav className="hidden items-center gap-1 md:flex">
