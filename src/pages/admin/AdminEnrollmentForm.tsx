@@ -49,6 +49,7 @@ const AdminEnrollmentForm = () => {
   });
 
   const isActive = watch("is_active");
+  const selectedTeacherId = watch("teacher_id");
 
   const { data: students = [] } = useQuery({
     queryKey: ["admin-students-select"],
