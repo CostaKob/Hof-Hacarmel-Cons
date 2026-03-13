@@ -42,10 +42,7 @@ const STATUS_OPTIONS: { value: AttendanceStatus; label: string }[] = [
   { value: "vacation", label: "חופש" },
 ];
 
-const ROLE_LABELS: Record<string, string> = {
-  primary: "ראשי",
-  secondary: "משני",
-};
+
 
 const MAX_DAILY_KM = 55;
 
