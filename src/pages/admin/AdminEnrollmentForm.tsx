@@ -175,6 +175,7 @@ const AdminEnrollmentForm = () => {
     label: string;
     required: boolean;
     options: { value: string; label: string }[];
+    warning?: string;
   }[] = [
     {
       name: "student_id",
