@@ -51,32 +51,6 @@ const AdminTeacherCard = () => {
     enabled: !!teacherId,
   });
 
-  const { data: instruments = [] } = useQuery({
-    queryKey: ["admin-teacher-instruments", teacherId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_instruments")
-        .select("*, instruments(name)")
-        .eq("teacher_id", teacherId!);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!teacherId,
-  });
-
-  const { data: schools = [] } = useQuery({
-    queryKey: ["admin-teacher-schools", teacherId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_schools")
-        .select("*, schools(name)")
-        .eq("teacher_id", teacherId!);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!teacherId,
-  });
-
   if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground">טוען...</p></AdminLayout>;
   if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground">מורה לא נמצא</p></AdminLayout>;
 
