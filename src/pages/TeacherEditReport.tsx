@@ -58,7 +58,6 @@ const TeacherEditReport = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { data: teacher } = useTeacherProfile();
-  const { data: teacherSchools } = useTeacherSchools(teacher?.id);
   const { data: report, isLoading: reportLoading } = useReportDetails(reportId);
   const { data: existingLines, isLoading: linesLoading } = useReportLines(reportId);
 
