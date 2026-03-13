@@ -137,7 +137,7 @@ const AdminTeacherCard = () => {
             <div className="flex items-center gap-2">
               {hasLogin ? (
                 <>
-                  <UserCheck className="h-5 w-5 text-green-600" />
+                  <UserCheck className="h-5 w-5 text-primary" />
                   <span className="font-medium text-foreground">יש חשבון כניסה</span>
                 </>
               ) : (
