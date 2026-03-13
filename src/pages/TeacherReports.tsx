@@ -187,10 +187,15 @@ const TeacherReports = () => {
                         <Pencil className="h-3 w-3" />
                         עריכה
                       </span>
-                      <span className="text-xs text-primary font-medium">צפייה ←</span>
+                      <span
+                        className="text-xs text-primary font-medium cursor-pointer"
+                        onClick={() => navigate(`/teacher/reports/${report.id}`)}
+                      >
+                        צפייה ←
+                      </span>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
