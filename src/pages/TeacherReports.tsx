@@ -1,36 +1,26 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTeacherProfile, useTeacherReports, useTeacherSchools } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherReports } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { ArrowRight, Eye, Pencil, Plus, FileText, ChevronLeft } from "lucide-react";
+import { ArrowRight, Plus, FileText, ChevronLeft } from "lucide-react";
 
 const TeacherReports = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: reports, isLoading: reportsLoading } = useTeacherReports(teacher?.id);
-  const { data: teacherSchools } = useTeacherSchools(teacher?.id);
 
   const [dateFilter, setDateFilter] = useState("");
-  const [schoolFilter, setSchoolFilter] = useState("all");
 
   const filtered = useMemo(() => {
     if (!reports) return [];
     return reports.filter((r) => {
       if (dateFilter && !r.report_date.includes(dateFilter)) return false;
-      if (schoolFilter !== "all" && r.school_id !== schoolFilter) return false;
       return true;
     });
-  }, [reports, dateFilter, schoolFilter]);
+  }, [reports, dateFilter]);
 
   const isLoading = teacherLoading || reportsLoading;
 
@@ -63,33 +53,15 @@ const TeacherReports = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
-        {/* Filters */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">תאריך</Label>
-            <Input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="h-11 rounded-xl bg-card"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label className="text-xs text-muted-foreground">בית ספר</Label>
-            <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-              <SelectTrigger className="h-11 rounded-xl bg-card">
-                <SelectValue placeholder="כל בתי הספר" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">כל בתי הספר</SelectItem>
-                {teacherSchools?.map((ts) => (
-                  <SelectItem key={ts.school_id} value={ts.school_id}>
-                    {ts.schools?.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Date filter only */}
+        <div className="max-w-[200px] space-y-1">
+          <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
+          <Input
+            type="date"
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="h-11 rounded-xl bg-card"
+          />
         </div>
 
         {/* Results */}
