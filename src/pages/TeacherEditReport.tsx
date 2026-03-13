@@ -186,18 +186,7 @@ const TeacherEditReport = () => {
       return;
     }
 
-    // Group selected lines by school
     const selectedEntries = Object.entries(lines).filter(([, l]) => l.selected);
-    const enrollmentMap = new Map((allEnrollments ?? []).map((e) => [e.id, e]));
-
-    const bySchool = new Map<string, { enrollmentId: string; line: LineState }[]>();
-    for (const [enrollmentId, line] of selectedEntries) {
-      const enrollment = enrollmentMap.get(enrollmentId);
-      const sid = enrollment?.school_id ?? allDayLines?.find((l) => l.enrollment_id === enrollmentId)?.enrollments?.school_id;
-      if (!sid) continue;
-      if (!bySchool.has(sid)) bySchool.set(sid, []);
-      bySchool.get(sid)!.push({ enrollmentId, line });
-    }
 
     // Delete all existing report lines for this workday
     const existingLineIdsToDelete = allDayLines?.map((l) => l.id) ?? [];
@@ -213,74 +202,39 @@ const TeacherEditReport = () => {
       if (error) { toast.error("שגיאה במחיקת דיווחים ישנים"); setSubmitting(false); return; }
     }
 
-    // Re-create reports by school with new data
-    let isFirst = true;
-    let firstNewReportId: string | null = null;
+    // Create a single report for the workday
+    const { data: newReport, error: reportError } = await supabase
+      .from("reports")
+      .insert({
+        teacher_id: teacher.id,
+        school_id: null,
+        report_date: dateStr,
+        kilometers: finalKm,
+        notes: notes.trim() || null,
+        created_by_user_id: user.id,
+      })
+      .select("id")
+      .single();
 
-    if (bySchool.size === 0) {
-      // No students selected — create a single report to preserve the workday
-      const fallbackSchoolId = allDayReports[0]?.school_id ?? allEnrollments?.[0]?.school_id;
-      if (!fallbackSchoolId) {
-        toast.error("לא נמצא בית ספר לשמירת יום העבודה");
+    if (reportError) {
+      toast.error("שגיאה בשמירת הדיווח");
+      setSubmitting(false);
+      return;
+    }
+
+    if (selectedEntries.length > 0) {
+      const lineInserts = selectedEntries.map(([enrollmentId, line]) => ({
+        report_id: newReport.id,
+        enrollment_id: enrollmentId,
+        status: line.status,
+        notes: line.notes.trim() || null,
+      }));
+
+      const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
+      if (linesError) {
+        toast.error("שגיאה בשמירת שורות הדיווח");
         setSubmitting(false);
         return;
-      }
-      const { data: newReport, error: reportError } = await supabase
-        .from("reports")
-        .insert({
-          teacher_id: teacher.id,
-          school_id: fallbackSchoolId,
-          report_date: dateStr,
-          kilometers: finalKm,
-          notes: notes.trim() || null,
-          created_by_user_id: user.id,
-        })
-        .select("id")
-        .single();
-
-      if (reportError) {
-        toast.error("שגיאה בשמירת הדיווח");
-        setSubmitting(false);
-        return;
-      }
-      firstNewReportId = newReport.id;
-    } else {
-      for (const [sid, items] of bySchool) {
-        const { data: newReport, error: reportError } = await supabase
-          .from("reports")
-          .insert({
-            teacher_id: teacher.id,
-            school_id: sid,
-            report_date: dateStr,
-            kilometers: isFirst ? finalKm : 0,
-            notes: notes.trim() || null,
-            created_by_user_id: user.id,
-          })
-          .select("id")
-          .single();
-
-        if (reportError) {
-          toast.error("שגיאה בשמירת הדיווח");
-          setSubmitting(false);
-          return;
-        }
-
-        if (isFirst) firstNewReportId = newReport.id;
-
-        const lineInserts = items.map(({ enrollmentId, line }) => ({
-          report_id: newReport.id,
-          enrollment_id: enrollmentId,
-          status: line.status,
-          notes: line.notes.trim() || null,
-        }));
-
-        const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
-        if (linesError) {
-          toast.error("שגיאה בשמירת שורות הדיווח");
-          setSubmitting(false);
-          return;
-        }
-        isFirst = false;
       }
     }
 
