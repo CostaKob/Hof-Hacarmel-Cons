@@ -37,6 +37,7 @@ const AdminEnrollmentForm = () => {
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<EnrollmentFormData>({
     defaultValues: {
+      student_id: presetStudentId ?? "",
       is_active: true,
       enrollment_role: "primary",
       lesson_type: "individual",
