@@ -106,10 +106,9 @@ const TeacherReports = () => {
               const { formatted, weekday } = formatDateWithDay(report.report_date);
               const lines = report.report_lines ?? [];
               return (
-                <button
+                <div
                   key={report.id}
-                  onClick={() => navigate(`/teacher/reports/${report.id}`)}
-                  className="w-full rounded-2xl bg-card shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md overflow-hidden"
+                  className="w-full rounded-2xl bg-card shadow-sm border border-border text-right transition-all hover:shadow-md overflow-hidden"
                 >
                   {/* Card header */}
                   <div className="flex items-center justify-between px-4 pt-4 pb-2">
