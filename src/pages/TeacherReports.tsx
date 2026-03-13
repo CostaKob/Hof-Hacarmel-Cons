@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Eye, Plus } from "lucide-react";
+import { ArrowRight, Eye, Pencil, Plus } from "lucide-react";
 
 const TeacherReports = () => {
   const navigate = useNavigate();
