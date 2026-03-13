@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 const TeacherDashboard = () => {
