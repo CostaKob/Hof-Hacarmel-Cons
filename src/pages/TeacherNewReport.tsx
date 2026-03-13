@@ -93,7 +93,7 @@ const TeacherNewReport = () => {
 
   // Determine school_id for the report — if filter set use it, otherwise derive from selected lines
   const getReportSchoolId = (): string | null => {
-    if (schoolId) return schoolId;
+    if (schoolId && schoolId !== "all") return schoolId;
     // All selected lines must belong to same school
     const selectedEnrollments = enrollments.filter((e) => lines[e.id]?.selected);
     if (selectedEnrollments.length === 0) return null;
