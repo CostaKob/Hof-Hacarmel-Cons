@@ -99,10 +99,6 @@ const TeacherNewReport = () => {
   const selectedCount = Object.values(lines).filter((l) => l.selected).length;
 
   const handleSubmit = async () => {
-    if (selectedCount === 0) {
-      toast.error("יש לסמן לפחות רישום אחד");
-      return;
-    }
     if (!teacher || !user) return;
 
     setSubmitting(true);
@@ -143,40 +139,67 @@ const TeacherNewReport = () => {
 
     // Create one report per school, km only on the first
     let isFirst = true;
-    for (const [sid, items] of bySchool) {
-      const { data: report, error: reportError } = await supabase
+
+    if (bySchool.size === 0) {
+      // No students selected — create a km-only workday
+      const fallbackSchoolId = enrollmentSchools[0]?.id;
+      if (!fallbackSchoolId) {
+        toast.error("לא נמצא בית ספר לשמירת יום העבודה");
+        setSubmitting(false);
+        return;
+      }
+      const { error: reportError } = await supabase
         .from("reports")
         .insert({
           teacher_id: teacher.id,
-          school_id: sid,
+          school_id: fallbackSchoolId,
           report_date: dateStr,
-          kilometers: isFirst ? finalKm : 0,
+          kilometers: finalKm,
           notes: notes.trim() || null,
           created_by_user_id: user.id,
-        })
-        .select("id")
-        .single();
+        });
 
       if (reportError) {
         toast.error("שגיאה בשמירת הדיווח");
         setSubmitting(false);
         return;
       }
+    } else {
+      for (const [sid, items] of bySchool) {
+        const { data: report, error: reportError } = await supabase
+          .from("reports")
+          .insert({
+            teacher_id: teacher.id,
+            school_id: sid,
+            report_date: dateStr,
+            kilometers: isFirst ? finalKm : 0,
+            notes: notes.trim() || null,
+            created_by_user_id: user.id,
+          })
+          .select("id")
+          .single();
 
-      const lineInserts = items.map(({ enrollmentId, line }) => ({
-        report_id: report.id,
-        enrollment_id: enrollmentId,
-        status: line.status,
-        notes: line.notes.trim() || null,
-      }));
+        if (reportError) {
+          toast.error("שגיאה בשמירת הדיווח");
+          setSubmitting(false);
+          return;
+        }
 
-      const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
-      if (linesError) {
-        toast.error("שגיאה בשמירת שורות הדיווח");
-        setSubmitting(false);
-        return;
+        const lineInserts = items.map(({ enrollmentId, line }) => ({
+          report_id: report.id,
+          enrollment_id: enrollmentId,
+          status: line.status,
+          notes: line.notes.trim() || null,
+        }));
+
+        const { error: linesError } = await supabase.from("report_lines").insert(lineInserts);
+        if (linesError) {
+          toast.error("שגיאה בשמירת שורות הדיווח");
+          setSubmitting(false);
+          return;
+        }
+        isFirst = false;
       }
-      isFirst = false;
     }
 
     toast.success("יום העבודה נשמר בהצלחה");
@@ -373,7 +396,7 @@ const TeacherNewReport = () => {
             size="lg"
             className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg"
             onClick={handleSubmit}
-            disabled={submitting || selectedCount === 0}
+            disabled={submitting}
           >
             <Save className="ml-2 h-5 w-5" />
             {submitting ? "שומר..." : "שמור יום עבודה"}
