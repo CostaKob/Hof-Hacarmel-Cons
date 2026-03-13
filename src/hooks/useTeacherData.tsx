@@ -28,7 +28,7 @@ export function useTeacherEnrollments(teacherId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select(`*, students (*), instruments (name), schools (name)`)
+        .select(`*, students (*), instruments (name), schools (id, name)`)
         .eq("teacher_id", teacherId!)
         .eq("is_active", true);
       if (error) throw error;
