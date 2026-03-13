@@ -158,7 +158,7 @@ const TeacherReports = () => {
                             <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${STATUS_DOT_COLORS[line.status] ?? "bg-muted"}`} />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
-                                <span className="font-medium text-foreground truncate">{studentName}</span>
+                                <span className="font-medium text-primary underline truncate">{studentName}</span>
                                 <span className="text-xs text-muted-foreground shrink-0">{STATUS_LABELS_SHORT[line.status]}</span>
                               </div>
                               <div className="text-xs text-muted-foreground truncate">
