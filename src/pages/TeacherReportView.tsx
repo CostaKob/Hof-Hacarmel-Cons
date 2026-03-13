@@ -101,10 +101,8 @@ const TeacherReportView = () => {
                       <span>{line.enrollments?.instruments?.name}</span>
                       <span>·</span>
                       <span>{line.enrollments?.lesson_duration_minutes} דק׳</span>
-                      <Badge variant="outline" className="text-xs">
-                        {ROLE_LABELS[line.enrollments?.enrollment_role ?? ""] ??
-                          line.enrollments?.enrollment_role}
-                      </Badge>
+                      <span>·</span>
+                      <span>{line.enrollments?.schools?.name}</span>
                     </div>
                     {line.notes && (
                       <p className="text-sm text-muted-foreground">הערות: {line.notes}</p>
