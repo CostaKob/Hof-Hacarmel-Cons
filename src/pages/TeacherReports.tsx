@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, Eye, Plus } from "lucide-react";
+import { ArrowRight, Eye, Pencil, Plus } from "lucide-react";
 
 const TeacherReports = () => {
   const navigate = useNavigate();
@@ -104,15 +104,24 @@ const TeacherReports = () => {
                       הוגש: {new Date(report.submitted_at).toLocaleString("he-IL")}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0"
-                    onClick={() => navigate(`/teacher/reports/${report.id}`)}
-                  >
-                    <Eye className="ml-1 h-4 w-4" />
-                    צפייה
-                  </Button>
+                  <div className="flex shrink-0 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/teacher/reports/${report.id}`)}
+                    >
+                      <Eye className="ml-1 h-4 w-4" />
+                      צפייה
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/teacher/reports/${report.id}/edit`)}
+                    >
+                      <Pencil className="ml-1 h-4 w-4" />
+                      עריכה
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

@@ -3,7 +3,7 @@ import { useReportDetails, useReportLines } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Pencil } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   present: "נוכח/ת",
@@ -43,11 +43,17 @@ const TeacherReportView = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <header className="border-b border-border bg-card px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/teacher/reports")}>
-            <ArrowRight className="h-5 w-5" />
+        <div className="mx-auto flex max-w-4xl items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/teacher/reports")}>
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+            <h1 className="text-lg font-bold text-foreground">צפייה בדיווח</h1>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}>
+            <Pencil className="ml-1 h-4 w-4" />
+            עריכת דיווח
           </Button>
-          <h1 className="text-lg font-bold text-foreground">צפייה בדיווח</h1>
         </div>
       </header>
 
