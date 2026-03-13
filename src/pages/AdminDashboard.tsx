@@ -1,16 +1,39 @@
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Users, GraduationCap, School } from "lucide-react";
+
+const SECTIONS = [
+  { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
+  { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
+  { path: "/admin/schools", label: "בתי ספר", description: "ניהול בתי ספר וכתובות", icon: School },
+];
 
 const AdminDashboard = () => {
-  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   return (
-    <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-4">
-      <h1 className="text-3xl font-bold text-foreground">פאנל ניהול</h1>
-      <p className="text-muted-foreground">ברוך הבא, {user?.email}</p>
-      <p className="text-sm text-muted-foreground">עמוד זה ישמש כפאנל הניהול הראשי</p>
-      <Button variant="outline" onClick={signOut}>התנתק</Button>
-    </div>
+    <AdminLayout title="פאנל ניהול">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {SECTIONS.map((s) => (
+          <Card
+            key={s.path}
+            className="cursor-pointer transition-shadow hover:shadow-md"
+            onClick={() => navigate(s.path)}
+          >
+            <CardContent className="flex items-center gap-4 p-6">
+              <div className="rounded-lg bg-primary/10 p-3">
+                <s.icon className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold text-foreground">{s.label}</p>
+                <p className="text-sm text-muted-foreground">{s.description}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </AdminLayout>
   );
 };
 
