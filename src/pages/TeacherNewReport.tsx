@@ -99,10 +99,6 @@ const TeacherNewReport = () => {
   const selectedCount = Object.values(lines).filter((l) => l.selected).length;
 
   const handleSubmit = async () => {
-    if (selectedCount === 0) {
-      toast.error("יש לסמן לפחות רישום אחד");
-      return;
-    }
     if (!teacher || !user) return;
 
     setSubmitting(true);
