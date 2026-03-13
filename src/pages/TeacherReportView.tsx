@@ -135,7 +135,7 @@ const TeacherReportView = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
+      <main className="mx-auto max-w-lg px-5 pt-4 pb-8 space-y-4">
         {/* Report summary card */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
