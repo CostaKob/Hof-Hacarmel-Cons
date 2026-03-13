@@ -82,9 +82,44 @@ const AdminTeacherForm = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: async (_result, data) => {
       queryClient.invalidateQueries({ queryKey: ["admin-teachers"] });
-      toast.success(isEdit ? "המורה עודכן בהצלחה" : "המורה נוצר בהצלחה");
+
+      if (!isEdit && data.email) {
+        // Auto-create login for new teacher
+        try {
+          // Get the newly created teacher by email to get its id
+          const { data: newTeacher } = await supabase
+            .from("teachers")
+            .select("id")
+            .eq("email", data.email)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (newTeacher) {
+            const { data: result, error } = await supabase.functions.invoke(
+              "create-teacher-user",
+              { body: { email: data.email, teacher_id: newTeacher.id } }
+            );
+
+            if (error) {
+              toast.error("המורה נוצר אך יצירת חשבון הכניסה נכשלה");
+            } else if (result?.warning) {
+              toast.warning(result.warning);
+            } else {
+              toast.success("המורה נוצר וחשבון כניסה הוגדר (סיסמה: 1234)");
+            }
+          } else {
+            toast.success("המורה נוצר בהצלחה");
+          }
+        } catch {
+          toast.success("המורה נוצר אך יצירת חשבון הכניסה נכשלה");
+        }
+      } else {
+        toast.success(isEdit ? "המורה עודכן בהצלחה" : "המורה נוצר בהצלחה");
+      }
+
       navigate("/admin/teachers");
     },
     onError: () => toast.error("שגיאה בשמירת הנתונים"),
