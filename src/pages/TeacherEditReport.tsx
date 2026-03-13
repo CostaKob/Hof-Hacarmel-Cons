@@ -310,7 +310,7 @@ const TeacherEditReport = () => {
           : "תלמיד",
       instrumentName: enrollment?.instruments?.name ?? existingLine?.enrollments?.instruments?.name ?? "",
       duration: enrollment?.lesson_duration_minutes ?? existingLine?.enrollments?.lesson_duration_minutes ?? 0,
-      role: enrollment?.enrollment_role ?? existingLine?.enrollments?.enrollment_role ?? "",
+      schoolName: enrollment?.schools?.name ?? existingLine?.enrollments?.schools?.name ?? "",
     };
   });
 
