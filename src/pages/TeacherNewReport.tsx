@@ -4,7 +4,6 @@ import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useTeacherProfile,
-  useTeacherSchools,
   useTeacherEnrollments,
   useKilometersForDate,
 } from "@/hooks/useTeacherData";
