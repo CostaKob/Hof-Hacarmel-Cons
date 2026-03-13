@@ -87,6 +87,13 @@ const App = () => (
               }
             />
             <Route
+              path="/teacher/reports/:reportId/edit"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherEditReport />
+                </ProtectedRoute>
+              }
+            <Route
               path="/secretary"
               element={
                 <ProtectedRoute allowedRoles={["secretary"]}>
