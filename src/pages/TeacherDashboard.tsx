@@ -3,7 +3,7 @@ import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, School, CalendarDays } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound } from "lucide-react";
 
 const TeacherDashboard = () => {
   const { signOut } = useAuth();
