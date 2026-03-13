@@ -80,7 +80,7 @@ const TeacherReports = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
+      <main className="mx-auto max-w-lg px-5 pt-4 pb-8 space-y-4">
         {/* Date filter */}
         <div className="max-w-[200px] space-y-1">
           <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
