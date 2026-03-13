@@ -192,7 +192,8 @@ const AdminEnrollmentForm = () => {
       name: "instrument_id",
       label: "כלי נגינה",
       required: true,
-      options: instruments.map((i) => ({ value: i.id, label: i.name })),
+      options: filteredInstruments.map((i) => ({ value: i.id, label: i.name })),
+      warning: selectedTeacherId && !hasTeacherInstruments ? "לא הוגדרו עדיין כלי נגינה למורה זה." : undefined,
     },
     {
       name: "school_id",
