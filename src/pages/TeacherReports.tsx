@@ -149,9 +149,9 @@ const TeacherReports = () => {
                             key={line.id}
                             className="flex items-start gap-2 text-sm"
                             onClick={(e) => {
-                              if (enr?.student_id) {
+                              if (line.enrollment_id) {
                                 e.stopPropagation();
-                                navigate(`/teacher/students/${enr.student_id}`);
+                                navigate(`/teacher/students/${line.enrollment_id}`);
                               }
                             }}
                           >
