@@ -334,22 +334,6 @@ const TeacherEditReport = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>בית ספר *</Label>
-                <Select value={schoolId} onValueChange={setSchoolId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחר בית ספר" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teacherSchools?.map((ts) => (
-                      <SelectItem key={ts.school_id} value={ts.school_id}>
-                        {ts.schools?.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <Label>תאריך דיווח *</Label>
                 <Popover>
                   <PopoverTrigger asChild>
