@@ -31,10 +31,13 @@ const Login = () => {
   };
 
   return (
-    <div dir="rtl" className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
+      <div className="mb-6">
+        <AppLogo size="lg" />
+      </div>
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">כניסה למערכת</CardTitle>
+          <h2 className="text-xl font-bold">כניסה למערכת</h2>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
