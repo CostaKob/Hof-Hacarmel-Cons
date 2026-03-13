@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useEnrollmentDetails, useStudentNotes } from "@/hooks/useTeacherData";
+import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
+import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
+import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -20,6 +23,7 @@ const TeacherStudentCard = () => {
   const { data: teacher } = useTeacherProfile();
   const { data: enrollment, isLoading } = useEnrollmentDetails(enrollmentId);
   const { data: notes } = useStudentNotes(enrollment?.student_id, teacher?.id);
+  const { data: reportLines, isLoading: linesLoading } = useEnrollmentReportLines(enrollmentId);
 
   const [noteContent, setNoteContent] = useState("");
   const [isGeneralNote, setIsGeneralNote] = useState(false);
@@ -152,6 +156,12 @@ const TeacherStudentCard = () => {
             </div>
           </div>
         </div>
+
+        {/* Enrollment summary counts */}
+        <EnrollmentSummary lines={reportLines ?? []} />
+
+        {/* Lesson history */}
+        <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={linesLoading} />
 
         {/* Notes */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
