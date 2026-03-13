@@ -80,6 +80,7 @@ const App = () => (
             <Route path="/teacher/reports/:reportId" element={<TeacherRoute><TeacherReportView /></TeacherRoute>} />
             <Route path="/teacher/reports/:reportId/edit" element={<TeacherRoute><TeacherEditReport /></TeacherRoute>} />
             <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
+            <Route path="/teacher/yearly-summary" element={<TeacherRoute><TeacherYearlySummary /></TeacherRoute>} />
             {/* Secretary */}
             <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
