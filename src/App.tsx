@@ -28,7 +28,9 @@ import TeacherNewReport from "./pages/TeacherNewReport";
 import TeacherReportView from "./pages/TeacherReportView";
 import TeacherEditReport from "./pages/TeacherEditReport";
 import TeacherChangePassword from "./pages/TeacherChangePassword";
+import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
+import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
