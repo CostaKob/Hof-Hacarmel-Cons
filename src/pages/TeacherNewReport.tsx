@@ -196,7 +196,7 @@ const TeacherNewReport = () => {
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">דיווח חדש</h1>
+          <h1 className="text-lg font-bold">יום עבודה חדש</h1>
         </div>
       </header>
 
@@ -376,7 +376,7 @@ const TeacherNewReport = () => {
             disabled={submitting || selectedCount === 0}
           >
             <Save className="ml-2 h-5 w-5" />
-            {submitting ? "שומר..." : "שמור דיווח"}
+            {submitting ? "שומר..." : "שמור יום עבודה"}
           </Button>
         </div>
       </main>

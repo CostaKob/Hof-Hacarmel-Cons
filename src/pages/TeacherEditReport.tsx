@@ -276,7 +276,7 @@ const TeacherEditReport = () => {
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">עריכת דיווח</h1>
+          <h1 className="text-lg font-bold">עריכת יום עבודה</h1>
         </div>
       </header>
 

@@ -58,7 +58,7 @@ const TeacherDashboard = () => {
           onClick={() => navigate("/teacher/reports/new")}
         >
           <FileText className="ml-2 h-5 w-5" />
-          דיווח חדש
+          יום עבודה חדש
         </Button>
 
         {/* Navigation cards */}
@@ -71,8 +71,8 @@ const TeacherDashboard = () => {
           />
           <NavCard
             icon={CalendarDays}
-            title="הדיווחים שלי"
-            subtitle="צפייה ועריכת דיווחים"
+            title="ימי העבודה שלי"
+            subtitle="צפייה ועריכת ימי עבודה"
             onClick={() => navigate("/teacher/reports")}
           />
           <NavCard
