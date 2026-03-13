@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -69,56 +68,52 @@ const TeacherInstrumentsSection = ({ teacherId }: Props) => {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>כלי נגינה ({teacherInstruments.length})</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {teacherInstruments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">לא שויכו כלי נגינה</p>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {teacherInstruments.map((ti: any) => (
-              <Badge key={ti.id} variant="secondary" className="gap-1 pl-1">
-                {ti.instruments?.name}
-                <button
-                  type="button"
-                  onClick={() => removeMutation.mutate(ti.id)}
-                  disabled={removeMutation.isPending}
-                  className="mr-1 rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        )}
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+      <h2 className="font-semibold text-foreground text-base">כלי נגינה ({teacherInstruments.length})</h2>
+      {teacherInstruments.length === 0 ? (
+        <p className="text-sm text-muted-foreground">לא שויכו כלי נגינה</p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {teacherInstruments.map((ti: any) => (
+            <Badge key={ti.id} variant="secondary" className="gap-1 pl-1 rounded-lg py-1.5 px-3 text-sm">
+              {ti.instruments?.name}
+              <button
+                type="button"
+                onClick={() => removeMutation.mutate(ti.id)}
+                disabled={removeMutation.isPending}
+                className="mr-1 rounded-full p-0.5 hover:bg-destructive/20 hover:text-destructive"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
 
-        {availableInstruments.length > 0 && (
-          <div className="flex items-end gap-2">
-            <div className="flex-1">
-              <Select value={selectedInstrument} onValueChange={setSelectedInstrument}>
-                <SelectTrigger>
-                  <SelectValue placeholder="בחר כלי נגינה להוספה" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableInstruments.map((i) => (
-                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              size="sm"
-              disabled={!selectedInstrument || addMutation.isPending}
-              onClick={() => selectedInstrument && addMutation.mutate(selectedInstrument)}
-            >
-              <Plus className="h-4 w-4" /> הוסף
-            </Button>
+      {availableInstruments.length > 0 && (
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <Select value={selectedInstrument} onValueChange={setSelectedInstrument}>
+              <SelectTrigger className="h-12 rounded-xl">
+                <SelectValue placeholder="בחר כלי נגינה להוספה" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableInstruments.map((i) => (
+                  <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-      </CardContent>
-    </Card>
+          <Button
+            className="h-12 rounded-xl"
+            disabled={!selectedInstrument || addMutation.isPending}
+            onClick={() => selectedInstrument && addMutation.mutate(selectedInstrument)}
+          >
+            <Plus className="h-4 w-4" /> הוסף
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -78,7 +77,6 @@ const AdminEnrollmentForm = () => {
     },
   });
 
-  // Fetch teacher's linked instruments
   const { data: teacherInstruments = [] } = useQuery({
     queryKey: ["admin-teacher-instruments", selectedTeacherId],
     queryFn: async () => {
@@ -230,20 +228,20 @@ const AdminEnrollmentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת שיוך" : "שיוך חדש"} backPath={presetStudentId ? `/admin/students/${presetStudentId}` : "/admin/enrollments"}>
-      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6 max-w-2xl pb-20 md:pb-0">
-        <Card>
-          <CardHeader><CardTitle>פרטי שיוך</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">פרטי שיוך</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
             {SELECT_FIELDS.map((f) => (
-              <div key={f.name} className="space-y-1">
-                <Label>{f.label}{f.required && " *"}</Label>
+              <div key={f.name} className="space-y-1.5">
+                <Label className="text-sm">{f.label}{f.required && " *"}</Label>
                 <Controller
                   name={f.name}
                   control={control}
                   rules={f.required ? { required: `${f.label} שדה חובה` } : undefined}
                   render={({ field }) => (
                     <Select value={field.value?.toString() ?? ""} onValueChange={field.onChange}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-12 rounded-xl">
                         <SelectValue placeholder={`בחר ${f.label}`} />
                       </SelectTrigger>
                       <SelectContent>
@@ -258,29 +256,29 @@ const AdminEnrollmentForm = () => {
                 {f.warning && <p className="text-sm text-amber-600">{f.warning}</p>}
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader><CardTitle>תאריך וסטטוס</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label>תאריך התחלה *</Label>
-              <Input type="date" {...register("start_date", { required: "תאריך התחלה שדה חובה" })} />
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm">תאריך התחלה *</Label>
+              <Input type="date" {...register("start_date", { required: "תאריך התחלה שדה חובה" })} className="h-12 rounded-xl" />
               {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
             </div>
-            <div className="flex items-center gap-2 sm:col-span-2">
+            <div className="flex items-center gap-3 sm:col-span-2">
               <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
               <Label>פעיל</Label>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" disabled={mutation.isPending}>
+        <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
+          <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate(-1 as any)}>
+          <Button type="button" variant="outline" onClick={() => navigate(-1 as any)} className="h-14 rounded-2xl text-base px-6">
             ביטול
           </Button>
         </div>

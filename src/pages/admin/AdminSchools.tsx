@@ -1,12 +1,10 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { Plus, ChevronLeft } from "lucide-react";
 
 const AdminSchools = () => {
   const navigate = useNavigate();
@@ -23,34 +21,34 @@ const AdminSchools = () => {
   return (
     <AdminLayout title="בתי ספר" backPath="/admin">
       <div className="mb-4 flex justify-end">
-        <Button onClick={() => navigate("/admin/schools/new")}>
+        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/schools/new")}>
           <Plus className="h-4 w-4" /> בית ספר חדש
         </Button>
       </div>
 
       {isLoading ? (
-        <p className="text-center text-muted-foreground">טוען...</p>
+        <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : schools.length === 0 ? (
-        <p className="text-center text-muted-foreground">לא נמצאו בתי ספר</p>
+        <p className="text-center text-muted-foreground py-8">לא נמצאו בתי ספר</p>
       ) : (
         <div className="space-y-2">
           {schools.map((s) => (
-            <Card key={s.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="font-medium text-foreground">{s.name}</p>
-                    {s.city && <p className="text-sm text-muted-foreground">{s.city}</p>}
-                  </div>
-                  <Badge variant={s.is_active ? "default" : "secondary"}>
-                    {s.is_active ? "פעיל" : "לא פעיל"}
-                  </Badge>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/schools/${s.id}/edit`)}>
-                  עריכה
-                </Button>
-              </CardContent>
-            </Card>
+            <div
+              key={s.id}
+              onClick={() => navigate(`/admin/schools/${s.id}/edit`)}
+              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+            >
+              <div>
+                <p className="font-semibold text-foreground">{s.name}</p>
+                {s.city && <p className="text-sm text-muted-foreground mt-0.5">{s.city}</p>}
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge variant={s.is_active ? "default" : "secondary"} className="rounded-lg">
+                  {s.is_active ? "פעיל" : "לא פעיל"}
+                </Badge>
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
           ))}
         </div>
       )}

@@ -5,9 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ChevronLeft } from "lucide-react";
 
 const AdminInstruments = () => {
   const navigate = useNavigate();
@@ -35,29 +33,29 @@ const AdminInstruments = () => {
             placeholder="חיפוש..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
+            className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <Button onClick={() => navigate("/admin/instruments/new")}>
+        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/instruments/new")}>
           <Plus className="h-4 w-4" /> כלי נגינה חדש
         </Button>
       </div>
 
       {isLoading ? (
-        <p className="text-center text-muted-foreground">טוען...</p>
+        <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground">לא נמצאו כלי נגינה</p>
+        <p className="text-center text-muted-foreground py-8">לא נמצאו כלי נגינה</p>
       ) : (
-        <div className="space-y-2 pb-20 md:pb-0">
+        <div className="space-y-2">
           {filtered.map((i) => (
-            <Card key={i.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <span className="font-medium text-foreground">{i.name}</span>
-                <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/instruments/${i.id}/edit`)}>
-                  עריכה
-                </Button>
-              </CardContent>
-            </Card>
+            <div
+              key={i.id}
+              onClick={() => navigate(`/admin/instruments/${i.id}/edit`)}
+              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+            >
+              <span className="font-semibold text-foreground">{i.name}</span>
+              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            </div>
           ))}
         </div>
       )}

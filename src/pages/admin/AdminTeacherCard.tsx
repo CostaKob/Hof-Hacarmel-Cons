@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, KeyRound, UserCheck, UserX } from "lucide-react";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
@@ -62,12 +61,8 @@ const AdminTeacherCard = () => {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => {
-      toast.success("הסיסמה אופסה ל-1234 בהצלחה");
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || "שגיאה באיפוס הסיסמה");
-    },
+    onSuccess: () => toast.success("הסיסמה אופסה ל-1234 בהצלחה"),
+    onError: (err: Error) => toast.error(err.message || "שגיאה באיפוס הסיסמה"),
   });
 
   const createLoginMutation = useMutation({
@@ -88,112 +83,102 @@ const AdminTeacherCard = () => {
         toast.success("חשבון כניסה נוצר בהצלחה (סיסמה: 1234)");
       }
     },
-    onError: (err: Error) => {
-      toast.error(err.message || "שגיאה ביצירת חשבון כניסה");
-    },
+    onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
   });
 
-  if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground">טוען...</p></AdminLayout>;
-  if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground">מורה לא נמצא</p></AdminLayout>;
+  if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+  if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
 
   const hasLogin = !!teacher.user_id;
 
   const DetailRow = ({ label, value }: { label: string; value?: string | null }) =>
     value ? (
-      <div className="flex justify-between border-b py-2 last:border-0">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium text-foreground">{value}</span>
+      <div className="flex justify-between border-b border-border py-2.5 last:border-0">
+        <span className="text-muted-foreground text-sm">{label}</span>
+        <span className="font-medium text-foreground text-sm">{value}</span>
       </div>
     ) : null;
 
   return (
     <AdminLayout title={`${teacher.first_name} ${teacher.last_name}`} backPath="/admin/teachers">
-      <div className="space-y-6 pb-20 md:pb-0">
+      <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Badge variant={teacher.is_active ? "default" : "secondary"}>
+          <Badge variant={teacher.is_active ? "default" : "secondary"} className="rounded-lg">
             {teacher.is_active ? "פעיל" : "לא פעיל"}
           </Badge>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/admin/teachers/${teacherId}/edit`)}>
+          <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/teachers/${teacherId}/edit`)}>
             <Pencil className="h-4 w-4" /> עריכה
           </Button>
         </div>
 
-        <Card>
-          <CardHeader><CardTitle>פרטים אישיים</CardTitle></CardHeader>
-          <CardContent>
-            <DetailRow label="תעודת זהות" value={teacher.national_id} />
-            <DetailRow label="תאריך לידה" value={teacher.birth_date} />
-            <DetailRow label="טלפון" value={teacher.phone} />
-            <DetailRow label="אימייל" value={teacher.email} />
-            <DetailRow label="כתובת" value={teacher.address} />
-            <DetailRow label="עיר" value={teacher.city} />
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
+          <h2 className="font-semibold text-foreground text-base mb-2">פרטים אישיים</h2>
+          <DetailRow label="תעודת זהות" value={teacher.national_id} />
+          <DetailRow label="תאריך לידה" value={teacher.birth_date} />
+          <DetailRow label="טלפון" value={teacher.phone} />
+          <DetailRow label="אימייל" value={teacher.email} />
+          <DetailRow label="כתובת" value={teacher.address} />
+          <DetailRow label="עיר" value={teacher.city} />
+        </div>
 
         {/* Login Account Section */}
-        <Card>
-          <CardHeader><CardTitle>חשבון כניסה</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2">
-              {hasLogin ? (
-                <>
-                  <UserCheck className="h-5 w-5 text-primary" />
-                  <span className="font-medium text-foreground">יש חשבון כניסה</span>
-                </>
-              ) : (
-                <>
-                  <UserX className="h-5 w-5 text-muted-foreground" />
-                  <span className="font-medium text-muted-foreground">אין חשבון כניסה</span>
-                </>
-              )}
-            </div>
-            {hasLogin && teacher.email && (
-              <div className="flex justify-between border-b py-2">
-                <span className="text-muted-foreground">אימייל מקושר</span>
-                <span className="font-medium text-foreground">{teacher.email}</span>
-              </div>
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <h2 className="font-semibold text-foreground text-base">חשבון כניסה</h2>
+          <div className="flex items-center gap-2">
+            {hasLogin ? (
+              <>
+                <UserCheck className="h-5 w-5 text-primary" />
+                <span className="font-medium text-foreground text-sm">יש חשבון כניסה</span>
+              </>
+            ) : (
+              <>
+                <UserX className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium text-muted-foreground text-sm">אין חשבון כניסה</span>
+              </>
             )}
-            <div className="flex gap-2 pt-2">
-              {hasLogin ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => resetPasswordMutation.mutate()}
-                  disabled={resetPasswordMutation.isPending}
-                >
-                  <KeyRound className="h-4 w-4" />
-                  {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-1234"}
-                </Button>
-              ) : teacher.email ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => createLoginMutation.mutate()}
-                  disabled={createLoginMutation.isPending}
-                >
-                  <UserCheck className="h-4 w-4" />
-                  {createLoginMutation.isPending ? "יוצר..." : "צור חשבון כניסה"}
-                </Button>
-              ) : (
-                <p className="text-sm text-muted-foreground">יש להגדיר אימייל למורה כדי ליצור חשבון כניסה</p>
-              )}
+          </div>
+          {hasLogin && teacher.email && (
+            <div className="flex justify-between border-b border-border py-2">
+              <span className="text-muted-foreground text-sm">אימייל מקושר</span>
+              <span className="font-medium text-foreground text-sm">{teacher.email}</span>
             </div>
-          </CardContent>
-        </Card>
+          )}
+          <div className="flex gap-2 pt-1">
+            {hasLogin ? (
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl"
+                onClick={() => resetPasswordMutation.mutate()}
+                disabled={resetPasswordMutation.isPending}
+              >
+                <KeyRound className="h-4 w-4" />
+                {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-1234"}
+              </Button>
+            ) : teacher.email ? (
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl"
+                onClick={() => createLoginMutation.mutate()}
+                disabled={createLoginMutation.isPending}
+              >
+                <UserCheck className="h-4 w-4" />
+                {createLoginMutation.isPending ? "יוצר..." : "צור חשבון כניסה"}
+              </Button>
+            ) : (
+              <p className="text-sm text-muted-foreground">יש להגדיר אימייל למורה כדי ליצור חשבון כניסה</p>
+            )}
+          </div>
+        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{enrollmentsCount}</p>
-              <p className="text-sm text-muted-foreground">רישומים פעילים</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-primary">{lastReport?.report_date ?? "—"}</p>
-              <p className="text-sm text-muted-foreground">דיווח אחרון</p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-3 grid-cols-2">
+          <div className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm">
+            <p className="text-2xl font-bold text-primary">{enrollmentsCount}</p>
+            <p className="text-sm text-muted-foreground">רישומים פעילים</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm">
+            <p className="text-2xl font-bold text-primary">{lastReport?.report_date ?? "—"}</p>
+            <p className="text-sm text-muted-foreground">דיווח אחרון</p>
+          </div>
         </div>
 
         <TeacherInstrumentsSection teacherId={teacherId!} />
