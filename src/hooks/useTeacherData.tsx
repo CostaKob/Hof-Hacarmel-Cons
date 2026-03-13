@@ -98,7 +98,7 @@ export function useTeacherReports(teacherId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reports")
-        .select(`*, schools (name), report_lines (id)`)
+        .select(`*, schools (name), report_lines (id, status, enrollments (students (first_name, last_name), instruments (name)))`)
         .eq("teacher_id", teacherId!)
         .order("report_date", { ascending: false });
       if (error) throw error;

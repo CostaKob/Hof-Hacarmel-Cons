@@ -1,11 +1,39 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { parseISO } from "date-fns";
 import { useTeacherProfile, useTeacherReports } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Plus, FileText, ChevronLeft } from "lucide-react";
+import { ArrowRight, Plus, CalendarDays, Navigation, Users } from "lucide-react";
+
+const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+
+const STATUS_LABELS_SHORT: Record<string, string> = {
+  present: "נוכח/ת",
+  double_lesson: "כפול",
+  justified_absence: "מוצדק",
+  unjustified_absence: "לא מוצדק",
+  vacation: "חופש",
+};
+
+const STATUS_DOT_COLORS: Record<string, string> = {
+  present: "bg-emerald-500",
+  double_lesson: "bg-blue-500",
+  justified_absence: "bg-amber-500",
+  unjustified_absence: "bg-red-500",
+  vacation: "bg-purple-500",
+};
+
+function formatDateWithDay(dateStr: string) {
+  const d = parseISO(dateStr);
+  const day = d.getDate().toString().padStart(2, "0");
+  const month = (d.getMonth() + 1).toString().padStart(2, "0");
+  const year = d.getFullYear();
+  const weekday = HEBREW_DAYS[d.getDay()];
+  return { formatted: `${day}/${month}/${year}`, weekday };
+}
 
 const TeacherReports = () => {
   const navigate = useNavigate();
@@ -38,7 +66,7 @@ const TeacherReports = () => {
             >
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-bold">הדיווחים שלי</h1>
+            <h1 className="text-lg font-bold">ימי העבודה שלי</h1>
           </div>
           <Button
             size="sm"
@@ -47,13 +75,13 @@ const TeacherReports = () => {
             onClick={() => navigate("/teacher/reports/new")}
           >
             <Plus className="ml-1 h-4 w-4" />
-            דיווח חדש
+            יום חדש
           </Button>
         </div>
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
-        {/* Date filter only */}
+        {/* Date filter */}
         <div className="max-w-[200px] space-y-1">
           <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
           <Input
@@ -69,33 +97,70 @@ const TeacherReports = () => {
           <p className="text-center text-muted-foreground py-8">טוען...</p>
         ) : filtered.length === 0 ? (
           <div className="text-center py-12 space-y-3">
-            <FileText className="mx-auto h-10 w-10 text-muted-foreground/40" />
-            <p className="text-muted-foreground">לא נמצאו דיווחים</p>
+            <CalendarDays className="mx-auto h-10 w-10 text-muted-foreground/40" />
+            <p className="text-muted-foreground">לא נמצאו ימי עבודה</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filtered.map((report) => (
-              <button
-                key={report.id}
-                onClick={() => navigate(`/teacher/reports/${report.id}`)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
-                  <FileText className="h-5 w-5 text-accent-foreground" />
-                </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <p className="font-semibold text-foreground">{report.report_date}</p>
-                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground">
-                    <span>{report.schools?.name}</span>
-                    <span>·</span>
-                    <span>{report.kilometers} ק״מ</span>
-                    <span>·</span>
-                    <Badge variant="secondary" className="text-xs rounded-lg">{report.report_lines?.length ?? 0} שורות</Badge>
+          <div className="space-y-4">
+            {filtered.map((report) => {
+              const { formatted, weekday } = formatDateWithDay(report.report_date);
+              const lines = report.report_lines ?? [];
+              return (
+                <button
+                  key={report.id}
+                  onClick={() => navigate(`/teacher/reports/${report.id}`)}
+                  className="w-full rounded-2xl bg-card shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md overflow-hidden"
+                >
+                  {/* Card header */}
+                  <div className="flex items-center justify-between px-4 pt-4 pb-2">
+                    <div className="flex items-center gap-2">
+                      <CalendarDays className="h-5 w-5 text-primary" />
+                      <span className="text-lg font-bold text-foreground">{formatted}</span>
+                      <span className="text-sm font-medium text-muted-foreground">({weekday})</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {report.kilometers > 0 && (
+                        <Badge variant="secondary" className="rounded-lg text-xs gap-1">
+                          <Navigation className="h-3 w-3" />
+                          {report.kilometers} ק״מ
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
-              </button>
-            ))}
+
+                  {/* School name */}
+                  <div className="px-4 pb-2">
+                    <span className="text-sm text-muted-foreground">{report.schools?.name}</span>
+                  </div>
+
+                  {/* Student rows */}
+                  {lines.length > 0 && (
+                    <div className="border-t border-border px-4 py-2 space-y-1.5">
+                      {lines.map((line: any) => (
+                        <div key={line.id} className="flex items-center gap-2 text-sm">
+                          <span className={`h-2 w-2 rounded-full shrink-0 ${STATUS_DOT_COLORS[line.status] ?? "bg-muted"}`} />
+                          <span className="text-foreground">
+                            {line.enrollments?.students?.first_name} {line.enrollments?.students?.last_name}
+                          </span>
+                          <span className="text-muted-foreground">·</span>
+                          <span className="text-muted-foreground text-xs">{line.enrollments?.instruments?.name}</span>
+                          <span className="mr-auto text-xs text-muted-foreground">{STATUS_LABELS_SHORT[line.status]}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="border-t border-border px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{lines.length} תלמידים</span>
+                    </div>
+                    <span className="text-xs text-primary font-medium">צפייה ←</span>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         )}
       </main>

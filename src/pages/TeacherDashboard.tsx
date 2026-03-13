@@ -71,8 +71,8 @@ const TeacherDashboard = () => {
           />
           <NavCard
             icon={CalendarDays}
-            title="הדיווחים שלי"
-            subtitle="צפייה ועריכת דיווחים"
+            title="ימי העבודה שלי"
+            subtitle="צפייה ועריכת ימי עבודה"
             onClick={() => navigate("/teacher/reports")}
           />
           <NavCard

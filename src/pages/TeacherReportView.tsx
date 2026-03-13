@@ -79,7 +79,14 @@ const TeacherReportView = () => {
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-foreground text-base">{report.report_date}</span>
+            {(() => {
+              const d = parseISO(report.report_date);
+              const day = d.getDate().toString().padStart(2, "0");
+              const month = (d.getMonth() + 1).toString().padStart(2, "0");
+              const year = d.getFullYear();
+              const weekday = HEBREW_DAYS[d.getDay()];
+              return <span className="font-semibold text-foreground text-base">{day}/{month}/{year} ({weekday})</span>;
+            })()}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <div className="flex items-center gap-1.5 text-muted-foreground">

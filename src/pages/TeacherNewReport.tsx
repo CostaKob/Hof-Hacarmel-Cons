@@ -196,7 +196,7 @@ const TeacherNewReport = () => {
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">דיווח חדש</h1>
+          <h1 className="text-lg font-bold">יום עבודה חדש</h1>
         </div>
       </header>
 
