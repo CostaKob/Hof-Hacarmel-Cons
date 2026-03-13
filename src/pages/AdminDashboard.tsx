@@ -1,7 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Users, GraduationCap, School, Music } from "lucide-react";
-
 import { Users, GraduationCap, School, Music, BarChart3 } from "lucide-react";
 
 const SECTIONS = [
