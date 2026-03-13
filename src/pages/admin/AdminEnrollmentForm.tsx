@@ -255,6 +255,7 @@ const AdminEnrollmentForm = () => {
                   )}
                 />
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
+                {f.warning && <p className="text-sm text-amber-600">{f.warning}</p>}
               </div>
             ))}
           </CardContent>
