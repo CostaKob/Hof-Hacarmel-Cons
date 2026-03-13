@@ -506,7 +506,7 @@ const TeacherEditReport = () => {
             size="lg"
             className="flex-1 h-14 rounded-2xl text-base font-semibold shadow-lg"
             onClick={handleSubmit}
-            disabled={submitting || selectedCount === 0}
+            disabled={submitting}
           >
             <Save className="ml-2 h-5 w-5" />
             {submitting ? "שומר..." : "שמור"}

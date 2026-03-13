@@ -396,7 +396,7 @@ const TeacherNewReport = () => {
             size="lg"
             className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg"
             onClick={handleSubmit}
-            disabled={submitting || selectedCount === 0}
+            disabled={submitting}
           >
             <Save className="ml-2 h-5 w-5" />
             {submitting ? "שומר..." : "שמור יום עבודה"}
