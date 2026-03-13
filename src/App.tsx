@@ -93,6 +93,7 @@ const App = () => (
                   <TeacherEditReport />
                 </ProtectedRoute>
               }
+            />
             <Route
               path="/secretary"
               element={
