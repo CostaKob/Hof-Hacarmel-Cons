@@ -157,6 +157,12 @@ const TeacherStudentCard = () => {
           </div>
         </div>
 
+        {/* Enrollment summary counts */}
+        <EnrollmentSummary lines={reportLines ?? []} />
+
+        {/* Lesson history */}
+        <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={linesLoading} />
+
         {/* Notes */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
           <h2 className="font-semibold text-foreground flex items-center gap-2">
