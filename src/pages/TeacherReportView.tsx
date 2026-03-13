@@ -89,10 +89,12 @@ const TeacherReportView = () => {
             })()}
           </div>
           <div className="flex flex-wrap items-center gap-4 text-sm">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>{report.schools?.name || "—"}</span>
-            </div>
+            {report.schools?.name && (
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <MapPin className="h-4 w-4" />
+                <span>{report.schools?.name}</span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <Navigation className="h-4 w-4" />
               <span>{report.kilometers} ק״מ</span>

@@ -189,7 +189,7 @@ export type Database = {
           kilometers: number
           notes: string | null
           report_date: string
-          school_id: string
+          school_id: string | null
           submitted_at: string
           teacher_id: string
           updated_at: string
@@ -201,7 +201,7 @@ export type Database = {
           kilometers?: number
           notes?: string | null
           report_date: string
-          school_id: string
+          school_id?: string | null
           submitted_at?: string
           teacher_id: string
           updated_at?: string
@@ -213,7 +213,7 @@ export type Database = {
           kilometers?: number
           notes?: string | null
           report_date?: string
-          school_id?: string
+          school_id?: string | null
           submitted_at?: string
           teacher_id?: string
           updated_at?: string
