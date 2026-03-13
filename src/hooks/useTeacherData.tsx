@@ -131,7 +131,7 @@ export function useReportLines(reportId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("report_lines")
-        .select(`*, enrollments (student_id, instrument_id, lesson_duration_minutes, enrollment_role, students (first_name, last_name), instruments (name))`)
+        .select(`*, enrollments (student_id, instrument_id, lesson_duration_minutes, enrollment_role, school_id, students (first_name, last_name), instruments (name), schools (name))`)
         .eq("report_id", reportId!);
       if (error) throw error;
       return data;
