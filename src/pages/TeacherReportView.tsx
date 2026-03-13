@@ -40,8 +40,45 @@ const STATUS_COLORS: Record<string, string> = {
 const TeacherReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: report, isLoading } = useReportDetails(reportId);
   const { data: lines } = useReportLines(reportId);
+  const { data: teacher } = useTeacherProfile();
+  const reportDate = report?.report_date;
+  const { data: allDayReports } = useTeacherReportsForDate(teacher?.id, reportDate);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!allDayReports || allDayReports.length === 0) return;
+    setDeleting(true);
+    try {
+      const reportIds = allDayReports.map((r) => r.id);
+      // Delete all report_lines first, then reports
+      const { error: linesError } = await supabase
+        .from("report_lines")
+        .delete()
+        .in("report_id", reportIds);
+      if (linesError) throw linesError;
+
+      const { error: reportsError } = await supabase
+        .from("reports")
+        .delete()
+        .in("id", reportIds);
+      if (reportsError) throw reportsError;
+
+      queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
+      toast.success("יום העבודה נמחק בהצלחה");
+      navigate("/teacher/reports");
+    } catch (err) {
+      console.error(err);
+      toast.error("שגיאה במחיקת יום העבודה");
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   if (isLoading) {
     return (
