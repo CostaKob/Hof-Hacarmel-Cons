@@ -101,35 +101,7 @@ const AdminTeacherCard = () => {
           </Card>
         </div>
 
-        <Card>
-          <CardHeader><CardTitle>כלי נגינה ({instruments.length})</CardTitle></CardHeader>
-          <CardContent>
-            {instruments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">לא שויכו כלי נגינה</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {instruments.map((i: any) => (
-                  <Badge key={i.id} variant="secondary">{i.instruments?.name}</Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>בתי ספר ({schools.length})</CardTitle></CardHeader>
-          <CardContent>
-            {schools.length === 0 ? (
-              <p className="text-sm text-muted-foreground">לא שויכו בתי ספר</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {schools.map((s: any) => (
-                  <Badge key={s.id} variant="secondary">{s.schools?.name}</Badge>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <TeacherInstrumentsSection teacherId={teacherId!} />
       </div>
     </AdminLayout>
   );
