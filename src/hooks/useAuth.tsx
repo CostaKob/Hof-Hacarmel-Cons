@@ -3,7 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type AppRole = Database["public"]["Enums"]["app_role"];
+export type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface AuthContextType {
   session: Session | null;
