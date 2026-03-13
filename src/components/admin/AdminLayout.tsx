@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/schools", label: "בתי ספר", icon: School },
   { path: "/admin/instruments", label: "כלי נגינה", icon: Music },
+  { path: "/admin/yearly-summary", label: "סיכום שנתי", icon: BarChart3 },
 ];
 
 interface AdminLayoutProps {

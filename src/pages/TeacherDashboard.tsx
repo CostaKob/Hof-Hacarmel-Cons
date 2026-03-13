@@ -80,6 +80,12 @@ const TeacherDashboard = () => {
             onClick={() => navigate("/teacher/reports")}
           />
           <NavCard
+            icon={BarChart3}
+            title="סיכום שיעורים שנתי"
+            subtitle="סיכום נוכחות לפי תלמידים"
+            onClick={() => navigate("/teacher/yearly-summary")}
+          />
+          <NavCard
             icon={KeyRound}
             title="שינוי סיסמה"
             subtitle="עדכון סיסמת הכניסה"
