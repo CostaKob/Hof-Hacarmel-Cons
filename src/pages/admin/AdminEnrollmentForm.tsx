@@ -78,6 +78,26 @@ const AdminEnrollmentForm = () => {
     },
   });
 
+  // Fetch teacher's linked instruments
+  const { data: teacherInstruments = [] } = useQuery({
+    queryKey: ["admin-teacher-instruments", selectedTeacherId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_instruments")
+        .select("instrument_id")
+        .eq("teacher_id", selectedTeacherId!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedTeacherId,
+  });
+
+  const teacherInstrumentIds = new Set(teacherInstruments.map((ti) => ti.instrument_id));
+  const hasTeacherInstruments = selectedTeacherId && teacherInstrumentIds.size > 0;
+  const filteredInstruments = hasTeacherInstruments
+    ? instruments.filter((i) => teacherInstrumentIds.has(i.id))
+    : instruments;
+
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-schools-select"],
     queryFn: async () => {
