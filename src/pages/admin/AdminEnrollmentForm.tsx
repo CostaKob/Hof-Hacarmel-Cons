@@ -5,9 +5,9 @@ import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -19,13 +19,16 @@ interface EnrollmentFormData {
   school_id: string;
   enrollment_role: string;
   lesson_type: string;
-  lesson_duration_minutes: number;
-  price_per_lesson: string;
-  teacher_rate_per_lesson: string;
+  lesson_duration_minutes: string;
   start_date: string;
-  end_date: string;
   is_active: boolean;
 }
+
+const DURATION_OPTIONS = [
+  { value: "30", label: "30 דקות" },
+  { value: "45", label: "45 דקות" },
+  { value: "60", label: "60 דקות" },
+];
 
 const AdminEnrollmentForm = () => {
   const { id } = useParams();
@@ -41,16 +44,12 @@ const AdminEnrollmentForm = () => {
       is_active: true,
       enrollment_role: "primary",
       lesson_type: "individual",
-      lesson_duration_minutes: 30,
-      price_per_lesson: "",
-      teacher_rate_per_lesson: "",
-      end_date: "",
+      lesson_duration_minutes: "45",
     },
   });
 
   const isActive = watch("is_active");
 
-  // Load reference data
   const { data: students = [] } = useQuery({
     queryKey: ["admin-students-select"],
     queryFn: async () => {
@@ -87,7 +86,6 @@ const AdminEnrollmentForm = () => {
     },
   });
 
-  // Load existing enrollment for edit
   const { data: enrollment } = useQuery({
     queryKey: ["admin-enrollment", id],
     queryFn: async () => {
@@ -107,11 +105,8 @@ const AdminEnrollmentForm = () => {
         school_id: enrollment.school_id,
         enrollment_role: enrollment.enrollment_role,
         lesson_type: enrollment.lesson_type,
-        lesson_duration_minutes: enrollment.lesson_duration_minutes,
-        price_per_lesson: enrollment.price_per_lesson?.toString() ?? "",
-        teacher_rate_per_lesson: enrollment.teacher_rate_per_lesson?.toString() ?? "",
+        lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         start_date: enrollment.start_date,
-        end_date: enrollment.end_date ?? "",
         is_active: enrollment.is_active,
       });
     }
@@ -119,14 +114,6 @@ const AdminEnrollmentForm = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: EnrollmentFormData) => {
-      // Validate end_date > start_date
-      if (data.end_date && data.end_date < data.start_date) {
-        throw new Error("תאריך סיום לא יכול להיות לפני תאריך התחלה");
-      }
-      if (data.lesson_duration_minutes <= 0) {
-        throw new Error("משך שיעור חייב להיות מספר חיובי");
-      }
-
       const payload = {
         student_id: data.student_id,
         teacher_id: data.teacher_id,
@@ -135,10 +122,7 @@ const AdminEnrollmentForm = () => {
         enrollment_role: data.enrollment_role as "primary" | "secondary",
         lesson_type: data.lesson_type as "individual" | "group",
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
-        price_per_lesson: data.price_per_lesson ? Number(data.price_per_lesson) : null,
-        teacher_rate_per_lesson: data.teacher_rate_per_lesson ? Number(data.teacher_rate_per_lesson) : null,
         start_date: data.start_date,
-        end_date: data.end_date || null,
         is_active: data.is_active,
       };
 
@@ -154,9 +138,10 @@ const AdminEnrollmentForm = () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
       toast.success(isEdit ? "השיוך עודכן בהצלחה" : "השיוך נוצר בהצלחה");
-      // Navigate back to student card if came from there
       if (presetStudentId && !isEdit) {
         navigate(`/admin/students/${presetStudentId}`);
+      } else if (isEdit && enrollment?.student_id) {
+        navigate(`/admin/students/${enrollment.student_id}`);
       } else {
         navigate(-1 as any);
       }
@@ -212,10 +197,16 @@ const AdminEnrollmentForm = () => {
         { value: "group", label: "קבוצתי" },
       ],
     },
+    {
+      name: "lesson_duration_minutes",
+      label: "משך שיעור",
+      required: true,
+      options: DURATION_OPTIONS,
+    },
   ];
 
   return (
-    <AdminLayout title={isEdit ? "עריכת שיוך" : "שיוך חדש"} backPath="/admin/enrollments">
+    <AdminLayout title={isEdit ? "עריכת שיוך" : "שיוך חדש"} backPath={presetStudentId ? `/admin/students/${presetStudentId}` : "/admin/enrollments"}>
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6 max-w-2xl pb-20 md:pb-0">
         <Card>
           <CardHeader><CardTitle>פרטי שיוך</CardTitle></CardHeader>
@@ -247,45 +238,12 @@ const AdminEnrollmentForm = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>פרטי שיעור</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1">
-              <Label>משך שיעור (דקות) *</Label>
-              <Input
-                type="number"
-                min={1}
-                {...register("lesson_duration_minutes", {
-                  required: "משך שיעור שדה חובה",
-                  valueAsNumber: true,
-                  min: { value: 1, message: "משך שיעור חייב להיות חיובי" },
-                })}
-              />
-              {errors.lesson_duration_minutes && (
-                <p className="text-sm text-destructive">{errors.lesson_duration_minutes.message}</p>
-              )}
-            </div>
-            <div className="space-y-1">
-              <Label>מחיר לשיעור</Label>
-              <Input type="number" step="0.01" min={0} {...register("price_per_lesson")} />
-            </div>
-            <div className="space-y-1">
-              <Label>תעריף מורה לשיעור</Label>
-              <Input type="number" step="0.01" min={0} {...register("teacher_rate_per_lesson")} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>תאריכים וסטטוס</CardTitle></CardHeader>
+          <CardHeader><CardTitle>תאריך וסטטוס</CardTitle></CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1">
               <Label>תאריך התחלה *</Label>
               <Input type="date" {...register("start_date", { required: "תאריך התחלה שדה חובה" })} />
               {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
-            </div>
-            <div className="space-y-1">
-              <Label>תאריך סיום</Label>
-              <Input type="date" {...register("end_date")} />
             </div>
             <div className="flex items-center gap-2 sm:col-span-2">
               <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
@@ -298,7 +256,7 @@ const AdminEnrollmentForm = () => {
           <Button type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/admin/enrollments")}>
+          <Button type="button" variant="outline" onClick={() => navigate(-1 as any)}>
             ביטול
           </Button>
         </div>

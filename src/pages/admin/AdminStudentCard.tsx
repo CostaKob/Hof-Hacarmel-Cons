@@ -149,8 +149,11 @@ const AdminStudentCard = () => {
                     <div>
                       <p className="font-medium">{e.schools?.name} — {e.instruments?.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳ · {e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}
+                        {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳ · {e.lesson_type === "individual" ? "פרטני" : "קבוצתי"} · {e.enrollment_role === "primary" ? "ראשי" : "משני"}
                       </p>
+                      {e.start_date && (
+                        <p className="text-xs text-muted-foreground">מ-{e.start_date}</p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={e.is_active ? "default" : "secondary"}>
