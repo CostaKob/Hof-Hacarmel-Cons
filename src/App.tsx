@@ -15,6 +15,8 @@ import AdminTeachers from "./pages/admin/AdminTeachers";
 import AdminTeacherForm from "./pages/admin/AdminTeacherForm";
 import AdminTeacherCard from "./pages/admin/AdminTeacherCard";
 import AdminSchools from "./pages/admin/AdminSchools";
+import AdminEnrollments from "./pages/admin/AdminEnrollments";
+import AdminEnrollmentForm from "./pages/admin/AdminEnrollmentForm";
 import AdminSchoolForm from "./pages/admin/AdminSchoolForm";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TeacherStudents from "./pages/TeacherStudents";
