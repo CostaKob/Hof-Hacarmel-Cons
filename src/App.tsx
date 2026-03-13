@@ -20,7 +20,6 @@ import AdminEnrollmentForm from "./pages/admin/AdminEnrollmentForm";
 import AdminInstruments from "./pages/admin/AdminInstruments";
 import AdminInstrumentForm from "./pages/admin/AdminInstrumentForm";
 import AdminSchoolForm from "./pages/admin/AdminSchoolForm";
-import AdminSchoolForm from "./pages/admin/AdminSchoolForm";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TeacherStudents from "./pages/TeacherStudents";
 import TeacherStudentCard from "./pages/TeacherStudentCard";
