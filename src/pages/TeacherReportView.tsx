@@ -1,8 +1,11 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { parseISO } from "date-fns";
 import { useReportDetails, useReportLines } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Pencil, Calendar, MapPin, Navigation } from "lucide-react";
+
+const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
 const STATUS_LABELS: Record<string, string> = {
   present: "נוכח/ת",
