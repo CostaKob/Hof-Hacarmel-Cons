@@ -1,9 +1,23 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
-import { useReportDetails, useReportLines } from "@/hooks/useTeacherData";
+import { useReportDetails, useReportLines, useTeacherProfile, useTeacherReportsForDate } from "@/hooks/useTeacherData";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Pencil, Calendar, MapPin, Navigation } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowRight, Pencil, Trash2, Calendar, MapPin, Navigation } from "lucide-react";
+import { toast } from "sonner";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
@@ -26,8 +40,45 @@ const STATUS_COLORS: Record<string, string> = {
 const TeacherReportView = () => {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: report, isLoading } = useReportDetails(reportId);
   const { data: lines } = useReportLines(reportId);
+  const { data: teacher } = useTeacherProfile();
+  const reportDate = report?.report_date;
+  const { data: allDayReports } = useTeacherReportsForDate(teacher?.id, reportDate);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!allDayReports || allDayReports.length === 0) return;
+    setDeleting(true);
+    try {
+      const reportIds = allDayReports.map((r) => r.id);
+      // Delete all report_lines first, then reports
+      const { error: linesError } = await supabase
+        .from("report_lines")
+        .delete()
+        .in("report_id", reportIds);
+      if (linesError) throw linesError;
+
+      const { error: reportsError } = await supabase
+        .from("reports")
+        .delete()
+        .in("id", reportIds);
+      if (reportsError) throw reportsError;
+
+      queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
+      toast.success("יום העבודה נמחק בהצלחה");
+      navigate("/teacher/reports");
+    } catch (err) {
+      console.error(err);
+      toast.error("שגיאה במחיקת יום העבודה");
+    } finally {
+      setDeleting(false);
+      setShowDeleteDialog(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -62,19 +113,29 @@ const TeacherReportView = () => {
             </Button>
             <h1 className="text-lg font-bold">צפייה ביום עבודה</h1>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="rounded-xl h-10"
-            onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}
-          >
-            <Pencil className="ml-1 h-4 w-4" />
-            עריכה
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-xl h-10"
+              onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}
+            >
+              <Pencil className="ml-1 h-4 w-4" />
+              עריכה
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-xl h-10 text-destructive hover:text-destructive"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
+      <main className="mx-auto max-w-lg px-5 pt-4 pb-8 space-y-4">
         {/* Report summary card */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -146,6 +207,27 @@ const TeacherReportView = () => {
           )}
         </div>
       </main>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>האם למחוק את יום העבודה הזה?</AlertDialogTitle>
+            <AlertDialogDescription>
+              כל הדיווחים של אותו יום יימחקו. לא ניתן לבטל פעולה זו.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "מוחק..." : "מחק"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
