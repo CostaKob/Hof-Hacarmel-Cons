@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut } from "lucide-react";
+import AppLogo from "@/components/AppLogo";
 
 const NAV_ITEMS = [
   { path: "/admin", label: "ראשי", icon: Home },
