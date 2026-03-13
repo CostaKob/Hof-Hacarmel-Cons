@@ -177,7 +177,19 @@ const TeacherReports = () => {
                       <Users className="h-3.5 w-3.5" />
                       <span>{lines.length} תלמידים</span>
                     </div>
-                    <span className="text-xs text-primary font-medium">צפייה ←</span>
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="text-xs text-muted-foreground font-medium flex items-center gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/teacher/reports/${report.id}/edit`);
+                        }}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        עריכה
+                      </span>
+                      <span className="text-xs text-primary font-medium">צפייה ←</span>
+                    </div>
                   </div>
                 </button>
               );
