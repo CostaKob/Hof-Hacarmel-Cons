@@ -3,13 +3,14 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type AppRole = Database["public"]["Enums"]["app_role"];
+export type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  role: AppRole | null;
+  roles: AppRole[];
   loading: boolean;
+  hasRole: (role: AppRole) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
@@ -19,16 +20,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
+  const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchRole = async (userId: string) => {
+  const hasRole = (role: AppRole) => roles.includes(role);
+
+  const fetchRoles = async (userId: string) => {
     const { data } = await supabase
       .from("user_roles")
       .select("role")
-      .eq("user_id", userId)
-      .maybeSingle();
-    setRole(data?.role ?? null);
+      .eq("user_id", userId);
+    setRoles(data?.map((r) => r.role) ?? []);
   };
 
   useEffect(() => {
@@ -37,10 +39,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          // Use setTimeout to avoid Supabase client deadlock
-          setTimeout(() => fetchRole(session.user.id), 0);
+          setTimeout(() => fetchRoles(session.user.id), 0);
         } else {
-          setRole(null);
+          setRoles([]);
         }
         setLoading(false);
       }
@@ -50,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRole(session.user.id);
+        fetchRoles(session.user.id);
       }
       setLoading(false);
     });
@@ -65,11 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setRole(null);
+    setRoles([]);
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, role, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, roles, loading, hasRole, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
