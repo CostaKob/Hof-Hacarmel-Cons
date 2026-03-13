@@ -10,7 +10,6 @@ import {
 } from "@/hooks/useTeacherData";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -64,7 +63,6 @@ const TeacherNewReport = () => {
   const dateStr = format(reportDate, "yyyy-MM-dd");
   const { data: usedKm } = useKilometersForDate(teacher?.id, dateStr);
 
-  // Filter enrollments by school if selected
   const enrollments = useMemo(() => {
     if (!allEnrollments) return [];
     if (!schoolId || schoolId === "all") return allEnrollments;
@@ -73,7 +71,6 @@ const TeacherNewReport = () => {
 
   const [lines, setLines] = useState<Record<string, LineState>>({});
 
-  // Rebuild lines when enrollments change
   const enrollmentIds = useMemo(() => enrollments.map((e) => e.id).join(","), [enrollments]);
 
   useMemo(() => {
@@ -91,14 +88,12 @@ const TeacherNewReport = () => {
 
   const selectedCount = Object.values(lines).filter((l) => l.selected).length;
 
-  // Determine school_id for the report — if filter set use it, otherwise derive from selected lines
   const getReportSchoolId = (): string | null => {
     if (schoolId && schoolId !== "all") return schoolId;
-    // All selected lines must belong to same school
     const selectedEnrollments = enrollments.filter((e) => lines[e.id]?.selected);
     if (selectedEnrollments.length === 0) return null;
     const schools = new Set(selectedEnrollments.map((e) => e.school_id));
-    if (schools.size > 1) return null; // multiple schools
+    if (schools.size > 1) return null;
     return selectedEnrollments[0].school_id;
   };
 
@@ -116,7 +111,6 @@ const TeacherNewReport = () => {
 
     setSubmitting(true);
 
-    // Refresh km data
     const { data: freshKmData } = await supabase
       .from("reports")
       .select("kilometers")
@@ -139,7 +133,6 @@ const TeacherNewReport = () => {
       return;
     }
 
-    // Insert report
     const { data: report, error: reportError } = await supabase
       .from("reports")
       .insert({
@@ -159,7 +152,6 @@ const TeacherNewReport = () => {
       return;
     }
 
-    // Insert report lines
     const lineInserts = Object.entries(lines)
       .filter(([, l]) => l.selected)
       .map(([enrollmentId, l]) => ({
@@ -183,70 +175,73 @@ const TeacherNewReport = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/teacher")}>
+      {/* Header */}
+      <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10"
+            onClick={() => navigate("/teacher")}
+          >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">דיווח חדש</h1>
+          <h1 className="text-lg font-bold">דיווח חדש</h1>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl p-4 space-y-6">
-        {/* Report Header */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">פרטי דיווח</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {/* Date */}
-              <div className="space-y-2">
-                <Label>תאריך דיווח *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn("w-full justify-start text-right font-normal")}
-                    >
-                      <CalendarIcon className="ml-2 h-4 w-4" />
-                      {format(reportDate, "dd/MM/yyyy")}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={reportDate}
-                      onSelect={(d) => d && setReportDate(d)}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-5">
+        {/* Report details card */}
+        <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
+          <h2 className="font-semibold text-foreground text-base">פרטי דיווח</h2>
+          <div className="space-y-4">
+            {/* Date */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">תאריך דיווח *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-right font-normal h-12 rounded-xl"
+                  >
+                    <CalendarIcon className="ml-2 h-4 w-4 text-primary" />
+                    {format(reportDate, "dd/MM/yyyy")}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={reportDate}
+                    onSelect={(d) => d && setReportDate(d)}
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
 
-              {/* Kilometers */}
-              <div className="space-y-2">
-                <Label>קילומטרים</Label>
+            {/* Km + School row */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-sm">קילומטרים</Label>
                 <Input
                   type="number"
                   min="0"
                   value={kilometers}
                   onChange={(e) => setKilometers(e.target.value)}
+                  className="h-12 rounded-xl text-base"
                 />
                 {usedKm !== undefined && usedKm > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    כבר דווחו {usedKm} ק״מ בתאריך זה (מקסימום {MAX_DAILY_KM})
+                    נוצלו {usedKm}/{MAX_DAILY_KM} ק״מ
                   </p>
                 )}
               </div>
-
-              {/* School filter */}
-              <div className="space-y-2">
-                <Label>סינון לפי בית ספר</Label>
+              <div className="space-y-1.5">
+                <Label className="text-sm">בית ספר</Label>
                 <Select value={schoolId} onValueChange={setSchoolId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="כל בתי הספר" />
+                  <SelectTrigger className="h-12 rounded-xl">
+                    <SelectValue placeholder="הכל" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">כל בתי הספר</SelectItem>
@@ -258,114 +253,118 @@ const TeacherNewReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-
-              {/* Notes */}
-              <div className="space-y-2">
-                <Label>הערות</Label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="הערות כלליות לדיווח..."
-                  rows={2}
-                />
-              </div>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Notes */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">הערות</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="הערות כלליות לדיווח..."
+                rows={2}
+                className="rounded-xl text-base"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Enrollment Lines */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">
-              שורות דיווח
-              {selectedCount > 0 && (
-                <Badge variant="secondary" className="mr-2">{selectedCount} נבחרו</Badge>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {enrollments.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-4">
-                אין רישומים פעילים
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {enrollments.map((enrollment) => {
-                  const line = lines[enrollment.id];
-                  if (!line) return null;
-                  return (
-                    <div
-                      key={enrollment.id}
-                      className={cn(
-                        "rounded-lg border p-3 space-y-3 transition-colors",
-                        line.selected ? "border-primary bg-primary/5" : "border-border"
-                      )}
-                    >
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          checked={line.selected}
-                          onCheckedChange={(v) => updateLine(enrollment.id, { selected: !!v })}
-                          className="mt-1"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground">
-                            {enrollment.students?.first_name} {enrollment.students?.last_name}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                            <span>{enrollment.instruments?.name}</span>
-                            <span>·</span>
-                            <span>{enrollment.lesson_duration_minutes} דק׳</span>
-                            <span>·</span>
-                            <span>{enrollment.schools?.name}</span>
-                          </div>
+        <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground text-base">שורות דיווח</h2>
+            {selectedCount > 0 && (
+              <Badge variant="default" className="rounded-lg">{selectedCount} נבחרו</Badge>
+            )}
+          </div>
+
+          {enrollments.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-6">
+              אין רישומים פעילים
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {enrollments.map((enrollment) => {
+                const line = lines[enrollment.id];
+                if (!line) return null;
+                return (
+                  <div
+                    key={enrollment.id}
+                    className={cn(
+                      "rounded-xl border p-4 space-y-3 transition-all",
+                      line.selected ? "border-primary bg-accent shadow-sm" : "border-border"
+                    )}
+                  >
+                    <div className="flex items-start gap-3">
+                      <Checkbox
+                        checked={line.selected}
+                        onCheckedChange={(v) => updateLine(enrollment.id, { selected: !!v })}
+                        className="mt-1 h-5 w-5"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {enrollment.students?.first_name} {enrollment.students?.last_name}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                          <span>{enrollment.instruments?.name}</span>
+                          <span>·</span>
+                          <span>{enrollment.lesson_duration_minutes} דק׳</span>
+                          <span>·</span>
+                          <span>{enrollment.schools?.name}</span>
                         </div>
                       </div>
-
-                      {line.selected && (
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 pr-7">
-                          <div className="space-y-1">
-                            <Label className="text-xs">סטטוס נוכחות</Label>
-                            <Select
-                              value={line.status}
-                              onValueChange={(v) =>
-                                updateLine(enrollment.id, { status: v as AttendanceStatus })
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {STATUS_OPTIONS.map((opt) => (
-                                  <SelectItem key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-xs">הערות שורה</Label>
-                            <Input
-                              value={line.notes}
-                              onChange={(e) =>
-                                updateLine(enrollment.id, { notes: e.target.value })
-                              }
-                              placeholder="הערות..."
-                            />
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
-        {/* Submit */}
-        <div className="flex justify-end">
-          <Button size="lg" onClick={handleSubmit} disabled={submitting || selectedCount === 0}>
+                    {line.selected && (
+                      <div className="space-y-3 pr-8">
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">סטטוס נוכחות</Label>
+                          <Select
+                            value={line.status}
+                            onValueChange={(v) =>
+                              updateLine(enrollment.id, { status: v as AttendanceStatus })
+                            }
+                          >
+                            <SelectTrigger className="h-11 rounded-xl">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label className="text-xs text-muted-foreground">הערות</Label>
+                          <Input
+                            value={line.notes}
+                            onChange={(e) =>
+                              updateLine(enrollment.id, { notes: e.target.value })
+                            }
+                            placeholder="הערות..."
+                            className="h-11 rounded-xl"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Sticky submit */}
+        <div className="sticky bottom-4 z-10">
+          <Button
+            size="lg"
+            className="w-full h-14 text-base font-semibold rounded-2xl shadow-lg"
+            onClick={handleSubmit}
+            disabled={submitting || selectedCount === 0}
+          >
             <Save className="ml-2 h-5 w-5" />
             {submitting ? "שומר..." : "שמור דיווח"}
           </Button>

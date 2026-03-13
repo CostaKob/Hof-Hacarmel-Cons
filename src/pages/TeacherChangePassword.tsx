@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { ArrowRight, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -44,51 +43,60 @@ const TeacherChangePassword = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/teacher")}>
+      {/* Header */}
+      <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10"
+            onClick={() => navigate("/teacher")}
+          >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">שינוי סיסמה</h1>
+          <h1 className="text-lg font-bold">שינוי סיסמה</h1>
         </div>
       </header>
 
-      <main className="mx-auto max-w-md p-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <KeyRound className="h-5 w-5" />
-              עדכון סיסמה
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <Label>סיסמה חדשה</Label>
-                <Input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="הזן סיסמה חדשה"
-                  required
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>אימות סיסמה</Label>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="הזן שוב את הסיסמה"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "מעדכן..." : "עדכן סיסמה"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8">
+        <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-5">
+          <div className="flex items-center gap-2">
+            <KeyRound className="h-5 w-5 text-primary" />
+            <h2 className="font-semibold text-foreground">עדכון סיסמה</h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-sm">סיסמה חדשה</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="הזן סיסמה חדשה"
+                required
+                className="h-12 rounded-xl text-base"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">אימות סיסמה</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="הזן שוב את הסיסמה"
+                required
+                className="h-12 rounded-xl text-base"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full h-14 text-base font-semibold rounded-2xl"
+              disabled={loading}
+            >
+              {loading ? "מעדכן..." : "עדכן סיסמה"}
+            </Button>
+          </form>
+        </div>
       </main>
     </div>
   );

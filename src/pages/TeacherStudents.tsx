@@ -3,15 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowRight, Search, User } from "lucide-react";
-
-const ROLE_LABELS: Record<string, string> = {
-  primary: "ראשי",
-  secondary: "משני",
-};
+import { ArrowRight, Search, User, ChevronLeft } from "lucide-react";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
@@ -55,29 +49,37 @@ const TeacherStudents = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card px-4 py-3">
-        <div className="mx-auto flex max-w-4xl items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/teacher")}>
+      {/* Header */}
+      <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:bg-primary-foreground/10"
+            onClick={() => navigate("/teacher")}
+          >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">התלמידים שלי</h1>
+          <h1 className="text-lg font-bold">התלמידים שלי</h1>
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl p-4 space-y-4">
+      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
+        {/* Search */}
+        <div className="relative">
+          <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="חיפוש לפי שם תלמיד..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pr-10 h-12 rounded-2xl bg-card shadow-sm border-border text-base"
+          />
+        </div>
+
         {/* Filters */}
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="חיפוש לפי שם תלמיד..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-9"
-            />
-          </div>
+        <div className="grid grid-cols-2 gap-3">
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl bg-card">
               <SelectValue placeholder="כל בתי הספר" />
             </SelectTrigger>
             <SelectContent>
@@ -88,7 +90,7 @@ const TeacherStudents = () => {
             </SelectContent>
           </Select>
           <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
-            <SelectTrigger>
+            <SelectTrigger className="h-11 rounded-xl bg-card">
               <SelectValue placeholder="כל הכלים" />
             </SelectTrigger>
             <SelectContent>
@@ -108,38 +110,28 @@ const TeacherStudents = () => {
         ) : (
           <div className="space-y-3">
             {filtered.map((enrollment) => (
-              <Card key={enrollment.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <User className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 space-y-1">
-                      <p className="font-semibold text-foreground truncate">
-                        {enrollment.students?.first_name} {enrollment.students?.last_name}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        <span>{enrollment.instruments?.name}</span>
-                        <span>·</span>
-                        <span>{enrollment.lesson_duration_minutes} דק׳</span>
-                        <span>·</span>
-                        <span>{enrollment.schools?.name}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {ROLE_LABELS[enrollment.enrollment_role] ?? enrollment.enrollment_role}
-                        </Badge>
-                      </div>
-                    </div>
+              <button
+                key={enrollment.id}
+                onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
+                className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
+                  <User className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground truncate">
+                    {enrollment.students?.first_name} {enrollment.students?.last_name}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                    <span>{enrollment.instruments?.name}</span>
+                    <span>·</span>
+                    <span>{enrollment.lesson_duration_minutes} דק׳</span>
+                    <span>·</span>
+                    <span>{enrollment.schools?.name}</span>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="shrink-0"
-                    onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
-                  >
-                    כרטיס תלמיד
-                  </Button>
-                </CardContent>
-              </Card>
+                </div>
+                <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
+              </button>
             ))}
           </div>
         )}
