@@ -113,15 +113,25 @@ const TeacherReportView = () => {
             </Button>
             <h1 className="text-lg font-bold">צפייה ביום עבודה</h1>
           </div>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="rounded-xl h-10"
-            onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}
-          >
-            <Pencil className="ml-1 h-4 w-4" />
-            עריכה
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-xl h-10"
+              onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}
+            >
+              <Pencil className="ml-1 h-4 w-4" />
+              עריכה
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-xl h-10 text-destructive hover:text-destructive"
+              onClick={() => setShowDeleteDialog(true)}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
