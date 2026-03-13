@@ -151,8 +151,14 @@ const AdminEnrollmentForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
       toast.success(isEdit ? "השיוך עודכן בהצלחה" : "השיוך נוצר בהצלחה");
-      navigate("/admin/enrollments");
+      // Navigate back to student card if came from there
+      if (presetStudentId && !isEdit) {
+        navigate(`/admin/students/${presetStudentId}`);
+      } else {
+        navigate(-1 as any);
+      }
     },
     onError: (err: any) => toast.error(err.message || "שגיאה בשמירת הנתונים"),
   });
