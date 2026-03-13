@@ -137,18 +137,37 @@ const TeacherReports = () => {
 
                   {/* Student rows */}
                   {lines.length > 0 && (
-                    <div className="border-t border-border px-4 py-2 space-y-1.5">
-                      {lines.map((line: any) => (
-                        <div key={line.id} className="flex items-center gap-2 text-sm">
-                          <span className={`h-2 w-2 rounded-full shrink-0 ${STATUS_DOT_COLORS[line.status] ?? "bg-muted"}`} />
-                          <span className="text-foreground">
-                            {line.enrollments?.students?.first_name} {line.enrollments?.students?.last_name}
-                          </span>
-                          <span className="text-muted-foreground">·</span>
-                          <span className="text-muted-foreground text-xs">{line.enrollments?.instruments?.name}</span>
-                          <span className="mr-auto text-xs text-muted-foreground">{STATUS_LABELS_SHORT[line.status]}</span>
-                        </div>
-                      ))}
+                    <div className="border-t border-border px-4 py-2 space-y-2">
+                      {lines.map((line: any) => {
+                        const enr = line.enrollments;
+                        const studentName = `${enr?.students?.first_name ?? ""} ${enr?.students?.last_name ?? ""}`.trim();
+                        const schoolName = enr?.schools?.name;
+                        const instrumentName = enr?.instruments?.name;
+                        const duration = enr?.lesson_duration_minutes;
+                        return (
+                          <div
+                            key={line.id}
+                            className="flex items-start gap-2 text-sm"
+                            onClick={(e) => {
+                              if (enr?.student_id) {
+                                e.stopPropagation();
+                                navigate(`/teacher/students/${enr.student_id}`);
+                              }
+                            }}
+                          >
+                            <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${STATUS_DOT_COLORS[line.status] ?? "bg-muted"}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-medium text-foreground truncate">{studentName}</span>
+                                <span className="text-xs text-muted-foreground shrink-0">{STATUS_LABELS_SHORT[line.status]}</span>
+                              </div>
+                              <div className="text-xs text-muted-foreground truncate">
+                                {[schoolName, instrumentName, duration ? `${duration} דק׳` : null].filter(Boolean).join(" · ")}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
 
