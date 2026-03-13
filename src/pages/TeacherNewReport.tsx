@@ -51,8 +51,19 @@ const TeacherNewReport = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: teacher } = useTeacherProfile();
-  const { data: teacherSchools } = useTeacherSchools(teacher?.id);
   const { data: allEnrollments } = useTeacherEnrollments(teacher?.id);
+
+  // Derive unique schools from enrollments (more reliable than teacher_schools)
+  const enrollmentSchools = useMemo(() => {
+    if (!allEnrollments) return [];
+    const map = new Map<string, { id: string; name: string }>();
+    allEnrollments.forEach((e) => {
+      if (e.schools?.id && e.schools?.name) {
+        map.set(e.schools.id, { id: e.schools.id, name: e.schools.name });
+      }
+    });
+    return [...map.values()];
+  }, [allEnrollments]);
 
   const [schoolId, setSchoolId] = useState<string>("");
   const [reportDate, setReportDate] = useState<Date>(new Date());
