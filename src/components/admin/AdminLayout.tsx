@@ -2,14 +2,14 @@ import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, School, Link, LogOut } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut } from "lucide-react";
 
 const NAV_ITEMS = [
   { path: "/admin", label: "ראשי", icon: Home },
   { path: "/admin/students", label: "תלמידים", icon: Users },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/schools", label: "בתי ספר", icon: School },
-  { path: "/admin/enrollments", label: "שיוכים", icon: Link },
+  { path: "/admin/instruments", label: "כלי נגינה", icon: Music },
 ];
 
 interface AdminLayoutProps {

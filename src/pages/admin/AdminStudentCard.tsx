@@ -5,7 +5,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { format } from "date-fns";
 
 const STATUS_MAP: Record<string, string> = {
@@ -133,7 +133,12 @@ const AdminStudentCard = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>רישומים ({enrollments.length})</CardTitle></CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>רישומים ({enrollments.length})</CardTitle>
+            <Button size="sm" onClick={() => navigate(`/admin/enrollments/new?student_id=${studentId}`)}>
+              <Plus className="h-4 w-4" /> שיוך חדש
+            </Button>
+          </CardHeader>
           <CardContent>
             {enrollments.length === 0 ? (
               <p className="text-sm text-muted-foreground">אין רישומים</p>
@@ -147,9 +152,14 @@ const AdminStudentCard = () => {
                         {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳ · {e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}
                       </p>
                     </div>
-                    <Badge variant={e.is_active ? "default" : "secondary"}>
-                      {e.is_active ? "פעיל" : "לא פעיל"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={e.is_active ? "default" : "secondary"}>
+                        {e.is_active ? "פעיל" : "לא פעיל"}
+                      </Badge>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}>
+                        <Pencil className="h-4 w-4" /> עריכה
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>

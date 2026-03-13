@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,12 +29,15 @@ interface EnrollmentFormData {
 
 const AdminEnrollmentForm = () => {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const presetStudentId = searchParams.get("student_id");
   const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<EnrollmentFormData>({
     defaultValues: {
+      student_id: presetStudentId ?? "",
       is_active: true,
       enrollment_role: "primary",
       lesson_type: "individual",
@@ -149,8 +152,14 @@ const AdminEnrollmentForm = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
       toast.success(isEdit ? "השיוך עודכן בהצלחה" : "השיוך נוצר בהצלחה");
-      navigate("/admin/enrollments");
+      // Navigate back to student card if came from there
+      if (presetStudentId && !isEdit) {
+        navigate(`/admin/students/${presetStudentId}`);
+      } else {
+        navigate(-1 as any);
+      }
     },
     onError: (err: any) => toast.error(err.message || "שגיאה בשמירת הנתונים"),
   });
