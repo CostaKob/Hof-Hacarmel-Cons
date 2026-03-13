@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 const TeacherDashboard = () => {
@@ -78,6 +78,12 @@ const TeacherDashboard = () => {
             title="ימי העבודה שלי"
             subtitle="צפייה ועריכת ימי עבודה"
             onClick={() => navigate("/teacher/reports")}
+          />
+          <NavCard
+            icon={BarChart3}
+            title="סיכום שיעורים שנתי"
+            subtitle="סיכום נוכחות לפי תלמידים"
+            onClick={() => navigate("/teacher/yearly-summary")}
           />
           <NavCard
             icon={KeyRound}

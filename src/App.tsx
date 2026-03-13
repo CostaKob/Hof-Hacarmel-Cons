@@ -28,7 +28,9 @@ import TeacherNewReport from "./pages/TeacherNewReport";
 import TeacherReportView from "./pages/TeacherReportView";
 import TeacherEditReport from "./pages/TeacherEditReport";
 import TeacherChangePassword from "./pages/TeacherChangePassword";
+import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
+import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +71,7 @@ const App = () => (
             <Route path="/admin/instruments" element={<AdminRoute><AdminInstruments /></AdminRoute>} />
             <Route path="/admin/instruments/new" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
             <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
+            <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
             {/* Teacher routes */}
             <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
             <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
@@ -78,6 +81,7 @@ const App = () => (
             <Route path="/teacher/reports/:reportId" element={<TeacherRoute><TeacherReportView /></TeacherRoute>} />
             <Route path="/teacher/reports/:reportId/edit" element={<TeacherRoute><TeacherEditReport /></TeacherRoute>} />
             <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
+            <Route path="/teacher/yearly-summary" element={<TeacherRoute><TeacherYearlySummary /></TeacherRoute>} />
             {/* Secretary */}
             <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
