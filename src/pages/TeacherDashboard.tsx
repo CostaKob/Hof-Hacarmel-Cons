@@ -77,7 +77,7 @@ const TeacherDashboard = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <Button size="lg" className="w-full" onClick={() => navigate("/teacher/students")}>
             <Users className="ml-2 h-5 w-5" />
             התלמידים שלי
@@ -89,6 +89,10 @@ const TeacherDashboard = () => {
           <Button size="lg" variant="outline" className="w-full" onClick={() => navigate("/teacher/reports")}>
             <CalendarDays className="ml-2 h-5 w-5" />
             הדיווחים שלי
+          </Button>
+          <Button size="lg" variant="outline" className="w-full" onClick={() => navigate("/teacher/change-password")}>
+            <KeyRound className="ml-2 h-5 w-5" />
+            שינוי סיסמה
           </Button>
         </div>
       </main>
