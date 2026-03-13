@@ -1,9 +1,23 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
-import { useReportDetails, useReportLines } from "@/hooks/useTeacherData";
+import { useReportDetails, useReportLines, useTeacherProfile, useTeacherReportsForDate } from "@/hooks/useTeacherData";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Pencil, Calendar, MapPin, Navigation } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowRight, Pencil, Trash2, Calendar, MapPin, Navigation } from "lucide-react";
+import { toast } from "sonner";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
