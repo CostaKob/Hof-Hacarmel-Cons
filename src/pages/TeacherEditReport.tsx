@@ -421,9 +421,8 @@ const TeacherEditReport = () => {
                               <span>{row.instrumentName}</span>
                               <span>·</span>
                               <span>{row.duration} דק׳</span>
-                              <Badge variant="outline" className="text-xs">
-                                {ROLE_LABELS[row.role] ?? row.role}
-                              </Badge>
+                              <span>·</span>
+                              <span>{row.schoolName}</span>
                               {line.existingLineId && (
                                 <Badge variant="secondary" className="text-xs">קיים</Badge>
                               )}
