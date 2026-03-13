@@ -60,6 +60,9 @@ const App = () => (
             <Route path="/admin/schools" element={<AdminRoute><AdminSchools /></AdminRoute>} />
             <Route path="/admin/schools/new" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
             <Route path="/admin/schools/:schoolId/edit" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
+            <Route path="/admin/enrollments" element={<AdminRoute><AdminEnrollments /></AdminRoute>} />
+            <Route path="/admin/enrollments/new" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
+            <Route path="/admin/enrollments/:id/edit" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
             {/* Teacher routes */}
             <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
             <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
