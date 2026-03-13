@@ -146,7 +146,7 @@ const TeacherReports = () => {
                         return (
                           <div
                             key={line.id}
-                            className="flex items-start gap-2 text-sm"
+                            className="flex items-start gap-2 text-sm cursor-pointer"
                             onClick={(e) => {
                               if (line.enrollment_id) {
                                 e.stopPropagation();
