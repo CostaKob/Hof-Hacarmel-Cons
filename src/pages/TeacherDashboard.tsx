@@ -58,7 +58,7 @@ const TeacherDashboard = () => {
           onClick={() => navigate("/teacher/reports/new")}
         >
           <FileText className="ml-2 h-5 w-5" />
-          דיווח חדש
+          יום עבודה חדש
         </Button>
 
         {/* Navigation cards */}
