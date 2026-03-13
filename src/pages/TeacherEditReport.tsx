@@ -242,7 +242,7 @@ const TeacherEditReport = () => {
     queryClient.invalidateQueries({ queryKey: ["teacher-last-report"] });
 
     toast.success("יום העבודה עודכן בהצלחה");
-    navigate(firstNewReportId ? `/teacher/reports/${firstNewReportId}` : "/teacher/reports");
+    navigate(`/teacher/reports/${newReport.id}`);
   };
 
   if (reportLoading || linesLoading) {

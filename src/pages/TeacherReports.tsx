@@ -128,10 +128,12 @@ const TeacherReports = () => {
                     </div>
                   </div>
 
-                  {/* School name */}
-                  <div className="px-4 pb-2">
-                    <span className="text-sm text-muted-foreground">{report.schools?.name}</span>
-                  </div>
+                  {/* School name (only if set on report) */}
+                  {report.schools?.name && (
+                    <div className="px-4 pb-2">
+                      <span className="text-sm text-muted-foreground">{report.schools?.name}</span>
+                    </div>
+                  )}
 
                   {/* Student rows */}
                   {lines.length > 0 && (
