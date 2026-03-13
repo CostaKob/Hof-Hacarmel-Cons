@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface StudentFormData {
@@ -123,44 +122,47 @@ const AdminStudentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת תלמיד" : "תלמיד חדש"} backPath="/admin/students">
-      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-6 max-w-2xl pb-20 md:pb-0">
-        <Card>
-          <CardHeader><CardTitle>פרטי תלמיד</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
+        {/* Student details */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">פרטי תלמיד</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
             {FIELDS.map((f) => (
-              <div key={f.name} className="space-y-1">
-                <Label>{f.label}{f.required && " *"}</Label>
+              <div key={f.name} className="space-y-1.5">
+                <Label className="text-sm">{f.label}{f.required && " *"}</Label>
                 <Input
                   type={f.type ?? "text"}
                   {...register(f.name, f.required ? { required: `${f.label} שדה חובה` } : undefined)}
+                  className="h-12 rounded-xl"
                 />
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
               </div>
             ))}
-            <div className="flex items-center gap-2 sm:col-span-2">
+            <div className="flex items-center gap-3 sm:col-span-2">
               <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
               <Label>פעיל</Label>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card>
-          <CardHeader><CardTitle>פרטי הורים</CardTitle></CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+        {/* Parent details */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">פרטי הורים</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
             {PARENT_FIELDS.map((f) => (
-              <div key={f.name} className="space-y-1">
-                <Label>{f.label}</Label>
-                <Input type={f.type ?? "text"} {...register(f.name)} />
+              <div key={f.name} className="space-y-1.5">
+                <Label className="text-sm">{f.label}</Label>
+                <Input type={f.type ?? "text"} {...register(f.name)} className="h-12 rounded-xl" />
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <div className="flex gap-2">
-          <Button type="submit" disabled={mutation.isPending}>
+        <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
+          <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/admin/students")}>
+          <Button type="button" variant="outline" onClick={() => navigate("/admin/students")} className="h-14 rounded-2xl text-base px-6">
             ביטול
           </Button>
         </div>

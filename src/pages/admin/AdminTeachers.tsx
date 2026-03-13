@@ -5,10 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ChevronLeft } from "lucide-react";
 
 const AdminTeachers = () => {
   const navigate = useNavigate();
@@ -38,10 +37,10 @@ const AdminTeachers = () => {
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="חיפוש לפי שם..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9" />
+            <Input placeholder="חיפוש לפי שם..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9 h-12 rounded-xl" />
           </div>
           <Select value={activeFilter} onValueChange={setActiveFilter}>
-            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">הכל</SelectItem>
               <SelectItem value="active">פעילים</SelectItem>
@@ -49,39 +48,39 @@ const AdminTeachers = () => {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => navigate("/admin/teachers/new")}>
+        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/teachers/new")}>
           <Plus className="h-4 w-4" /> מורה חדש
         </Button>
       </div>
 
       {isLoading ? (
-        <p className="text-center text-muted-foreground">טוען...</p>
+        <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground">לא נמצאו מורים</p>
+        <p className="text-center text-muted-foreground py-8">לא נמצאו מורים</p>
       ) : (
         <div className="space-y-2">
           {filtered.map((t) => (
-            <Card key={t.id}>
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <p className="font-medium text-foreground">{t.first_name} {t.last_name}</p>
-                    {t.city && <p className="text-sm text-muted-foreground">{t.city}</p>}
+            <div
+              key={t.id}
+              onClick={() => navigate(`/admin/teachers/${t.id}`)}
+              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div>
+                  <p className="font-semibold text-foreground">{t.first_name} {t.last_name}</p>
+                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                    {t.phone && <span>{t.phone}</span>}
+                    {t.city && <><span>·</span><span>{t.city}</span></>}
                   </div>
-                  <Badge variant={t.is_active ? "default" : "secondary"}>
-                    {t.is_active ? "פעיל" : "לא פעיל"}
-                  </Badge>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigate(`/admin/teachers/${t.id}`)}>
-                    כרטיס מורה
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/teachers/${t.id}/edit`)}>
-                    עריכה
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge variant={t.is_active ? "default" : "secondary"} className="rounded-lg">
+                  {t.is_active ? "פעיל" : "לא פעיל"}
+                </Badge>
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
           ))}
         </div>
       )}

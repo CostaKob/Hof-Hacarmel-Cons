@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search } from "lucide-react";
 
 const AdminStudents = () => {
@@ -19,7 +18,6 @@ const AdminStudents = () => {
   const [cityFilter, setCityFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
 
-  // Fetch enrollment-based rows with joins
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-students-enrollments"],
     queryFn: async () => {
@@ -32,7 +30,6 @@ const AdminStudents = () => {
     },
   });
 
-  // Extract unique filter options
   const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()];
   const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()];
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort();
@@ -60,10 +57,10 @@ const AdminStudents = () => {
             placeholder="חיפוש לפי שם תלמיד..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pr-9"
+            className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <Button onClick={() => navigate("/admin/students/new")}>
+        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
           <Plus className="h-4 w-4" />
           תלמיד חדש
         </Button>
@@ -72,9 +69,7 @@ const AdminStudents = () => {
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
         <Select value={teacherFilter} onValueChange={setTeacherFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="מורה" />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורה" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המורים</SelectItem>
             {(teachers as any[]).map((t: any) => (
@@ -84,9 +79,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="בית ספר" />
-          </SelectTrigger>
+          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל בתי הספר</SelectItem>
             {(schools as any[]).map((s: any) => (
@@ -96,9 +89,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={durationFilter} onValueChange={setDurationFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="משך שיעור" />
-          </SelectTrigger>
+          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המשכים</SelectItem>
             {durations.map((d) => (
@@ -108,9 +99,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={cityFilter} onValueChange={setCityFilter}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="עיר" />
-          </SelectTrigger>
+          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הערים</SelectItem>
             {cities.map((c) => (
@@ -120,9 +109,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={activeFilter} onValueChange={setActiveFilter}>
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">הכל</SelectItem>
             <SelectItem value="active">פעילים</SelectItem>
@@ -131,53 +118,46 @@ const AdminStudents = () => {
         </Select>
       </div>
 
-      {/* Table */}
+      {/* Card-based list */}
       {isLoading ? (
-        <p className="text-center text-muted-foreground">טוען...</p>
+        <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground">לא נמצאו תלמידים</p>
+        <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-right">שם תלמיד</TableHead>
-                <TableHead className="text-right">מורה</TableHead>
-                <TableHead className="text-right">בית ספר</TableHead>
-                <TableHead className="text-right">כלי נגינה</TableHead>
-                <TableHead className="text-right">משך שיעור</TableHead>
-                <TableHead className="text-right">עיר</TableHead>
-                <TableHead className="text-right">סטטוס</TableHead>
-                <TableHead className="text-right">פעולות</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((r: any) => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{r.students?.first_name} {r.students?.last_name}</TableCell>
-                  <TableCell>{r.teachers?.first_name} {r.teachers?.last_name}</TableCell>
-                  <TableCell>{r.schools?.name}</TableCell>
-                  <TableCell>{r.instruments?.name}</TableCell>
-                  <TableCell>{r.lesson_duration_minutes} דק׳</TableCell>
-                  <TableCell>{r.students?.city || "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={r.is_active ? "default" : "secondary"}>
-                      {r.is_active ? "פעיל" : "לא פעיל"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/admin/students/${r.students?.id}`)}>
-                      כרטיס תלמיד
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+        <div className="space-y-2">
+          {filtered.map((r: any) => (
+            <div
+              key={r.id}
+              onClick={() => navigate(`/admin/students/${r.students?.id}`)}
+              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground">
+                  {r.students?.first_name} {r.students?.last_name}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                  <span>{r.instruments?.name}</span>
+                  <span>·</span>
+                  <span>{r.schools?.name}</span>
+                  <span>·</span>
+                  <span>{r.lesson_duration_minutes} דק׳</span>
+                  {r.teachers && (
+                    <>
+                      <span>·</span>
+                      <span>{r.teachers.first_name} {r.teachers.last_name}</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <Badge variant={r.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
+                {r.is_active ? "פעיל" : "לא פעיל"}
+              </Badge>
+            </div>
+          ))}
         </div>
       )}
 
-      <p className="mt-2 text-sm text-muted-foreground">{filtered.length} שורות</p>
+      <p className="mt-3 text-sm text-muted-foreground">{filtered.length} שורות</p>
     </AdminLayout>
   );
 };

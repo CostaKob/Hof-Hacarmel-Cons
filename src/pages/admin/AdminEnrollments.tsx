@@ -5,19 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ChevronLeft } from "lucide-react";
 
-const ROLE_LABELS: Record<string, string> = {
-  primary: "ראשי",
-  secondary: "משני",
-};
-const TYPE_LABELS: Record<string, string> = {
-  individual: "פרטני",
-  group: "קבוצתי",
-};
+const ROLE_LABELS: Record<string, string> = { primary: "ראשי", secondary: "משני" };
+const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "קבוצתי" };
 
 const AdminEnrollments = () => {
   const navigate = useNavigate();
@@ -88,17 +81,17 @@ const AdminEnrollments = () => {
               placeholder="חיפוש לפי שם תלמיד או מורה..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pr-9"
+              className="pr-9 h-12 rounded-xl"
             />
           </div>
-          <Button onClick={() => navigate("/admin/enrollments/new")}>
+          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/enrollments/new")}>
             <Plus className="h-4 w-4" />
             שיוך חדש
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           <Select value={activeFilter} onValueChange={setActiveFilter}>
-            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">הכל</SelectItem>
               <SelectItem value="active">פעילים</SelectItem>
@@ -106,7 +99,7 @@ const AdminEnrollments = () => {
             </SelectContent>
           </Select>
           <Select value={teacherFilter} onValueChange={setTeacherFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="מורה" /></SelectTrigger>
+            <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורה" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל המורים</SelectItem>
               {teachers.map((t) => (
@@ -115,7 +108,7 @@ const AdminEnrollments = () => {
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="בית ספר" /></SelectTrigger>
+            <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל בתי הספר</SelectItem>
               {schools.map((s) => (
@@ -124,7 +117,7 @@ const AdminEnrollments = () => {
             </SelectContent>
           </Select>
           <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
-            <SelectTrigger className="w-40"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+            <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל הכלים</SelectItem>
               {instruments.map((i) => (
@@ -136,46 +129,42 @@ const AdminEnrollments = () => {
       </div>
 
       {isLoading ? (
-        <p className="text-center text-muted-foreground">טוען...</p>
+        <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground">לא נמצאו שיוכים</p>
+        <p className="text-center text-muted-foreground py-8">לא נמצאו שיוכים</p>
       ) : (
-        <div className="space-y-2 pb-20 md:pb-0">
+        <div className="space-y-2">
           {filtered.map((e: any) => (
-            <Card key={e.id}>
-              <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1">
-                  <p className="font-medium text-foreground">
-                    {e.students?.first_name} {e.students?.last_name}
-                    <span className="mx-2 text-muted-foreground">←</span>
-                    {e.teachers?.first_name} {e.teachers?.last_name}
-                  </p>
-                  <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                    <span>{e.instruments?.name}</span>
-                    <span>·</span>
-                    <span>{e.schools?.name}</span>
-                    <span>·</span>
-                    <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
-                    <span>·</span>
-                    <span>{e.lesson_duration_minutes} דק׳</span>
-                    <span>·</span>
-                    <span>{ROLE_LABELS[e.enrollment_role] ?? e.enrollment_role}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                    <span>מ-{e.start_date}</span>
-                    {e.end_date && <span>עד {e.end_date}</span>}
-                  </div>
+            <div
+              key={e.id}
+              onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
+              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-foreground">
+                  {e.students?.first_name} {e.students?.last_name}
+                  <span className="mx-1.5 text-muted-foreground">←</span>
+                  {e.teachers?.first_name} {e.teachers?.last_name}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                  <span>{e.instruments?.name}</span>
+                  <span>·</span>
+                  <span>{e.schools?.name}</span>
+                  <span>·</span>
+                  <span>{e.lesson_duration_minutes} דק׳</span>
+                  <span>·</span>
+                  <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
+                  <span>·</span>
+                  <span>{ROLE_LABELS[e.enrollment_role] ?? e.enrollment_role}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={e.is_active ? "default" : "secondary"}>
-                    {e.is_active ? "פעיל" : "לא פעיל"}
-                  </Badge>
-                  <Button variant="ghost" size="sm" onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}>
-                    עריכה
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 mr-3">
+                <Badge variant={e.is_active ? "default" : "secondary"} className="rounded-lg">
+                  {e.is_active ? "פעיל" : "לא פעיל"}
+                </Badge>
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </div>
           ))}
         </div>
       )}

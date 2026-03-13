@@ -7,7 +7,6 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface FormData {
@@ -56,22 +55,20 @@ const AdminInstrumentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת כלי נגינה" : "כלי נגינה חדש"} backPath="/admin/instruments">
-      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="max-w-md space-y-6 pb-20 md:pb-0">
-        <Card>
-          <CardHeader><CardTitle>פרטים</CardTitle></CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label>שם *</Label>
-              <Input {...register("name", { required: "שם שדה חובה" })} />
-              {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-            </div>
-          </CardContent>
-        </Card>
-        <div className="flex gap-2">
-          <Button type="submit" disabled={mutation.isPending}>
+      <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="max-w-md space-y-5">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">פרטים</h2>
+          <div className="space-y-1.5">
+            <Label className="text-sm">שם *</Label>
+            <Input {...register("name", { required: "שם שדה חובה" })} className="h-12 rounded-xl" />
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+          </div>
+        </div>
+        <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
+          <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/admin/instruments")}>
+          <Button type="button" variant="outline" onClick={() => navigate("/admin/instruments")} className="h-14 rounded-2xl text-base px-6">
             ביטול
           </Button>
         </div>

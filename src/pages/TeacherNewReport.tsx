@@ -255,9 +255,9 @@ const TeacherNewReport = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">כל בתי הספר</SelectItem>
-                    {teacherSchools?.map((ts) => (
-                      <SelectItem key={ts.school_id} value={ts.school_id}>
-                        {ts.schools?.name}
+                    {enrollmentSchools.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
