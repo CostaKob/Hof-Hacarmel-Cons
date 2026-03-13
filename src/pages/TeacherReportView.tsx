@@ -3,7 +3,7 @@ import { useReportDetails, useReportLines } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Pencil } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   present: "נוכח/ת",
