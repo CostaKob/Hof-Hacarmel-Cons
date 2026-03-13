@@ -60,7 +60,7 @@ const TeacherReportView = () => {
             >
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <h1 className="text-lg font-bold">צפייה בדיווח</h1>
+            <h1 className="text-lg font-bold">צפייה ביום עבודה</h1>
           </div>
           <Button
             variant="secondary"
