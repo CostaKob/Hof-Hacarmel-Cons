@@ -11,6 +11,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import TeacherStudents from "./pages/TeacherStudents";
 import TeacherStudentCard from "./pages/TeacherStudentCard";
+import TeacherReports from "./pages/TeacherReports";
+import TeacherNewReport from "./pages/TeacherNewReport";
+import TeacherReportView from "./pages/TeacherReportView";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -55,6 +58,30 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["teacher"]}>
                   <TeacherStudentCard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/reports"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/reports/new"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherNewReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/teacher/reports/:reportId"
+              element={
+                <ProtectedRoute allowedRoles={["teacher"]}>
+                  <TeacherReportView />
                 </ProtectedRoute>
               }
             />
