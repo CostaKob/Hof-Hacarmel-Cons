@@ -139,6 +139,39 @@ export function useReportLines(reportId: string | undefined) {
   });
 }
 
+// ─── All reports for a teacher on a specific date ───
+export function useTeacherReportsForDate(teacherId: string | undefined, date: string | undefined) {
+  return useQuery({
+    queryKey: ["teacher-reports-for-date", teacherId, date],
+    enabled: !!teacherId && !!date,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports")
+        .select(`*, schools (name)`)
+        .eq("teacher_id", teacherId!)
+        .eq("report_date", date!);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// ─── All report lines for multiple report IDs ───
+export function useReportLinesForReports(reportIds: string[]) {
+  return useQuery({
+    queryKey: ["report-lines-multi", ...reportIds],
+    enabled: reportIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("report_lines")
+        .select(`*, enrollments (student_id, instrument_id, lesson_duration_minutes, enrollment_role, school_id, students (first_name, last_name), instruments (name), schools (name))`)
+        .in("report_id", reportIds);
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 // ─── Kilometers used on a specific date ───
 export function useKilometersForDate(teacherId: string | undefined, date: string | undefined) {
   return useQuery({
