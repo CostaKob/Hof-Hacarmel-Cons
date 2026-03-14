@@ -66,6 +66,7 @@ const TeacherNewReport = () => {
 
   const [schoolId, setSchoolId] = useState<string>("");
   const [reportDate, setReportDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [kilometers, setKilometers] = useState<string>("0");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -193,7 +194,7 @@ const TeacherNewReport = () => {
             {/* Date */}
             <div className="space-y-1.5">
               <Label className="text-sm">תאריך דיווח *</Label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="outline"
@@ -207,7 +208,12 @@ const TeacherNewReport = () => {
                   <Calendar
                     mode="single"
                     selected={reportDate}
-                    onSelect={(d) => d && setReportDate(d)}
+                    onSelect={(d) => {
+                      if (d) {
+                        setReportDate(d);
+                        setCalendarOpen(false);
+                      }
+                    }}
                     initialFocus
                     className="p-3 pointer-events-auto"
                   />
