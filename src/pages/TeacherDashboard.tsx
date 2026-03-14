@@ -129,28 +129,10 @@ const TeacherDashboard = () => {
         {/* Navigation cards */}
         <div className="space-y-3">
           <NavCard
-            icon={Users}
-            title="התלמידים שלי"
-            subtitle={`${uniqueStudents} תלמידים פעילים`}
-            onClick={() => navigate("/teacher/students")}
-          />
-          <NavCard
-            icon={CalendarDays}
-            title="ימי העבודה שלי"
-            subtitle="צפייה ועריכת ימי עבודה"
-            onClick={() => navigate("/teacher/reports")}
-          />
-          <NavCard
             icon={BarChart3}
             title="סיכום שיעורים שנתי"
             subtitle="סיכום נוכחות לפי תלמידים"
             onClick={() => navigate("/teacher/yearly-summary")}
-          />
-          <NavCard
-            icon={Car}
-            title="סיכום נסיעות"
-            subtitle="פירוט ק״מ חודש נוכחי וקודם"
-            onClick={() => navigate("/teacher/travel-summary")}
           />
           <NavCard
             icon={KeyRound}
