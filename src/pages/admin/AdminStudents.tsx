@@ -120,6 +120,26 @@ const AdminStudents = () => {
             <SelectItem value="inactive">לא פעילים</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={gradeFilter} onValueChange={setGradeFilter}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הכיתות</SelectItem>
+            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
+              <SelectItem key={g} value={g}>{g}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={levelFilter} onValueChange={setLevelFilter}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הרמות</SelectItem>
+            {["א","ב","ג"].map((l) => (
+              <SelectItem key={l} value={l}>{l}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Card-based list */}
