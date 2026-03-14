@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
