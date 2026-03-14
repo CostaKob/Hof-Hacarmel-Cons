@@ -1,19 +1,49 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
+import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3 } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
+
+const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+
+function formatDateHe(dateStr: string) {
+  const d = new Date(dateStr + "T00:00:00");
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const year = d.getFullYear();
+  const weekday = WEEKDAYS_HE[d.getDay()];
+  return { formatted: `${day}/${month}/${year}`, weekday };
+}
+
+function getMonthName(offset: number) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + offset);
+  return d.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+}
 
 const TeacherDashboard = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: enrollments } = useTeacherEnrollments(teacher?.id);
-  const { data: lastReport } = useTeacherLastReport(teacher?.id);
+
+  const { data: currentMonthReports } = useTeacherMonthReports(teacher?.id, 0);
+  const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
+
+  const currentMonthWorkdays = currentMonthReports?.length ?? 0;
+  const currentMonthKm = currentMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
+  const prevMonthKm = prevMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
+
+  // Combine current + previous month for the travel detail list
+  const allReportsForTravel = [
+    ...(currentMonthReports ?? []),
+    ...(prevMonthReports ?? []),
+  ].sort((a, b) => b.report_date.localeCompare(a.report_date));
 
   if (teacherLoading) {
     return (
@@ -48,11 +78,12 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-4 pb-8 space-y-5">
-        {/* Stat cards row */}
-        <div className="grid grid-cols-3 gap-3">
-          <StatCard icon={GraduationCap} label="רישומים" value={activeCount} />
-          <StatCard icon={Users} label="תלמידים" value={uniqueStudents} />
-          <StatCard icon={CalendarDays} label="דיווח אחרון" value={lastReport?.report_date ? lastReport.report_date.slice(5) : "—"} small />
+        {/* Stat cards row - 2x2 grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} />
+          <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} />
+          <StatCard icon={Car} label="נסיעות החודש" value={`${currentMonthKm} ק״מ`} small />
+          <StatCard icon={MapPin} label="נסיעות לחודש השכר" value={`${prevMonthKm} ק״מ`} small highlight />
         </div>
 
         {/* Primary action */}
@@ -64,6 +95,47 @@ const TeacherDashboard = () => {
           <FileText className="ml-2 h-5 w-5" />
           יום עבודה חדש
         </Button>
+
+        {/* Travel summary section */}
+        <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
+          <h2 className="font-semibold text-foreground flex items-center gap-2">
+            <Car className="h-4 w-4 text-primary" />
+            סיכום נסיעות
+          </h2>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-muted/30 px-3 py-3 text-center">
+              <p className="text-xs text-muted-foreground mb-1">{getMonthName(0)}</p>
+              <p className="text-lg font-bold text-foreground">{currentMonthKm} ק״מ</p>
+            </div>
+            <div className="rounded-xl bg-primary/10 px-3 py-3 text-center">
+              <p className="text-xs text-muted-foreground mb-1">{getMonthName(-1)}</p>
+              <p className="text-lg font-bold text-primary">{prevMonthKm} ק״מ</p>
+            </div>
+          </div>
+
+          {allReportsForTravel.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-2">אין נסיעות מדווחות</p>
+          ) : (
+            <div className="space-y-1.5">
+              <p className="text-xs text-muted-foreground">פירוט ימי עבודה:</p>
+              {allReportsForTravel.map((r) => {
+                const { formatted, weekday } = formatDateHe(r.report_date);
+                return (
+                  <div
+                    key={r.id}
+                    className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-sm"
+                  >
+                    <span className="text-foreground">
+                      {formatted} <span className="text-muted-foreground">({weekday})</span>
+                    </span>
+                    <span className="font-medium text-foreground">{Number(r.kilometers)} ק״מ</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Navigation cards */}
         <div className="space-y-3">
@@ -97,10 +169,10 @@ const TeacherDashboard = () => {
   );
 };
 
-function StatCard({ icon: Icon, label, value, small }: { icon: React.ElementType; label: string; value: string | number; small?: boolean }) {
+function StatCard({ icon: Icon, label, value, small, highlight }: { icon: React.ElementType; label: string; value: string | number; small?: boolean; highlight?: boolean }) {
   return (
-    <div className="rounded-2xl bg-card p-4 text-center shadow-sm border border-border">
-      <Icon className="mx-auto h-5 w-5 text-primary mb-1" />
+    <div className={`rounded-2xl p-4 text-center shadow-sm border ${highlight ? "bg-primary/10 border-primary/30" : "bg-card border-border"}`}>
+      <Icon className={`mx-auto h-5 w-5 mb-1 ${highlight ? "text-primary" : "text-primary"}`} />
       <div className={`font-bold text-foreground ${small ? "text-sm" : "text-2xl"}`}>{value}</div>
       <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
     </div>
