@@ -91,8 +91,11 @@ const AdminTeachers = () => {
           ))}
         </div>
       )}
+
+      <TeacherImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
   );
+};
 };
 
 export default AdminTeachers;
