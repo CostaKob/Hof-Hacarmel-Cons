@@ -96,47 +96,6 @@ const TeacherDashboard = () => {
           יום עבודה חדש
         </Button>
 
-        {/* Travel summary section */}
-        <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <Car className="h-4 w-4 text-primary" />
-            סיכום נסיעות
-          </h2>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-muted/30 px-3 py-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">{getMonthName(0)}</p>
-              <p className="text-lg font-bold text-foreground">{currentMonthKm} ק״מ</p>
-            </div>
-            <div className="rounded-xl bg-primary/10 px-3 py-3 text-center">
-              <p className="text-xs text-muted-foreground mb-1">{getMonthName(-1)}</p>
-              <p className="text-lg font-bold text-primary">{prevMonthKm} ק״מ</p>
-            </div>
-          </div>
-
-          {allReportsForTravel.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-2">אין נסיעות מדווחות</p>
-          ) : (
-            <div className="space-y-1.5">
-              <p className="text-xs text-muted-foreground">פירוט ימי עבודה:</p>
-              {allReportsForTravel.map((r) => {
-                const { formatted, weekday } = formatDateHe(r.report_date);
-                return (
-                  <div
-                    key={r.id}
-                    className="flex items-center justify-between rounded-xl border border-border px-3 py-2 text-sm"
-                  >
-                    <span className="text-foreground">
-                      {formatted} <span className="text-muted-foreground">({weekday})</span>
-                    </span>
-                    <span className="font-medium text-foreground">{Number(r.kilometers)} ק״מ</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
         {/* Navigation cards */}
         <div className="space-y-3">
           <NavCard
