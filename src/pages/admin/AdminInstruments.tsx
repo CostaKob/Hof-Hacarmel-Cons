@@ -46,18 +46,24 @@ const AdminInstruments = () => {
       ) : filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">לא נמצאו כלי נגינה</p>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((i) => (
-            <div
-              key={i.id}
-              onClick={() => navigate(`/admin/instruments/${i.id}/edit`)}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              <span className="font-semibold text-foreground">{i.name}</span>
-              <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-            </div>
-          ))}
-        </div>
+        <>
+          <p className="text-sm text-muted-foreground mb-2">{filtered.length} כלי נגינה</p>
+          <div className="space-y-2">
+            {filtered.map((i, index) => (
+              <div
+                key={i.id}
+                onClick={() => navigate(`/admin/instruments/${i.id}/edit`)}
+                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                  <span className="font-semibold text-foreground">{i.name}</span>
+                </div>
+                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </AdminLayout>
   );

@@ -31,26 +31,32 @@ const AdminSchools = () => {
       ) : schools.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">לא נמצאו בתי ספר</p>
       ) : (
-        <div className="space-y-2">
-          {schools.map((s) => (
-            <div
-              key={s.id}
-              onClick={() => navigate(`/admin/schools/${s.id}/edit`)}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              <div>
-                <p className="font-semibold text-foreground">{s.name}</p>
-                {s.city && <p className="text-sm text-muted-foreground mt-0.5">{s.city}</p>}
+        <>
+          <p className="text-sm text-muted-foreground mb-2">{schools.length} בתי ספר</p>
+          <div className="space-y-2">
+            {schools.map((s, index) => (
+              <div
+                key={s.id}
+                onClick={() => navigate(`/admin/schools/${s.id}/edit`)}
+                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                  <div>
+                    <p className="font-semibold text-foreground">{s.name}</p>
+                    {s.city && <p className="text-sm text-muted-foreground mt-0.5">{s.city}</p>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={s.is_active ? "default" : "secondary"} className="rounded-lg">
+                    {s.is_active ? "פעיל" : "לא פעיל"}
+                  </Badge>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={s.is_active ? "default" : "secondary"} className="rounded-lg">
-                  {s.is_active ? "פעיל" : "לא פעיל"}
-                </Badge>
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </AdminLayout>
   );
