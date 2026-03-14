@@ -286,6 +286,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
               first_name: row.data.student_first_name,
               last_name: row.data.student_last_name,
               national_id: row.data.national_id || null,
+              gender: row.data.gender || null,
               grade: row.data.grade || null,
               playing_level: row.data.playing_level || null,
               parent_name: row.data.parent_name || null,
