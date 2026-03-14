@@ -20,6 +20,7 @@ interface StudentRowData {
   student_last_name: string;
   national_id?: string;
   gender?: string;
+  student_phone?: string;
   grade?: string;
   playing_level?: string;
   parent_name?: string;
