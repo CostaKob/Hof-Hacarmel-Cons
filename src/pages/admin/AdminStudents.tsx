@@ -28,7 +28,11 @@ const AdminStudents = () => {
         .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data as any[]).sort((a: any, b: any) => {
+        const nameA = `${a.students?.last_name ?? ""} ${a.students?.first_name ?? ""}`;
+        const nameB = `${b.students?.last_name ?? ""} ${b.students?.first_name ?? ""}`;
+        return nameA.localeCompare(nameB, "he");
+      });
     },
   });
 
