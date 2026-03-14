@@ -96,6 +96,5 @@ const AdminTeachers = () => {
     </AdminLayout>
   );
 };
-};
 
 export default AdminTeachers;
