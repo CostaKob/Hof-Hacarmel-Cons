@@ -166,7 +166,27 @@ const AdminStudentForm = () => {
               </div>
             ))}
 
-            {/* Grade dropdown */}
+            {/* Gender dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">מין</Label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר מין" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">ללא</SelectItem>
+                      {GENDERS.map((g) => (
+                        <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+
             <div className="space-y-1.5">
               <Label className="text-sm">כיתה</Label>
               <Controller
