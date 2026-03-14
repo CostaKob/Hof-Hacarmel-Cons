@@ -268,6 +268,35 @@ const AdminTeacherCard = () => {
           </div>
         </div>
 
+        {/* Roles Section */}
+        {hasLogin && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-foreground text-base">הרשאות</h2>
+            </div>
+            {([
+              { value: "teacher", label: "מורה" },
+              { value: "admin", label: "מנהל" },
+              { value: "secretary", label: "מזכירות" },
+            ] as const).map((role) => (
+              <div key={role.value} className="flex items-center gap-3 py-1">
+                <Checkbox
+                  id={`role-${role.value}`}
+                  checked={userRoles.includes(role.value)}
+                  onCheckedChange={(checked) =>
+                    toggleRoleMutation.mutate({ role: role.value, add: !!checked })
+                  }
+                  disabled={toggleRoleMutation.isPending}
+                />
+                <Label htmlFor={`role-${role.value}`} className="text-sm cursor-pointer">
+                  {role.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="grid gap-3 grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm">
             <p className="text-2xl font-bold text-primary">{enrollmentsCount}</p>
