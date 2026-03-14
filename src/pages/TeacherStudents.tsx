@@ -60,7 +60,7 @@ const TeacherStudents = () => {
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">התלמידים שלי</h1>
+          <h1 className="text-lg font-bold">התלמידים שלי ({filtered.length})</h1>
         </div>
       </header>
 
