@@ -36,13 +36,19 @@ const TeacherStudents = () => {
 
   const filtered = useMemo(() => {
     if (!enrollments) return [];
-    return enrollments.filter((e) => {
-      const studentName = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}`;
-      if (search && !studentName.includes(search)) return false;
-      if (schoolFilter !== "all" && e.school_id !== schoolFilter) return false;
-      if (instrumentFilter !== "all" && e.instrument_id !== instrumentFilter) return false;
-      return true;
-    });
+    return enrollments
+      .filter((e) => {
+        const studentName = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}`;
+        if (search && !studentName.includes(search)) return false;
+        if (schoolFilter !== "all" && e.school_id !== schoolFilter) return false;
+        if (instrumentFilter !== "all" && e.instrument_id !== instrumentFilter) return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const nameA = `${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`;
+        const nameB = `${b.students?.first_name ?? ""} ${b.students?.last_name ?? ""}`;
+        return nameA.localeCompare(nameB, "he");
+      });
   }, [enrollments, search, schoolFilter, instrumentFilter]);
 
   const isLoading = teacherLoading || enrollmentsLoading;
