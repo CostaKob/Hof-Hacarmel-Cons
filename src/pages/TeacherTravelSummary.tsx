@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronRight, Car } from "lucide-react";
+import { ChevronRight, Car, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherReportsByMonth } from "@/hooks/useTeacherDashboardData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
