@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight, Car } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
-import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
+import { useTeacherReportsByMonth } from "@/hooks/useTeacherDashboardData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
+const MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
 
 function formatDateHe(dateStr: string) {
   const d = new Date(dateStr + "T00:00:00");
@@ -14,25 +17,30 @@ function formatDateHe(dateStr: string) {
   return { formatted: `${day}/${month}/${year}`, weekday };
 }
 
-function getMonthName(offset: number) {
-  const d = new Date();
-  d.setMonth(d.getMonth() + offset);
-  return d.toLocaleDateString("he-IL", { month: "long", year: "numeric" });
+function buildMonthOptions() {
+  const now = new Date();
+  const options: { value: string; label: string }[] = [];
+  // Show last 12 months including current
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${d.getMonth()}`;
+    const label = `${MONTHS_HE[d.getMonth()]} ${d.getFullYear()}`;
+    options.push({ value, label });
+  }
+  return options;
 }
 
 const TeacherTravelSummary = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading } = useTeacherProfile();
-  const { data: currentMonthReports } = useTeacherMonthReports(teacher?.id, 0);
-  const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
 
-  const currentMonthKm = currentMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
-  const prevMonthKm = prevMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
+  const now = new Date();
+  const [selected, setSelected] = useState(`${now.getFullYear()}-${now.getMonth()}`);
+  const [selYear, selMonth] = selected.split("-").map(Number);
 
-  const allReports = [
-    ...(currentMonthReports ?? []),
-    ...(prevMonthReports ?? []),
-  ].sort((a, b) => b.report_date.localeCompare(a.report_date));
+  const { data: reports } = useTeacherReportsByMonth(teacher?.id, selYear, selMonth);
+  const totalKm = reports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
+  const monthOptions = buildMonthOptions();
 
   if (isLoading) {
     return (
@@ -57,28 +65,40 @@ const TeacherTravelSummary = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 py-5 space-y-5">
-        {/* Month totals */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-card border border-border p-4 text-center shadow-sm">
-            <p className="text-xs text-muted-foreground mb-1">{getMonthName(0)}</p>
-            <p className="text-2xl font-bold text-foreground">{currentMonthKm}</p>
-            <p className="text-xs text-muted-foreground">ק״מ</p>
-          </div>
-          <div className="rounded-2xl bg-primary/10 border border-primary/30 p-4 text-center shadow-sm">
-            <p className="text-xs text-muted-foreground mb-1">{getMonthName(-1)}</p>
-            <p className="text-2xl font-bold text-primary">{prevMonthKm}</p>
-            <p className="text-xs text-muted-foreground">ק״מ (לחודש השכר)</p>
-          </div>
+        {/* Month selector */}
+        <Select dir="rtl" value={selected} onValueChange={setSelected}>
+          <SelectTrigger className="w-full rounded-xl">
+            <SelectValue placeholder="בחר חודש" />
+          </SelectTrigger>
+          <SelectContent>
+            {monthOptions.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Total */}
+        <div className="rounded-2xl bg-primary/10 border border-primary/30 p-4 text-center shadow-sm">
+          <p className="text-xs text-muted-foreground mb-1">
+            {MONTHS_HE[selMonth]} {selYear}
+          </p>
+          <p className="text-3xl font-bold text-primary">{totalKm}</p>
+          <p className="text-xs text-muted-foreground">ק״מ</p>
         </div>
 
         {/* Detailed list */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-3">
-          <h2 className="font-semibold text-foreground text-sm">פירוט ימי עבודה</h2>
-          {allReports.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-4">אין נסיעות מדווחות</p>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground text-sm">פירוט ימי עבודה</h2>
+            <span className="text-xs text-muted-foreground">{reports?.length ?? 0} ימים</span>
+          </div>
+          {(!reports || reports.length === 0) ? (
+            <p className="text-center text-sm text-muted-foreground py-4">אין נסיעות מדווחות בחודש זה</p>
           ) : (
             <div className="space-y-1.5">
-              {allReports.map((r) => {
+              {reports.map((r) => {
                 const { formatted, weekday } = formatDateHe(r.report_date);
                 return (
                   <div
