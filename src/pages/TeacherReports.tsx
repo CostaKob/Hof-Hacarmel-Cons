@@ -4,6 +4,7 @@ import { parseISO } from "date-fns";
 import { useTeacherProfile, useTeacherReports } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Plus, CalendarDays, Navigation, Users, Pencil } from "lucide-react";
@@ -84,11 +85,11 @@ const TeacherReports = () => {
         {/* Date filter */}
         <div className="max-w-[200px] space-y-1">
           <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
-          <Input
-            type="date"
+          <DateInput
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="h-11 rounded-xl bg-card"
+            onChange={setDateFilter}
+            placeholder="בחר תאריך"
+            className="h-11 bg-card"
           />
         </div>
 
