@@ -152,6 +152,7 @@ const TeacherStudentCard = () => {
             <InfoRow icon={School} label="בית ספר" value={enrollment.schools?.name} />
             <InfoRow icon={Calendar} label="תאריך התחלה" value={enrollment.start_date} />
             {enrollment.end_date && <InfoRow icon={Calendar} label="תאריך סיום" value={enrollment.end_date} />}
+            {(() => { const yrs = calcYearsOfPlaying((enrollment as any).instrument_start_date); return yrs !== null ? <InfoRow icon={Music} label="שנות נגינה" value={String(yrs)} /> : null; })()}
             <div className="flex items-center gap-2 pt-1">
               <Badge variant={enrollment.is_active ? "default" : "secondary"} className="rounded-lg">
                 {enrollment.is_active ? "פעיל" : "לא פעיל"}
