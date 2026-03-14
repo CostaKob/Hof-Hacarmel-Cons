@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft } from "lucide-react";
+import { Plus, Search, ChevronLeft, FileSpreadsheet } from "lucide-react";
+import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
 
 const AdminTeachers = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
@@ -48,9 +50,14 @@ const AdminTeachers = () => {
             </SelectContent>
           </Select>
         </div>
-        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/teachers/new")}>
-          <Plus className="h-4 w-4" /> מורה חדש
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" /> ייבוא מאקסל
+          </Button>
+          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/teachers/new")}>
+            <Plus className="h-4 w-4" /> מורה חדש
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -84,6 +91,8 @@ const AdminTeachers = () => {
           ))}
         </div>
       )}
+
+      <TeacherImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
   );
 };
