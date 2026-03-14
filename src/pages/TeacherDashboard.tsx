@@ -150,11 +150,14 @@ function StatCard({ icon: Icon, label, value, small, onClick }: { icon: React.El
   return (
     <button
       onClick={onClick}
-      className="rounded-2xl p-4 text-center shadow-sm border bg-card border-border transition-all active:scale-[0.98] hover:shadow-md"
+      className="group rounded-2xl p-4 text-center shadow-sm border bg-card border-border transition-all active:scale-[0.97] hover:shadow-md hover:border-primary/30 cursor-pointer"
     >
-      <Icon className="mx-auto h-5 w-5 mb-1 text-primary" />
+      <div className="mx-auto mb-1 flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
+        <Icon className="h-5 w-5 text-primary" />
+      </div>
       <div className={`font-bold text-foreground ${small ? "text-sm" : "text-2xl"}`}>{value}</div>
       <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
+      <div className="mt-1.5 text-[10px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">לחץ לפרטים ←</div>
     </button>
   );
 }
