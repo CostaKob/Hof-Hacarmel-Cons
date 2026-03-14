@@ -30,6 +30,7 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: enrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: lastReport } = useTeacherLastReport(teacher?.id);
 
   const { data: currentMonthReports } = useTeacherMonthReports(teacher?.id, 0);
   const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
@@ -40,6 +41,16 @@ const TeacherDashboard = () => {
   const currentMonthWorkdays = currentMonthReports?.length ?? 0;
   const currentMonthKm = currentMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
   const prevMonthKm = prevMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
+
+  // 7-day warning logic
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const lastReportDate = lastReport?.report_date ? new Date(lastReport.report_date + "T00:00:00") : null;
+  const noReportsEver = !lastReport?.report_date;
+  const noRecentReport = lastReportDate ? lastReportDate < sevenDaysAgo : false;
+  const showWarning = noReportsEver || noRecentReport;
 
 
 
