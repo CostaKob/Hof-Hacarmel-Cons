@@ -164,13 +164,16 @@ const TeacherDashboard = () => {
   );
 };
 
-function StatCard({ icon: Icon, label, value, small, highlight }: { icon: React.ElementType; label: string; value: string | number; small?: boolean; highlight?: boolean }) {
+function StatCard({ icon: Icon, label, value, small, onClick }: { icon: React.ElementType; label: string; value: string | number; small?: boolean; onClick?: () => void }) {
   return (
-    <div className={`rounded-2xl p-4 text-center shadow-sm border ${highlight ? "bg-primary/10 border-primary/30" : "bg-card border-border"}`}>
-      <Icon className={`mx-auto h-5 w-5 mb-1 ${highlight ? "text-primary" : "text-primary"}`} />
+    <button
+      onClick={onClick}
+      className="rounded-2xl p-4 text-center shadow-sm border bg-card border-border transition-all active:scale-[0.98] hover:shadow-md"
+    >
+      <Icon className="mx-auto h-5 w-5 mb-1 text-primary" />
       <div className={`font-bold text-foreground ${small ? "text-sm" : "text-2xl"}`}>{value}</div>
       <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
-    </div>
+    </button>
   );
 }
 
