@@ -157,7 +157,7 @@ function StatCard({ icon: Icon, label, value, small, onClick }: { icon: React.El
       </div>
       <div className={`font-bold text-foreground ${small ? "text-sm" : "text-2xl"}`}>{value}</div>
       <div className="text-xs text-muted-foreground mt-0.5">{label}</div>
-      <div className="mt-1.5 text-[10px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity">לחץ לפרטים ←</div>
+      <div className="mt-1.5 text-[10px] font-medium text-primary">לחץ לפרטים ←</div>
     </button>
   );
 }
