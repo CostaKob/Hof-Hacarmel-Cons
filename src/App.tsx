@@ -29,6 +29,7 @@ import TeacherReportView from "./pages/TeacherReportView";
 import TeacherEditReport from "./pages/TeacherEditReport";
 import TeacherChangePassword from "./pages/TeacherChangePassword";
 import TeacherYearlySummary from "./pages/TeacherYearlySummary";
+import TeacherTravelSummary from "./pages/TeacherTravelSummary";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
@@ -86,6 +87,7 @@ const App = () => (
             <Route path="/teacher/reports/:reportId/edit" element={<TeacherRoute><TeacherEditReport /></TeacherRoute>} />
             <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
             <Route path="/teacher/yearly-summary" element={<TeacherRoute><TeacherYearlySummary /></TeacherRoute>} />
+            <Route path="/teacher/travel-summary" element={<TeacherRoute><TeacherTravelSummary /></TeacherRoute>} />
             {/* Secretary */}
             <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
