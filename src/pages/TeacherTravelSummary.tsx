@@ -119,6 +119,15 @@ const TeacherTravelSummary = () => {
             </div>
           )}
         </div>
+
+        <Button
+          variant="outline"
+          className="w-full rounded-2xl h-12"
+          onClick={() => navigate("/teacher/reports")}
+        >
+          <CalendarDays className="ml-2 h-4 w-4" />
+          ימי העבודה שלי
+        </Button>
       </main>
     </div>
   );
