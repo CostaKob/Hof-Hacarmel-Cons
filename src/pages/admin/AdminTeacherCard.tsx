@@ -5,6 +5,8 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, KeyRound, UserCheck, UserX, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
 import { toast } from "sonner";
 import {
