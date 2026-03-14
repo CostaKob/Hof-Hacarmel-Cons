@@ -14,13 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      academic_years: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_active: boolean
+          name: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_active?: boolean
+          name: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          start_date?: string
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
+          academic_year_id: string | null
           created_at: string
           end_date: string | null
           enrollment_role: Database["public"]["Enums"]["enrollment_role"]
           id: string
           instrument_id: string
+          instrument_start_date: string | null
           is_active: boolean
           lesson_duration_minutes: number
           lesson_type: Database["public"]["Enums"]["lesson_type"]
@@ -32,11 +61,13 @@ export type Database = {
           teacher_rate_per_lesson: number | null
         }
         Insert: {
+          academic_year_id?: string | null
           created_at?: string
           end_date?: string | null
           enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
           id?: string
           instrument_id: string
+          instrument_start_date?: string | null
           is_active?: boolean
           lesson_duration_minutes: number
           lesson_type?: Database["public"]["Enums"]["lesson_type"]
@@ -48,11 +79,13 @@ export type Database = {
           teacher_rate_per_lesson?: number | null
         }
         Update: {
+          academic_year_id?: string | null
           created_at?: string
           end_date?: string | null
           enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
           id?: string
           instrument_id?: string
+          instrument_start_date?: string | null
           is_active?: boolean
           lesson_duration_minutes?: number
           lesson_type?: Database["public"]["Enums"]["lesson_type"]
@@ -64,6 +97,13 @@ export type Database = {
           teacher_rate_per_lesson?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "enrollments_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "enrollments_instrument_id_fkey"
             columns: ["instrument_id"]
@@ -183,6 +223,7 @@ export type Database = {
       }
       reports: {
         Row: {
+          academic_year_id: string | null
           created_at: string
           created_by_user_id: string | null
           id: string
@@ -195,6 +236,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academic_year_id?: string | null
           created_at?: string
           created_by_user_id?: string | null
           id?: string
@@ -207,6 +249,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academic_year_id?: string | null
           created_at?: string
           created_by_user_id?: string | null
           id?: string
@@ -219,6 +262,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "reports_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reports_created_by_user_id_fkey"
             columns: ["created_by_user_id"]
@@ -320,6 +370,7 @@ export type Database = {
       }
       student_payments: {
         Row: {
+          academic_year_id: string | null
           amount: number
           created_at: string
           created_by_user_id: string | null
@@ -333,6 +384,7 @@ export type Database = {
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
         Insert: {
+          academic_year_id?: string | null
           amount: number
           created_at?: string
           created_by_user_id?: string | null
@@ -346,6 +398,7 @@ export type Database = {
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
         Update: {
+          academic_year_id?: string | null
           amount?: number
           created_at?: string
           created_by_user_id?: string | null
@@ -359,6 +412,13 @@ export type Database = {
           transaction_type?: Database["public"]["Enums"]["transaction_type"]
         }
         Relationships: [
+          {
+            foreignKeyName: "student_payments_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "student_payments_created_by_user_id_fkey"
             columns: ["created_by_user_id"]
@@ -382,6 +442,7 @@ export type Database = {
           created_at: string
           date_of_birth: string | null
           first_name: string
+          grade: string | null
           id: string
           is_active: boolean
           last_name: string
@@ -392,6 +453,7 @@ export type Database = {
           parent_name_2: string | null
           parent_phone: string | null
           parent_phone_2: string | null
+          playing_level: string | null
         }
         Insert: {
           address?: string | null
@@ -399,6 +461,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           first_name: string
+          grade?: string | null
           id?: string
           is_active?: boolean
           last_name: string
@@ -409,6 +472,7 @@ export type Database = {
           parent_name_2?: string | null
           parent_phone?: string | null
           parent_phone_2?: string | null
+          playing_level?: string | null
         }
         Update: {
           address?: string | null
@@ -416,6 +480,7 @@ export type Database = {
           created_at?: string
           date_of_birth?: string | null
           first_name?: string
+          grade?: string | null
           id?: string
           is_active?: boolean
           last_name?: string
@@ -426,6 +491,7 @@ export type Database = {
           parent_name_2?: string | null
           parent_phone?: string | null
           parent_phone_2?: string | null
+          playing_level?: string | null
         }
         Relationships: []
       }
