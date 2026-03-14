@@ -103,13 +103,18 @@ const TeacherReports = () => {
       <main className="mx-auto max-w-lg px-5 pt-4 pb-8 space-y-4">
         {/* Date filter */}
         <div className="max-w-[200px] space-y-1">
-          <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
-          <DateInput
-            value={dateFilter}
-            onChange={setDateFilter}
-            placeholder="בחר תאריך"
-            className="h-11 bg-card"
-          />
+          <Label className="text-xs text-muted-foreground">סינון לפי חודש</Label>
+          <Select value={monthFilter} onValueChange={setMonthFilter}>
+            <SelectTrigger className="h-11 rounded-xl bg-card">
+              <SelectValue placeholder="כל החודשים" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל החודשים</SelectItem>
+              {monthOptions.map((m) => (
+                <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Results */}
