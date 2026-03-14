@@ -142,7 +142,7 @@ const AdminEnrollmentForm = () => {
         enrollment_role: data.enrollment_role as "primary" | "secondary",
         lesson_type: data.lesson_type as "individual" | "group",
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
-        start_date: data.start_date,
+        start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
       };
