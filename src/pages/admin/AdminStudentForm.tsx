@@ -68,6 +68,7 @@ const AdminStudentForm = () => {
         national_id: student.national_id ?? "",
         date_of_birth: student.date_of_birth ?? "",
         gender: (student as any).gender ?? "__none__",
+        phone: (student as any).phone ?? "",
         address: student.address ?? "",
         city: student.city ?? "",
         grade: student.grade ?? "__none__",
