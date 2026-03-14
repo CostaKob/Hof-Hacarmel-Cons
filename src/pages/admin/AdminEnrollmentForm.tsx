@@ -128,6 +128,7 @@ const AdminEnrollmentForm = () => {
         lesson_type: enrollment.lesson_type,
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         start_date: enrollment.start_date,
+        instrument_start_date: (enrollment as any).instrument_start_date ?? "",
         is_active: enrollment.is_active,
       });
     }
