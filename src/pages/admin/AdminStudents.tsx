@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, FileSpreadsheet } from "lucide-react";
+import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [durationFilter, setDurationFilter] = useState("all");
@@ -68,11 +70,19 @@ const AdminStudents = () => {
             className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
-          <Plus className="h-4 w-4" />
-          תלמיד חדש
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" />
+            ייבוא מאקסל
+          </Button>
+          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
+            <Plus className="h-4 w-4" />
+            תלמיד חדש
+          </Button>
+        </div>
       </div>
+
+      <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
