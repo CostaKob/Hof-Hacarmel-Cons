@@ -70,14 +70,16 @@ const AdminYearlySummary = () => {
   }, [enrollments, lines]);
 
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      if (search && !r.studentName.includes(search)) return false;
-      if (teacherFilter !== "all" && r.teacherName !== teacherFilter) return false;
-      if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
-      if (activeFilter === "active" && !r.isActive) return false;
-      if (activeFilter === "inactive" && r.isActive) return false;
-      return true;
-    });
+    return rows
+      .filter((r) => {
+        if (search && !r.studentName.includes(search)) return false;
+        if (teacherFilter !== "all" && r.teacherName !== teacherFilter) return false;
+        if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
+        if (activeFilter === "active" && !r.isActive) return false;
+        if (activeFilter === "inactive" && r.isActive) return false;
+        return true;
+      })
+      .sort((a, b) => a.studentName.localeCompare(b.studentName, "he"));
   }, [rows, search, teacherFilter, schoolFilter, activeFilter]);
 
   const teacherOptions = useMemo(() => {

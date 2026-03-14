@@ -19,7 +19,7 @@ const AdminTeachers = () => {
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("*").order("last_name");
+      const { data, error } = await supabase.from("teachers").select("*").order("last_name").order("first_name");
       if (error) throw error;
       return data;
     },
