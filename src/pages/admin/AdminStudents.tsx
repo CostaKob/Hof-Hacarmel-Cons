@@ -159,7 +159,7 @@ const AdminStudents = () => {
               <div
                 key={r.id}
                 onClick={() => navigate(`/admin/students/${r.students?.id}`)}
-                className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.is_active ? "opacity-50" : ""}`}
+                className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
