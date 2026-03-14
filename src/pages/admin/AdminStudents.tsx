@@ -48,8 +48,8 @@ const AdminStudents = () => {
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (activeFilter === "active" && !r.is_active) return false;
-    if (activeFilter === "inactive" && r.is_active) return false;
+    if (activeFilter === "active" && !r.students?.is_active) return false;
+    if (activeFilter === "inactive" && r.students?.is_active) return false;
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     return true;
@@ -159,7 +159,7 @@ const AdminStudents = () => {
               <div
                 key={r.id}
                 onClick={() => navigate(`/admin/students/${r.students?.id}`)}
-                className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.is_active ? "opacity-50" : ""}`}
+                className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
@@ -194,8 +194,8 @@ const AdminStudents = () => {
                     </div>
                   </div>
                 </div>
-                <Badge variant={r.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
-                  {r.is_active ? "פעיל" : "לא פעיל"}
+                <Badge variant={r.students?.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
+                  {r.students?.is_active ? "פעיל" : "לא פעיל"}
                 </Badge>
               </div>
             ))}
