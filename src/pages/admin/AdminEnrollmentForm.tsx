@@ -19,7 +19,6 @@ interface EnrollmentFormData {
   enrollment_role: string;
   lesson_type: string;
   lesson_duration_minutes: string;
-  start_date: string;
   instrument_start_date: string;
   is_active: boolean;
 }
@@ -127,8 +126,7 @@ const AdminEnrollmentForm = () => {
         enrollment_role: enrollment.enrollment_role,
         lesson_type: enrollment.lesson_type,
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
-        start_date: enrollment.start_date,
-        instrument_start_date: (enrollment as any).instrument_start_date ?? "",
+        instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
         is_active: enrollment.is_active,
       });
     }
@@ -144,7 +142,7 @@ const AdminEnrollmentForm = () => {
         enrollment_role: data.enrollment_role as "primary" | "secondary",
         lesson_type: data.lesson_type as "individual" | "group",
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
-        start_date: data.start_date,
+        start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
       };
@@ -267,13 +265,9 @@ const AdminEnrollmentForm = () => {
           <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-sm">תאריך התחלה *</Label>
-              <Input type="date" {...register("start_date", { required: "תאריך התחלה שדה חובה" })} className="h-12 rounded-xl" />
-              {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">תאריך תחילת נגינה</Label>
-              <Input type="date" {...register("instrument_start_date")} className="h-12 rounded-xl" />
+              <Label className="text-sm">תאריך תחילת נגינה *</Label>
+              <Input type="date" {...register("instrument_start_date", { required: "תאריך תחילת נגינה שדה חובה" })} className="h-12 rounded-xl" />
+              {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
             </div>
             <div className="flex items-center gap-3 sm:col-span-2">
               <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
