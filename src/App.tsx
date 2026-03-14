@@ -31,6 +31,8 @@ import TeacherChangePassword from "./pages/TeacherChangePassword";
 import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
+import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
+import AdminYearTransition from "./pages/admin/AdminYearTransition";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
