@@ -4,9 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, KeyRound, UserCheck, UserX } from "lucide-react";
+import { Pencil, KeyRound, UserCheck, UserX, Trash2 } from "lucide-react";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const AdminTeacherCard = () => {
   const { teacherId } = useParams();
@@ -86,6 +91,18 @@ const AdminTeacherCard = () => {
     onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
   });
 
+  const deleteTeacherMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("teachers").delete().eq("id", teacherId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("המורה נמחק בהצלחה");
+      navigate("/admin/teachers");
+    },
+    onError: () => toast.error("שגיאה במחיקת המורה. ייתכן שיש רישומים או דיווחים מקושרים."),
+  });
+
   if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
 
@@ -106,9 +123,36 @@ const AdminTeacherCard = () => {
           <Badge variant={teacher.is_active ? "default" : "secondary"} className="rounded-lg">
             {teacher.is_active ? "פעיל" : "לא פעיל"}
           </Badge>
-          <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/teachers/${teacherId}/edit`)}>
-            <Pencil className="h-4 w-4" /> עריכה
-          </Button>
+          <div className="flex gap-2">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="h-11 rounded-xl text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" /> מחיקה
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>מחיקת מורה</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    האם למחוק את {teacher.first_name} {teacher.last_name}? פעולה זו אינה ניתנת לביטול.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex-row-reverse gap-2 sm:flex-row-reverse">
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => deleteTeacherMutation.mutate()}
+                    disabled={deleteTeacherMutation.isPending}
+                  >
+                    {deleteTeacherMutation.isPending ? "מוחק..." : "מחק"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/teachers/${teacherId}/edit`)}>
+              <Pencil className="h-4 w-4" /> עריכה
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
