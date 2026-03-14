@@ -171,6 +171,18 @@ const AdminStudents = () => {
                       <span>{r.teachers.first_name} {r.teachers.last_name}</span>
                     </>
                   )}
+                  {r.students?.grade && (
+                    <>
+                      <span>·</span>
+                      <span>כיתה {r.students.grade}</span>
+                    </>
+                  )}
+                  {r.students?.playing_level && (
+                    <>
+                      <span>·</span>
+                      <span>רמה {r.students.playing_level}</span>
+                    </>
+                  )}
                 </div>
               </div>
               <Badge variant={r.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">

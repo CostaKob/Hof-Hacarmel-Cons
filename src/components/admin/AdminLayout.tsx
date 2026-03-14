@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut, BarChart3 } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut, BarChart3, CalendarDays } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 const NAV_ITEMS = [
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { path: "/admin/schools", label: "בתי ספר", icon: School },
   { path: "/admin/instruments", label: "כלי נגינה", icon: Music },
   { path: "/admin/yearly-summary", label: "סיכום שנתי", icon: BarChart3 },
+  { path: "/admin/academic-years", label: "שנות לימודים", icon: CalendarDays },
 ];
 
 interface AdminLayoutProps {

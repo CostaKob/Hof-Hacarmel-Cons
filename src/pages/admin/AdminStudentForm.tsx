@@ -1,14 +1,16 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { GRADES, PLAYING_LEVELS } from "@/lib/constants";
 
 interface StudentFormData {
   first_name: string;
@@ -17,6 +19,8 @@ interface StudentFormData {
   date_of_birth: string;
   address: string;
   city: string;
+  grade: string;
+  playing_level: string;
   parent_name: string;
   parent_phone: string;
   parent_email: string;
@@ -32,8 +36,8 @@ const AdminStudentForm = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true },
+  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
+    defaultValues: { is_active: true, grade: "", playing_level: "" },
   });
 
   const isActive = watch("is_active");
@@ -57,6 +61,8 @@ const AdminStudentForm = () => {
         date_of_birth: student.date_of_birth ?? "",
         address: student.address ?? "",
         city: student.city ?? "",
+        grade: (student as any).grade ?? "",
+        playing_level: (student as any).playing_level ?? "",
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
@@ -77,6 +83,8 @@ const AdminStudentForm = () => {
         date_of_birth: data.date_of_birth || null,
         address: data.address || null,
         city: data.city || null,
+        grade: data.grade || null,
+        playing_level: data.playing_level || null,
         parent_name: data.parent_name || null,
         parent_phone: data.parent_phone || null,
         parent_email: data.parent_email || null,
@@ -138,6 +146,47 @@ const AdminStudentForm = () => {
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
               </div>
             ))}
+
+            {/* Grade dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">כיתה</Label>
+              <Controller
+                name="grade"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">ללא</SelectItem>
+                      {GRADES.map((g) => (
+                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            {/* Playing level dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">רמת נגינה</Label>
+              <Controller
+                name="playing_level"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר רמה" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">ללא</SelectItem>
+                      {PLAYING_LEVELS.map((l) => (
+                        <SelectItem key={l} value={l}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
             <div className="flex items-center gap-3 sm:col-span-2">
               <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
               <Label>פעיל</Label>
