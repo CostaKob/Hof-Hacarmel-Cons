@@ -98,11 +98,11 @@ const AdminAcademicYears = () => {
               </div>
               <div className="space-y-1.5">
                 <Label>תאריך התחלה</Label>
-                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-12 rounded-xl" />
+                <DateInput value={startDate} onChange={setStartDate} placeholder="תאריך התחלה" />
               </div>
               <div className="space-y-1.5">
                 <Label>תאריך סיום</Label>
-                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-12 rounded-xl" />
+                <DateInput value={endDate} onChange={setEndDate} placeholder="תאריך סיום" />
               </div>
             </div>
             <div className="flex gap-2">
