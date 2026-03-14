@@ -105,6 +105,19 @@ const AdminTeacherCard = () => {
     onError: () => toast.error("שגיאה במחיקת המורה. ייתכן שיש רישומים או דיווחים מקושרים."),
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: async (newActive: boolean) => {
+      const { error } = await supabase.from("teachers").update({ is_active: newActive }).eq("id", teacherId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher", teacherId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-teachers"] });
+      toast.success("הסטטוס עודכן בהצלחה");
+    },
+    onError: () => toast.error("שגיאה בעדכון הסטטוס"),
+  });
+
   if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
 
