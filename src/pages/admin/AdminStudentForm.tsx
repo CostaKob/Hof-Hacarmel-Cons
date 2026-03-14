@@ -37,7 +37,7 @@ const AdminStudentForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true, grade: "", playing_level: "" },
+    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__" },
   });
 
   const isActive = watch("is_active");
@@ -61,8 +61,8 @@ const AdminStudentForm = () => {
         date_of_birth: student.date_of_birth ?? "",
         address: student.address ?? "",
         city: student.city ?? "",
-        grade: (student as any).grade ?? "",
-        playing_level: (student as any).playing_level ?? "",
+        grade: student.grade ?? "__none__",
+        playing_level: student.playing_level ?? "__none__",
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
@@ -83,8 +83,8 @@ const AdminStudentForm = () => {
         date_of_birth: data.date_of_birth || null,
         address: data.address || null,
         city: data.city || null,
-        grade: data.grade || null,
-        playing_level: data.playing_level || null,
+        grade: data.grade === "__none__" ? null : data.grade || null,
+        playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
         parent_name: data.parent_name || null,
         parent_phone: data.parent_phone || null,
         parent_email: data.parent_email || null,
@@ -157,7 +157,7 @@ const AdminStudentForm = () => {
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">ללא</SelectItem>
+                      <SelectItem value="__none__">ללא</SelectItem>
                       {GRADES.map((g) => (
                         <SelectItem key={g} value={g}>{g}</SelectItem>
                       ))}
@@ -177,7 +177,7 @@ const AdminStudentForm = () => {
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר רמה" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">ללא</SelectItem>
+                      <SelectItem value="__none__">ללא</SelectItem>
                       {PLAYING_LEVELS.map((l) => (
                         <SelectItem key={l} value={l}>{l}</SelectItem>
                       ))}
