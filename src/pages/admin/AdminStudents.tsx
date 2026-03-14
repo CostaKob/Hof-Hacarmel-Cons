@@ -194,8 +194,8 @@ const AdminStudents = () => {
                     </div>
                   </div>
                 </div>
-                <Badge variant={r.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
-                  {r.is_active ? "פעיל" : "לא פעיל"}
+                <Badge variant={r.students?.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
+                  {r.students?.is_active ? "פעיל" : "לא פעיל"}
                 </Badge>
               </div>
             ))}
