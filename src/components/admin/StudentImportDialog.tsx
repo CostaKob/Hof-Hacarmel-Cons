@@ -221,6 +221,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           student_first_name: firstName,
           student_last_name: lastName,
           national_id: nationalId,
+          gender,
           grade,
           playing_level: playingLevel,
           parent_name: parentName,
