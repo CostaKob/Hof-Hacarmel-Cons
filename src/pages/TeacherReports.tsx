@@ -85,11 +85,11 @@ const TeacherReports = () => {
         {/* Date filter */}
         <div className="max-w-[200px] space-y-1">
           <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
-          <Input
-            type="date"
+          <DateInput
             value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="h-11 rounded-xl bg-card"
+            onChange={setDateFilter}
+            placeholder="בחר תאריך"
+            className="h-11 bg-card"
           />
         </div>
 
