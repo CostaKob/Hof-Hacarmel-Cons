@@ -20,6 +20,7 @@ interface EnrollmentFormData {
   lesson_type: string;
   lesson_duration_minutes: string;
   start_date: string;
+  instrument_start_date: string;
   is_active: boolean;
 }
 
