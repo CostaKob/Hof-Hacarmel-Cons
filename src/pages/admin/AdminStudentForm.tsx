@@ -157,7 +157,7 @@ const AdminStudentForm = () => {
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">ללא</SelectItem>
+                      <SelectItem value="__none__">ללא</SelectItem>
                       {GRADES.map((g) => (
                         <SelectItem key={g} value={g}>{g}</SelectItem>
                       ))}
