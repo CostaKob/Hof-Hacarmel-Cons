@@ -13,11 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { GRADES, PLAYING_LEVELS } from "@/lib/constants";
 
+const GENDERS = [
+  { value: "male", label: "זכר" },
+  { value: "female", label: "נקבה" },
+] as const;
+
 interface StudentFormData {
   first_name: string;
   last_name: string;
   national_id: string;
   date_of_birth: string;
+  gender: string;
   address: string;
   city: string;
   grade: string;
