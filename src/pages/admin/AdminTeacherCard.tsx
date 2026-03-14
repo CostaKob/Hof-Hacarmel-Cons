@@ -5,6 +5,8 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, KeyRound, UserCheck, UserX, Trash2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
 import { toast } from "sonner";
 import {
@@ -103,6 +105,19 @@ const AdminTeacherCard = () => {
     onError: () => toast.error("שגיאה במחיקת המורה. ייתכן שיש רישומים או דיווחים מקושרים."),
   });
 
+  const toggleActiveMutation = useMutation({
+    mutationFn: async (newActive: boolean) => {
+      const { error } = await supabase.from("teachers").update({ is_active: newActive }).eq("id", teacherId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher", teacherId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-teachers"] });
+      toast.success("הסטטוס עודכן בהצלחה");
+    },
+    onError: () => toast.error("שגיאה בעדכון הסטטוס"),
+  });
+
   if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
 
@@ -120,9 +135,17 @@ const AdminTeacherCard = () => {
     <AdminLayout title={`${teacher.first_name} ${teacher.last_name}`} backPath="/admin/teachers">
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Badge variant={teacher.is_active ? "default" : "secondary"} className="rounded-lg">
-            {teacher.is_active ? "פעיל" : "לא פעיל"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Switch
+              id="teacher-active"
+              checked={teacher.is_active}
+              onCheckedChange={(checked) => toggleActiveMutation.mutate(checked)}
+              disabled={toggleActiveMutation.isPending}
+            />
+            <Label htmlFor="teacher-active" className="text-sm font-medium cursor-pointer">
+              {teacher.is_active ? "פעיל" : "לא פעיל"}
+            </Label>
+          </div>
           <div className="flex gap-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
