@@ -3,8 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
 import { useTeacherProfile, useTeacherReports } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { DateInput } from "@/components/ui/date-input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Plus, CalendarDays, Navigation, Users, Pencil } from "lucide-react";
@@ -41,15 +40,35 @@ const TeacherReports = () => {
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: reports, isLoading: reportsLoading } = useTeacherReports(teacher?.id);
 
-  const [dateFilter, setDateFilter] = useState("");
+  const now = new Date();
+  const [monthFilter, setMonthFilter] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+
+  const monthOptions = useMemo(() => {
+    if (!reports?.length) return [];
+    const months = new Set<string>();
+    reports.forEach((r) => {
+      const d = parseISO(r.report_date);
+      months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    });
+    return Array.from(months).sort().reverse();
+  }, [reports]);
+
+  const HEBREW_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+
+  const formatMonth = (key: string) => {
+    const [y, m] = key.split("-");
+    return `${HEBREW_MONTHS[parseInt(m) - 1]} ${y}`;
+  };
 
   const filtered = useMemo(() => {
     if (!reports) return [];
+    if (!monthFilter || monthFilter === "all") return reports;
     return reports.filter((r) => {
-      if (dateFilter && !r.report_date.includes(dateFilter)) return false;
-      return true;
+      const d = parseISO(r.report_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      return key === monthFilter;
     });
-  }, [reports, dateFilter]);
+  }, [reports, monthFilter]);
 
   const isLoading = teacherLoading || reportsLoading;
 
@@ -84,13 +103,18 @@ const TeacherReports = () => {
       <main className="mx-auto max-w-lg px-5 pt-4 pb-8 space-y-4">
         {/* Date filter */}
         <div className="max-w-[200px] space-y-1">
-          <Label className="text-xs text-muted-foreground">סינון לפי תאריך</Label>
-          <DateInput
-            value={dateFilter}
-            onChange={setDateFilter}
-            placeholder="בחר תאריך"
-            className="h-11 bg-card"
-          />
+          <Label className="text-xs text-muted-foreground">סינון לפי חודש</Label>
+          <Select value={monthFilter} onValueChange={setMonthFilter}>
+            <SelectTrigger className="h-11 rounded-xl bg-card">
+              <SelectValue placeholder="כל החודשים" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל החודשים</SelectItem>
+              {monthOptions.map((m) => (
+                <SelectItem key={m} value={m}>{formatMonth(m)}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Results */}
