@@ -17,6 +17,8 @@ const AdminStudents = () => {
   const [durationFilter, setDurationFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-students-enrollments"],
