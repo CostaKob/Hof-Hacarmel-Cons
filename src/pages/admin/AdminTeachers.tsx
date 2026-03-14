@@ -65,31 +65,35 @@ const AdminTeachers = () => {
       ) : filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">לא נמצאו מורים</p>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((t) => (
-            <div
-              key={t.id}
-              onClick={() => navigate(`/admin/teachers/${t.id}`)}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div>
-                  <p className="font-semibold text-foreground">{t.first_name} {t.last_name}</p>
-                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                    {t.phone && <span>{t.phone}</span>}
-                    {t.city && <><span>·</span><span>{t.city}</span></>}
+        <>
+          <p className="text-sm text-muted-foreground mb-2">{filtered.length} מורים</p>
+          <div className="space-y-2">
+            {filtered.map((t, index) => (
+              <div
+                key={t.id}
+                onClick={() => navigate(`/admin/teachers/${t.id}`)}
+                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                  <div>
+                    <p className="font-semibold text-foreground">{t.first_name} {t.last_name}</p>
+                    <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                      {t.phone && <span>{t.phone}</span>}
+                      {t.city && <><span>·</span><span>{t.city}</span></>}
+                    </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Badge variant={t.is_active ? "default" : "secondary"} className="rounded-lg">
+                    {t.is_active ? "פעיל" : "לא פעיל"}
+                  </Badge>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Badge variant={t.is_active ? "default" : "secondary"} className="rounded-lg">
-                  {t.is_active ? "פעיל" : "לא פעיל"}
-                </Badge>
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       <TeacherImportDialog open={importOpen} onOpenChange={setImportOpen} />
