@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, FileSpreadsheet } from "lucide-react";
+import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [importOpen, setImportOpen] = useState(false);
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [durationFilter, setDurationFilter] = useState("all");
