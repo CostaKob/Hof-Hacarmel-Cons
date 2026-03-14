@@ -87,6 +87,24 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-4 pb-8 space-y-5">
+        {/* Stat cards row - 2x2 grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} />
+          <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} />
+          <StatCard icon={Car} label="נסיעות החודש" value={`${currentMonthKm} ק״מ`} small />
+          <StatCard icon={MapPin} label="נסיעות לחודש השכר" value={`${prevMonthKm} ק״מ`} small highlight />
+        </div>
+
+        {/* Primary action */}
+        <Button
+          size="lg"
+          className="w-full h-14 text-base font-semibold rounded-2xl shadow-md"
+          onClick={() => navigate("/teacher/reports/new")}
+        >
+          <FileText className="ml-2 h-5 w-5" />
+          יום עבודה חדש
+        </Button>
+
         {/* No-report warning */}
         {showWarning && (
           <Alert className="border-destructive/50 bg-destructive/10 rounded-2xl">
@@ -107,22 +125,6 @@ const TeacherDashboard = () => {
             </AlertDescription>
           </Alert>
         )}
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} />
-          <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} />
-          <StatCard icon={Car} label="נסיעות החודש" value={`${currentMonthKm} ק״מ`} small />
-          <StatCard icon={MapPin} label="נסיעות לחודש השכר" value={`${prevMonthKm} ק״מ`} small highlight />
-        </div>
-
-        {/* Primary action */}
-        <Button
-          size="lg"
-          className="w-full h-14 text-base font-semibold rounded-2xl shadow-md"
-          onClick={() => navigate("/teacher/reports/new")}
-        >
-          <FileText className="ml-2 h-5 w-5" />
-          יום עבודה חדש
-        </Button>
 
         {/* Navigation cards */}
         <div className="space-y-3">
