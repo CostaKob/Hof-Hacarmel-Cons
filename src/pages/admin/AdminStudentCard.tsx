@@ -116,6 +116,8 @@ const AdminStudentCard = () => {
           <DetailRow label="תאריך לידה" value={student.date_of_birth} />
           <DetailRow label="כתובת" value={student.address} />
           <DetailRow label="עיר" value={student.city} />
+          <DetailRow label="כיתה" value={(student as any).grade} />
+          <DetailRow label="רמת נגינה" value={(student as any).playing_level} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
