@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, KeyRound, UserCheck, UserX, Trash2 } from "lucide-react";
+import { Pencil, KeyRound, UserCheck, UserX, Trash2, Shield } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
@@ -57,6 +58,36 @@ const AdminTeacherCard = () => {
       return data;
     },
     enabled: !!teacherId,
+  });
+
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ["admin-teacher-roles", teacher?.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", teacher!.user_id!);
+      if (error) throw error;
+      return data.map((r) => r.role);
+    },
+    enabled: !!teacher?.user_id,
+  });
+
+  const toggleRoleMutation = useMutation({
+    mutationFn: async ({ role, add }: { role: string; add: boolean }) => {
+      if (add) {
+        const { error } = await supabase.from("user_roles").insert({ user_id: teacher!.user_id!, role: role as any });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("user_roles").delete().eq("user_id", teacher!.user_id!).eq("role", role as any);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher-roles", teacher?.user_id] });
+      toast.success("ההרשאה עודכנה בהצלחה");
+    },
+    onError: () => toast.error("שגיאה בעדכון ההרשאה"),
   });
 
   const resetPasswordMutation = useMutation({
@@ -236,6 +267,35 @@ const AdminTeacherCard = () => {
             )}
           </div>
         </div>
+
+        {/* Roles Section */}
+        {hasLogin && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              <h2 className="font-semibold text-foreground text-base">הרשאות</h2>
+            </div>
+            {([
+              { value: "teacher", label: "מורה" },
+              { value: "admin", label: "מנהל" },
+              { value: "secretary", label: "מזכירות" },
+            ] as const).map((role) => (
+              <div key={role.value} className="flex items-center gap-3 py-1">
+                <Checkbox
+                  id={`role-${role.value}`}
+                  checked={userRoles.includes(role.value)}
+                  onCheckedChange={(checked) =>
+                    toggleRoleMutation.mutate({ role: role.value, add: !!checked })
+                  }
+                  disabled={toggleRoleMutation.isPending}
+                />
+                <Label htmlFor={`role-${role.value}`} className="text-sm cursor-pointer">
+                  {role.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="grid gap-3 grid-cols-2">
           <div className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm">
