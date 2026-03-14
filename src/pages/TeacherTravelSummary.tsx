@@ -4,6 +4,7 @@ import { ChevronRight, Car, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherReportsByMonth } from "@/hooks/useTeacherDashboardData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
