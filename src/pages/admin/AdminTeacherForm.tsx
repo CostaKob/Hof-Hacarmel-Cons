@@ -29,7 +29,7 @@ const AdminTeacherForm = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<TeacherFormData>({
+  const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<TeacherFormData>({
     defaultValues: { is_active: true },
   });
 
