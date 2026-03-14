@@ -87,7 +87,26 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-4 pb-8 space-y-5">
-        {/* Stat cards row - 2x2 grid */}
+        {/* No-report warning */}
+        {showWarning && (
+          <Alert className="border-destructive/50 bg-destructive/10 rounded-2xl">
+            <AlertTriangle className="h-5 w-5 text-destructive !right-4 !left-auto" />
+            <AlertDescription className="pr-8 text-sm text-destructive font-medium">
+              {noReportsEver ? (
+                "עדיין לא התקבלו דיווחי שיעורים"
+              ) : (
+                <>
+                  <div>לא התקבל דיווח שיעורים כבר יותר משבוע</div>
+                  {lastReportDate && (
+                    <div className="mt-1 text-xs opacity-80">
+                      הדיווח האחרון: {formatDateHe(lastReport!.report_date).formatted}
+                    </div>
+                  )}
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} />
           <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} />
