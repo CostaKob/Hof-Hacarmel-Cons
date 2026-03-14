@@ -230,6 +230,8 @@ const TeacherNewReport = () => {
                   min="0"
                   value={kilometers}
                   onChange={(e) => setKilometers(e.target.value)}
+                  onFocus={() => { if (kilometers === "0") setKilometers(""); }}
+                  onBlur={() => { if (kilometers === "") setKilometers("0"); }}
                   className="h-12 rounded-xl text-base"
                 />
                 {usedKm !== undefined && usedKm > 0 && (
