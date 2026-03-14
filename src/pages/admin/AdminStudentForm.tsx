@@ -144,7 +144,7 @@ const AdminStudentForm = () => {
                     name={f.name}
                     control={control}
                     render={({ field }) => (
-                      <DateInput value={field.value} onChange={field.onChange} placeholder={f.label} />
+                      <DateInput value={field.value as string} onChange={field.onChange} placeholder={f.label} />
                     )}
                   />
                 ) : (
