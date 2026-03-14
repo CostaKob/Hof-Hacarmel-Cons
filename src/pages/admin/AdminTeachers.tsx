@@ -50,9 +50,14 @@ const AdminTeachers = () => {
             </SelectContent>
           </Select>
         </div>
-        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/teachers/new")}>
-          <Plus className="h-4 w-4" /> מורה חדש
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" /> ייבוא מאקסל
+          </Button>
+          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/teachers/new")}>
+            <Plus className="h-4 w-4" /> מורה חדש
+          </Button>
+        </div>
       </div>
 
       {isLoading ? (
