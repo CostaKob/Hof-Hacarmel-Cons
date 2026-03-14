@@ -66,6 +66,7 @@ const TeacherNewReport = () => {
 
   const [schoolId, setSchoolId] = useState<string>("");
   const [reportDate, setReportDate] = useState<Date>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [kilometers, setKilometers] = useState<string>("0");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
