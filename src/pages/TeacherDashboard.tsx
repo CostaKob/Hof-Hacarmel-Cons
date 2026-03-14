@@ -39,11 +39,7 @@ const TeacherDashboard = () => {
   const currentMonthKm = currentMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
   const prevMonthKm = prevMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
 
-  // Combine current + previous month for the travel detail list
-  const allReportsForTravel = [
-    ...(currentMonthReports ?? []),
-    ...(prevMonthReports ?? []),
-  ].sort((a, b) => b.report_date.localeCompare(a.report_date));
+
 
   if (teacherLoading) {
     return (
