@@ -67,6 +67,7 @@ const COLUMN_LABELS: Record<string, string> = {
   student_first_name: "שם פרטי (חובה)",
   student_last_name: "שם משפחה (חובה)",
   national_id: "ת.ז.",
+  gender: "מין (male/female)",
   grade: "כיתה",
   playing_level: "רמת נגינה",
   parent_name: "שם הורה",
