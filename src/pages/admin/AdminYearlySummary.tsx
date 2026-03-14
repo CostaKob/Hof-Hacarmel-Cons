@@ -138,6 +138,7 @@ const AdminYearlySummary = () => {
           <p className="text-center text-muted-foreground py-12">טוען...</p>
         ) : (
           <>
+            <p className="text-sm text-muted-foreground mb-2">{filtered.length} רישומים</p>
             <div className="hidden md:block">
               <YearlySummaryTable rows={filtered} showTeacher />
             </div>
