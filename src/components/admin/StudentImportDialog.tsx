@@ -49,6 +49,7 @@ const TEMPLATE_COLUMNS = [
   "student_first_name",
   "student_last_name",
   "national_id",
+  "gender",
   "grade",
   "playing_level",
   "parent_name",
