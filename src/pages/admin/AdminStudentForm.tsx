@@ -24,6 +24,7 @@ interface StudentFormData {
   national_id: string;
   date_of_birth: string;
   gender: string;
+  phone: string;
   address: string;
   city: string;
   grade: string;
