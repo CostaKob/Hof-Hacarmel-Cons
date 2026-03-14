@@ -91,6 +91,18 @@ const AdminTeacherCard = () => {
     onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
   });
 
+  const deleteTeacherMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("teachers").delete().eq("id", teacherId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("המורה נמחק בהצלחה");
+      navigate("/admin/teachers");
+    },
+    onError: () => toast.error("שגיאה במחיקת המורה. ייתכן שיש רישומים או דיווחים מקושרים."),
+  });
+
   if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
 
