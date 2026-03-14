@@ -149,7 +149,7 @@ const AdminStudents = () => {
         <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground mb-2">{filtered.length} שורות</p>
+          <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>
           <div className="space-y-2">
             {filtered.map((r: any, index: number) => (
               <div
