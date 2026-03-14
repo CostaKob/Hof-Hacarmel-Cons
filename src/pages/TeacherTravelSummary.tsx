@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronRight, Car } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherReportsByMonth } from "@/hooks/useTeacherDashboardData";
@@ -32,10 +32,13 @@ function buildMonthOptions() {
 
 const TeacherTravelSummary = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: teacher, isLoading } = useTeacherProfile();
 
-  const now = new Date();
-  const [selected, setSelected] = useState(`${now.getFullYear()}-${now.getMonth()}`);
+  const monthOffset = Number(searchParams.get("month") ?? 0);
+  const initialDate = new Date();
+  initialDate.setMonth(initialDate.getMonth() + monthOffset);
+  const [selected, setSelected] = useState(`${initialDate.getFullYear()}-${initialDate.getMonth()}`);
   const [selYear, selMonth] = selected.split("-").map(Number);
 
   const { data: reports } = useTeacherReportsByMonth(teacher?.id, selYear, selMonth);

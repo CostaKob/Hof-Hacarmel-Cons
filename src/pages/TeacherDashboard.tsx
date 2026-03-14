@@ -91,8 +91,8 @@ const TeacherDashboard = () => {
         <div className="grid grid-cols-2 gap-3">
           <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} onClick={() => navigate("/teacher/students")} />
           <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} onClick={() => navigate("/teacher/reports")} />
-          <StatCard icon={Car} label="נסיעות החודש" value={`${currentMonthKm} ק״מ`} small onClick={() => navigate("/teacher/travel-summary")} />
-          <StatCard icon={MapPin} label="נסיעות לחודש השכר" value={`${prevMonthKm} ק״מ`} small onClick={() => navigate("/teacher/travel-summary")} />
+          <StatCard icon={Car} label="נסיעות לחודש הנוכחי" value={`${currentMonthKm} ק״מ`} small onClick={() => navigate("/teacher/travel-summary")} />
+          <StatCard icon={MapPin} label="נסיעות לחודש השכר" value={`${prevMonthKm} ק״מ`} small onClick={() => navigate("/teacher/travel-summary?month=-1")} />
         </div>
 
         {/* Primary action */}
