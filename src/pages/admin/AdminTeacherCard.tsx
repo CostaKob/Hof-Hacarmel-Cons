@@ -60,6 +60,36 @@ const AdminTeacherCard = () => {
     enabled: !!teacherId,
   });
 
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ["admin-teacher-roles", teacher?.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", teacher!.user_id!);
+      if (error) throw error;
+      return data.map((r) => r.role);
+    },
+    enabled: !!teacher?.user_id,
+  });
+
+  const toggleRoleMutation = useMutation({
+    mutationFn: async ({ role, add }: { role: string; add: boolean }) => {
+      if (add) {
+        const { error } = await supabase.from("user_roles").insert({ user_id: teacher!.user_id!, role: role as any });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("user_roles").delete().eq("user_id", teacher!.user_id!).eq("role", role as any);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher-roles", teacher?.user_id] });
+      toast.success("ההרשאה עודכנה בהצלחה");
+    },
+    onError: () => toast.error("שגיאה בעדכון ההרשאה"),
+  });
+
   const resetPasswordMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("reset-teacher-password", {
