@@ -4,9 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, KeyRound, UserCheck, UserX } from "lucide-react";
+import { Pencil, KeyRound, UserCheck, UserX, Trash2 } from "lucide-react";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const AdminTeacherCard = () => {
   const { teacherId } = useParams();
