@@ -114,6 +114,7 @@ const AdminStudentCard = () => {
           <h2 className="font-semibold text-foreground text-base mb-2">פרטים אישיים</h2>
           <DetailRow label="תעודת זהות" value={student.national_id} />
           <DetailRow label="מין" value={(student as any).gender === "male" ? "זכר" : (student as any).gender === "female" ? "נקבה" : null} />
+          <DetailRow label="נייד" value={(student as any).phone} />
           <DetailRow label="תאריך לידה" value={student.date_of_birth} />
           <DetailRow label="כתובת" value={student.address} />
           <DetailRow label="עיר" value={student.city} />

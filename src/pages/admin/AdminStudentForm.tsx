@@ -127,6 +127,7 @@ const AdminStudentForm = () => {
     { name: "last_name", label: "שם משפחה", required: true },
     { name: "national_id", label: "תעודת זהות" },
     { name: "date_of_birth", label: "תאריך לידה", type: "date" },
+    { name: "phone", label: "נייד תלמיד", type: "tel" },
     { name: "address", label: "כתובת" },
     { name: "city", label: "עיר" },
   ];
