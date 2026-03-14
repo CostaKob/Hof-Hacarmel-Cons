@@ -118,7 +118,6 @@ const TeacherStudents = () => {
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
                   <span className="text-sm font-bold text-accent-foreground">{index + 1}</span>
                 </div>
-                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">
                     {enrollment.students?.first_name} {enrollment.students?.last_name}
