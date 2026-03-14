@@ -45,6 +45,7 @@ const AdminEnrollmentForm = () => {
       enrollment_role: "primary",
       lesson_type: "individual",
       lesson_duration_minutes: "45",
+      instrument_start_date: "",
     },
   });
 
