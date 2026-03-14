@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronRight, Car } from "lucide-react";
+import { ChevronRight, Car, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherReportsByMonth } from "@/hooks/useTeacherDashboardData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
@@ -118,6 +119,15 @@ const TeacherTravelSummary = () => {
             </div>
           )}
         </div>
+
+        <Button
+          variant="outline"
+          className="w-full rounded-2xl h-12"
+          onClick={() => navigate("/teacher/reports")}
+        >
+          <CalendarDays className="ml-2 h-4 w-4" />
+          ימי העבודה שלי
+        </Button>
       </main>
     </div>
   );
