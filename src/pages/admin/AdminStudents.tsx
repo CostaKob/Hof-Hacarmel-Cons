@@ -46,6 +46,8 @@ const AdminStudents = () => {
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
     if (activeFilter === "active" && !r.is_active) return false;
     if (activeFilter === "inactive" && r.is_active) return false;
+    if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
+    if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     return true;
   });
 
