@@ -70,11 +70,19 @@ const AdminStudents = () => {
             className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
-          <Plus className="h-4 w-4" />
-          תלמיד חדש
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" />
+            ייבוא מאקסל
+          </Button>
+          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
+            <Plus className="h-4 w-4" />
+            תלמיד חדש
+          </Button>
+        </div>
       </div>
+
+      <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
