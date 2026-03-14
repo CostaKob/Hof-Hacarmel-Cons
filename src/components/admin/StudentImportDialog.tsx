@@ -198,6 +198,9 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       if (playingLevel && !VALID_LEVELS.includes(playingLevel)) {
         errors.push("רמת נגינה חייבת להיות א, ב או ג");
       }
+      if (gender && !VALID_GENDERS.includes(gender)) {
+        errors.push("מין חייב להיות male או female");
+      }
 
       // Check if student exists (by national_id or name)
       let existingStudentId: string | undefined;
