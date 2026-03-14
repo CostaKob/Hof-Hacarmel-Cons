@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { calcYearsOfPlaying } from "@/lib/constants";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
