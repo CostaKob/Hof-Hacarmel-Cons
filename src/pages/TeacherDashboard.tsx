@@ -1,6 +1,8 @@
 import { useAuth } from "@/hooks/useAuth";
-import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin } from "lucide-react";
@@ -28,6 +30,7 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: enrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: lastReport } = useTeacherLastReport(teacher?.id);
 
   const { data: currentMonthReports } = useTeacherMonthReports(teacher?.id, 0);
   const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
@@ -38,6 +41,16 @@ const TeacherDashboard = () => {
   const currentMonthWorkdays = currentMonthReports?.length ?? 0;
   const currentMonthKm = currentMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
   const prevMonthKm = prevMonthReports?.reduce((sum, r) => sum + Number(r.kilometers), 0) ?? 0;
+
+  // 7-day warning logic
+  const now = new Date();
+  const sevenDaysAgo = new Date(now);
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+  const lastReportDate = lastReport?.report_date ? new Date(lastReport.report_date + "T00:00:00") : null;
+  const noReportsEver = !lastReport?.report_date;
+  const noRecentReport = lastReportDate ? lastReportDate < sevenDaysAgo : false;
+  const showWarning = noReportsEver || noRecentReport;
 
 
 
@@ -74,7 +87,26 @@ const TeacherDashboard = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-4 pb-8 space-y-5">
-        {/* Stat cards row - 2x2 grid */}
+        {/* No-report warning */}
+        {showWarning && (
+          <Alert className="border-destructive/50 bg-destructive/10 rounded-2xl">
+            <AlertTriangle className="h-5 w-5 text-destructive !right-4 !left-auto" />
+            <AlertDescription className="pr-8 text-sm text-destructive font-medium">
+              {noReportsEver ? (
+                "עדיין לא התקבלו דיווחי שיעורים"
+              ) : (
+                <>
+                  <div>לא התקבל דיווח שיעורים כבר יותר משבוע</div>
+                  {lastReportDate && (
+                    <div className="mt-1 text-xs opacity-80">
+                      הדיווח האחרון: {formatDateHe(lastReport!.report_date).formatted}
+                    </div>
+                  )}
+                </>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} />
           <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} />
