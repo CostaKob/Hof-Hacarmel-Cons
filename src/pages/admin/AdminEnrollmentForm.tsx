@@ -265,13 +265,9 @@ const AdminEnrollmentForm = () => {
           <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-sm">תאריך התחלה *</Label>
-              <Input type="date" {...register("start_date", { required: "תאריך התחלה שדה חובה" })} className="h-12 rounded-xl" />
-              {errors.start_date && <p className="text-sm text-destructive">{errors.start_date.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">תאריך תחילת נגינה</Label>
-              <Input type="date" {...register("instrument_start_date")} className="h-12 rounded-xl" />
+              <Label className="text-sm">תאריך תחילת נגינה *</Label>
+              <Input type="date" {...register("instrument_start_date", { required: "תאריך תחילת נגינה שדה חובה" })} className="h-12 rounded-xl" />
+              {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
             </div>
             <div className="flex items-center gap-3 sm:col-span-2">
               <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
