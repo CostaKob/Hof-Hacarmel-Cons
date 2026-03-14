@@ -274,11 +274,29 @@ const TeacherNewReport = () => {
 
         {/* Enrollment Lines */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-semibold text-foreground text-base">שורות דיווח</h2>
-            {selectedCount > 0 && (
-              <Badge variant="default" className="rounded-lg">{selectedCount} נבחרו</Badge>
-            )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={() => {
+                  setLines((prev) => {
+                    const updated: Record<string, LineState> = {};
+                    for (const [id, line] of Object.entries(prev)) {
+                      updated[id] = { ...line, selected: true, status: "present" };
+                    }
+                    return updated;
+                  });
+                }}
+              >
+                ✓ כולם נוכחים
+              </Button>
+              {selectedCount > 0 && (
+                <Badge variant="default" className="rounded-lg">{selectedCount} נבחרו</Badge>
+              )}
+            </div>
           </div>
 
           {enrollments.length === 0 ? (
