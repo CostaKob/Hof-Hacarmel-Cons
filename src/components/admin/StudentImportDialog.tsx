@@ -113,7 +113,7 @@ function parseDateValue(val: unknown): string | null {
 function downloadTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
     TEMPLATE_COLUMNS,
-    ["יוסי", "כהן", "123456789", "male", "ד'", "א", "אבי כהן", "0501234567", "avi@mail.com", "teacher@mail.com", "גיטרה", "בית ספר מוסיקה", 45, "individual", "01/09/2024"],
+    ["יוסי", "כהן", "123456789", "male", "0501234567", "ד'", "א", "אבי כהן", "0501234567", "avi@mail.com", "teacher@mail.com", "גיטרה", "בית ספר מוסיקה", 45, "individual", "01/09/2024"],
   ]);
   ws["!cols"] = TEMPLATE_COLUMNS.map(() => ({ wch: 20 }));
   const wb = XLSX.utils.book_new();
