@@ -60,7 +60,7 @@ const TeacherStudents = () => {
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-bold">התלמידים שלי</h1>
+          <h1 className="text-lg font-bold">התלמידים שלי ({filtered.length})</h1>
         </div>
       </header>
 
@@ -109,14 +109,14 @@ const TeacherStudents = () => {
           <p className="text-center text-muted-foreground py-8">לא נמצאו רישומים</p>
         ) : (
           <div className="space-y-3">
-            {filtered.map((enrollment) => (
+            {filtered.map((enrollment, index) => (
               <button
                 key={enrollment.id}
                 onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
                 className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md"
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
-                  <User className="h-5 w-5 text-accent-foreground" />
+                  <span className="text-sm font-bold text-accent-foreground">{index + 1}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">
