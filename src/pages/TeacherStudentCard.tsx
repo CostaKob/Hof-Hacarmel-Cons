@@ -6,6 +6,7 @@ import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import { supabase } from "@/integrations/supabase/client";
+import { calcYearsOfPlaying } from "@/lib/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
