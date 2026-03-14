@@ -57,7 +57,7 @@ const DateInput = React.forwardRef<HTMLButtonElement, DateInputProps>(
             onSelect={handleSelect}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
-            captionLayout="dropdown-buttons"
+            captionLayout="dropdown"
             fromYear={1950}
             toYear={2040}
           />
