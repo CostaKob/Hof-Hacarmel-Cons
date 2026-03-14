@@ -454,6 +454,7 @@ export type Database = {
           parent_name_2: string | null
           parent_phone: string | null
           parent_phone_2: string | null
+          phone: string | null
           playing_level: string | null
         }
         Insert: {
@@ -474,6 +475,7 @@ export type Database = {
           parent_name_2?: string | null
           parent_phone?: string | null
           parent_phone_2?: string | null
+          phone?: string | null
           playing_level?: string | null
         }
         Update: {
@@ -494,6 +496,7 @@ export type Database = {
           parent_name_2?: string | null
           parent_phone?: string | null
           parent_phone_2?: string | null
+          phone?: string | null
           playing_level?: string | null
         }
         Relationships: []

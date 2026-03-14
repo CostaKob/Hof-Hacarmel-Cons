@@ -20,6 +20,7 @@ interface StudentRowData {
   student_last_name: string;
   national_id?: string;
   gender?: string;
+  student_phone?: string;
   grade?: string;
   playing_level?: string;
   parent_name?: string;
@@ -50,6 +51,7 @@ const TEMPLATE_COLUMNS = [
   "student_last_name",
   "national_id",
   "gender",
+  "student_phone",
   "grade",
   "playing_level",
   "parent_name",
@@ -68,6 +70,7 @@ const COLUMN_LABELS: Record<string, string> = {
   student_last_name: "שם משפחה (חובה)",
   national_id: "ת.ז.",
   gender: "מין (male/female)",
+  student_phone: "נייד תלמיד",
   grade: "כיתה",
   playing_level: "רמת נגינה",
   parent_name: "שם הורה",
@@ -110,7 +113,7 @@ function parseDateValue(val: unknown): string | null {
 function downloadTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
     TEMPLATE_COLUMNS,
-    ["יוסי", "כהן", "123456789", "male", "ד'", "א", "אבי כהן", "0501234567", "avi@mail.com", "teacher@mail.com", "גיטרה", "בית ספר מוסיקה", 45, "individual", "01/09/2024"],
+    ["יוסי", "כהן", "123456789", "male", "0501234567", "ד'", "א", "אבי כהן", "0501234567", "avi@mail.com", "teacher@mail.com", "גיטרה", "בית ספר מוסיקה", 45, "individual", "01/09/2024"],
   ]);
   ws["!cols"] = TEMPLATE_COLUMNS.map(() => ({ wch: 20 }));
   const wb = XLSX.utils.book_new();
@@ -161,6 +164,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       const lastName = String(row.student_last_name ?? "").trim();
       const nationalId = String(row.national_id ?? "").trim() || undefined;
       const gender = String(row.gender ?? "").trim().toLowerCase() || undefined;
+      const studentPhone = String(row.student_phone ?? "").trim() || undefined;
       const grade = String(row.grade ?? "").trim() || undefined;
       const playingLevel = String(row.playing_level ?? "").trim() || undefined;
       const parentName = String(row.parent_name ?? "").trim() || undefined;
@@ -222,6 +226,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           student_last_name: lastName,
           national_id: nationalId,
           gender,
+          student_phone: studentPhone,
           grade,
           playing_level: playingLevel,
           parent_name: parentName,
@@ -287,6 +292,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
               last_name: row.data.student_last_name,
               national_id: row.data.national_id || null,
               gender: row.data.gender || null,
+              phone: row.data.student_phone || null,
               grade: row.data.grade || null,
               playing_level: row.data.playing_level || null,
               parent_name: row.data.parent_name || null,

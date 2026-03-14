@@ -24,6 +24,7 @@ interface StudentFormData {
   national_id: string;
   date_of_birth: string;
   gender: string;
+  phone: string;
   address: string;
   city: string;
   grade: string;
@@ -67,6 +68,7 @@ const AdminStudentForm = () => {
         national_id: student.national_id ?? "",
         date_of_birth: student.date_of_birth ?? "",
         gender: (student as any).gender ?? "__none__",
+        phone: (student as any).phone ?? "",
         address: student.address ?? "",
         city: student.city ?? "",
         grade: student.grade ?? "__none__",
@@ -91,6 +93,7 @@ const AdminStudentForm = () => {
         date_of_birth: data.date_of_birth || null,
         address: data.address || null,
         city: data.city || null,
+        phone: data.phone || null,
         gender: data.gender === "__none__" ? null : data.gender || null,
         grade: data.grade === "__none__" ? null : data.grade || null,
         playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
@@ -124,6 +127,7 @@ const AdminStudentForm = () => {
     { name: "last_name", label: "שם משפחה", required: true },
     { name: "national_id", label: "תעודת זהות" },
     { name: "date_of_birth", label: "תאריך לידה", type: "date" },
+    { name: "phone", label: "נייד תלמיד", type: "tel" },
     { name: "address", label: "כתובת" },
     { name: "city", label: "עיר" },
   ];
