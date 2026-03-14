@@ -117,6 +117,10 @@ const TeacherReports = () => {
             </SelectContent>
           </Select>
         </div>
+          <Badge variant="secondary" className="rounded-xl h-11 px-4 text-sm flex items-center">
+            {filtered.length} ימי עבודה
+          </Badge>
+        </div>
 
         {/* Results */}
         {isLoading ? (
