@@ -40,15 +40,35 @@ const TeacherReports = () => {
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: reports, isLoading: reportsLoading } = useTeacherReports(teacher?.id);
 
-  const [dateFilter, setDateFilter] = useState("");
+  const now = new Date();
+  const [monthFilter, setMonthFilter] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+
+  const monthOptions = useMemo(() => {
+    if (!reports?.length) return [];
+    const months = new Set<string>();
+    reports.forEach((r) => {
+      const d = parseISO(r.report_date);
+      months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
+    });
+    return Array.from(months).sort().reverse();
+  }, [reports]);
+
+  const HEBREW_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
+
+  const formatMonth = (key: string) => {
+    const [y, m] = key.split("-");
+    return `${HEBREW_MONTHS[parseInt(m) - 1]} ${y}`;
+  };
 
   const filtered = useMemo(() => {
     if (!reports) return [];
+    if (!monthFilter || monthFilter === "all") return reports;
     return reports.filter((r) => {
-      if (dateFilter && !r.report_date.includes(dateFilter)) return false;
-      return true;
+      const d = parseISO(r.report_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      return key === monthFilter;
     });
-  }, [reports, dateFilter]);
+  }, [reports, monthFilter]);
 
   const isLoading = teacherLoading || reportsLoading;
 
