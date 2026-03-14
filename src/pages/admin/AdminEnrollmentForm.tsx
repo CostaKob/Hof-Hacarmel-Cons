@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 
@@ -265,7 +266,14 @@ const AdminEnrollmentForm = () => {
           <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
           <div className="space-y-1.5">
             <Label className="text-sm">תאריך תחילת נגינה *</Label>
-            <Input type="date" {...register("instrument_start_date", { required: "תאריך תחילת נגינה שדה חובה" })} className="h-12 rounded-xl" />
+            <Controller
+              name="instrument_start_date"
+              control={control}
+              rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
+              render={({ field }) => (
+                <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
+              )}
+            />
             {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
           </div>
           <div className="flex items-center gap-3 pt-2">

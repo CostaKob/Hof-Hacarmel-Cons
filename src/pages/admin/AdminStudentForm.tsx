@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
+import { DateInput } from "@/components/ui/date-input";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -138,11 +139,21 @@ const AdminStudentForm = () => {
             {FIELDS.map((f) => (
               <div key={f.name} className="space-y-1.5">
                 <Label className="text-sm">{f.label}{f.required && " *"}</Label>
-                <Input
-                  type={f.type ?? "text"}
-                  {...register(f.name, f.required ? { required: `${f.label} שדה חובה` } : undefined)}
-                  className="h-12 rounded-xl"
-                />
+                {f.type === "date" ? (
+                  <Controller
+                    name={f.name}
+                    control={control}
+                    render={({ field }) => (
+                      <DateInput value={field.value as string} onChange={field.onChange} placeholder={f.label} />
+                    )}
+                  />
+                ) : (
+                  <Input
+                    type={f.type ?? "text"}
+                    {...register(f.name, f.required ? { required: `${f.label} שדה חובה` } : undefined)}
+                    className="h-12 rounded-xl"
+                  />
+                )}
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
               </div>
             ))}
