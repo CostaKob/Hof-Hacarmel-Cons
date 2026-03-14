@@ -117,6 +117,12 @@ const TeacherDashboard = () => {
             onClick={() => navigate("/teacher/yearly-summary")}
           />
           <NavCard
+            icon={Car}
+            title="סיכום נסיעות"
+            subtitle="פירוט ק״מ חודש נוכחי וקודם"
+            onClick={() => navigate("/teacher/travel-summary")}
+          />
+          <NavCard
             icon={KeyRound}
             title="שינוי סיסמה"
             subtitle="עדכון סיסמת הכניסה"
