@@ -135,9 +135,17 @@ const AdminTeacherCard = () => {
     <AdminLayout title={`${teacher.first_name} ${teacher.last_name}`} backPath="/admin/teachers">
       <div className="space-y-5">
         <div className="flex items-center justify-between">
-          <Badge variant={teacher.is_active ? "default" : "secondary"} className="rounded-lg">
-            {teacher.is_active ? "פעיל" : "לא פעיל"}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Switch
+              id="teacher-active"
+              checked={teacher.is_active}
+              onCheckedChange={(checked) => toggleActiveMutation.mutate(checked)}
+              disabled={toggleActiveMutation.isPending}
+            />
+            <Label htmlFor="teacher-active" className="text-sm font-medium cursor-pointer">
+              {teacher.is_active ? "פעיל" : "לא פעיל"}
+            </Label>
+          </div>
           <div className="flex gap-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
