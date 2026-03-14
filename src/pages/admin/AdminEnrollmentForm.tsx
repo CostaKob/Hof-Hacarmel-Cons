@@ -145,6 +145,7 @@ const AdminEnrollmentForm = () => {
         lesson_type: data.lesson_type as "individual" | "group",
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
         start_date: data.start_date,
+        instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
       };
 
