@@ -148,52 +148,56 @@ const AdminStudents = () => {
       ) : filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((r: any) => (
-            <div
-              key={r.id}
-              onClick={() => navigate(`/admin/students/${r.students?.id}`)}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground">
-                  {r.students?.first_name} {r.students?.last_name}
-                </p>
-                <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                  <span>{r.instruments?.name}</span>
-                  <span>·</span>
-                  <span>{r.schools?.name}</span>
-                  <span>·</span>
-                  <span>{r.lesson_duration_minutes} דק׳</span>
-                  {r.teachers && (
-                    <>
+        <>
+          <p className="text-sm text-muted-foreground mb-2">{filtered.length} שורות</p>
+          <div className="space-y-2">
+            {filtered.map((r: any, index: number) => (
+              <div
+                key={r.id}
+                onClick={() => navigate(`/admin/students/${r.students?.id}`)}
+                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground">
+                      {r.students?.first_name} {r.students?.last_name}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                      <span>{r.instruments?.name}</span>
                       <span>·</span>
-                      <span>{r.teachers.first_name} {r.teachers.last_name}</span>
-                    </>
-                  )}
-                  {r.students?.grade && (
-                    <>
+                      <span>{r.schools?.name}</span>
                       <span>·</span>
-                      <span>כיתה {r.students.grade}</span>
-                    </>
-                  )}
-                  {r.students?.playing_level && (
-                    <>
-                      <span>·</span>
-                      <span>רמה {r.students.playing_level}</span>
-                    </>
-                  )}
+                      <span>{r.lesson_duration_minutes} דק׳</span>
+                      {r.teachers && (
+                        <>
+                          <span>·</span>
+                          <span>{r.teachers.first_name} {r.teachers.last_name}</span>
+                        </>
+                      )}
+                      {r.students?.grade && (
+                        <>
+                          <span>·</span>
+                          <span>כיתה {r.students.grade}</span>
+                        </>
+                      )}
+                      {r.students?.playing_level && (
+                        <>
+                          <span>·</span>
+                          <span>רמה {r.students.playing_level}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
+                <Badge variant={r.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
+                  {r.is_active ? "פעיל" : "לא פעיל"}
+                </Badge>
               </div>
-              <Badge variant={r.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
-                {r.is_active ? "פעיל" : "לא פעיל"}
-              </Badge>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
-
-      <p className="mt-3 text-sm text-muted-foreground">{filtered.length} שורות</p>
     </AdminLayout>
   );
 };
