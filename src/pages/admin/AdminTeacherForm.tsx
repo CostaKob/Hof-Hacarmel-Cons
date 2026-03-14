@@ -146,10 +146,10 @@ const AdminTeacherForm = () => {
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
               </div>
             ))}
-            <div className="flex items-center gap-3 sm:col-span-2">
-              <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
-              <Label>פעיל</Label>
-            </div>
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
+            <Label>פעיל</Label>
           </div>
         </div>
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
