@@ -31,6 +31,8 @@ import TeacherChangePassword from "./pages/TeacherChangePassword";
 import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
+import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
+import AdminYearTransition from "./pages/admin/AdminYearTransition";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,6 +74,8 @@ const App = () => (
             <Route path="/admin/instruments/new" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
             <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
             <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
+            <Route path="/admin/academic-years" element={<AdminRoute><AdminAcademicYears /></AdminRoute>} />
+            <Route path="/admin/year-transition" element={<AdminRoute><AdminYearTransition /></AdminRoute>} />
             {/* Teacher routes */}
             <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
             <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />

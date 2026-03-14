@@ -6,6 +6,7 @@ import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import { supabase } from "@/integrations/supabase/client";
+import { calcYearsOfPlaying } from "@/lib/constants";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -98,6 +99,8 @@ const TeacherStudentCard = () => {
             <InfoRow icon={User} label="שם מלא" value={`${student.first_name} ${student.last_name}`} />
             <InfoRow icon={Calendar} label="תאריך לידה" value={student.date_of_birth} />
             <InfoRow icon={MapPin} label="עיר" value={student.city} />
+            {(student as any).grade && <InfoRow icon={User} label="כיתה" value={(student as any).grade} />}
+            {(student as any).playing_level && <InfoRow icon={Music} label="רמת נגינה" value={(student as any).playing_level} />}
             {student.national_id && <InfoRow icon={User} label="ת.ז." value={student.national_id} />}
           </div>
         </div>
@@ -149,6 +152,7 @@ const TeacherStudentCard = () => {
             <InfoRow icon={School} label="בית ספר" value={enrollment.schools?.name} />
             <InfoRow icon={Calendar} label="תאריך התחלה" value={enrollment.start_date} />
             {enrollment.end_date && <InfoRow icon={Calendar} label="תאריך סיום" value={enrollment.end_date} />}
+            {(() => { const yrs = calcYearsOfPlaying((enrollment as any).instrument_start_date); return yrs !== null ? <InfoRow icon={Music} label="שנות נגינה" value={String(yrs)} /> : null; })()}
             <div className="flex items-center gap-2 pt-1">
               <Badge variant={enrollment.is_active ? "default" : "secondary"} className="rounded-lg">
                 {enrollment.is_active ? "פעיל" : "לא פעיל"}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Plus } from "lucide-react";
 import { format } from "date-fns";
+import { calcYearsOfPlaying } from "@/lib/constants";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
@@ -115,6 +116,8 @@ const AdminStudentCard = () => {
           <DetailRow label="תאריך לידה" value={student.date_of_birth} />
           <DetailRow label="כתובת" value={student.address} />
           <DetailRow label="עיר" value={student.city} />
+          <DetailRow label="כיתה" value={(student as any).grade} />
+          <DetailRow label="רמת נגינה" value={(student as any).playing_level} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
@@ -144,6 +147,7 @@ const AdminStudentCard = () => {
                     <p className="font-medium text-foreground text-sm">{e.schools?.name} — {e.instruments?.name}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳ · {e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}
+                      {(() => { const yrs = calcYearsOfPlaying((e as any).instrument_start_date); return yrs !== null ? ` · שנות נגינה: ${yrs}` : ""; })()}
                     </p>
                   </div>
                   <div className="flex items-center gap-2">

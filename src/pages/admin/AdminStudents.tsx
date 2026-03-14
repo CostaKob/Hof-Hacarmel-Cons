@@ -17,13 +17,15 @@ const AdminStudents = () => {
   const [durationFilter, setDurationFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("all");
+  const [gradeFilter, setGradeFilter] = useState("all");
+  const [levelFilter, setLevelFilter] = useState("all");
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-students-enrollments"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
@@ -44,6 +46,8 @@ const AdminStudents = () => {
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
     if (activeFilter === "active" && !r.is_active) return false;
     if (activeFilter === "inactive" && r.is_active) return false;
+    if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
+    if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     return true;
   });
 
@@ -116,6 +120,26 @@ const AdminStudents = () => {
             <SelectItem value="inactive">לא פעילים</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={gradeFilter} onValueChange={setGradeFilter}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הכיתות</SelectItem>
+            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
+              <SelectItem key={g} value={g}>{g}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={levelFilter} onValueChange={setLevelFilter}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הרמות</SelectItem>
+            {["א","ב","ג"].map((l) => (
+              <SelectItem key={l} value={l}>{l}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Card-based list */}
@@ -145,6 +169,18 @@ const AdminStudents = () => {
                     <>
                       <span>·</span>
                       <span>{r.teachers.first_name} {r.teachers.last_name}</span>
+                    </>
+                  )}
+                  {r.students?.grade && (
+                    <>
+                      <span>·</span>
+                      <span>כיתה {r.students.grade}</span>
+                    </>
+                  )}
+                  {r.students?.playing_level && (
+                    <>
+                      <span>·</span>
+                      <span>רמה {r.students.playing_level}</span>
                     </>
                   )}
                 </div>
