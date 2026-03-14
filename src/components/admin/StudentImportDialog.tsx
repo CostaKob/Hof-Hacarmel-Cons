@@ -83,6 +83,7 @@ const COLUMN_LABELS: Record<string, string> = {
 
 const VALID_DURATIONS = [30, 45, 60];
 const VALID_LESSON_TYPES = ["individual", "group"];
+const VALID_GENDERS = ["male", "female"];
 const VALID_GRADES = GRADES as readonly string[];
 const VALID_LEVELS = PLAYING_LEVELS as readonly string[];
 
