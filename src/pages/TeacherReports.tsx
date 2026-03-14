@@ -101,8 +101,9 @@ const TeacherReports = () => {
       </header>
 
       <main className="mx-auto max-w-lg px-5 pt-4 pb-8 space-y-4">
-        {/* Date filter */}
-        <div className="max-w-[200px] space-y-1">
+        {/* Month filter */}
+        <div className="flex items-end justify-between gap-3">
+        <div className="flex-1 max-w-[200px] space-y-1">
           <Label className="text-xs text-muted-foreground">סינון לפי חודש</Label>
           <Select value={monthFilter} onValueChange={setMonthFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-card">
