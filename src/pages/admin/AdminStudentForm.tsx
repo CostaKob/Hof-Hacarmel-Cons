@@ -13,11 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { GRADES, PLAYING_LEVELS } from "@/lib/constants";
 
+const GENDERS = [
+  { value: "male", label: "זכר" },
+  { value: "female", label: "נקבה" },
+] as const;
+
 interface StudentFormData {
   first_name: string;
   last_name: string;
   national_id: string;
   date_of_birth: string;
+  gender: string;
   address: string;
   city: string;
   grade: string;
@@ -38,7 +44,7 @@ const AdminStudentForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__" },
+    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__" },
   });
 
   const isActive = watch("is_active");
@@ -60,6 +66,7 @@ const AdminStudentForm = () => {
         last_name: student.last_name,
         national_id: student.national_id ?? "",
         date_of_birth: student.date_of_birth ?? "",
+        gender: (student as any).gender ?? "__none__",
         address: student.address ?? "",
         city: student.city ?? "",
         grade: student.grade ?? "__none__",
@@ -84,6 +91,7 @@ const AdminStudentForm = () => {
         date_of_birth: data.date_of_birth || null,
         address: data.address || null,
         city: data.city || null,
+        gender: data.gender === "__none__" ? null : data.gender || null,
         grade: data.grade === "__none__" ? null : data.grade || null,
         playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
         parent_name: data.parent_name || null,
@@ -158,7 +166,27 @@ const AdminStudentForm = () => {
               </div>
             ))}
 
-            {/* Grade dropdown */}
+            {/* Gender dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">מין</Label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר מין" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">ללא</SelectItem>
+                      {GENDERS.map((g) => (
+                        <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+
             <div className="space-y-1.5">
               <Label className="text-sm">כיתה</Label>
               <Controller
