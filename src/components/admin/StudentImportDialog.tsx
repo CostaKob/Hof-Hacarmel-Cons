@@ -19,6 +19,7 @@ interface StudentRowData {
   student_first_name: string;
   student_last_name: string;
   national_id?: string;
+  gender?: string;
   grade?: string;
   playing_level?: string;
   parent_name?: string;
@@ -48,6 +49,7 @@ const TEMPLATE_COLUMNS = [
   "student_first_name",
   "student_last_name",
   "national_id",
+  "gender",
   "grade",
   "playing_level",
   "parent_name",
@@ -65,6 +67,7 @@ const COLUMN_LABELS: Record<string, string> = {
   student_first_name: "שם פרטי (חובה)",
   student_last_name: "שם משפחה (חובה)",
   national_id: "ת.ז.",
+  gender: "מין (male/female)",
   grade: "כיתה",
   playing_level: "רמת נגינה",
   parent_name: "שם הורה",
@@ -80,6 +83,7 @@ const COLUMN_LABELS: Record<string, string> = {
 
 const VALID_DURATIONS = [30, 45, 60];
 const VALID_LESSON_TYPES = ["individual", "group"];
+const VALID_GENDERS = ["male", "female"];
 const VALID_GRADES = GRADES as readonly string[];
 const VALID_LEVELS = PLAYING_LEVELS as readonly string[];
 
@@ -106,7 +110,7 @@ function parseDateValue(val: unknown): string | null {
 function downloadTemplate() {
   const ws = XLSX.utils.aoa_to_sheet([
     TEMPLATE_COLUMNS,
-    ["יוסי", "כהן", "123456789", "ד'", "א", "אבי כהן", "0501234567", "avi@mail.com", "teacher@mail.com", "גיטרה", "בית ספר מוסיקה", 45, "individual", "01/09/2024"],
+    ["יוסי", "כהן", "123456789", "male", "ד'", "א", "אבי כהן", "0501234567", "avi@mail.com", "teacher@mail.com", "גיטרה", "בית ספר מוסיקה", 45, "individual", "01/09/2024"],
   ]);
   ws["!cols"] = TEMPLATE_COLUMNS.map(() => ({ wch: 20 }));
   const wb = XLSX.utils.book_new();
@@ -156,6 +160,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       const firstName = String(row.student_first_name ?? "").trim();
       const lastName = String(row.student_last_name ?? "").trim();
       const nationalId = String(row.national_id ?? "").trim() || undefined;
+      const gender = String(row.gender ?? "").trim().toLowerCase() || undefined;
       const grade = String(row.grade ?? "").trim() || undefined;
       const playingLevel = String(row.playing_level ?? "").trim() || undefined;
       const parentName = String(row.parent_name ?? "").trim() || undefined;
@@ -193,6 +198,9 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       if (playingLevel && !VALID_LEVELS.includes(playingLevel)) {
         errors.push("רמת נגינה חייבת להיות א, ב או ג");
       }
+      if (gender && !VALID_GENDERS.includes(gender)) {
+        errors.push("מין חייב להיות male או female");
+      }
 
       // Check if student exists (by national_id or name)
       let existingStudentId: string | undefined;
@@ -213,6 +221,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           student_first_name: firstName,
           student_last_name: lastName,
           national_id: nationalId,
+          gender,
           grade,
           playing_level: playingLevel,
           parent_name: parentName,
@@ -277,6 +286,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
               first_name: row.data.student_first_name,
               last_name: row.data.student_last_name,
               national_id: row.data.national_id || null,
+              gender: row.data.gender || null,
               grade: row.data.grade || null,
               playing_level: row.data.playing_level || null,
               parent_name: row.data.parent_name || null,
