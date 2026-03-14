@@ -187,10 +187,10 @@ const AdminStudentForm = () => {
               />
             </div>
 
-            <div className="flex items-center gap-3 sm:col-span-2">
-              <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
-              <Label>פעיל</Label>
-            </div>
+          </div>
+          <div className="flex items-center gap-3 pt-2">
+            <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
+            <Label>פעיל</Label>
           </div>
         </div>
 
