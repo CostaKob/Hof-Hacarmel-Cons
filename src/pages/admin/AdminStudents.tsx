@@ -23,18 +23,17 @@ const AdminStudents = () => {
   const schoolFilter = searchParams.get("school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
   const cityFilter = searchParams.get("city") || "all";
-  const activeFilter = searchParams.get("active") || "active";
+  const statusFilter = searchParams.get("status") || "active";
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
-  const statusFilter = searchParams.get("status") || "all";
   const paymentFilter = searchParams.get("payment") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
       if (value === "") next.delete(key);
-      else if (key === "active" && value === "active") next.delete(key);
-      else if (key !== "active" && value === "all") next.delete(key);
+      else if (key === "status" && value === "active") next.delete(key);
+      else if (key !== "status" && value === "all") next.delete(key);
       else next.set(key, value);
       return next;
     }, { replace: true });
@@ -91,9 +90,8 @@ const AdminStudents = () => {
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
-    if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
-    if (activeFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
-    if (activeFilter === "inactive" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
+    if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
+    if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
     if (paymentFilter === "paid" && !paidEnrollmentIds.has(r.id)) return false;
     if (paymentFilter === "unpaid" && paidEnrollmentIds.has(r.id)) return false;
     return true;
@@ -168,12 +166,12 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={activeFilter} onValueChange={(v) => setFilter("active", v)}>
+        <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="active">פעילים</SelectItem>
             <SelectItem value="all">הכל</SelectItem>
-            <SelectItem value="inactive">לא פעילים</SelectItem>
+            <SelectItem value="stopped">הפסיקו</SelectItem>
           </SelectContent>
         </Select>
 
@@ -194,15 +192,6 @@ const AdminStudents = () => {
             {["א","ב","ג"].map((l) => (
               <SelectItem key={l} value={l}>{l}</SelectItem>
             ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל הסטטוסים</SelectItem>
-            <SelectItem value="פעיל">פעיל</SelectItem>
-            <SelectItem value="הפסיק">הפסיק</SelectItem>
           </SelectContent>
         </Select>
 
