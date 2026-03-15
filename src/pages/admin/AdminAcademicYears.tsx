@@ -9,7 +9,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, ArrowLeftRight, Users, GraduationCap, CalendarDays, Archive, Eye } from "lucide-react";
+import { Plus, ArrowLeftRight, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen } from "lucide-react";
 
 const AdminAcademicYears = () => {
   const navigate = useNavigate();
@@ -36,42 +36,42 @@ const AdminAcademicYears = () => {
   const { data: stats = {} } = useQuery({
     queryKey: ["academic-years-stats"],
     queryFn: async () => {
-      const [{ data: enrollments }, { data: reports }] = await Promise.all([
+      const [{ data: enrollments }, { data: reports }, { data: teachers }] = await Promise.all([
         supabase.from("enrollments").select("academic_year_id, student_id, teacher_id"),
         supabase.from("reports").select("academic_year_id, id"),
+        supabase.from("teachers").select("id").eq("is_active", true),
       ]);
 
-      const result: Record<string, { students: number; teachers: number; reports: number }> = {};
+      const result: Record<string, { students: number; teachers: number; enrollments: number; reports: number }> = {};
+      const activeTeacherCount = teachers?.length ?? 0;
 
-      (enrollments ?? []).forEach((e: any) => {
-        const yid = e.academic_year_id;
-        if (!yid) return;
-        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
-      });
-
-      // Count unique students and teachers per year
+      // Count unique students and enrollments per year
       const studentSets: Record<string, Set<string>> = {};
-      const teacherSets: Record<string, Set<string>> = {};
+      const enrollmentCounts: Record<string, number> = {};
       (enrollments ?? []).forEach((e: any) => {
         const yid = e.academic_year_id;
         if (!yid) return;
         if (!studentSets[yid]) studentSets[yid] = new Set();
-        if (!teacherSets[yid]) teacherSets[yid] = new Set();
         studentSets[yid].add(e.student_id);
-        teacherSets[yid].add(e.teacher_id);
+        enrollmentCounts[yid] = (enrollmentCounts[yid] ?? 0) + 1;
       });
 
       Object.keys(studentSets).forEach((yid) => {
-        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+        if (!result[yid]) result[yid] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
         result[yid].students = studentSets[yid].size;
-        result[yid].teachers = teacherSets[yid].size;
+        result[yid].enrollments = enrollmentCounts[yid] ?? 0;
       });
 
       (reports ?? []).forEach((r: any) => {
         const yid = r.academic_year_id;
         if (!yid) return;
-        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+        if (!result[yid]) result[yid] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
         result[yid].reports++;
+      });
+
+      // Ensure all years have an entry
+      years.forEach((y: any) => {
+        if (!result[y.id]) result[y.id] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
       });
 
       return result;
@@ -173,7 +173,7 @@ const AdminAcademicYears = () => {
             {/* Active years */}
             <div className="space-y-3">
               {activeYears.map((y: any) => {
-                const s = stats[y.id] ?? { students: 0, teachers: 0, reports: 0 };
+                const s = stats[y.id] ?? { students: 0, teachers: 0, enrollments: 0, reports: 0 };
                 return (
                   <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
                     <div className="flex items-center justify-between">
@@ -183,11 +183,16 @@ const AdminAcademicYears = () => {
                       </div>
                       <Badge className="rounded-lg">פעילה</Badge>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       <div className="rounded-xl bg-muted/50 p-3 text-center">
                         <Users className="h-4 w-4 mx-auto text-primary mb-1" />
                         <p className="text-xl font-bold text-foreground">{s.students}</p>
                         <p className="text-xs text-muted-foreground">תלמידים</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/50 p-3 text-center">
+                        <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
+                        <p className="text-xl font-bold text-foreground">{s.enrollments}</p>
+                        <p className="text-xs text-muted-foreground">רישומים</p>
                       </div>
                       <div className="rounded-xl bg-muted/50 p-3 text-center">
                         <GraduationCap className="h-4 w-4 mx-auto text-primary mb-1" />
@@ -219,7 +224,7 @@ const AdminAcademicYears = () => {
                 </Button>
 
                 {showArchive && archivedYears.map((y: any) => {
-                  const s = stats[y.id] ?? { students: 0, teachers: 0, reports: 0 };
+                  const s = stats[y.id] ?? { students: 0, teachers: 0, enrollments: 0, reports: 0 };
                   return (
                     <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 opacity-70">
                       <div className="flex items-center justify-between">
@@ -231,10 +236,14 @@ const AdminAcademicYears = () => {
                           הפעל
                         </Button>
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-4 gap-3">
                         <div className="rounded-xl bg-muted/50 p-3 text-center">
                           <p className="text-lg font-bold text-foreground">{s.students}</p>
                           <p className="text-xs text-muted-foreground">תלמידים</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-3 text-center">
+                          <p className="text-lg font-bold text-foreground">{s.enrollments}</p>
+                          <p className="text-xs text-muted-foreground">רישומים</p>
                         </div>
                         <div className="rounded-xl bg-muted/50 p-3 text-center">
                           <p className="text-lg font-bold text-foreground">{s.teachers}</p>
