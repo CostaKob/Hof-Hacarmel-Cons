@@ -99,7 +99,7 @@ const AdminStudentCard = () => {
     ) : null;
 
   return (
-    <AdminLayout title={`${(student as any).gender === "female" ? "👧" : (student as any).gender === "male" ? "👦" : ""} ${student.first_name} ${student.last_name}`} backPath="/admin/students">
+    <AdminLayout title={`${(student as any).gender === "female" ? "👧" : (student as any).gender === "male" ? "👦" : ""} ${student.first_name} ${student.last_name}`} backPath="/admin/students" onBack={() => navigate(-1)}>
       <div className="space-y-5">
         <div className="flex items-center justify-between">
           <Badge variant={student.is_active ? "default" : "secondary"} className="rounded-lg">

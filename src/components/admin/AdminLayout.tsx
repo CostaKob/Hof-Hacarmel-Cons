@@ -22,9 +22,10 @@ interface AdminLayoutProps {
   children: ReactNode;
   title: string;
   backPath?: string;
+  onBack?: () => void;
 }
 
-const AdminLayout = ({ children, title, backPath }: AdminLayoutProps) => {
+const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -71,7 +72,7 @@ const AdminLayout = ({ children, title, backPath }: AdminLayoutProps) => {
                 variant="ghost"
                 size="icon"
                 className="text-primary-foreground hover:bg-primary-foreground/10"
-                onClick={() => navigate(backPath)}
+                onClick={() => onBack ? onBack() : navigate(backPath!)}
               >
                 <ArrowRight className="h-5 w-5" />
               </Button>
