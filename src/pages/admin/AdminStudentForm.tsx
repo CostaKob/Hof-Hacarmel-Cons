@@ -32,9 +32,11 @@ interface StudentFormData {
   parent_name: string;
   parent_phone: string;
   parent_email: string;
+  parent_national_id: string;
   parent_name_2: string;
   parent_phone_2: string;
   parent_email_2: string;
+  parent_national_id_2: string;
   is_active: boolean;
 }
 
