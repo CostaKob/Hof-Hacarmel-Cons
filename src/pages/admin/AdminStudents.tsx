@@ -77,7 +77,7 @@ const AdminStudents = () => {
           <Input
             placeholder="חיפוש לפי שם תלמיד..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setFilter("q", e.target.value)}
             className="pr-9 h-12 rounded-xl"
           />
         </div>
