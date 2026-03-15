@@ -53,6 +53,27 @@ const AdminEnrollmentForm = () => {
 
   const isActive = watch("is_active");
   const selectedTeacherId = watch("teacher_id");
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("enrollments").delete().eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
+      toast.success("השיוך נמחק בהצלחה");
+      navigate(-1 as any);
+    },
+    onError: (err: any) => {
+      if (err.message?.includes("violates foreign key")) {
+        toast.error("לא ניתן למחוק שיוך עם דוחות נוכחות קיימים.");
+      } else {
+        toast.error(err.message || "שגיאה במחיקת השיוך");
+      }
+    },
+  });
 
   const { data: students = [] } = useQuery({
     queryKey: ["admin-students-select"],
