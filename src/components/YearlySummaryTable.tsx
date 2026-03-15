@@ -42,7 +42,7 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
               <TableCell className="whitespace-nowrap">{r.schoolName}</TableCell>
               <TableCell className="text-center">{r.lessonDuration}</TableCell>
               <TableCell className="text-center">
-                <Badge variant={r.isActive ? "default" : "secondary"} className="text-[11px]">
+                <Badge variant="outline" className={`text-[11px] ${r.isActive ? "text-primary border-primary bg-primary/10" : "text-destructive border-destructive bg-destructive/10"}`}>
                   {r.isActive ? "פעיל" : "לא פעיל"}
                 </Badge>
               </TableCell>
@@ -72,7 +72,7 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
         <div key={r.enrollmentId} className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-semibold text-foreground">{r.studentName}</span>
-            <Badge variant={r.isActive ? "default" : "secondary"} className="text-[11px]">
+            <Badge variant="outline" className={`text-[11px] ${r.isActive ? "text-primary border-primary bg-primary/10" : "text-destructive border-destructive bg-destructive/10"}`}>
               {r.isActive ? "פעיל" : "לא פעיל"}
             </Badge>
           </div>

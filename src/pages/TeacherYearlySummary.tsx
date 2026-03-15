@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useTeacherProfile, useTeacherEnrollments, useTeacherSchools } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherAllEnrollments, useTeacherSchools } from "@/hooks/useTeacherData";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -30,13 +30,13 @@ function useTeacherReportLinesAll(teacherId: string | undefined) {
 const TeacherYearlySummary = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: tLoading } = useTeacherProfile();
-  const { data: enrollments, isLoading: eLoading } = useTeacherEnrollments(teacher?.id);
+  const { data: enrollments, isLoading: eLoading } = useTeacherAllEnrollments(teacher?.id);
   const { data: schools } = useTeacherSchools(teacher?.id);
   const { data: lines, isLoading: lLoading } = useTeacherReportLinesAll(teacher?.id);
 
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("active");
 
   const rows = useMemo<EnrollmentSummaryRow[]>(() => {
     if (!enrollments || !lines) return [];
@@ -115,9 +115,9 @@ const TeacherYearlySummary = () => {
             <Select value={activeFilter} onValueChange={setActiveFilter}>
               <SelectTrigger className="h-10 rounded-xl bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="active">פעילים</SelectItem>
                 <SelectItem value="all">הכל</SelectItem>
-                <SelectItem value="active">פעיל</SelectItem>
-                <SelectItem value="inactive">לא פעיל</SelectItem>
+                <SelectItem value="inactive">לא פעילים</SelectItem>
               </SelectContent>
             </Select>
           </div>
