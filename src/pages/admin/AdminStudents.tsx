@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -12,15 +12,26 @@ import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
-  const [teacherFilter, setTeacherFilter] = useState("all");
-  const [schoolFilter, setSchoolFilter] = useState("all");
-  const [durationFilter, setDurationFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [gradeFilter, setGradeFilter] = useState("all");
-  const [levelFilter, setLevelFilter] = useState("all");
+
+  const search = searchParams.get("q") || "";
+  const teacherFilter = searchParams.get("teacher") || "all";
+  const schoolFilter = searchParams.get("school") || "all";
+  const durationFilter = searchParams.get("duration") || "all";
+  const cityFilter = searchParams.get("city") || "all";
+  const activeFilter = searchParams.get("active") || "all";
+  const gradeFilter = searchParams.get("grade") || "all";
+  const levelFilter = searchParams.get("level") || "all";
+
+  const setFilter = useCallback((key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === "" || value === "all") next.delete(key);
+      else next.set(key, value);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-students-enrollments"],
@@ -66,7 +77,7 @@ const AdminStudents = () => {
           <Input
             placeholder="חיפוש לפי שם תלמיד..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => setFilter("q", e.target.value)}
             className="pr-9 h-12 rounded-xl"
           />
         </div>
@@ -86,7 +97,7 @@ const AdminStudents = () => {
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <Select value={teacherFilter} onValueChange={setTeacherFilter}>
+        <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
           <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורה" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המורים</SelectItem>
@@ -96,7 +107,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={schoolFilter} onValueChange={setSchoolFilter}>
+        <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
           <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל בתי הספר</SelectItem>
@@ -106,7 +117,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={durationFilter} onValueChange={setDurationFilter}>
+        <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המשכים</SelectItem>
@@ -116,7 +127,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={cityFilter} onValueChange={setCityFilter}>
+        <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הערים</SelectItem>
@@ -126,7 +137,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={activeFilter} onValueChange={setActiveFilter}>
+        <Select value={activeFilter} onValueChange={(v) => setFilter("active", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">הכל</SelectItem>
@@ -135,7 +146,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={gradeFilter} onValueChange={setGradeFilter}>
+        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הכיתות</SelectItem>
@@ -145,7 +156,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={levelFilter} onValueChange={setLevelFilter}>
+        <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הרמות</SelectItem>
