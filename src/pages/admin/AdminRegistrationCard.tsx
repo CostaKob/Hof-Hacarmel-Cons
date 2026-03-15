@@ -16,6 +16,7 @@ const AdminRegistrationCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: registration, isLoading } = useQuery({
     queryKey: ["admin-registration", id],
