@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2 } from "lucide-react";
+import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
-type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly" | "registrations";
+type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly" | "registrations" | "payments";
 
 interface ExportOption {
   key: ExportKey;
@@ -22,6 +22,7 @@ const EXPORTS: ExportOption[] = [
   { key: "enrollments", label: "רישומים (שיוכים)", description: "כל הרישומים כולל תלמיד, מורה, בי\"ס וכלי", icon: ClipboardList },
   { key: "reports", label: "דיווחי שיעורים", description: "כל דיווחי השיעורים כולל סטטוס נוכחות", icon: BarChart3 },
   { key: "yearly", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכל רישום", icon: BarChart3 },
+  { key: "payments", label: "תשלומים", description: "כל התשלומים כולל שיוך, סכום ואמצעי תשלום", icon: CreditCard },
   { key: "registrations", label: "הרשמות", description: "כל ההרשמות שהתקבלו כולל סטטוס ופרטים", icon: ClipboardList },
 ];
 
@@ -152,6 +153,32 @@ const AdminExports = () => {
     });
   };
 
+  const exportPayments = async () => {
+    const { data, error } = await supabase
+      .from("student_payments")
+      .select("*, students(first_name, last_name), enrollments(instruments(name), schools(name), teachers(first_name, last_name))")
+      .order("payment_date", { ascending: false });
+    if (error) throw error;
+    const methodMap: Record<string, string> = {
+      cash: "מזומן", check: "צ'ק", transfer: "העברה", credit_card: "אשראי", other: "אחר",
+    };
+    const typeMap: Record<string, string> = { payment: "תשלום", credit: "זיכוי" };
+    return (data ?? []).map((p: any) => ({
+      "תאריך": p.payment_date,
+      "תלמיד": `${p.students?.first_name ?? ""} ${p.students?.last_name ?? ""}`.trim(),
+      "מורה": `${p.enrollments?.teachers?.first_name ?? ""} ${p.enrollments?.teachers?.last_name ?? ""}`.trim(),
+      "כלי": p.enrollments?.instruments?.name ?? "",
+      "בית ספר": p.enrollments?.schools?.name ?? "",
+      "סוג": typeMap[p.transaction_type] ?? p.transaction_type,
+      "סכום": p.amount,
+      "אמצעי תשלום": methodMap[p.payment_method] ?? p.payment_method ?? "",
+      "תשלומים": p.installments,
+      "מספר אסמכתא": p.reference_number ?? "",
+      "חודש ייחוס": p.month_reference ?? "",
+      "הערות": p.notes ?? "",
+    }));
+  };
+
   const exportRegistrations = async () => {
     const { data, error } = await supabase.from("registrations").select("*").order("created_at", { ascending: false });
     if (error) throw error;
@@ -191,6 +218,7 @@ const AdminExports = () => {
         case "enrollments": data = await exportEnrollments(); break;
         case "reports": data = await exportReports(); break;
         case "yearly": data = await exportYearly(); break;
+        case "payments": data = await exportPayments(); break;
         case "registrations": data = await exportRegistrations(); break;
       }
       if (data.length === 0) {
@@ -203,6 +231,7 @@ const AdminExports = () => {
         enrollments: "רישומים",
         reports: "דיווחי_שיעורים",
         yearly: "סיכום_שנתי",
+        payments: "תשלומים",
         registrations: "הרשמות",
       };
       downloadXlsx(data, names[key]);
