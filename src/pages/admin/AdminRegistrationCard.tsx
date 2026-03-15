@@ -92,6 +92,22 @@ const AdminRegistrationCard = () => {
     onError: () => toast.error("שגיאה בעדכון"),
   });
 
+  const deleteRegistration = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("registrations" as any)
+        .delete()
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
+      toast.success("ההרשמה נמחקה");
+      navigate("/admin/registrations");
+    },
+    onError: () => toast.error("שגיאה במחיקת ההרשמה"),
+  });
+
   if (isLoading) {
     return <AdminLayout title="הרשמה"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   }
