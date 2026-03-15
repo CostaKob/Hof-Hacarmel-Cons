@@ -132,7 +132,7 @@ const TeacherStudents = () => {
               <button
                 key={enrollment.id}
                 onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md"
+                className={`flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active ? "opacity-50" : ""}`}
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
                   <span className="text-sm font-bold text-accent-foreground">{index + 1}</span>
