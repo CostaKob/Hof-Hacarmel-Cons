@@ -62,6 +62,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setInstallments(String((editPayment as any).installments ?? 1));
       setNotes(editPayment.notes || "");
       setSelectedEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
+      setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
       resetForm();
     }
