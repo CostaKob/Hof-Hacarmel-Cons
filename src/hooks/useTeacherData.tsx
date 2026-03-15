@@ -20,6 +20,23 @@ export function useTeacherProfile() {
   });
 }
 
+// ─── Teacher by ID (for admin context) ───
+export function useTeacherById(teacherId: string | undefined) {
+  return useQuery({
+    queryKey: ["teacher-by-id", teacherId],
+    enabled: !!teacherId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("*")
+        .eq("id", teacherId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 // ─── Teacher Enrollments (active) ───
 export function useTeacherEnrollments(teacherId: string | undefined) {
   return useQuery({

@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
-import { useReportDetails, useReportLines, useTeacherProfile, useTeacherReportsForDate } from "@/hooks/useTeacherData";
+import { useReportDetails, useReportLines, useTeacherProfile, useTeacherById, useTeacherReportsForDate } from "@/hooks/useTeacherData";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -38,14 +39,22 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const TeacherReportView = () => {
-  const { reportId } = useParams<{ reportId: string }>();
+  const { reportId, teacherId: urlTeacherId } = useParams<{ reportId: string; teacherId?: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { roles } = useAuth();
+  const isAdminContext = !!urlTeacherId && roles.includes("admin");
+
   const { data: report, isLoading } = useReportDetails(reportId);
   const { data: lines } = useReportLines(reportId);
-  const { data: teacher } = useTeacherProfile();
+  const { data: teacherProfile } = useTeacherProfile();
+  const { data: teacherById } = useTeacherById(isAdminContext ? urlTeacherId : undefined);
+  const teacher = isAdminContext ? teacherById : teacherProfile;
   const reportDate = report?.report_date;
   const { data: allDayReports } = useTeacherReportsForDate(teacher?.id, reportDate);
+
+  const backPath = isAdminContext ? `/admin/teachers/${urlTeacherId}/reports` : "/teacher/reports";
+  const editPath = isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}/edit` : `/teacher/reports/${reportId}/edit`;
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -70,7 +79,7 @@ const TeacherReportView = () => {
 
       queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
       toast.success("יום העבודה נמחק בהצלחה");
-      navigate("/teacher/reports");
+      navigate(backPath);
     } catch (err) {
       console.error(err);
       toast.error("שגיאה במחיקת יום העבודה");
@@ -92,7 +101,7 @@ const TeacherReportView = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
-        <Button variant="outline" onClick={() => navigate("/teacher/reports")}>חזרה</Button>
+        <Button variant="outline" onClick={() => navigate(backPath)}>חזרה</Button>
       </div>
     );
   }
@@ -107,7 +116,7 @@ const TeacherReportView = () => {
               variant="ghost"
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={() => navigate("/teacher/reports")}
+              onClick={() => navigate(backPath)}
             >
               <ArrowRight className="h-5 w-5" />
             </Button>
@@ -118,7 +127,7 @@ const TeacherReportView = () => {
               variant="secondary"
               size="sm"
               className="rounded-xl h-10"
-              onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}
+              onClick={() => navigate(editPath)}
             >
               <Pencil className="ml-1 h-4 w-4" />
               עריכה

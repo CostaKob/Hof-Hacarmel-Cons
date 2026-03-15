@@ -127,7 +127,11 @@ const AdminTeacherReports = () => {
               const { formatted, weekday } = formatDateWithDay(report.report_date);
               const lines = report.report_lines ?? [];
               return (
-                <div key={report.id} className="rounded-2xl bg-card shadow-sm border border-border overflow-hidden">
+                <div
+                  key={report.id}
+                  className="rounded-2xl bg-card shadow-sm border border-border overflow-hidden cursor-pointer transition-all hover:shadow-md active:scale-[0.99] touch-manipulation"
+                  onClick={() => navigate(`/admin/teachers/${teacherId}/reports/${report.id}`)}
+                >
                   <div className="flex items-center justify-between px-4 pt-4 pb-2">
                     <div className="flex items-center gap-2">
                       <CalendarDays className="h-5 w-5 text-primary" />

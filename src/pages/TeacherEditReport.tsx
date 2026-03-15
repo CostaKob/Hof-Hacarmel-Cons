@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useTeacherProfile,
+  useTeacherById,
   useTeacherEnrollments,
   useReportDetails,
   useTeacherReportsForDate,
@@ -54,11 +55,14 @@ interface LineState {
 }
 
 const TeacherEditReport = () => {
-  const { reportId } = useParams<{ reportId: string }>();
+  const { reportId, teacherId: urlTeacherId } = useParams<{ reportId: string; teacherId?: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const queryClient = useQueryClient();
-  const { data: teacher } = useTeacherProfile();
+  const isAdminContext = !!urlTeacherId && roles.includes("admin");
+  const { data: teacherProfile } = useTeacherProfile();
+  const { data: teacherById } = useTeacherById(isAdminContext ? urlTeacherId : undefined);
+  const teacher = isAdminContext ? teacherById : teacherProfile;
 
   // Load the clicked report to get the date
   const { data: report, isLoading: reportLoading } = useReportDetails(reportId);
@@ -240,9 +244,13 @@ const TeacherEditReport = () => {
 
     queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
     queryClient.invalidateQueries({ queryKey: ["teacher-last-report"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-teacher-reports"] });
 
     toast.success("יום העבודה עודכן בהצלחה");
-    navigate(`/teacher/reports/${newReport.id}`);
+    const viewPath = isAdminContext
+      ? `/admin/teachers/${urlTeacherId}/reports/${newReport.id}`
+      : `/teacher/reports/${newReport.id}`;
+    navigate(viewPath);
   };
 
   if (reportLoading || linesLoading) {
@@ -257,7 +265,7 @@ const TeacherEditReport = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
-        <Button variant="outline" onClick={() => navigate("/teacher/reports")}>חזרה</Button>
+        <Button variant="outline" onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports` : "/teacher/reports")}>חזרה</Button>
       </div>
     );
   }
@@ -296,7 +304,7 @@ const TeacherEditReport = () => {
             variant="ghost"
             size="icon"
             className="text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => navigate(`/teacher/reports/${reportId}`)}
+            onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}` : `/teacher/reports/${reportId}`)}
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
@@ -452,7 +460,7 @@ const TeacherEditReport = () => {
             variant="outline"
             size="lg"
             className="flex-1 h-14 rounded-2xl text-base"
-            onClick={() => navigate(`/teacher/reports/${reportId}`)}
+            onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}` : `/teacher/reports/${reportId}`)}
           >
             ביטול
           </Button>
