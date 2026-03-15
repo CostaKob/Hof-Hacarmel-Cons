@@ -9,12 +9,13 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, ArrowLeftRight } from "lucide-react";
+import { Plus, ArrowLeftRight, Users, GraduationCap, CalendarDays, Archive, Eye } from "lucide-react";
 
 const AdminAcademicYears = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
+  const [showArchive, setShowArchive] = useState(false);
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -31,6 +32,53 @@ const AdminAcademicYears = () => {
     },
   });
 
+  // Fetch stats for all years
+  const { data: stats = {} } = useQuery({
+    queryKey: ["academic-years-stats"],
+    queryFn: async () => {
+      const [{ data: enrollments }, { data: reports }] = await Promise.all([
+        supabase.from("enrollments").select("academic_year_id, student_id, teacher_id"),
+        supabase.from("reports").select("academic_year_id, id"),
+      ]);
+
+      const result: Record<string, { students: number; teachers: number; reports: number }> = {};
+
+      (enrollments ?? []).forEach((e: any) => {
+        const yid = e.academic_year_id;
+        if (!yid) return;
+        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+      });
+
+      // Count unique students and teachers per year
+      const studentSets: Record<string, Set<string>> = {};
+      const teacherSets: Record<string, Set<string>> = {};
+      (enrollments ?? []).forEach((e: any) => {
+        const yid = e.academic_year_id;
+        if (!yid) return;
+        if (!studentSets[yid]) studentSets[yid] = new Set();
+        if (!teacherSets[yid]) teacherSets[yid] = new Set();
+        studentSets[yid].add(e.student_id);
+        teacherSets[yid].add(e.teacher_id);
+      });
+
+      Object.keys(studentSets).forEach((yid) => {
+        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+        result[yid].students = studentSets[yid].size;
+        result[yid].teachers = teacherSets[yid].size;
+      });
+
+      (reports ?? []).forEach((r: any) => {
+        const yid = r.academic_year_id;
+        if (!yid) return;
+        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+        result[yid].reports++;
+      });
+
+      return result;
+    },
+    enabled: years.length > 0,
+  });
+
   const createMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("academic_years").insert({
@@ -43,6 +91,7 @@ const AdminAcademicYears = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["academic-years"] });
+      queryClient.invalidateQueries({ queryKey: ["academic-years-stats"] });
       toast.success("שנת לימודים נוצרה בהצלחה");
       setShowForm(false);
       setName("");
@@ -54,9 +103,7 @@ const AdminAcademicYears = () => {
 
   const activateMutation = useMutation({
     mutationFn: async (yearId: string) => {
-      // Deactivate all
       await supabase.from("academic_years").update({ is_active: false }).neq("id", "");
-      // Activate selected
       const { error } = await supabase.from("academic_years").update({ is_active: true }).eq("id", yearId);
       if (error) throw error;
     },
@@ -73,6 +120,9 @@ const AdminAcademicYears = () => {
     setStartDate(`${year}-09-01`);
     setEndDate(`${year + 1}-08-31`);
   };
+
+  const activeYears = years.filter((y: any) => y.is_active);
+  const archivedYears = years.filter((y: any) => !y.is_active);
 
   return (
     <AdminLayout title="שנות לימודים" backPath="/admin">
@@ -119,25 +169,88 @@ const AdminAcademicYears = () => {
         ) : years.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">אין שנות לימודים. צור את השנה הראשונה.</p>
         ) : (
-          <div className="space-y-2">
-            {years.map((y: any) => (
-              <div key={y.id} className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm">
-                <div>
-                  <p className="font-semibold text-foreground">{y.name}</p>
-                  <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  {y.is_active ? (
-                    <Badge className="rounded-lg">פעילה</Badge>
-                  ) : (
-                    <Button variant="outline" size="sm" className="rounded-lg" onClick={() => activateMutation.mutate(y.id)}>
-                      הפעל
-                    </Button>
-                  )}
-                </div>
+          <>
+            {/* Active years */}
+            <div className="space-y-3">
+              {activeYears.map((y: any) => {
+                const s = stats[y.id] ?? { students: 0, teachers: 0, reports: 0 };
+                return (
+                  <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground text-lg">{y.name}</p>
+                        <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
+                      </div>
+                      <Badge className="rounded-lg">פעילה</Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-xl bg-muted/50 p-3 text-center">
+                        <Users className="h-4 w-4 mx-auto text-primary mb-1" />
+                        <p className="text-xl font-bold text-foreground">{s.students}</p>
+                        <p className="text-xs text-muted-foreground">תלמידים</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/50 p-3 text-center">
+                        <GraduationCap className="h-4 w-4 mx-auto text-primary mb-1" />
+                        <p className="text-xl font-bold text-foreground">{s.teachers}</p>
+                        <p className="text-xs text-muted-foreground">מורים</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/50 p-3 text-center">
+                        <CalendarDays className="h-4 w-4 mx-auto text-primary mb-1" />
+                        <p className="text-xl font-bold text-foreground">{s.reports}</p>
+                        <p className="text-xs text-muted-foreground">דיווחים</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Archived years */}
+            {archivedYears.length > 0 && (
+              <div className="space-y-3">
+                <Button
+                  variant="ghost"
+                  className="w-full h-11 rounded-xl text-sm text-muted-foreground"
+                  onClick={() => setShowArchive(!showArchive)}
+                >
+                  <Archive className="h-4 w-4 ml-1" />
+                  {showArchive ? "הסתר ארכיון" : `הצג ארכיון (${archivedYears.length})`}
+                  {showArchive && <Eye className="h-4 w-4 mr-1" />}
+                </Button>
+
+                {showArchive && archivedYears.map((y: any) => {
+                  const s = stats[y.id] ?? { students: 0, teachers: 0, reports: 0 };
+                  return (
+                    <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 opacity-70">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-foreground">{y.name}</p>
+                          <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
+                        </div>
+                        <Button variant="outline" size="sm" className="rounded-lg" onClick={() => activateMutation.mutate(y.id)}>
+                          הפעל
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="rounded-xl bg-muted/50 p-3 text-center">
+                          <p className="text-lg font-bold text-foreground">{s.students}</p>
+                          <p className="text-xs text-muted-foreground">תלמידים</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-3 text-center">
+                          <p className="text-lg font-bold text-foreground">{s.teachers}</p>
+                          <p className="text-xs text-muted-foreground">מורים</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-3 text-center">
+                          <p className="text-lg font-bold text-foreground">{s.reports}</p>
+                          <p className="text-xs text-muted-foreground">דיווחים</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </AdminLayout>
