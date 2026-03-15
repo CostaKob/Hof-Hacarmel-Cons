@@ -35,6 +35,26 @@ const AdminStudentCard = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      // Get enrollment IDs for this student
+      const { data: enrollments } = await supabase
+        .from("enrollments")
+        .select("id")
+        .eq("student_id", studentId!);
+      const enrollmentIds = (enrollments || []).map((e) => e.id);
+
+      if (enrollmentIds.length > 0) {
+        // Delete report_lines via reports that reference these enrollments
+        await supabase.from("report_lines").delete().in("enrollment_id", enrollmentIds);
+        // Delete payments
+        await supabase.from("student_payments").delete().in("enrollment_id", enrollmentIds);
+        // Delete enrollments
+        await supabase.from("enrollments").delete().eq("student_id", studentId!);
+      }
+
+      // Delete student notes
+      await supabase.from("student_notes").delete().eq("student_id", studentId!);
+
+      // Delete the student
       const { error } = await supabase.from("students").delete().eq("id", studentId!);
       if (error) throw error;
     },
@@ -44,11 +64,7 @@ const AdminStudentCard = () => {
       navigate("/admin/students");
     },
     onError: (err: any) => {
-      if (err.message?.includes("violates foreign key")) {
-        toast.error("לא ניתן למחוק תלמיד עם שיוכים או דוחות קיימים. יש לבטל את השיוכים קודם.");
-      } else {
-        toast.error(err.message || "שגיאה במחיקת התלמיד");
-      }
+      toast.error(err.message || "שגיאה במחיקת התלמיד");
     },
   });
 
@@ -144,7 +160,7 @@ const AdminStudentCard = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>מחיקת תלמיד</AlertDialogTitle>
               <AlertDialogDescription>
-                האם למחוק את {student.first_name} {student.last_name}? פעולה זו אינה ניתנת לביטול.
+                האם למחוק את {student.first_name} {student.last_name} כולל כל השיוכים, הדוחות והתשלומים? פעולה זו אינה ניתנת לביטול.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
