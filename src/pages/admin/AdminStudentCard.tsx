@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { calcYearsOfPlaying } from "@/lib/constants";
+import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
