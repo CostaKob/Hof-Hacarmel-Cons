@@ -132,6 +132,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setPaymentMethod("credit_card");
     setInstallments("1");
     setNotes("");
+    setTransactionType("payment");
     const defaultEnrollment = enrollments.find((e: any) => e.is_active) || enrollments[0];
     setSelectedEnrollmentId(defaultEnrollment?.id || "");
   };
