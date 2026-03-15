@@ -116,6 +116,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
           <DialogTitle>{isEdit ? "עריכת תשלום" : "הוסף תשלום"}</DialogTitle>
+          <DialogDescription>
+            {isEdit ? "עדכון פרטי תשלום קיים עבור התלמיד." : "הוספת רישום תשלום פנימי לצורכי מעקב בלבד."}
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <div>
@@ -127,26 +130,30 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
           </div>
           <div>
-            <Label>אופן תשלום</Label>
-            <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {PAYMENT_METHODS.map((m) => (
-                  <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="payment-method">אופן תשלום</Label>
+            <select
+              id="payment-method"
+              value={paymentMethod}
+              onChange={(e) => setPaymentMethod(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m.value} value={m.value}>{m.label}</option>
+              ))}
+            </select>
           </div>
           <div>
-            <Label>מספר תשלומים</Label>
-            <Select value={installments} onValueChange={setInstallments}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="installments">מספר תשלומים</Label>
+            <select
+              id="installments"
+              value={installments}
+              onChange={(e) => setInstallments(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={String(n)}>{n}</option>
+              ))}
+            </select>
           </div>
           <div>
             <Label>הערות</Label>
