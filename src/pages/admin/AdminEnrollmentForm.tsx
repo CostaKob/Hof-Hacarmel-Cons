@@ -339,6 +339,7 @@ const AdminEnrollmentForm = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+      </form>
     </AdminLayout>
   );
 };
