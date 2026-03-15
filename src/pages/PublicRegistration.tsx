@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ const PublicRegistration = () => {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const approvalRef = useRef<HTMLDivElement>(null);
 
   // Load active year
   const { data: activeYear } = useQuery({
@@ -157,7 +158,20 @@ const PublicRegistration = () => {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      // Scroll to approval if that's the issue
+      if (!approvalChecked && approvalRef.current) {
+        approvalRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        // Scroll to first error field
+        const firstErrorKey = Object.keys(validationErrors)[0];
+        if (firstErrorKey) {
+          const el = document.querySelector(`[data-field-key="${firstErrorKey}"]`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
 
@@ -308,7 +322,7 @@ const PublicRegistration = () => {
           )}
 
           {/* Approval checkbox */}
-          <Card>
+          <Card ref={approvalRef}>
             <CardContent className="pt-6 space-y-3">
               <div className="flex items-start gap-3">
                 <Checkbox
@@ -450,7 +464,7 @@ const DynamicField = ({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-field-key={field.field_key}>
       <Label className="text-sm font-medium">
         {label}
         {is_required && <span className="text-destructive mr-1">*</span>}
