@@ -103,6 +103,7 @@ const AdminStudentForm = () => {
         gender: data.gender === "__none__" ? null : data.gender || null,
         grade: data.grade === "__none__" ? null : data.grade || null,
         playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
+        student_status: data.student_status,
         parent_name: data.parent_name || null,
         parent_phone: data.parent_phone || null,
         parent_email: data.parent_email || null,
