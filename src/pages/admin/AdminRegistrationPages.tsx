@@ -8,7 +8,7 @@ import { DEFAULT_TITLE, DEFAULT_APPROVAL_TEXT, DEFAULT_SUCCESS_MESSAGE, DEFAULT_
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Copy, Edit, FileText } from "lucide-react";
+import { Plus, Copy, Edit, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
