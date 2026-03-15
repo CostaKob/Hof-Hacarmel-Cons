@@ -117,7 +117,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={durationFilter} onValueChange={setDurationFilter}>
+        <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המשכים</SelectItem>
