@@ -22,6 +22,7 @@ interface AdminLayoutProps {
   children: ReactNode;
   title: string;
   backPath?: string;
+  onBack?: () => void;
 }
 
 const AdminLayout = ({ children, title, backPath }: AdminLayoutProps) => {
