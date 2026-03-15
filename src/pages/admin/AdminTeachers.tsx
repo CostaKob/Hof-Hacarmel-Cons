@@ -26,6 +26,8 @@ const AdminTeachers = () => {
     },
   });
 
+  useScrollRestore(!isLoading);
+
   const filtered = teachers.filter((t) => {
     const name = `${t.first_name} ${t.last_name}`.toLowerCase();
     if (search && !name.includes(search.toLowerCase())) return false;
