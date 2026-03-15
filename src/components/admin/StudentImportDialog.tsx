@@ -75,6 +75,8 @@ const COLUMN_LABELS: Record<string, string> = {
   national_id: "ת.ז.",
   gender: "מין (male/female)",
   student_phone: "נייד תלמיד",
+  address: "כתובת",
+  city: "עיר",
   grade: "כיתה",
   playing_level: "רמת נגינה",
   parent_name: "שם הורה",
