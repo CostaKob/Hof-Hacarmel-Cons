@@ -36,6 +36,9 @@ import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
 import AdminYearTransition from "./pages/admin/AdminYearTransition";
+import AdminRegistrations from "./pages/admin/AdminRegistrations";
+import AdminRegistrationCard from "./pages/admin/AdminRegistrationCard";
+import PublicRegistration from "./pages/PublicRegistration";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
