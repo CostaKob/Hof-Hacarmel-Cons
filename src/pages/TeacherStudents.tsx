@@ -10,11 +10,12 @@ import { ArrowRight, Search, User, ChevronLeft } from "lucide-react";
 const TeacherStudents = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
-  const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherEnrollments(teacher?.id);
+  const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id);
 
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("active");
 
   const schools = useMemo(() => {
     if (!enrollments) return [];
