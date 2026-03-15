@@ -6,16 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus, ClipboardCheck } from "lucide-react";
+import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus, ClipboardCheck, PhoneCall, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  new: { label: "חדש", variant: "default" },
-  in_review: { label: "בטיפול", variant: "secondary" },
-  approved: { label: "אושר", variant: "outline" },
-  rejected: { label: "נדחה", variant: "destructive" },
-  converted: { label: "הומר", variant: "outline" },
-};
+import { REGISTRATION_STATUSES, daysAgoLabel } from "@/lib/registrationStatuses";
 
 const AdminRegistrationCard = () => {
   const { id } = useParams<{ id: string }>();
