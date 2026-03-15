@@ -48,6 +48,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [installments, setInstallments] = useState("1");
   const [notes, setNotes] = useState("");
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState("");
+  const [transactionType, setTransactionType] = useState<"payment" | "credit">("payment");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isEdit = !!editPayment;
@@ -61,6 +62,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setInstallments(String((editPayment as any).installments ?? 1));
       setNotes(editPayment.notes || "");
       setSelectedEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
+      setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
       resetForm();
     }
@@ -82,6 +84,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         installments: parseInt(installments),
         notes: notes || null,
         enrollment_id: selectedEnrollmentId,
+        transaction_type: transactionType,
       };
 
       if (isEdit) {
@@ -92,7 +95,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           ...paymentData,
           student_id: studentId,
           academic_year_id: academicYearId,
-          transaction_type: "payment" as const,
         });
         if (error) throw error;
       }
@@ -130,6 +132,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setPaymentMethod("credit_card");
     setInstallments("1");
     setNotes("");
+    setTransactionType("payment");
     const defaultEnrollment = enrollments.find((e: any) => e.is_active) || enrollments[0];
     setSelectedEnrollmentId(defaultEnrollment?.id || "");
   };
@@ -143,12 +146,32 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md" dir="rtl">
           <DialogHeader>
-            <DialogTitle>{isEdit ? "עריכת תשלום" : "הוסף תשלום"}</DialogTitle>
+            <DialogTitle>{isEdit ? "עריכת רישום" : "הוסף תשלום / זיכוי"}</DialogTitle>
             <DialogDescription>
-              {isEdit ? "עדכון פרטי תשלום קיים עבור התלמיד." : "הוספת רישום תשלום פנימי לצורכי מעקב בלבד."}
+              {isEdit ? "עדכון פרטי רישום קיים." : "הוספת רישום תשלום או זיכוי פנימי לצורכי מעקב בלבד."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
+            {/* Transaction type */}
+            <div>
+              <Label>סוג רישום</Label>
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "payment" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                  onClick={() => setTransactionType("payment")}
+                >
+                  תשלום
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "credit" ? "bg-destructive text-destructive-foreground border-destructive" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                  onClick={() => setTransactionType("credit")}
+                >
+                  זיכוי
+                </button>
+              </div>
+            </div>
             {/* Enrollment selector */}
             <div>
               <Label htmlFor="enrollment-select">שיוך (כלי + בי״ס)</Label>
@@ -196,7 +219,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </div>
             <div className="flex gap-2">
               <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
-                {mutation.isPending ? "שומר..." : isEdit ? "עדכן תשלום" : "שמור תשלום"}
+                {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
               </Button>
               {isEdit && (
                 <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteConfirm(true)}>
