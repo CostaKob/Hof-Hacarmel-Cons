@@ -40,7 +40,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as any[]).sort((a: any, b: any) => {
