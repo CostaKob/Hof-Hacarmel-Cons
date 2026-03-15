@@ -72,7 +72,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
                 variant="ghost"
                 size="icon"
                 className="text-primary-foreground hover:bg-primary-foreground/10"
-                onClick={() => onBack ? onBack() : navigate(backPath!)}
+                onClick={() => onBack ? onBack() : navigate(-1)}
               >
                 <ArrowRight className="h-5 w-5" />
               </Button>
