@@ -224,7 +224,7 @@ const AdminAcademicYears = () => {
                 </Button>
 
                 {showArchive && archivedYears.map((y: any) => {
-                  const s = stats[y.id] ?? { students: 0, teachers: 0, reports: 0 };
+                  const s = stats[y.id] ?? { students: 0, teachers: 0, enrollments: 0, reports: 0 };
                   return (
                     <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 opacity-70">
                       <div className="flex items-center justify-between">
@@ -236,10 +236,14 @@ const AdminAcademicYears = () => {
                           הפעל
                         </Button>
                       </div>
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-4 gap-3">
                         <div className="rounded-xl bg-muted/50 p-3 text-center">
                           <p className="text-lg font-bold text-foreground">{s.students}</p>
                           <p className="text-xs text-muted-foreground">תלמידים</p>
+                        </div>
+                        <div className="rounded-xl bg-muted/50 p-3 text-center">
+                          <p className="text-lg font-bold text-foreground">{s.enrollments}</p>
+                          <p className="text-xs text-muted-foreground">רישומים</p>
                         </div>
                         <div className="rounded-xl bg-muted/50 p-3 text-center">
                           <p className="text-lg font-bold text-foreground">{s.teachers}</p>
