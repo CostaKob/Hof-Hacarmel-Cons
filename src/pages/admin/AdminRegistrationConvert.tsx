@@ -566,13 +566,13 @@ const AdminRegistrationConvert = () => {
                   <div className="flex items-center gap-2 mt-1">
                     {!showAllTeachers ? (
                       <>
-                        <p className="text-xs text-muted-foreground">מציג מורים המלמדים: {requestedInstrumentNames.join(", ")}</p>
+                        <p className="text-xs text-muted-foreground">מציג רק מורים המלמדים: {requestedInstrumentNames.join(", ")}</p>
                         <button type="button" className="text-xs text-primary hover:underline" onClick={() => setShowAllTeachers(true)}>כל המורים</button>
                       </>
                     ) : (
                       <>
                         <p className="text-xs text-muted-foreground">מציג את כל המורים</p>
-                        <button type="button" className="text-xs text-primary hover:underline" onClick={() => setShowAllTeachers(false)}>סנן לפי כלים</button>
+                        <button type="button" className="text-xs text-primary hover:underline" onClick={() => setShowAllTeachers(false)}>סנן לפי כלים מבוקשים</button>
                       </>
                     )}
                   </div>
