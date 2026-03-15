@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
