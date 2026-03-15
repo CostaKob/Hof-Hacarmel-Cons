@@ -14,6 +14,7 @@ import AdminStudentCard from "./pages/admin/AdminStudentCard";
 import AdminTeachers from "./pages/admin/AdminTeachers";
 import AdminTeacherForm from "./pages/admin/AdminTeacherForm";
 import AdminTeacherCard from "./pages/admin/AdminTeacherCard";
+import AdminTeacherReports from "./pages/admin/AdminTeacherReports";
 import AdminSchools from "./pages/admin/AdminSchools";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
 import AdminEnrollmentForm from "./pages/admin/AdminEnrollmentForm";
