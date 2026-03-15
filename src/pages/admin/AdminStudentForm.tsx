@@ -140,9 +140,11 @@ const AdminStudentForm = () => {
 
   const PARENT_FIELDS: { name: keyof StudentFormData; label: string; type?: string }[] = [
     { name: "parent_name", label: "שם הורה 1" },
+    { name: "parent_national_id", label: "ת.ז. הורה 1" },
     { name: "parent_phone", label: "טלפון הורה 1", type: "tel" },
     { name: "parent_email", label: "אימייל הורה 1", type: "email" },
     { name: "parent_name_2", label: "שם הורה 2" },
+    { name: "parent_national_id_2", label: "ת.ז. הורה 2" },
     { name: "parent_phone_2", label: "טלפון הורה 2", type: "tel" },
     { name: "parent_email_2", label: "אימייל הורה 2", type: "email" },
   ];
