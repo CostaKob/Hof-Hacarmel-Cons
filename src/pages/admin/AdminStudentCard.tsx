@@ -30,6 +30,27 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 const AdminStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("students").delete().eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      toast.success("התלמיד נמחק בהצלחה");
+      navigate("/admin/students");
+    },
+    onError: (err: any) => {
+      if (err.message?.includes("violates foreign key")) {
+        toast.error("לא ניתן למחוק תלמיד עם שיוכים או דוחות קיימים. יש לבטל את השיוכים קודם.");
+      } else {
+        toast.error(err.message || "שגיאה במחיקת התלמיד");
+      }
+    },
+  });
 
   const { data: student, isLoading } = useQuery({
     queryKey: ["admin-student", studentId],
