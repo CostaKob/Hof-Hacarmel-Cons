@@ -164,7 +164,7 @@ const AdminStudentCard = () => {
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={(student as any).student_status ?? "פעיל"} onValueChange={(v) => statusMutation.mutate(v)}>
-              <SelectTrigger className="h-9 w-28 rounded-lg text-sm">
+              <SelectTrigger className={`h-9 w-28 rounded-lg text-sm font-medium ${(student as any).student_status === "הפסיק" ? "border-destructive text-destructive bg-destructive/10" : "border-primary text-primary bg-primary/10"}`}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
