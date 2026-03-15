@@ -29,7 +29,9 @@ const AdminStudents = () => {
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
       const next = new URLSearchParams(prev);
-      if (value === "" || value === "all") next.delete(key);
+      if (value === "") next.delete(key);
+      else if (key === "active" && value === "active") next.delete(key);
+      else if (key !== "active" && value === "all") next.delete(key);
       else next.set(key, value);
       return next;
     }, { replace: true });
