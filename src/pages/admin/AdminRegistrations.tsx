@@ -6,7 +6,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, Settings } from "lucide-react";
+import { Search, User, Settings, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -130,8 +130,13 @@ const AdminRegistrations = () => {
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <Badge variant={status.variant}>{status.label}</Badge>
-                    {r.existing_student_id && (
+                    {r.existing_student_id && r.match_type === "id_match" && (
                       <span className="text-[10px] text-green-600 font-medium">תלמיד קיים</span>
+                    )}
+                    {r.existing_student_id && r.match_type === "name_match" && (
+                      <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-medium">
+                        <AlertTriangle className="h-3 w-3" /> התאמת שם
+                      </span>
                     )}
                   </div>
                 </button>

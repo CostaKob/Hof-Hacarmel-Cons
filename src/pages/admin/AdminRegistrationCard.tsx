@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowRight, UserCheck, Clock, CheckCircle2, XCircle, Link2 } from "lucide-react";
+import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -41,7 +41,7 @@ const AdminRegistrationCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, first_name, last_name")
+        .select("id, first_name, last_name, national_id")
         .eq("id", registration.existing_student_id)
         .single();
       if (error) return null;
@@ -66,6 +66,36 @@ const AdminRegistrationCard = () => {
     onError: () => toast.error("שגיאה בעדכון הסטטוס"),
   });
 
+  const clearMatchMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("registrations" as any)
+        .update({ existing_student_id: null, match_type: null })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-registration", id] });
+      toast.success("ההתאמה הוסרה — ניתן ליצור תלמיד חדש");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const confirmMatchMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("registrations" as any)
+        .update({ match_type: "id_match" })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-registration", id] });
+      toast.success("ההתאמה אושרה — התלמיד הקיים מקושר");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
   if (isLoading) {
     return <AdminLayout title="הרשמה"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   }
@@ -76,6 +106,9 @@ const AdminRegistrationCard = () => {
 
   const r = registration;
   const status = STATUS_CONFIG[r.status] || STATUS_CONFIG.new;
+  const isIdMatch = r.match_type === "id_match";
+  const isNameMatch = r.match_type === "name_match";
+  const hasExistingStudent = !!r.existing_student_id;
 
   return (
     <AdminLayout
@@ -91,11 +124,12 @@ const AdminRegistrationCard = () => {
               <Badge variant={status.variant} className="text-sm">{status.label}</Badge>
             </div>
 
-            {r.existing_student_id && (
+            {/* ID-based match — confirmed */}
+            {hasExistingStudent && isIdMatch && (
               <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <UserCheck className="h-5 w-5 text-green-600 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-green-800 dark:text-green-200">נמצא תלמיד קיים במערכת</p>
+                  <p className="text-sm font-medium text-green-800 dark:text-green-200">נמצא תלמיד קיים במערכת (לפי ת.ז.)</p>
                   {existingStudent && (
                     <button
                       onClick={() => navigate(`/admin/students/${r.existing_student_id}`)}
@@ -104,6 +138,51 @@ const AdminRegistrationCard = () => {
                       {existingStudent.first_name} {existingStudent.last_name} →
                     </button>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Name-based match — needs confirmation */}
+            {hasExistingStudent && isNameMatch && (
+              <div className="space-y-3">
+                <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-300 dark:border-amber-700 rounded-lg p-3">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                      נמצא תלמיד קיים עם אותו שם. יש לבדוק האם זו אותה הרשמה.
+                    </p>
+                    {existingStudent && (
+                      <button
+                        onClick={() => navigate(`/admin/students/${r.existing_student_id}`)}
+                        className="text-xs text-amber-700 underline mt-1"
+                      >
+                        צפה בתלמיד: {existingStudent.first_name} {existingStudent.last_name}
+                        {existingStudent.national_id ? ` (ת.ז. ${existingStudent.national_id})` : ""} →
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-green-300 text-green-700 hover:bg-green-50"
+                    onClick={() => confirmMatchMutation.mutate()}
+                    disabled={confirmMatchMutation.isPending}
+                  >
+                    <UserCheck className="h-4 w-4 ml-1" />
+                    {confirmMatchMutation.isPending ? "מאשר..." : "זה אותו תלמיד — קשר קיים"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                    onClick={() => clearMatchMutation.mutate()}
+                    disabled={clearMatchMutation.isPending}
+                  >
+                    <UserPlus className="h-4 w-4 ml-1" />
+                    {clearMatchMutation.isPending ? "מעדכן..." : "תלמיד אחר — צור חדש"}
+                  </Button>
                 </div>
               </div>
             )}
@@ -126,7 +205,7 @@ const AdminRegistrationCard = () => {
                   </Button>
                 </>
               )}
-              {r.status === "approved" && !r.existing_student_id && (
+              {r.status === "approved" && !hasExistingStudent && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -149,7 +228,7 @@ const AdminRegistrationCard = () => {
                   צור תלמיד מההרשמה
                 </Button>
               )}
-              {r.status === "approved" && r.existing_student_id && (
+              {r.status === "approved" && hasExistingStudent && isIdMatch && (
                 <Button size="sm" variant="outline" onClick={() => navigate(`/admin/students/${r.existing_student_id}`)}>
                   <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד הקיים
                 </Button>

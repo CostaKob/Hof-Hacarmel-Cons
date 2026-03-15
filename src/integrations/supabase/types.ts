@@ -364,6 +364,7 @@ export type Database = {
           gender: string | null
           grade: string
           id: string
+          match_type: string | null
           notes: string | null
           parent_email: string
           parent_name: string
@@ -391,6 +392,7 @@ export type Database = {
           gender?: string | null
           grade: string
           id?: string
+          match_type?: string | null
           notes?: string | null
           parent_email: string
           parent_name: string
@@ -418,6 +420,7 @@ export type Database = {
           gender?: string | null
           grade?: string
           id?: string
+          match_type?: string | null
           notes?: string | null
           parent_email?: string
           parent_name?: string
