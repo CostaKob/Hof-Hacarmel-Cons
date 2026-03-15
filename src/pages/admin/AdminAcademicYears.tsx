@@ -9,7 +9,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, ArrowLeftRight, Users, GraduationCap, CalendarDays, Archive, Eye } from "lucide-react";
+import { Plus, ArrowLeftRight, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen } from "lucide-react";
 
 const AdminAcademicYears = () => {
   const navigate = useNavigate();
