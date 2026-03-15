@@ -56,30 +56,32 @@ const AdminStudents = () => {
     },
   });
 
-  // Fetch all payments for current academic year to determine payment status per student
   const { data: yearPayments = [] } = useQuery({
     queryKey: ["admin-year-payments", activeYear?.id],
     queryFn: async () => {
       if (!activeYear) return [];
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("student_payments")
         .select("student_id, enrollment_id")
         .eq("academic_year_id", activeYear.id);
+      if (error) throw error;
       return data ?? [];
     },
     enabled: !!activeYear,
   });
 
-  // Set of student IDs who paid this year
   const paidStudentIds = useMemo(() => {
-    if (!activeYear) return new Set<string>();
-    // Get student IDs from payments that have student_id
-    const fromStudentId = yearPayments.filter((p: any) => p.student_id).map((p: any) => p.student_id);
-    // For payments without student_id, map enrollment_id -> student_id
+    const directStudentIds = yearPayments
+      .map((p: any) => p.student_id)
+      .filter(Boolean);
+
     const enrollmentToStudent = new Map(rows.map((r: any) => [r.id, r.students?.id]));
-    const fromEnrollment = yearPayments.filter((p: any) => !p.student_id && p.enrollment_id).map((p: any) => enrollmentToStudent.get(p.enrollment_id)).filter(Boolean);
-    return new Set([...fromStudentId, ...fromEnrollment]);
-  }, [yearPayments, rows, activeYear]);
+    const fallbackStudentIds = yearPayments
+      .map((p: any) => p.enrollment_id ? enrollmentToStudent.get(p.enrollment_id) : null)
+      .filter(Boolean);
+
+    return new Set<string>([...directStudentIds, ...fallbackStudentIds]);
+  }, [yearPayments, rows]);
 
   const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()]
     .sort((a: any, b: any) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he"));
