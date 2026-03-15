@@ -25,7 +25,7 @@ interface AdminLayoutProps {
   onBack?: () => void;
 }
 
-const AdminLayout = ({ children, title, backPath }: AdminLayoutProps) => {
+const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
