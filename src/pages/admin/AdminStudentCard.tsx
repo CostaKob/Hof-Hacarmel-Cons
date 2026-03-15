@@ -376,6 +376,7 @@ const AdminStudentCard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="text-right">סוג</TableHead>
                     <TableHead className="text-right">שיוך</TableHead>
                     <TableHead className="text-right">שנת לימודים</TableHead>
                     <TableHead className="text-right">סכום</TableHead>
@@ -389,11 +390,19 @@ const AdminStudentCard = () => {
                 <TableBody>
                   {payments.map((p: any) => {
                     const enrollment = enrollments.find((e: any) => e.id === p.enrollment_id);
+                    const isCredit = p.transaction_type === "credit";
                     return (
                       <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setEditingPayment(p); setShowPaymentDialog(true); }}>
+                        <TableCell className="text-sm">
+                          <Badge variant={isCredit ? "destructive" : "default"} className="text-xs">
+                            {isCredit ? "זיכוי" : "תשלום"}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-sm">{enrollment ? `${enrollment.instruments?.name} — ${enrollment.schools?.name}` : "—"}</TableCell>
                         <TableCell className="text-sm">{p.academic_years?.name ?? "—"}</TableCell>
-                        <TableCell className="text-sm font-medium">₪{Number(p.amount).toLocaleString()}</TableCell>
+                        <TableCell className={`text-sm font-medium ${isCredit ? "text-destructive" : ""}`}>
+                          {isCredit ? "-" : ""}₪{Number(p.amount).toLocaleString()}
+                        </TableCell>
                         <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), "dd/MM/yyyy") : "—"}</TableCell>
                         <TableCell className="text-sm">{PAYMENT_METHOD_MAP[p.payment_method] ?? p.payment_method ?? "—"}</TableCell>
                         <TableCell className="text-sm">{(p as any).installments ?? 1}</TableCell>
