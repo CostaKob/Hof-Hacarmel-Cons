@@ -346,13 +346,25 @@ const AdminStudentCard = () => {
 
           {/* Yearly summary */}
           {(() => {
-            const total = payments
-              .filter((p: any) => activeYear && p.academic_year_id === activeYear.id)
-              .reduce((sum: number, p: any) => sum + (p.transaction_type === "payment" ? Number(p.amount) : -Number(p.amount)), 0);
+            const yearPayments = payments.filter((p: any) => activeYear && p.academic_year_id === activeYear.id);
+            const totalPaid = yearPayments
+              .filter((p: any) => p.transaction_type === "payment")
+              .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+            const totalCredit = yearPayments
+              .filter((p: any) => p.transaction_type === "credit")
+              .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+            const net = totalPaid - totalCredit;
             return (
-              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
-                <span className="text-sm text-muted-foreground">סה״כ שולם השנה: </span>
-                <span className="font-bold text-primary text-lg">₪{total.toLocaleString()}</span>
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center space-y-1">
+                <div>
+                  <span className="text-sm text-muted-foreground">שולם השנה: </span>
+                  <span className="font-bold text-primary text-lg">₪{net.toLocaleString()}</span>
+                </div>
+                {totalCredit > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    (תשלומים: ₪{totalPaid.toLocaleString()} | זיכויים: ₪{totalCredit.toLocaleString()})
+                  </p>
+                )}
               </div>
             );
           })()}
@@ -364,6 +376,7 @@ const AdminStudentCard = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="text-right">סוג</TableHead>
                     <TableHead className="text-right">שיוך</TableHead>
                     <TableHead className="text-right">שנת לימודים</TableHead>
                     <TableHead className="text-right">סכום</TableHead>
@@ -377,11 +390,19 @@ const AdminStudentCard = () => {
                 <TableBody>
                   {payments.map((p: any) => {
                     const enrollment = enrollments.find((e: any) => e.id === p.enrollment_id);
+                    const isCredit = p.transaction_type === "credit";
                     return (
                       <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setEditingPayment(p); setShowPaymentDialog(true); }}>
+                        <TableCell className="text-sm">
+                          <Badge variant={isCredit ? "destructive" : "default"} className="text-xs">
+                            {isCredit ? "זיכוי" : "תשלום"}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-sm">{enrollment ? `${enrollment.instruments?.name} — ${enrollment.schools?.name}` : "—"}</TableCell>
                         <TableCell className="text-sm">{p.academic_years?.name ?? "—"}</TableCell>
-                        <TableCell className="text-sm font-medium">₪{Number(p.amount).toLocaleString()}</TableCell>
+                        <TableCell className={`text-sm font-medium ${isCredit ? "text-destructive" : ""}`}>
+                          {isCredit ? "-" : ""}₪{Number(p.amount).toLocaleString()}
+                        </TableCell>
                         <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), "dd/MM/yyyy") : "—"}</TableCell>
                         <TableCell className="text-sm">{PAYMENT_METHOD_MAP[p.payment_method] ?? p.payment_method ?? "—"}</TableCell>
                         <TableCell className="text-sm">{(p as any).installments ?? 1}</TableCell>
