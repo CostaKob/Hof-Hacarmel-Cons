@@ -50,6 +50,8 @@ const AdminStudents = () => {
     },
   });
 
+  useScrollRestore(!isLoading);
+
   const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()];
   const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()];
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort();
