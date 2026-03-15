@@ -358,4 +358,14 @@ const AdminStudentCard = () => {
   );
 };
 
+function EnrollmentReportSection({ enrollmentId, label }: { enrollmentId: string; label: string }) {
+  const { data: reportLines, isLoading } = useEnrollmentReportLines(enrollmentId);
+  return (
+    <div className="space-y-4 mt-2">
+      <EnrollmentSummary lines={reportLines ?? []} />
+      <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={isLoading} />
+    </div>
+  );
+}
+
 export default AdminStudentCard;
