@@ -29,6 +29,7 @@ interface StudentFormData {
   city: string;
   grade: string;
   playing_level: string;
+  student_status: string;
   parent_name: string;
   parent_phone: string;
   parent_email: string;
