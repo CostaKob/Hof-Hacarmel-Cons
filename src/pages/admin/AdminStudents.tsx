@@ -156,7 +156,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={levelFilter} onValueChange={setLevelFilter}>
+        <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הרמות</SelectItem>
