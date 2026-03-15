@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus } from "lucide-react";
+import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -205,32 +205,18 @@ const AdminRegistrationCard = () => {
                   </Button>
                 </>
               )}
-              {r.status === "approved" && !hasExistingStudent && (
+              {(r.status === "approved" || r.status === "in_review") && r.status !== "converted" && (
                 <Button
                   size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    const params = new URLSearchParams({
-                      first_name: r.student_first_name,
-                      last_name: r.student_last_name,
-                      national_id: r.student_national_id || "",
-                      gender: r.gender || "",
-                      grade: r.grade || "",
-                      city: r.city || "",
-                      phone: r.student_phone || "",
-                      parent_name: r.parent_name || "",
-                      parent_phone: r.parent_phone || "",
-                      parent_email: r.parent_email || "",
-                    });
-                    navigate(`/admin/students/new?${params.toString()}`);
-                  }}
+                  variant="default"
+                  onClick={() => navigate(`/admin/registrations/${r.id}/convert`)}
                 >
-                  צור תלמיד מההרשמה
+                  <ClipboardCheck className="h-4 w-4 ml-1" /> טפל בהרשמה
                 </Button>
               )}
-              {r.status === "approved" && hasExistingStudent && isIdMatch && (
+              {r.status === "converted" && hasExistingStudent && (
                 <Button size="sm" variant="outline" onClick={() => navigate(`/admin/students/${r.existing_student_id}`)}>
-                  <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד הקיים
+                  <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד
                 </Button>
               )}
             </div>

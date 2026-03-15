@@ -41,6 +41,7 @@ import AdminRegistrationCard from "./pages/admin/AdminRegistrationCard";
 import AdminRegistrationSettings from "./pages/admin/AdminRegistrationSettings";
 import AdminRegistrationPages from "./pages/admin/AdminRegistrationPages";
 import AdminRegistrationPageEditor from "./pages/admin/AdminRegistrationPageEditor";
+import AdminRegistrationConvert from "./pages/admin/AdminRegistrationConvert";
 import PublicRegistration from "./pages/PublicRegistration";
 import NotFound from "./pages/NotFound";
 
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/admin/year-transition" element={<AdminRoute><AdminYearTransition /></AdminRoute>} />
             <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
             <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
+            <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
             <Route path="/admin/registration-settings" element={<AdminRoute><AdminRegistrationSettings /></AdminRoute>} />
             <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
             <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
