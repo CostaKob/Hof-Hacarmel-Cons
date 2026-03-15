@@ -158,7 +158,20 @@ const PublicRegistration = () => {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      // Scroll to approval if that's the issue
+      if (!approvalChecked && approvalRef.current) {
+        approvalRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        // Scroll to first error field
+        const firstErrorKey = Object.keys(validationErrors)[0];
+        if (firstErrorKey) {
+          const el = document.querySelector(`[data-field-key="${firstErrorKey}"]`);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      return;
+    }
     setSubmitting(true);
     setSubmitError(null);
 
