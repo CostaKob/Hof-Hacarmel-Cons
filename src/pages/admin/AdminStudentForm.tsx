@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { GRADES, PLAYING_LEVELS } from "@/lib/constants";
+import { GRADES, PLAYING_LEVELS, STUDENT_STATUSES } from "@/lib/constants";
 
 const GENDERS = [
   { value: "male", label: "זכר" },
@@ -29,6 +29,7 @@ interface StudentFormData {
   city: string;
   grade: string;
   playing_level: string;
+  student_status: string;
   parent_name: string;
   parent_phone: string;
   parent_email: string;
@@ -47,7 +48,7 @@ const AdminStudentForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__" },
+    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל" },
   });
 
   const isActive = watch("is_active");
@@ -75,6 +76,7 @@ const AdminStudentForm = () => {
         city: student.city ?? "",
         grade: student.grade ?? "__none__",
         playing_level: student.playing_level ?? "__none__",
+        student_status: (student as any).student_status ?? "פעיל",
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
@@ -101,6 +103,7 @@ const AdminStudentForm = () => {
         gender: data.gender === "__none__" ? null : data.gender || null,
         grade: data.grade === "__none__" ? null : data.grade || null,
         playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
+        student_status: data.student_status,
         parent_name: data.parent_name || null,
         parent_phone: data.parent_phone || null,
         parent_email: data.parent_email || null,
@@ -231,6 +234,25 @@ const AdminStudentForm = () => {
                       <SelectItem value="__none__">ללא</SelectItem>
                       {PLAYING_LEVELS.map((l) => (
                         <SelectItem key={l} value={l}>{l}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            {/* Student status dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">סטטוס תלמיד</Label>
+              <Controller
+                name="student_status"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר סטטוס" /></SelectTrigger>
+                    <SelectContent>
+                      {STUDENT_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

@@ -6,10 +6,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { calcYearsOfPlaying } from "@/lib/constants";
+import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
@@ -32,6 +33,19 @@ const AdminStudentCard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const statusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const { error } = await supabase.from("students").update({ student_status: newStatus } as any).eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      toast.success("סטטוס עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון סטטוס"),
+  });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -147,10 +161,22 @@ const AdminStudentCard = () => {
   return (
     <AdminLayout title={`${(student as any).gender === "female" ? "👧" : (student as any).gender === "male" ? "👦" : ""} ${student.first_name} ${student.last_name}`} backPath="/admin/students" onBack={() => navigate(-1)}>
       <div className="space-y-5">
-        <div className="flex items-center justify-between">
-          <Badge variant={student.is_active ? "default" : "secondary"} className="rounded-lg">
-            {student.is_active ? "פעיל" : "לא פעיל"}
-          </Badge>
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant={student.is_active ? "default" : "secondary"} className="rounded-lg">
+              {student.is_active ? "פעיל" : "לא פעיל"}
+            </Badge>
+            <Select value={(student as any).student_status ?? "פעיל"} onValueChange={(v) => statusMutation.mutate(v)}>
+              <SelectTrigger className="h-9 w-28 rounded-lg text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {STUDENT_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <div className="flex gap-2">
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
               <Trash2 className="h-4 w-4" />

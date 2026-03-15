@@ -24,6 +24,7 @@ const AdminStudents = () => {
   const activeFilter = searchParams.get("active") || "all";
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
+  const statusFilter = searchParams.get("status") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -39,7 +40,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as any[]).sort((a: any, b: any) => {
@@ -67,6 +68,7 @@ const AdminStudents = () => {
     if (activeFilter === "inactive" && r.students?.is_active) return false;
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
+    if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
     return true;
   });
 
@@ -167,6 +169,15 @@ const AdminStudents = () => {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הסטטוסים</SelectItem>
+            <SelectItem value="פעיל">פעיל</SelectItem>
+            <SelectItem value="הפסיק">הפסיק</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Card-based list */}
@@ -220,6 +231,11 @@ const AdminStudents = () => {
                 <Badge variant={r.students?.is_active ? "default" : "secondary"} className="rounded-lg mr-3 shrink-0">
                   {r.students?.is_active ? "פעיל" : "לא פעיל"}
                 </Badge>
+                {r.students?.student_status === "הפסיק" && (
+                  <Badge variant="outline" className="rounded-lg mr-1 shrink-0 text-destructive border-destructive">
+                    הפסיק
+                  </Badge>
+                )}
               </div>
             ))}
           </div>
