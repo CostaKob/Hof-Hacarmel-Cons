@@ -54,6 +54,8 @@ const TEMPLATE_COLUMNS = [
   "national_id",
   "gender",
   "student_phone",
+  "address",
+  "city",
   "grade",
   "playing_level",
   "parent_name",
