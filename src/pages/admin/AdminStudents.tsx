@@ -21,7 +21,7 @@ const AdminStudents = () => {
   const schoolFilter = searchParams.get("school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
   const cityFilter = searchParams.get("city") || "all";
-  const activeFilter = searchParams.get("active") || "all";
+  const activeFilter = searchParams.get("active") || "active";
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
   const statusFilter = searchParams.get("status") || "all";
@@ -70,8 +70,6 @@ const AdminStudents = () => {
     // Enrollment-level active filter
     if (activeFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (activeFilter === "inactive" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
-    // By default (activeFilter === "all"), hide inactive enrollments unless student also stopped
-    if (activeFilter === "all" && !r.is_active) return false;
     return true;
   });
 
@@ -147,8 +145,8 @@ const AdminStudents = () => {
         <Select value={activeFilter} onValueChange={(v) => setFilter("active", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">הכל</SelectItem>
             <SelectItem value="active">פעילים</SelectItem>
+            <SelectItem value="all">הכל</SelectItem>
             <SelectItem value="inactive">לא פעילים</SelectItem>
           </SelectContent>
         </Select>
