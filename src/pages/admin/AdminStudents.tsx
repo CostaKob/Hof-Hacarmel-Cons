@@ -21,7 +21,7 @@ const AdminStudents = () => {
   const schoolFilter = searchParams.get("school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
   const cityFilter = searchParams.get("city") || "all";
-  const activeFilter = searchParams.get("active") || "all";
+  const activeFilter = searchParams.get("active") || "active";
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
   const statusFilter = searchParams.get("status") || "all";
