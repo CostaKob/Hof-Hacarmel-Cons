@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
-import { useReportDetails, useReportLines, useTeacherProfile, useTeacherReportsForDate } from "@/hooks/useTeacherData";
+import { useReportDetails, useReportLines, useTeacherProfile, useTeacherById, useTeacherReportsForDate } from "@/hooks/useTeacherData";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -38,14 +39,22 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const TeacherReportView = () => {
-  const { reportId } = useParams<{ reportId: string }>();
+  const { reportId, teacherId: urlTeacherId } = useParams<{ reportId: string; teacherId?: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { roles } = useAuth();
+  const isAdminContext = !!urlTeacherId && roles.includes("admin");
+
   const { data: report, isLoading } = useReportDetails(reportId);
   const { data: lines } = useReportLines(reportId);
-  const { data: teacher } = useTeacherProfile();
+  const { data: teacherProfile } = useTeacherProfile();
+  const { data: teacherById } = useTeacherById(isAdminContext ? urlTeacherId : undefined);
+  const teacher = isAdminContext ? teacherById : teacherProfile;
   const reportDate = report?.report_date;
   const { data: allDayReports } = useTeacherReportsForDate(teacher?.id, reportDate);
+
+  const backPath = isAdminContext ? `/admin/teachers/${urlTeacherId}/reports` : "/teacher/reports";
+  const editPath = isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}/edit` : `/teacher/reports/${reportId}/edit`;
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
