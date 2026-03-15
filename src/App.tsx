@@ -41,6 +41,7 @@ import AdminRegistrationCard from "./pages/admin/AdminRegistrationCard";
 import AdminRegistrationSettings from "./pages/admin/AdminRegistrationSettings";
 import AdminRegistrationPages from "./pages/admin/AdminRegistrationPages";
 import AdminRegistrationPageEditor from "./pages/admin/AdminRegistrationPageEditor";
+import AdminRegistrationConvert from "./pages/admin/AdminRegistrationConvert";
 import PublicRegistration from "./pages/PublicRegistration";
 import NotFound from "./pages/NotFound";
 
