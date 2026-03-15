@@ -30,7 +30,7 @@ function useTeacherReportLinesAll(teacherId: string | undefined) {
 const TeacherYearlySummary = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: tLoading } = useTeacherProfile();
-  const { data: enrollments, isLoading: eLoading } = useTeacherEnrollments(teacher?.id);
+  const { data: enrollments, isLoading: eLoading } = useTeacherAllEnrollments(teacher?.id);
   const { data: schools } = useTeacherSchools(teacher?.id);
   const { data: lines, isLoading: lLoading } = useTeacherReportLinesAll(teacher?.id);
 
