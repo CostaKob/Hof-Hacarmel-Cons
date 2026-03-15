@@ -4,6 +4,7 @@ import { format, parseISO } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import {
   useTeacherProfile,
+  useTeacherById,
   useTeacherEnrollments,
   useReportDetails,
   useTeacherReportsForDate,
