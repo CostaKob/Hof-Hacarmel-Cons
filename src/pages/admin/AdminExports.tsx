@@ -7,7 +7,7 @@ import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, Cred
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
-type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly" | "registrations";
+type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly" | "registrations" | "payments";
 
 interface ExportOption {
   key: ExportKey;
@@ -22,6 +22,7 @@ const EXPORTS: ExportOption[] = [
   { key: "enrollments", label: "רישומים (שיוכים)", description: "כל הרישומים כולל תלמיד, מורה, בי\"ס וכלי", icon: ClipboardList },
   { key: "reports", label: "דיווחי שיעורים", description: "כל דיווחי השיעורים כולל סטטוס נוכחות", icon: BarChart3 },
   { key: "yearly", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכל רישום", icon: BarChart3 },
+  { key: "payments", label: "תשלומים", description: "כל התשלומים כולל שיוך, סכום ואמצעי תשלום", icon: CreditCard },
   { key: "registrations", label: "הרשמות", description: "כל ההרשמות שהתקבלו כולל סטטוס ופרטים", icon: ClipboardList },
 ];
 
