@@ -152,6 +152,26 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
+            {/* Transaction type */}
+            <div>
+              <Label>סוג רישום</Label>
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "payment" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                  onClick={() => setTransactionType("payment")}
+                >
+                  תשלום
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "credit" ? "bg-destructive text-destructive-foreground border-destructive" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                  onClick={() => setTransactionType("credit")}
+                >
+                  זיכוי
+                </button>
+              </div>
+            </div>
             {/* Enrollment selector */}
             <div>
               <Label htmlFor="enrollment-select">שיוך (כלי + בי״ס)</Label>
