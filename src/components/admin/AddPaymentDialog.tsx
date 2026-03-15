@@ -86,6 +86,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         enrollment_id: selectedEnrollmentId,
         transaction_type: transactionType,
       };
+
+      if (isEdit) {
         const { error } = await supabase.from("student_payments").update(paymentData).eq("id", editPayment!.id);
         if (error) throw error;
       } else {
@@ -93,7 +95,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           ...paymentData,
           student_id: studentId,
           academic_year_id: academicYearId,
-          transaction_type: "payment" as const,
         });
         if (error) throw error;
       }
