@@ -289,11 +289,14 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       (schools ?? []).map(s => [s.name.toLowerCase(), s.id])
     );
     const activeYearId = academicYears?.[0]?.id ?? null;
+    // Track students created during this import to prevent duplicates within the same file
+    const createdStudents = new Map<string, string>(); // "first_last" -> id
 
     for (const row of validRows) {
       try {
         // 1. Resolve student
-        let studentId = row.existingStudentId;
+        const studentKey = `${row.data.student_first_name}_${row.data.student_last_name}`.toLowerCase();
+        let studentId = row.existingStudentId || createdStudents.get(studentKey);
         if (!studentId) {
           const { data: newStudent, error: sErr } = await supabase
             .from("students")
