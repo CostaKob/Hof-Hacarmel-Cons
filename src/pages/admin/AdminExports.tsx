@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2 } from "lucide-react";
+import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
