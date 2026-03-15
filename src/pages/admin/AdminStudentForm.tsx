@@ -32,9 +32,11 @@ interface StudentFormData {
   parent_name: string;
   parent_phone: string;
   parent_email: string;
+  parent_national_id: string;
   parent_name_2: string;
   parent_phone_2: string;
   parent_email_2: string;
+  parent_national_id_2: string;
   is_active: boolean;
 }
 
@@ -76,9 +78,11 @@ const AdminStudentForm = () => {
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
+        parent_national_id: (student as any).parent_national_id ?? "",
         parent_name_2: student.parent_name_2 ?? "",
         parent_phone_2: student.parent_phone_2 ?? "",
         parent_email_2: student.parent_email_2 ?? "",
+        parent_national_id_2: (student as any).parent_national_id_2 ?? "",
         is_active: student.is_active,
       });
     }
@@ -100,9 +104,11 @@ const AdminStudentForm = () => {
         parent_name: data.parent_name || null,
         parent_phone: data.parent_phone || null,
         parent_email: data.parent_email || null,
+        parent_national_id: data.parent_national_id || null,
         parent_name_2: data.parent_name_2 || null,
         parent_phone_2: data.parent_phone_2 || null,
         parent_email_2: data.parent_email_2 || null,
+        parent_national_id_2: data.parent_national_id_2 || null,
         is_active: data.is_active,
       };
 
@@ -134,9 +140,11 @@ const AdminStudentForm = () => {
 
   const PARENT_FIELDS: { name: keyof StudentFormData; label: string; type?: string }[] = [
     { name: "parent_name", label: "שם הורה 1" },
+    { name: "parent_national_id", label: "ת.ז. הורה 1" },
     { name: "parent_phone", label: "טלפון הורה 1", type: "tel" },
     { name: "parent_email", label: "אימייל הורה 1", type: "email" },
     { name: "parent_name_2", label: "שם הורה 2" },
+    { name: "parent_national_id_2", label: "ת.ז. הורה 2" },
     { name: "parent_phone_2", label: "טלפון הורה 2", type: "tel" },
     { name: "parent_email_2", label: "אימייל הורה 2", type: "email" },
   ];
