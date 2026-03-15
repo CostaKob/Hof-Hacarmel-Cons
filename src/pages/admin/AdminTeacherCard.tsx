@@ -298,20 +298,22 @@ const AdminTeacherCard = () => {
         )}
 
         <div className="grid gap-3 grid-cols-2">
-          <div
-            className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]"
+          <button
+            type="button"
+            className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] touch-manipulation"
             onClick={() => navigate(`/admin/students?teacher=${teacherId}`)}
           >
             <p className="text-2xl font-bold text-primary">{enrollmentsCount}</p>
             <p className="text-sm text-muted-foreground">רישומים פעילים</p>
-          </div>
-          <div
-            className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98]"
+          </button>
+          <button
+            type="button"
+            className="rounded-2xl border border-border bg-card p-5 text-center shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.98] touch-manipulation"
             onClick={() => navigate(`/admin/teachers/${teacherId}/reports`)}
           >
             <p className="text-2xl font-bold text-primary">{lastReport?.report_date ?? "—"}</p>
             <p className="text-sm text-muted-foreground">דיווח אחרון</p>
-          </div>
+          </button>
         </div>
 
         <TeacherInstrumentsSection teacherId={teacherId!} />
