@@ -20,6 +20,7 @@ const AdminRegistrationPages = () => {
   const queryClient = useQueryClient();
   const [duplicateSource, setDuplicateSource] = useState<any>(null);
   const [duplicateYearId, setDuplicateYearId] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
 
   const { data: pages = [], isLoading } = useQuery({
     queryKey: ["registration-pages"],
