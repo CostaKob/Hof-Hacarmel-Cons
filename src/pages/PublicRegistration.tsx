@@ -1,87 +1,48 @@
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
+import { KNOWN_KEYS_SET } from "@/lib/registrationFieldKeys";
 
-const registrationSchema = z.object({
-  studentFullName: z.string().min(2, "יש להזין שם מלא").max(100),
-  gender: z.string().optional(),
-  studentNationalId: z.string().min(1, "שדה חובה").max(20),
-  studentStatus: z.string().optional(),
-  branchSchoolName: z.string().min(1, "שדה חובה"),
-  studentSchoolText: z.string().min(1, "שדה חובה"),
-  grade: z.string().min(1, "שדה חובה"),
-  city: z.string().min(1, "שדה חובה"),
-  studentPhone: z.string().optional(),
-  requestedInstruments: z.array(z.string()).min(1, "יש לבחור לפחות כלי אחד"),
-  requestedLessonDuration: z.string().min(1, "שדה חובה"),
-  parentName: z.string().min(1, "שדה חובה"),
-  parentNationalId: z.string().min(1, "שדה חובה"),
-  parentPhone: z.string().min(1, "שדה חובה"),
-  parentEmail: z.string().email("כתובת דוא\"ל לא תקינה"),
-  approvalChecked: z.literal(true, { errorMap: () => ({ message: "יש לאשר את תנאי ההרשמה" }) }),
-});
+interface FieldDef {
+  id: string;
+  field_key: string;
+  label: string;
+  field_type: string;
+  is_required: boolean;
+  options: { value: string; label: string }[];
+  sort_order: number;
+  is_active: boolean;
+  help_text: string;
+  section_title: string;
+  placeholder: string;
+  data_source: string;
+}
 
-type RegistrationForm = z.infer<typeof registrationSchema>;
-
-const GRADES = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י", "יא", "יב", "בוגר"];
-
-const GENDER_OPTIONS = [
-  { value: "male", label: "זכר" },
-  { value: "female", label: "נקבה" },
-  { value: "prefer_not_to_say", label: "מעדיף/ה לא לציין" },
-];
-
-const STUDENT_STATUS_OPTIONS = [
-  { value: "new", label: "תלמיד/ה חדש/ה באולפן המוסיקה" },
-  { value: "continuing", label: "תלמיד/ה ממשיך/ה באולפן המוסיקה" },
-];
-
-const LESSON_DURATION_OPTIONS = [
-  { value: "30", label: "30 דקות — תלמידי שנה ראשונה כיתות א-ד בלבד" },
-  { value: "45", label: "45 דקות" },
-  { value: "60", label: "60 דקות" },
-];
-
-interface InfoSection {
+interface Section {
   id: string;
   title: string;
   content: string;
+  sort_order: number;
 }
 
 const PublicRegistration = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [formValues, setFormValues] = useState<Record<string, any>>({});
+  const [approvalChecked, setApprovalChecked] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const { data: instruments = [] } = useQuery({
-    queryKey: ["public-instruments"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: schools = [] } = useQuery({
-    queryKey: ["public-schools"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("id, name").eq("is_active", true).order("name");
-      if (error) throw error;
-      return data;
-    },
-  });
-
+  // Load active year
   const { data: activeYear } = useQuery({
     queryKey: ["public-active-year"],
     queryFn: async () => {
@@ -91,79 +52,162 @@ const PublicRegistration = () => {
     },
   });
 
-  // Load form settings for the active year
-  const { data: formSettings, isLoading: settingsLoading } = useQuery({
-    queryKey: ["public-form-settings", activeYear?.id],
+  // Load active registration page
+  const { data: page, isLoading: pageLoading } = useQuery({
+    queryKey: ["public-registration-page", activeYear?.id],
     queryFn: async () => {
       if (!activeYear?.id) return null;
       const { data, error } = await supabase
-        .from("registration_form_settings" as any)
+        .from("registration_pages")
         .select("*")
         .eq("academic_year_id", activeYear.id)
         .eq("is_open", true)
         .maybeSingle();
       if (error) throw error;
-      return data as any;
+      return data;
     },
     enabled: !!activeYear?.id,
   });
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<RegistrationForm>({
-    resolver: zodResolver(registrationSchema),
-    defaultValues: {
-      requestedInstruments: [],
-      approvalChecked: undefined as any,
+  // Load sections
+  const { data: sections = [] } = useQuery({
+    queryKey: ["public-registration-sections", page?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("registration_page_sections")
+        .select("*")
+        .eq("page_id", page!.id)
+        .order("sort_order");
+      if (error) throw error;
+      return data as Section[];
+    },
+    enabled: !!page?.id,
+  });
+
+  // Load fields
+  const { data: fields = [] } = useQuery({
+    queryKey: ["public-registration-fields", page?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("registration_page_fields")
+        .select("*")
+        .eq("page_id", page!.id)
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return (data as any[]).map((f) => ({
+        ...f,
+        options: Array.isArray(f.options) ? f.options : [],
+      })) as FieldDef[];
+    },
+    enabled: !!page?.id,
+  });
+
+  // Load instruments (for data_source)
+  const { data: instruments = [] } = useQuery({
+    queryKey: ["public-instruments"],
+    queryFn: async () => {
+      const { data } = await supabase.from("instruments").select("id, name").order("name");
+      return data || [];
     },
   });
 
-  const selectedInstruments = watch("requestedInstruments") || [];
-  const approvalChecked = watch("approvalChecked");
+  // Load schools (for data_source)
+  const { data: schools = [] } = useQuery({
+    queryKey: ["public-schools"],
+    queryFn: async () => {
+      const { data } = await supabase.from("schools").select("id, name").eq("is_active", true).order("name");
+      return data || [];
+    },
+  });
 
-  const toggleInstrument = (instrumentName: string) => {
-    const current = selectedInstruments;
-    const updated = current.includes(instrumentName)
-      ? current.filter((i) => i !== instrumentName)
-      : [...current, instrumentName];
-    setValue("requestedInstruments", updated, { shouldValidate: true });
+  const getOptionsForField = (field: FieldDef) => {
+    if (field.data_source === "instruments") return instruments.map((i) => ({ value: i.name, label: i.name }));
+    if (field.data_source === "schools") return schools.map((s) => ({ value: s.name, label: s.name }));
+    return field.options;
   };
 
-  const onSubmit = async (data: RegistrationForm) => {
+  const setFieldValue = (key: string, value: any) => {
+    setFormValues((prev) => ({ ...prev, [key]: value }));
+    setValidationErrors((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
+
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+    for (const field of fields) {
+      if (!field.is_required) continue;
+      const val = formValues[field.field_key];
+      if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
+        errors[field.field_key] = "שדה חובה";
+      }
+      if (field.field_type === "email" && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+        errors[field.field_key] = 'כתובת דוא"ל לא תקינה';
+      }
+    }
+    if (!approvalChecked) {
+      errors["__approval"] = "יש לאשר את תנאי ההרשמה";
+    }
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
     setSubmitting(true);
     setSubmitError(null);
 
     try {
-      const nameParts = data.studentFullName.trim().split(/\s+/);
-      const firstName = nameParts[0];
-      const lastName = nameParts.slice(1).join(" ") || firstName;
+      // Map known fields to registrations columns
+      const knownMap: Record<string, any> = {};
+      const customData: Record<string, any> = {};
 
-      const { error } = await supabase.from("registrations" as any).insert({
+      for (const field of fields) {
+        const val = formValues[field.field_key];
+        if (val === undefined || val === null) continue;
+
+        if (field.field_key === "student_full_name") {
+          const parts = String(val).trim().split(/\s+/);
+          knownMap.student_first_name = parts[0];
+          knownMap.student_last_name = parts.slice(1).join(" ") || parts[0];
+        } else if (KNOWN_KEYS_SET.has(field.field_key)) {
+          knownMap[field.field_key] = val;
+        } else {
+          customData[field.field_key] = val;
+        }
+      }
+
+      // Build registration row
+      const row: any = {
         academic_year_id: activeYear?.id || null,
-        student_first_name: firstName,
-        student_last_name: lastName,
-        student_national_id: data.studentNationalId.trim(),
-        gender: data.gender || null,
-        student_status: data.studentStatus || null,
-        branch_school_name: data.branchSchoolName,
-        student_school_text: data.studentSchoolText.trim(),
-        grade: data.grade,
-        city: data.city.trim(),
-        student_phone: data.studentPhone?.trim() || null,
-        requested_instruments: data.requestedInstruments,
-        requested_lesson_duration: data.requestedLessonDuration,
-        parent_name: data.parentName.trim(),
-        parent_national_id: data.parentNationalId.trim(),
-        parent_phone: data.parentPhone.trim(),
-        parent_email: data.parentEmail.trim(),
+        registration_page_id: page?.id || null,
+        student_first_name: knownMap.student_first_name || "",
+        student_last_name: knownMap.student_last_name || "",
+        student_national_id: knownMap.student_national_id || "",
+        gender: knownMap.gender || null,
+        student_status: knownMap.student_status || null,
+        branch_school_name: knownMap.branch_school_name || "",
+        student_school_text: knownMap.student_school_text || "",
+        grade: knownMap.grade || "",
+        city: knownMap.city || "",
+        student_phone: knownMap.student_phone || null,
+        requested_instruments: knownMap.requested_instruments || [],
+        requested_lesson_duration: knownMap.requested_lesson_duration || "",
+        parent_name: knownMap.parent_name || "",
+        parent_national_id: knownMap.parent_national_id || "",
+        parent_phone: knownMap.parent_phone || "",
+        parent_email: knownMap.parent_email || "",
+        notes: knownMap.notes || null,
         approval_checked: true,
         status: "new",
-      });
+        custom_data: Object.keys(customData).length > 0 ? customData : {},
+      };
 
+      const { error } = await supabase.from("registrations").insert(row);
       if (error) throw error;
       setSubmitted(true);
     } catch (err: any) {
@@ -176,35 +220,22 @@ const PublicRegistration = () => {
 
   // Success screen
   if (submitted) {
+    const msg = page?.success_message || "ההרשמה נקלטה בהצלחה! ניצור קשר לאחר בדיקת הפרטים.";
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-2xl font-bold text-foreground">ההרשמה נקלטה בהצלחה!</h2>
-            <p className="text-muted-foreground text-lg">ניצור קשר לאחר בדיקת הפרטים.</p>
+            <p className="text-muted-foreground text-lg whitespace-pre-line">{msg}</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Form closed or no settings
-  if (!settingsLoading && !formSettings) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
-        <Card className="w-full max-w-lg text-center">
-          <CardContent className="pt-10 pb-10 space-y-4">
-            <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
-            <h2 className="text-2xl font-bold text-foreground">ההרשמה סגורה כרגע</h2>
-            <p className="text-muted-foreground text-lg">טופס ההרשמה אינו פעיל בתקופה זו. אנא נסו שוב מאוחר יותר.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (settingsLoading) {
+  // Loading
+  if (pageLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <p className="text-muted-foreground">טוען...</p>
@@ -212,9 +243,30 @@ const PublicRegistration = () => {
     );
   }
 
-  const infoSections: InfoSection[] = Array.isArray(formSettings?.info_sections) ? formSettings.info_sections : [];
-  const approvalLabel = formSettings?.approval_text || "קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים";
-  const title = formSettings?.form_title || "";
+  // Closed
+  if (!page) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <Card className="w-full max-w-lg text-center">
+          <CardContent className="pt-10 pb-10 space-y-4">
+            <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">ההרשמה סגורה כרגע</h2>
+            <p className="text-muted-foreground text-lg">טופס ההרשמה אינו פעיל בתקופה זו.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Group fields by section_title
+  const fieldGroups: { title: string; fields: FieldDef[] }[] = [];
+  for (const field of fields) {
+    if (field.section_title || fieldGroups.length === 0) {
+      fieldGroups.push({ title: field.section_title || "", fields: [field] });
+    } else {
+      fieldGroups[fieldGroups.length - 1].fields.push(field);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-muted/30 py-6 px-4" dir="rtl">
@@ -224,186 +276,70 @@ const PublicRegistration = () => {
           <div className="flex justify-center">
             <AppLogo size="lg" />
           </div>
-          {title && (
+          {page.title && (
             <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-snug whitespace-pre-line">
-              {title}
+              {page.title}
             </h1>
           )}
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Information & Terms Sections */}
-          {infoSections.length > 0 && (
+        <form onSubmit={onSubmit} className="space-y-6">
+          {/* Info sections */}
+          {sections.length > 0 && (
             <Card>
               <CardContent className="pt-6 space-y-5 text-sm leading-relaxed text-foreground">
-                {infoSections.map((section) => (
+                {sections.map((section) => (
                   <InfoSectionBlock key={section.id} section={section} />
                 ))}
               </CardContent>
             </Card>
           )}
 
-          {/* Approval Checkbox */}
+          {/* Approval checkbox */}
           <Card>
             <CardContent className="pt-6 space-y-3">
               <div className="flex items-start gap-3">
                 <Checkbox
                   id="approval"
-                  checked={approvalChecked === true}
-                  onCheckedChange={(checked) =>
-                    setValue("approvalChecked", checked === true ? true : (undefined as any), { shouldValidate: true })
-                  }
+                  checked={approvalChecked}
+                  onCheckedChange={(c) => {
+                    setApprovalChecked(c === true);
+                    setValidationErrors((prev) => { const n = { ...prev }; delete n["__approval"]; return n; });
+                  }}
                   className="mt-0.5"
                 />
                 <Label htmlFor="approval" className="text-sm font-bold cursor-pointer leading-snug">
-                  {approvalLabel}
+                  {page.approval_text || "קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים"}
                 </Label>
               </div>
-              {errors.approvalChecked && (
-                <p className="text-sm text-destructive">{errors.approvalChecked.message}</p>
+              {validationErrors["__approval"] && (
+                <p className="text-sm text-destructive">{validationErrors["__approval"]}</p>
               )}
             </CardContent>
           </Card>
 
-          {/* Student Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">פרטי התלמיד/ה</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FieldGroup label="שם מלא של התלמיד/ה" error={errors.studentFullName?.message} required>
-                <Input {...register("studentFullName")} placeholder="שם פרטי ושם משפחה" />
-              </FieldGroup>
-
-              <FieldGroup label="לשון פנייה">
-                <div className="flex flex-wrap gap-3">
-                  {GENDER_OPTIONS.map((opt) => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" value={opt.value} {...register("gender")} className="accent-primary" />
-                      <span className="text-sm">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </FieldGroup>
-
-              <FieldGroup label="תעודת זהות התלמיד/ה" error={errors.studentNationalId?.message} required>
-                <Input {...register("studentNationalId")} placeholder="מספר תעודת זהות" />
-              </FieldGroup>
-
-              <FieldGroup label="תלמיד חדש/ה או ממשיך/ה">
-                <div className="flex flex-col gap-2">
-                  {STUDENT_STATUS_OPTIONS.map((opt) => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" value={opt.value} {...register("studentStatus")} className="accent-primary" />
-                      <span className="text-sm">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </FieldGroup>
-
-              <FieldGroup label="שלוחת לימודים" error={errors.branchSchoolName?.message} required>
-                <Select dir="rtl" onValueChange={(val) => setValue("branchSchoolName", val, { shouldValidate: true })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחרו שלוחה" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {schools.map((s) => (
-                      <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FieldGroup>
-
-              <FieldGroup label="בית הספר בו לומד/ת התלמיד/ה" error={errors.studentSchoolText?.message} required>
-                <Input {...register("studentSchoolText")} placeholder="שם בית הספר" />
-              </FieldGroup>
-
-              <FieldGroup label='כיתה בשנת הלימודים הבאה' error={errors.grade?.message} required>
-                <Select dir="rtl" onValueChange={(val) => setValue("grade", val, { shouldValidate: true })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחרו כיתה" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GRADES.map((g) => (
-                      <SelectItem key={g} value={g}>{g}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </FieldGroup>
-
-              <FieldGroup label="ישוב המגורים של התלמיד/ה" error={errors.city?.message} required>
-                <Input {...register("city")} placeholder="ישוב" />
-              </FieldGroup>
-
-              <FieldGroup label="טלפון נייד של התלמיד/ה">
-                <Input {...register("studentPhone")} type="tel" placeholder="050-0000000" />
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          {/* Learning Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">פרטי לימודים מבוקשים</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FieldGroup label="הכלי המבוקש" error={errors.requestedInstruments?.message} required>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {instruments.map((inst) => (
-                    <label
-                      key={inst.id}
-                      className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${
-                        selectedInstruments.includes(inst.name)
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/50"
-                      }`}
-                    >
-                      <Checkbox
-                        checked={selectedInstruments.includes(inst.name)}
-                        onCheckedChange={() => toggleInstrument(inst.name)}
-                      />
-                      <span className="text-sm">{inst.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </FieldGroup>
-
-              <FieldGroup label="משך שיעור מבוקש" error={errors.requestedLessonDuration?.message} required>
-                <div className="flex flex-col gap-2">
-                  {LESSON_DURATION_OPTIONS.map((opt) => (
-                    <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                      <input type="radio" value={opt.value} {...register("requestedLessonDuration")} className="accent-primary" />
-                      <span className="text-sm">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </FieldGroup>
-            </CardContent>
-          </Card>
-
-          {/* Parent Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">פרטי הורה</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <FieldGroup label="שם מלא הורה" error={errors.parentName?.message} required>
-                <Input {...register("parentName")} placeholder="שם מלא" />
-              </FieldGroup>
-
-              <FieldGroup label="תעודת זהות הורה" error={errors.parentNationalId?.message} required>
-                <Input {...register("parentNationalId")} placeholder="מספר תעודת זהות" />
-              </FieldGroup>
-
-              <FieldGroup label="טלפון נייד הורה" error={errors.parentPhone?.message} required>
-                <Input {...register("parentPhone")} type="tel" placeholder="050-0000000" />
-              </FieldGroup>
-
-              <FieldGroup label='דוא"ל הורה' error={errors.parentEmail?.message} required>
-                <Input {...register("parentEmail")} type="email" placeholder="email@example.com" dir="ltr" className="text-left" />
-              </FieldGroup>
-            </CardContent>
-          </Card>
+          {/* Dynamic form fields grouped by section */}
+          {fieldGroups.map((group, gi) => (
+            <Card key={gi}>
+              {group.title && (
+                <CardHeader>
+                  <CardTitle className="text-lg">{group.title}</CardTitle>
+                </CardHeader>
+              )}
+              <CardContent className="space-y-4">
+                {group.fields.map((field) => (
+                  <DynamicField
+                    key={field.id}
+                    field={field}
+                    value={formValues[field.field_key]}
+                    onChange={(val) => setFieldValue(field.field_key, val)}
+                    error={validationErrors[field.field_key]}
+                    options={getOptionsForField(field)}
+                  />
+                ))}
+              </CardContent>
+            </Card>
+          ))}
 
           {/* Submit */}
           {submitError && (
@@ -419,22 +355,112 @@ const PublicRegistration = () => {
   );
 };
 
-/* Renders a single info section with paragraph/list formatting */
-const InfoSectionBlock = ({ section }: { section: InfoSection }) => {
-  const lines = section.content.split("\n").filter((l) => l.trim());
+/* Dynamic field renderer */
+const DynamicField = ({
+  field,
+  value,
+  onChange,
+  error,
+  options,
+}: {
+  field: FieldDef;
+  value: any;
+  onChange: (val: any) => void;
+  error?: string;
+  options: { value: string; label: string }[];
+}) => {
+  const { field_type, label, is_required, placeholder, help_text } = field;
+
+  const renderInput = () => {
+    switch (field_type) {
+      case "text":
+      case "number":
+        return <Input type={field_type} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+      case "email":
+        return <Input type="email" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="ltr" className="text-left" />;
+      case "phone":
+        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+      case "textarea":
+        return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
+      case "select":
+        return (
+          <Select dir="rtl" value={value || ""} onValueChange={onChange}>
+            <SelectTrigger>
+              <SelectValue placeholder={placeholder || "בחרו..."} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        );
+      case "multiselect": {
+        const selected: string[] = Array.isArray(value) ? value : [];
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {options.map((opt) => (
+              <label
+                key={opt.value}
+                className={`flex items-center gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${
+                  selected.includes(opt.value) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                }`}
+              >
+                <Checkbox
+                  checked={selected.includes(opt.value)}
+                  onCheckedChange={() => {
+                    const updated = selected.includes(opt.value)
+                      ? selected.filter((v) => v !== opt.value)
+                      : [...selected, opt.value];
+                    onChange(updated);
+                  }}
+                />
+                <span className="text-sm">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+      }
+      case "radio":
+        return (
+          <div className="flex flex-col gap-2">
+            {options.map((opt) => (
+              <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
+                <input type="radio" checked={value === opt.value} onChange={() => onChange(opt.value)} className="accent-primary" />
+                <span className="text-sm">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+      default:
+        return <Input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+    }
+  };
 
   return (
+    <div className="space-y-1.5">
+      <Label className="text-sm font-medium">
+        {label}
+        {is_required && <span className="text-destructive mr-1">*</span>}
+      </Label>
+      {renderInput()}
+      {help_text && <p className="text-xs text-muted-foreground">{help_text}</p>}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  );
+};
+
+/* Info section block */
+const InfoSectionBlock = ({ section }: { section: Section }) => {
+  const lines = section.content.split("\n").filter((l) => l.trim());
+  return (
     <div>
-      {section.title && (
-        <h3 className="font-bold text-base mb-2">{section.title}</h3>
-      )}
+      {section.title && <h3 className="font-bold text-base mb-2">{section.title}</h3>}
       <div className="space-y-1.5 pr-1">
         {lines.map((line, i) => {
           const trimmed = line.trim();
           if (trimmed.startsWith("•") || trimmed.startsWith("-")) {
-            return (
-              <p key={i} className="pr-3">{trimmed}</p>
-            );
+            return <p key={i} className="pr-3">{trimmed}</p>;
           }
           return <p key={i}>{trimmed}</p>;
         })}
@@ -442,27 +468,5 @@ const InfoSectionBlock = ({ section }: { section: InfoSection }) => {
     </div>
   );
 };
-
-/* Reusable field wrapper */
-const FieldGroup = ({
-  label,
-  error,
-  required,
-  children,
-}: {
-  label: string;
-  error?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) => (
-  <div className="space-y-1.5">
-    <Label className="text-sm font-medium">
-      {label}
-      {required && <span className="text-destructive mr-1">*</span>}
-    </Label>
-    {children}
-    {error && <p className="text-sm text-destructive">{error}</p>}
-  </div>
-);
 
 export default PublicRegistration;
