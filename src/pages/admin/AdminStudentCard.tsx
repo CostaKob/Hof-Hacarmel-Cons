@@ -40,6 +40,8 @@ const AdminStudentCard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const { activeYear } = useAcademicYear();
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
