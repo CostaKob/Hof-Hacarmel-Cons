@@ -309,11 +309,36 @@ const AdminEnrollmentForm = () => {
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
+          {isEdit && (
+            <Button type="button" variant="outline" className="h-14 rounded-2xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
           <Button type="button" variant="outline" onClick={() => navigate(-1 as any)} className="h-14 rounded-2xl text-base px-6">
             ביטול
           </Button>
         </div>
-      </form>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>מחיקת שיוך</AlertDialogTitle>
+              <AlertDialogDescription>
+                האם למחוק את השיוך הזה? פעולה זו אינה ניתנת לביטול.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "מוחק..." : "מחק"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
     </AdminLayout>
   );
 };
