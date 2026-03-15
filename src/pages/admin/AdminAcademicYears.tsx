@@ -173,7 +173,7 @@ const AdminAcademicYears = () => {
             {/* Active years */}
             <div className="space-y-3">
               {activeYears.map((y: any) => {
-                const s = stats[y.id] ?? { students: 0, teachers: 0, reports: 0 };
+                const s = stats[y.id] ?? { students: 0, teachers: 0, enrollments: 0, reports: 0 };
                 return (
                   <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
                     <div className="flex items-center justify-between">
@@ -183,11 +183,16 @@ const AdminAcademicYears = () => {
                       </div>
                       <Badge className="rounded-lg">פעילה</Badge>
                     </div>
-                    <div className="grid grid-cols-3 gap-3">
+                    <div className="grid grid-cols-4 gap-3">
                       <div className="rounded-xl bg-muted/50 p-3 text-center">
                         <Users className="h-4 w-4 mx-auto text-primary mb-1" />
                         <p className="text-xl font-bold text-foreground">{s.students}</p>
                         <p className="text-xs text-muted-foreground">תלמידים</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/50 p-3 text-center">
+                        <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
+                        <p className="text-xl font-bold text-foreground">{s.enrollments}</p>
+                        <p className="text-xs text-muted-foreground">רישומים</p>
                       </div>
                       <div className="rounded-xl bg-muted/50 p-3 text-center">
                         <GraduationCap className="h-4 w-4 mx-auto text-primary mb-1" />
