@@ -148,6 +148,35 @@ const AdminExports = () => {
     });
   };
 
+  const exportRegistrations = async () => {
+    const { data, error } = await supabase.from("registrations").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    const statusMap: Record<string, string> = {
+      new: "חדש", in_review: "בבדיקה", approved: "אושר", rejected: "נדחה",
+      converted: "הומר", waiting_for_call: "ממתין לשיחה", waiting_for_payment: "ממתין לתשלום", ready_to_assign: "מוכן לשיוך",
+    };
+    return (data ?? []).map((r) => ({
+      "שם פרטי": r.student_first_name,
+      "שם משפחה": r.student_last_name,
+      "ת.ז. תלמיד": r.student_national_id,
+      "מין": r.gender === "male" ? "זכר" : r.gender === "female" ? "נקבה" : r.gender ?? "",
+      "טלפון תלמיד": r.student_phone ?? "",
+      "עיר": r.city,
+      "כיתה": r.grade,
+      "בית ספר (סניף)": r.branch_school_name,
+      "בית ספר (טקסט)": r.student_school_text,
+      "כלים מבוקשים": Array.isArray(r.requested_instruments) ? (r.requested_instruments as string[]).join(", ") : "",
+      "משך שיעור מבוקש": r.requested_lesson_duration,
+      "שם הורה": r.parent_name,
+      "ת.ז. הורה": r.parent_national_id,
+      "טלפון הורה": r.parent_phone,
+      "אימייל הורה": r.parent_email,
+      "סטטוס": statusMap[r.status] ?? r.status,
+      "הערות": r.notes ?? "",
+      "תאריך הרשמה": r.created_at ? new Date(r.created_at).toLocaleDateString("he-IL") : "",
+    }));
+  };
+
   const handleExport = async (key: ExportKey) => {
     setLoading(key);
     try {
