@@ -94,8 +94,8 @@ const AdminStudents = () => {
     if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
     if (activeFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (activeFilter === "inactive" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
-    if (paymentFilter === "paid" && !paidStudentIds.has(r.students?.id)) return false;
-    if (paymentFilter === "unpaid" && paidStudentIds.has(r.students?.id)) return false;
+    if (paymentFilter === "paid" && !paidEnrollmentIds.has(r.id)) return false;
+    if (paymentFilter === "unpaid" && paidEnrollmentIds.has(r.id)) return false;
     return true;
   });
 
