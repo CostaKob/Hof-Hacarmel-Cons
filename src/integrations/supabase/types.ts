@@ -217,6 +217,141 @@ export type Database = {
           },
         ]
       }
+      registration_page_fields: {
+        Row: {
+          created_at: string
+          data_source: string | null
+          field_key: string
+          field_type: string
+          help_text: string | null
+          id: string
+          is_active: boolean
+          is_required: boolean
+          label: string
+          options: Json | null
+          page_id: string
+          placeholder: string | null
+          section_title: string | null
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          data_source?: string | null
+          field_key: string
+          field_type?: string
+          help_text?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          label: string
+          options?: Json | null
+          page_id: string
+          placeholder?: string | null
+          section_title?: string | null
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          data_source?: string | null
+          field_key?: string
+          field_type?: string
+          help_text?: string | null
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          label?: string
+          options?: Json | null
+          page_id?: string
+          placeholder?: string | null
+          section_title?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_page_fields_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "registration_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      registration_page_sections: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          page_id: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          page_id: string
+          sort_order?: number
+          title?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          page_id?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_page_sections_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "registration_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      registration_pages: {
+        Row: {
+          academic_year_id: string | null
+          approval_text: string
+          created_at: string
+          id: string
+          is_open: boolean
+          success_message: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          approval_text?: string
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          success_message?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          approval_text?: string
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          success_message?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_pages_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: true
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registrations: {
         Row: {
           academic_year_id: string | null
@@ -224,6 +359,7 @@ export type Database = {
           branch_school_name: string
           city: string
           created_at: string
+          custom_data: Json | null
           existing_student_id: string | null
           gender: string | null
           grade: string
@@ -233,6 +369,7 @@ export type Database = {
           parent_name: string
           parent_national_id: string
           parent_phone: string
+          registration_page_id: string | null
           requested_instruments: Json
           requested_lesson_duration: string
           status: Database["public"]["Enums"]["registration_status"]
@@ -249,6 +386,7 @@ export type Database = {
           branch_school_name: string
           city: string
           created_at?: string
+          custom_data?: Json | null
           existing_student_id?: string | null
           gender?: string | null
           grade: string
@@ -258,6 +396,7 @@ export type Database = {
           parent_name: string
           parent_national_id: string
           parent_phone: string
+          registration_page_id?: string | null
           requested_instruments?: Json
           requested_lesson_duration: string
           status?: Database["public"]["Enums"]["registration_status"]
@@ -274,6 +413,7 @@ export type Database = {
           branch_school_name?: string
           city?: string
           created_at?: string
+          custom_data?: Json | null
           existing_student_id?: string | null
           gender?: string | null
           grade?: string
@@ -283,6 +423,7 @@ export type Database = {
           parent_name?: string
           parent_national_id?: string
           parent_phone?: string
+          registration_page_id?: string | null
           requested_instruments?: Json
           requested_lesson_duration?: string
           status?: Database["public"]["Enums"]["registration_status"]
@@ -306,6 +447,13 @@ export type Database = {
             columns: ["existing_student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_registration_page_id_fkey"
+            columns: ["registration_page_id"]
+            isOneToOne: false
+            referencedRelation: "registration_pages"
             referencedColumns: ["id"]
           },
         ]
