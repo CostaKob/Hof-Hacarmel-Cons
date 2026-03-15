@@ -552,7 +552,7 @@ const AdminRegistrationConvert = () => {
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר מורה" /></SelectTrigger>
                       <SelectContent>
-                        {teachers.map((t) => (
+                        {filteredTeachers.map((t) => (
                           <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
                         ))}
                       </SelectContent>
@@ -560,6 +560,9 @@ const AdminRegistrationConvert = () => {
                   )}
                 />
                 {errors.teacher_id && <p className="text-sm text-destructive">{errors.teacher_id.message}</p>}
+                {requestedInstrumentIds.size > 0 && relevantTeacherIds.size > 0 && (
+                  <p className="text-xs text-muted-foreground">מציג מורים המלמדים: {requestedInstrumentNames.join(", ")}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
