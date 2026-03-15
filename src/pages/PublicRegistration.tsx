@@ -232,8 +232,8 @@ const PublicRegistration = () => {
             <Button
               onClick={() => {
                 setSubmitted(false);
-                setFormData({});
-                setApproved(false);
+                setFormValues({});
+                setApprovalChecked(false);
               }}
               variant="outline"
               className="mt-2"
