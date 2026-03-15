@@ -137,7 +137,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={activeFilter} onValueChange={setActiveFilter}>
+        <Select value={activeFilter} onValueChange={(v) => setFilter("active", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">הכל</SelectItem>
