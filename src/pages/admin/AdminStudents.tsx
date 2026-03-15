@@ -169,6 +169,15 @@ const AdminStudents = () => {
             ))}
           </SelectContent>
         </Select>
+
+        <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הסטטוסים</SelectItem>
+            <SelectItem value="פעיל">פעיל</SelectItem>
+            <SelectItem value="הפסיק">הפסיק</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Card-based list */}
