@@ -38,13 +38,30 @@ const AdminStudentCard = () => {
     mutationFn: async (newStatus: string) => {
       const { error } = await supabase.from("students").update({ student_status: newStatus } as any).eq("id", studentId!);
       if (error) throw error;
+      // If student stopped, deactivate all enrollments
+      if (newStatus === "הפסיק") {
+        await supabase.from("enrollments").update({ is_active: false }).eq("student_id", studentId!);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       toast.success("סטטוס עודכן");
     },
     onError: () => toast.error("שגיאה בעדכון סטטוס"),
+  });
+
+  const enrollmentStatusMutation = useMutation({
+    mutationFn: async ({ enrollmentId, isActive }: { enrollmentId: string; isActive: boolean }) => {
+      const { error } = await supabase.from("enrollments").update({ is_active: isActive }).eq("id", enrollmentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
+      toast.success("סטטוס רישום עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון סטטוס רישום"),
   });
 
   const deleteMutation = useMutation({
