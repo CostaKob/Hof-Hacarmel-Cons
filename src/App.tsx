@@ -84,6 +84,10 @@ const App = () => (
             <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
             <Route path="/admin/academic-years" element={<AdminRoute><AdminAcademicYears /></AdminRoute>} />
             <Route path="/admin/year-transition" element={<AdminRoute><AdminYearTransition /></AdminRoute>} />
+            <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
+            <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
+            {/* Public */}
+            <Route path="/register" element={<PublicRegistration />} />
             {/* Teacher routes */}
             <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
             <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />

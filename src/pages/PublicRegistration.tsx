@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, Music } from "lucide-react";
-import { AppLogo } from "@/components/AppLogo";
+import AppLogo from "@/components/AppLogo";
 
 const registrationSchema = z.object({
   studentFullName: z.string().min(2, "יש להזין שם מלא").max(100),

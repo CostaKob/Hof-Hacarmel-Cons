@@ -80,11 +80,7 @@ const AdminRegistrationCard = () => {
   return (
     <AdminLayout
       title={`${r.student_first_name} ${r.student_last_name}`}
-      backButton={
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowRight className="h-5 w-5" />
-        </Button>
-      }
+      onBack={() => navigate(-1)}
     >
       <div className="space-y-4">
         {/* Status & Actions */}
