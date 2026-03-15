@@ -51,7 +51,7 @@ export function useTeacherEnrollmentsBySchool(teacherId: string | undefined, sch
         .eq("school_id", schoolId!)
         .eq("is_active", true);
       if (error) throw error;
-      return data;
+      return (data ?? []).filter((e: any) => e.students?.student_status !== "הפסיק");
     },
   });
 }
