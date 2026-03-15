@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus } from "lucide-react";
+import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
