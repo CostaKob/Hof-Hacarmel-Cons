@@ -41,6 +41,7 @@ const AdminStudentCard = () => {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
   const { activeYear } = useAcademicYear();
 
   const statusMutation = useMutation({
@@ -333,15 +334,16 @@ const AdminStudentCard = () => {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
-            <Button className="h-10 rounded-xl text-sm" onClick={() => setShowPaymentDialog(true)}>
+            <Button className="h-10 rounded-xl text-sm" onClick={() => { setEditingPayment(null); setShowPaymentDialog(true); }}>
               <Plus className="h-4 w-4" /> הוסף תשלום
             </Button>
           </div>
 
           {/* Yearly summary */}
           {(() => {
-            const yearPayments = payments.filter((p: any) => activeYear && p.academic_year_id === activeYear.id);
-            const total = yearPayments.reduce((sum: number, p: any) => sum + (p.transaction_type === "payment" ? Number(p.amount) : -Number(p.amount)), 0);
+            const total = payments
+              .filter((p: any) => activeYear && p.academic_year_id === activeYear.id)
+              .reduce((sum: number, p: any) => sum + (p.transaction_type === "payment" ? Number(p.amount) : -Number(p.amount)), 0);
             return (
               <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
                 <span className="text-sm text-muted-foreground">סה״כ שולם השנה: </span>
@@ -363,17 +365,23 @@ const AdminStudentCard = () => {
                     <TableHead className="text-right">אופן תשלום</TableHead>
                     <TableHead className="text-right">תשלומים</TableHead>
                     <TableHead className="text-right">הערות</TableHead>
+                    <TableHead className="text-right"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {payments.map((p: any) => (
-                    <TableRow key={p.id}>
+                    <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setEditingPayment(p); setShowPaymentDialog(true); }}>
                       <TableCell className="text-sm">{p.academic_years?.name ?? "—"}</TableCell>
                       <TableCell className="text-sm font-medium">₪{Number(p.amount).toLocaleString()}</TableCell>
                       <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), "dd/MM/yyyy") : "—"}</TableCell>
                       <TableCell className="text-sm">{PAYMENT_METHOD_MAP[p.payment_method] ?? p.payment_method ?? "—"}</TableCell>
                       <TableCell className="text-sm">{(p as any).installments ?? 1}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{p.notes ?? "—"}</TableCell>
+                      <TableCell className="text-sm">
+                        <Button variant="ghost" size="sm" className="rounded-xl" onClick={(e) => { e.stopPropagation(); setEditingPayment(p); setShowPaymentDialog(true); }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -384,9 +392,10 @@ const AdminStudentCard = () => {
 
         <AddPaymentDialog
           open={showPaymentDialog}
-          onOpenChange={setShowPaymentDialog}
+          onOpenChange={(v) => { setShowPaymentDialog(v); if (!v) setEditingPayment(null); }}
           studentId={studentId!}
           enrollments={enrollments}
+          editPayment={editingPayment}
         />
       </div>
     </AdminLayout>
