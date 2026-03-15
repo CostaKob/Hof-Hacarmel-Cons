@@ -129,7 +129,7 @@ const AdminStudents = () => {
         <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
           <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורים" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל המורים</SelectItem>
+            <SelectItem value="all">מורים</SelectItem>
             {(teachers as any[]).map((t: any) => (
               <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
             ))}
@@ -139,7 +139,7 @@ const AdminStudents = () => {
         <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
           <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בתי ספר" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל בתי הספר</SelectItem>
+            <SelectItem value="all">בתי ספר</SelectItem>
             {(schools as any[]).map((s: any) => (
               <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
             ))}
@@ -149,7 +149,7 @@ const AdminStudents = () => {
         <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל המשכים</SelectItem>
+            <SelectItem value="all">משך שיעור</SelectItem>
             {durations.map((d) => (
               <SelectItem key={d} value={String(d)}>{d} דק׳</SelectItem>
             ))}
@@ -159,7 +159,7 @@ const AdminStudents = () => {
         <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל הערים</SelectItem>
+            <SelectItem value="all">עיר מגורים</SelectItem>
             {cities.map((c) => (
               <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
             ))}
@@ -170,7 +170,7 @@ const AdminStudents = () => {
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="active">פעילים</SelectItem>
-            <SelectItem value="all">הכל</SelectItem>
+            <SelectItem value="all">סטטוס</SelectItem>
             <SelectItem value="stopped">הפסיקו</SelectItem>
           </SelectContent>
         </Select>
@@ -178,7 +178,7 @@ const AdminStudents = () => {
         <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל הכיתות</SelectItem>
+            <SelectItem value="all">כיתה</SelectItem>
             {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
               <SelectItem key={g} value={g}>{g}</SelectItem>
             ))}
@@ -188,7 +188,7 @@ const AdminStudents = () => {
         <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמת לימוד" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל הרמות</SelectItem>
+            <SelectItem value="all">רמת לימוד</SelectItem>
             {["א","ב","ג"].map((l) => (
               <SelectItem key={l} value={l}>{l}</SelectItem>
             ))}
@@ -198,7 +198,7 @@ const AdminStudents = () => {
         <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">כל התשלומים</SelectItem>
+            <SelectItem value="all">תשלומים</SelectItem>
             <SelectItem value="paid">שולם</SelectItem>
             <SelectItem value="unpaid">לא שולם</SelectItem>
           </SelectContent>
