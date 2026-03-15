@@ -187,6 +187,7 @@ const AdminExports = () => {
         case "enrollments": data = await exportEnrollments(); break;
         case "reports": data = await exportReports(); break;
         case "yearly": data = await exportYearly(); break;
+        case "registrations": data = await exportRegistrations(); break;
       }
       if (data.length === 0) {
         toast.info("אין נתונים לייצוא");
