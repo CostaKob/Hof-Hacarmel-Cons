@@ -52,7 +52,7 @@ const TeacherStudents = () => {
         const nameB = `${b.students?.first_name ?? ""} ${b.students?.last_name ?? ""}`;
         return nameA.localeCompare(nameB, "he");
       });
-  }, [enrollments, search, schoolFilter, instrumentFilter]);
+  }, [enrollments, search, schoolFilter, instrumentFilter, activeFilter]);
 
   const isLoading = teacherLoading || enrollmentsLoading;
 
