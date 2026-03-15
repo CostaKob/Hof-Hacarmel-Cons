@@ -70,18 +70,10 @@ const AdminStudents = () => {
     enabled: !!activeYear,
   });
 
-  const paidStudentIds = useMemo(() => {
-    const directStudentIds = yearPayments
-      .map((p: any) => p.student_id)
-      .filter(Boolean);
-
-    const enrollmentToStudent = new Map(rows.map((r: any) => [r.id, r.students?.id]));
-    const fallbackStudentIds = yearPayments
-      .map((p: any) => p.enrollment_id ? enrollmentToStudent.get(p.enrollment_id) : null)
-      .filter(Boolean);
-
-    return new Set<string>([...directStudentIds, ...fallbackStudentIds]);
-  }, [yearPayments, rows]);
+  // Set of enrollment IDs that have payments this year
+  const paidEnrollmentIds = useMemo(() => {
+    return new Set<string>(yearPayments.map((p: any) => p.enrollment_id).filter(Boolean));
+  }, [yearPayments]);
 
   const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()]
     .sort((a: any, b: any) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he"));
