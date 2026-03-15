@@ -661,11 +661,13 @@ export type Database = {
           created_by_user_id: string | null
           enrollment_id: string
           id: string
+          installments: number
           month_reference: string | null
           notes: string | null
           payment_date: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           reference_number: string | null
+          student_id: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
         Insert: {
@@ -675,11 +677,13 @@ export type Database = {
           created_by_user_id?: string | null
           enrollment_id: string
           id?: string
+          installments?: number
           month_reference?: string | null
           notes?: string | null
           payment_date: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           reference_number?: string | null
+          student_id?: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
         Update: {
@@ -689,11 +693,13 @@ export type Database = {
           created_by_user_id?: string | null
           enrollment_id?: string
           id?: string
+          installments?: number
           month_reference?: string | null
           notes?: string | null
           payment_date?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           reference_number?: string | null
+          student_id?: string | null
           transaction_type?: Database["public"]["Enums"]["transaction_type"]
         }
         Relationships: [
@@ -716,6 +722,13 @@ export type Database = {
             columns: ["enrollment_id"]
             isOneToOne: false
             referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]

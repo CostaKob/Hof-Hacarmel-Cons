@@ -1,7 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ const AdminStudents = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
+  const { activeYear } = useAcademicYear();
 
   const search = searchParams.get("q") || "";
   const teacherFilter = searchParams.get("teacher") || "all";
@@ -25,6 +27,7 @@ const AdminStudents = () => {
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
   const statusFilter = searchParams.get("status") || "all";
+  const paymentFilter = searchParams.get("payment") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -42,7 +45,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data as any[]).sort((a: any, b: any) => {
@@ -53,6 +56,30 @@ const AdminStudents = () => {
     },
   });
 
+  // Fetch all payments for current academic year to determine payment status per student
+  const { data: yearPayments = [] } = useQuery({
+    queryKey: ["admin-year-payments", activeYear?.id],
+    queryFn: async () => {
+      if (!activeYear) return [];
+      const { data } = await supabase
+        .from("student_payments")
+        .select("student_id, enrollment_id")
+        .eq("academic_year_id", activeYear.id);
+      return data ?? [];
+    },
+    enabled: !!activeYear,
+  });
+
+  // Set of student IDs who paid this year
+  const paidStudentIds = useMemo(() => {
+    if (!activeYear) return new Set<string>();
+    // Get student IDs from payments that have student_id
+    const fromStudentId = yearPayments.filter((p: any) => p.student_id).map((p: any) => p.student_id);
+    // For payments without student_id, map enrollment_id -> student_id
+    const enrollmentToStudent = new Map(rows.map((r: any) => [r.id, r.students?.id]));
+    const fromEnrollment = yearPayments.filter((p: any) => !p.student_id && p.enrollment_id).map((p: any) => enrollmentToStudent.get(p.enrollment_id)).filter(Boolean);
+    return new Set([...fromStudentId, ...fromEnrollment]);
+  }, [yearPayments, rows, activeYear]);
 
   const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()]
     .sort((a: any, b: any) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he"));
@@ -71,9 +98,10 @@ const AdminStudents = () => {
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
-    // Enrollment-level active filter
     if (activeFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (activeFilter === "inactive" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
+    if (paymentFilter === "paid" && !paidStudentIds.has(r.students?.id)) return false;
+    if (paymentFilter === "unpaid" && paidStudentIds.has(r.students?.id)) return false;
     return true;
   });
 
@@ -183,6 +211,15 @@ const AdminStudents = () => {
             <SelectItem value="הפסיק">הפסיק</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
+          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="סטטוס תשלום" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל התשלומים</SelectItem>
+            <SelectItem value="paid">שולם</SelectItem>
+            <SelectItem value="unpaid">לא שולם</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Card-based list */}
@@ -194,50 +231,61 @@ const AdminStudents = () => {
         <>
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>
           <div className="space-y-2">
-            {filtered.map((r: any, index: number) => (
-              <div
-                key={r.id}
-                onClick={() => navigate(`/admin/students/${r.students?.id}`)}
-                className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
-                  <div className="min-w-0">
-                    <p className="font-semibold text-foreground">
-                      {r.students?.first_name} {r.students?.last_name}
-                    </p>
-                    <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                      <span>{r.instruments?.name}</span>
-                      <span>·</span>
-                      <span>{r.schools?.name}</span>
-                      <span>·</span>
-                      <span>{r.lesson_duration_minutes} דק׳</span>
-                      {r.teachers && (
-                        <>
-                          <span>·</span>
-                          <span>{r.teachers.first_name} {r.teachers.last_name}</span>
-                        </>
-                      )}
-                      {r.students?.grade && (
-                        <>
-                          <span>·</span>
-                          <span>כיתה {r.students.grade}</span>
-                        </>
-                      )}
-                      {r.students?.playing_level && (
-                        <>
-                          <span>·</span>
-                          <span>רמה {r.students.playing_level}</span>
-                        </>
-                      )}
+            {filtered.map((r: any, index: number) => {
+              const isPaid = paidStudentIds.has(r.students?.id);
+              return (
+                <div
+                  key={r.id}
+                  onClick={() => navigate(`/admin/students/${r.students?.id}`)}
+                  className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">
+                        {r.students?.first_name} {r.students?.last_name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                        <span>{r.instruments?.name}</span>
+                        <span>·</span>
+                        <span>{r.schools?.name}</span>
+                        <span>·</span>
+                        <span>{r.lesson_duration_minutes} דק׳</span>
+                        {r.teachers && (
+                          <>
+                            <span>·</span>
+                            <span>{r.teachers.first_name} {r.teachers.last_name}</span>
+                          </>
+                        )}
+                        {r.students?.grade && (
+                          <>
+                            <span>·</span>
+                            <span>כיתה {r.students.grade}</span>
+                          </>
+                        )}
+                        {r.students?.playing_level && (
+                          <>
+                            <span>·</span>
+                            <span>רמה {r.students.playing_level}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  <div className="flex items-center gap-2 mr-3 shrink-0">
+                    <Badge
+                      variant="outline"
+                      className={`rounded-lg text-xs ${isPaid ? "bg-green-500/10 text-green-700 border-green-500/30" : "bg-destructive/10 text-destructive border-destructive/30"}`}
+                    >
+                      {isPaid ? "שולם" : "לא שולם"}
+                    </Badge>
+                    <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
+                      {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
+                    </Badge>
+                  </div>
                 </div>
-                <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg mr-3 shrink-0 ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
-                  {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
-                </Badge>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}

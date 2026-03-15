@@ -1,0 +1,2 @@
+ALTER TABLE public.student_payments ADD COLUMN IF NOT EXISTS installments integer NOT NULL DEFAULT 1;
+ALTER TABLE public.student_payments ADD COLUMN IF NOT EXISTS student_id uuid REFERENCES public.students(id) ON DELETE CASCADE;
