@@ -48,6 +48,14 @@ const AdminRegistrations = () => {
   return (
     <AdminLayout title="הרשמות">
       <div className="space-y-4">
+        {/* Header actions */}
+        <div className="flex justify-end">
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/registration-settings")}>
+            <Settings className="h-4 w-4 ml-1" />
+            הגדרות טופס הרשמה
+          </Button>
+        </div>
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
