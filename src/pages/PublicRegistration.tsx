@@ -305,7 +305,6 @@ const PublicRegistration = () => {
           </CardContent>
         </Card>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Student Details */}
           <Card>
             <CardHeader>
