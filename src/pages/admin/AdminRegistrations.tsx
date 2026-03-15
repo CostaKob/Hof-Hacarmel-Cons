@@ -49,10 +49,10 @@ const AdminRegistrations = () => {
     <AdminLayout title="הרשמות">
       <div className="space-y-4">
         {/* Header actions */}
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={() => navigate("/admin/registration-settings")}>
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/registration-pages")}>
             <Settings className="h-4 w-4 ml-1" />
-            הגדרות טופס הרשמה
+            ניהול דפי הרשמה
           </Button>
         </div>
 

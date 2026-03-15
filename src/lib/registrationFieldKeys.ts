@@ -18,7 +18,7 @@ export const KNOWN_FIELD_KEYS = [
   { key: "notes", label: "הערות" },
 ] as const;
 
-export const KNOWN_KEYS_SET = new Set(KNOWN_FIELD_KEYS.map((f) => f.key));
+export const KNOWN_KEYS_SET = new Set<string>(KNOWN_FIELD_KEYS.map((f) => f.key));
 
 export const FIELD_TYPES = [
   { value: "text", label: "טקסט" },

@@ -90,6 +90,8 @@ const App = () => (
             <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
             <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
             <Route path="/admin/registration-settings" element={<AdminRoute><AdminRegistrationSettings /></AdminRoute>} />
+            <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
+            <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
             {/* Public */}
             <Route path="/register" element={<PublicRegistration />} />
             {/* Teacher routes */}
