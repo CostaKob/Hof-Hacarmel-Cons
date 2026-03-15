@@ -54,6 +54,12 @@ const AdminStudentCard = () => {
       // Delete student notes
       await supabase.from("student_notes").delete().eq("student_id", studentId!);
 
+      // Clear registration references to this student
+      await supabase
+        .from("registrations" as any)
+        .update({ existing_student_id: null, match_type: null })
+        .eq("existing_student_id", studentId!);
+
       // Delete the student
       const { error } = await supabase.from("students").delete().eq("id", studentId!);
       if (error) throw error;

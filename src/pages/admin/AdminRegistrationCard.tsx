@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { UserCheck, AlertTriangle, UserPlus, Link2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { UserCheck, AlertTriangle, UserPlus, Link2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { REGISTRATION_STATUSES, SETTABLE_STATUSES, daysAgoLabel } from "@/lib/registrationStatuses";
 
@@ -14,6 +16,7 @@ const AdminRegistrationCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const { data: registration, isLoading } = useQuery({
     queryKey: ["admin-registration", id],
@@ -87,6 +90,22 @@ const AdminRegistrationCard = () => {
       toast.success("ההתאמה אושרה");
     },
     onError: () => toast.error("שגיאה בעדכון"),
+  });
+
+  const deleteRegistration = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("registrations" as any)
+        .delete()
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
+      toast.success("ההרשמה נמחקה");
+      navigate("/admin/registrations");
+    },
+    onError: () => toast.error("שגיאה במחיקת ההרשמה"),
   });
 
   if (isLoading) {
@@ -224,7 +243,37 @@ const AdminRegistrationCard = () => {
                   <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד
                 </Button>
               )}
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="h-4 w-4 ml-1" /> מחק הרשמה
+              </Button>
             </div>
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>מחיקת הרשמה</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    האם למחוק את ההרשמה של {r.student_first_name} {r.student_last_name}? פעולה זו אינה ניתנת לביטול.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => deleteRegistration.mutate()}
+                    disabled={deleteRegistration.isPending}
+                  >
+                    {deleteRegistration.isPending ? "מוחק..." : "מחק"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 
