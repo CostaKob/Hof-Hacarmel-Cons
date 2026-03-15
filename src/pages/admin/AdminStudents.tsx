@@ -54,9 +54,11 @@ const AdminStudents = () => {
   });
 
 
-  const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()];
-  const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()];
-  const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort();
+  const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()]
+    .sort((a: any, b: any) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he"));
+  const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()]
+    .sort((a: any, b: any) => (a.name ?? "").localeCompare(b.name ?? "", "he"));
+  const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const durations = [...new Set(rows.map((r: any) => r.lesson_duration_minutes))].sort((a, b) => a - b);
 
   const filtered = rows.filter((r: any) => {
