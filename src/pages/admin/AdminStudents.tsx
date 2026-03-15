@@ -228,11 +228,9 @@ const AdminStudents = () => {
                     </div>
                   </div>
                 </div>
-                {r.students?.student_status === "הפסיק" && (
-                  <Badge variant="outline" className="rounded-lg mr-3 shrink-0 text-destructive border-destructive">
-                    הפסיק
-                  </Badge>
-                )}
+                <Badge variant={r.students?.student_status === "הפסיק" ? "outline" : "default"} className={`rounded-lg mr-3 shrink-0 ${r.students?.student_status === "הפסיק" ? "text-destructive border-destructive" : ""}`}>
+                  {r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
+                </Badge>
               </div>
             ))}
           </div>
