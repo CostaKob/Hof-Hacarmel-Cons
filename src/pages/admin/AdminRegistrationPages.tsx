@@ -50,16 +50,61 @@ const AdminRegistrationPages = () => {
 
   const createMutation = useMutation({
     mutationFn: async (yearId: string) => {
+      const yearObj = years.find((y) => y.id === yearId);
+      const titleWithYear = yearObj ? `${DEFAULT_TITLE} ${yearObj.name}` : DEFAULT_TITLE;
+
+      // Create the page
       const { data, error } = await supabase
         .from("registration_pages")
-        .insert({ academic_year_id: yearId, title: "", is_open: false })
+        .insert({
+          academic_year_id: yearId,
+          title: titleWithYear,
+          is_open: false,
+          approval_text: DEFAULT_APPROVAL_TEXT,
+          success_message: DEFAULT_SUCCESS_MESSAGE,
+        })
         .select("id")
         .single();
       if (error) throw error;
+
+      // Seed default sections
+      if (DEFAULT_SECTIONS.length > 0) {
+        const { error: secErr } = await supabase
+          .from("registration_page_sections")
+          .insert(DEFAULT_SECTIONS.map((s, i) => ({
+            page_id: data.id,
+            title: s.title,
+            content: s.content,
+            sort_order: i,
+          })));
+        if (secErr) throw secErr;
+      }
+
+      // Seed default fields
+      if (DEFAULT_FIELDS.length > 0) {
+        const { error: fldErr } = await supabase
+          .from("registration_page_fields")
+          .insert(DEFAULT_FIELDS.map((f, i) => ({
+            page_id: data.id,
+            field_key: f.field_key,
+            label: f.label,
+            field_type: f.field_type,
+            is_required: f.is_required,
+            options: f.options,
+            sort_order: i,
+            is_active: true,
+            help_text: f.help_text,
+            section_title: f.section_title,
+            placeholder: f.placeholder,
+            data_source: f.data_source,
+          })));
+        if (fldErr) throw fldErr;
+      }
+
       return data;
     },
     onSuccess: (data) => {
-      toast.success("דף הרשמה חדש נוצר");
+      toast.success("דף הרשמה חדש נוצר עם כל התוכן והשדות");
       queryClient.invalidateQueries({ queryKey: ["registration-pages"] });
       navigate(`/admin/registration-pages/${data.id}`);
     },
