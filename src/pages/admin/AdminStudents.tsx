@@ -195,6 +195,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
+        <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="סטטוס תשלום" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל התשלומים</SelectItem>
