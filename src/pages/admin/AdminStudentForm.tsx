@@ -48,7 +48,7 @@ const AdminStudentForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__" },
+    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל" },
   });
 
   const isActive = watch("is_active");
