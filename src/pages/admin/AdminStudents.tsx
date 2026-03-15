@@ -231,8 +231,8 @@ const AdminStudents = () => {
                     </div>
                   </div>
                 </div>
-                <Badge variant={r.students?.student_status === "הפסיק" ? "outline" : "default"} className={`rounded-lg mr-3 shrink-0 ${r.students?.student_status === "הפסיק" ? "text-destructive border-destructive" : ""}`}>
-                  {r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
+                <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg mr-3 shrink-0 ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
+                  {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
                 </Badge>
               </div>
             ))}
