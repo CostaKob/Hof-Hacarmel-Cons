@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,15 +17,27 @@ const PAYMENT_METHODS = [
   { value: "check", label: "צ׳ק" },
 ];
 
+interface PaymentData {
+  id: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string | null;
+  installments?: number;
+  notes: string | null;
+  academic_year_id: string | null;
+}
+
 interface AddPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   studentId: string;
   enrollments: any[];
+  editPayment?: PaymentData | null;
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment }: AddPaymentDialogProps) => {
   const queryClient = useQueryClient();
+  const { activeYear } = useAcademicYear();
   const today = format(new Date(), "yyyy-MM-dd");
 
   const [amount, setAmount] = useState("");
@@ -33,34 +46,60 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments }: AddPay
   const [installments, setInstallments] = useState("1");
   const [notes, setNotes] = useState("");
 
-  // Get academic_year_id from the first active enrollment
+  const isEdit = !!editPayment;
+
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (editPayment) {
+      setAmount(String(editPayment.amount));
+      setPaymentDate(editPayment.payment_date);
+      setPaymentMethod(editPayment.payment_method || "credit_card");
+      setInstallments(String((editPayment as any).installments ?? 1));
+      setNotes(editPayment.notes || "");
+    } else {
+      resetForm();
+    }
+  }, [editPayment, open]);
+
   const activeEnrollment = enrollments.find((e: any) => e.is_active) || enrollments[0];
-  const academicYearId = activeEnrollment?.academic_year_id;
   const enrollmentId = activeEnrollment?.id;
+  // Always use the active academic year from context
+  const academicYearId = activeYear?.id ?? activeEnrollment?.academic_year_id;
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!enrollmentId) throw new Error("אין רישום פעיל לתלמיד");
-      const { error } = await supabase.from("student_payments").insert({
-        student_id: studentId,
-        enrollment_id: enrollmentId,
-        academic_year_id: academicYearId,
+      if (!enrollmentId && !isEdit) throw new Error("אין רישום פעיל לתלמיד");
+
+      const paymentData = {
         amount: parseFloat(amount),
         payment_date: paymentDate,
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
-        transaction_type: "payment" as const,
         notes: notes || null,
-      });
-      if (error) throw error;
+      };
+
+      if (isEdit) {
+        const { error } = await supabase.from("student_payments").update(paymentData).eq("id", editPayment!.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("student_payments").insert({
+          ...paymentData,
+          student_id: studentId,
+          enrollment_id: enrollmentId,
+          academic_year_id: academicYearId,
+          transaction_type: "payment" as const,
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
-      toast.success("התשלום נוסף בהצלחה");
+      queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
+      toast.success(isEdit ? "התשלום עודכן בהצלחה" : "התשלום נוסף בהצלחה");
       onOpenChange(false);
       resetForm();
     },
-    onError: (err: any) => toast.error(err.message || "שגיאה בהוספת תשלום"),
+    onError: (err: any) => toast.error(err.message || "שגיאה בשמירת תשלום"),
   });
 
   const resetForm = () => {
@@ -71,13 +110,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments }: AddPay
     setNotes("");
   };
 
-  const canSubmit = amount && parseFloat(amount) > 0 && paymentDate && enrollmentId;
+  const canSubmit = amount && parseFloat(amount) > 0 && paymentDate;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md" dir="rtl">
         <DialogHeader>
-          <DialogTitle>הוסף תשלום</DialogTitle>
+          <DialogTitle>{isEdit ? "עריכת תשלום" : "הוסף תשלום"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-2">
           <div>
@@ -115,7 +154,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments }: AddPay
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערות (אופציונלי)" rows={2} />
           </div>
           <Button className="w-full h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
-            {mutation.isPending ? "שומר..." : "שמור תשלום"}
+            {mutation.isPending ? "שומר..." : isEdit ? "עדכן תשלום" : "שמור תשלום"}
           </Button>
         </div>
       </DialogContent>
