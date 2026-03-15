@@ -6,16 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus, ClipboardCheck } from "lucide-react";
+import { UserCheck, Clock, CheckCircle2, XCircle, Link2, AlertTriangle, UserPlus, ClipboardCheck, PhoneCall, CreditCard } from "lucide-react";
 import { toast } from "sonner";
-
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  new: { label: "חדש", variant: "default" },
-  in_review: { label: "בטיפול", variant: "secondary" },
-  approved: { label: "אושר", variant: "outline" },
-  rejected: { label: "נדחה", variant: "destructive" },
-  converted: { label: "הומר", variant: "outline" },
-};
+import { REGISTRATION_STATUSES, daysAgoLabel } from "@/lib/registrationStatuses";
 
 const AdminRegistrationCard = () => {
   const { id } = useParams<{ id: string }>();
@@ -105,7 +98,7 @@ const AdminRegistrationCard = () => {
   }
 
   const r = registration;
-  const status = STATUS_CONFIG[r.status] || STATUS_CONFIG.new;
+  const statusCfg = REGISTRATION_STATUSES[r.status] || REGISTRATION_STATUSES.new;
   const isIdMatch = r.match_type === "id_match";
   const isNameMatch = r.match_type === "name_match";
   const hasExistingStudent = !!r.existing_student_id;
@@ -120,8 +113,13 @@ const AdminRegistrationCard = () => {
         <Card>
           <CardContent className="pt-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">סטטוס</span>
-              <Badge variant={status.variant} className="text-sm">{status.label}</Badge>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-muted-foreground">סטטוס</span>
+                <span className="text-xs text-muted-foreground">{daysAgoLabel(r.created_at)}</span>
+              </div>
+              <span className={`text-sm font-medium px-3 py-1 rounded-full ${statusCfg.color}`}>
+                {statusCfg.label}
+              </span>
             </div>
 
             {/* ID-based match — confirmed */}
@@ -190,22 +188,35 @@ const AdminRegistrationCard = () => {
             <Separator />
 
             <div className="flex flex-wrap gap-2">
+              {/* Status transitions */}
               {r.status === "new" && (
                 <Button size="sm" variant="secondary" onClick={() => updateStatus.mutate("in_review")}>
                   <Clock className="h-4 w-4 ml-1" /> סמן בטיפול
                 </Button>
               )}
-              {(r.status === "new" || r.status === "in_review") && (
-                <>
-                  <Button size="sm" variant="default" onClick={() => updateStatus.mutate("approved")}>
-                    <CheckCircle2 className="h-4 w-4 ml-1" /> אשר
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate("rejected")}>
-                    <XCircle className="h-4 w-4 ml-1" /> דחה
-                  </Button>
-                </>
+              {["new", "in_review"].includes(r.status) && (
+                <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("waiting_for_call")}>
+                  <PhoneCall className="h-4 w-4 ml-1" /> ממתין לשיחה
+                </Button>
               )}
-              {(r.status === "approved" || r.status === "in_review") && r.status !== "converted" && (
+              {["in_review", "waiting_for_call"].includes(r.status) && (
+                <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("waiting_for_payment")}>
+                  <CreditCard className="h-4 w-4 ml-1" /> ממתין לתשלום
+                </Button>
+              )}
+              {["in_review", "waiting_for_call", "waiting_for_payment"].includes(r.status) && (
+                <Button size="sm" variant="default" onClick={() => updateStatus.mutate("approved")}>
+                  <CheckCircle2 className="h-4 w-4 ml-1" /> אשר
+                </Button>
+              )}
+              {r.status !== "converted" && r.status !== "rejected" && (
+                <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate("rejected")}>
+                  <XCircle className="h-4 w-4 ml-1" /> דחה
+                </Button>
+              )}
+
+              {/* Convert action */}
+              {["approved", "in_review", "waiting_for_payment"].includes(r.status) && (
                 <Button
                   size="sm"
                   variant="default"
@@ -214,6 +225,8 @@ const AdminRegistrationCard = () => {
                   <ClipboardCheck className="h-4 w-4 ml-1" /> טפל בהרשמה
                 </Button>
               )}
+
+              {/* View converted student */}
               {r.status === "converted" && hasExistingStudent && (
                 <Button size="sm" variant="outline" onClick={() => navigate(`/admin/students/${r.existing_student_id}`)}>
                   <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד

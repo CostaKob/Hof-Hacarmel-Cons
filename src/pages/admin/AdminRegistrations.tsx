@@ -6,16 +6,9 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, User, Settings, AlertTriangle } from "lucide-react";
+import { Search, Settings, AlertTriangle, Phone, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const STATUS_MAP: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  new: { label: "חדש", variant: "default" },
-  in_review: { label: "בטיפול", variant: "secondary" },
-  approved: { label: "אושר", variant: "outline" },
-  rejected: { label: "נדחה", variant: "destructive" },
-  converted: { label: "הומר", variant: "outline" },
-};
+import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
 
 const AdminRegistrations = () => {
   const navigate = useNavigate();
@@ -68,23 +61,21 @@ const AdminRegistrations = () => {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-44">
+            <SelectTrigger className="w-full sm:w-48">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל הסטטוסים</SelectItem>
-              <SelectItem value="new">חדש</SelectItem>
-              <SelectItem value="in_review">בטיפול</SelectItem>
-              <SelectItem value="approved">אושר</SelectItem>
-              <SelectItem value="rejected">נדחה</SelectItem>
-              <SelectItem value="converted">הומר</SelectItem>
+              {Object.entries(REGISTRATION_STATUSES).map(([key, { label }]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Summary */}
+        {/* Summary chips */}
         <div className="flex gap-2 flex-wrap">
-          {Object.entries(STATUS_MAP).map(([key, { label }]) => {
+          {Object.entries(REGISTRATION_STATUSES).map(([key, { label }]) => {
             const count = registrations.filter((r) => r.status === key).length;
             if (count === 0) return null;
             return (
@@ -109,35 +100,62 @@ const AdminRegistrations = () => {
         ) : (
           <div className="space-y-2">
             {filtered.map((r, idx) => {
-              const status = STATUS_MAP[r.status] || STATUS_MAP.new;
+              const statusCfg = REGISTRATION_STATUSES[r.status] || REGISTRATION_STATUSES.new;
+              const instruments = (r.requested_instruments as string[])?.join(", ") || "";
+              const days = daysAgo(r.created_at);
+              const isUrgent = days >= 7 && ["new", "in_review", "waiting_for_call"].includes(r.status);
+
               return (
                 <button
                   key={r.id}
                   onClick={() => navigate(`/admin/registrations/${r.id}`)}
-                  className="w-full flex items-center gap-3 rounded-xl border border-border bg-card p-4 text-right transition-all hover:shadow-sm active:scale-[0.99]"
+                  className="w-full rounded-xl border border-border bg-card p-4 text-right transition-all hover:shadow-sm active:scale-[0.99]"
                 >
-                  <span className="text-xs text-muted-foreground w-6 shrink-0">{idx + 1}</span>
-                  <div className="rounded-full bg-muted p-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">
-                      {r.student_first_name} {r.student_last_name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {r.parent_name} · {(r.requested_instruments as string[])?.join(", ")}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    <Badge variant={status.variant}>{status.label}</Badge>
-                    {r.existing_student_id && r.match_type === "id_match" && (
-                      <span className="text-[10px] text-green-600 font-medium">תלמיד קיים</span>
-                    )}
-                    {r.existing_student_id && r.match_type === "name_match" && (
-                      <span className="flex items-center gap-0.5 text-[10px] text-amber-600 font-medium">
-                        <AlertTriangle className="h-3 w-3" /> התאמת שם
-                      </span>
-                    )}
+                  <div className="flex items-start gap-3">
+                    <span className="text-xs text-muted-foreground w-5 shrink-0 pt-1">{idx + 1}</span>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      {/* Row 1: Name + Status */}
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="font-medium text-foreground truncate text-sm">
+                          {r.student_first_name} {r.student_last_name}
+                          {r.grade ? <span className="text-muted-foreground font-normal"> · כיתה {r.grade}</span> : ""}
+                        </p>
+                        <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full shrink-0 ${statusCfg.color}`}>
+                          {statusCfg.label}
+                        </span>
+                      </div>
+
+                      {/* Row 2: Instruments + Parent phone */}
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        {instruments && (
+                          <span className="flex items-center gap-1 truncate">
+                            <Music className="h-3 w-3 shrink-0" />
+                            {instruments}
+                          </span>
+                        )}
+                        {r.parent_phone && (
+                          <span className="flex items-center gap-1 shrink-0">
+                            <Phone className="h-3 w-3" />
+                            {r.parent_phone}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Row 3: Days ago + match indicator */}
+                      <div className="flex items-center gap-3 text-[11px]">
+                        <span className={isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}>
+                          {daysAgoLabel(r.created_at)}
+                        </span>
+                        {r.existing_student_id && r.match_type === "id_match" && (
+                          <span className="text-green-600 font-medium">תלמיד קיים</span>
+                        )}
+                        {r.existing_student_id && r.match_type === "name_match" && (
+                          <span className="flex items-center gap-0.5 text-amber-600 font-medium">
+                            <AlertTriangle className="h-3 w-3" /> התאמת שם
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </button>
               );

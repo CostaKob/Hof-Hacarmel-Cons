@@ -960,6 +960,8 @@ export type Database = {
         | "approved"
         | "rejected"
         | "converted"
+        | "waiting_for_call"
+        | "waiting_for_payment"
       transaction_type: "payment" | "credit"
     }
     CompositeTypes: {
@@ -1105,6 +1107,8 @@ export const Constants = {
         "approved",
         "rejected",
         "converted",
+        "waiting_for_call",
+        "waiting_for_payment",
       ],
       transaction_type: ["payment", "credit"],
     },
