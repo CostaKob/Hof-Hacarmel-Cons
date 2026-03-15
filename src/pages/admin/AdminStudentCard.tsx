@@ -283,6 +283,10 @@ const AdminStudentCard = () => {
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Attendance summary & lesson history per enrollment */}
@@ -309,10 +313,6 @@ const AdminStudentCard = () => {
             )}
           </div>
         )}
-              ))}
-            </div>
-          )}
-        </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <h2 className="font-semibold text-foreground text-base">הערות ({notes.length})</h2>
