@@ -8,13 +8,16 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
 import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
+import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
