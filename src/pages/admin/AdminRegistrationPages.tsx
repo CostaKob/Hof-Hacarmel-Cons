@@ -191,6 +191,20 @@ const AdminRegistrationPages = () => {
     onError: () => toast.error("שגיאה בשכפול דף הרשמה"),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (pageId: string) => {
+      // Sections and fields are deleted via CASCADE
+      const { error } = await supabase.from("registration_pages").delete().eq("id", pageId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("דף הרשמה נמחק");
+      queryClient.invalidateQueries({ queryKey: ["registration-pages"] });
+      setDeleteTarget(null);
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
   return (
     <AdminLayout title="דפי הרשמה" backPath="/admin">
       <div className="space-y-4">
@@ -250,6 +264,10 @@ const AdminRegistrationPages = () => {
                         onClick={() => { setDuplicateSource(page); setDuplicateYearId(""); }}>
                         <Copy className="h-4 w-4" />
                       </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => setDeleteTarget(page)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -291,6 +309,31 @@ const AdminRegistrationPages = () => {
               onClick={() => duplicateMutation.mutate({ sourceId: duplicateSource.id, targetYearId: duplicateYearId })}
             >
               {duplicateMutation.isPending ? "משכפל..." : "שכפל"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
+        <DialogContent dir="rtl">
+          <DialogHeader>
+            <DialogTitle>מחיקת דף הרשמה</DialogTitle>
+          </DialogHeader>
+          <div className="py-2">
+            <p className="text-sm text-muted-foreground">
+              האם למחוק את דף ההרשמה "{deleteTarget?.title || deleteTarget?.academic_years?.name}"?
+              כל הסעיפים והשדות ימחקו לצמיתות. הרשמות קיימות שנשלחו לא ימחקו.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>ביטול</Button>
+            <Button
+              variant="destructive"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate(deleteTarget.id)}
+            >
+              {deleteMutation.isPending ? "מוחק..." : "מחק"}
             </Button>
           </DialogFooter>
         </DialogContent>
