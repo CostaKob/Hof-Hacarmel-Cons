@@ -41,7 +41,7 @@ const AdminYearlySummary = () => {
   const [search, setSearch] = useState("");
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [schoolFilter, setSchoolFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("active");
 
   const rows = useMemo<EnrollmentSummaryRow[]>(() => {
     if (!enrollments || !lines) return [];
