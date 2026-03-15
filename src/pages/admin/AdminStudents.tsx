@@ -97,7 +97,7 @@ const AdminStudents = () => {
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <Select value={teacherFilter} onValueChange={setTeacherFilter}>
+        <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
           <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורה" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המורים</SelectItem>
