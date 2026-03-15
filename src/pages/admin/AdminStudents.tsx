@@ -35,6 +35,8 @@ const AdminStudents = () => {
   }, [setSearchParams]);
 
   const { data: rows = [], isLoading } = useQuery({
+  useScrollRestore(!isLoading);
+  const _query = useQuery({
     queryKey: ["admin-students-enrollments"],
     queryFn: async () => {
       const { data, error } = await supabase
