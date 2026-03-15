@@ -35,6 +35,19 @@ const AdminStudentCard = () => {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
+  const statusMutation = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const { error } = await supabase.from("students").update({ student_status: newStatus } as any).eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      toast.success("סטטוס עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון סטטוס"),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       // Get enrollment IDs for this student
