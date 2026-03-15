@@ -218,6 +218,7 @@ const AdminExports = () => {
         case "enrollments": data = await exportEnrollments(); break;
         case "reports": data = await exportReports(); break;
         case "yearly": data = await exportYearly(); break;
+        case "payments": data = await exportPayments(); break;
         case "registrations": data = await exportRegistrations(); break;
       }
       if (data.length === 0) {
@@ -230,6 +231,7 @@ const AdminExports = () => {
         enrollments: "רישומים",
         reports: "דיווחי_שיעורים",
         yearly: "סיכום_שנתי",
+        payments: "תשלומים",
         registrations: "הרשמות",
       };
       downloadXlsx(data, names[key]);
