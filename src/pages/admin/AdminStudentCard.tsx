@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Plus } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcYearsOfPlaying } from "@/lib/constants";
 
@@ -27,6 +30,27 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 const AdminStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("students").delete().eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      toast.success("התלמיד נמחק בהצלחה");
+      navigate("/admin/students");
+    },
+    onError: (err: any) => {
+      if (err.message?.includes("violates foreign key")) {
+        toast.error("לא ניתן למחוק תלמיד עם שיוכים או דוחות קיימים. יש לבטל את השיוכים קודם.");
+      } else {
+        toast.error(err.message || "שגיאה במחיקת התלמיד");
+      }
+    },
+  });
 
   const { data: student, isLoading } = useQuery({
     queryKey: ["admin-student", studentId],
@@ -105,10 +129,36 @@ const AdminStudentCard = () => {
           <Badge variant={student.is_active ? "default" : "secondary"} className="rounded-lg">
             {student.is_active ? "פעיל" : "לא פעיל"}
           </Badge>
-          <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/students/${studentId}/edit`)}>
-            <Pencil className="h-4 w-4" /> עריכה
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/students/${studentId}/edit`)}>
+              <Pencil className="h-4 w-4" /> עריכה
+            </Button>
+          </div>
         </div>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>מחיקת תלמיד</AlertDialogTitle>
+              <AlertDialogDescription>
+                האם למחוק את {student.first_name} {student.last_name}? פעולה זו אינה ניתנת לביטול.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "מוחק..." : "מחק"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <h2 className="font-semibold text-foreground text-base mb-2">פרטים אישיים</h2>
