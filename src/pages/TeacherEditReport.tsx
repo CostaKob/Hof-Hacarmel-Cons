@@ -244,9 +244,13 @@ const TeacherEditReport = () => {
 
     queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
     queryClient.invalidateQueries({ queryKey: ["teacher-last-report"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-teacher-reports"] });
 
     toast.success("יום העבודה עודכן בהצלחה");
-    navigate(`/teacher/reports/${newReport.id}`);
+    const viewPath = isAdminContext
+      ? `/admin/teachers/${urlTeacherId}/reports/${newReport.id}`
+      : `/teacher/reports/${newReport.id}`;
+    navigate(viewPath);
   };
 
   if (reportLoading || linesLoading) {
