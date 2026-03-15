@@ -199,6 +199,7 @@ const AdminExports = () => {
         enrollments: "רישומים",
         reports: "דיווחי_שיעורים",
         yearly: "סיכום_שנתי",
+        registrations: "הרשמות",
       };
       downloadXlsx(data, names[key]);
       toast.success(`${data.length} רשומות יוצאו בהצלחה`);
