@@ -127,7 +127,7 @@ const AdminStudents = () => {
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
         <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
-          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורה" /></SelectTrigger>
+          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורים" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל המורים</SelectItem>
             {(teachers as any[]).map((t: any) => (
@@ -137,7 +137,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
-          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
+          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בתי ספר" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל בתי הספר</SelectItem>
             {(schools as any[]).map((s: any) => (
@@ -157,7 +157,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר" /></SelectTrigger>
+          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הערים</SelectItem>
             {cities.map((c) => (
@@ -167,7 +167,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="active">פעילים</SelectItem>
             <SelectItem value="all">הכל</SelectItem>
@@ -186,7 +186,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמת לימוד" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הרמות</SelectItem>
             {["א","ב","ג"].map((l) => (
@@ -196,7 +196,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
-          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="סטטוס תשלום" /></SelectTrigger>
+          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל התשלומים</SelectItem>
             <SelectItem value="paid">שולם</SelectItem>
