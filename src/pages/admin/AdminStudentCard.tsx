@@ -129,10 +129,36 @@ const AdminStudentCard = () => {
           <Badge variant={student.is_active ? "default" : "secondary"} className="rounded-lg">
             {student.is_active ? "פעיל" : "לא פעיל"}
           </Badge>
-          <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/students/${studentId}/edit`)}>
-            <Pencil className="h-4 w-4" /> עריכה
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/students/${studentId}/edit`)}>
+              <Pencil className="h-4 w-4" /> עריכה
+            </Button>
+          </div>
         </div>
+
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>מחיקת תלמיד</AlertDialogTitle>
+              <AlertDialogDescription>
+                האם למחוק את {student.first_name} {student.last_name}? פעולה זו אינה ניתנת לביטול.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+              >
+                {deleteMutation.isPending ? "מוחק..." : "מחק"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <h2 className="font-semibold text-foreground text-base mb-2">פרטים אישיים</h2>
