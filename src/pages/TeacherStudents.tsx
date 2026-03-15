@@ -86,7 +86,7 @@ const TeacherStudents = () => {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-card">
               <SelectValue placeholder="כל בתי הספר" />
@@ -107,6 +107,16 @@ const TeacherStudents = () => {
               {instruments.map((i) => (
                 <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select value={activeFilter} onValueChange={setActiveFilter}>
+            <SelectTrigger className="h-11 rounded-xl bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">פעילים</SelectItem>
+              <SelectItem value="all">הכל</SelectItem>
+              <SelectItem value="inactive">לא פעילים</SelectItem>
             </SelectContent>
           </Select>
         </div>
