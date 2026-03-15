@@ -146,9 +146,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md" dir="rtl">
           <DialogHeader>
-            <DialogTitle>{isEdit ? "עריכת תשלום" : "הוסף תשלום"}</DialogTitle>
+            <DialogTitle>{isEdit ? "עריכת רישום" : "הוסף תשלום / זיכוי"}</DialogTitle>
             <DialogDescription>
-              {isEdit ? "עדכון פרטי תשלום קיים עבור התלמיד." : "הוספת רישום תשלום פנימי לצורכי מעקב בלבד."}
+              {isEdit ? "עדכון פרטי רישום קיים." : "הוספת רישום תשלום או זיכוי פנימי לצורכי מעקב בלבד."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
