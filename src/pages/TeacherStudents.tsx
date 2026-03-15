@@ -43,6 +43,8 @@ const TeacherStudents = () => {
         if (search && !studentName.includes(search)) return false;
         if (schoolFilter !== "all" && e.school_id !== schoolFilter) return false;
         if (instrumentFilter !== "all" && e.instrument_id !== instrumentFilter) return false;
+        if (activeFilter === "active" && (!e.is_active || (e.students as any)?.student_status === "הפסיק")) return false;
+        if (activeFilter === "inactive" && (e.is_active && (e.students as any)?.student_status !== "הפסיק")) return false;
         return true;
       })
       .sort((a, b) => {
