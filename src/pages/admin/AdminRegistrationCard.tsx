@@ -188,22 +188,35 @@ const AdminRegistrationCard = () => {
             <Separator />
 
             <div className="flex flex-wrap gap-2">
+              {/* Status transitions */}
               {r.status === "new" && (
                 <Button size="sm" variant="secondary" onClick={() => updateStatus.mutate("in_review")}>
                   <Clock className="h-4 w-4 ml-1" /> סמן בטיפול
                 </Button>
               )}
-              {(r.status === "new" || r.status === "in_review") && (
-                <>
-                  <Button size="sm" variant="default" onClick={() => updateStatus.mutate("approved")}>
-                    <CheckCircle2 className="h-4 w-4 ml-1" /> אשר
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate("rejected")}>
-                    <XCircle className="h-4 w-4 ml-1" /> דחה
-                  </Button>
-                </>
+              {["new", "in_review"].includes(r.status) && (
+                <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("waiting_for_call")}>
+                  <PhoneCall className="h-4 w-4 ml-1" /> ממתין לשיחה
+                </Button>
               )}
-              {(r.status === "approved" || r.status === "in_review") && r.status !== "converted" && (
+              {["in_review", "waiting_for_call"].includes(r.status) && (
+                <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("waiting_for_payment")}>
+                  <CreditCard className="h-4 w-4 ml-1" /> ממתין לתשלום
+                </Button>
+              )}
+              {["in_review", "waiting_for_call", "waiting_for_payment"].includes(r.status) && (
+                <Button size="sm" variant="default" onClick={() => updateStatus.mutate("approved")}>
+                  <CheckCircle2 className="h-4 w-4 ml-1" /> אשר
+                </Button>
+              )}
+              {r.status !== "converted" && r.status !== "rejected" && (
+                <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate("rejected")}>
+                  <XCircle className="h-4 w-4 ml-1" /> דחה
+                </Button>
+              )}
+
+              {/* Convert action */}
+              {["approved", "in_review", "waiting_for_payment"].includes(r.status) && (
                 <Button
                   size="sm"
                   variant="default"
@@ -212,6 +225,8 @@ const AdminRegistrationCard = () => {
                   <ClipboardCheck className="h-4 w-4 ml-1" /> טפל בהרשמה
                 </Button>
               )}
+
+              {/* View converted student */}
               {r.status === "converted" && hasExistingStudent && (
                 <Button size="sm" variant="outline" onClick={() => navigate(`/admin/students/${r.existing_student_id}`)}>
                   <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד
