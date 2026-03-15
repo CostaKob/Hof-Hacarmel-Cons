@@ -166,41 +166,12 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={activeFilter} onValueChange={(v) => setFilter("active", v)}>
+        <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="active">פעילים</SelectItem>
             <SelectItem value="all">הכל</SelectItem>
-            <SelectItem value="inactive">לא פעילים</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל הכיתות</SelectItem>
-            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל הרמות</SelectItem>
-            {["א","ב","ג"].map((l) => (
-              <SelectItem key={l} value={l}>{l}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={statusFilter} onValueChange={(v) => setFilter("status", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כל הסטטוסים</SelectItem>
-            <SelectItem value="פעיל">פעיל</SelectItem>
-            <SelectItem value="הפסיק">הפסיק</SelectItem>
+            <SelectItem value="stopped">הפסיקו</SelectItem>
           </SelectContent>
         </Select>
 
