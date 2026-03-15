@@ -175,7 +175,26 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
+        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הכיתות</SelectItem>
+            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
+              <SelectItem key={g} value={g}>{g}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
+          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הרמות</SelectItem>
+            {["א","ב","ג"].map((l) => (
+              <SelectItem key={l} value={l}>{l}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="סטטוס תשלום" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל התשלומים</SelectItem>
