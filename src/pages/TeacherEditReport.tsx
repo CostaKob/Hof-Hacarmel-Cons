@@ -55,11 +55,14 @@ interface LineState {
 }
 
 const TeacherEditReport = () => {
-  const { reportId } = useParams<{ reportId: string }>();
+  const { reportId, teacherId: urlTeacherId } = useParams<{ reportId: string; teacherId?: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
   const queryClient = useQueryClient();
-  const { data: teacher } = useTeacherProfile();
+  const isAdminContext = !!urlTeacherId && roles.includes("admin");
+  const { data: teacherProfile } = useTeacherProfile();
+  const { data: teacherById } = useTeacherById(isAdminContext ? urlTeacherId : undefined);
+  const teacher = isAdminContext ? teacherById : teacherProfile;
 
   // Load the clicked report to get the date
   const { data: report, isLoading: reportLoading } = useReportDetails(reportId);
