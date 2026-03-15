@@ -64,11 +64,14 @@ const AdminStudents = () => {
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (activeFilter === "active" && r.students?.student_status !== "פעיל") return false;
-    if (activeFilter === "inactive" && r.students?.student_status !== "הפסיק") return false;
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
+    // Enrollment-level active filter
+    if (activeFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
+    if (activeFilter === "inactive" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
+    // By default (activeFilter === "all"), hide inactive enrollments unless student also stopped
+    if (activeFilter === "all" && !r.is_active) return false;
     return true;
   });
 
