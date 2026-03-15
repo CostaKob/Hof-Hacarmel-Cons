@@ -22,6 +22,7 @@ const EXPORTS: ExportOption[] = [
   { key: "enrollments", label: "רישומים (שיוכים)", description: "כל הרישומים כולל תלמיד, מורה, בי\"ס וכלי", icon: ClipboardList },
   { key: "reports", label: "דיווחי שיעורים", description: "כל דיווחי השיעורים כולל סטטוס נוכחות", icon: BarChart3 },
   { key: "yearly", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכל רישום", icon: BarChart3 },
+  { key: "registrations", label: "הרשמות", description: "כל ההרשמות שהתקבלו כולל סטטוס ופרטים", icon: ClipboardList },
 ];
 
 function downloadXlsx(data: Record<string, string | number | boolean | null>[], filename: string) {
