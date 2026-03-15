@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useScrollRestore } from "@/hooks/useScrollRestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,8 @@ const AdminTeachers = () => {
       return data;
     },
   });
+
+  useScrollRestore(!isLoading);
 
   const filtered = teachers.filter((t) => {
     const name = `${t.first_name} ${t.last_name}`.toLowerCase();
