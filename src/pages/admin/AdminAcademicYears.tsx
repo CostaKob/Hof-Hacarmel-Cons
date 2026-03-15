@@ -36,42 +36,42 @@ const AdminAcademicYears = () => {
   const { data: stats = {} } = useQuery({
     queryKey: ["academic-years-stats"],
     queryFn: async () => {
-      const [{ data: enrollments }, { data: reports }] = await Promise.all([
+      const [{ data: enrollments }, { data: reports }, { data: teachers }] = await Promise.all([
         supabase.from("enrollments").select("academic_year_id, student_id, teacher_id"),
         supabase.from("reports").select("academic_year_id, id"),
+        supabase.from("teachers").select("id").eq("is_active", true),
       ]);
 
-      const result: Record<string, { students: number; teachers: number; reports: number }> = {};
+      const result: Record<string, { students: number; teachers: number; enrollments: number; reports: number }> = {};
+      const activeTeacherCount = teachers?.length ?? 0;
 
-      (enrollments ?? []).forEach((e: any) => {
-        const yid = e.academic_year_id;
-        if (!yid) return;
-        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
-      });
-
-      // Count unique students and teachers per year
+      // Count unique students and enrollments per year
       const studentSets: Record<string, Set<string>> = {};
-      const teacherSets: Record<string, Set<string>> = {};
+      const enrollmentCounts: Record<string, number> = {};
       (enrollments ?? []).forEach((e: any) => {
         const yid = e.academic_year_id;
         if (!yid) return;
         if (!studentSets[yid]) studentSets[yid] = new Set();
-        if (!teacherSets[yid]) teacherSets[yid] = new Set();
         studentSets[yid].add(e.student_id);
-        teacherSets[yid].add(e.teacher_id);
+        enrollmentCounts[yid] = (enrollmentCounts[yid] ?? 0) + 1;
       });
 
       Object.keys(studentSets).forEach((yid) => {
-        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+        if (!result[yid]) result[yid] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
         result[yid].students = studentSets[yid].size;
-        result[yid].teachers = teacherSets[yid].size;
+        result[yid].enrollments = enrollmentCounts[yid] ?? 0;
       });
 
       (reports ?? []).forEach((r: any) => {
         const yid = r.academic_year_id;
         if (!yid) return;
-        if (!result[yid]) result[yid] = { students: 0, teachers: 0, reports: 0 };
+        if (!result[yid]) result[yid] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
         result[yid].reports++;
+      });
+
+      // Ensure all years have an entry
+      years.forEach((y: any) => {
+        if (!result[y.id]) result[y.id] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
       });
 
       return result;
