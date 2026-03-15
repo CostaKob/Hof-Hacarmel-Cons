@@ -48,6 +48,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [installments, setInstallments] = useState("1");
   const [notes, setNotes] = useState("");
   const [selectedEnrollmentId, setSelectedEnrollmentId] = useState("");
+  const [transactionType, setTransactionType] = useState<"payment" | "credit">("payment");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isEdit = !!editPayment;
