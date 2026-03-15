@@ -338,26 +338,63 @@ const AdminStudentCard = () => {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-          <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
+            <Button className="h-10 rounded-xl text-sm" onClick={() => setShowPaymentDialog(true)}>
+              <Plus className="h-4 w-4" /> הוסף תשלום
+            </Button>
+          </div>
+
+          {/* Yearly summary */}
+          {(() => {
+            const yearPayments = payments.filter((p: any) => activeYear && p.academic_year_id === activeYear.id);
+            const total = yearPayments.reduce((sum: number, p: any) => sum + (p.transaction_type === "payment" ? Number(p.amount) : -Number(p.amount)), 0);
+            return (
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
+                <span className="text-sm text-muted-foreground">סה״כ שולם השנה: </span>
+                <span className="font-bold text-primary text-lg">₪{total.toLocaleString()}</span>
+              </div>
+            );
+          })()}
+
           {payments.length === 0 ? (
             <p className="text-sm text-muted-foreground">אין תשלומים</p>
           ) : (
-            <div className="space-y-2">
-              {payments.map((p: any) => (
-                <div key={p.id} className="flex items-center justify-between rounded-xl border border-border p-3">
-                  <div>
-                    <p className="font-medium text-sm">₪{p.amount}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {p.payment_date} · {p.transaction_type === "payment" ? "תשלום" : "זיכוי"}
-                      {p.payment_method && ` · ${PAYMENT_METHOD_MAP[p.payment_method] ?? p.payment_method}`}
-                    </p>
-                  </div>
-                  {p.month_reference && <span className="text-xs text-muted-foreground">{p.month_reference}</span>}
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-right">שנת לימודים</TableHead>
+                    <TableHead className="text-right">סכום</TableHead>
+                    <TableHead className="text-right">תאריך</TableHead>
+                    <TableHead className="text-right">אופן תשלום</TableHead>
+                    <TableHead className="text-right">תשלומים</TableHead>
+                    <TableHead className="text-right">הערות</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.map((p: any) => (
+                    <TableRow key={p.id}>
+                      <TableCell className="text-sm">{p.academic_years?.name ?? "—"}</TableCell>
+                      <TableCell className="text-sm font-medium">₪{Number(p.amount).toLocaleString()}</TableCell>
+                      <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), "dd/MM/yyyy") : "—"}</TableCell>
+                      <TableCell className="text-sm">{PAYMENT_METHOD_MAP[p.payment_method] ?? p.payment_method ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{(p as any).installments ?? 1}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{p.notes ?? "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           )}
         </div>
+
+        <AddPaymentDialog
+          open={showPaymentDialog}
+          onOpenChange={setShowPaymentDialog}
+          studentId={studentId!}
+          enrollments={enrollments}
+        />
       </div>
     </AdminLayout>
   );
