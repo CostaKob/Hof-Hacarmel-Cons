@@ -219,7 +219,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </div>
             <div className="flex gap-2">
               <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
-                {mutation.isPending ? "שומר..." : isEdit ? "עדכן תשלום" : "שמור תשלום"}
+                {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
               </Button>
               {isEdit && (
                 <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteConfirm(true)}>
