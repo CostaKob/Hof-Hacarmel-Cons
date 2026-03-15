@@ -180,7 +180,7 @@ const PublicRegistration = () => {
           </h1>
         </div>
 
-        {/* Information & Terms Section */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">אולפן המוסיקה &quot;חוף הכרמל&quot; רישום ומידע תשפ&quot;ז</CardTitle>
