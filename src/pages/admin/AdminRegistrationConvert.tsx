@@ -158,7 +158,8 @@ const AdminRegistrationConvert = () => {
       .filter((ti) => requestedInstrumentIds.has(ti.instrument_id))
       .map((ti) => ti.teacher_id)
   );
-  const filteredTeachers = requestedInstrumentIds.size > 0 && relevantTeacherIds.size > 0
+  const canFilterTeachers = requestedInstrumentIds.size > 0 && relevantTeacherIds.size > 0;
+  const filteredTeachers = canFilterTeachers && !showAllTeachers
     ? teachers.filter((t) => relevantTeacherIds.has(t.id))
     : teachers;
 
