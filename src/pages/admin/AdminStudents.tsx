@@ -68,6 +68,7 @@ const AdminStudents = () => {
     if (activeFilter === "inactive" && r.students?.is_active) return false;
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
+    if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
     return true;
   });
 
