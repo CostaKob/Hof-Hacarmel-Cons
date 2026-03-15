@@ -132,10 +132,10 @@ const TeacherStudents = () => {
               <button
                 key={enrollment.id}
                 onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
-                className={`flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active ? "opacity-50" : ""}`}
+                className={`flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "border-destructive/30" : "border-primary/30"}`}
               >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
-                  <span className="text-sm font-bold text-accent-foreground">{index + 1}</span>
+                <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "bg-destructive/10" : "bg-primary/10"}`}>
+                  <span className={`text-sm font-bold ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "text-destructive" : "text-primary"}`}>{index + 1}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">
@@ -149,6 +149,9 @@ const TeacherStudents = () => {
                     <span>{enrollment.schools?.name}</span>
                   </div>
                 </div>
+                {(!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק") && (
+                  <Badge variant="outline" className="rounded-lg text-destructive border-destructive shrink-0">לא פעיל</Badge>
+                )}
                 <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
               </button>
             ))}
