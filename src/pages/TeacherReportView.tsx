@@ -79,7 +79,7 @@ const TeacherReportView = () => {
 
       queryClient.invalidateQueries({ queryKey: ["teacher-reports"] });
       toast.success("יום העבודה נמחק בהצלחה");
-      navigate("/teacher/reports");
+      navigate(backPath);
     } catch (err) {
       console.error(err);
       toast.error("שגיאה במחיקת יום העבודה");
