@@ -70,8 +70,6 @@ const AdminStudents = () => {
     // Enrollment-level active filter
     if (activeFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (activeFilter === "inactive" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
-    // By default (activeFilter === "all"), hide inactive enrollments unless student also stopped
-    if (activeFilter === "all" && !r.is_active) return false;
     return true;
   });
 
