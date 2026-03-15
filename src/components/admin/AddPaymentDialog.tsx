@@ -84,9 +84,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         installments: parseInt(installments),
         notes: notes || null,
         enrollment_id: selectedEnrollmentId,
+        transaction_type: transactionType,
       };
-
-      if (isEdit) {
         const { error } = await supabase.from("student_payments").update(paymentData).eq("id", editPayment!.id);
         if (error) throw error;
       } else {
