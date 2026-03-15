@@ -224,10 +224,22 @@ const PublicRegistration = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <Card className="w-full max-w-lg text-center">
-          <CardContent className="pt-10 pb-10 space-y-4">
+          <CardContent className="pt-10 pb-10 space-y-6">
+            <AppLogo size="lg" />
             <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto" />
             <h2 className="text-2xl font-bold text-foreground">ההרשמה נקלטה בהצלחה!</h2>
             <p className="text-muted-foreground text-lg whitespace-pre-line">{msg}</p>
+            <Button
+              onClick={() => {
+                setSubmitted(false);
+                setFormValues({});
+                setApprovalChecked(false);
+              }}
+              variant="outline"
+              className="mt-2"
+            >
+              מילוי טופס הרשמה נוסף
+            </Button>
           </CardContent>
         </Card>
       </div>
