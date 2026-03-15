@@ -48,6 +48,7 @@ const AdminRegistrationConvert = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [useExisting, setUseExisting] = useState<boolean | null>(null);
+  const [showAllTeachers, setShowAllTeachers] = useState(false);
 
   const { data: registration, isLoading: regLoading } = useQuery({
     queryKey: ["admin-registration", id],
