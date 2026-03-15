@@ -464,7 +464,7 @@ const DynamicField = ({
   };
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-field-key={field.field_key}>
       <Label className="text-sm font-medium">
         {label}
         {is_required && <span className="text-destructive mr-1">*</span>}
