@@ -171,6 +171,8 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       const nationalId = String(row.national_id ?? "").trim() || undefined;
       const gender = String(row.gender ?? "").trim().toLowerCase() || undefined;
       const studentPhone = String(row.student_phone ?? "").trim() || undefined;
+      const address = String(row.address ?? "").trim() || undefined;
+      const city = String(row.city ?? "").trim() || undefined;
       const grade = String(row.grade ?? "").trim() || undefined;
       const playingLevel = String(row.playing_level ?? "").trim() || undefined;
       const parentName = String(row.parent_name ?? "").trim() || undefined;
