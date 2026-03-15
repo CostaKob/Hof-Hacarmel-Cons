@@ -303,6 +303,8 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
               national_id: row.data.national_id || null,
               gender: row.data.gender || null,
               phone: row.data.student_phone || null,
+              address: row.data.address || null,
+              city: row.data.city || null,
               grade: row.data.grade || null,
               playing_level: row.data.playing_level || null,
               parent_name: row.data.parent_name || null,
