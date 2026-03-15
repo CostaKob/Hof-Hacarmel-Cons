@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
+import { DEFAULT_TITLE, DEFAULT_APPROVAL_TEXT, DEFAULT_SUCCESS_MESSAGE, DEFAULT_SECTIONS, DEFAULT_FIELDS } from "@/lib/registrationDefaults";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
