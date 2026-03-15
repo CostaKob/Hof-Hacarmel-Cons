@@ -76,6 +76,34 @@ const AdminSchoolForm = () => {
     onError: () => toast.error("שגיאה בשמירת הנתונים"),
   });
 
+  const [showDelete, setShowDelete] = useState(false);
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      // Check for enrollments using this school
+      const { count } = await supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("school_id", schoolId!);
+      if (count && count > 0) {
+        throw new Error("linked");
+      }
+      // Clear teacher_schools references
+      await supabase.from("teacher_schools").delete().eq("school_id", schoolId!);
+      const { error } = await supabase.from("schools").delete().eq("id", schoolId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-schools"] });
+      toast.success("בית הספר נמחק בהצלחה");
+      navigate("/admin/schools");
+    },
+    onError: (err: any) => {
+      if (err.message === "linked") {
+        toast.error("לא ניתן למחוק בית ספר עם שיוכים פעילים. יש למחוק את השיוכים קודם.");
+      } else {
+        toast.error("שגיאה במחיקת בית הספר");
+      }
+    },
+  });
+
   const FIELDS: { name: keyof SchoolFormData; label: string; required?: boolean }[] = [
     { name: "name", label: "שם בית ספר", required: true },
     { name: "address", label: "כתובת" },
@@ -86,7 +114,15 @@ const AdminSchoolForm = () => {
     <AdminLayout title={isEdit ? "עריכת בית ספר" : "בית ספר חדש"} backPath="/admin/schools">
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-          <h2 className="font-semibold text-foreground text-base">פרטי בית ספר</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground text-base">פרטי בית ספר</h2>
+            {isEdit && (
+              <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setShowDelete(true)}>
+                <Trash2 className="h-4 w-4 ml-1" />
+                מחיקה
+              </Button>
+            )}
+          </div>
           <div className="grid gap-4">
             {FIELDS.map((f) => (
               <div key={f.name} className="space-y-1.5">
@@ -108,6 +144,21 @@ const AdminSchoolForm = () => {
           <Button type="button" variant="outline" onClick={() => navigate("/admin/schools")} className="h-14 rounded-2xl text-base px-6">ביטול</Button>
         </div>
       </form>
+
+      <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת בית ספר</AlertDialogTitle>
+            <AlertDialogDescription>האם למחוק את בית הספר? פעולה זו אינה ניתנת לביטול.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleteMutation.isPending ? "מוחק..." : "מחק"}
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
