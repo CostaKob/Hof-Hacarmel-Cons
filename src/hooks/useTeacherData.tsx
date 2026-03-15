@@ -35,7 +35,7 @@ export function useTeacherById(teacherId: string | undefined) {
       return data;
     },
   });
-
+}
 
 // ─── Teacher Enrollments (active) ───
 export function useTeacherEnrollments(teacherId: string | undefined) {
