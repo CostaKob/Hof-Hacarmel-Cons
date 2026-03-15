@@ -39,6 +39,8 @@ import AdminYearTransition from "./pages/admin/AdminYearTransition";
 import AdminRegistrations from "./pages/admin/AdminRegistrations";
 import AdminRegistrationCard from "./pages/admin/AdminRegistrationCard";
 import AdminRegistrationSettings from "./pages/admin/AdminRegistrationSettings";
+import AdminRegistrationPages from "./pages/admin/AdminRegistrationPages";
+import AdminRegistrationPageEditor from "./pages/admin/AdminRegistrationPageEditor";
 import PublicRegistration from "./pages/PublicRegistration";
 import NotFound from "./pages/NotFound";
 
