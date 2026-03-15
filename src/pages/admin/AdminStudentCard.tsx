@@ -163,9 +163,6 @@ const AdminStudentCard = () => {
       <div className="space-y-5">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant={student.is_active ? "default" : "secondary"} className="rounded-lg">
-              {student.is_active ? "פעיל" : "לא פעיל"}
-            </Badge>
             <Select value={(student as any).student_status ?? "פעיל"} onValueChange={(v) => statusMutation.mutate(v)}>
               <SelectTrigger className="h-9 w-28 rounded-lg text-sm">
                 <SelectValue />
