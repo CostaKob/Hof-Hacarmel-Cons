@@ -737,6 +737,8 @@ export type Database = {
           parent_email_2: string | null
           parent_name: string | null
           parent_name_2: string | null
+          parent_national_id: string | null
+          parent_national_id_2: string | null
           parent_phone: string | null
           parent_phone_2: string | null
           phone: string | null
@@ -758,6 +760,8 @@ export type Database = {
           parent_email_2?: string | null
           parent_name?: string | null
           parent_name_2?: string | null
+          parent_national_id?: string | null
+          parent_national_id_2?: string | null
           parent_phone?: string | null
           parent_phone_2?: string | null
           phone?: string | null
@@ -779,6 +783,8 @@ export type Database = {
           parent_email_2?: string | null
           parent_name?: string | null
           parent_name_2?: string | null
+          parent_national_id?: string | null
+          parent_national_id_2?: string | null
           parent_phone?: string | null
           parent_phone_2?: string | null
           phone?: string | null
