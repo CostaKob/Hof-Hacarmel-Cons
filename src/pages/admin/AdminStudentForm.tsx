@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { GRADES, PLAYING_LEVELS } from "@/lib/constants";
+import { GRADES, PLAYING_LEVELS, STUDENT_STATUSES } from "@/lib/constants";
 
 const GENDERS = [
   { value: "male", label: "זכר" },
