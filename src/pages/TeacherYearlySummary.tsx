@@ -115,9 +115,9 @@ const TeacherYearlySummary = () => {
             <Select value={activeFilter} onValueChange={setActiveFilter}>
               <SelectTrigger className="h-10 rounded-xl bg-card"><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="active">פעילים</SelectItem>
                 <SelectItem value="all">הכל</SelectItem>
-                <SelectItem value="active">פעיל</SelectItem>
-                <SelectItem value="inactive">לא פעיל</SelectItem>
+                <SelectItem value="inactive">לא פעילים</SelectItem>
               </SelectContent>
             </Select>
           </div>
