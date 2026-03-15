@@ -36,28 +36,32 @@ const AdminExports = () => {
   const [loading, setLoading] = useState<ExportKey | null>(null);
 
   const exportStudents = async () => {
-    const { data, error } = await supabase.from("students").select("*").order("last_name");
+    // Fetch enrollments with all related data to match import format
+    const { data: enrollments, error } = await supabase
+      .from("enrollments")
+      .select("*, students(*), teachers(email), instruments(name), schools(name)")
+      .order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map((s) => ({
-      "שם פרטי": s.first_name,
-      "שם משפחה": s.last_name,
-      "ת.ז.": s.national_id ?? "",
-      "מין": s.gender === "male" ? "זכר" : s.gender === "female" ? "נקבה" : "",
-      "תאריך לידה": s.date_of_birth ?? "",
-      "טלפון": s.phone ?? "",
-      "כתובת": s.address ?? "",
-      "עיר": s.city ?? "",
-      "כיתה": s.grade ?? "",
-      "רמת נגינה": s.playing_level ?? "",
-      "סטטוס": s.student_status,
-      "שם הורה 1": s.parent_name ?? "",
-      "טלפון הורה 1": s.parent_phone ?? "",
-      "אימייל הורה 1": s.parent_email ?? "",
-      "ת.ז. הורה 1": s.parent_national_id ?? "",
-      "שם הורה 2": s.parent_name_2 ?? "",
-      "טלפון הורה 2": s.parent_phone_2 ?? "",
-      "אימייל הורה 2": s.parent_email_2 ?? "",
-      "ת.ז. הורה 2": s.parent_national_id_2 ?? "",
+
+    return (enrollments ?? []).map((e: any) => ({
+      student_first_name: e.students?.first_name ?? "",
+      student_last_name: e.students?.last_name ?? "",
+      national_id: e.students?.national_id ?? "",
+      gender: e.students?.gender ?? "",
+      student_phone: e.students?.phone ?? "",
+      address: e.students?.address ?? "",
+      city: e.students?.city ?? "",
+      grade: e.students?.grade ?? "",
+      playing_level: e.students?.playing_level ?? "",
+      parent_name: e.students?.parent_name ?? "",
+      parent_phone: e.students?.parent_phone ?? "",
+      parent_email: e.students?.parent_email ?? "",
+      teacher_email: e.teachers?.email ?? "",
+      instrument: e.instruments?.name ?? "",
+      school: e.schools?.name ?? "",
+      lesson_duration: e.lesson_duration_minutes,
+      lesson_type: e.lesson_type,
+      instrument_start_date: e.instrument_start_date ?? "",
     }));
   };
 
