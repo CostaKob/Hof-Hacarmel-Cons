@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
+import { AcademicYearProvider } from "@/hooks/useAcademicYear";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import Index from "./pages/Index";
@@ -63,56 +64,58 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/" element={<Index />} />
-            {/* Admin routes */}
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/students" element={<AdminRoute><AdminStudents /></AdminRoute>} />
-            <Route path="/admin/students/new" element={<AdminRoute><AdminStudentForm /></AdminRoute>} />
-            <Route path="/admin/students/:studentId" element={<AdminRoute><AdminStudentCard /></AdminRoute>} />
-            <Route path="/admin/students/:studentId/edit" element={<AdminRoute><AdminStudentForm /></AdminRoute>} />
-            <Route path="/admin/teachers" element={<AdminRoute><AdminTeachers /></AdminRoute>} />
-            <Route path="/admin/teachers/new" element={<AdminRoute><AdminTeacherForm /></AdminRoute>} />
-            <Route path="/admin/teachers/:teacherId" element={<AdminRoute><AdminTeacherCard /></AdminRoute>} />
-            <Route path="/admin/teachers/:teacherId/edit" element={<AdminRoute><AdminTeacherForm /></AdminRoute>} />
-            <Route path="/admin/teachers/:teacherId/reports" element={<AdminRoute><AdminTeacherReports /></AdminRoute>} />
-            <Route path="/admin/schools" element={<AdminRoute><AdminSchools /></AdminRoute>} />
-            <Route path="/admin/schools/new" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
-            <Route path="/admin/schools/:schoolId/edit" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
-            <Route path="/admin/enrollments" element={<AdminRoute><AdminEnrollments /></AdminRoute>} />
-            <Route path="/admin/enrollments/new" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
-            <Route path="/admin/enrollments/:id/edit" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
-            <Route path="/admin/instruments" element={<AdminRoute><AdminInstruments /></AdminRoute>} />
-            <Route path="/admin/instruments/new" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
-            <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
-            <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
-            <Route path="/admin/academic-years" element={<AdminRoute><AdminAcademicYears /></AdminRoute>} />
-            <Route path="/admin/year-transition" element={<AdminRoute><AdminYearTransition /></AdminRoute>} />
-            <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
-            <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
-            <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
-            <Route path="/admin/registration-settings" element={<AdminRoute><AdminRegistrationSettings /></AdminRoute>} />
-            <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
-            <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
-            <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
-            {/* Public */}
-            <Route path="/register" element={<PublicRegistration />} />
-            {/* Teacher routes */}
-            <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
-            <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
-            <Route path="/teacher/students/:enrollmentId" element={<TeacherRoute><TeacherStudentCard /></TeacherRoute>} />
-            <Route path="/teacher/reports" element={<TeacherRoute><TeacherReports /></TeacherRoute>} />
-            <Route path="/teacher/reports/new" element={<TeacherRoute><TeacherNewReport /></TeacherRoute>} />
-            <Route path="/teacher/reports/:reportId" element={<TeacherRoute><TeacherReportView /></TeacherRoute>} />
-            <Route path="/teacher/reports/:reportId/edit" element={<TeacherRoute><TeacherEditReport /></TeacherRoute>} />
-            <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
-            <Route path="/teacher/yearly-summary" element={<TeacherRoute><TeacherYearlySummary /></TeacherRoute>} />
-            <Route path="/teacher/travel-summary" element={<TeacherRoute><TeacherTravelSummary /></TeacherRoute>} />
-            {/* Secretary */}
-            <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AcademicYearProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/" element={<Index />} />
+              {/* Admin routes */}
+              <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/students" element={<AdminRoute><AdminStudents /></AdminRoute>} />
+              <Route path="/admin/students/new" element={<AdminRoute><AdminStudentForm /></AdminRoute>} />
+              <Route path="/admin/students/:studentId" element={<AdminRoute><AdminStudentCard /></AdminRoute>} />
+              <Route path="/admin/students/:studentId/edit" element={<AdminRoute><AdminStudentForm /></AdminRoute>} />
+              <Route path="/admin/teachers" element={<AdminRoute><AdminTeachers /></AdminRoute>} />
+              <Route path="/admin/teachers/new" element={<AdminRoute><AdminTeacherForm /></AdminRoute>} />
+              <Route path="/admin/teachers/:teacherId" element={<AdminRoute><AdminTeacherCard /></AdminRoute>} />
+              <Route path="/admin/teachers/:teacherId/edit" element={<AdminRoute><AdminTeacherForm /></AdminRoute>} />
+              <Route path="/admin/teachers/:teacherId/reports" element={<AdminRoute><AdminTeacherReports /></AdminRoute>} />
+              <Route path="/admin/schools" element={<AdminRoute><AdminSchools /></AdminRoute>} />
+              <Route path="/admin/schools/new" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
+              <Route path="/admin/schools/:schoolId/edit" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
+              <Route path="/admin/enrollments" element={<AdminRoute><AdminEnrollments /></AdminRoute>} />
+              <Route path="/admin/enrollments/new" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
+              <Route path="/admin/enrollments/:id/edit" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
+              <Route path="/admin/instruments" element={<AdminRoute><AdminInstruments /></AdminRoute>} />
+              <Route path="/admin/instruments/new" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
+              <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
+              <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
+              <Route path="/admin/academic-years" element={<AdminRoute><AdminAcademicYears /></AdminRoute>} />
+              <Route path="/admin/year-transition" element={<AdminRoute><AdminYearTransition /></AdminRoute>} />
+              <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
+              <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
+              <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
+              <Route path="/admin/registration-settings" element={<AdminRoute><AdminRegistrationSettings /></AdminRoute>} />
+              <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
+              <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
+              <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
+              {/* Public */}
+              <Route path="/register" element={<PublicRegistration />} />
+              {/* Teacher routes */}
+              <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
+              <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
+              <Route path="/teacher/students/:enrollmentId" element={<TeacherRoute><TeacherStudentCard /></TeacherRoute>} />
+              <Route path="/teacher/reports" element={<TeacherRoute><TeacherReports /></TeacherRoute>} />
+              <Route path="/teacher/reports/new" element={<TeacherRoute><TeacherNewReport /></TeacherRoute>} />
+              <Route path="/teacher/reports/:reportId" element={<TeacherRoute><TeacherReportView /></TeacherRoute>} />
+              <Route path="/teacher/reports/:reportId/edit" element={<TeacherRoute><TeacherEditReport /></TeacherRoute>} />
+              <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
+              <Route path="/teacher/yearly-summary" element={<TeacherRoute><TeacherYearlySummary /></TeacherRoute>} />
+              <Route path="/teacher/travel-summary" element={<TeacherRoute><TeacherTravelSummary /></TeacherRoute>} />
+              {/* Secretary */}
+              <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AcademicYearProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
