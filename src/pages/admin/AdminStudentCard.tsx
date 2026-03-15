@@ -160,7 +160,7 @@ const AdminStudentCard = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>מחיקת תלמיד</AlertDialogTitle>
               <AlertDialogDescription>
-                האם למחוק את {student.first_name} {student.last_name}? פעולה זו אינה ניתנת לביטול.
+                האם למחוק את {student.first_name} {student.last_name} כולל כל השיוכים, הדוחות והתשלומים? פעולה זו אינה ניתנת לביטול.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
