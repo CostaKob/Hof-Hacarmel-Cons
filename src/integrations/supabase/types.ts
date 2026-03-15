@@ -176,6 +176,47 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_form_settings: {
+        Row: {
+          academic_year_id: string | null
+          approval_text: string
+          created_at: string
+          form_title: string
+          id: string
+          info_sections: Json
+          is_open: boolean
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          approval_text?: string
+          created_at?: string
+          form_title?: string
+          id?: string
+          info_sections?: Json
+          is_open?: boolean
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          approval_text?: string
+          created_at?: string
+          form_title?: string
+          id?: string
+          info_sections?: Json
+          is_open?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registration_form_settings_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: true
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registrations: {
         Row: {
           academic_year_id: string | null
