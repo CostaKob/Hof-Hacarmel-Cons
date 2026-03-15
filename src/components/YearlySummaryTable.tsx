@@ -42,7 +42,7 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
               <TableCell className="whitespace-nowrap">{r.schoolName}</TableCell>
               <TableCell className="text-center">{r.lessonDuration}</TableCell>
               <TableCell className="text-center">
-                <Badge variant={r.isActive ? "default" : "secondary"} className="text-[11px]">
+                <Badge variant="outline" className={`text-[11px] ${r.isActive ? "text-primary border-primary bg-primary/10" : "text-destructive border-destructive bg-destructive/10"}`}>
                   {r.isActive ? "פעיל" : "לא פעיל"}
                 </Badge>
               </TableCell>
