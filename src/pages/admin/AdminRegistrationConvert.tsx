@@ -517,7 +517,7 @@ const AdminRegistrationConvert = () => {
         {/* Enrollment details - admin fills */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">פרטי שיוך (למילוי ע״י המזכירה)</CardTitle>
+            <CardTitle className="text-base">פרטי שיוך</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2">
