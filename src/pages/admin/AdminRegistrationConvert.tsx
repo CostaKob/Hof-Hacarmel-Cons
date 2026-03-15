@@ -112,6 +112,17 @@ const AdminRegistrationConvert = () => {
     },
   });
 
+  const { data: allTeacherInstruments = [] } = useQuery({
+    queryKey: ["admin-all-teacher-instruments"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teacher_instruments")
+        .select("teacher_id, instrument_id");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-schools-select"],
     queryFn: async () => {
@@ -132,20 +143,30 @@ const AdminRegistrationConvert = () => {
 
   const selectedTeacherId = watch("teacher_id");
 
-  const { data: teacherInstruments = [] } = useQuery({
-    queryKey: ["admin-teacher-instruments", selectedTeacherId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("teacher_instruments")
-        .select("instrument_id")
-        .eq("teacher_id", selectedTeacherId!);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedTeacherId,
-  });
+  // Determine requested instrument IDs from registration
+  const requestedInstrumentNames = (registration?.requested_instruments as string[]) || [];
+  const requestedInstrumentIds = new Set(
+    instruments
+      .filter((i) => requestedInstrumentNames.some((name) => i.name === name))
+      .map((i) => i.id)
+  );
 
-  const teacherInstrumentIds = new Set(teacherInstruments.map((ti) => ti.instrument_id));
+  // Filter teachers: show only those who teach at least one requested instrument
+  const relevantTeacherIds = new Set(
+    allTeacherInstruments
+      .filter((ti) => requestedInstrumentIds.has(ti.instrument_id))
+      .map((ti) => ti.teacher_id)
+  );
+  const filteredTeachers = requestedInstrumentIds.size > 0 && relevantTeacherIds.size > 0
+    ? teachers.filter((t) => relevantTeacherIds.has(t.id))
+    : teachers;
+
+  // Filter instruments by selected teacher
+  const teacherInstrumentIds = new Set(
+    allTeacherInstruments
+      .filter((ti) => ti.teacher_id === selectedTeacherId)
+      .map((ti) => ti.instrument_id)
+  );
   const hasTeacherInstruments = selectedTeacherId && teacherInstrumentIds.size > 0;
   const filteredInstruments = hasTeacherInstruments
     ? instruments.filter((i) => teacherInstrumentIds.has(i.id))
