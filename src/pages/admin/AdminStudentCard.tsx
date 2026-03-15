@@ -283,7 +283,32 @@ const AdminStudentCard = () => {
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </div>
+        </div>
+
+        {/* Attendance summary & lesson history per enrollment */}
+        {enrollments.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <h2 className="font-semibold text-foreground text-base">סיכום נוכחות והיסטוריית שיעורים</h2>
+            {enrollments.length === 1 ? (
+              <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} />
+            ) : (
+              <Tabs defaultValue={enrollments[0].id} dir="rtl">
+                <TabsList className="w-full flex-wrap h-auto gap-1">
+                  {enrollments.map((e: any) => (
+                    <TabsTrigger key={e.id} value={e.id} className="text-xs">
+                      {e.instruments?.name} — {e.schools?.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {enrollments.map((e: any) => (
+                  <TabsContent key={e.id} value={e.id}>
+                    <EnrollmentReportSection enrollmentId={e.id} label={`${e.instruments?.name} — ${e.schools?.name}`} />
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
+          </div>
+        )}
               ))}
             </div>
           )}
