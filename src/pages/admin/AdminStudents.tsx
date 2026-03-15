@@ -226,7 +226,7 @@ const AdminStudents = () => {
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>
           <div className="space-y-2">
             {filtered.map((r: any, index: number) => {
-              const isPaid = paidStudentIds.has(r.students?.id);
+              const isPaid = paidEnrollmentIds.has(r.id);
               return (
                 <div
                   key={r.id}
