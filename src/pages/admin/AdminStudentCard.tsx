@@ -38,13 +38,30 @@ const AdminStudentCard = () => {
     mutationFn: async (newStatus: string) => {
       const { error } = await supabase.from("students").update({ student_status: newStatus } as any).eq("id", studentId!);
       if (error) throw error;
+      // If student stopped, deactivate all enrollments
+      if (newStatus === "הפסיק") {
+        await supabase.from("enrollments").update({ is_active: false }).eq("student_id", studentId!);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       toast.success("סטטוס עודכן");
     },
     onError: () => toast.error("שגיאה בעדכון סטטוס"),
+  });
+
+  const enrollmentStatusMutation = useMutation({
+    mutationFn: async ({ enrollmentId, isActive }: { enrollmentId: string; isActive: boolean }) => {
+      const { error } = await supabase.from("enrollments").update({ is_active: isActive }).eq("id", enrollmentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
+      toast.success("סטטוס רישום עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון סטטוס רישום"),
   });
 
   const deleteMutation = useMutation({
@@ -248,9 +265,16 @@ const AdminStudentCard = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={e.is_active ? "default" : "secondary"} className="rounded-lg text-xs">
-                      {e.is_active ? "פעיל" : "לא פעיל"}
-                    </Badge>
+                    <button
+                      onClick={() => enrollmentStatusMutation.mutate({ enrollmentId: e.id, isActive: !e.is_active })}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors cursor-pointer ${
+                        e.is_active
+                          ? "bg-primary/10 text-primary border border-primary/30"
+                          : "bg-destructive/10 text-destructive border border-destructive/30"
+                      }`}
+                    >
+                      {e.is_active ? "פעיל" : "הפסיק"}
+                    </button>
                     <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
