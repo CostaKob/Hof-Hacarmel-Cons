@@ -241,6 +241,25 @@ const AdminStudentForm = () => {
               />
             </div>
 
+            {/* Student status dropdown */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">סטטוס תלמיד</Label>
+              <Controller
+                name="student_status"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר סטטוס" /></SelectTrigger>
+                    <SelectContent>
+                      {STUDENT_STATUSES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
           </div>
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />

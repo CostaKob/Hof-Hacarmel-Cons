@@ -22,6 +22,8 @@ export const GRADE_PROMOTION: Record<string, string | null> = {
 
 export const PLAYING_LEVELS = ["א", "ב", "ג"] as const;
 
+export const STUDENT_STATUSES = ["פעיל", "הפסיק"] as const;
+
 export function calcYearsOfPlaying(instrumentStartDate: string | null | undefined): number | null {
   if (!instrumentStartDate) return null;
   const start = new Date(instrumentStartDate);
