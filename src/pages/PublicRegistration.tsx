@@ -41,6 +41,7 @@ const PublicRegistration = () => {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const approvalRef = useRef<HTMLDivElement>(null);
 
   // Load active year
   const { data: activeYear } = useQuery({
