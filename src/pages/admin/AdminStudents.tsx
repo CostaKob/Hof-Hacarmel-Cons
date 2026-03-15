@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -12,15 +12,26 @@ import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
-  const [teacherFilter, setTeacherFilter] = useState("all");
-  const [schoolFilter, setSchoolFilter] = useState("all");
-  const [durationFilter, setDurationFilter] = useState("all");
-  const [cityFilter, setCityFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [gradeFilter, setGradeFilter] = useState("all");
-  const [levelFilter, setLevelFilter] = useState("all");
+
+  const search = searchParams.get("q") || "";
+  const teacherFilter = searchParams.get("teacher") || "all";
+  const schoolFilter = searchParams.get("school") || "all";
+  const durationFilter = searchParams.get("duration") || "all";
+  const cityFilter = searchParams.get("city") || "all";
+  const activeFilter = searchParams.get("active") || "all";
+  const gradeFilter = searchParams.get("grade") || "all";
+  const levelFilter = searchParams.get("level") || "all";
+
+  const setFilter = useCallback((key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === "" || value === "all") next.delete(key);
+      else next.set(key, value);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-students-enrollments"],
