@@ -14,6 +14,7 @@ import AdminStudentCard from "./pages/admin/AdminStudentCard";
 import AdminTeachers from "./pages/admin/AdminTeachers";
 import AdminTeacherForm from "./pages/admin/AdminTeacherForm";
 import AdminTeacherCard from "./pages/admin/AdminTeacherCard";
+import AdminTeacherReports from "./pages/admin/AdminTeacherReports";
 import AdminSchools from "./pages/admin/AdminSchools";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
 import AdminEnrollmentForm from "./pages/admin/AdminEnrollmentForm";
@@ -65,6 +66,7 @@ const App = () => (
             <Route path="/admin/teachers/new" element={<AdminRoute><AdminTeacherForm /></AdminRoute>} />
             <Route path="/admin/teachers/:teacherId" element={<AdminRoute><AdminTeacherCard /></AdminRoute>} />
             <Route path="/admin/teachers/:teacherId/edit" element={<AdminRoute><AdminTeacherForm /></AdminRoute>} />
+            <Route path="/admin/teachers/:teacherId/reports" element={<AdminRoute><AdminTeacherReports /></AdminRoute>} />
             <Route path="/admin/schools" element={<AdminRoute><AdminSchools /></AdminRoute>} />
             <Route path="/admin/schools/new" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
             <Route path="/admin/schools/:schoolId/edit" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
