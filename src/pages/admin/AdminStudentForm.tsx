@@ -78,9 +78,11 @@ const AdminStudentForm = () => {
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
+        parent_national_id: (student as any).parent_national_id ?? "",
         parent_name_2: student.parent_name_2 ?? "",
         parent_phone_2: student.parent_phone_2 ?? "",
         parent_email_2: student.parent_email_2 ?? "",
+        parent_national_id_2: (student as any).parent_national_id_2 ?? "",
         is_active: student.is_active,
       });
     }
