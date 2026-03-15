@@ -44,7 +44,7 @@ const PublicRegistration = () => {
   const approvalRef = useRef<HTMLDivElement>(null);
 
   // Load active year
-  const { data: activeYear } = useQuery({
+  const { data: activeYear, isLoading: yearLoading } = useQuery({
     queryKey: ["public-active-year"],
     queryFn: async () => {
       const { data, error } = await supabase.from("academic_years").select("id, name").eq("is_active", true).single();
