@@ -127,7 +127,7 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={cityFilter} onValueChange={setCityFilter}>
+        <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">כל הערים</SelectItem>
