@@ -243,7 +243,37 @@ const AdminRegistrationCard = () => {
                   <Link2 className="h-4 w-4 ml-1" /> צפה בתלמיד
                 </Button>
               )}
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={() => setShowDeleteDialog(true)}
+              >
+                <Trash2 className="h-4 w-4 ml-1" /> מחק הרשמה
+              </Button>
             </div>
+
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>מחיקת הרשמה</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    האם למחוק את ההרשמה של {r.student_first_name} {r.student_last_name}? פעולה זו אינה ניתנת לביטול.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={() => deleteRegistration.mutate()}
+                    disabled={deleteRegistration.isPending}
+                  >
+                    {deleteRegistration.isPending ? "מוחק..." : "מחק"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 
