@@ -153,22 +153,15 @@ const AdminStudentCard = () => {
   const { data: payments = [] } = useQuery({
     queryKey: ["admin-student-payments", studentId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: enrs } = await supabase.from("enrollments").select("id").eq("student_id", studentId!);
+      if (!enrs?.length) return [];
+      const ids = enrs.map((e) => e.id);
+      const { data: p } = await supabase
         .from("student_payments")
-        .select("*, enrollments(schools(name), instruments(name))")
-        .eq("enrollment_id.student_id" as never, studentId!);
-      if (error) {
-        const { data: enrs } = await supabase.from("enrollments").select("id").eq("student_id", studentId!);
-        if (!enrs?.length) return [];
-        const ids = enrs.map((e) => e.id);
-        const { data: p } = await supabase
-          .from("student_payments")
-          .select("*")
-          .in("enrollment_id", ids)
-          .order("payment_date", { ascending: false });
-        return p ?? [];
-      }
-      return data;
+        .select("*, academic_years:academic_year_id(name)")
+        .in("enrollment_id", ids)
+        .order("payment_date", { ascending: false });
+      return p ?? [];
     },
     enabled: !!studentId,
   });
