@@ -98,7 +98,7 @@ const AdminRegistrationCard = () => {
   }
 
   const r = registration;
-  const status = STATUS_CONFIG[r.status] || STATUS_CONFIG.new;
+  const statusCfg = REGISTRATION_STATUSES[r.status] || REGISTRATION_STATUSES.new;
   const isIdMatch = r.match_type === "id_match";
   const isNameMatch = r.match_type === "name_match";
   const hasExistingStudent = !!r.existing_student_id;
@@ -113,8 +113,13 @@ const AdminRegistrationCard = () => {
         <Card>
           <CardContent className="pt-5 space-y-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">סטטוס</span>
-              <Badge variant={status.variant} className="text-sm">{status.label}</Badge>
+              <div className="flex flex-col gap-1">
+                <span className="text-sm text-muted-foreground">סטטוס</span>
+                <span className="text-xs text-muted-foreground">{daysAgoLabel(r.created_at)}</span>
+              </div>
+              <span className={`text-sm font-medium px-3 py-1 rounded-full ${statusCfg.color}`}>
+                {statusCfg.label}
+              </span>
             </div>
 
             {/* ID-based match — confirmed */}
