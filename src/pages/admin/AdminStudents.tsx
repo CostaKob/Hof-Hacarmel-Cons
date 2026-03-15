@@ -64,8 +64,8 @@ const AdminStudents = () => {
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (activeFilter === "active" && !r.students?.is_active) return false;
-    if (activeFilter === "inactive" && r.students?.is_active) return false;
+    if (activeFilter === "active" && r.students?.student_status !== "פעיל") return false;
+    if (activeFilter === "inactive" && r.students?.student_status !== "הפסיק") return false;
     if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     if (statusFilter !== "all" && r.students?.student_status !== statusFilter) return false;
