@@ -76,6 +76,7 @@ const AdminStudentForm = () => {
         city: student.city ?? "",
         grade: student.grade ?? "__none__",
         playing_level: student.playing_level ?? "__none__",
+        student_status: (student as any).student_status ?? "פעיל",
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
