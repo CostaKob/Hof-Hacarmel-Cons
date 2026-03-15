@@ -24,6 +24,7 @@ const AdminStudents = () => {
   const activeFilter = searchParams.get("active") || "all";
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
+  const statusFilter = searchParams.get("status") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
