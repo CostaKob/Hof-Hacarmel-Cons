@@ -116,7 +116,7 @@ const TeacherReportView = () => {
               variant="ghost"
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={() => navigate("/teacher/reports")}
+              onClick={() => navigate(backPath)}
             >
               <ArrowRight className="h-5 w-5" />
             </Button>
@@ -127,7 +127,7 @@ const TeacherReportView = () => {
               variant="secondary"
               size="sm"
               className="rounded-xl h-10"
-              onClick={() => navigate(`/teacher/reports/${reportId}/edit`)}
+              onClick={() => navigate(editPath)}
             >
               <Pencil className="ml-1 h-4 w-4" />
               עריכה
