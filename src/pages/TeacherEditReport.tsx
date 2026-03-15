@@ -265,7 +265,7 @@ const TeacherEditReport = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
-        <Button variant="outline" onClick={() => navigate("/teacher/reports")}>חזרה</Button>
+        <Button variant="outline" onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports` : "/teacher/reports")}>חזרה</Button>
       </div>
     );
   }
