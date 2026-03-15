@@ -7,10 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
+import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
+import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
+import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
@@ -285,6 +289,31 @@ const AdminStudentCard = () => {
           )}
         </div>
 
+        {/* Attendance summary & lesson history per enrollment */}
+        {enrollments.length > 0 && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <h2 className="font-semibold text-foreground text-base">סיכום נוכחות והיסטוריית שיעורים</h2>
+            {enrollments.length === 1 ? (
+              <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} />
+            ) : (
+              <Tabs defaultValue={enrollments[0].id} dir="rtl">
+                <TabsList className="w-full flex-wrap h-auto gap-1">
+                  {enrollments.map((e: any) => (
+                    <TabsTrigger key={e.id} value={e.id} className="text-xs">
+                      {e.instruments?.name} — {e.schools?.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+                {enrollments.map((e: any) => (
+                  <TabsContent key={e.id} value={e.id}>
+                    <EnrollmentReportSection enrollmentId={e.id} label={`${e.instruments?.name} — ${e.schools?.name}`} />
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
+          </div>
+        )}
+
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <h2 className="font-semibold text-foreground text-base">הערות ({notes.length})</h2>
           {notes.length === 0 ? (
@@ -328,5 +357,15 @@ const AdminStudentCard = () => {
     </AdminLayout>
   );
 };
+
+function EnrollmentReportSection({ enrollmentId, label }: { enrollmentId: string; label: string }) {
+  const { data: reportLines, isLoading } = useEnrollmentReportLines(enrollmentId);
+  return (
+    <div className="space-y-4 mt-2">
+      <EnrollmentSummary lines={reportLines ?? []} />
+      <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={isLoading} />
+    </div>
+  );
+}
 
 export default AdminStudentCard;
