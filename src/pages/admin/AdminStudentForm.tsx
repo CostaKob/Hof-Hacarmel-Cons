@@ -104,9 +104,11 @@ const AdminStudentForm = () => {
         parent_name: data.parent_name || null,
         parent_phone: data.parent_phone || null,
         parent_email: data.parent_email || null,
+        parent_national_id: data.parent_national_id || null,
         parent_name_2: data.parent_name_2 || null,
         parent_phone_2: data.parent_phone_2 || null,
         parent_email_2: data.parent_email_2 || null,
+        parent_national_id_2: data.parent_national_id_2 || null,
         is_active: data.is_active,
       };
 
