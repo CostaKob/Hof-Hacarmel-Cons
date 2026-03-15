@@ -319,6 +319,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
             .single();
           if (sErr || !newStudent) { failed++; continue; }
           studentId = newStudent.id;
+          createdStudents.set(studentKey, studentId);
           created++;
         } else {
           reused++;
