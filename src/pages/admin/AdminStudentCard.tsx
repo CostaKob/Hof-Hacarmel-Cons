@@ -346,13 +346,25 @@ const AdminStudentCard = () => {
 
           {/* Yearly summary */}
           {(() => {
-            const total = payments
-              .filter((p: any) => activeYear && p.academic_year_id === activeYear.id)
-              .reduce((sum: number, p: any) => sum + (p.transaction_type === "payment" ? Number(p.amount) : -Number(p.amount)), 0);
+            const yearPayments = payments.filter((p: any) => activeYear && p.academic_year_id === activeYear.id);
+            const totalPaid = yearPayments
+              .filter((p: any) => p.transaction_type === "payment")
+              .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+            const totalCredit = yearPayments
+              .filter((p: any) => p.transaction_type === "credit")
+              .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
+            const net = totalPaid - totalCredit;
             return (
-              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center">
-                <span className="text-sm text-muted-foreground">סה״כ שולם השנה: </span>
-                <span className="font-bold text-primary text-lg">₪{total.toLocaleString()}</span>
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center space-y-1">
+                <div>
+                  <span className="text-sm text-muted-foreground">שולם השנה: </span>
+                  <span className="font-bold text-primary text-lg">₪{net.toLocaleString()}</span>
+                </div>
+                {totalCredit > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    (תשלומים: ₪{totalPaid.toLocaleString()} | זיכויים: ₪{totalCredit.toLocaleString()})
+                  </p>
+                )}
               </div>
             );
           })()}
