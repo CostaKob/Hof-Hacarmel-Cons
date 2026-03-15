@@ -460,7 +460,7 @@ const TeacherEditReport = () => {
             variant="outline"
             size="lg"
             className="flex-1 h-14 rounded-2xl text-base"
-            onClick={() => navigate(`/teacher/reports/${reportId}`)}
+            onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}` : `/teacher/reports/${reportId}`)}
           >
             ביטול
           </Button>
