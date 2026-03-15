@@ -38,6 +38,22 @@ export function useTeacherEnrollments(teacherId: string | undefined) {
   });
 }
 
+// ─── Teacher All Enrollments (active + inactive) ───
+export function useTeacherAllEnrollments(teacherId: string | undefined) {
+  return useQuery({
+    queryKey: ["teacher-all-enrollments", teacherId],
+    enabled: !!teacherId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select(`*, students (*), instruments (name), schools (id, name)`)
+        .eq("teacher_id", teacherId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 // ─── Teacher Enrollments filtered by school ───
 export function useTeacherEnrollmentsBySchool(teacherId: string | undefined, schoolId: string | undefined) {
   return useQuery({

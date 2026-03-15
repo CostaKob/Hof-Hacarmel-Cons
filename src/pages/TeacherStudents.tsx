@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,11 +10,12 @@ import { ArrowRight, Search, User, ChevronLeft } from "lucide-react";
 const TeacherStudents = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
-  const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherEnrollments(teacher?.id);
+  const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id);
 
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("active");
 
   const schools = useMemo(() => {
     if (!enrollments) return [];
@@ -42,6 +43,8 @@ const TeacherStudents = () => {
         if (search && !studentName.includes(search)) return false;
         if (schoolFilter !== "all" && e.school_id !== schoolFilter) return false;
         if (instrumentFilter !== "all" && e.instrument_id !== instrumentFilter) return false;
+        if (activeFilter === "active" && (!e.is_active || (e.students as any)?.student_status === "הפסיק")) return false;
+        if (activeFilter === "inactive" && (e.is_active && (e.students as any)?.student_status !== "הפסיק")) return false;
         return true;
       })
       .sort((a, b) => {
@@ -49,7 +52,7 @@ const TeacherStudents = () => {
         const nameB = `${b.students?.first_name ?? ""} ${b.students?.last_name ?? ""}`;
         return nameA.localeCompare(nameB, "he");
       });
-  }, [enrollments, search, schoolFilter, instrumentFilter]);
+  }, [enrollments, search, schoolFilter, instrumentFilter, activeFilter]);
 
   const isLoading = teacherLoading || enrollmentsLoading;
 
@@ -83,7 +86,7 @@ const TeacherStudents = () => {
         </div>
 
         {/* Filters */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
             <SelectTrigger className="h-11 rounded-xl bg-card">
               <SelectValue placeholder="כל בתי הספר" />
@@ -106,6 +109,16 @@ const TeacherStudents = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={activeFilter} onValueChange={setActiveFilter}>
+            <SelectTrigger className="h-11 rounded-xl bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">פעילים</SelectItem>
+              <SelectItem value="all">הכל</SelectItem>
+              <SelectItem value="inactive">לא פעילים</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Results */}
@@ -119,7 +132,7 @@ const TeacherStudents = () => {
               <button
                 key={enrollment.id}
                 onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
-                className="flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md"
+                className={`flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active ? "opacity-50" : ""}`}
               >
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
                   <span className="text-sm font-bold text-accent-foreground">{index + 1}</span>
