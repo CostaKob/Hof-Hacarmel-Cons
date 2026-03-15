@@ -32,7 +32,8 @@ export function useTeacherEnrollments(teacherId: string | undefined) {
         .eq("teacher_id", teacherId!)
         .eq("is_active", true);
       if (error) throw error;
-      return data;
+      // Filter out students who stopped studying
+      return (data ?? []).filter((e: any) => e.students?.student_status !== "הפסיק");
     },
   });
 }
