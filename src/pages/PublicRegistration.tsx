@@ -322,7 +322,7 @@ const PublicRegistration = () => {
           )}
 
           {/* Approval checkbox */}
-          <Card>
+          <Card ref={approvalRef}>
             <CardContent className="pt-6 space-y-3">
               <div className="flex items-start gap-3">
                 <Checkbox
