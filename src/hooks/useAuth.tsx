@@ -34,32 +34,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    let initialLoad = true;
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchRoles(session.user.id);
-        } else {
-          setRoles([]);
-        }
-        setLoading(false);
-      }
-    );
-
+    // getSession handles initial load — waits for roles before clearing loading
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
         await fetchRoles(session.user.id);
       }
-      if (initialLoad) {
-        setLoading(false);
-        initialLoad = false;
-      }
+      setLoading(false);
     });
+
+    // onAuthStateChange handles subsequent events — no await to avoid deadlock
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchRoles(session.user.id);
+        } else {
+          setRoles([]);
+          setLoading(false);
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, []);
