@@ -176,6 +176,99 @@ export type Database = {
         }
         Relationships: []
       }
+      registrations: {
+        Row: {
+          academic_year_id: string | null
+          approval_checked: boolean
+          branch_school_name: string
+          city: string
+          created_at: string
+          existing_student_id: string | null
+          gender: string | null
+          grade: string
+          id: string
+          notes: string | null
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          requested_instruments: Json
+          requested_lesson_duration: string
+          status: Database["public"]["Enums"]["registration_status"]
+          student_first_name: string
+          student_last_name: string
+          student_national_id: string
+          student_phone: string | null
+          student_school_text: string
+          student_status: string | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          approval_checked?: boolean
+          branch_school_name: string
+          city: string
+          created_at?: string
+          existing_student_id?: string | null
+          gender?: string | null
+          grade: string
+          id?: string
+          notes?: string | null
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          requested_instruments?: Json
+          requested_lesson_duration: string
+          status?: Database["public"]["Enums"]["registration_status"]
+          student_first_name: string
+          student_last_name: string
+          student_national_id: string
+          student_phone?: string | null
+          student_school_text: string
+          student_status?: string | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          approval_checked?: boolean
+          branch_school_name?: string
+          city?: string
+          created_at?: string
+          existing_student_id?: string | null
+          gender?: string | null
+          grade?: string
+          id?: string
+          notes?: string | null
+          parent_email?: string
+          parent_name?: string
+          parent_national_id?: string
+          parent_phone?: string
+          requested_instruments?: Json
+          requested_lesson_duration?: string
+          status?: Database["public"]["Enums"]["registration_status"]
+          student_first_name?: string
+          student_last_name?: string
+          student_national_id?: string
+          student_phone?: string | null
+          student_school_text?: string
+          student_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registrations_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_existing_student_id_fkey"
+            columns: ["existing_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       report_lines: {
         Row: {
           created_at: string
@@ -669,6 +762,12 @@ export type Database = {
       enrollment_role: "primary" | "secondary"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
+      registration_status:
+        | "new"
+        | "in_review"
+        | "approved"
+        | "rejected"
+        | "converted"
       transaction_type: "payment" | "credit"
     }
     CompositeTypes: {
@@ -808,6 +907,13 @@ export const Constants = {
       enrollment_role: ["primary", "secondary"],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],
+      registration_status: [
+        "new",
+        "in_review",
+        "approved",
+        "rejected",
+        "converted",
+      ],
       transaction_type: ["payment", "credit"],
     },
   },

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Users, GraduationCap, School, Music, BarChart3, CalendarDays } from "lucide-react";
+import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList } from "lucide-react";
 
 const SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
@@ -9,6 +9,7 @@ const SECTIONS = [
   { path: "/admin/instruments", label: "כלי נגינה", description: "ניהול כלי נגינה", icon: Music },
   { path: "/admin/yearly-summary", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכלל המערכת", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים ומעבר שנה", icon: CalendarDays },
+  { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
 ];
 
 const AdminDashboard = () => {
