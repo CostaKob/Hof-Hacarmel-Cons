@@ -261,7 +261,7 @@ const PublicRegistration = () => {
   }
 
   // Loading
-  if (pageLoading) {
+  if (yearLoading || pageLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
         <p className="text-muted-foreground">טוען...</p>
