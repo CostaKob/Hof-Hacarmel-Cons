@@ -7,7 +7,7 @@ import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2 } fro
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
-type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly";
+type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly" | "registrations";
 
 interface ExportOption {
   key: ExportKey;
