@@ -715,6 +715,107 @@ export type Database = {
           },
         ]
       }
+      school_music_groups: {
+        Row: {
+          created_at: string
+          id: string
+          instrument_id: string
+          school_music_school_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrument_id: string
+          school_music_school_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrument_id?: string
+          school_music_school_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_groups_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_groups_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_groups_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_music_schools: {
+        Row: {
+          academic_year_id: string | null
+          conductor_teacher_id: string | null
+          coordinator_teacher_id: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          school_name: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          conductor_teacher_id?: string | null
+          coordinator_teacher_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          school_name: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          conductor_teacher_id?: string | null
+          coordinator_teacher_id?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          school_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_schools_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_schools_conductor_teacher_id_fkey"
+            columns: ["conductor_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_schools_coordinator_teacher_id_fkey"
+            columns: ["coordinator_teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           address: string | null
