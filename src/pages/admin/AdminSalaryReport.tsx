@@ -45,6 +45,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
   lessons_60: "60 דק׳",
   small_ensemble: "הרכב קטן",
   large_ensemble: "הרכב גדול",
+  branch_coord: "ריכוז שלוחה",
   orchestra_conductor: "ניצוח תזמורת",
   choir_conductor: "ניצוח מקהלה",
   choir_accompaniment: "ליווי מקהלה",
