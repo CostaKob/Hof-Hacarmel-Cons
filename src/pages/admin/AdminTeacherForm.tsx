@@ -32,7 +32,7 @@ const AdminTeacherForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<TeacherFormData>({
-    defaultValues: { is_active: true, is_freelance: false },
+    defaultValues: { is_active: true, is_freelance: false, is_office: false },
   });
 
   const isActive = watch("is_active");
