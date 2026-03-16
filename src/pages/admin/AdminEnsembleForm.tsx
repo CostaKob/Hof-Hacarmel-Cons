@@ -164,6 +164,37 @@ const AdminEnsembleForm = () => {
             </FormItem>
           )} />
 
+
+          <div className="grid grid-cols-3 gap-3">
+            <FormField control={form.control} name="day_of_week" render={({ field }) => (
+              <FormItem>
+                <FormLabel>יום</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="בחר יום" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    {Object.entries(DAYS_OF_WEEK_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="start_time" render={({ field }) => (
+              <FormItem>
+                <FormLabel>שעה</FormLabel>
+                <FormControl><Input type="time" {...field} /></FormControl>
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="room" render={({ field }) => (
+              <FormItem>
+                <FormLabel>חדר</FormLabel>
+                <FormControl><Input {...field} placeholder="מס׳ חדר" /></FormControl>
+              </FormItem>
+            )} />
+          </div>
+
           <FormField control={form.control} name="notes" render={({ field }) => (
             <FormItem>
               <FormLabel>הערות</FormLabel>
