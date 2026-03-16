@@ -27,7 +27,7 @@ const TeacherEnsembleCard = () => {
     );
   }
 
-  if (!ensemble) {
+  if (!ensemble || !myStaff) {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">הרכב לא נמצא</p>
