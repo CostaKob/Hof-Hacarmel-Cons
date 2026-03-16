@@ -102,7 +102,7 @@ const AdminSalaryReport = () => {
   const { data: teachers } = useQuery({
     queryKey: ["salary-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id, is_freelance").eq("is_active", true).order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id, is_freelance, is_office").eq("is_active", true).order("last_name");
       if (error) throw error;
       return data ?? [];
     },
@@ -258,6 +258,7 @@ const AdminSalaryReport = () => {
     }
 
     return teachers
+      .filter((t) => !(t as any).is_office)
       .filter((t) => showFreelancers ? (t as any).is_freelance : !(t as any).is_freelance)
       .map((t) => {
       const defaults = systemDefaults.get(t.id) ?? {

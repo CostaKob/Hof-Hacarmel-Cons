@@ -22,6 +22,7 @@ interface TeacherFormData {
   city: string;
   is_active: boolean;
   is_freelance: boolean;
+  is_office: boolean;
 }
 
 const AdminTeacherForm = () => {
@@ -31,11 +32,12 @@ const AdminTeacherForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<TeacherFormData>({
-    defaultValues: { is_active: true, is_freelance: false },
+    defaultValues: { is_active: true, is_freelance: false, is_office: false },
   });
 
   const isActive = watch("is_active");
   const isFreelance = watch("is_freelance");
+  const isOffice = watch("is_office");
 
   const { data: teacher } = useQuery({
     queryKey: ["admin-teacher", teacherId],
@@ -60,6 +62,7 @@ const AdminTeacherForm = () => {
         city: teacher.city ?? "",
         is_active: teacher.is_active,
         is_freelance: (teacher as any).is_freelance ?? false,
+        is_office: (teacher as any).is_office ?? false,
       });
     }
   }, [teacher, reset]);
@@ -77,6 +80,7 @@ const AdminTeacherForm = () => {
         city: data.city || null,
         is_active: data.is_active,
         is_freelance: data.is_freelance,
+        is_office: data.is_office,
       };
       if (isEdit) {
         const { error } = await supabase.from("teachers").update(payload).eq("id", teacherId!);
@@ -168,7 +172,11 @@ const AdminTeacherForm = () => {
           </div>
           <div className="flex items-center gap-3">
             <Switch checked={isFreelance} onCheckedChange={(v) => setValue("is_freelance", v)} />
-            <Label>עצמאי (לא מופיע בדוח שכר)</Label>
+            <Label>עצמאי</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isOffice} onCheckedChange={(v) => setValue("is_office", v)} />
+            <Label>משרד (לא מופיע בדוח שכר)</Label>
           </div>
         </div>
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
