@@ -302,44 +302,119 @@ const AdminSalaryReport = () => {
 
   // --- PDF export ---
   const handleExportPdf = async () => {
-    if (!tableRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(tableRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-      });
-      const imgData = canvas.toDataURL("image/png");
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
+      // Build a clean HTML table for PDF (no inputs)
+      const cellStyle = "border:1px solid #ccc;padding:4px 6px;text-align:center;font-size:11px;white-space:nowrap;";
+      const headerStyle = `${cellStyle}font-weight:bold;background:#f0f0f0;`;
+      const groupBg: Record<string, string> = {
+        blue: "background:#eff6ff;", violet: "background:#f5f3ff;",
+        emerald: "background:#ecfdf5;", amber: "background:#fffbeb;",
+        sky: "background:#f0f9ff;", primary: "background:#e0e7ff;",
+      };
 
-      // Landscape A4
+      const groupHeaders = [
+        { label: "מורה", cols: 3, bg: "" },
+        { label: "הוראה פרטנית", cols: 3, bg: groupBg.blue },
+        { label: "הרכבים", cols: 5, bg: groupBg.violet },
+        { label: 'בי"ס מנגן', cols: 2, bg: groupBg.emerald },
+        { label: "פעילות", cols: 2, bg: groupBg.amber },
+        { label: "נסיעות", cols: 1, bg: groupBg.sky },
+        { label: "סיכומים", cols: 2, bg: groupBg.primary },
+        { label: "מורה", cols: 2, bg: "" },
+      ];
+
+      const colHeaders = [
+        { label: "שם משפחה", bg: "" }, { label: "שם פרטי", bg: "" }, { label: "ת.ז.", bg: "" },
+        { label: "45 דק׳", bg: groupBg.blue }, { label: "30 דק׳", bg: groupBg.blue }, { label: "60 דק׳", bg: groupBg.blue },
+        { label: "הרכב קטן", bg: groupBg.violet }, { label: "הרכב גדול", bg: groupBg.violet },
+        { label: "ניצוח תזמורת", bg: groupBg.violet }, { label: "ניצוח מקהלה", bg: groupBg.violet }, { label: "ליווי מקהלה", bg: groupBg.violet },
+        { label: "קבוצה קטנה", bg: groupBg.emerald }, { label: "ריכוז/ניצוח", bg: groupBg.emerald },
+        { label: "יום פעילות", bg: groupBg.amber }, { label: "שעה בודדת", bg: groupBg.amber },
+        { label: "ק״מ", bg: groupBg.sky },
+        { label: "משכורת", bg: groupBg.primary }, { label: "נסיעות", bg: groupBg.primary },
+        { label: "שם משפחה", bg: "" }, { label: "שם פרטי", bg: "" },
+      ];
+
+      let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
+      html += `<h2 style="text-align:center;font-size:14px;margin-bottom:8px;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</h2>`;
+      html += `<table style="border-collapse:collapse;width:100%;">`;
+      // Group header row
+      html += `<tr>`;
+      for (const g of groupHeaders) html += `<th colspan="${g.cols}" style="${headerStyle}${g.bg}">${g.label}</th>`;
+      html += `</tr>`;
+      // Column header row
+      html += `<tr>`;
+      for (const c of colHeaders) html += `<th style="${headerStyle}${c.bg}">${c.label}</th>`;
+      html += `</tr>`;
+      // Data rows
+      for (const r of rows) {
+        const salary = calcSalary(r.values);
+        const travel = calcTravel(r.values.km);
+        const v = (n: number) => n ? String(n) : "";
+        html += `<tr>`;
+        html += `<td style="${cellStyle}text-align:right;">${r.lastName}</td>`;
+        html += `<td style="${cellStyle}text-align:right;">${r.firstName}</td>`;
+        html += `<td style="${cellStyle}text-align:right;font-size:10px;">${r.nationalId}</td>`;
+        for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${v(r.values[key])}</td>`;
+        for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
+        for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${v(r.values[key])}</td>`;
+        for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${v(r.values[key])}</td>`;
+        html += `<td style="${cellStyle}${groupBg.sky}">${v(r.values.km)}</td>`;
+        html += `<td style="${cellStyle}${groupBg.primary}font-weight:bold;">${salary ? `₪${salary.toLocaleString("he-IL")}` : ""}</td>`;
+        html += `<td style="${cellStyle}${groupBg.primary}">${travel ? `₪${travel.toLocaleString("he-IL")}` : ""}</td>`;
+        html += `<td style="${cellStyle}text-align:right;color:#888;">${r.lastName}</td>`;
+        html += `<td style="${cellStyle}text-align:right;color:#888;">${r.firstName}</td>`;
+        html += `</tr>`;
+      }
+      // Totals row
+      html += `<tr style="font-weight:bold;background:#f0f0f0;">`;
+      html += `<td colspan="3" style="${cellStyle}text-align:right;">סה״כ</td>`;
+      for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${totals[key] || ""}</td>`;
+      for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${totals[key] || ""}</td>`;
+      for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${totals[key] || ""}</td>`;
+      for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${totals[key] || ""}</td>`;
+      html += `<td style="${cellStyle}${groupBg.sky}">${totals.km || ""}</td>`;
+      html += `<td style="${cellStyle}${groupBg.primary}">${totals.totalSalary ? `₪${totals.totalSalary.toLocaleString("he-IL")}` : ""}</td>`;
+      html += `<td style="${cellStyle}${groupBg.primary}">${totals.totalTravel ? `₪${totals.totalTravel.toLocaleString("he-IL")}` : ""}</td>`;
+      html += `<td colspan="2" style="${cellStyle}"></td>`;
+      html += `</tr>`;
+      html += `</table></div>`;
+
+      // Render offscreen
+      const container = document.createElement("div");
+      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1400px;";
+      container.innerHTML = html;
+      document.body.appendChild(container);
+
+      const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+      document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 8;
+      const margin = 6;
       const usableWidth = pageWidth - margin * 2;
-      const ratio = usableWidth / imgWidth;
-      const scaledHeight = imgHeight * ratio;
+      const ratio = usableWidth / canvas.width;
+      const scaledHeight = canvas.height * ratio;
 
       if (scaledHeight <= pageHeight - margin * 2) {
         pdf.addImage(imgData, "PNG", margin, margin, usableWidth, scaledHeight);
       } else {
-        // Multi-page
         let yOffset = 0;
         const sliceHeight = (pageHeight - margin * 2) / ratio;
-        while (yOffset < imgHeight) {
+        while (yOffset < canvas.height) {
           const sliceCanvas = document.createElement("canvas");
-          sliceCanvas.width = imgWidth;
-          sliceCanvas.height = Math.min(sliceHeight, imgHeight - yOffset);
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = Math.min(sliceHeight, canvas.height - yOffset);
           const ctx = sliceCanvas.getContext("2d")!;
           ctx.drawImage(canvas, 0, -yOffset);
           const sliceImg = sliceCanvas.toDataURL("image/png");
           const h = sliceCanvas.height * ratio;
           pdf.addImage(sliceImg, "PNG", margin, margin, usableWidth, h);
           yOffset += sliceHeight;
-          if (yOffset < imgHeight) pdf.addPage();
+          if (yOffset < canvas.height) pdf.addPage();
         }
       }
 
