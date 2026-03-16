@@ -18,6 +18,85 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
+  const queryClient = useQueryClient();
+  const [newBranch, setNewBranch] = useState("");
+  const [newHours, setNewHours] = useState("");
+
+  const { data: branches = [], isLoading } = useQuery({
+    queryKey: ["branch-coordinators", teacherId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("branch_coordinators")
+        .select("*")
+        .eq("teacher_id", teacherId)
+        .order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["branch-coordinators", teacherId] });
+
+  const addBranch = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("branch_coordinators").insert({
+        teacher_id: teacherId,
+        branch_name: newBranch,
+        weekly_hours: Number(newHours) || 0,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setNewBranch(""); setNewHours(""); toast.success("ריכוז שלוחה נוסף"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
+  const removeBranch = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("branch_coordinators").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("ריכוז שלוחה הוסר"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+      <h2 className="font-semibold text-foreground text-base">ריכוז שלוחה/תחום</h2>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">טוען...</p>
+      ) : (
+        <>
+          {branches.map((b: any) => (
+            <div key={b.id} className="flex items-center justify-between rounded-xl border p-2.5">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-sm">{b.branch_name}</span>
+                <Badge variant="secondary">{Number(b.weekly_hours)} שעות</Badge>
+              </div>
+              <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeBranch.mutate(b.id)}>
+                <X className="h-3.5 w-3.5 text-destructive" />
+              </Button>
+            </div>
+          ))}
+          <div className="flex gap-2 items-end">
+            <div className="flex-1 space-y-1">
+              <Label className="text-xs">שם שלוחה/תחום</Label>
+              <Input value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="למשל: שלוחת צפון" className="h-9" />
+            </div>
+            <div className="w-20 space-y-1">
+              <Label className="text-xs">שעות</Label>
+              <Input type="number" min={0} value={newHours} onChange={(e) => setNewHours(e.target.value)} placeholder="0" className="h-9 text-center" />
+            </div>
+            <Button size="sm" className="h-9" disabled={!newBranch || addBranch.isPending} onClick={() => addBranch.mutate()}>
+              <Plus className="h-4 w-4 ml-1" /> הוסף
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const AdminTeacherCard = () => {
   const { teacherId } = useParams();
   const navigate = useNavigate();
