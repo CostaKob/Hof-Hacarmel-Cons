@@ -61,6 +61,7 @@ const AdminTeachers = () => {
               <SelectItem value="all">הכל</SelectItem>
               <SelectItem value="employee">שכירים</SelectItem>
               <SelectItem value="freelance">עצמאיים</SelectItem>
+              <SelectItem value="office">משרד</SelectItem>
             </SelectContent>
           </Select>
         </div>
