@@ -322,6 +322,9 @@ const AdminTeacherCard = () => {
         </div>
 
         <TeacherInstrumentsSection teacherId={teacherId!} />
+
+        {/* Branch Coordination */}
+        <BranchCoordinationSection teacherId={teacherId!} />
       </div>
     </AdminLayout>
   );
