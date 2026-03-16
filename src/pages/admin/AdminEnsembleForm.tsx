@@ -134,7 +134,7 @@ const AdminEnsembleForm = () => {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="ללא" /></SelectTrigger></FormControl>
                 <SelectContent>
-                  <SelectItem value="">ללא</SelectItem>
+                  <SelectItem value="none">ללא</SelectItem>
                   {schools.map((s: any) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
