@@ -1,10 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
-import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
+import { ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { ArrowRight, Music, MapPin, Clock, CalendarDays, School, StickyNote, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import AppLogo from "@/components/AppLogo";
 
 const TeacherEnsembleCard = () => {
@@ -28,7 +27,7 @@ const TeacherEnsembleCard = () => {
     );
   }
 
-  if (!ensemble) {
+  if (!ensemble || !myStaff) {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">הרכב לא נמצא</p>
@@ -102,34 +101,21 @@ const TeacherEnsembleCard = () => {
                 const enrollment = (allEnrollments ?? []).find((e: any) => e.student_id === s.id);
                 const instrumentName = enrollment?.instruments?.name;
 
-                if (enrollment) {
-                  return (
-                    <button
-                      key={s.id}
-                      type="button"
-                      className="flex w-full items-center justify-between px-4 py-2 text-right transition-colors hover:bg-accent/50 active:bg-accent"
-                      onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground">
-                          {s.first_name} {s.last_name}
-                          {instrumentName && <span className="text-muted-foreground font-normal mr-1">· {instrumentName}</span>}
-                        </p>
-                      </div>
-                      <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </button>
-                  );
-                }
-
                 return (
-                  <div key={s.id} className="flex items-center justify-between px-4 py-2">
+                  <button
+                    key={s.id}
+                    type="button"
+                    className="flex w-full items-center justify-between px-4 py-2 text-right transition-colors hover:bg-accent/50 active:bg-accent"
+                    onClick={() => navigate(`/teacher/ensembles/${id}/students/${s.id}`)}
+                  >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         {s.first_name} {s.last_name}
-                        {instrumentName && <span className="text-muted-foreground font-normal mr-1">· {instrumentName}</span>}
+                        {instrumentName && <span className="mr-1 font-normal text-muted-foreground">· {instrumentName}</span>}
                       </p>
                     </div>
-                  </div>
+                    <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
                 );
               })}
             </div>

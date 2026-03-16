@@ -35,6 +35,7 @@ import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import TeacherTravelSummary from "./pages/TeacherTravelSummary";
 import TeacherEnsembles from "./pages/TeacherEnsembles";
 import TeacherEnsembleCard from "./pages/TeacherEnsembleCard";
+import TeacherEnsembleStudentCard from "./pages/TeacherEnsembleStudentCard";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
@@ -124,6 +125,7 @@ const App = () => (
               <Route path="/teacher/travel-summary" element={<TeacherRoute><TeacherTravelSummary /></TeacherRoute>} />
               <Route path="/teacher/ensembles" element={<TeacherRoute><TeacherEnsembles /></TeacherRoute>} />
               <Route path="/teacher/ensembles/:id" element={<TeacherRoute><TeacherEnsembleCard /></TeacherRoute>} />
+              <Route path="/teacher/ensembles/:id/students/:studentId" element={<TeacherRoute><TeacherEnsembleStudentCard /></TeacherRoute>} />
               {/* Secretary */}
               <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
