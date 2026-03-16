@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
-import { ArrowRight, Music, MapPin, Clock, CalendarDays, School, StickyNote } from "lucide-react";
+import { ArrowRight, Music, MapPin, Clock, CalendarDays, School, StickyNote, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import AppLogo from "@/components/AppLogo";
