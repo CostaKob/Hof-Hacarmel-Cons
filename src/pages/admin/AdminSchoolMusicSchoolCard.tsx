@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pencil, Trash2, Plus, X, Check, Phone } from "lucide-react";
@@ -26,6 +28,7 @@ const AdminSchoolMusicSchoolCard = () => {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editGroupInstrumentId, setEditGroupInstrumentId] = useState("");
   const [editGroupTeacherId, setEditGroupTeacherId] = useState("");
+  const [editGroupHours, setEditGroupHours] = useState("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["school-music-school", id] });
@@ -102,8 +105,9 @@ const AdminSchoolMusicSchoolCard = () => {
   });
 
   const updateGroup = useMutation({
-    mutationFn: async ({ groupId, instrumentId, teacherId }: { groupId: string; instrumentId: string; teacherId: string }) => {
-      const { error } = await supabase.from("school_music_groups").update({ instrument_id: instrumentId, teacher_id: teacherId }).eq("id", groupId);
+    mutationFn: async ({ groupId, instrumentId, teacherId, weeklyHours }: { groupId: string; instrumentId: string; teacherId: string; weeklyHours: string }) => {
+      const hours = weeklyHours === "" ? null : Number(weeklyHours);
+      const { error } = await supabase.from("school_music_groups").update({ instrument_id: instrumentId, teacher_id: teacherId, weekly_hours: hours } as any).eq("id", groupId);
       if (error) throw error;
     },
     onSuccess: () => { invalidate(); setEditingGroupId(null); toast.success("הקבוצה עודכנה"); },
@@ -315,15 +319,18 @@ const AdminSchoolMusicSchoolCard = () => {
             <CardContent>
               <div className="grid gap-2">
                 {/* Per-teacher breakdown */}
-                {groups.map((g: any) => (
+                {groups.map((g: any) => {
+                  const hours = (g as any).weekly_hours ?? classesCount;
+                  return (
                   <div key={g.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{g.teachers?.first_name} {g.teachers?.last_name}</span>
                       <span className="text-muted-foreground">({g.instruments?.name})</span>
                     </div>
-                    <Badge variant="secondary">{classesCount} שעות קבוצה קטנה</Badge>
+                    <Badge variant={hours !== classesCount ? "default" : "secondary"}>{hours} שעות קבוצה קטנה</Badge>
                   </div>
-                ))}
+                  );
+                })}
                 {coordinator && (
                   <div className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                     <div className="flex items-center gap-2">
@@ -346,7 +353,7 @@ const AdminSchoolMusicSchoolCard = () => {
                 <div className="border-t pt-2 mt-1 space-y-1">
                   <div className="flex items-center justify-between text-sm font-semibold">
                     <span>סה״כ שעות קבוצה קטנה</span>
-                    <span>{groups.length * classesCount}</span>
+                    <span>{groups.reduce((sum: number, g: any) => sum + ((g as any).weekly_hours ?? classesCount), 0)}</span>
                   </div>
                   {(coordinator || conductor) && (
                     <div className="flex items-center justify-between text-sm font-semibold">
@@ -408,11 +415,15 @@ const AdminSchoolMusicSchoolCard = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">שעות שבועיות (ריק = {classesCount} לפי שכבה)</Label>
+                      <Input type="number" min={0} className="h-8 text-xs rounded-lg" value={editGroupHours} onChange={(e) => setEditGroupHours(e.target.value)} placeholder={String(classesCount)} />
+                    </div>
                     <div className="flex gap-1 justify-end">
                       <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditingGroupId(null)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="sm" className="h-7 px-2" onClick={() => updateGroup.mutate({ groupId: g.id, instrumentId: editGroupInstrumentId, teacherId: editGroupTeacherId })}>
+                      <Button size="sm" className="h-7 px-2" onClick={() => updateGroup.mutate({ groupId: g.id, instrumentId: editGroupInstrumentId, teacherId: editGroupTeacherId, weeklyHours: editGroupHours })}>
                         <Check className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -422,10 +433,15 @@ const AdminSchoolMusicSchoolCard = () => {
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{g.instruments?.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{g.teachers?.first_name} {g.teachers?.last_name}</p>
-                      <PhoneLink phone={g.teachers?.phone} />
+                      <div className="flex items-center gap-2">
+                        <PhoneLink phone={g.teachers?.phone} />
+                        {(g as any).weekly_hours != null && (g as any).weekly_hours !== classesCount && (
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">{(g as any).weekly_hours} ש׳</Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-0.5 shrink-0">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingGroupId(g.id); setEditGroupInstrumentId(g.instrument_id); setEditGroupTeacherId(g.teacher_id); }}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingGroupId(g.id); setEditGroupInstrumentId(g.instrument_id); setEditGroupTeacherId(g.teacher_id); setEditGroupHours((g as any).weekly_hours != null ? String((g as any).weekly_hours) : ""); }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeGroup.mutate(g.id)}>

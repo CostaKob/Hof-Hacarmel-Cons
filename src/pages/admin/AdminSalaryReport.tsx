@@ -126,7 +126,7 @@ const AdminSalaryReport = () => {
   const { data: schoolMusicGroups } = useQuery({
     queryKey: ["salary-school-music-groups"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("school_music_groups").select("teacher_id, school_music_school_id, school_music_schools!inner(classes_count, is_active)");
+      const { data, error } = await supabase.from("school_music_groups").select("teacher_id, school_music_school_id, weekly_hours, school_music_schools!inner(classes_count, is_active)");
       if (error) throw error;
       return (data ?? []).filter((g: any) => g.school_music_schools?.is_active);
     },
@@ -202,7 +202,7 @@ const AdminSalaryReport = () => {
     for (const g of schoolMusicGroups ?? []) {
       const d = map.get(g.teacher_id);
       if (!d) continue;
-      d.school_music_group += (g as any).school_music_schools?.classes_count ?? 0;
+      d.school_music_group += (g as any).weekly_hours ?? (g as any).school_music_schools?.classes_count ?? 0;
     }
     // Coordinators/conductors
     for (const sms of schoolMusicSchools ?? []) {

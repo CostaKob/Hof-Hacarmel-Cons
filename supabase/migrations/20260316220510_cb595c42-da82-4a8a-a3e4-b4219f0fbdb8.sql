@@ -1,0 +1,1 @@
+ALTER TABLE public.school_music_groups ADD COLUMN weekly_hours integer DEFAULT NULL;
