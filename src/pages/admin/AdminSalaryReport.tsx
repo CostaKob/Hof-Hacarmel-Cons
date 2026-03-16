@@ -22,6 +22,7 @@ const MONTH_NAMES = [
 const RATES: Record<string, number> = {
   lessons_45: 280, lessons_30: 190, lessons_60: 370,
   small_ensemble: 280, large_ensemble: 315,
+  branch_coord: 350,
   orchestra_conductor: 840, choir_conductor: 420, choir_accompaniment: 315,
   school_music_group: 280, school_music_coord: 350,
   activity_days: 600, single_hours: 75,
@@ -31,6 +32,7 @@ const KM_RATE = 1.1;
 const FIELD_KEYS = [
   "lessons_45", "lessons_30", "lessons_60",
   "small_ensemble", "large_ensemble",
+  "branch_coord",
   "orchestra_conductor", "choir_conductor", "choir_accompaniment",
   "school_music_group", "school_music_coord",
   "activity_days", "single_hours", "km",
@@ -43,6 +45,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
   lessons_60: "60 דק׳",
   small_ensemble: "הרכב קטן",
   large_ensemble: "הרכב גדול",
+  branch_coord: "ריכוז שלוחה",
   orchestra_conductor: "ניצוח תזמורת",
   choir_conductor: "ניצוח מקהלה",
   choir_accompaniment: "ליווי מקהלה",
@@ -141,6 +144,15 @@ const AdminSalaryReport = () => {
     },
   });
 
+  const { data: branchCoordinators } = useQuery({
+    queryKey: ["salary-branch-coordinators"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("branch_coordinators").select("teacher_id, weekly_hours");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: prevMonthReports } = useQuery({
     queryKey: ["salary-prev-reports", prevRange.from, prevRange.to],
     queryFn: async () => {
@@ -166,7 +178,7 @@ const AdminSalaryReport = () => {
 
     const empty = (): Record<FieldKey, number> => ({
       lessons_45: 0, lessons_30: 0, lessons_60: 0,
-      small_ensemble: 0, large_ensemble: 0,
+      small_ensemble: 0, large_ensemble: 0, branch_coord: 0,
       orchestra_conductor: 0, choir_conductor: 0, choir_accompaniment: 0,
       school_music_group: 0, school_music_coord: 0,
       activity_days: 0, single_hours: 0, km: 0,
@@ -218,6 +230,12 @@ const AdminSalaryReport = () => {
       }
     }
 
+    // Branch coordinators
+    for (const bc of branchCoordinators ?? []) {
+      const d = map.get(bc.teacher_id);
+      if (d) d.branch_coord += Number(bc.weekly_hours);
+    }
+
     // Travel (previous month km)
     for (const r of prevMonthReports ?? []) {
       const d = map.get(r.teacher_id);
@@ -225,7 +243,7 @@ const AdminSalaryReport = () => {
     }
 
     return map;
-  }, [teachers, enrollments, ensembleStaff, schoolMusicGroups, schoolMusicSchools, prevMonthReports]);
+  }, [teachers, enrollments, ensembleStaff, schoolMusicGroups, schoolMusicSchools, branchCoordinators, prevMonthReports]);
 
   // --- Merge with manual overrides ---
   const rows: TeacherRow[] = useMemo(() => {
@@ -244,7 +262,7 @@ const AdminSalaryReport = () => {
       .map((t) => {
       const defaults = systemDefaults.get(t.id) ?? {
         lessons_45: 0, lessons_30: 0, lessons_60: 0,
-        small_ensemble: 0, large_ensemble: 0,
+        small_ensemble: 0, large_ensemble: 0, branch_coord: 0,
         orchestra_conductor: 0, choir_conductor: 0, choir_accompaniment: 0,
         school_music_group: 0, school_music_coord: 0,
         activity_days: 0, single_hours: 0, km: 0,
@@ -269,7 +287,7 @@ const AdminSalaryReport = () => {
   const totals = useMemo(() => {
     const t: Record<FieldKey, number> = {
       lessons_45: 0, lessons_30: 0, lessons_60: 0,
-      small_ensemble: 0, large_ensemble: 0,
+      small_ensemble: 0, large_ensemble: 0, branch_coord: 0,
       orchestra_conductor: 0, choir_conductor: 0, choir_accompaniment: 0,
       school_music_group: 0, school_music_coord: 0,
       activity_days: 0, single_hours: 0, km: 0,
@@ -330,7 +348,7 @@ const AdminSalaryReport = () => {
         { label: "#", cols: 1, bg: "" },
         { label: "מורה", cols: 3, bg: "" },
         { label: "הוראה פרטנית", cols: 3, bg: groupBg.blue },
-        { label: "הרכבים", cols: 5, bg: groupBg.violet },
+        { label: "הרכבים", cols: 6, bg: groupBg.violet },
         { label: 'בי"ס מנגן', cols: 2, bg: groupBg.emerald },
         { label: "פעילות", cols: 2, bg: groupBg.amber },
         { label: "נסיעות", cols: 1, bg: groupBg.sky },
@@ -343,6 +361,7 @@ const AdminSalaryReport = () => {
         { label: "שם משפחה", bg: "" }, { label: "שם פרטי", bg: "" }, { label: "ת.ז.", bg: "" },
         { label: "45 דק׳", bg: groupBg.blue }, { label: "30 דק׳", bg: groupBg.blue }, { label: "60 דק׳", bg: groupBg.blue },
         { label: "הרכב קטן", bg: groupBg.violet }, { label: "הרכב גדול", bg: groupBg.violet },
+        { label: "ריכוז שלוחה", bg: groupBg.violet },
         { label: "ניצוח תזמורת", bg: groupBg.violet }, { label: "ניצוח מקהלה", bg: groupBg.violet }, { label: "ליווי מקהלה", bg: groupBg.violet },
         { label: "קבוצה קטנה", bg: groupBg.emerald }, { label: "ריכוז/ניצוח", bg: groupBg.emerald },
         { label: "יום פעילות", bg: groupBg.amber }, { label: "שעה בודדת", bg: groupBg.amber },
@@ -375,7 +394,7 @@ const AdminSalaryReport = () => {
         html += `<td style="${cellStyle}text-align:right;">${r.firstName}</td>`;
         html += `<td style="${cellStyle}text-align:right;font-size:${fontSize - 1}px;">${r.nationalId}</td>`;
         for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${v(r.values[key])}</td>`;
-        for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
+        for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
         for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${v(r.values[key])}</td>`;
         for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${v(r.values[key])}</td>`;
         html += `<td style="${cellStyle}${groupBg.sky}">${v(r.values.km)}</td>`;
@@ -389,7 +408,7 @@ const AdminSalaryReport = () => {
       html += `<tr style="font-weight:bold;background:#e8e8e8;">`;
       html += `<td colspan="4" style="${cellStyle}text-align:right;">סה״כ (${rows.length} מורים)</td>`;
       for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${totals[key] || ""}</td>`;
-      for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${totals[key] || ""}</td>`;
+      for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${totals[key] || ""}</td>`;
       for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${totals[key] || ""}</td>`;
       for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${totals[key] || ""}</td>`;
       html += `<td style="${cellStyle}${groupBg.sky}">${totals.km || ""}</td>`;
@@ -503,7 +522,7 @@ const AdminSalaryReport = () => {
                       <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border w-8">#</th>
                       <th colSpan={3} className="p-2 text-right font-bold whitespace-nowrap border-b border-l border-border">מורה</th>
                       <th colSpan={3} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-blue-50 dark:bg-blue-950/30">הוראה פרטנית</th>
-                      <th colSpan={5} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
+                      <th colSpan={6} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
                       <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-emerald-50 dark:bg-emerald-950/30">בי״ס מנגן</th>
                       <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-amber-50 dark:bg-amber-950/30">פעילות</th>
                       <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-sky-50 dark:bg-sky-950/30">נסיעות</th>
@@ -523,6 +542,7 @@ const AdminSalaryReport = () => {
                       {/* Ensembles */}
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב קטן</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב גדול</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ריכוז שלוחה</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח תזמורת</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח מקהלה</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20 border-l border-border">ליווי מקהלה</th>
@@ -562,8 +582,8 @@ const AdminSalaryReport = () => {
                             </td>
                           ))}
                           {/* Ensembles */}
-                          {(["small_ensemble", "large_ensemble", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] as FieldKey[]).map((key, ki) => (
-                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 4 ? "border-l border-border" : ""}`}>
+                          {(["small_ensemble", "large_ensemble", "branch_coord", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] as FieldKey[]).map((key, ki) => (
+                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 5 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
                                 onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
@@ -609,6 +629,7 @@ const AdminSalaryReport = () => {
                       <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10 border-l border-border">{totals.lessons_60 || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.small_ensemble || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.large_ensemble || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.branch_coord || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.orchestra_conductor || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.choir_conductor || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10 border-l border-border">{totals.choir_accompaniment || "–"}</td>
