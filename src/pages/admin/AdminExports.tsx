@@ -262,7 +262,7 @@ const AdminExports = () => {
             <p className="font-semibold text-foreground text-base">דוח משכורות</p>
             <p className="text-sm text-muted-foreground mt-0.5">הפקת דוח משכורות חודשי לכל המורים</p>
           </div>
-        </button>
+        </a>
 
         {/* Export buttons */}
         <div className="grid gap-4 sm:grid-cols-2">
