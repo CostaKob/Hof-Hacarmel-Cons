@@ -20,7 +20,7 @@ const AdminEnsembles = () => {
     queryFn: async () => {
       let q = supabase
         .from("ensembles")
-        .select("*, schools(name)")
+        .select("*, schools(name), ensemble_staff(role, teachers(first_name, last_name))")
         .order("name");
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
