@@ -23,6 +23,8 @@ const AdminEnsembleCard = () => {
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [selectedStaffRole, setSelectedStaffRole] = useState("");
   const [staffWeeklyHours, setStaffWeeklyHours] = useState("0");
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [editingHours, setEditingHours] = useState("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["ensemble", id] });
