@@ -211,6 +211,9 @@ const AdminTeacherCard = () => {
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <h2 className="font-semibold text-foreground text-base mb-2">פרטים אישיים</h2>
+          {(teacher as any).is_freelance && (
+            <Badge variant="secondary" className="mb-2">עצמאי</Badge>
+          )}
           <DetailRow label="תעודת זהות" value={teacher.national_id} />
           <DetailRow label="תאריך לידה" value={teacher.birth_date} />
           <DetailRow label="טלפון" value={teacher.phone} />

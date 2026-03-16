@@ -21,6 +21,7 @@ interface TeacherFormData {
   address: string;
   city: string;
   is_active: boolean;
+  is_freelance: boolean;
 }
 
 const AdminTeacherForm = () => {
@@ -30,10 +31,11 @@ const AdminTeacherForm = () => {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<TeacherFormData>({
-    defaultValues: { is_active: true },
+    defaultValues: { is_active: true, is_freelance: false },
   });
 
   const isActive = watch("is_active");
+  const isFreelance = watch("is_freelance");
 
   const { data: teacher } = useQuery({
     queryKey: ["admin-teacher", teacherId],
@@ -57,6 +59,7 @@ const AdminTeacherForm = () => {
         address: teacher.address ?? "",
         city: teacher.city ?? "",
         is_active: teacher.is_active,
+        is_freelance: (teacher as any).is_freelance ?? false,
       });
     }
   }, [teacher, reset]);
@@ -73,6 +76,7 @@ const AdminTeacherForm = () => {
         address: data.address || null,
         city: data.city || null,
         is_active: data.is_active,
+        is_freelance: data.is_freelance,
       };
       if (isEdit) {
         const { error } = await supabase.from("teachers").update(payload).eq("id", teacherId!);
@@ -161,6 +165,10 @@ const AdminTeacherForm = () => {
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
             <Label>פעיל</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isFreelance} onCheckedChange={(v) => setValue("is_freelance", v)} />
+            <Label>עצמאי (לא מופיע בדוח שכר)</Label>
           </div>
         </div>
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">

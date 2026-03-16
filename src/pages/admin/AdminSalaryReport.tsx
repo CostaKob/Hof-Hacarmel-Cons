@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, FileSpreadsheet, FileDown } from "lucide-react";
 import { toast } from "sonner";
@@ -82,6 +84,7 @@ const AdminSalaryReport = () => {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [generated, setGenerated] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showFreelancers, setShowFreelancers] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
@@ -96,7 +99,7 @@ const AdminSalaryReport = () => {
   const { data: teachers } = useQuery({
     queryKey: ["salary-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id").eq("is_active", true).order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id, is_freelance").eq("is_active", true).order("last_name");
       if (error) throw error;
       return data ?? [];
     },
@@ -232,7 +235,9 @@ const AdminSalaryReport = () => {
       manualMap.set(me.teacher_id, overrides);
     }
 
-    return teachers.map((t) => {
+    return teachers
+      .filter((t) => showFreelancers || !(t as any).is_freelance)
+      .map((t) => {
       const defaults = systemDefaults.get(t.id) ?? {
         lessons_45: 0, lessons_30: 0, lessons_60: 0,
         small_ensemble: 0, large_ensemble: 0,
@@ -254,7 +259,7 @@ const AdminSalaryReport = () => {
         values,
       };
     });
-  }, [teachers, systemDefaults, manualEntries]);
+  }, [teachers, systemDefaults, manualEntries, showFreelancers]);
 
   // --- Totals ---
   const totals = useMemo(() => {
@@ -459,6 +464,10 @@ const AdminSalaryReport = () => {
               ייצוא PDF
             </Button>
           )}
+          <div className="flex items-center gap-2 mr-auto">
+            <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
+            <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג עצמאיים</Label>
+          </div>
         </div>
 
         {generated && (
