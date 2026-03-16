@@ -140,7 +140,7 @@ const AdminEnsembleCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
-
+  const deleteEnsemble = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("ensembles").delete().eq("id", id!);
       if (error) throw error;
