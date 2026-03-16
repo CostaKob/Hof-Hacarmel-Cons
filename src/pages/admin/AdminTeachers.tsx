@@ -33,6 +33,8 @@ const AdminTeachers = () => {
     if (search && !name.includes(search.toLowerCase())) return false;
     if (activeFilter === "active" && !t.is_active) return false;
     if (activeFilter === "inactive" && t.is_active) return false;
+    if (typeFilter === "freelance" && !t.is_freelance) return false;
+    if (typeFilter === "employee" && t.is_freelance) return false;
     return true;
   });
 
