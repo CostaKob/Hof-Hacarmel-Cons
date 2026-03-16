@@ -599,7 +599,7 @@ const AdminSalaryReport = () => {
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-primary/30 bg-muted font-bold">
-                      <td className="p-2 text-right sticky right-0 bg-muted z-10" colSpan={3}>סה״כ</td>
+                      <td className="p-2 text-right sticky right-0 bg-muted z-10" colSpan={4}>סה״כ ({rows.length} מורים)</td>
                       <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10">{totals.lessons_45 || "–"}</td>
                       <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10">{totals.lessons_30 || "–"}</td>
                       <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10 border-l border-border">{totals.lessons_60 || "–"}</td>
