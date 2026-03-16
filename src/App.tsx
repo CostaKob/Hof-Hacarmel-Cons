@@ -49,6 +49,7 @@ import AdminRegistrationPages from "./pages/admin/AdminRegistrationPages";
 import AdminRegistrationPageEditor from "./pages/admin/AdminRegistrationPageEditor";
 import AdminRegistrationConvert from "./pages/admin/AdminRegistrationConvert";
 import AdminExports from "./pages/admin/AdminExports";
+import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
 import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
               <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
               <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
+              <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
               <Route path="/admin/ensembles/:id" element={<AdminRoute><AdminEnsembleCard /></AdminRoute>} />

@@ -715,6 +715,44 @@ export type Database = {
           },
         ]
       }
+      salary_manual_entries: {
+        Row: {
+          activity_days: number
+          created_at: string
+          id: string
+          month_key: string
+          single_hours: number
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity_days?: number
+          created_at?: string
+          id?: string
+          month_key: string
+          single_hours?: number
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity_days?: number
+          created_at?: string
+          id?: string
+          month_key?: string
+          single_hours?: number
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_manual_entries_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_music_groups: {
         Row: {
           created_at: string

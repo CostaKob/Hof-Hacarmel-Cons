@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard } from "lucide-react";
+import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -34,6 +35,7 @@ function downloadXlsx(data: Record<string, string | number | boolean | null>[], 
 }
 
 const AdminExports = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState<ExportKey | null>(null);
 
   const exportStudents = async () => {
@@ -245,7 +247,23 @@ const AdminExports = () => {
 
   return (
     <AdminLayout title="דוחות וייצוא" backPath="/admin">
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="space-y-6">
+        {/* Salary report link */}
+        <button
+          onClick={() => navigate("/admin/salary-report")}
+          className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98] text-right"
+        >
+          <div className="rounded-xl bg-accent p-3.5">
+            <FileSpreadsheet className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-foreground text-base">דוח משכורות</p>
+            <p className="text-sm text-muted-foreground mt-0.5">הפקת דוח משכורות חודשי לכל המורים</p>
+          </div>
+        </button>
+
+        {/* Export buttons */}
+        <div className="grid gap-4 sm:grid-cols-2">
         {EXPORTS.map((exp) => (
           <div
             key={exp.key}
@@ -273,6 +291,7 @@ const AdminExports = () => {
             </Button>
           </div>
         ))}
+        </div>
       </div>
     </AdminLayout>
   );
