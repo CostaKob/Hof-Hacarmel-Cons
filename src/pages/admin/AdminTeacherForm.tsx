@@ -35,6 +35,7 @@ const AdminTeacherForm = () => {
   });
 
   const isActive = watch("is_active");
+  const isFreelance = watch("is_freelance");
 
   const { data: teacher } = useQuery({
     queryKey: ["admin-teacher", teacherId],
