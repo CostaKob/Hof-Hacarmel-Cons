@@ -394,7 +394,7 @@ const AdminSalaryReport = () => {
         html += `<td style="${cellStyle}text-align:right;">${r.firstName}</td>`;
         html += `<td style="${cellStyle}text-align:right;font-size:${fontSize - 1}px;">${r.nationalId}</td>`;
         for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${v(r.values[key])}</td>`;
-        for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
+        for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
         for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${v(r.values[key])}</td>`;
         for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${v(r.values[key])}</td>`;
         html += `<td style="${cellStyle}${groupBg.sky}">${v(r.values.km)}</td>`;
