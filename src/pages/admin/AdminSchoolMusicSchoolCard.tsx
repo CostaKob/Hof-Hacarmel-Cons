@@ -103,8 +103,9 @@ const AdminSchoolMusicSchoolCard = () => {
   });
 
   const updateGroup = useMutation({
-    mutationFn: async ({ groupId, instrumentId, teacherId }: { groupId: string; instrumentId: string; teacherId: string }) => {
-      const { error } = await supabase.from("school_music_groups").update({ instrument_id: instrumentId, teacher_id: teacherId }).eq("id", groupId);
+    mutationFn: async ({ groupId, instrumentId, teacherId, weeklyHours }: { groupId: string; instrumentId: string; teacherId: string; weeklyHours: string }) => {
+      const hours = weeklyHours === "" ? null : Number(weeklyHours);
+      const { error } = await supabase.from("school_music_groups").update({ instrument_id: instrumentId, teacher_id: teacherId, weekly_hours: hours } as any).eq("id", groupId);
       if (error) throw error;
     },
     onSuccess: () => { invalidate(); setEditingGroupId(null); toast.success("הקבוצה עודכנה"); },
