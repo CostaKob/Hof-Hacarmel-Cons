@@ -351,7 +351,7 @@ const AdminSchoolMusicSchoolCard = () => {
                 <div className="border-t pt-2 mt-1 space-y-1">
                   <div className="flex items-center justify-between text-sm font-semibold">
                     <span>סה״כ שעות קבוצה קטנה</span>
-                    <span>{groups.length * classesCount}</span>
+                    <span>{groups.reduce((sum: number, g: any) => sum + ((g as any).weekly_hours ?? classesCount), 0)}</span>
                   </div>
                   {(coordinator || conductor) && (
                     <div className="flex items-center justify-between text-sm font-semibold">
