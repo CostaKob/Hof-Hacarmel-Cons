@@ -413,11 +413,15 @@ const AdminSchoolMusicSchoolCard = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">שעות שבועיות (ריק = {classesCount} לפי שכבה)</Label>
+                      <Input type="number" min={0} className="h-8 text-xs rounded-lg" value={editGroupHours} onChange={(e) => setEditGroupHours(e.target.value)} placeholder={String(classesCount)} />
+                    </div>
                     <div className="flex gap-1 justify-end">
                       <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setEditingGroupId(null)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="sm" className="h-7 px-2" onClick={() => updateGroup.mutate({ groupId: g.id, instrumentId: editGroupInstrumentId, teacherId: editGroupTeacherId })}>
+                      <Button size="sm" className="h-7 px-2" onClick={() => updateGroup.mutate({ groupId: g.id, instrumentId: editGroupInstrumentId, teacherId: editGroupTeacherId, weeklyHours: editGroupHours })}>
                         <Check className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -427,10 +431,15 @@ const AdminSchoolMusicSchoolCard = () => {
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{g.instruments?.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{g.teachers?.first_name} {g.teachers?.last_name}</p>
-                      <PhoneLink phone={g.teachers?.phone} />
+                      <div className="flex items-center gap-2">
+                        <PhoneLink phone={g.teachers?.phone} />
+                        {(g as any).weekly_hours != null && (g as any).weekly_hours !== classesCount && (
+                          <Badge variant="outline" className="text-[10px] h-4 px-1">{(g as any).weekly_hours} ש׳</Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="flex gap-0.5 shrink-0">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingGroupId(g.id); setEditGroupInstrumentId(g.instrument_id); setEditGroupTeacherId(g.teacher_id); }}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingGroupId(g.id); setEditGroupInstrumentId(g.instrument_id); setEditGroupTeacherId(g.teacher_id); setEditGroupHours((g as any).weekly_hours != null ? String((g as any).weekly_hours) : ""); }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeGroup.mutate(g.id)}>
