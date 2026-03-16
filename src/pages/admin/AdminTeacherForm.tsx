@@ -166,6 +166,10 @@ const AdminTeacherForm = () => {
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
             <Label>פעיל</Label>
           </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isFreelance} onCheckedChange={(v) => setValue("is_freelance", v)} />
+            <Label>עצמאי (לא מופיע בדוח שכר)</Label>
+          </div>
         </div>
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">

@@ -97,7 +97,7 @@ const AdminSalaryReport = () => {
   const { data: teachers } = useQuery({
     queryKey: ["salary-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id").eq("is_active", true).order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id, is_freelance").eq("is_active", true).order("last_name");
       if (error) throw error;
       return data ?? [];
     },
