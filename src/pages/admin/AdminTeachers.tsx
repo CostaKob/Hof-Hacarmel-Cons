@@ -15,6 +15,7 @@ const AdminTeachers = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [importOpen, setImportOpen] = useState(false);
 
   const { data: teachers = [], isLoading } = useQuery({
@@ -32,6 +33,8 @@ const AdminTeachers = () => {
     if (search && !name.includes(search.toLowerCase())) return false;
     if (activeFilter === "active" && !t.is_active) return false;
     if (activeFilter === "inactive" && t.is_active) return false;
+    if (typeFilter === "freelance" && !t.is_freelance) return false;
+    if (typeFilter === "employee" && t.is_freelance) return false;
     return true;
   });
 
@@ -49,6 +52,14 @@ const AdminTeachers = () => {
               <SelectItem value="all">הכל</SelectItem>
               <SelectItem value="active">פעילים</SelectItem>
               <SelectItem value="inactive">לא פעילים</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">הכל</SelectItem>
+              <SelectItem value="employee">שכירים</SelectItem>
+              <SelectItem value="freelance">עצמאיים</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -87,6 +98,7 @@ const AdminTeachers = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {t.is_freelance && <Badge variant="outline" className="rounded-lg">עצמאי</Badge>}
                   <Badge variant={t.is_active ? "default" : "secondary"} className="rounded-lg">
                     {t.is_active ? "פעיל" : "לא פעיל"}
                   </Badge>
