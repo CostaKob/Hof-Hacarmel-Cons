@@ -74,7 +74,7 @@ const AdminEnsembleForm = () => {
       const payload = {
         name: values.name,
         ensemble_type: values.ensemble_type as any,
-        school_id: values.school_id || null,
+        school_id: values.school_id && values.school_id !== "none" ? values.school_id : null,
         weekly_hours: values.weekly_hours,
         notes: values.notes || null,
         is_active: values.is_active,
@@ -134,7 +134,7 @@ const AdminEnsembleForm = () => {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="ללא" /></SelectTrigger></FormControl>
                 <SelectContent>
-                  <SelectItem value="">ללא</SelectItem>
+                  <SelectItem value="none">ללא</SelectItem>
                   {schools.map((s: any) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
