@@ -34,7 +34,8 @@ const AdminTeachers = () => {
     if (activeFilter === "active" && !t.is_active) return false;
     if (activeFilter === "inactive" && t.is_active) return false;
     if (typeFilter === "freelance" && !t.is_freelance) return false;
-    if (typeFilter === "employee" && t.is_freelance) return false;
+    if (typeFilter === "employee" && (t.is_freelance || (t as any).is_office)) return false;
+    if (typeFilter === "office" && !(t as any).is_office) return false;
     return true;
   });
 
