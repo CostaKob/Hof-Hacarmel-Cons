@@ -274,14 +274,16 @@ const AdminEnsembleCard = () => {
             <CardTitle className="text-lg">משתתפים ({ensembleStudents.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {ensembleStudents.map((es: any) => (
-              <div key={es.id} className="flex items-center justify-between rounded-xl border p-3">
-                <p className="font-medium">{es.students?.first_name} {es.students?.last_name}</p>
-                <Button size="icon" variant="ghost" onClick={() => removeStudent.mutate(es.id)}>
-                  <X className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
+            <div className="flex flex-wrap gap-2">
+              {ensembleStudents.map((es: any) => (
+                <Badge key={es.id} variant="secondary" className="text-sm gap-1 pl-3 pr-1 py-1">
+                  {es.students?.first_name} {es.students?.last_name}
+                  <button onClick={() => removeStudent.mutate(es.id)} className="hover:text-destructive rounded-full p-0.5">
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
 
             <div className="flex gap-2 pt-2 border-t">
               <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
