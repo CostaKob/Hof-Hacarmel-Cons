@@ -85,7 +85,9 @@ const AdminEnsembles = () => {
                 })()}
                 <p className="text-xs text-muted-foreground">
                   {((e as any).ensemble_students || []).length} משתתפים
-                  {e.weekly_hours > 0 && ` · ${e.weekly_hours} שעות שבועיות`}
+                  {e.day_of_week != null && ` · יום ${DAYS_OF_WEEK_LABELS[e.day_of_week] || e.day_of_week}`}
+                  {e.start_time && ` · ${String(e.start_time).slice(0, 5)}`}
+                  {e.room && ` · חדר ${e.room}`}
                 </p>
               </button>
             ))}
