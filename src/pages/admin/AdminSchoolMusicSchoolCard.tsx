@@ -253,6 +253,32 @@ const AdminSchoolMusicSchoolCard = () => {
             <CardTitle className="text-lg">קבוצות ({groups.length})</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            <div className="flex flex-col sm:flex-row gap-2 pb-2 border-b">
+              <Select value={newGroupInstrumentId} onValueChange={setNewGroupInstrumentId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+                <SelectContent>
+                  {allInstruments.map((i: any) => (
+                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={newGroupTeacherId} onValueChange={setNewGroupTeacherId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="מורה" /></SelectTrigger>
+                <SelectContent>
+                  {allTeachers.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={() => addGroup.mutate()}
+                disabled={!newGroupInstrumentId || !newGroupTeacherId || addGroup.isPending}
+                className="shrink-0"
+              >
+                <Plus className="h-4 w-4 ml-1" /> הוסף קבוצה
+              </Button>
+            </div>
+
             <div className="grid grid-cols-2 gap-2">
               {groups.map((g: any) => (
                 editingGroupId === g.id ? (
@@ -299,32 +325,6 @@ const AdminSchoolMusicSchoolCard = () => {
                   </div>
                 )
               ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
-              <Select value={newGroupInstrumentId} onValueChange={setNewGroupInstrumentId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
-                <SelectContent>
-                  {allInstruments.map((i: any) => (
-                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={newGroupTeacherId} onValueChange={setNewGroupTeacherId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="מורה" /></SelectTrigger>
-                <SelectContent>
-                  {allTeachers.map((t: any) => (
-                    <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={() => addGroup.mutate()}
-                disabled={!newGroupInstrumentId || !newGroupTeacherId || addGroup.isPending}
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4 ml-1" /> הוסף קבוצה
-              </Button>
             </div>
           </CardContent>
         </Card>
