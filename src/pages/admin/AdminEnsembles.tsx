@@ -84,7 +84,10 @@ const AdminEnsembles = () => {
                   );
                 })()}
                 {e.weekly_hours > 0 && (
-                  <p className="text-xs text-muted-foreground">{e.weekly_hours} שעות שבועיות</p>
+                  <p className="text-xs text-muted-foreground">
+                    {e.weekly_hours} שעות שבועיות
+                    {` · ${((e as any).ensemble_students || []).length} משתתפים`}
+                  </p>
                 )}
               </button>
             ))}
