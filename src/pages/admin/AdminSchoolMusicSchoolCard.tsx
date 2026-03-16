@@ -314,6 +314,7 @@ const AdminSchoolMusicSchoolCard = () => {
             </CardHeader>
             <CardContent>
               <div className="grid gap-2">
+                {/* Per-teacher breakdown */}
                 {groups.map((g: any) => (
                   <div key={g.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                     <div className="flex items-center gap-2">
@@ -341,6 +342,29 @@ const AdminSchoolMusicSchoolCard = () => {
                     <Badge variant="secondary">{classesCount} שעות ניצוח</Badge>
                   </div>
                 )}
+                {/* Totals */}
+                <div className="border-t pt-2 mt-1 space-y-1">
+                  <div className="flex items-center justify-between text-sm font-semibold">
+                    <span>סה״כ שעות קבוצה קטנה</span>
+                    <span>{groups.length * classesCount}</span>
+                  </div>
+                  {coordinator && (
+                    <div className="flex items-center justify-between text-sm font-semibold">
+                      <span>סה״כ שעות ריכוז</span>
+                      <span>{classesCount}</span>
+                    </div>
+                  )}
+                  {conductor && (
+                    <div className="flex items-center justify-between text-sm font-semibold">
+                      <span>סה״כ שעות ניצוח</span>
+                      <span>{classesCount}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-sm font-bold border-t pt-1">
+                    <span>סה״כ כללי</span>
+                    <span>{(groups.length * classesCount) + (coordinator ? classesCount : 0) + (conductor ? classesCount : 0)}</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
