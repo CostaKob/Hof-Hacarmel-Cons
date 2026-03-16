@@ -12,10 +12,6 @@ import { toast } from "sonner";
 import { getMonthRange } from "@/hooks/useTeacherDashboardData";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { toast } from "sonner";
-import { getMonthRange } from "@/hooks/useTeacherDashboardData";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 const MONTH_NAMES = [
   "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
