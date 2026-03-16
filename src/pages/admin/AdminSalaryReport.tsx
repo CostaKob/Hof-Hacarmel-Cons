@@ -608,7 +608,7 @@ const AdminSalaryReport = () => {
                           ))}
                           {/* KM */}
                           <td className="p-1 text-center whitespace-nowrap bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">
-                            <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                            <Input type="number" min={0} step="any" className="w-20 h-8 text-center mx-auto rounded-lg text-sm"
                               defaultValue={r.values.km || ""} placeholder={r.defaults.km ? String(r.defaults.km) : "0"}
                               onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} />
                           </td>
@@ -641,7 +641,45 @@ const AdminSalaryReport = () => {
                       <td className="p-2 text-center bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">{totals.km || "–"}</td>
                       <td className="p-2 text-center bg-primary/10">{fmt(totals.totalSalary)}</td>
                       <td className="p-2 text-center bg-primary/10 border-l border-border">{totals.totalTravel ? fmt(totals.totalTravel) : "–"}</td>
-                      <td colSpan={2}></td>
+                           <td colSpan={2}></td>
+                    </tr>
+                  </tfoot>
+                  {/* Bottom header rows for easy navigation */}
+                  <tfoot>
+                    <tr className="bg-muted/50 border-t">
+                      <th className="p-2 text-center font-medium whitespace-nowrap">#</th>
+                      <th className="p-2 text-right font-medium whitespace-nowrap sticky right-0 bg-muted/50 z-10">שם משפחה</th>
+                      <th className="p-2 text-right font-medium whitespace-nowrap">שם פרטי</th>
+                      <th className="p-2 text-right font-medium whitespace-nowrap border-l border-border">ת.ז.</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-blue-50/50 dark:bg-blue-950/20">45 דק׳</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-blue-50/50 dark:bg-blue-950/20">30 דק׳</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-blue-50/50 dark:bg-blue-950/20 border-l border-border">60 דק׳</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב קטן</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב גדול</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ריכוז שלוחה</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח תזמורת</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח מקהלה</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20 border-l border-border">ליווי מקהלה</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-emerald-50/50 dark:bg-emerald-950/20">קבוצה קטנה</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-emerald-50/50 dark:bg-emerald-950/20 border-l border-border">ריכוז/ניצוח</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-amber-50/50 dark:bg-amber-950/20">יום פעילות</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-amber-50/50 dark:bg-amber-950/20 border-l border-border">שעה בודדת</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-sky-50/50 dark:bg-sky-950/20 border-l border-border">ק״מ</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-primary/10">סיכום משכורת</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-primary/10 border-l border-border">סיכום נסיעות</th>
+                      <th className="p-2 text-right font-medium whitespace-nowrap">שם משפחה</th>
+                      <th className="p-2 text-right font-medium whitespace-nowrap">שם פרטי</th>
+                    </tr>
+                    <tr className="bg-muted/70">
+                      <th className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border w-8">#</th>
+                      <th colSpan={3} className="p-2 text-right font-bold whitespace-nowrap border-t border-l border-border">מורה</th>
+                      <th colSpan={3} className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border bg-blue-50 dark:bg-blue-950/30">הוראה פרטנית</th>
+                      <th colSpan={6} className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
+                      <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border bg-emerald-50 dark:bg-emerald-950/30">בי״ס מנגן</th>
+                      <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border bg-amber-50 dark:bg-amber-950/30">פעילות</th>
+                      <th className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border bg-sky-50 dark:bg-sky-950/30">נסיעות</th>
+                      <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-t border-l border-border bg-primary/10">סיכומים</th>
+                      <th colSpan={2} className="p-2 text-right font-bold whitespace-nowrap border-t border-border">מורה</th>
                     </tr>
                   </tfoot>
                 </table>
