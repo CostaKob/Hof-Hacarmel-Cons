@@ -12,7 +12,7 @@ const TeacherEnsembleCard = () => {
   const navigate = useNavigate();
   const { data: teacher } = useTeacherProfile();
   const { data: ensemble, isLoading } = useTeacherEnsembleDetail(id);
-  const { data: teacherEnrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherAllEnrollments(teacher?.id);
 
 
   // Find the logged-in teacher's role in this ensemble
