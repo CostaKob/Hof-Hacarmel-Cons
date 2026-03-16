@@ -283,24 +283,12 @@ const AdminEnsembleCard = () => {
                 </Badge>
               ))}
             </div>
-
-            <div className="flex gap-2 pt-2 border-t">
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="בחר תלמיד" /></SelectTrigger>
-                <SelectContent>
-                  {availableStudents.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={() => addStudent.mutate()}
-                disabled={!selectedStudentId || addStudent.isPending}
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4 ml-1" /> הוסף
-              </Button>
-            </div>
+            <EnsembleStudentPicker
+              ensembleId={id!}
+              allStudents={allStudents}
+              existingStudentIds={existingStudentIds}
+              onDone={invalidate}
+            />
           </CardContent>
         </Card>
       </div>
