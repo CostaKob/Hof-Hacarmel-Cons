@@ -233,7 +233,9 @@ const AdminSalaryReport = () => {
       manualMap.set(me.teacher_id, overrides);
     }
 
-    return teachers.map((t) => {
+    return teachers
+      .filter((t) => showFreelancers || !(t as any).is_freelance)
+      .map((t) => {
       const defaults = systemDefaults.get(t.id) ?? {
         lessons_45: 0, lessons_30: 0, lessons_60: 0,
         small_ensemble: 0, large_ensemble: 0,
@@ -255,7 +257,7 @@ const AdminSalaryReport = () => {
         values,
       };
     });
-  }, [teachers, systemDefaults, manualEntries]);
+  }, [teachers, systemDefaults, manualEntries, showFreelancers]);
 
   // --- Totals ---
   const totals = useMemo(() => {
