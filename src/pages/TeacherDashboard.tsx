@@ -140,22 +140,6 @@ const TeacherDashboard = () => {
 
         {/* Navigation cards */}
         <div className="space-y-3">
-          {hasEnsembles && (
-            <NavCard
-              icon={Music}
-              title="ההרכבים שלי"
-              subtitle={`${ensembleStaff!.length} הרכבים`}
-              onClick={() => navigate("/teacher/ensembles")}
-            />
-          )}
-          {hasSchoolMusic && (
-            <NavCard
-              icon={School}
-              title="קבוצות בית ספר מנגן שלי"
-              subtitle={`${schoolMusicSchools!.length} בתי ספר`}
-              onClick={() => navigate("/teacher/school-music-schools")}
-            />
-          )}
           <NavCard
             icon={BarChart3}
             title="סיכום שיעורים שנתי"
