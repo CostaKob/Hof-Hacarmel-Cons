@@ -14,10 +14,6 @@ const TeacherEnsembleCard = () => {
   const { data: ensemble, isLoading } = useTeacherEnsembleDetail(id);
   const { data: teacherEnrollments } = useTeacherEnrollments(teacher?.id);
 
-  // Build a set of student IDs accessible to this teacher (via enrollments)
-  const accessibleStudentIds = new Set(
-    (teacherEnrollments ?? []).map((e: any) => e.student_id)
-  );
 
   // Find the logged-in teacher's role in this ensemble
   const myStaff = (ensemble?.ensemble_staff ?? []).find(
