@@ -582,8 +582,8 @@ const AdminSalaryReport = () => {
                             </td>
                           ))}
                           {/* Ensembles */}
-                          {(["small_ensemble", "large_ensemble", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] as FieldKey[]).map((key, ki) => (
-                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 4 ? "border-l border-border" : ""}`}>
+                          {(["small_ensemble", "large_ensemble", "branch_coord", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] as FieldKey[]).map((key, ki) => (
+                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 5 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
                                 onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
