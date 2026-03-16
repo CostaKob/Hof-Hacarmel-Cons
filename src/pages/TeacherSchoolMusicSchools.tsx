@@ -46,7 +46,7 @@ const TeacherSchoolMusicSchools = () => {
           <Button variant="ghost" size="icon" className="text-primary-foreground shrink-0" onClick={() => navigate("/teacher")}>
             <ChevronLeft className="h-5 w-5 rotate-180" />
           </Button>
-          <h1 className="text-lg font-bold">קבוצות בית ספר מנגן שלי</h1>
+          <h1 className="text-lg font-bold">קבוצות בית ספר מנגן שלי{schools.length > 0 ? ` (${schools.length})` : ""}</h1>
         </div>
       </header>
 
