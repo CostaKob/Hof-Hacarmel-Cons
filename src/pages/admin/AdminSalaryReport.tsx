@@ -522,7 +522,7 @@ const AdminSalaryReport = () => {
                       <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border w-8">#</th>
                       <th colSpan={3} className="p-2 text-right font-bold whitespace-nowrap border-b border-l border-border">מורה</th>
                       <th colSpan={3} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-blue-50 dark:bg-blue-950/30">הוראה פרטנית</th>
-                      <th colSpan={5} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
+                      <th colSpan={6} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
                       <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-emerald-50 dark:bg-emerald-950/30">בי״ס מנגן</th>
                       <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-amber-50 dark:bg-amber-950/30">פעילות</th>
                       <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-sky-50 dark:bg-sky-950/30">נסיעות</th>
