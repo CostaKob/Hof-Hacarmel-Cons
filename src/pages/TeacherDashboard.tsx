@@ -131,6 +131,14 @@ const TeacherDashboard = () => {
 
         {/* Navigation cards */}
         <div className="space-y-3">
+          {hasEnsembles && (
+            <NavCard
+              icon={Music}
+              title="ההרכבים שלי"
+              subtitle={`${ensembleStaff!.length} הרכבים`}
+              onClick={() => navigate("/teacher/ensembles")}
+            />
+          )}
           <NavCard
             icon={BarChart3}
             title="סיכום שיעורים שנתי"
