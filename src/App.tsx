@@ -50,6 +50,9 @@ import AdminExports from "./pages/admin/AdminExports";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
 import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
+import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
+import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
+import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
 import PublicRegistration from "./pages/PublicRegistration";
 import NotFound from "./pages/NotFound";
 
