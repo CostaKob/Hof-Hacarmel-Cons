@@ -35,6 +35,7 @@ import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import TeacherTravelSummary from "./pages/TeacherTravelSummary";
 import TeacherEnsembles from "./pages/TeacherEnsembles";
 import TeacherEnsembleCard from "./pages/TeacherEnsembleCard";
+import TeacherEnsembleStudentCard from "./pages/TeacherEnsembleStudentCard";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
