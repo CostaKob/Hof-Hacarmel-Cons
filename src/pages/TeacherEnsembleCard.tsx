@@ -102,19 +102,33 @@ const TeacherEnsembleCard = () => {
                 const enrollment = (allEnrollments ?? []).find((e: any) => e.student_id === s.id);
                 const instrumentName = enrollment?.instruments?.name;
 
+                if (enrollment) {
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      className="flex w-full items-center justify-between px-4 py-2 text-right transition-colors hover:bg-accent/50 active:bg-accent"
+                      onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground">
+                          {s.first_name} {s.last_name}
+                          {instrumentName && <span className="text-muted-foreground font-normal mr-1">· {instrumentName}</span>}
+                        </p>
+                      </div>
+                      <ChevronLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    </button>
+                  );
+                }
+
                 return (
-                  <div
-                    key={s.id}
-                    className={`px-4 py-2 flex items-center justify-between ${enrollment ? "cursor-pointer hover:bg-accent/50 active:bg-accent transition-colors" : ""}`}
-                    onClick={() => { if (enrollment) navigate(`/teacher/students/${enrollment.id}`); }}
-                  >
+                  <div key={s.id} className="flex items-center justify-between px-4 py-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         {s.first_name} {s.last_name}
                         {instrumentName && <span className="text-muted-foreground font-normal mr-1">· {instrumentName}</span>}
                       </p>
                     </div>
-                    {enrollment && <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0" />}
                   </div>
                 );
               })}
