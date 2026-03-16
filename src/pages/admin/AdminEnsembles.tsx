@@ -73,6 +73,16 @@ const AdminEnsembles = () => {
                   {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
                   {e.schools?.name ? ` · ${e.schools.name}` : ""}
                 </p>
+                {(() => {
+                  const staff = (e as any).ensemble_staff || [];
+                  const lead = staff.find((s: any) => s.role === "conductor" || s.role === "instructor");
+                  if (!lead?.teachers) return null;
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      {lead.teachers.first_name} {lead.teachers.last_name}
+                    </p>
+                  );
+                })()}
                 {e.weekly_hours > 0 && (
                   <p className="text-xs text-muted-foreground">{e.weekly_hours} שעות שבועיות</p>
                 )}
