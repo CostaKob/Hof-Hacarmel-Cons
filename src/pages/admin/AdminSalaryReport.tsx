@@ -542,6 +542,7 @@ const AdminSalaryReport = () => {
                       {/* Ensembles */}
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב קטן</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב גדול</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ריכוז שלוחה</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח תזמורת</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח מקהלה</th>
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20 border-l border-border">ליווי מקהלה</th>
