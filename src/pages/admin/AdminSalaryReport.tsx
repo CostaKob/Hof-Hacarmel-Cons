@@ -206,11 +206,15 @@ const AdminSalaryReport = () => {
     }
     // Coordinators/conductors
     for (const sms of schoolMusicSchools ?? []) {
-      for (const tid of [sms.coordinator_teacher_id, sms.conductor_teacher_id]) {
-        if (!tid) continue;
-        const d = map.get(tid);
-        if (!d) continue;
-        d.school_music_coord += sms.classes_count;
+      // Coordinator
+      if (sms.coordinator_teacher_id) {
+        const d = map.get(sms.coordinator_teacher_id);
+        if (d) d.school_music_coord += (sms as any).coordinator_hours ?? sms.classes_count;
+      }
+      // Conductor
+      if (sms.conductor_teacher_id) {
+        const d = map.get(sms.conductor_teacher_id);
+        if (d) d.school_music_coord += (sms as any).conductor_hours ?? sms.classes_count;
       }
     }
 
