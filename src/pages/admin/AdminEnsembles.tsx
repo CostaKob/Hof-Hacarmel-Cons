@@ -20,7 +20,7 @@ const AdminEnsembles = () => {
     queryFn: async () => {
       let q = supabase
         .from("ensembles")
-        .select("*, schools(name), ensemble_staff(role, teachers(first_name, last_name))")
+        .select("*, schools(name), ensemble_staff(role, teachers(first_name, last_name)), ensemble_students(id)")
         .order("name");
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -83,9 +83,10 @@ const AdminEnsembles = () => {
                     </p>
                   );
                 })()}
-                {e.weekly_hours > 0 && (
-                  <p className="text-xs text-muted-foreground">{e.weekly_hours} שעות שבועיות</p>
-                )}
+                <p className="text-xs text-muted-foreground">
+                  {((e as any).ensemble_students || []).length} משתתפים
+                  {e.weekly_hours > 0 && ` · ${e.weekly_hours} שעות שבועיות`}
+                </p>
               </button>
             ))}
           </div>
