@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
+import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
