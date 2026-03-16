@@ -496,6 +496,7 @@ const AdminSalaryReport = () => {
                   <thead>
                     {/* Group headers */}
                     <tr className="bg-muted/70">
+                      <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border w-8">#</th>
                       <th colSpan={3} className="p-2 text-right font-bold whitespace-nowrap border-b border-l border-border">מורה</th>
                       <th colSpan={3} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-blue-50 dark:bg-blue-950/30">הוראה פרטנית</th>
                       <th colSpan={5} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
