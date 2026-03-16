@@ -25,6 +25,10 @@ const AdminSchoolMusicSchoolCard = () => {
   const [showDeleteSchool, setShowDeleteSchool] = useState(false);
   const [editingCoordinator, setEditingCoordinator] = useState(false);
   const [editingConductor, setEditingConductor] = useState(false);
+  const [editingCoordinatorHours, setEditingCoordinatorHours] = useState(false);
+  const [editingConductorHours, setEditingConductorHours] = useState(false);
+  const [coordHoursInput, setCoordHoursInput] = useState("");
+  const [conductHoursInput, setConductHoursInput] = useState("");
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editGroupInstrumentId, setEditGroupInstrumentId] = useState("");
   const [editGroupTeacherId, setEditGroupTeacherId] = useState("");
@@ -132,6 +136,15 @@ const AdminSchoolMusicSchoolCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
+  const updateRoleHours = useMutation({
+    mutationFn: async ({ field, value }: { field: "coordinator_hours" | "conductor_hours"; value: number | null }) => {
+      const { error } = await supabase.from("school_music_schools").update({ [field]: value } as any).eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setEditingCoordinatorHours(false); setEditingConductorHours(false); toast.success("השעות עודכנו"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
   const deleteSchool = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("school_music_schools").delete().eq("id", id!);
@@ -151,6 +164,10 @@ const AdminSchoolMusicSchoolCard = () => {
   const coordinator = (school as any).coordinator;
   const conductor = (school as any).conductor;
   const classesCount = (school as any).classes_count || 0;
+  const coordinatorHours: number | null = (school as any).coordinator_hours;
+  const conductorHours: number | null = (school as any).conductor_hours;
+  const effectiveCoordHours = coordinatorHours ?? classesCount;
+  const effectiveConductHours = conductorHours ?? classesCount;
   const dayOfWeek = (school as any).day_of_week;
   const classSchedules: { start_time: string; end_time: string }[] = (school as any).class_schedules || [];
   const homeroomTeachers: { name: string; phone: string }[] = (school as any).homeroom_teachers || [];
@@ -237,7 +254,7 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">רכז</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             {coordinator && !editingCoordinator ? (
               <div className="flex items-center justify-between rounded-xl border p-3">
                 <div>
@@ -268,6 +285,30 @@ const AdminSchoolMusicSchoolCard = () => {
                 )}
               </div>
             )}
+            {coordinator && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">שעות ריכוז:</span>
+                {editingCoordinatorHours ? (
+                  <div className="flex items-center gap-1">
+                    <Input type="number" min={0} className="w-20 h-7 text-xs rounded-lg text-center" value={coordHoursInput} onChange={(e) => setCoordHoursInput(e.target.value)} placeholder={String(classesCount)} />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { updateRoleHours.mutate({ field: "coordinator_hours", value: coordHoursInput === "" ? null : Number(coordHoursInput) }); }}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCoordinatorHours(false)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Badge variant={coordinatorHours != null ? "default" : "secondary"}>{effectiveCoordHours}</Badge>
+                    {coordinatorHours != null && <span className="text-xs text-muted-foreground">(ידני)</span>}
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setCoordHoursInput(coordinatorHours != null ? String(coordinatorHours) : ""); setEditingCoordinatorHours(true); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -276,7 +317,7 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">מנצח</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             {conductor && !editingConductor ? (
               <div className="flex items-center justify-between rounded-xl border p-3">
                 <div>
@@ -304,6 +345,30 @@ const AdminSchoolMusicSchoolCard = () => {
                 </Select>
                 {editingConductor && (
                   <Button variant="ghost" size="sm" onClick={() => setEditingConductor(false)}>ביטול</Button>
+                )}
+              </div>
+            )}
+            {conductor && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">שעות ניצוח:</span>
+                {editingConductorHours ? (
+                  <div className="flex items-center gap-1">
+                    <Input type="number" min={0} className="w-20 h-7 text-xs rounded-lg text-center" value={conductHoursInput} onChange={(e) => setConductHoursInput(e.target.value)} placeholder={String(classesCount)} />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { updateRoleHours.mutate({ field: "conductor_hours", value: conductHoursInput === "" ? null : Number(conductHoursInput) }); }}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingConductorHours(false)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Badge variant={conductorHours != null ? "default" : "secondary"}>{effectiveConductHours}</Badge>
+                    {conductorHours != null && <span className="text-xs text-muted-foreground">(ידני)</span>}
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setConductHoursInput(conductorHours != null ? String(conductorHours) : ""); setEditingConductorHours(true); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
@@ -337,7 +402,7 @@ const AdminSchoolMusicSchoolCard = () => {
                       <span className="font-medium">{coordinator.first_name} {coordinator.last_name}</span>
                       <span className="text-muted-foreground">(רכז)</span>
                     </div>
-                    <Badge variant="secondary">{classesCount} שעות ריכוז</Badge>
+                    <Badge variant={coordinatorHours != null ? "default" : "secondary"}>{effectiveCoordHours} שעות ריכוז</Badge>
                   </div>
                 )}
                 {conductor && (
@@ -346,7 +411,7 @@ const AdminSchoolMusicSchoolCard = () => {
                       <span className="font-medium">{conductor.first_name} {conductor.last_name}</span>
                       <span className="text-muted-foreground">(מנצח)</span>
                     </div>
-                    <Badge variant="secondary">{classesCount} שעות ניצוח</Badge>
+                    <Badge variant={conductorHours != null ? "default" : "secondary"}>{effectiveConductHours} שעות ניצוח</Badge>
                   </div>
                 )}
                 {/* Totals */}
@@ -358,7 +423,7 @@ const AdminSchoolMusicSchoolCard = () => {
                   {(coordinator || conductor) && (
                     <div className="flex items-center justify-between text-sm font-semibold">
                       <span>סה״כ שעות ריכוז וניצוח</span>
-                      <span>{(coordinator ? classesCount : 0) + (conductor ? classesCount : 0)}</span>
+                      <span>{(coordinator ? effectiveCoordHours : 0) + (conductor ? effectiveConductHours : 0)}</span>
                     </div>
                   )}
                 </div>

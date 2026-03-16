@@ -810,7 +810,9 @@ export type Database = {
           academic_year_id: string | null
           class_schedules: Json
           classes_count: number
+          conductor_hours: number | null
           conductor_teacher_id: string | null
+          coordinator_hours: number | null
           coordinator_teacher_id: string | null
           created_at: string
           day_of_week: number | null
@@ -824,7 +826,9 @@ export type Database = {
           academic_year_id?: string | null
           class_schedules?: Json
           classes_count?: number
+          conductor_hours?: number | null
           conductor_teacher_id?: string | null
+          coordinator_hours?: number | null
           coordinator_teacher_id?: string | null
           created_at?: string
           day_of_week?: number | null
@@ -838,7 +842,9 @@ export type Database = {
           academic_year_id?: string | null
           class_schedules?: Json
           classes_count?: number
+          conductor_hours?: number | null
           conductor_teacher_id?: string | null
+          coordinator_hours?: number | null
           coordinator_teacher_id?: string | null
           created_at?: string
           day_of_week?: number | null
