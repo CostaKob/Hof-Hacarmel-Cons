@@ -44,6 +44,9 @@ import AdminRegistrationPages from "./pages/admin/AdminRegistrationPages";
 import AdminRegistrationPageEditor from "./pages/admin/AdminRegistrationPageEditor";
 import AdminRegistrationConvert from "./pages/admin/AdminRegistrationConvert";
 import AdminExports from "./pages/admin/AdminExports";
+import AdminEnsembles from "./pages/admin/AdminEnsembles";
+import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
+import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
 import PublicRegistration from "./pages/PublicRegistration";
 import NotFound from "./pages/NotFound";
 
