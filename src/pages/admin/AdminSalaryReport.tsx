@@ -361,6 +361,7 @@ const AdminSalaryReport = () => {
         { label: "שם משפחה", bg: "" }, { label: "שם פרטי", bg: "" }, { label: "ת.ז.", bg: "" },
         { label: "45 דק׳", bg: groupBg.blue }, { label: "30 דק׳", bg: groupBg.blue }, { label: "60 דק׳", bg: groupBg.blue },
         { label: "הרכב קטן", bg: groupBg.violet }, { label: "הרכב גדול", bg: groupBg.violet },
+        { label: "ריכוז שלוחה", bg: groupBg.violet },
         { label: "ניצוח תזמורת", bg: groupBg.violet }, { label: "ניצוח מקהלה", bg: groupBg.violet }, { label: "ליווי מקהלה", bg: groupBg.violet },
         { label: "קבוצה קטנה", bg: groupBg.emerald }, { label: "ריכוז/ניצוח", bg: groupBg.emerald },
         { label: "יום פעילות", bg: groupBg.amber }, { label: "שעה בודדת", bg: groupBg.amber },
