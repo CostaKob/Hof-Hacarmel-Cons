@@ -42,16 +42,12 @@ const TeacherEnsembleCard = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
-        <div className="mx-auto flex max-w-lg items-center justify-between">
-          <div className="flex items-center gap-3">
-            <AppLogo size="sm" />
-            <h1 className="text-xl font-bold truncate">{ensemble.name}</h1>
-          </div>
-          <Button variant="ghost" size="sm" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/teacher/ensembles")}>
-            <ArrowRight className="ml-1 h-4 w-4" />
-            חזרה
+      <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/teacher/ensembles")}>
+            <ArrowRight className="h-5 w-5" />
           </Button>
+          <h1 className="text-lg font-bold truncate">{ensemble.name}</h1>
         </div>
       </header>
 

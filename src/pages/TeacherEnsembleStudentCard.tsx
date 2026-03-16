@@ -38,24 +38,15 @@ const TeacherEnsembleStudentCard = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
-        <div className="mx-auto flex max-w-lg items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <AppLogo size="sm" />
-            <div className="min-w-0">
-              <h1 className="truncate text-xl font-bold">{student.first_name} {student.last_name}</h1>
-              <p className="text-sm opacity-80">כרטיס תלמיד מתוך ההרכב</p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => navigate(`/teacher/ensembles/${id}`)}
-          >
-            <ArrowRight className="ml-1 h-4 w-4" />
-            חזרה
+      <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate(`/teacher/ensembles/${id}`)}>
+            <ArrowRight className="h-5 w-5" />
           </Button>
+          <div className="min-w-0">
+            <h1 className="truncate text-lg font-bold">{student.first_name} {student.last_name}</h1>
+            <p className="text-sm opacity-80">כרטיס תלמיד מתוך ההרכב</p>
+          </div>
         </div>
       </header>
 
