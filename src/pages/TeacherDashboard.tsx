@@ -2,11 +2,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
+import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
@@ -37,6 +38,8 @@ const TeacherDashboard = () => {
   const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
   const { data: ensembleStaff } = useTeacherEnsembleStaff(teacher?.id);
   const hasEnsembles = (ensembleStaff ?? []).length > 0;
+  const { data: schoolMusicSchools } = useTeacherSchoolMusicSchools(teacher?.id);
+  const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
@@ -137,6 +140,14 @@ const TeacherDashboard = () => {
               title="ההרכבים שלי"
               subtitle={`${ensembleStaff!.length} הרכבים`}
               onClick={() => navigate("/teacher/ensembles")}
+            />
+          )}
+          {hasSchoolMusic && (
+            <NavCard
+              icon={School}
+              title="קבוצות בית ספר מנגן שלי"
+              subtitle={`${schoolMusicSchools!.length} בתי ספר`}
+              onClick={() => navigate("/teacher/school-music-schools")}
             />
           )}
           <NavCard
