@@ -629,6 +629,7 @@ const AdminSalaryReport = () => {
                       <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10 border-l border-border">{totals.lessons_60 || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.small_ensemble || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.large_ensemble || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.branch_coord || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.orchestra_conductor || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.choir_conductor || "–"}</td>
                       <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10 border-l border-border">{totals.choir_accompaniment || "–"}</td>
