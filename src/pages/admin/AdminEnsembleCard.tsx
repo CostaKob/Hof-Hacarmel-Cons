@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Plus, X } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
@@ -23,6 +23,8 @@ const AdminEnsembleCard = () => {
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [selectedStaffRole, setSelectedStaffRole] = useState("");
   const [staffWeeklyHours, setStaffWeeklyHours] = useState("0");
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [editingHours, setEditingHours] = useState("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["ensemble", id] });
@@ -129,6 +131,15 @@ const AdminEnsembleCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
+  const updateStaff = useMutation({
+    mutationFn: async ({ rowId, hours }: { rowId: string; hours: number }) => {
+      const { error } = await supabase.from("ensemble_staff").update({ weekly_hours: hours }).eq("id", rowId);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setEditingStaffId(null); toast.success("שעות עודכנו"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
   const deleteEnsemble = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("ensembles").delete().eq("id", id!);
@@ -220,12 +231,38 @@ const AdminEnsembleCard = () => {
                 <div>
                   <p className="font-medium">{s.teachers?.first_name} {s.teachers?.last_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {ENSEMBLE_STAFF_ROLE_LABELS[s.role] || s.role} · {s.weekly_hours} שעות
+                    {ENSEMBLE_STAFF_ROLE_LABELS[s.role] || s.role} · {editingStaffId === s.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={editingHours}
+                          onChange={(e) => setEditingHours(e.target.value)}
+                          className="w-16 h-6 text-xs inline-block"
+                        />
+                        <button onClick={() => updateStaff.mutate({ rowId: s.id, hours: Number(editingHours) })} className="text-primary hover:text-primary/80">
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setEditingStaffId(null)} className="text-muted-foreground hover:text-foreground">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    ) : (
+                      <>{s.weekly_hours} שעות</>
+                    )}
                   </p>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => removeStaff.mutate(s.id)}>
-                  <X className="h-4 w-4 text-destructive" />
-                </Button>
+                <div className="flex gap-1">
+                  {editingStaffId !== s.id && (
+                    <Button size="icon" variant="ghost" onClick={() => { setEditingStaffId(s.id); setEditingHours(String(s.weekly_hours)); }}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button size="icon" variant="ghost" onClick={() => removeStaff.mutate(s.id)}>
+                    <X className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
 
