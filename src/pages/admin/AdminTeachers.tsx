@@ -14,7 +14,7 @@ import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
 const AdminTeachers = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [activeFilter, setActiveFilter] = useState<string>("active");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [importOpen, setImportOpen] = useState(false);
 
