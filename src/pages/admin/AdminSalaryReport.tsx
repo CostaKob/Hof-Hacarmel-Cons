@@ -22,6 +22,7 @@ const MONTH_NAMES = [
 const RATES: Record<string, number> = {
   lessons_45: 280, lessons_30: 190, lessons_60: 370,
   small_ensemble: 280, large_ensemble: 315,
+  branch_coord: 350,
   orchestra_conductor: 840, choir_conductor: 420, choir_accompaniment: 315,
   school_music_group: 280, school_music_coord: 350,
   activity_days: 600, single_hours: 75,
@@ -31,6 +32,7 @@ const KM_RATE = 1.1;
 const FIELD_KEYS = [
   "lessons_45", "lessons_30", "lessons_60",
   "small_ensemble", "large_ensemble",
+  "branch_coord",
   "orchestra_conductor", "choir_conductor", "choir_accompaniment",
   "school_music_group", "school_music_coord",
   "activity_days", "single_hours", "km",
