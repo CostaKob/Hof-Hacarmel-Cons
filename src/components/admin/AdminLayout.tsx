@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut, BarChart3, CalendarDays, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut, BarChart3, CalendarDays, Upload, Loader2, Music2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { supabase } from "@/integrations/supabase/client";
