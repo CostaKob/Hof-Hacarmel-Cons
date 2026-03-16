@@ -125,6 +125,7 @@ const App = () => (
               <Route path="/teacher/travel-summary" element={<TeacherRoute><TeacherTravelSummary /></TeacherRoute>} />
               <Route path="/teacher/ensembles" element={<TeacherRoute><TeacherEnsembles /></TeacherRoute>} />
               <Route path="/teacher/ensembles/:id" element={<TeacherRoute><TeacherEnsembleCard /></TeacherRoute>} />
+              <Route path="/teacher/ensembles/:id/students/:studentId" element={<TeacherRoute><TeacherEnsembleStudentCard /></TeacherRoute>} />
               {/* Secretary */}
               <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
