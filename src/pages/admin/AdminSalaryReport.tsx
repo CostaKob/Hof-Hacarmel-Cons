@@ -82,6 +82,7 @@ const AdminSalaryReport = () => {
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
   const [generated, setGenerated] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [showFreelancers, setShowFreelancers] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
