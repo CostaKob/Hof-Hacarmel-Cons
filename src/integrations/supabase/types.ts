@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      branch_coordinators: {
+        Row: {
+          academic_year_id: string | null
+          branch_name: string
+          created_at: string
+          id: string
+          teacher_id: string
+          weekly_hours: number
+        }
+        Insert: {
+          academic_year_id?: string | null
+          branch_name: string
+          created_at?: string
+          id?: string
+          teacher_id: string
+          weekly_hours?: number
+        }
+        Update: {
+          academic_year_id?: string | null
+          branch_name?: string
+          created_at?: string
+          id?: string
+          teacher_id?: string
+          weekly_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_coordinators_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_coordinators_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       enrollments: {
         Row: {
           academic_year_id: string | null
