@@ -62,6 +62,7 @@ const AdminTeacherForm = () => {
         city: teacher.city ?? "",
         is_active: teacher.is_active,
         is_freelance: (teacher as any).is_freelance ?? false,
+        is_office: (teacher as any).is_office ?? false,
       });
     }
   }, [teacher, reset]);
