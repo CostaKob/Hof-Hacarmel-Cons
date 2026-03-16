@@ -99,8 +99,7 @@ const TeacherEnsembleCard = () => {
           ) : (
             <div className="divide-y divide-border">
               {students.map((s: any) => {
-                // Find any enrollment this teacher has for this student
-                const enrollment = (teacherEnrollments ?? []).find((e: any) => e.student_id === s.id);
+                const enrollment = (allEnrollments ?? []).find((e: any) => e.student_id === s.id);
                 const instrumentName = enrollment?.instruments?.name;
 
                 return (
