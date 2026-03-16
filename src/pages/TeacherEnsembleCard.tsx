@@ -61,7 +61,7 @@ const TeacherEnsembleCard = () => {
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-3">
           <div className="flex items-center gap-2">
             <Music className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">{ENSEMBLE_TYPE_LABELS[ensemble.ensemble_type] || ensemble.ensemble_type}</span>
+            <span className="font-semibold text-foreground">פרטי ההרכב</span>
           </div>
 
           {myStaff && (
