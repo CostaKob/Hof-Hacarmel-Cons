@@ -317,15 +317,18 @@ const AdminSchoolMusicSchoolCard = () => {
             <CardContent>
               <div className="grid gap-2">
                 {/* Per-teacher breakdown */}
-                {groups.map((g: any) => (
+                {groups.map((g: any) => {
+                  const hours = (g as any).weekly_hours ?? classesCount;
+                  return (
                   <div key={g.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{g.teachers?.first_name} {g.teachers?.last_name}</span>
                       <span className="text-muted-foreground">({g.instruments?.name})</span>
                     </div>
-                    <Badge variant="secondary">{classesCount} שעות קבוצה קטנה</Badge>
+                    <Badge variant={hours !== classesCount ? "default" : "secondary"}>{hours} שעות קבוצה קטנה</Badge>
                   </div>
-                ))}
+                  );
+                })}
                 {coordinator && (
                   <div className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
                     <div className="flex items-center gap-2">
