@@ -545,6 +545,7 @@ const AdminSalaryReport = () => {
                       const stripe = idx % 2 === 0 ? "bg-background" : "bg-muted/20";
                       return (
                         <tr key={r.teacherId} className={`border-b hover:bg-muted/40 ${stripe}`}>
+                          <td className={`p-2 text-center whitespace-nowrap text-muted-foreground text-xs ${stripe}`}>{idx + 1}</td>
                           <td className={`p-2 text-right whitespace-nowrap sticky right-0 z-10 ${stripe}`}>{r.lastName}</td>
                           <td className="p-2 text-right whitespace-nowrap">{r.firstName}</td>
                           <td className="p-2 text-right whitespace-nowrap font-mono text-xs border-l border-border">{r.nationalId}</td>
