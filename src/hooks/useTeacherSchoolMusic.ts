@@ -30,7 +30,7 @@ export function useTeacherSchoolMusicSchools(teacherId: string | undefined) {
         if (s.coordinator_teacher_id === teacherId) roles.push("רכז");
         if (s.conductor_teacher_id === teacherId) roles.push("מנצח");
         return { ...s, teacherRoles: roles, teacherGroupCount: myGroups.length };
-      });
+      }).filter((s: any) => s.teacherRoles.length > 0);
     },
   });
 }
