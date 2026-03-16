@@ -134,6 +134,135 @@ export type Database = {
           },
         ]
       }
+      ensemble_staff: {
+        Row: {
+          created_at: string
+          ensemble_id: string
+          id: string
+          role: Database["public"]["Enums"]["ensemble_staff_role"]
+          teacher_id: string
+          weekly_hours: number
+        }
+        Insert: {
+          created_at?: string
+          ensemble_id: string
+          id?: string
+          role: Database["public"]["Enums"]["ensemble_staff_role"]
+          teacher_id: string
+          weekly_hours?: number
+        }
+        Update: {
+          created_at?: string
+          ensemble_id?: string
+          id?: string
+          role?: Database["public"]["Enums"]["ensemble_staff_role"]
+          teacher_id?: string
+          weekly_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_staff_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "ensembles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ensemble_staff_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ensemble_students: {
+        Row: {
+          created_at: string
+          ensemble_id: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          ensemble_id: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          ensemble_id?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensemble_students_ensemble_id_fkey"
+            columns: ["ensemble_id"]
+            isOneToOne: false
+            referencedRelation: "ensembles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ensemble_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ensembles: {
+        Row: {
+          academic_year_id: string | null
+          created_at: string
+          ensemble_type: Database["public"]["Enums"]["ensemble_type"]
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+          school_id: string | null
+          weekly_hours: number
+        }
+        Insert: {
+          academic_year_id?: string | null
+          created_at?: string
+          ensemble_type: Database["public"]["Enums"]["ensemble_type"]
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+          school_id?: string | null
+          weekly_hours?: number
+        }
+        Update: {
+          academic_year_id?: string | null
+          created_at?: string
+          ensemble_type?: Database["public"]["Enums"]["ensemble_type"]
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+          school_id?: string | null
+          weekly_hours?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ensembles_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ensembles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instruments: {
         Row: {
           created_at: string
@@ -974,6 +1103,18 @@ export type Database = {
         | "unjustified_absence"
         | "vacation"
       enrollment_role: "primary" | "secondary"
+      ensemble_staff_role:
+        | "conductor"
+        | "instructor"
+        | "piano_accompanist"
+        | "vocal_accompanist"
+      ensemble_type:
+        | "orchestra"
+        | "big_band"
+        | "choir"
+        | "large_ensemble"
+        | "small_ensemble"
+        | "chamber_ensemble"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
       registration_status:
@@ -1122,6 +1263,20 @@ export const Constants = {
         "vacation",
       ],
       enrollment_role: ["primary", "secondary"],
+      ensemble_staff_role: [
+        "conductor",
+        "instructor",
+        "piano_accompanist",
+        "vocal_accompanist",
+      ],
+      ensemble_type: [
+        "orchestra",
+        "big_band",
+        "choir",
+        "large_ensemble",
+        "small_ensemble",
+        "chamber_ensemble",
+      ],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],
       registration_status: [
