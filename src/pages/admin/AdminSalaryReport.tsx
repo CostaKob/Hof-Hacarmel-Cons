@@ -468,6 +468,12 @@ const AdminSalaryReport = () => {
               ייצוא PDF
             </Button>
           )}
+          <div className="flex items-center gap-2 mr-auto">
+            <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
+            <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג עצמאיים</Label>
+          </div>
+            </Button>
+          )}
         </div>
 
         {generated && (
