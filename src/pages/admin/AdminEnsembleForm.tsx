@@ -17,7 +17,6 @@ interface FormValues {
   name: string;
   ensemble_type: string;
   school_id: string;
-  weekly_hours: number;
   day_of_week: string;
   start_time: string;
   room: string;
@@ -58,7 +57,6 @@ const AdminEnsembleForm = () => {
           name: existing.name,
           ensemble_type: existing.ensemble_type,
           school_id: existing.school_id || "",
-          weekly_hours: existing.weekly_hours,
           day_of_week: (existing as any).day_of_week != null ? String((existing as any).day_of_week) : "",
           start_time: (existing as any).start_time ? String((existing as any).start_time).slice(0, 5) : "",
           room: (existing as any).room || "",
@@ -69,7 +67,6 @@ const AdminEnsembleForm = () => {
           name: "",
           ensemble_type: "",
           school_id: "",
-          weekly_hours: 0,
           day_of_week: "",
           start_time: "",
           room: "",
@@ -84,7 +81,6 @@ const AdminEnsembleForm = () => {
         name: values.name,
         ensemble_type: values.ensemble_type,
         school_id: values.school_id && values.school_id !== "none" ? values.school_id : null,
-        weekly_hours: values.weekly_hours,
         day_of_week: values.day_of_week !== "" ? Number(values.day_of_week) : null,
         start_time: values.start_time || null,
         room: values.room || null,
@@ -155,14 +151,6 @@ const AdminEnsembleForm = () => {
             </FormItem>
           )} />
 
-          <FormField control={form.control} name="weekly_hours" render={({ field }) => (
-            <FormItem>
-              <FormLabel>שעות שבועיות</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.5" min="0" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-              </FormControl>
-            </FormItem>
-          )} />
 
 
           <div className="grid grid-cols-3 gap-3">
