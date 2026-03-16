@@ -764,9 +764,13 @@ export type Database = {
       school_music_schools: {
         Row: {
           academic_year_id: string | null
+          class_schedules: Json
+          classes_count: number
           conductor_teacher_id: string | null
           coordinator_teacher_id: string | null
           created_at: string
+          day_of_week: number | null
+          homeroom_teachers: Json
           id: string
           is_active: boolean
           notes: string | null
@@ -774,9 +778,13 @@ export type Database = {
         }
         Insert: {
           academic_year_id?: string | null
+          class_schedules?: Json
+          classes_count?: number
           conductor_teacher_id?: string | null
           coordinator_teacher_id?: string | null
           created_at?: string
+          day_of_week?: number | null
+          homeroom_teachers?: Json
           id?: string
           is_active?: boolean
           notes?: string | null
@@ -784,9 +792,13 @@ export type Database = {
         }
         Update: {
           academic_year_id?: string | null
+          class_schedules?: Json
+          classes_count?: number
           conductor_teacher_id?: string | null
           coordinator_teacher_id?: string | null
           created_at?: string
+          day_of_week?: number | null
+          homeroom_teachers?: Json
           id?: string
           is_active?: boolean
           notes?: string | null

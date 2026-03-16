@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, X, Check } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 const AdminSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +38,7 @@ const AdminSchoolMusicSchoolCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_schools")
-        .select("*, academic_years(name), coordinator:teachers!school_music_schools_coordinator_teacher_id_fkey(id, first_name, last_name), conductor:teachers!school_music_schools_conductor_teacher_id_fkey(id, first_name, last_name)")
+        .select("*, academic_years(name), coordinator:teachers!school_music_schools_coordinator_teacher_id_fkey(id, first_name, last_name, phone), conductor:teachers!school_music_schools_conductor_teacher_id_fkey(id, first_name, last_name, phone)")
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -50,7 +52,7 @@ const AdminSchoolMusicSchoolCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_groups")
-        .select("*, instruments(name), teachers(first_name, last_name)")
+        .select("*, instruments(name), teachers(first_name, last_name, phone)")
         .eq("school_music_school_id", id!);
       if (error) throw error;
       return data;
@@ -61,7 +63,7 @@ const AdminSchoolMusicSchoolCard = () => {
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["all-teachers-active"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true).order("first_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, phone").eq("is_active", true).order("first_name");
       if (error) throw error;
       return data;
     },
@@ -77,7 +79,6 @@ const AdminSchoolMusicSchoolCard = () => {
   });
 
   // --- Mutations ---
-
   const addGroup = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("school_music_groups").insert({
@@ -87,12 +88,7 @@ const AdminSchoolMusicSchoolCard = () => {
       });
       if (error) throw error;
     },
-    onSuccess: () => {
-      invalidate();
-      setNewGroupInstrumentId("");
-      setNewGroupTeacherId("");
-      toast.success("הקבוצה נוספה");
-    },
+    onSuccess: () => { invalidate(); setNewGroupInstrumentId(""); setNewGroupTeacherId(""); toast.success("הקבוצה נוספה"); },
     onError: () => toast.error("שגיאה בהוספת הקבוצה"),
   });
 
@@ -150,6 +146,20 @@ const AdminSchoolMusicSchoolCard = () => {
 
   const coordinator = (school as any).coordinator;
   const conductor = (school as any).conductor;
+  const classesCount = (school as any).classes_count || 0;
+  const dayOfWeek = (school as any).day_of_week;
+  const classSchedules: { start_time: string; end_time: string }[] = (school as any).class_schedules || [];
+  const homeroomTeachers: { name: string; phone: string }[] = (school as any).homeroom_teachers || [];
+
+  const PhoneLink = ({ phone }: { phone?: string | null }) => {
+    if (!phone) return null;
+    return (
+      <a href={`tel:${phone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline" dir="ltr">
+        <Phone className="h-3 w-3" />
+        {phone}
+      </a>
+    );
+  };
 
   return (
     <AdminLayout title={school.school_name} backPath="/admin/school-music-schools">
@@ -170,10 +180,53 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardContent className="space-y-2 text-sm">
             <div className="flex gap-2"><span className="text-muted-foreground">שם:</span><span>{school.school_name}</span></div>
             <div className="flex gap-2"><span className="text-muted-foreground">שנה:</span><span>{(school as any).academic_years?.name || "—"}</span></div>
+            {classesCount > 0 && <div className="flex gap-2"><span className="text-muted-foreground">כיתות בשכבה:</span><span>{classesCount}</span></div>}
+            {dayOfWeek != null && <div className="flex gap-2"><span className="text-muted-foreground">יום:</span><span>{DAY_NAMES[dayOfWeek]}</span></div>}
             {school.notes && <div className="flex gap-2"><span className="text-muted-foreground">הערות:</span><span>{school.notes}</span></div>}
             <div className="flex gap-2 items-center"><span className="text-muted-foreground">סטטוס:</span><Badge variant={school.is_active ? "default" : "secondary"}>{school.is_active ? "פעיל" : "לא פעיל"}</Badge></div>
           </CardContent>
         </Card>
+
+        {/* Class Schedules */}
+        {classSchedules.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">שעות שיעורים</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2">
+                {classSchedules.map((s, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-xl border p-2.5 text-sm">
+                    <span className="font-medium text-muted-foreground">כיתה {i + 1}</span>
+                    <span dir="ltr">{s.start_time || "—"} – {s.end_time || "—"}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Homeroom Teachers */}
+        {homeroomTeachers.length > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">מחנכות כיתות</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2">
+                {homeroomTeachers.map((ht, i) => (
+                  <div key={i} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-muted-foreground">כיתה {i + 1}:</span>
+                      <span className="font-medium">{ht.name || "—"}</span>
+                    </div>
+                    <PhoneLink phone={ht.phone} />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Coordinator */}
         <Card>
@@ -183,7 +236,10 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardContent>
             {coordinator && !editingCoordinator ? (
               <div className="flex items-center justify-between rounded-xl border p-3">
-                <p className="font-medium">{coordinator.first_name} {coordinator.last_name}</p>
+                <div>
+                  <p className="font-medium">{coordinator.first_name} {coordinator.last_name}</p>
+                  <PhoneLink phone={coordinator.phone} />
+                </div>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" onClick={() => setEditingCoordinator(true)}>
                     <Pencil className="h-3.5 w-3.5" />
@@ -219,7 +275,10 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardContent>
             {conductor && !editingConductor ? (
               <div className="flex items-center justify-between rounded-xl border p-3">
-                <p className="font-medium">{conductor.first_name} {conductor.last_name}</p>
+                <div>
+                  <p className="font-medium">{conductor.first_name} {conductor.last_name}</p>
+                  <PhoneLink phone={conductor.phone} />
+                </div>
                 <div className="flex gap-1">
                   <Button size="icon" variant="ghost" onClick={() => setEditingConductor(true)}>
                     <Pencil className="h-3.5 w-3.5" />
@@ -270,11 +329,7 @@ const AdminSchoolMusicSchoolCard = () => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button
-                onClick={() => addGroup.mutate()}
-                disabled={!newGroupInstrumentId || !newGroupTeacherId || addGroup.isPending}
-                className="shrink-0"
-              >
+              <Button onClick={() => addGroup.mutate()} disabled={!newGroupInstrumentId || !newGroupTeacherId || addGroup.isPending} className="shrink-0">
                 <Plus className="h-4 w-4 ml-1" /> הוסף קבוצה
               </Button>
             </div>
@@ -313,6 +368,7 @@ const AdminSchoolMusicSchoolCard = () => {
                     <div className="min-w-0">
                       <p className="font-medium text-sm truncate">{g.instruments?.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{g.teachers?.first_name} {g.teachers?.last_name}</p>
+                      <PhoneLink phone={g.teachers?.phone} />
                     </div>
                     <div className="flex gap-0.5 shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { setEditingGroupId(g.id); setEditGroupInstrumentId(g.instrument_id); setEditGroupTeacherId(g.teacher_id); }}>
