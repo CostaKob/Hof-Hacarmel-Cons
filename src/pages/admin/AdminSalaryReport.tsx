@@ -399,43 +399,104 @@ const AdminSalaryReport = () => {
               </h2>
 
               <div className="relative w-full overflow-auto border rounded-xl">
-                <table className="w-full text-sm" dir="rtl">
+                <table className="w-full text-sm border-collapse" dir="rtl">
                   <thead>
+                    {/* Group headers */}
+                    <tr className="bg-muted/70">
+                      <th colSpan={3} className="p-2 text-right font-bold whitespace-nowrap border-b border-l border-border">מורה</th>
+                      <th colSpan={3} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-blue-50 dark:bg-blue-950/30">הוראה פרטנית</th>
+                      <th colSpan={5} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-violet-50 dark:bg-violet-950/30">הרכבים</th>
+                      <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-emerald-50 dark:bg-emerald-950/30">בי״ס מנגן</th>
+                      <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-amber-50 dark:bg-amber-950/30">פעילות</th>
+                      <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-sky-50 dark:bg-sky-950/30">נסיעות</th>
+                      <th colSpan={2} className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border bg-primary/10">סיכומים</th>
+                      <th colSpan={2} className="p-2 text-right font-bold whitespace-nowrap border-b border-border">מורה</th>
+                    </tr>
+                    {/* Column headers */}
                     <tr className="border-b bg-muted/50">
                       <th className="p-2 text-right font-medium whitespace-nowrap sticky right-0 bg-muted/50 z-10">שם משפחה</th>
                       <th className="p-2 text-right font-medium whitespace-nowrap">שם פרטי</th>
-                      <th className="p-2 text-right font-medium whitespace-nowrap">ת.ז.</th>
-                      {FIELD_KEYS.map((key) => (
-                        <th key={key} className="p-2 text-center font-medium whitespace-nowrap">{FIELD_LABELS[key]}</th>
-                      ))}
+                      <th className="p-2 text-right font-medium whitespace-nowrap border-l border-border">ת.ז.</th>
+                      {/* Private lessons */}
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-blue-50/50 dark:bg-blue-950/20">45 דק׳</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-blue-50/50 dark:bg-blue-950/20">30 דק׳</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-blue-50/50 dark:bg-blue-950/20 border-l border-border">60 דק׳</th>
+                      {/* Ensembles */}
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב קטן</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">הרכב גדול</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח תזמורת</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20">ניצוח מקהלה</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-violet-50/50 dark:bg-violet-950/20 border-l border-border">ליווי מקהלה</th>
+                      {/* School music */}
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-emerald-50/50 dark:bg-emerald-950/20">קבוצה קטנה</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-emerald-50/50 dark:bg-emerald-950/20 border-l border-border">ריכוז/ניצוח</th>
+                      {/* Activity */}
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-amber-50/50 dark:bg-amber-950/20">יום פעילות</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-amber-50/50 dark:bg-amber-950/20 border-l border-border">שעה בודדת</th>
+                      {/* Travel */}
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-sky-50/50 dark:bg-sky-950/20 border-l border-border">ק״מ</th>
+                      {/* Summaries */}
                       <th className="p-2 text-center font-medium whitespace-nowrap bg-primary/10">סיכום משכורת</th>
-                      <th className="p-2 text-center font-medium whitespace-nowrap bg-primary/10">סיכום נסיעות</th>
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-primary/10 border-l border-border">סיכום נסיעות</th>
+                      {/* Repeated name */}
+                      <th className="p-2 text-right font-medium whitespace-nowrap">שם משפחה</th>
+                      <th className="p-2 text-right font-medium whitespace-nowrap">שם פרטי</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {rows.map((r) => {
+                    {rows.map((r, idx) => {
                       const salary = calcSalary(r.values);
                       const travel = calcTravel(r.values.km);
+                      const stripe = idx % 2 === 0 ? "bg-background" : "bg-muted/20";
                       return (
-                        <tr key={r.teacherId} className="border-b hover:bg-muted/30">
-                          <td className="p-2 text-right whitespace-nowrap sticky right-0 bg-background z-10">{r.lastName}</td>
+                        <tr key={r.teacherId} className={`border-b hover:bg-muted/40 ${stripe}`}>
+                          <td className={`p-2 text-right whitespace-nowrap sticky right-0 z-10 ${stripe}`}>{r.lastName}</td>
                           <td className="p-2 text-right whitespace-nowrap">{r.firstName}</td>
-                          <td className="p-2 text-right whitespace-nowrap font-mono text-xs">{r.nationalId}</td>
-                          {FIELD_KEYS.map((key) => (
-                            <td key={key} className="p-1 text-center whitespace-nowrap">
-                              <Input
-                                type="number"
-                                min={0}
-                                step="any"
-                                className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
-                                defaultValue={r.values[key] || ""}
-                                placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)}
-                              />
+                          <td className="p-2 text-right whitespace-nowrap font-mono text-xs border-l border-border">{r.nationalId}</td>
+                          {/* Private lessons */}
+                          {(["lessons_45", "lessons_30", "lessons_60"] as FieldKey[]).map((key, ki) => (
+                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-blue-50/30 dark:bg-blue-950/10 ${ki === 2 ? "border-l border-border" : ""}`}>
+                              <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                                defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
                             </td>
                           ))}
+                          {/* Ensembles */}
+                          {(["small_ensemble", "large_ensemble", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] as FieldKey[]).map((key, ki) => (
+                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 4 ? "border-l border-border" : ""}`}>
+                              <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                                defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                            </td>
+                          ))}
+                          {/* School music */}
+                          {(["school_music_group", "school_music_coord"] as FieldKey[]).map((key, ki) => (
+                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-emerald-50/30 dark:bg-emerald-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
+                              <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                                defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                            </td>
+                          ))}
+                          {/* Activity */}
+                          {(["activity_days", "single_hours"] as FieldKey[]).map((key, ki) => (
+                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-amber-50/30 dark:bg-amber-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
+                              <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                                defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                            </td>
+                          ))}
+                          {/* KM */}
+                          <td className="p-1 text-center whitespace-nowrap bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">
+                            <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                              defaultValue={r.values.km || ""} placeholder={r.defaults.km ? String(r.defaults.km) : "0"}
+                              onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} />
+                          </td>
+                          {/* Summaries */}
                           <td className="p-2 text-center whitespace-nowrap font-bold bg-primary/5">{fmt(salary)}</td>
-                          <td className="p-2 text-center whitespace-nowrap font-bold bg-primary/5">{travel ? fmt(travel) : "–"}</td>
+                          <td className="p-2 text-center whitespace-nowrap font-bold bg-primary/5 border-l border-border">{travel ? fmt(travel) : "–"}</td>
+                          {/* Repeated name */}
+                          <td className="p-2 text-right whitespace-nowrap text-muted-foreground">{r.lastName}</td>
+                          <td className="p-2 text-right whitespace-nowrap text-muted-foreground">{r.firstName}</td>
                         </tr>
                       );
                     })}
@@ -443,11 +504,22 @@ const AdminSalaryReport = () => {
                   <tfoot>
                     <tr className="border-t-2 border-primary/30 bg-muted font-bold">
                       <td className="p-2 text-right sticky right-0 bg-muted z-10" colSpan={3}>סה״כ</td>
-                      {FIELD_KEYS.map((key) => (
-                        <td key={key} className="p-2 text-center">{totals[key] || "–"}</td>
-                      ))}
+                      <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10">{totals.lessons_45 || "–"}</td>
+                      <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10">{totals.lessons_30 || "–"}</td>
+                      <td className="p-2 text-center bg-blue-50/30 dark:bg-blue-950/10 border-l border-border">{totals.lessons_60 || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.small_ensemble || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.large_ensemble || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.orchestra_conductor || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10">{totals.choir_conductor || "–"}</td>
+                      <td className="p-2 text-center bg-violet-50/30 dark:bg-violet-950/10 border-l border-border">{totals.choir_accompaniment || "–"}</td>
+                      <td className="p-2 text-center bg-emerald-50/30 dark:bg-emerald-950/10">{totals.school_music_group || "–"}</td>
+                      <td className="p-2 text-center bg-emerald-50/30 dark:bg-emerald-950/10 border-l border-border">{totals.school_music_coord || "–"}</td>
+                      <td className="p-2 text-center bg-amber-50/30 dark:bg-amber-950/10">{totals.activity_days || "–"}</td>
+                      <td className="p-2 text-center bg-amber-50/30 dark:bg-amber-950/10 border-l border-border">{totals.single_hours || "–"}</td>
+                      <td className="p-2 text-center bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">{totals.km || "–"}</td>
                       <td className="p-2 text-center bg-primary/10">{fmt(totals.totalSalary)}</td>
-                      <td className="p-2 text-center bg-primary/10">{totals.totalTravel ? fmt(totals.totalTravel) : "–"}</td>
+                      <td className="p-2 text-center bg-primary/10 border-l border-border">{totals.totalTravel ? fmt(totals.totalTravel) : "–"}</td>
+                      <td colSpan={2}></td>
                     </tr>
                   </tfoot>
                 </table>
