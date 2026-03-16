@@ -348,7 +348,7 @@ const AdminSalaryReport = () => {
         { label: "#", cols: 1, bg: "" },
         { label: "מורה", cols: 3, bg: "" },
         { label: "הוראה פרטנית", cols: 3, bg: groupBg.blue },
-        { label: "הרכבים", cols: 5, bg: groupBg.violet },
+        { label: "הרכבים", cols: 6, bg: groupBg.violet },
         { label: 'בי"ס מנגן', cols: 2, bg: groupBg.emerald },
         { label: "פעילות", cols: 2, bg: groupBg.amber },
         { label: "נסיעות", cols: 1, bg: groupBg.sky },
