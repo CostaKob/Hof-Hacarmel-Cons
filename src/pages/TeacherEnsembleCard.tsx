@@ -60,7 +60,7 @@ const TeacherEnsembleCard = () => {
           </div>
 
           {myStaff && (
-            <InfoRow icon={null} label="התפקיד שלי" value={ENSEMBLE_STAFF_ROLE_LABELS[myStaff.role] || myStaff.role} />
+            <InfoRow icon={null} label="התפקיד שלי" value={`${ENSEMBLE_STAFF_ROLE_LABELS[myStaff.role] || myStaff.role} · ${myStaff.weekly_hours} שעות`} />
           )}
 
           {ensemble.day_of_week != null && (
