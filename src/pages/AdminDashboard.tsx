@@ -10,6 +10,7 @@ const SECTIONS = [
   { path: "/admin/yearly-summary", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכלל המערכת", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים ומעבר שנה", icon: CalendarDays },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
+  { path: "/admin/ensembles", label: "הרכבים", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
   { path: "/admin/exports", label: "דוחות וייצוא", description: "ייצוא תלמידים, מורים, דיווחים וסיכומים לאקסל", icon: FileDown },
 ];
 
