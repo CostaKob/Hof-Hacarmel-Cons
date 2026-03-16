@@ -763,6 +763,7 @@ export type Database = {
           instrument_id: string
           school_music_school_id: string
           teacher_id: string
+          weekly_hours: number | null
         }
         Insert: {
           created_at?: string
@@ -770,6 +771,7 @@ export type Database = {
           instrument_id: string
           school_music_school_id: string
           teacher_id: string
+          weekly_hours?: number | null
         }
         Update: {
           created_at?: string
@@ -777,6 +779,7 @@ export type Database = {
           instrument_id?: string
           school_music_school_id?: string
           teacher_id?: string
+          weekly_hours?: number | null
         }
         Relationships: [
           {
