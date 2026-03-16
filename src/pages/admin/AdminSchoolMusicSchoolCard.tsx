@@ -136,6 +136,15 @@ const AdminSchoolMusicSchoolCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
+  const updateRoleHours = useMutation({
+    mutationFn: async ({ field, value }: { field: "coordinator_hours" | "conductor_hours"; value: number | null }) => {
+      const { error } = await supabase.from("school_music_schools").update({ [field]: value } as any).eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setEditingCoordinatorHours(false); setEditingConductorHours(false); toast.success("השעות עודכנו"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
   const deleteSchool = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("school_music_schools").delete().eq("id", id!);
