@@ -37,6 +37,8 @@ const TeacherDashboard = () => {
   const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
   const { data: ensembleStaff } = useTeacherEnsembleStaff(teacher?.id);
   const hasEnsembles = (ensembleStaff ?? []).length > 0;
+  const { data: schoolMusicSchools } = useTeacherSchoolMusicSchools(teacher?.id);
+  const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
