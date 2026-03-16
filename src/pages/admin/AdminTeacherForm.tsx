@@ -22,6 +22,7 @@ interface TeacherFormData {
   city: string;
   is_active: boolean;
   is_freelance: boolean;
+  is_office: boolean;
 }
 
 const AdminTeacherForm = () => {
