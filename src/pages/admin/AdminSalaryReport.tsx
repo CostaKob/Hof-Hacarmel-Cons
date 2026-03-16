@@ -236,7 +236,7 @@ const AdminSalaryReport = () => {
     }
 
     return teachers
-      .filter((t) => showFreelancers || !(t as any).is_freelance)
+      .filter((t) => showFreelancers ? (t as any).is_freelance : !(t as any).is_freelance)
       .map((t) => {
       const defaults = systemDefaults.get(t.id) ?? {
         lessons_45: 0, lessons_30: 0, lessons_60: 0,
@@ -475,7 +475,7 @@ const AdminSalaryReport = () => {
           )}
           <div className="flex items-center gap-2 mr-auto">
             <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
-            <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג עצמאיים</Label>
+            <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג רק עצמאיים</Label>
           </div>
         </div>
 
