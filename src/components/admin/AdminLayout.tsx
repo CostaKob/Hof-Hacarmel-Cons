@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut, BarChart3, CalendarDays, Upload, Loader2, Music2 } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, School, Music, LogOut, BarChart3, CalendarDays, Upload, Loader2, Music2, Music4 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: "/admin/yearly-summary", label: "סיכום שנתי", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", icon: CalendarDays },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
+  { path: "/admin/school-music-schools", label: "מנגנים", icon: Music4 },
   { path: "/admin/registrations", label: "הרשמות", icon: Upload },
 ];
 
