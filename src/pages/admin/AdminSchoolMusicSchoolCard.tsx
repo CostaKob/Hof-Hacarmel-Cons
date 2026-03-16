@@ -25,6 +25,10 @@ const AdminSchoolMusicSchoolCard = () => {
   const [showDeleteSchool, setShowDeleteSchool] = useState(false);
   const [editingCoordinator, setEditingCoordinator] = useState(false);
   const [editingConductor, setEditingConductor] = useState(false);
+  const [editingCoordinatorHours, setEditingCoordinatorHours] = useState(false);
+  const [editingConductorHours, setEditingConductorHours] = useState(false);
+  const [coordHoursInput, setCoordHoursInput] = useState("");
+  const [conductHoursInput, setConductHoursInput] = useState("");
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editGroupInstrumentId, setEditGroupInstrumentId] = useState("");
   const [editGroupTeacherId, setEditGroupTeacherId] = useState("");
