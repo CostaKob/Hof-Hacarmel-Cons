@@ -104,41 +104,24 @@ const TeacherEnsembleCard = () => {
             <div className="divide-y divide-border">
               {students.map((s: any) => {
                 const isAccessible = accessibleStudentIds.has(s.id);
-                // Find the enrollment ID for navigation
                 const enrollment = isAccessible
                   ? (teacherEnrollments ?? []).find((e: any) => e.student_id === s.id)
                   : null;
+                const clickable = isAccessible && enrollment;
 
                 return (
                   <div
                     key={s.id}
-                    className={`px-5 py-3 ${isAccessible && enrollment ? "cursor-pointer hover:bg-accent/50 active:bg-accent transition-colors" : ""}`}
-                    onClick={() => {
-                      if (isAccessible && enrollment) {
-                        navigate(`/teacher/students/${enrollment.id}`);
-                      }
-                    }}
+                    className={`px-4 py-2 flex items-center justify-between ${clickable ? "cursor-pointer hover:bg-accent/50 active:bg-accent transition-colors" : ""}`}
+                    onClick={() => { if (clickable) navigate(`/teacher/students/${enrollment.id}`); }}
                   >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-foreground">
-                          {s.first_name} {s.last_name}
-                          {isAccessible && enrollment && (
-                            <span className="text-primary text-xs mr-1">←</span>
-                          )}
-                        </p>
-                        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
-                          {s.grade && <span>כיתה {s.grade}</span>}
-                          {s.phone && <span>טלפון: {s.phone}</span>}
-                        </div>
-                        {(s.parent_name || s.parent_phone) && (
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {s.parent_name && <span>הורה: {s.parent_name}</span>}
-                            {s.parent_phone && <span className="mr-3">טלפון הורה: {s.parent_phone}</span>}
-                          </div>
-                        )}
-                      </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground">
+                        {s.first_name} {s.last_name}
+                        {s.grade && <span className="text-muted-foreground font-normal mr-1">· כיתה {s.grade}</span>}
+                      </p>
                     </div>
+                    {clickable && <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0" />}
                   </div>
                 );
               })}
