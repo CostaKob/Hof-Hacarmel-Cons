@@ -258,6 +258,7 @@ const AdminSalaryReport = () => {
     }
 
     return teachers
+      .filter((t) => !(t as any).is_office)
       .filter((t) => showFreelancers ? (t as any).is_freelance : !(t as any).is_freelance)
       .map((t) => {
       const defaults = systemDefaults.get(t.id) ?? {
