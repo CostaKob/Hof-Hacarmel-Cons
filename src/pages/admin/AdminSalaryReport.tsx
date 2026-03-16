@@ -608,7 +608,7 @@ const AdminSalaryReport = () => {
                           ))}
                           {/* KM */}
                           <td className="p-1 text-center whitespace-nowrap bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">
-                            <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
+                            <Input type="number" min={0} step="any" className="w-20 h-8 text-center mx-auto rounded-lg text-sm"
                               defaultValue={r.values.km || ""} placeholder={r.defaults.km ? String(r.defaults.km) : "0"}
                               onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} />
                           </td>
