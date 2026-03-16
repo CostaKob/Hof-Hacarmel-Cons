@@ -54,6 +54,14 @@ const AdminTeachers = () => {
               <SelectItem value="inactive">לא פעילים</SelectItem>
             </SelectContent>
           </Select>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">הכל</SelectItem>
+              <SelectItem value="employee">שכירים</SelectItem>
+              <SelectItem value="freelance">עצמאיים</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
