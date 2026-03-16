@@ -35,6 +35,7 @@ function downloadXlsx(data: Record<string, string | number | boolean | null>[], 
 }
 
 const AdminExports = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState<ExportKey | null>(null);
 
   const exportStudents = async () => {
