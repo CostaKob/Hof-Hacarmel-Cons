@@ -11,14 +11,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 import { useState } from "react";
+import EnsembleStudentPicker from "@/components/admin/EnsembleStudentPicker";
 
 const AdminEnsembleCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // State for adding student / staff
-  const [selectedStudentId, setSelectedStudentId] = useState("");
+  // State for adding staff
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [selectedStaffRole, setSelectedStaffRole] = useState("");
   const [staffWeeklyHours, setStaffWeeklyHours] = useState("0");
@@ -88,15 +88,6 @@ const AdminEnsembleCard = () => {
     },
   });
 
-  const addStudent = useMutation({
-    mutationFn: async () => {
-      if (!selectedStudentId) return;
-      const { error } = await supabase.from("ensemble_students").insert({ ensemble_id: id!, student_id: selectedStudentId });
-      if (error) throw error;
-    },
-    onSuccess: () => { invalidate(); setSelectedStudentId(""); toast.success("התלמיד נוסף"); },
-    onError: (e: any) => toast.error(e.message?.includes("duplicate") ? "התלמיד כבר משויך" : "שגיאה"),
-  });
 
   const removeStudent = useMutation({
     mutationFn: async (rowId: string) => {
@@ -292,24 +283,12 @@ const AdminEnsembleCard = () => {
                 </Badge>
               ))}
             </div>
-
-            <div className="flex gap-2 pt-2 border-t">
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                <SelectTrigger className="flex-1"><SelectValue placeholder="בחר תלמיד" /></SelectTrigger>
-                <SelectContent>
-                  {availableStudents.map((s: any) => (
-                    <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={() => addStudent.mutate()}
-                disabled={!selectedStudentId || addStudent.isPending}
-                className="shrink-0"
-              >
-                <Plus className="h-4 w-4 ml-1" /> הוסף
-              </Button>
-            </div>
+            <EnsembleStudentPicker
+              ensembleId={id!}
+              allStudents={allStudents}
+              existingStudentIds={existingStudentIds}
+              onDone={invalidate}
+            />
           </CardContent>
         </Card>
       </div>
