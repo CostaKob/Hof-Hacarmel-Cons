@@ -1,0 +1,285 @@
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import AdminLayout from "@/components/admin/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pencil, Trash2, Plus, X } from "lucide-react";
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
+const AdminSchoolMusicSchoolCard = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [newGroupInstrumentId, setNewGroupInstrumentId] = useState("");
+  const [newGroupTeacherId, setNewGroupTeacherId] = useState("");
+  const [showDeleteSchool, setShowDeleteSchool] = useState(false);
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["school-music-school", id] });
+    queryClient.invalidateQueries({ queryKey: ["school-music-groups", id] });
+    queryClient.invalidateQueries({ queryKey: ["school-music-schools"] });
+  };
+
+  const { data: school, isLoading } = useQuery({
+    queryKey: ["school-music-school", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_schools")
+        .select("*, academic_years(name), coordinator:teachers!school_music_schools_coordinator_teacher_id_fkey(id, first_name, last_name), conductor:teachers!school_music_schools_conductor_teacher_id_fkey(id, first_name, last_name)")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: groups = [] } = useQuery({
+    queryKey: ["school-music-groups", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_groups")
+        .select("*, instruments(name), teachers(first_name, last_name)")
+        .eq("school_music_school_id", id!);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: allTeachers = [] } = useQuery({
+    queryKey: ["all-teachers-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true).order("first_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: allInstruments = [] } = useQuery({
+    queryKey: ["all-instruments"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // --- Mutations ---
+
+  const addGroup = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("school_music_groups").insert({
+        school_music_school_id: id!,
+        instrument_id: newGroupInstrumentId,
+        teacher_id: newGroupTeacherId,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      setNewGroupInstrumentId("");
+      setNewGroupTeacherId("");
+      toast.success("הקבוצה נוספה");
+    },
+    onError: () => toast.error("שגיאה בהוספת הקבוצה"),
+  });
+
+  const removeGroup = useMutation({
+    mutationFn: async (groupId: string) => {
+      const { error } = await supabase.from("school_music_groups").delete().eq("id", groupId);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("הקבוצה הוסרה"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
+  const setCoordinator = useMutation({
+    mutationFn: async (teacherId: string | null) => {
+      const { error } = await supabase.from("school_music_schools").update({ coordinator_teacher_id: teacherId }).eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("הרכז עודכן"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
+  const setConductor = useMutation({
+    mutationFn: async (teacherId: string | null) => {
+      const { error } = await supabase.from("school_music_schools").update({ conductor_teacher_id: teacherId }).eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); toast.success("המנצח עודכן"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
+  const deleteSchool = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("school_music_schools").delete().eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["school-music-schools"] });
+      toast.success("בית הספר נמחק");
+      navigate("/admin/school-music-schools");
+    },
+    onError: () => toast.error("שגיאה במחיקה"),
+  });
+
+  if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+  if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
+
+  const coordinator = (school as any).coordinator;
+  const conductor = (school as any).conductor;
+
+  return (
+    <AdminLayout title={school.school_name} backPath="/admin/school-music-schools">
+      <div className="space-y-5">
+        {/* School Details */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-lg">פרטי בית הספר</CardTitle>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => navigate(`/admin/school-music-schools/${id}/edit`)}>
+                <Pencil className="h-4 w-4 ml-1" /> עריכה
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => setShowDeleteSchool(true)}>
+                <Trash2 className="h-4 w-4 ml-1" /> מחיקה
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            <div className="flex gap-2"><span className="text-muted-foreground">שם:</span><span>{school.school_name}</span></div>
+            <div className="flex gap-2"><span className="text-muted-foreground">שנה:</span><span>{(school as any).academic_years?.name || "—"}</span></div>
+            {school.notes && <div className="flex gap-2"><span className="text-muted-foreground">הערות:</span><span>{school.notes}</span></div>}
+            <div className="flex gap-2 items-center"><span className="text-muted-foreground">סטטוס:</span><Badge variant={school.is_active ? "default" : "secondary"}>{school.is_active ? "פעיל" : "לא פעיל"}</Badge></div>
+          </CardContent>
+        </Card>
+
+        {/* Coordinator */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">רכז</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {coordinator ? (
+              <div className="flex items-center justify-between rounded-xl border p-3">
+                <p className="font-medium">{coordinator.first_name} {coordinator.last_name}</p>
+                <Button size="icon" variant="ghost" onClick={() => setCoordinator.mutate(null)}>
+                  <X className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Select onValueChange={(v) => setCoordinator.mutate(v)}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="בחר רכז" /></SelectTrigger>
+                  <SelectContent>
+                    {allTeachers.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Conductor */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">מנצח</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {conductor ? (
+              <div className="flex items-center justify-between rounded-xl border p-3">
+                <p className="font-medium">{conductor.first_name} {conductor.last_name}</p>
+                <Button size="icon" variant="ghost" onClick={() => setConductor.mutate(null)}>
+                  <X className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Select onValueChange={(v) => setConductor.mutate(v)}>
+                  <SelectTrigger className="flex-1"><SelectValue placeholder="בחר מנצח" /></SelectTrigger>
+                  <SelectContent>
+                    {allTeachers.map((t: any) => (
+                      <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Groups */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">קבוצות ({groups.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {groups.map((g: any) => (
+              <div key={g.id} className="flex items-center justify-between rounded-xl border p-3">
+                <div>
+                  <p className="font-medium">{g.instruments?.name}</p>
+                  <p className="text-sm text-muted-foreground">{g.teachers?.first_name} {g.teachers?.last_name}</p>
+                </div>
+                <Button size="icon" variant="ghost" onClick={() => removeGroup.mutate(g.id)}>
+                  <X className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            ))}
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-2 border-t">
+              <Select value={newGroupInstrumentId} onValueChange={setNewGroupInstrumentId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+                <SelectContent>
+                  {allInstruments.map((i: any) => (
+                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={newGroupTeacherId} onValueChange={setNewGroupTeacherId}>
+                <SelectTrigger className="flex-1"><SelectValue placeholder="מורה" /></SelectTrigger>
+                <SelectContent>
+                  {allTeachers.map((t: any) => (
+                    <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                onClick={() => addGroup.mutate()}
+                disabled={!newGroupInstrumentId || !newGroupTeacherId || addGroup.isPending}
+                className="shrink-0"
+              >
+                <Plus className="h-4 w-4 ml-1" /> הוסף קבוצה
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <AlertDialog open={showDeleteSchool} onOpenChange={setShowDeleteSchool}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת בית ספר מנגן</AlertDialogTitle>
+            <AlertDialogDescription>האם למחוק את בית הספר וכל הקבוצות שלו? פעולה זו אינה ניתנת לביטול.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction onClick={() => deleteSchool.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleteSchool.isPending ? "מוחק..." : "מחק"}
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </AdminLayout>
+  );
+};
+
+export default AdminSchoolMusicSchoolCard;
