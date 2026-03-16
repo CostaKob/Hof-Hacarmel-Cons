@@ -151,14 +151,6 @@ const AdminEnsembleForm = () => {
             </FormItem>
           )} />
 
-          <FormField control={form.control} name="weekly_hours" render={({ field }) => (
-            <FormItem>
-              <FormLabel>שעות שבועיות</FormLabel>
-              <FormControl>
-                <Input type="number" step="0.5" min="0" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
-              </FormControl>
-            </FormItem>
-          )} />
 
 
           <div className="grid grid-cols-3 gap-3">
