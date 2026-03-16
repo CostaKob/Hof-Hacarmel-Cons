@@ -131,7 +131,16 @@ const AdminEnsembleCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
-  const deleteEnsemble = useMutation({
+  const updateStaff = useMutation({
+    mutationFn: async ({ rowId, hours }: { rowId: string; hours: number }) => {
+      const { error } = await supabase.from("ensemble_staff").update({ weekly_hours: hours }).eq("id", rowId);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidate(); setEditingStaffId(null); toast.success("שעות עודכנו"); },
+    onError: () => toast.error("שגיאה"),
+  });
+
+
     mutationFn: async () => {
       const { error } = await supabase.from("ensembles").delete().eq("id", id!);
       if (error) throw error;
