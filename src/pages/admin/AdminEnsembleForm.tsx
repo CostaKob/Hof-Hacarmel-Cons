@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { ENSEMBLE_TYPE_LABELS } from "@/lib/ensembleConstants";
+import { ENSEMBLE_TYPE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 
 interface FormValues {
