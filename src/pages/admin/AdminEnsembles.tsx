@@ -20,7 +20,7 @@ const AdminEnsembles = () => {
     queryFn: async () => {
       let q = supabase
         .from("ensembles")
-        .select("*, schools(name)")
+        .select("*, schools(name), ensemble_staff(role, teachers(first_name, last_name))")
         .order("name");
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -73,6 +73,16 @@ const AdminEnsembles = () => {
                   {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
                   {e.schools?.name ? ` · ${e.schools.name}` : ""}
                 </p>
+                {(() => {
+                  const staff = (e as any).ensemble_staff || [];
+                  const lead = staff.find((s: any) => s.role === "conductor" || s.role === "instructor");
+                  if (!lead?.teachers) return null;
+                  return (
+                    <p className="text-xs text-muted-foreground">
+                      {lead.teachers.first_name} {lead.teachers.last_name}
+                    </p>
+                  );
+                })()}
                 {e.weekly_hours > 0 && (
                   <p className="text-xs text-muted-foreground">{e.weekly_hours} שעות שבועיות</p>
                 )}
