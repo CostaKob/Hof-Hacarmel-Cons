@@ -231,12 +231,38 @@ const AdminEnsembleCard = () => {
                 <div>
                   <p className="font-medium">{s.teachers?.first_name} {s.teachers?.last_name}</p>
                   <p className="text-sm text-muted-foreground">
-                    {ENSEMBLE_STAFF_ROLE_LABELS[s.role] || s.role} · {s.weekly_hours} שעות
+                    {ENSEMBLE_STAFF_ROLE_LABELS[s.role] || s.role} · {editingStaffId === s.id ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Input
+                          type="number"
+                          step="0.5"
+                          min="0"
+                          value={editingHours}
+                          onChange={(e) => setEditingHours(e.target.value)}
+                          className="w-16 h-6 text-xs inline-block"
+                        />
+                        <button onClick={() => updateStaff.mutate({ rowId: s.id, hours: Number(editingHours) })} className="text-primary hover:text-primary/80">
+                          <Check className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setEditingStaffId(null)} className="text-muted-foreground hover:text-foreground">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    ) : (
+                      <>{s.weekly_hours} שעות</>
+                    )}
                   </p>
                 </div>
-                <Button size="icon" variant="ghost" onClick={() => removeStaff.mutate(s.id)}>
-                  <X className="h-4 w-4 text-destructive" />
-                </Button>
+                <div className="flex gap-1">
+                  {editingStaffId !== s.id && (
+                    <Button size="icon" variant="ghost" onClick={() => { setEditingStaffId(s.id); setEditingHours(String(s.weekly_hours)); }}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                  <Button size="icon" variant="ghost" onClick={() => removeStaff.mutate(s.id)}>
+                    <X className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
 
