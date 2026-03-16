@@ -472,8 +472,6 @@ const AdminSalaryReport = () => {
             <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
             <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג עצמאיים</Label>
           </div>
-            </Button>
-          )}
         </div>
 
         {generated && (
