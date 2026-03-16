@@ -306,6 +306,46 @@ const AdminSchoolMusicSchoolCard = () => {
           </CardContent>
         </Card>
 
+        {/* Hours Summary */}
+        {classesCount > 0 && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">סיכום שעות שבועיות</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-2">
+                {groups.map((g: any) => (
+                  <div key={g.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{g.teachers?.first_name} {g.teachers?.last_name}</span>
+                      <span className="text-muted-foreground">({g.instruments?.name})</span>
+                    </div>
+                    <Badge variant="secondary">{classesCount} שעות קבוצה קטנה</Badge>
+                  </div>
+                ))}
+                {coordinator && (
+                  <div className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{coordinator.first_name} {coordinator.last_name}</span>
+                      <span className="text-muted-foreground">(רכז)</span>
+                    </div>
+                    <Badge variant="secondary">{classesCount} שעות ריכוז</Badge>
+                  </div>
+                )}
+                {conductor && (
+                  <div className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{conductor.first_name} {conductor.last_name}</span>
+                      <span className="text-muted-foreground">(מנצח)</span>
+                    </div>
+                    <Badge variant="secondary">{classesCount} שעות ניצוח</Badge>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Groups */}
         <Card>
           <CardHeader className="pb-3">
