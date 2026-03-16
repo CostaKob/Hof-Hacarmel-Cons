@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -189,6 +190,16 @@ const AdminEnsembleCard = () => {
               <span className="text-muted-foreground">שעות שבועיות:</span>
               <span>{ensemble.weekly_hours}</span>
             </div>
+            {((ensemble as any).day_of_week != null || (ensemble as any).start_time || (ensemble as any).room) && (
+              <div className="flex gap-2 items-center">
+                <span className="text-muted-foreground">מועד:</span>
+                <span>
+                  {(ensemble as any).day_of_week != null ? `יום ${DAYS_OF_WEEK_LABELS[(ensemble as any).day_of_week] || (ensemble as any).day_of_week}` : ""}
+                  {(ensemble as any).start_time ? ` · ${(ensemble as any).start_time.slice(0, 5)}` : ""}
+                  {(ensemble as any).room ? ` · חדר ${(ensemble as any).room}` : ""}
+                </span>
+              </div>
+            )}
             {ensemble.notes && (
               <div className="flex gap-2">
                 <span className="text-muted-foreground">הערות:</span>

@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { ENSEMBLE_TYPE_LABELS } from "@/lib/ensembleConstants";
+import { ENSEMBLE_TYPE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 
 interface FormValues {
@@ -18,6 +18,9 @@ interface FormValues {
   ensemble_type: string;
   school_id: string;
   weekly_hours: number;
+  day_of_week: string;
+  start_time: string;
+  room: string;
   notes: string;
   is_active: boolean;
 }
@@ -56,6 +59,9 @@ const AdminEnsembleForm = () => {
           ensemble_type: existing.ensemble_type,
           school_id: existing.school_id || "",
           weekly_hours: existing.weekly_hours,
+          day_of_week: (existing as any).day_of_week != null ? String((existing as any).day_of_week) : "",
+          start_time: (existing as any).start_time ? String((existing as any).start_time).slice(0, 5) : "",
+          room: (existing as any).room || "",
           notes: existing.notes || "",
           is_active: existing.is_active,
         }
@@ -64,6 +70,9 @@ const AdminEnsembleForm = () => {
           ensemble_type: "",
           school_id: "",
           weekly_hours: 0,
+          day_of_week: "",
+          start_time: "",
+          room: "",
           notes: "",
           is_active: true,
         },
@@ -71,11 +80,14 @@ const AdminEnsembleForm = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const payload = {
+      const payload: any = {
         name: values.name,
-        ensemble_type: values.ensemble_type as any,
+        ensemble_type: values.ensemble_type,
         school_id: values.school_id && values.school_id !== "none" ? values.school_id : null,
         weekly_hours: values.weekly_hours,
+        day_of_week: values.day_of_week !== "" ? Number(values.day_of_week) : null,
+        start_time: values.start_time || null,
+        room: values.room || null,
         notes: values.notes || null,
         is_active: values.is_active,
         academic_year_id: selectedYearId,
@@ -151,6 +163,37 @@ const AdminEnsembleForm = () => {
               </FormControl>
             </FormItem>
           )} />
+
+
+          <div className="grid grid-cols-3 gap-3">
+            <FormField control={form.control} name="day_of_week" render={({ field }) => (
+              <FormItem>
+                <FormLabel>יום</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="בחר יום" /></SelectTrigger></FormControl>
+                  <SelectContent>
+                    {Object.entries(DAYS_OF_WEEK_LABELS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="start_time" render={({ field }) => (
+              <FormItem>
+                <FormLabel>שעה</FormLabel>
+                <FormControl><Input type="time" {...field} /></FormControl>
+              </FormItem>
+            )} />
+
+            <FormField control={form.control} name="room" render={({ field }) => (
+              <FormItem>
+                <FormLabel>חדר</FormLabel>
+                <FormControl><Input {...field} placeholder="מס׳ חדר" /></FormControl>
+              </FormItem>
+            )} />
+          </div>
 
           <FormField control={form.control} name="notes" render={({ field }) => (
             <FormItem>
