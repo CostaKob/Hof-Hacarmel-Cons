@@ -1,0 +1,1 @@
+ALTER TABLE public.salary_manual_entries ADD COLUMN overrides jsonb NOT NULL DEFAULT '{}'::jsonb;
