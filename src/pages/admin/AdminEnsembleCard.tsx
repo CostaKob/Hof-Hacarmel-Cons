@@ -88,15 +88,6 @@ const AdminEnsembleCard = () => {
     },
   });
 
-  const addStudent = useMutation({
-    mutationFn: async () => {
-      if (!selectedStudentId) return;
-      const { error } = await supabase.from("ensemble_students").insert({ ensemble_id: id!, student_id: selectedStudentId });
-      if (error) throw error;
-    },
-    onSuccess: () => { invalidate(); setSelectedStudentId(""); toast.success("התלמיד נוסף"); },
-    onError: (e: any) => toast.error(e.message?.includes("duplicate") ? "התלמיד כבר משויך" : "שגיאה"),
-  });
 
   const removeStudent = useMutation({
     mutationFn: async (rowId: string) => {
