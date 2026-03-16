@@ -164,6 +164,10 @@ const AdminSchoolMusicSchoolCard = () => {
   const coordinator = (school as any).coordinator;
   const conductor = (school as any).conductor;
   const classesCount = (school as any).classes_count || 0;
+  const coordinatorHours: number | null = (school as any).coordinator_hours;
+  const conductorHours: number | null = (school as any).conductor_hours;
+  const effectiveCoordHours = coordinatorHours ?? classesCount;
+  const effectiveConductHours = conductorHours ?? classesCount;
   const dayOfWeek = (school as any).day_of_week;
   const classSchedules: { start_time: string; end_time: string }[] = (school as any).class_schedules || [];
   const homeroomTeachers: { name: string; phone: string }[] = (school as any).homeroom_teachers || [];
