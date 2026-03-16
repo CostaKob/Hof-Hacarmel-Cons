@@ -26,6 +26,7 @@ const AdminSchoolMusicSchoolCard = () => {
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
   const [editGroupInstrumentId, setEditGroupInstrumentId] = useState("");
   const [editGroupTeacherId, setEditGroupTeacherId] = useState("");
+  const [editGroupHours, setEditGroupHours] = useState("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["school-music-school", id] });
