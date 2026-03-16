@@ -81,7 +81,6 @@ const AdminEnsembleForm = () => {
         name: values.name,
         ensemble_type: values.ensemble_type,
         school_id: values.school_id && values.school_id !== "none" ? values.school_id : null,
-        weekly_hours: values.weekly_hours,
         day_of_week: values.day_of_week !== "" ? Number(values.day_of_week) : null,
         start_time: values.start_time || null,
         room: values.room || null,
