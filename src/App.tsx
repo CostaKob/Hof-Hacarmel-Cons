@@ -33,6 +33,8 @@ import TeacherEditReport from "./pages/TeacherEditReport";
 import TeacherChangePassword from "./pages/TeacherChangePassword";
 import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import TeacherTravelSummary from "./pages/TeacherTravelSummary";
+import TeacherEnsembles from "./pages/TeacherEnsembles";
+import TeacherEnsembleCard from "./pages/TeacherEnsembleCard";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
