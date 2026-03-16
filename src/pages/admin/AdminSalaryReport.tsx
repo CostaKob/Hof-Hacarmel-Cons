@@ -135,7 +135,7 @@ const AdminSalaryReport = () => {
   const { data: schoolMusicSchools } = useQuery({
     queryKey: ["salary-school-music-schools-all"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("school_music_schools").select("id, classes_count, coordinator_teacher_id, conductor_teacher_id, is_active").eq("is_active", true);
+      const { data, error } = await supabase.from("school_music_schools").select("id, classes_count, coordinator_teacher_id, conductor_teacher_id, coordinator_hours, conductor_hours, is_active").eq("is_active", true);
       if (error) throw error;
       return data ?? [];
     },
