@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useTeacherProfile, useTeacherEnrollments } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { ArrowRight, Music, MapPin, Clock, CalendarDays, School, StickyNote, ChevronLeft } from "lucide-react";
@@ -12,7 +12,7 @@ const TeacherEnsembleCard = () => {
   const navigate = useNavigate();
   const { data: teacher } = useTeacherProfile();
   const { data: ensemble, isLoading } = useTeacherEnsembleDetail(id);
-  const { data: teacherEnrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherAllEnrollments(teacher?.id);
 
 
   // Find the logged-in teacher's role in this ensemble
@@ -61,7 +61,7 @@ const TeacherEnsembleCard = () => {
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-3">
           <div className="flex items-center gap-2">
             <Music className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-foreground">{ENSEMBLE_TYPE_LABELS[ensemble.ensemble_type] || ensemble.ensemble_type}</span>
+            <span className="font-semibold text-foreground">פרטי ההרכב</span>
           </div>
 
           {myStaff && (
@@ -99,8 +99,7 @@ const TeacherEnsembleCard = () => {
           ) : (
             <div className="divide-y divide-border">
               {students.map((s: any) => {
-                // Find any enrollment this teacher has for this student
-                const enrollment = (teacherEnrollments ?? []).find((e: any) => e.student_id === s.id);
+                const enrollment = (allEnrollments ?? []).find((e: any) => e.student_id === s.id);
                 const instrumentName = enrollment?.instruments?.name;
 
                 return (
