@@ -721,6 +721,7 @@ export type Database = {
           created_at: string
           id: string
           month_key: string
+          overrides: Json
           single_hours: number
           teacher_id: string
           updated_at: string
@@ -730,6 +731,7 @@ export type Database = {
           created_at?: string
           id?: string
           month_key: string
+          overrides?: Json
           single_hours?: number
           teacher_id: string
           updated_at?: string
@@ -739,6 +741,7 @@ export type Database = {
           created_at?: string
           id?: string
           month_key?: string
+          overrides?: Json
           single_hours?: number
           teacher_id?: string
           updated_at?: string

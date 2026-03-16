@@ -249,8 +249,10 @@ const AdminExports = () => {
     <AdminLayout title="דוחות וייצוא" backPath="/admin">
       <div className="space-y-6">
         {/* Salary report link */}
-        <button
-          onClick={() => navigate("/admin/salary-report")}
+        <a
+          href="/admin/salary-report"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex w-full items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98] text-right"
         >
           <div className="rounded-xl bg-accent p-3.5">
@@ -260,7 +262,7 @@ const AdminExports = () => {
             <p className="font-semibold text-foreground text-base">דוח משכורות</p>
             <p className="text-sm text-muted-foreground mt-0.5">הפקת דוח משכורות חודשי לכל המורים</p>
           </div>
-        </button>
+        </a>
 
         {/* Export buttons */}
         <div className="grid gap-4 sm:grid-cols-2">
