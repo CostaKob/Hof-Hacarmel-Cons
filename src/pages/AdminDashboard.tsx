@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2 } from "lucide-react";
+import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4 } from "lucide-react";
 
 const SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
