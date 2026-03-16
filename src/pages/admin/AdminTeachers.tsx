@@ -15,6 +15,7 @@ const AdminTeachers = () => {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [importOpen, setImportOpen] = useState(false);
 
   const { data: teachers = [], isLoading } = useQuery({
