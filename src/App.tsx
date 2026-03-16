@@ -113,6 +113,11 @@ const App = () => (
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
               <Route path="/admin/ensembles/:id" element={<AdminRoute><AdminEnsembleCard /></AdminRoute>} />
               <Route path="/admin/ensembles/:id/edit" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
+              {/* School Music Schools */}
+              <Route path="/admin/school-music-schools" element={<AdminRoute><AdminSchoolMusicSchools /></AdminRoute>} />
+              <Route path="/admin/school-music-schools/new" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
+              <Route path="/admin/school-music-schools/:id" element={<AdminRoute><AdminSchoolMusicSchoolCard /></AdminRoute>} />
+              <Route path="/admin/school-music-schools/:id/edit" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
               {/* Public */}
               <Route path="/register" element={<PublicRegistration />} />
               {/* Teacher routes */}
