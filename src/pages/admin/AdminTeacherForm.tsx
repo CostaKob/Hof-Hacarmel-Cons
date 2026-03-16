@@ -172,7 +172,11 @@ const AdminTeacherForm = () => {
           </div>
           <div className="flex items-center gap-3">
             <Switch checked={isFreelance} onCheckedChange={(v) => setValue("is_freelance", v)} />
-            <Label>עצמאי (לא מופיע בדוח שכר)</Label>
+            <Label>עצמאי</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isOffice} onCheckedChange={(v) => setValue("is_office", v)} />
+            <Label>משרד (לא מופיע בדוח שכר)</Label>
           </div>
         </div>
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
