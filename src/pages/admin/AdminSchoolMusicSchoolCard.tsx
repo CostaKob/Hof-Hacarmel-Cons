@@ -348,22 +348,12 @@ const AdminSchoolMusicSchoolCard = () => {
                     <span>סה״כ שעות קבוצה קטנה</span>
                     <span>{groups.length * classesCount}</span>
                   </div>
-                  {coordinator && (
+                  {(coordinator || conductor) && (
                     <div className="flex items-center justify-between text-sm font-semibold">
-                      <span>סה״כ שעות ריכוז</span>
-                      <span>{classesCount}</span>
+                      <span>סה״כ שעות ריכוז וניצוח</span>
+                      <span>{(coordinator ? classesCount : 0) + (conductor ? classesCount : 0)}</span>
                     </div>
                   )}
-                  {conductor && (
-                    <div className="flex items-center justify-between text-sm font-semibold">
-                      <span>סה״כ שעות ניצוח</span>
-                      <span>{classesCount}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between text-sm font-bold border-t pt-1">
-                    <span>סה״כ כללי</span>
-                    <span>{(groups.length * classesCount) + (coordinator ? classesCount : 0) + (conductor ? classesCount : 0)}</span>
-                  </div>
                 </div>
               </div>
             </CardContent>
