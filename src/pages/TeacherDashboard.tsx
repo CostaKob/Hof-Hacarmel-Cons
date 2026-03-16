@@ -1,11 +1,12 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "@/hooks/useTeacherData";
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
+import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
@@ -34,6 +35,8 @@ const TeacherDashboard = () => {
 
   const { data: currentMonthReports } = useTeacherMonthReports(teacher?.id, 0);
   const { data: prevMonthReports } = useTeacherMonthReports(teacher?.id, -1);
+  const { data: ensembleStaff } = useTeacherEnsembleStaff(teacher?.id);
+  const hasEnsembles = (ensembleStaff ?? []).length > 0;
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
@@ -128,6 +131,14 @@ const TeacherDashboard = () => {
 
         {/* Navigation cards */}
         <div className="space-y-3">
+          {hasEnsembles && (
+            <NavCard
+              icon={Music}
+              title="ההרכבים שלי"
+              subtitle={`${ensembleStaff!.length} הרכבים`}
+              onClick={() => navigate("/teacher/ensembles")}
+            />
+          )}
           <NavCard
             icon={BarChart3}
             title="סיכום שיעורים שנתי"
