@@ -98,6 +98,7 @@ const AdminTeachers = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {t.is_freelance && <Badge variant="outline" className="rounded-lg">עצמאי</Badge>}
                   <Badge variant={t.is_active ? "default" : "secondary"} className="rounded-lg">
                     {t.is_active ? "פעיל" : "לא פעיל"}
                   </Badge>
