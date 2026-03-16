@@ -18,6 +18,9 @@ interface FormValues {
   ensemble_type: string;
   school_id: string;
   weekly_hours: number;
+  day_of_week: string;
+  start_time: string;
+  room: string;
   notes: string;
   is_active: boolean;
 }
