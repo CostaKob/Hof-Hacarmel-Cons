@@ -55,7 +55,6 @@ const TeacherSchoolMusicSchools = () => {
           <p className="text-center text-muted-foreground py-8">לא נמצאו בתי ספר מנגנים</p>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mb-1">{schools.length} בתי ספר</p>
             {schools.map((s: any) => {
               const timeRange = getTimeRange(s);
               const day = s.day_of_week != null ? `יום ${DAY_NAMES[s.day_of_week]}` : null;
