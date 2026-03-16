@@ -14,10 +14,6 @@ const TeacherEnsembleCard = () => {
   const { data: ensemble, isLoading } = useTeacherEnsembleDetail(id);
   const { data: teacherEnrollments } = useTeacherEnrollments(teacher?.id);
 
-  // Build a set of student IDs accessible to this teacher (via enrollments)
-  const accessibleStudentIds = new Set(
-    (teacherEnrollments ?? []).map((e: any) => e.student_id)
-  );
 
   // Find the logged-in teacher's role in this ensemble
   const myStaff = (ensemble?.ensemble_staff ?? []).find(
@@ -103,25 +99,23 @@ const TeacherEnsembleCard = () => {
           ) : (
             <div className="divide-y divide-border">
               {students.map((s: any) => {
-                const isAccessible = accessibleStudentIds.has(s.id);
-                const enrollment = isAccessible
-                  ? (teacherEnrollments ?? []).find((e: any) => e.student_id === s.id)
-                  : null;
-                const clickable = isAccessible && enrollment;
+                // Find any enrollment this teacher has for this student
+                const enrollment = (teacherEnrollments ?? []).find((e: any) => e.student_id === s.id);
+                const instrumentName = enrollment?.instruments?.name;
 
                 return (
                   <div
                     key={s.id}
-                    className={`px-4 py-2 flex items-center justify-between ${clickable ? "cursor-pointer hover:bg-accent/50 active:bg-accent transition-colors" : ""}`}
-                    onClick={() => { if (clickable) navigate(`/teacher/students/${enrollment.id}`); }}
+                    className={`px-4 py-2 flex items-center justify-between ${enrollment ? "cursor-pointer hover:bg-accent/50 active:bg-accent transition-colors" : ""}`}
+                    onClick={() => { if (enrollment) navigate(`/teacher/students/${enrollment.id}`); }}
                   >
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground">
                         {s.first_name} {s.last_name}
-                        {s.grade && <span className="text-muted-foreground font-normal mr-1">· כיתה {s.grade}</span>}
+                        {instrumentName && <span className="text-muted-foreground font-normal mr-1">· {instrumentName}</span>}
                       </p>
                     </div>
-                    {clickable && <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0" />}
+                    {enrollment && <ChevronLeft className="h-4 w-4 text-muted-foreground shrink-0" />}
                   </div>
                 );
               })}
