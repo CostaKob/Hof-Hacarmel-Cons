@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: "/admin/yearly-summary", label: "סיכום שנתי", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", icon: CalendarDays },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
+  { path: "/admin/school-music-schools", label: "מנגנים", icon: Music4 },
   { path: "/admin/registrations", label: "הרשמות", icon: Upload },
 ];
 
