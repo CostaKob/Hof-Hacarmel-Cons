@@ -216,34 +216,43 @@ export type Database = {
         Row: {
           academic_year_id: string | null
           created_at: string
+          day_of_week: number | null
           ensemble_type: Database["public"]["Enums"]["ensemble_type"]
           id: string
           is_active: boolean
           name: string
           notes: string | null
+          room: string | null
           school_id: string | null
+          start_time: string | null
           weekly_hours: number
         }
         Insert: {
           academic_year_id?: string | null
           created_at?: string
+          day_of_week?: number | null
           ensemble_type: Database["public"]["Enums"]["ensemble_type"]
           id?: string
           is_active?: boolean
           name: string
           notes?: string | null
+          room?: string | null
           school_id?: string | null
+          start_time?: string | null
           weekly_hours?: number
         }
         Update: {
           academic_year_id?: string | null
           created_at?: string
+          day_of_week?: number | null
           ensemble_type?: Database["public"]["Enums"]["ensemble_type"]
           id?: string
           is_active?: boolean
           name?: string
           notes?: string | null
+          room?: string | null
           school_id?: string | null
+          start_time?: string | null
           weekly_hours?: number
         }
         Relationships: [
