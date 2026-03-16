@@ -402,7 +402,7 @@ const AdminSchoolMusicSchoolCard = () => {
                       <span className="font-medium">{coordinator.first_name} {coordinator.last_name}</span>
                       <span className="text-muted-foreground">(רכז)</span>
                     </div>
-                    <Badge variant="secondary">{classesCount} שעות ריכוז</Badge>
+                    <Badge variant={coordinatorHours != null ? "default" : "secondary"}>{effectiveCoordHours} שעות ריכוז</Badge>
                   </div>
                 )}
                 {conductor && (
@@ -411,7 +411,7 @@ const AdminSchoolMusicSchoolCard = () => {
                       <span className="font-medium">{conductor.first_name} {conductor.last_name}</span>
                       <span className="text-muted-foreground">(מנצח)</span>
                     </div>
-                    <Badge variant="secondary">{classesCount} שעות ניצוח</Badge>
+                    <Badge variant={conductorHours != null ? "default" : "secondary"}>{effectiveConductHours} שעות ניצוח</Badge>
                   </div>
                 )}
                 {/* Totals */}
@@ -423,7 +423,7 @@ const AdminSchoolMusicSchoolCard = () => {
                   {(coordinator || conductor) && (
                     <div className="flex items-center justify-between text-sm font-semibold">
                       <span>סה״כ שעות ריכוז וניצוח</span>
-                      <span>{(coordinator ? classesCount : 0) + (conductor ? classesCount : 0)}</span>
+                      <span>{(coordinator ? effectiveCoordHours : 0) + (conductor ? effectiveConductHours : 0)}</span>
                     </div>
                   )}
                 </div>
