@@ -80,6 +80,7 @@ const AdminSchoolMusicSchools = () => {
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                       <span>{(s as any).academic_years?.name || "—"}</span>
                       <span>{groupCounts[s.id] || 0} קבוצות</span>
+                      {getTimeRange(s) && <span>{getTimeRange(s)}</span>}
                     </div>
                     <div className="flex gap-3 text-xs text-muted-foreground mt-1">
                       <span className="flex items-center gap-1">
