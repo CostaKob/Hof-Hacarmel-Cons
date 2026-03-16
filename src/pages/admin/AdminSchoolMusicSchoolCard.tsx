@@ -254,7 +254,7 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">רכז</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             {coordinator && !editingCoordinator ? (
               <div className="flex items-center justify-between rounded-xl border p-3">
                 <div>
@@ -285,6 +285,30 @@ const AdminSchoolMusicSchoolCard = () => {
                 )}
               </div>
             )}
+            {coordinator && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">שעות ריכוז:</span>
+                {editingCoordinatorHours ? (
+                  <div className="flex items-center gap-1">
+                    <Input type="number" min={0} className="w-20 h-7 text-xs rounded-lg text-center" value={coordHoursInput} onChange={(e) => setCoordHoursInput(e.target.value)} placeholder={String(classesCount)} />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { updateRoleHours.mutate({ field: "coordinator_hours", value: coordHoursInput === "" ? null : Number(coordHoursInput) }); }}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingCoordinatorHours(false)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Badge variant={coordinatorHours != null ? "default" : "secondary"}>{effectiveCoordHours}</Badge>
+                    {coordinatorHours != null && <span className="text-xs text-muted-foreground">(ידני)</span>}
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setCoordHoursInput(coordinatorHours != null ? String(coordinatorHours) : ""); setEditingCoordinatorHours(true); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -293,7 +317,7 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">מנצח</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-2">
             {conductor && !editingConductor ? (
               <div className="flex items-center justify-between rounded-xl border p-3">
                 <div>
@@ -321,6 +345,30 @@ const AdminSchoolMusicSchoolCard = () => {
                 </Select>
                 {editingConductor && (
                   <Button variant="ghost" size="sm" onClick={() => setEditingConductor(false)}>ביטול</Button>
+                )}
+              </div>
+            )}
+            {conductor && (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-muted-foreground">שעות ניצוח:</span>
+                {editingConductorHours ? (
+                  <div className="flex items-center gap-1">
+                    <Input type="number" min={0} className="w-20 h-7 text-xs rounded-lg text-center" value={conductHoursInput} onChange={(e) => setConductHoursInput(e.target.value)} placeholder={String(classesCount)} />
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { updateRoleHours.mutate({ field: "conductor_hours", value: conductHoursInput === "" ? null : Number(conductHoursInput) }); }}>
+                      <Check className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setEditingConductorHours(false)}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <Badge variant={conductorHours != null ? "default" : "secondary"}>{effectiveConductHours}</Badge>
+                    {conductorHours != null && <span className="text-xs text-muted-foreground">(ידני)</span>}
+                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setConductHoursInput(conductorHours != null ? String(conductorHours) : ""); setEditingConductorHours(true); }}>
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  </div>
                 )}
               </div>
             )}
