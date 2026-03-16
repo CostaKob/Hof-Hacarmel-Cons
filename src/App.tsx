@@ -112,6 +112,7 @@ const App = () => (
               <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
               <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
               <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
+              <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
               <Route path="/admin/ensembles/:id" element={<AdminRoute><AdminEnsembleCard /></AdminRoute>} />
