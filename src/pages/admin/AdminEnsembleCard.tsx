@@ -276,9 +276,17 @@ const AdminEnsembleCard = () => {
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
               {ensembleStudents.map((es: any) => (
-                <Badge key={es.id} variant="secondary" className="text-sm gap-1 pl-3 pr-1 py-1">
+                <Badge
+                  key={es.id}
+                  variant="secondary"
+                  className="text-sm gap-1.5 pl-3 pr-1.5 py-1.5 cursor-pointer hover:bg-accent transition-colors"
+                  onClick={() => navigate(`/admin/students/${es.student_id}`)}
+                >
                   {es.students?.first_name} {es.students?.last_name}
-                  <button onClick={() => removeStudent.mutate(es.id)} className="hover:text-destructive rounded-full p-0.5">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeStudent.mutate(es.id); }}
+                    className="hover:text-destructive rounded-full p-0.5"
+                  >
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
