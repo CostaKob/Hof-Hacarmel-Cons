@@ -178,7 +178,7 @@ const AdminSalaryReport = () => {
 
     const empty = (): Record<FieldKey, number> => ({
       lessons_45: 0, lessons_30: 0, lessons_60: 0,
-      small_ensemble: 0, large_ensemble: 0,
+      small_ensemble: 0, large_ensemble: 0, branch_coord: 0,
       orchestra_conductor: 0, choir_conductor: 0, choir_accompaniment: 0,
       school_music_group: 0, school_music_coord: 0,
       activity_days: 0, single_hours: 0, km: 0,
