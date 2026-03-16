@@ -1,0 +1,1 @@
+ALTER TABLE public.teachers ADD COLUMN is_office boolean NOT NULL DEFAULT false;
