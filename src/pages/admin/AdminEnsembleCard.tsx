@@ -18,8 +18,7 @@ const AdminEnsembleCard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // State for adding student / staff
-  const [selectedStudentId, setSelectedStudentId] = useState("");
+  // State for adding staff
   const [selectedTeacherId, setSelectedTeacherId] = useState("");
   const [selectedStaffRole, setSelectedStaffRole] = useState("");
   const [staffWeeklyHours, setStaffWeeklyHours] = useState("0");
