@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 import { useState } from "react";
+import EnsembleStudentPicker from "@/components/admin/EnsembleStudentPicker";
 
 const AdminEnsembleCard = () => {
   const { id } = useParams<{ id: string }>();
