@@ -144,6 +144,15 @@ const AdminSalaryReport = () => {
     },
   });
 
+  const { data: branchCoordinators } = useQuery({
+    queryKey: ["salary-branch-coordinators"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("branch_coordinators").select("teacher_id, weekly_hours");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const { data: prevMonthReports } = useQuery({
     queryKey: ["salary-prev-reports", prevRange.from, prevRange.to],
     queryFn: async () => {
