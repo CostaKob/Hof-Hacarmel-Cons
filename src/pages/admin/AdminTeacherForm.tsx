@@ -76,6 +76,7 @@ const AdminTeacherForm = () => {
         address: data.address || null,
         city: data.city || null,
         is_active: data.is_active,
+        is_freelance: data.is_freelance,
       };
       if (isEdit) {
         const { error } = await supabase.from("teachers").update(payload).eq("id", teacherId!);
