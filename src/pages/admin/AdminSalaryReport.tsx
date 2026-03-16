@@ -230,6 +230,12 @@ const AdminSalaryReport = () => {
       }
     }
 
+    // Branch coordinators
+    for (const bc of branchCoordinators ?? []) {
+      const d = map.get(bc.teacher_id);
+      if (d) d.branch_coord += Number(bc.weekly_hours);
+    }
+
     // Travel (previous month km)
     for (const r of prevMonthReports ?? []) {
       const d = map.get(r.teacher_id);
@@ -237,7 +243,7 @@ const AdminSalaryReport = () => {
     }
 
     return map;
-  }, [teachers, enrollments, ensembleStaff, schoolMusicGroups, schoolMusicSchools, prevMonthReports]);
+  }, [teachers, enrollments, ensembleStaff, schoolMusicGroups, schoolMusicSchools, branchCoordinators, prevMonthReports]);
 
   // --- Merge with manual overrides ---
   const rows: TeacherRow[] = useMemo(() => {
