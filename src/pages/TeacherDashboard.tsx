@@ -99,6 +99,12 @@ const TeacherDashboard = () => {
           <StatCard icon={CalendarDays} label="ימי עבודה החודש" value={currentMonthWorkdays} onClick={() => navigate("/teacher/reports")} />
           <StatCard icon={Car} label="נסיעות לחודש הנוכחי" value={`${currentMonthKm} ק״מ`} small onClick={() => navigate("/teacher/travel-summary")} />
           <StatCard icon={MapPin} label="נסיעות לחודש השכר" value={`${prevMonthKm} ק״מ`} small onClick={() => navigate("/teacher/travel-summary?month=-1")} />
+          {hasEnsembles && (
+            <StatCard icon={Music} label="ההרכבים שלי" value={ensembleStaff!.length} onClick={() => navigate("/teacher/ensembles")} />
+          )}
+          {hasSchoolMusic && (
+            <StatCard icon={School} label="בתי ספר מנגנים" value={schoolMusicSchools!.length} onClick={() => navigate("/teacher/school-music-schools")} />
+          )}
         </div>
 
         {/* Primary action */}
@@ -134,22 +140,6 @@ const TeacherDashboard = () => {
 
         {/* Navigation cards */}
         <div className="space-y-3">
-          {hasEnsembles && (
-            <NavCard
-              icon={Music}
-              title="ההרכבים שלי"
-              subtitle={`${ensembleStaff!.length} הרכבים`}
-              onClick={() => navigate("/teacher/ensembles")}
-            />
-          )}
-          {hasSchoolMusic && (
-            <NavCard
-              icon={School}
-              title="קבוצות בית ספר מנגן שלי"
-              subtitle={`${schoolMusicSchools!.length} בתי ספר`}
-              onClick={() => navigate("/teacher/school-music-schools")}
-            />
-          )}
           <NavCard
             icon={BarChart3}
             title="סיכום שיעורים שנתי"
