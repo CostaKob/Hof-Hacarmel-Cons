@@ -310,8 +310,12 @@ const AdminSalaryReport = () => {
     setExporting(true);
     try {
       // Build a clean HTML table for PDF (no inputs)
-      const cellStyle = "border:1px solid #ccc;padding:4px 6px;text-align:center;font-size:11px;white-space:nowrap;";
-      const headerStyle = `${cellStyle}font-weight:bold;background:#f0f0f0;`;
+      // Calculate dynamic font size to fit one page
+      const rowCount = rows.length;
+      const fontSize = Math.max(8, Math.min(13, Math.floor(580 / (rowCount + 4))));
+      const pad = Math.max(2, Math.min(5, Math.floor(fontSize * 0.4)));
+      const cellStyle = `border:1px solid #bbb;padding:${pad}px ${pad + 2}px;text-align:center;font-size:${fontSize}px;white-space:nowrap;`;
+      const headerStyle = `${cellStyle}font-weight:bold;background:#e8e8e8;`;
       const groupBg: Record<string, string> = {
         blue: "background:#eff6ff;", violet: "background:#f5f3ff;",
         emerald: "background:#ecfdf5;", amber: "background:#fffbeb;",
@@ -319,6 +323,7 @@ const AdminSalaryReport = () => {
       };
 
       const groupHeaders = [
+        { label: "#", cols: 1, bg: "" },
         { label: "מורה", cols: 3, bg: "" },
         { label: "הוראה פרטנית", cols: 3, bg: groupBg.blue },
         { label: "הרכבים", cols: 5, bg: groupBg.violet },
@@ -330,6 +335,7 @@ const AdminSalaryReport = () => {
       ];
 
       const colHeaders = [
+        { label: "#", bg: "" },
         { label: "שם משפחה", bg: "" }, { label: "שם פרטי", bg: "" }, { label: "ת.ז.", bg: "" },
         { label: "45 דק׳", bg: groupBg.blue }, { label: "30 דק׳", bg: groupBg.blue }, { label: "60 דק׳", bg: groupBg.blue },
         { label: "הרכב קטן", bg: groupBg.violet }, { label: "הרכב גדול", bg: groupBg.violet },
@@ -342,7 +348,7 @@ const AdminSalaryReport = () => {
       ];
 
       let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
-      html += `<h2 style="text-align:center;font-size:14px;margin-bottom:8px;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</h2>`;
+      html += `<h2 style="text-align:center;font-size:${fontSize + 4}px;margin-bottom:6px;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</h2>`;
       html += `<table style="border-collapse:collapse;width:100%;">`;
       // Group header row
       html += `<tr>`;
@@ -353,14 +359,17 @@ const AdminSalaryReport = () => {
       for (const c of colHeaders) html += `<th style="${headerStyle}${c.bg}">${c.label}</th>`;
       html += `</tr>`;
       // Data rows
-      for (const r of rows) {
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
         const salary = calcSalary(r.values);
         const travel = calcTravel(r.values.km);
         const v = (n: number) => n ? String(n) : "";
-        html += `<tr>`;
+        const rowBg = i % 2 === 1 ? "background:#fafafa;" : "";
+        html += `<tr style="${rowBg}">`;
+        html += `<td style="${cellStyle}color:#999;">${i + 1}</td>`;
         html += `<td style="${cellStyle}text-align:right;">${r.lastName}</td>`;
         html += `<td style="${cellStyle}text-align:right;">${r.firstName}</td>`;
-        html += `<td style="${cellStyle}text-align:right;font-size:10px;">${r.nationalId}</td>`;
+        html += `<td style="${cellStyle}text-align:right;font-size:${fontSize - 1}px;">${r.nationalId}</td>`;
         for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${v(r.values[key])}</td>`;
         for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
         for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${v(r.values[key])}</td>`;
@@ -373,8 +382,8 @@ const AdminSalaryReport = () => {
         html += `</tr>`;
       }
       // Totals row
-      html += `<tr style="font-weight:bold;background:#f0f0f0;">`;
-      html += `<td colspan="3" style="${cellStyle}text-align:right;">סה״כ</td>`;
+      html += `<tr style="font-weight:bold;background:#e8e8e8;">`;
+      html += `<td colspan="4" style="${cellStyle}text-align:right;">סה״כ (${rows.length} מורים)</td>`;
       for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${totals[key] || ""}</td>`;
       for (const key of ["small_ensemble","large_ensemble","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${totals[key] || ""}</td>`;
       for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${totals[key] || ""}</td>`;
@@ -386,9 +395,9 @@ const AdminSalaryReport = () => {
       html += `</tr>`;
       html += `</table></div>`;
 
-      // Render offscreen
+      // Render offscreen — use wide container so table doesn't wrap
       const container = document.createElement("div");
-      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1400px;";
+      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1800px;";
       container.innerHTML = html;
       document.body.appendChild(container);
 
