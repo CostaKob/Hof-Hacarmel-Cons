@@ -202,7 +202,7 @@ const AdminSalaryReport = () => {
     for (const g of schoolMusicGroups ?? []) {
       const d = map.get(g.teacher_id);
       if (!d) continue;
-      d.school_music_group += (g as any).school_music_schools?.classes_count ?? 0;
+      d.school_music_group += (g as any).weekly_hours ?? (g as any).school_music_schools?.classes_count ?? 0;
     }
     // Coordinators/conductors
     for (const sms of schoolMusicSchools ?? []) {
