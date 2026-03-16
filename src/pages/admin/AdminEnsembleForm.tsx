@@ -80,11 +80,14 @@ const AdminEnsembleForm = () => {
 
   const mutation = useMutation({
     mutationFn: async (values: FormValues) => {
-      const payload = {
+      const payload: any = {
         name: values.name,
-        ensemble_type: values.ensemble_type as any,
+        ensemble_type: values.ensemble_type,
         school_id: values.school_id && values.school_id !== "none" ? values.school_id : null,
         weekly_hours: values.weekly_hours,
+        day_of_week: values.day_of_week !== "" ? Number(values.day_of_week) : null,
+        start_time: values.start_time || null,
+        room: values.room || null,
         notes: values.notes || null,
         is_active: values.is_active,
         academic_year_id: selectedYearId,
