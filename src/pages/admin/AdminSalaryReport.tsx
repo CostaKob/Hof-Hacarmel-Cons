@@ -508,6 +508,7 @@ const AdminSalaryReport = () => {
                     </tr>
                     {/* Column headers */}
                     <tr className="border-b bg-muted/50">
+                      <th className="p-2 text-center font-medium whitespace-nowrap bg-muted/50">#</th>
                       <th className="p-2 text-right font-medium whitespace-nowrap sticky right-0 bg-muted/50 z-10">שם משפחה</th>
                       <th className="p-2 text-right font-medium whitespace-nowrap">שם פרטי</th>
                       <th className="p-2 text-right font-medium whitespace-nowrap border-l border-border">ת.ז.</th>
