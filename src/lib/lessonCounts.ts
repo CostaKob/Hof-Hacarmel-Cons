@@ -36,6 +36,7 @@ export interface EnrollmentSummaryRow {
   counts: StatusCounts;
   totalLessons: number;
   expectedLessons: number;
+  startDate?: string | null;
 }
 
 export function emptyStatusCounts(): StatusCounts {
