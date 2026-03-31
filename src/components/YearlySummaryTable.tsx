@@ -2,7 +2,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { EnrollmentSummaryRow } from "@/lib/lessonCounts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getMonthlyRate, getRateColorClass, type EnrollmentSummaryRow } from "@/lib/lessonCounts";
 
 interface Props {
   rows: EnrollmentSummaryRow[];
