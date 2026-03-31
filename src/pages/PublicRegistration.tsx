@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertCircle, UserCheck } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { KNOWN_KEYS_SET } from "@/lib/registrationFieldKeys";
+import { isValidIsraeliPhone, normalizePhone } from "@/lib/phoneValidation";
 
 interface FieldDef {
   id: string;
@@ -34,6 +35,22 @@ interface Section {
   sort_order: number;
 }
 
+// Map from student record fields to registration field keys
+const STUDENT_TO_FIELD_MAP: Record<string, string> = {
+  first_name: "__student_first_name",
+  last_name: "__student_last_name",
+  national_id: "student_national_id",
+  parent_phone: "parent_phone",
+  parent_phone_2: "__parent_phone_2",
+  parent_name: "parent_name",
+  parent_email: "parent_email",
+  phone: "student_phone",
+  city: "city",
+  grade: "grade",
+  gender: "gender",
+  address: "__address",
+};
+
 const PublicRegistration = () => {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -41,7 +58,10 @@ const PublicRegistration = () => {
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [existingStudent, setExistingStudent] = useState<any>(null);
+  const [lookupDone, setLookupDone] = useState(false);
   const approvalRef = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load active year
   const { data: activeYear, isLoading: yearLoading } = useQuery({
@@ -128,6 +148,49 @@ const PublicRegistration = () => {
     return field.options;
   };
 
+  // Lookup student by national ID
+  const lookupStudent = useCallback(async (nationalId: string) => {
+    const trimmed = nationalId.trim();
+    if (trimmed.length < 5) {
+      setExistingStudent(null);
+      setLookupDone(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("students")
+      .select("*")
+      .eq("national_id", trimmed)
+      .maybeSingle();
+
+    if (data) {
+      setExistingStudent(data);
+      setLookupDone(true);
+
+      // Prefill form values from student record
+      setFormValues((prev) => {
+        const updated = { ...prev };
+        // Student full name
+        const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+        if (fullName) updated["student_full_name"] = fullName;
+        if (data.national_id) updated["student_national_id"] = data.national_id;
+        if (data.parent_phone) updated["parent_phone"] = data.parent_phone;
+        if (data.parent_name) updated["parent_name"] = data.parent_name;
+        if (data.parent_email) updated["parent_email"] = data.parent_email;
+        if (data.phone) updated["student_phone"] = data.phone;
+        if (data.city) updated["city"] = data.city;
+        if (data.grade) updated["grade"] = data.grade;
+        if (data.gender) updated["gender"] = data.gender;
+        if (data.parent_national_id) updated["parent_national_id"] = data.parent_national_id;
+        // student_school_text - try to match from student address or keep empty
+        return updated;
+      });
+    } else {
+      setExistingStudent(null);
+      setLookupDone(true);
+    }
+  }, []);
+
   const setFieldValue = (key: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
     setValidationErrors((prev) => {
@@ -135,6 +198,14 @@ const PublicRegistration = () => {
       delete next[key];
       return next;
     });
+
+    // Trigger student lookup when national ID changes
+    if (key === "student_national_id") {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => {
+        lookupStudent(value || "");
+      }, 600);
+    }
   };
 
   const validate = (): boolean => {
@@ -148,6 +219,13 @@ const PublicRegistration = () => {
       if (field.field_type === "email" && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
         errors[field.field_key] = 'כתובת דוא"ל לא תקינה';
       }
+      // Phone validation for Israeli numbers
+      if (field.field_type === "phone" && val) {
+        const normalized = normalizePhone(val);
+        if (normalized && !isValidIsraeliPhone(normalized)) {
+          errors[field.field_key] = "יש להזין מספר טלפון ישראלי תקין";
+        }
+      }
     }
     if (!approvalChecked) {
       errors["__approval"] = "יש לאשר את תנאי ההרשמה";
@@ -159,11 +237,9 @@ const PublicRegistration = () => {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
-      // Scroll to approval if that's the issue
       if (!approvalChecked && approvalRef.current) {
         approvalRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
-        // Scroll to first error field
         const firstErrorKey = Object.keys(validationErrors)[0];
         if (firstErrorKey) {
           const el = document.querySelector(`[data-field-key="${firstErrorKey}"]`);
@@ -176,7 +252,6 @@ const PublicRegistration = () => {
     setSubmitError(null);
 
     try {
-      // Map known fields to registrations columns
       const knownMap: Record<string, any> = {};
       const customData: Record<string, any> = {};
 
@@ -189,13 +264,17 @@ const PublicRegistration = () => {
           knownMap.student_first_name = parts[0];
           knownMap.student_last_name = parts.slice(1).join(" ") || parts[0];
         } else if (KNOWN_KEYS_SET.has(field.field_key)) {
-          knownMap[field.field_key] = val;
+          // Normalize phone values before saving
+          if (field.field_type === "phone" && val) {
+            knownMap[field.field_key] = normalizePhone(val);
+          } else {
+            knownMap[field.field_key] = val;
+          }
         } else {
           customData[field.field_key] = val;
         }
       }
 
-      // Build registration row
       const row: any = {
         academic_year_id: activeYear?.id || null,
         registration_page_id: page?.id || null,
@@ -248,6 +327,8 @@ const PublicRegistration = () => {
                 setSubmitted(false);
                 setFormValues({});
                 setApprovalChecked(false);
+                setExistingStudent(null);
+                setLookupDone(false);
               }}
               variant="outline"
               className="mt-2"
@@ -343,6 +424,25 @@ const PublicRegistration = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Existing student banner */}
+          {existingStudent && lookupDone && (
+            <Card className="border-green-300 bg-green-50 dark:bg-green-950/20 dark:border-green-800">
+              <CardContent className="pt-5 pb-5">
+                <div className="flex items-center gap-3">
+                  <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400 shrink-0" />
+                  <div>
+                    <p className="font-semibold text-green-800 dark:text-green-300 text-sm">
+                      נמצא תלמיד/ה קיים/ת במערכת
+                    </p>
+                    <p className="text-green-700 dark:text-green-400 text-xs mt-0.5">
+                      הפרטים מולאו אוטומטית. אנא עיינו ועדכנו פרטים שהשתנו.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Dynamic form fields grouped by section */}
           {fieldGroups.map((group, gi) => (
