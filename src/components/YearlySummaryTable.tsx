@@ -2,7 +2,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import type { EnrollmentSummaryRow } from "@/lib/lessonCounts";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getMonthlyRate, getRateColorClass, type EnrollmentSummaryRow } from "@/lib/lessonCounts";
 
 interface Props {
   rows: EnrollmentSummaryRow[];
@@ -51,7 +52,9 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
               <TableCell className="text-center">{r.counts.justified_absence}</TableCell>
               <TableCell className="text-center">{r.counts.unjustified_absence}</TableCell>
               <TableCell className="text-center">{r.counts.vacation}</TableCell>
-              <TableCell className="text-center font-bold text-primary">{r.totalLessons} / {r.expectedLessons}</TableCell>
+              <TableCell className="text-center font-bold">
+                <RateDisplay totalLessons={r.totalLessons} expectedLessons={r.expectedLessons} startDate={r.startDate} />
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -89,7 +92,7 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
             <CountBox label="לא מוצדק" value={r.counts.unjustified_absence} />
             <CountBox label="חופש" value={r.counts.vacation} />
             <div className="rounded-lg bg-primary/10 p-2">
-              <div className="text-lg font-bold text-primary">{r.totalLessons} / {r.expectedLessons}</div>
+              <RateDisplay totalLessons={r.totalLessons} expectedLessons={r.expectedLessons} startDate={r.startDate} />
               <div className="text-muted-foreground">סה״כ / צפי</div>
             </div>
           </div>
@@ -105,6 +108,27 @@ function CountBox({ label, value }: { label: string; value: number }) {
       <div className="text-base font-semibold text-foreground">{value}</div>
       <div className="text-muted-foreground">{label}</div>
     </div>
+  );
+}
+
+function RateDisplay({ totalLessons, expectedLessons, startDate }: { totalLessons: number; expectedLessons: number; startDate?: string | null }) {
+  const { rate, status } = getMonthlyRate(totalLessons, startDate);
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-primary font-bold">{totalLessons} / {expectedLessons}</span>
+            {status !== "unknown" ? (
+              <span className={`text-xs font-medium ${getRateColorClass(status)}`}>({rate.toFixed(1)})</span>
+            ) : (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent><p>יעד: 3.2 שיעורים/חודש</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

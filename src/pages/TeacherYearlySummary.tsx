@@ -61,6 +61,7 @@ const TeacherYearlySummary = () => {
         counts,
         totalLessons: calcTotal(counts),
         expectedLessons: getExpectedLessons(e.start_date),
+        startDate: e.start_date,
       } satisfies EnrollmentSummaryRow;
     });
   }, [enrollments, lines]);

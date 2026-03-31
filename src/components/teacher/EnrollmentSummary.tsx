@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
-import { STATUS_LABELS_HE, emptyStatusCounts, calcTotal, getExpectedLessons, type StatusCounts } from "@/lib/lessonCounts";
+import { STATUS_LABELS_HE, emptyStatusCounts, calcTotal, getExpectedLessons, getMonthlyRate, getRateColorClass, type StatusCounts } from "@/lib/lessonCounts";
 import { BarChart3 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   lines: { status: string }[];
@@ -14,6 +15,7 @@ export default function EnrollmentSummary({ lines, startDate }: Props) {
   }
   const total = calcTotal(counts);
   const expected = getExpectedLessons(startDate);
+  const { rate, status } = getMonthlyRate(total, startDate);
 
   const items: { key: keyof StatusCounts; label: string }[] = [
     { key: "present", label: "נוכח/ת" },
@@ -39,10 +41,29 @@ export default function EnrollmentSummary({ lines, startDate }: Props) {
           </div>
         ))}
       </div>
-      <div className="flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 font-semibold">
-        <span className="text-foreground">סה״כ יחידות</span>
-        <span className="text-primary text-lg">{total} / {expected}</span>
-      </div>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 font-semibold">
+              <span className="text-foreground">סה״כ יחידות</span>
+              <span className="flex items-center gap-2">
+                <span className="text-primary text-lg">{total} / {expected}</span>
+                {status !== "unknown" && (
+                  <span className={`text-sm font-medium ${getRateColorClass(status)}`}>
+                    ({rate.toFixed(1)}/חודש)
+                  </span>
+                )}
+                {status === "unknown" && (
+                  <span className="text-sm text-muted-foreground">—</span>
+                )}
+              </span>
+            </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>יעד: 3.2 שיעורים/חודש</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 }
