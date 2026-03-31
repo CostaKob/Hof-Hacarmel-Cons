@@ -51,7 +51,7 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
               <TableCell className="text-center">{r.counts.justified_absence}</TableCell>
               <TableCell className="text-center">{r.counts.unjustified_absence}</TableCell>
               <TableCell className="text-center">{r.counts.vacation}</TableCell>
-              <TableCell className="text-center font-bold text-primary">{r.totalLessons}</TableCell>
+              <TableCell className="text-center font-bold text-primary">{r.totalLessons} / {r.expectedLessons}</TableCell>
             </TableRow>
           ))}
         </TableBody>
