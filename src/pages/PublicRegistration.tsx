@@ -148,7 +148,7 @@ const PublicRegistration = () => {
     return field.options;
   };
 
-  // Lookup student by national ID
+  // Lookup student by national ID via secure RPC
   const lookupStudent = useCallback(async (nationalId: string) => {
     const trimmed = nationalId.trim();
     if (trimmed.length < 5) {
@@ -158,10 +158,7 @@ const PublicRegistration = () => {
     }
 
     const { data } = await supabase
-      .from("students")
-      .select("*")
-      .eq("national_id", trimmed)
-      .maybeSingle();
+      .rpc("lookup_student_by_national_id", { _national_id: trimmed });
 
     if (data) {
       setExistingStudent(data);
