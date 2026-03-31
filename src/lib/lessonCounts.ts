@@ -71,3 +71,27 @@ export const STATUS_LABELS_HE: Record<string, string> = {
   unjustified_absence: "היעדרות לא מוצדקת",
   vacation: "חופש",
 };
+
+export type RateStatus = "good" | "medium" | "bad" | "unknown";
+
+export function getMonthlyRate(totalLessons: number, startDate: string | null | undefined): { rate: number; status: RateStatus } {
+  if (!startDate) return { rate: 0, status: "unknown" };
+  const start = new Date(startDate);
+  const today = new Date();
+  let monthsPassed =
+    (today.getFullYear() - start.getFullYear()) * 12 +
+    (today.getMonth() - start.getMonth()) + 1;
+  if (monthsPassed <= 0) return { rate: 0, status: "unknown" };
+  const rate = totalLessons / monthsPassed;
+  let status: RateStatus = "good";
+  if (rate < 2.5) status = "bad";
+  else if (rate < 3.2) status = "medium";
+  return { rate, status };
+}
+
+export function getRateColorClass(status: RateStatus): string {
+  if (status === "good") return "text-green-600";
+  if (status === "medium") return "text-yellow-500";
+  if (status === "bad") return "text-red-500";
+  return "text-muted-foreground";
+}
