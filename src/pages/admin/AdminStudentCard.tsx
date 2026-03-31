@@ -298,7 +298,7 @@ const AdminStudentCard = () => {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
             <h2 className="font-semibold text-foreground text-base">סיכום נוכחות והיסטוריית שיעורים</h2>
             {enrollments.length === 1 ? (
-              <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} />
+              <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} startDate={(enrollments[0] as any).start_date} />
             ) : (
               <Tabs defaultValue={enrollments[0].id} dir="rtl">
                 <TabsList className="w-full flex-wrap h-auto gap-1">
