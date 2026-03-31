@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowRight } from "lucide-react";
 import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySummaryTable";
-import { emptyStatusCounts, calcTotal, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
+import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 import AppLogo from "@/components/AppLogo";
 
 function useTeacherReportLinesAll(teacherId: string | undefined) {
