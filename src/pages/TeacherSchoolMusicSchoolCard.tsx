@@ -2,17 +2,28 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useTeacherSchoolMusicDetail, useTeacherSchoolMusicGroups } from "@/hooks/useTeacherSchoolMusic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Phone } from "lucide-react";
+import { ChevronLeft, MessageCircle, Phone } from "lucide-react";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+const formatWhatsApp = (phone: string) => {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.startsWith("0")) return "972" + digits.slice(1);
+  return digits;
+};
 
 const PhoneLink = ({ phone }: { phone?: string | null }) => {
   if (!phone) return null;
   return (
-    <a href={`tel:${phone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline" dir="ltr">
-      <Phone className="h-3 w-3" />
-      {phone}
-    </a>
+    <span className="inline-flex items-center gap-2" dir="ltr">
+      <a href={`tel:${phone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+        <Phone className="h-3 w-3" />
+        {phone}
+      </a>
+      <a href={`https://wa.me/${formatWhatsApp(phone)}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
+        <MessageCircle className="h-4 w-4" />
+      </a>
+    </span>
   );
 };
 
