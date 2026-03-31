@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySummaryTable";
-import { emptyStatusCounts, calcTotal, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
+import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 
 function useAllEnrollments() {
   return useQuery({
