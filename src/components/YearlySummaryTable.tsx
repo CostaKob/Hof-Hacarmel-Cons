@@ -30,7 +30,7 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
             <TableHead className="text-center">מוצדק</TableHead>
             <TableHead className="text-center">לא מוצדק</TableHead>
             <TableHead className="text-center">חופש</TableHead>
-            <TableHead className="text-center font-bold">סה״כ</TableHead>
+            <TableHead className="text-center font-bold">סה״כ / צפי</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -51,7 +51,7 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
               <TableCell className="text-center">{r.counts.justified_absence}</TableCell>
               <TableCell className="text-center">{r.counts.unjustified_absence}</TableCell>
               <TableCell className="text-center">{r.counts.vacation}</TableCell>
-              <TableCell className="text-center font-bold text-primary">{r.totalLessons}</TableCell>
+              <TableCell className="text-center font-bold text-primary">{r.totalLessons} / {r.expectedLessons}</TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -89,8 +89,8 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
             <CountBox label="לא מוצדק" value={r.counts.unjustified_absence} />
             <CountBox label="חופש" value={r.counts.vacation} />
             <div className="rounded-lg bg-primary/10 p-2">
-              <div className="text-lg font-bold text-primary">{r.totalLessons}</div>
-              <div className="text-muted-foreground">סה״כ</div>
+              <div className="text-lg font-bold text-primary">{r.totalLessons} / {r.expectedLessons}</div>
+              <div className="text-muted-foreground">סה״כ / צפי</div>
             </div>
           </div>
         </div>

@@ -35,6 +35,7 @@ export interface EnrollmentSummaryRow {
   isActive: boolean;
   counts: StatusCounts;
   totalLessons: number;
+  expectedLessons: number;
 }
 
 export function emptyStatusCounts(): StatusCounts {
@@ -49,6 +50,18 @@ export function calcTotal(c: StatusCounts): number {
     c.unjustified_absence * LESSON_WEIGHT.unjustified_absence +
     c.vacation * LESSON_WEIGHT.vacation
   );
+}
+
+const EXPECTED_MONTHS_MAP: Record<number, number> = {
+  9: 10, 10: 9, 11: 8, 12: 7,
+  1: 6, 2: 5, 3: 4, 4: 3, 5: 2, 6: 1,
+};
+
+export function getExpectedLessons(startDate: string | null | undefined): number {
+  if (!startDate) return 32;
+  const month = new Date(startDate).getMonth() + 1;
+  const months = EXPECTED_MONTHS_MAP[month] ?? 0;
+  return Math.round(months * 3.2);
 }
 
 export const STATUS_LABELS_HE: Record<string, string> = {

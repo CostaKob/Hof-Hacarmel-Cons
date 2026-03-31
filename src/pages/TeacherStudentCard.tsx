@@ -162,7 +162,7 @@ const TeacherStudentCard = () => {
         </div>
 
         {/* Enrollment summary counts */}
-        <EnrollmentSummary lines={reportLines ?? []} />
+        <EnrollmentSummary lines={reportLines ?? []} startDate={enrollment.start_date} />
 
         {/* Lesson history */}
         <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={linesLoading} />

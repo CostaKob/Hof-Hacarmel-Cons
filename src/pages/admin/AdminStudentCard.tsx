@@ -298,7 +298,7 @@ const AdminStudentCard = () => {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
             <h2 className="font-semibold text-foreground text-base">סיכום נוכחות והיסטוריית שיעורים</h2>
             {enrollments.length === 1 ? (
-              <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} />
+              <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} startDate={(enrollments[0] as any).start_date} />
             ) : (
               <Tabs defaultValue={enrollments[0].id} dir="rtl">
                 <TabsList className="w-full flex-wrap h-auto gap-1">
@@ -310,7 +310,7 @@ const AdminStudentCard = () => {
                 </TabsList>
                 {enrollments.map((e: any) => (
                   <TabsContent key={e.id} value={e.id}>
-                    <EnrollmentReportSection enrollmentId={e.id} label={`${e.instruments?.name} — ${e.schools?.name}`} />
+                    <EnrollmentReportSection enrollmentId={e.id} label={`${e.instruments?.name} — ${e.schools?.name}`} startDate={e.start_date} />
                   </TabsContent>
                 ))}
               </Tabs>
@@ -433,11 +433,11 @@ const AdminStudentCard = () => {
   );
 };
 
-function EnrollmentReportSection({ enrollmentId, label }: { enrollmentId: string; label: string }) {
+function EnrollmentReportSection({ enrollmentId, label, startDate }: { enrollmentId: string; label: string; startDate?: string | null }) {
   const { data: reportLines, isLoading } = useEnrollmentReportLines(enrollmentId);
   return (
     <div className="space-y-4 mt-2">
-      <EnrollmentSummary lines={reportLines ?? []} />
+      <EnrollmentSummary lines={reportLines ?? []} startDate={startDate} />
       <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={isLoading} />
     </div>
   );

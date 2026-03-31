@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySummaryTable";
-import { emptyStatusCounts, calcTotal, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
+import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 
 function useAllEnrollments() {
   return useQuery({
@@ -14,7 +14,7 @@ function useAllEnrollments() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, is_active, lesson_duration_minutes, student_id, teacher_id, school_id, instrument_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name), schools(name)");
+        .select("id, is_active, lesson_duration_minutes, start_date, student_id, teacher_id, school_id, instrument_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name), schools(name)");
       if (error) throw error;
       return data;
     },
@@ -65,6 +65,7 @@ const AdminYearlySummary = () => {
         isActive: e.is_active,
         counts,
         totalLessons: calcTotal(counts),
+        expectedLessons: getExpectedLessons(e.start_date),
       } satisfies EnrollmentSummaryRow;
     });
   }, [enrollments, lines]);
