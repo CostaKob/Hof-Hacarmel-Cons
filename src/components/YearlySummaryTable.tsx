@@ -89,8 +89,8 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
             <CountBox label="לא מוצדק" value={r.counts.unjustified_absence} />
             <CountBox label="חופש" value={r.counts.vacation} />
             <div className="rounded-lg bg-primary/10 p-2">
-              <div className="text-lg font-bold text-primary">{r.totalLessons}</div>
-              <div className="text-muted-foreground">סה״כ</div>
+              <div className="text-lg font-bold text-primary">{r.totalLessons} / {r.expectedLessons}</div>
+              <div className="text-muted-foreground">סה״כ / צפי</div>
             </div>
           </div>
         </div>

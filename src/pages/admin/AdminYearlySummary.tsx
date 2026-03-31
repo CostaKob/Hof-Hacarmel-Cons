@@ -65,6 +65,7 @@ const AdminYearlySummary = () => {
         isActive: e.is_active,
         counts,
         totalLessons: calcTotal(counts),
+        expectedLessons: getExpectedLessons(e.start_date),
       } satisfies EnrollmentSummaryRow;
     });
   }, [enrollments, lines]);
