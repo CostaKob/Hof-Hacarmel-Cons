@@ -155,7 +155,58 @@ const TeacherSchoolMusicSchoolCard = () => {
           </Card>
         )}
 
-        {/* E. Groups */}
+        {/* E. All Teachers */}
+        {(() => {
+          const teacherMap = new Map<string, { name: string; phone?: string | null; roles: string[] }>();
+          // Add coordinator
+          if (coordinator) {
+            const key = coordinator.id;
+            const entry = teacherMap.get(key) || { name: `${coordinator.first_name} ${coordinator.last_name}`, phone: coordinator.phone, roles: [] };
+            entry.roles.push("רכז");
+            teacherMap.set(key, entry);
+          }
+          // Add conductor
+          if (conductor) {
+            const key = conductor.id;
+            const entry = teacherMap.get(key) || { name: `${conductor.first_name} ${conductor.last_name}`, phone: conductor.phone, roles: [] };
+            entry.roles.push("מנצח");
+            teacherMap.set(key, entry);
+          }
+          // Add group teachers
+          groups.forEach((g: any) => {
+            if (g.teachers) {
+              const key = g.teacher_id;
+              const entry = teacherMap.get(key) || { name: `${g.teachers.first_name} ${g.teachers.last_name}`, phone: g.teachers.phone, roles: [] };
+              const role = g.instruments?.name ? `מורה ל${g.instruments.name}` : "מורה לקבוצה";
+              if (!entry.roles.includes(role)) entry.roles.push(role);
+              teacherMap.set(key, entry);
+            }
+          });
+          const allTeachers = Array.from(teacherMap.values());
+          if (allTeachers.length === 0) return null;
+          return (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">צוות מורים ({allTeachers.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-2">
+                  {allTeachers.map((t, i) => (
+                    <div key={i} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
+                      <div>
+                        <p className="font-medium">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">{t.roles.join(" · ")}</p>
+                      </div>
+                      <PhoneLink phone={t.phone} />
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {/* F. Groups */}
         {groups.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
