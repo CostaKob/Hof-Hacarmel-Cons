@@ -30,7 +30,7 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
             <TableHead className="text-center">מוצדק</TableHead>
             <TableHead className="text-center">לא מוצדק</TableHead>
             <TableHead className="text-center">חופש</TableHead>
-            <TableHead className="text-center font-bold">סה״כ</TableHead>
+            <TableHead className="text-center font-bold">סה״כ / צפי</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
