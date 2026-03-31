@@ -1313,6 +1313,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_student_by_national_id: {
+        Args: { _national_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "teacher" | "secretary"
