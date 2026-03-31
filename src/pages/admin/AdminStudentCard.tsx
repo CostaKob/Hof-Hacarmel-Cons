@@ -310,7 +310,7 @@ const AdminStudentCard = () => {
                 </TabsList>
                 {enrollments.map((e: any) => (
                   <TabsContent key={e.id} value={e.id}>
-                    <EnrollmentReportSection enrollmentId={e.id} label={`${e.instruments?.name} — ${e.schools?.name}`} />
+                    <EnrollmentReportSection enrollmentId={e.id} label={`${e.instruments?.name} — ${e.schools?.name}`} startDate={e.start_date} />
                   </TabsContent>
                 ))}
               </Tabs>
