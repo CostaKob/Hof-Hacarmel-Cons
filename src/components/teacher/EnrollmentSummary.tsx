@@ -1,17 +1,19 @@
 import { Badge } from "@/components/ui/badge";
-import { STATUS_LABELS_HE, emptyStatusCounts, calcTotal, type StatusCounts } from "@/lib/lessonCounts";
+import { STATUS_LABELS_HE, emptyStatusCounts, calcTotal, getExpectedLessons, type StatusCounts } from "@/lib/lessonCounts";
 import { BarChart3 } from "lucide-react";
 
 interface Props {
   lines: { status: string }[];
+  startDate?: string | null;
 }
 
-export default function EnrollmentSummary({ lines }: Props) {
+export default function EnrollmentSummary({ lines, startDate }: Props) {
   const counts: StatusCounts = emptyStatusCounts();
   for (const l of lines) {
     if (l.status in counts) counts[l.status as keyof StatusCounts]++;
   }
   const total = calcTotal(counts);
+  const expected = getExpectedLessons(startDate);
 
   const items: { key: keyof StatusCounts; label: string }[] = [
     { key: "present", label: "נוכח/ת" },
@@ -39,7 +41,7 @@ export default function EnrollmentSummary({ lines }: Props) {
       </div>
       <div className="flex items-center justify-between rounded-xl bg-primary/10 px-4 py-3 font-semibold">
         <span className="text-foreground">סה״כ יחידות</span>
-        <span className="text-primary text-lg">{total}</span>
+        <span className="text-primary text-lg">{total} / {expected}</span>
       </div>
     </div>
   );
