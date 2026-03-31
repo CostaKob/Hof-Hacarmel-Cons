@@ -111,4 +111,25 @@ function CountBox({ label, value }: { label: string; value: number }) {
   );
 }
 
+function RateDisplay({ totalLessons, expectedLessons, startDate }: { totalLessons: number; expectedLessons: number; startDate?: string | null }) {
+  const { rate, status } = getMonthlyRate(totalLessons, startDate);
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="inline-flex items-center gap-1.5">
+            <span className="text-primary font-bold">{totalLessons} / {expectedLessons}</span>
+            {status !== "unknown" ? (
+              <span className={`text-xs font-medium ${getRateColorClass(status)}`}>({rate.toFixed(1)})</span>
+            ) : (
+              <span className="text-xs text-muted-foreground">—</span>
+            )}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent><p>יעד: 3.2 שיעורים/חודש</p></TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 export default YearlySummaryTable;
