@@ -157,29 +157,29 @@ const PublicRegistration = () => {
       return;
     }
 
-    const { data } = await supabase
+    const { data: rawData } = await supabase
       .rpc("lookup_student_by_national_id", { _national_id: trimmed });
 
-    if (data) {
-      setExistingStudent(data);
+    const student = rawData as any;
+
+    if (student) {
+      setExistingStudent(student);
       setLookupDone(true);
 
       // Prefill form values from student record
       setFormValues((prev) => {
         const updated = { ...prev };
-        // Student full name
-        const fullName = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+        const fullName = `${student.first_name || ""} ${student.last_name || ""}`.trim();
         if (fullName) updated["student_full_name"] = fullName;
-        if (data.national_id) updated["student_national_id"] = data.national_id;
-        if (data.parent_phone) updated["parent_phone"] = data.parent_phone;
-        if (data.parent_name) updated["parent_name"] = data.parent_name;
-        if (data.parent_email) updated["parent_email"] = data.parent_email;
-        if (data.phone) updated["student_phone"] = data.phone;
-        if (data.city) updated["city"] = data.city;
-        if (data.grade) updated["grade"] = data.grade;
-        if (data.gender) updated["gender"] = data.gender;
-        if (data.parent_national_id) updated["parent_national_id"] = data.parent_national_id;
-        // student_school_text - try to match from student address or keep empty
+        if (student.national_id) updated["student_national_id"] = student.national_id;
+        if (student.parent_phone) updated["parent_phone"] = student.parent_phone;
+        if (student.parent_name) updated["parent_name"] = student.parent_name;
+        if (student.parent_email) updated["parent_email"] = student.parent_email;
+        if (student.phone) updated["student_phone"] = student.phone;
+        if (student.city) updated["city"] = student.city;
+        if (student.grade) updated["grade"] = student.grade;
+        if (student.gender) updated["gender"] = student.gender;
+        if (student.parent_national_id) updated["parent_national_id"] = student.parent_national_id;
         return updated;
       });
     } else {
