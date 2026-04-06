@@ -12,7 +12,16 @@ import { isValidIsraeliPhone, normalizePhone } from "@/lib/phoneValidation";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import AppLogo from "@/components/AppLogo";
 
-const INFO_TEXT = `הורים ותלמידים יקרים!
+const Field = ({ id, label, required, children, error }: { id: string; label: string; required?: boolean; children: React.ReactNode; error?: string }) => (
+  <div className="space-y-1.5">
+    <Label htmlFor={id} className="text-sm font-medium">
+      {label} {required && <span className="text-destructive">*</span>}
+    </Label>
+    {children}
+    {error && <p className="text-xs text-destructive">{error}</p>}
+  </div>
+);
+
 
 אנא קראו את הטופס, מלאו את השאלון הקצר ואשרו בסופו.
 
