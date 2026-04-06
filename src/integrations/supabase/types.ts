@@ -920,6 +920,91 @@ export type Database = {
           },
         ]
       }
+      school_music_students: {
+        Row: {
+          academic_year_id: string | null
+          approval_checked: boolean
+          city: string | null
+          class_name: string
+          created_at: string
+          gender: string | null
+          id: string
+          instrument_id: string | null
+          instrument_serial_number: string | null
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          school_music_school_id: string
+          status: Database["public"]["Enums"]["school_music_student_status"]
+          student_first_name: string
+          student_last_name: string
+          student_national_id: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          approval_checked?: boolean
+          city?: string | null
+          class_name: string
+          created_at?: string
+          gender?: string | null
+          id?: string
+          instrument_id?: string | null
+          instrument_serial_number?: string | null
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          school_music_school_id: string
+          status?: Database["public"]["Enums"]["school_music_student_status"]
+          student_first_name: string
+          student_last_name: string
+          student_national_id: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          approval_checked?: boolean
+          city?: string | null
+          class_name?: string
+          created_at?: string
+          gender?: string | null
+          id?: string
+          instrument_id?: string | null
+          instrument_serial_number?: string | null
+          parent_email?: string
+          parent_name?: string
+          parent_national_id?: string
+          parent_phone?: string
+          school_music_school_id?: string
+          status?: Database["public"]["Enums"]["school_music_student_status"]
+          student_first_name?: string
+          student_last_name?: string
+          student_national_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_students_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_students_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_students_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       schools: {
         Row: {
           address: string | null
@@ -1350,6 +1435,7 @@ export type Database = {
         | "waiting_for_call"
         | "waiting_for_payment"
         | "ready_to_assign"
+      school_music_student_status: "new" | "in_review" | "assigned" | "inactive"
       transaction_type: "payment" | "credit"
     }
     CompositeTypes: {
@@ -1513,6 +1599,7 @@ export const Constants = {
         "waiting_for_payment",
         "ready_to_assign",
       ],
+      school_music_student_status: ["new", "in_review", "assigned", "inactive"],
       transaction_type: ["payment", "credit"],
     },
   },
