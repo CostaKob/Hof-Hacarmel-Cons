@@ -165,7 +165,7 @@ const SchoolMusicRegister = () => {
     );
   }
 
-  const Field = ({ id, label, required, children, error }: { id: string; label: string; required?: boolean; children: React.ReactNode; error?: string }) => (
+  return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-sm font-medium">
         {label} {required && <span className="text-destructive">*</span>}
