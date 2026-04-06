@@ -180,7 +180,7 @@ const SchoolMusicRegister = () => {
       <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-3">
-          {logoUrl && <AppLogo className="mx-auto h-16 w-auto" />}
+          {logoUrl && <AppLogo size="lg" />}
           <h1 className="text-xl font-bold">טופס השאלת כלי נגינה - תשפ״ז (2026-2027)</h1>
         </div>
 
