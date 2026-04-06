@@ -534,6 +534,68 @@ const AdminSchoolMusicSchoolCard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* School Music Students */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-lg">תלמידים ({smsStudents.length})</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {smsStudents.length > 5 && (
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="חיפוש תלמיד..."
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  className="pr-9"
+                />
+              </div>
+            )}
+            {smsStudents.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">אין תלמידים רשומים עדיין</p>
+            ) : (
+              <div className="grid gap-2">
+                {smsStudents
+                  .filter((s: any) => {
+                    if (!studentSearch) return true;
+                    const q = studentSearch.toLowerCase();
+                    return `${s.student_first_name} ${s.student_last_name}`.toLowerCase().includes(q)
+                      || s.parent_name?.toLowerCase().includes(q)
+                      || s.instrument_serial_number?.toLowerCase().includes(q);
+                  })
+                  .map((s: any) => {
+                    const statusMap: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+                      new: { label: "חדש", variant: "secondary" },
+                      in_review: { label: "בבדיקה", variant: "outline" },
+                      assigned: { label: "שובץ", variant: "default" },
+                      inactive: { label: "לא פעיל", variant: "destructive" },
+                    };
+                    const st = statusMap[s.status] || statusMap.new;
+                    return (
+                      <div key={s.id} className="rounded-xl border p-3 text-sm space-y-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{s.student_first_name} {s.student_last_name}</span>
+                          <Badge variant={st.variant}>{st.label}</Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                          <span>כיתה: {s.class_name}</span>
+                          <span>כלי: {(s as any).instruments?.name || "—"}</span>
+                          {s.instrument_serial_number && <span>סידורי: {s.instrument_serial_number}</span>}
+                        </div>
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                          <span>הורה: {s.parent_name}</span>
+                          <a href={`tel:${s.parent_phone}`} className="text-primary hover:underline" dir="ltr">
+                            <Phone className="h-3 w-3 inline mr-0.5" />{s.parent_phone}
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <AlertDialog open={showDeleteSchool} onOpenChange={setShowDeleteSchool}>
