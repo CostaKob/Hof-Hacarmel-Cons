@@ -57,6 +57,7 @@ import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
 import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
 import PublicRegistration from "./pages/PublicRegistration";
+import SchoolMusicRegister from "./pages/SchoolMusicRegister";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -124,6 +125,7 @@ const App = () => (
               <Route path="/admin/school-music-schools/:id/edit" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
               {/* Public */}
               <Route path="/register" element={<PublicRegistration />} />
+              <Route path="/school-music-register" element={<SchoolMusicRegister />} />
               {/* Teacher routes */}
               <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
               <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
