@@ -22,6 +22,7 @@ const Field = ({ id, label, required, children, error }: { id: string; label: st
   </div>
 );
 
+const INFO_TEXT = `הורים ותלמידים יקרים!
 
 אנא קראו את הטופס, מלאו את השאלון הקצר ואשרו בסופו.
 
@@ -173,16 +174,6 @@ const SchoolMusicRegister = () => {
       </div>
     );
   }
-
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-sm font-medium">
-        {label} {required && <span className="text-destructive">*</span>}
-      </Label>
-      {children}
-      {error && <p className="text-xs text-destructive">{error}</p>}
-    </div>
-  );
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
