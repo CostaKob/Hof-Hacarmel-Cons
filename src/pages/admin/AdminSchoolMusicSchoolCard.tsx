@@ -68,6 +68,20 @@ const AdminSchoolMusicSchoolCard = () => {
     enabled: !!id,
   });
 
+  const { data: smsStudents = [] } = useQuery({
+    queryKey: ["school-music-students", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_students" as any)
+        .select("*, instruments(name)")
+        .eq("school_music_school_id", id!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!id,
+  });
+
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["all-teachers-active"],
     queryFn: async () => {
