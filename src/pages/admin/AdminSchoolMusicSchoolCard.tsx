@@ -674,19 +674,38 @@ const AdminSchoolMusicSchoolCard = () => {
 
                       {/* Groups list */}
                       <div className="space-y-1.5">
-                        {groups.map((g: any) => (
-                          <div key={g.id} className="flex items-center justify-between rounded-lg border p-2 text-sm">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <Music className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <span className="font-medium">{g.instruments?.name}</span>
-                              <span className="text-muted-foreground">–</span>
-                              <span className="text-muted-foreground">{g.teachers?.first_name} {g.teachers?.last_name}</span>
+                        {groups.map((g: any) => {
+                          const groupStudents = getStudentsForGroup(g.id);
+                          return (
+                            <div key={g.id} className="rounded-lg border overflow-hidden">
+                              <div className="flex items-center justify-between p-2 text-sm">
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <Music className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                                  <span className="font-medium">{g.instruments?.name}</span>
+                                  <span className="text-muted-foreground">–</span>
+                                  <span className="text-muted-foreground">{g.teachers?.first_name} {g.teachers?.last_name}</span>
+                                  {groupStudents.length > 0 && (
+                                    <Badge variant="outline" className="text-xs">{groupStudents.length} תלמידים</Badge>
+                                  )}
+                                </div>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeGroup.mutate(g.id)}>
+                                  <X className="h-3 w-3 text-destructive" />
+                                </Button>
+                              </div>
+                              {groupStudents.length > 0 && (
+                                <div className="border-t bg-muted/20 px-3 py-1.5 space-y-0.5">
+                                  {groupStudents.map((st: any) => (
+                                    <div key={st.id} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      <Users className="h-3 w-3 shrink-0" />
+                                      <span>{st.student_first_name} {st.student_last_name}</span>
+                                      {st.class_name && <span className="text-muted-foreground/60">({st.class_name})</span>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                            <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeGroup.mutate(g.id)}>
-                              <X className="h-3 w-3 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
+                          );
+                        })}
 
                         {groups.length === 0 && addingGroupForClassId !== cls.id && (
                           <p className="text-xs text-muted-foreground text-center py-2">אין קבוצות. לחץ "קבוצה+" להוספה.</p>
