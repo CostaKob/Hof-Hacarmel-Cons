@@ -240,7 +240,7 @@ const AdminSchoolMusicSchoolCard = () => {
       const source = classes.find((c: any) => c.id === sourceClassId);
       if (!source) throw new Error("Class not found");
 
-      const { data: newClass, error: classErr } = await supabase
+      const { data: insertedClass, error: classErr } = await supabase
         .from("school_music_classes" as any)
         .insert({
           school_music_school_id: id!,
@@ -254,6 +254,8 @@ const AdminSchoolMusicSchoolCard = () => {
         })
         .select("id, class_name, homeroom_teacher_name, homeroom_teacher_phone, day_of_week, start_time, end_time, notes")
         .single();
+
+      const newClass = insertedClass as any;
 
       if (classErr || !newClass) throw classErr ?? new Error("Failed to create duplicated class");
 
