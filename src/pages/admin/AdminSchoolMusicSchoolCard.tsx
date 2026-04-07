@@ -577,6 +577,8 @@ const AdminSchoolMusicSchoolCard = () => {
             {classes.map((cls: any) => {
               const isExpanded = expandedClasses.has(cls.id);
               const groups = getGroupsForClass(cls.id);
+              const groupIds = new Set(groups.map((g: any) => g.id));
+              const classStudentCount = schoolStudents.filter((s: any) => s.school_music_class_group_id && groupIds.has(s.school_music_class_group_id)).length;
               const isEditingThis = editingClassId === cls.id;
               const dayName = cls.day_of_week != null ? DAY_NAMES[cls.day_of_week] : null;
               const timeStr = [cls.start_time?.slice(0, 5), cls.end_time?.slice(0, 5)].filter(Boolean).join("–");
@@ -596,7 +598,7 @@ const AdminSchoolMusicSchoolCard = () => {
                       {cls.homeroom_teacher_name && (
                         <span className="text-xs text-muted-foreground">מחנכת: {cls.homeroom_teacher_name}</span>
                       )}
-                      <Badge variant="outline" className="text-xs">{groups.length} קבוצות</Badge>
+                      <Badge variant="outline" className="text-xs">{groups.length} קבוצות · {classStudentCount} תלמידים</Badge>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7" title="שכפל כיתה" onClick={(e) => {
