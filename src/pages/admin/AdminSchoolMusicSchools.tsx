@@ -9,8 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Search, Users, Pencil, Save, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Search, Users, Pencil, Save, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -54,7 +57,10 @@ const AdminSchoolMusicSchools = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addForm, setAddForm] = useState<Record<string, any>>({});
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { activeYear } = useAcademicYear();
   // ── Schools data ──
   const { data: schools = [], isLoading } = useQuery({
     queryKey: ["school-music-schools"],
@@ -130,6 +136,67 @@ const AdminSchoolMusicSchools = () => {
     onError: () => toast.error("שגיאה בעדכון הפרטים"),
   });
 
+  // ── Create mutation ──
+  const createMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const { error } = await supabase.from("school_music_students").insert(data as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["school-music-students-all"] });
+      toast.success("התלמיד נוסף בהצלחה");
+      setAddDialogOpen(false);
+      setAddForm({});
+    },
+    onError: () => toast.error("שגיאה בהוספת התלמיד"),
+  });
+
+  // ── Delete mutation ──
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("school_music_students").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["school-music-students-all"] });
+      toast.success("התלמיד נמחק בהצלחה");
+      setExpandedId(null);
+      setDeleteId(null);
+    },
+    onError: () => toast.error("שגיאה במחיקת התלמיד"),
+  });
+
+  const openAddDialog = () => {
+    setAddForm({
+      student_first_name: "",
+      student_last_name: "",
+      student_national_id: "",
+      gender: "",
+      class_name: "",
+      city: "",
+      parent_name: "",
+      parent_national_id: "",
+      parent_phone: "",
+      parent_email: "",
+      school_music_school_id: "",
+      instrument_id: "",
+      instrument_serial_number: "",
+      status: "new",
+      academic_year_id: activeYear?.id || null,
+    });
+    setAddDialogOpen(true);
+  };
+
+  const submitAdd = () => {
+    if (!addForm.student_first_name || !addForm.student_last_name || !addForm.student_national_id || !addForm.school_music_school_id || !addForm.class_name || !addForm.parent_name || !addForm.parent_national_id || !addForm.parent_phone || !addForm.parent_email) {
+      toast.error("יש למלא את כל שדות החובה");
+      return;
+    }
+    const payload = { ...addForm };
+    if (!payload.instrument_id) delete payload.instrument_id;
+    if (!payload.gender) delete payload.gender;
+    createMutation.mutate(payload);
+  };
   // ── Derive filter options ──
   const filterOptions = useMemo(() => {
     const schoolSet = new Map<string, string>();
@@ -313,8 +380,8 @@ const AdminSchoolMusicSchools = () => {
 
         {/* ── Students Tab ── */}
         <TabsContent value="students">
-          {/* Search + Filters like AdminStudents */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Search + Add button */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -324,6 +391,10 @@ const AdminSchoolMusicSchools = () => {
                 className="pr-9 h-12 rounded-xl"
               />
             </div>
+            <Button className="h-12 rounded-xl text-base" onClick={openAddDialog}>
+              <Plus className="h-4 w-4" />
+              תלמיד חדש
+            </Button>
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
@@ -446,15 +517,26 @@ const AdminSchoolMusicSchools = () => {
                             <>
                               <div className="flex justify-between items-center mb-3">
                                 <h4 className="text-sm font-semibold text-foreground">פרטים מלאים</h4>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 gap-1.5 rounded-lg"
-                                  onClick={(e) => { e.stopPropagation(); startEditing(s); }}
-                                >
-                                  <Pencil className="h-3.5 w-3.5" />
-                                  עריכה
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 gap-1.5 rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10"
+                                    onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    מחיקה
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 gap-1.5 rounded-lg"
+                                    onClick={(e) => { e.stopPropagation(); startEditing(s); }}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" />
+                                    עריכה
+                                  </Button>
+                                </div>
                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
                                 <div>
@@ -580,6 +662,118 @@ const AdminSchoolMusicSchools = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Add Student Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>הוספת תלמיד חדש</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">שם פרטי *</Label>
+                <Input value={addForm.student_first_name || ""} onChange={(e) => setAddForm(p => ({ ...p, student_first_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">שם משפחה *</Label>
+                <Input value={addForm.student_last_name || ""} onChange={(e) => setAddForm(p => ({ ...p, student_last_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">ת.ז תלמיד *</Label>
+                <Input value={addForm.student_national_id || ""} onChange={(e) => setAddForm(p => ({ ...p, student_national_id: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">מגדר</Label>
+                <Select value={addForm.gender || ""} onValueChange={(v) => setAddForm(p => ({ ...p, gender: v }))}>
+                  <SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">זכר</SelectItem>
+                    <SelectItem value="female">נקבה</SelectItem>
+                    <SelectItem value="other">אחר</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">בית ספר מנגן *</Label>
+                <Select value={addForm.school_music_school_id || ""} onValueChange={(v) => setAddForm(p => ({ ...p, school_music_school_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                  <SelectContent>
+                    {schools.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">כיתה *</Label>
+                <Input value={addForm.class_name || ""} onChange={(e) => setAddForm(p => ({ ...p, class_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">ישוב</Label>
+                <Input value={addForm.city || ""} onChange={(e) => setAddForm(p => ({ ...p, city: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">כלי נגינה</Label>
+                <Select value={addForm.instrument_id || ""} onValueChange={(v) => setAddForm(p => ({ ...p, instrument_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="בחר כלי" /></SelectTrigger>
+                  <SelectContent>
+                    {allInstruments.map((i: any) => (
+                      <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-muted-foreground mt-2">פרטי הורה</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">שם הורה *</Label>
+                <Input value={addForm.parent_name || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">ת.ז הורה *</Label>
+                <Input value={addForm.parent_national_id || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_national_id: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">טלפון הורה *</Label>
+                <Input value={addForm.parent_phone || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_phone: e.target.value }))} type="tel" dir="ltr" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">דוא"ל הורה *</Label>
+                <Input value={addForm.parent_email || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_email: e.target.value }))} type="email" dir="ltr" />
+              </div>
+            </div>
+            <div className="flex justify-start gap-2 pt-2">
+              <Button onClick={submitAdd} disabled={createMutation.isPending}>
+                {createMutation.isPending ? "שומר..." : "הוסף תלמיד"}
+              </Button>
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>ביטול</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת תלמיד</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך למחוק תלמיד זה? פעולה זו אינה ניתנת לביטול.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+            >
+              מחק
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
