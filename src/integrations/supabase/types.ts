@@ -798,6 +798,47 @@ export type Database = {
           },
         ]
       }
+      school_music_classes: {
+        Row: {
+          class_name: string
+          created_at: string
+          grade_level: string | null
+          homeroom_teacher_name: string | null
+          homeroom_teacher_phone: string | null
+          id: string
+          notes: string | null
+          school_music_school_id: string
+        }
+        Insert: {
+          class_name: string
+          created_at?: string
+          grade_level?: string | null
+          homeroom_teacher_name?: string | null
+          homeroom_teacher_phone?: string | null
+          id?: string
+          notes?: string | null
+          school_music_school_id: string
+        }
+        Update: {
+          class_name?: string
+          created_at?: string
+          grade_level?: string | null
+          homeroom_teacher_name?: string | null
+          homeroom_teacher_phone?: string | null
+          id?: string
+          notes?: string | null
+          school_music_school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_classes_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_music_groups: {
         Row: {
           created_at: string
@@ -916,6 +957,97 @@ export type Database = {
             columns: ["coordinator_teacher_id"]
             isOneToOne: false
             referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_music_session_groups: {
+        Row: {
+          created_at: string
+          id: string
+          instrument_id: string
+          school_music_session_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrument_id: string
+          school_music_session_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrument_id?: string
+          school_music_session_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_session_groups_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_session_groups_school_music_session_id_fkey"
+            columns: ["school_music_session_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_session_groups_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_music_sessions: {
+        Row: {
+          created_at: string
+          day_of_week: number | null
+          end_time: string | null
+          id: string
+          school_music_class_id: string
+          school_music_school_id: string
+          start_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          day_of_week?: number | null
+          end_time?: string | null
+          id?: string
+          school_music_class_id: string
+          school_music_school_id: string
+          start_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          day_of_week?: number | null
+          end_time?: string | null
+          id?: string
+          school_music_class_id?: string
+          school_music_school_id?: string
+          start_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_sessions_school_music_class_id_fkey"
+            columns: ["school_music_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_sessions_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools"
             referencedColumns: ["id"]
           },
         ]

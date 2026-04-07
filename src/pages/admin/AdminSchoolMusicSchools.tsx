@@ -17,17 +17,8 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
-const getTimeRange = (school: any) => {
-  const day = school.day_of_week != null ? `יום ${DAY_NAMES[school.day_of_week]}` : null;
-  const schedules: { start_time: string; end_time: string }[] = school.class_schedules || [];
-  if (schedules.length === 0) return day;
-  const starts = schedules.map((s) => s.start_time).filter(Boolean);
-  const ends = schedules.map((s) => s.end_time).filter(Boolean);
-  if (starts.length === 0 || ends.length === 0) return day;
-  const first = starts.sort()[0];
-  const last = ends.sort().reverse()[0];
-  const timeStr = `${first}–${last}`;
-  return day ? `${day}, ${timeStr}` : timeStr;
+const getDayName = (school: any) => {
+  return school.day_of_week != null ? `יום ${DAY_NAMES[school.day_of_week]}` : null;
 };
 
 const ALL = "__all__";
@@ -74,15 +65,15 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
-  const { data: groupCounts = {} } = useQuery({
-    queryKey: ["school-music-groups-count"],
+  const { data: classCounts = {} } = useQuery({
+    queryKey: ["school-music-classes-count"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_groups")
+        .from("school_music_classes" as any)
         .select("school_music_school_id");
       if (error) throw error;
       const counts: Record<string, number> = {};
-      data.forEach((g: any) => {
+      (data as any[]).forEach((g: any) => {
         counts[g.school_music_school_id] = (counts[g.school_music_school_id] || 0) + 1;
       });
       return counts;
@@ -352,8 +343,8 @@ const AdminSchoolMusicSchools = () => {
                         <p className="font-semibold text-foreground truncate">{s.school_name}</p>
                         <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                           <span>{(s as any).academic_years?.name || "—"}</span>
-                          <span>{groupCounts[s.id] || 0} קבוצות</span>
-                          {getTimeRange(s) && <span>{getTimeRange(s)}</span>}
+                          <span>{classCounts[s.id] || 0} כיתות</span>
+                          {getDayName(s) && <span>{getDayName(s)}</span>}
                         </div>
                         <div className="flex gap-3 text-xs text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
