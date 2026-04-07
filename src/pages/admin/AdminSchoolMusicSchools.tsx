@@ -580,7 +580,6 @@ const AdminSchoolMusicSchools = () => {
           )}
         </TabsContent>
       </Tabs>
-      </div>
     </AdminLayout>
   );
 };
