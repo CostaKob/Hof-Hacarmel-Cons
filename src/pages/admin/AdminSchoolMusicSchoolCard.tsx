@@ -141,8 +141,10 @@ const AdminSchoolMusicSchoolCard = () => {
     enabled: !!id,
   });
 
+  const classIdsKey = classes.map((c: any) => c.id).sort().join(",");
+
   const { data: classGroups = [] } = useQuery({
-    queryKey: ["school-music-class-groups", id],
+    queryKey: ["school-music-class-groups", id, classIdsKey],
     queryFn: async () => {
       const classIds = classes.map((c: any) => c.id);
       if (classIds.length === 0) return [];
@@ -153,7 +155,7 @@ const AdminSchoolMusicSchoolCard = () => {
       if (error) throw error;
       return data as any[];
     },
-    enabled: classes.length > 0,
+    enabled: !!id && classes.length > 0,
   });
 
   const { data: allTeachers = [] } = useQuery({
