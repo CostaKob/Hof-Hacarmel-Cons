@@ -91,6 +91,12 @@
     @apply border-border;
   }
 
+  html,
+  body,
+  #root {
+    direction: rtl;
+  }
+
   body {
     @apply bg-background text-foreground;
   }

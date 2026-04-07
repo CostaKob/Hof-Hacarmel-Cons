@@ -248,10 +248,11 @@ const AdminSchoolMusicSchools = () => {
 
   return (
     <AdminLayout title="בתי ספר מנגנים" backPath="/admin">
-      <Tabs value={tab} onValueChange={setTab} className="w-full">
-        <TabsList className="w-full mb-4">
-          <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
-          <TabsTrigger value="students" className="flex-1">
+      <div dir="rtl" className="w-full text-right">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
+            <TabsTrigger value="students" className="flex-1">
             <Users className="h-4 w-4 ml-1.5" />
             תלמידי בית ספר מנגן
           </TabsTrigger>
@@ -440,7 +441,7 @@ const AdminSchoolMusicSchools = () => {
 
                       {/* Expanded details */}
                       {isExpanded && (
-                        <div className="border-t border-border px-4 pb-4 pt-3">
+                        <div dir="rtl" className="border-t border-border px-4 pb-4 pt-3 text-right">
                           {!isEditing ? (
                             <>
                               {/* View mode */}
@@ -579,6 +580,7 @@ const AdminSchoolMusicSchools = () => {
           )}
         </TabsContent>
       </Tabs>
+      </div>
     </AdminLayout>
   );
 };
