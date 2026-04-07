@@ -1131,6 +1131,8 @@ export type Database = {
           parent_name: string
           parent_national_id: string
           parent_phone: string
+          school_music_class_group_id: string | null
+          school_music_class_id: string | null
           school_music_school_id: string
           status: Database["public"]["Enums"]["school_music_student_status"]
           student_first_name: string
@@ -1151,6 +1153,8 @@ export type Database = {
           parent_name: string
           parent_national_id: string
           parent_phone: string
+          school_music_class_group_id?: string | null
+          school_music_class_id?: string | null
           school_music_school_id: string
           status?: Database["public"]["Enums"]["school_music_student_status"]
           student_first_name: string
@@ -1171,6 +1175,8 @@ export type Database = {
           parent_name?: string
           parent_national_id?: string
           parent_phone?: string
+          school_music_class_group_id?: string | null
+          school_music_class_id?: string | null
           school_music_school_id?: string
           status?: Database["public"]["Enums"]["school_music_student_status"]
           student_first_name?: string
@@ -1190,6 +1196,20 @@ export type Database = {
             columns: ["instrument_id"]
             isOneToOne: false
             referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_students_school_music_class_group_id_fkey"
+            columns: ["school_music_class_group_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_class_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_students_school_music_class_id_fkey"
+            columns: ["school_music_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_classes"
             referencedColumns: ["id"]
           },
           {
