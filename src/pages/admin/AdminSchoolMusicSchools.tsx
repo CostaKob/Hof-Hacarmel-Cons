@@ -139,7 +139,7 @@ const AdminSchoolMusicSchools = () => {
   // ── Create mutation ──
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
-      const { error } = await supabase.from("school_music_students").insert(data);
+      const { error } = await supabase.from("school_music_students").insert(data as any);
       if (error) throw error;
     },
     onSuccess: () => {
