@@ -64,7 +64,7 @@ const Login = () => {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full h-12 rounded-xl text-base" disabled={isLoading}>
               {isLoading ? "מתחבר..." : "התחבר"}
             </Button>
           </form>
