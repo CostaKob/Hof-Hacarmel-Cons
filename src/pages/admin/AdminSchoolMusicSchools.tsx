@@ -104,6 +104,30 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
+  // ── Class groups for edit filtering ──
+  const { data: allClassGroups = [] } = useQuery({
+    queryKey: ["school-music-class-groups-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_class_groups" as any)
+        .select("id, school_music_class_id, instrument_id, teacher_id, instruments(name), teachers(first_name, last_name)");
+      if (error) throw error;
+      return data as any[] ?? [];
+    },
+  });
+
+  // ── Classes for edit filtering ──
+  const { data: allClasses = [] } = useQuery({
+    queryKey: ["school-music-classes-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_classes" as any)
+        .select("id, class_name, school_music_school_id");
+      if (error) throw error;
+      return data as any[] ?? [];
+    },
+  });
+
   const { data: allInstruments = [] } = useQuery({
     queryKey: ["all-instruments"],
     queryFn: async () => {
@@ -284,11 +308,43 @@ const AdminSchoolMusicSchools = () => {
       instrument_id: s.instrument_id || "",
       instrument_serial_number: s.instrument_serial_number || "",
       status: s.status,
+      school_music_class_id: s.school_music_class_id || "",
+      school_music_class_group_id: s.school_music_class_group_id || "",
+      school_music_school_id: s.school_music_school_id || "",
     });
   };
 
-  const saveEdit = (id: string) => {
-    updateMutation.mutate({ id, data: editForm });
+  // Get instruments available in a specific class
+  const getClassInstruments = (classId: string) => {
+    if (!classId) return [];
+    const groupsForClass = allClassGroups.filter((g: any) => g.school_music_class_id === classId);
+    const seen = new Set<string>();
+    return groupsForClass
+      .filter((g: any) => g.instruments && !seen.has(g.instrument_id) && seen.add(g.instrument_id))
+      .map((g: any) => ({ id: g.instrument_id, name: g.instruments.name }))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name, "he"));
+  };
+
+  // Find matching group for class + instrument
+  const findMatchingGroup = (classId: string, instrumentId: string) => {
+    if (!classId || !instrumentId) return null;
+    return allClassGroups.find((g: any) => g.school_music_class_id === classId && g.instrument_id === instrumentId) || null;
+  };
+
+  // Get classes for a school
+  const getSchoolClasses = (schoolId: string) => {
+    if (!schoolId) return [];
+    return allClasses.filter((c: any) => c.school_music_school_id === schoolId);
+  };
+
+  const saveEdit = (studentId: string) => {
+    // Auto-assign group based on class + instrument
+    const matchingGroup = findMatchingGroup(editForm.school_music_class_id, editForm.instrument_id);
+    const payload = {
+      ...editForm,
+      school_music_class_group_id: matchingGroup?.id || null,
+    };
+    updateMutation.mutate({ id: studentId, data: payload });
   };
 
   const EditField = ({ label, field, type = "text", dir }: { label: string; field: string; type?: string; dir?: string }) => (
@@ -612,21 +668,53 @@ const AdminSchoolMusicSchools = () => {
                               </div>
 
                               <div className="mt-3 space-y-3">
-                                <p className="text-xs font-semibold text-muted-foreground">כלי נגינה</p>
+                                <p className="text-xs font-semibold text-muted-foreground">כלי נגינה ושיוך</p>
+                                {/* Class selector (filtered by school) */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground">כלי נגינה</Label>
-                                    <Select value={editForm.instrument_id || ""} onValueChange={(v) => setEditForm((p: any) => ({ ...p, instrument_id: v }))}>
-                                      <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                                    <Label className="text-xs text-muted-foreground">כיתה</Label>
+                                    <Select
+                                      value={editForm.school_music_class_id || ""}
+                                      onValueChange={(v) => setEditForm((p: any) => ({ ...p, school_music_class_id: v, instrument_id: "" }))}
+                                    >
+                                      <SelectTrigger className="h-9"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
                                       <SelectContent>
-                                        {allInstruments.map((i: any) => (
+                                        {getSchoolClasses(editForm.school_music_school_id).map((c: any) => (
+                                          <SelectItem key={c.id} value={c.id}>{c.class_name}</SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground">כלי נגינה</Label>
+                                    <Select
+                                      value={editForm.instrument_id || ""}
+                                      onValueChange={(v) => setEditForm((p: any) => ({ ...p, instrument_id: v }))}
+                                      disabled={!editForm.school_music_class_id}
+                                    >
+                                      <SelectTrigger className="h-9">
+                                        <SelectValue placeholder={editForm.school_music_class_id ? "בחר כלי" : "בחר קודם כיתה"} />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {getClassInstruments(editForm.school_music_class_id).map((i: any) => (
                                           <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
                                         ))}
                                       </SelectContent>
                                     </Select>
                                   </div>
-                                  <EditField label="מספר סידורי" field="instrument_serial_number" />
                                 </div>
+                                {/* Show assigned group */}
+                                {editForm.school_music_class_id && editForm.instrument_id && (() => {
+                                  const mg = findMatchingGroup(editForm.school_music_class_id, editForm.instrument_id);
+                                  if (!mg) return <p className="text-xs text-destructive">לא נמצאה קבוצה מתאימה לכיתה וכלי שנבחרו</p>;
+                                  return (
+                                    <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2 text-sm">
+                                      <span className="text-muted-foreground">קבוצה:</span>
+                                      <span className="font-medium">{mg.instruments?.name} – {mg.teachers?.first_name} {mg.teachers?.last_name}</span>
+                                    </div>
+                                  );
+                                })()}
+                                <EditField label="מספר סידורי" field="instrument_serial_number" />
                                 <div className="space-y-1">
                                   <Label className="text-xs text-muted-foreground">סטטוס</Label>
                                   <Select value={editForm.status} onValueChange={(v) => setEditForm((p: any) => ({ ...p, status: v }))}>
