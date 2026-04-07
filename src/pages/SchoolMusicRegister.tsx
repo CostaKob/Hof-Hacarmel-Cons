@@ -113,6 +113,9 @@ const SchoolMusicRegister = () => {
 
   const updateField = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "school_music_school_id") {
+      setForm((prev) => ({ ...prev, instrument_id: "" }));
+    }
     if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
   };
 
