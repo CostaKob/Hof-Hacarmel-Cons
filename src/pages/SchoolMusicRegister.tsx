@@ -409,15 +409,15 @@ const SchoolMusicRegister = () => {
             {/* Student details */}
             <div className="grid grid-cols-2 gap-4">
               <Field id="first_name" label="שם פרטי תלמיד" required error={errors.student_first_name} fieldRef={fieldRefs.student_first_name}>
-                <Input id="first_name" value={form.student_first_name} onChange={(e) => updateField("student_first_name", e.target.value)} />
+                <Input id="first_name" value={form.student_first_name} onChange={(e) => updateField("student_first_name", e.target.value)} onBlur={() => handleBlur("student_first_name")} />
               </Field>
               <Field id="last_name" label="שם משפחה תלמיד" required error={errors.student_last_name} fieldRef={fieldRefs.student_last_name}>
-                <Input id="last_name" value={form.student_last_name} onChange={(e) => updateField("student_last_name", e.target.value)} />
+                <Input id="last_name" value={form.student_last_name} onChange={(e) => updateField("student_last_name", e.target.value)} onBlur={() => handleBlur("student_last_name")} />
               </Field>
             </div>
 
             <Field id="national_id" label="תעודת זהות תלמיד (9 ספרות)" required error={errors.student_national_id} fieldRef={fieldRefs.student_national_id}>
-              <Input id="national_id" dir="ltr" inputMode="numeric" maxLength={9} value={form.student_national_id} onChange={(e) => updateField("student_national_id", e.target.value)} />
+              <Input id="national_id" dir="ltr" inputMode="numeric" maxLength={9} value={form.student_national_id} onChange={(e) => updateField("student_national_id", e.target.value)} onBlur={() => handleBlur("student_national_id")} />
             </Field>
 
             <Field id="gender" label="לשון פנייה" fieldRef={fieldRefs.gender}>
@@ -439,19 +439,19 @@ const SchoolMusicRegister = () => {
 
             {/* Parent details */}
             <Field id="parent_name" label="שם מלא של הורה" required error={errors.parent_name} fieldRef={fieldRefs.parent_name}>
-              <Input id="parent_name" value={form.parent_name} onChange={(e) => updateField("parent_name", e.target.value)} />
+              <Input id="parent_name" value={form.parent_name} onChange={(e) => updateField("parent_name", e.target.value)} onBlur={() => handleBlur("parent_name")} />
             </Field>
 
             <Field id="parent_nid" label="מספר תעודת זהות הורה (9 ספרות)" required error={errors.parent_national_id} fieldRef={fieldRefs.parent_national_id}>
-              <Input id="parent_nid" dir="ltr" inputMode="numeric" maxLength={9} value={form.parent_national_id} onChange={(e) => updateField("parent_national_id", e.target.value)} />
+              <Input id="parent_nid" dir="ltr" inputMode="numeric" maxLength={9} value={form.parent_national_id} onChange={(e) => updateField("parent_national_id", e.target.value)} onBlur={() => handleBlur("parent_national_id")} />
             </Field>
 
             <Field id="parent_phone" label="טלפון הורה (10 ספרות)" required error={errors.parent_phone} fieldRef={fieldRefs.parent_phone}>
-              <Input id="parent_phone" type="tel" dir="ltr" inputMode="numeric" maxLength={10} value={form.parent_phone} onChange={(e) => updateField("parent_phone", e.target.value)} />
+              <Input id="parent_phone" type="tel" dir="ltr" inputMode="numeric" maxLength={10} value={form.parent_phone} onChange={(e) => updateField("parent_phone", e.target.value)} onBlur={() => handleBlur("parent_phone")} />
             </Field>
 
             <Field id="parent_email" label='דוא"ל הורה' required error={errors.parent_email} fieldRef={fieldRefs.parent_email}>
-              <Input id="parent_email" type="email" dir="ltr" value={form.parent_email} onChange={(e) => updateField("parent_email", e.target.value)} />
+              <Input id="parent_email" type="email" dir="ltr" value={form.parent_email} onChange={(e) => updateField("parent_email", e.target.value)} onBlur={() => handleBlur("parent_email")} />
             </Field>
 
             
