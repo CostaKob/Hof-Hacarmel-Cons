@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, Music } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, Music, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
@@ -235,6 +235,56 @@ const AdminSchoolMusicSchoolCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
+  const duplicateClass = useMutation({
+    mutationFn: async (sourceClassId: string) => {
+      const source = classes.find((c: any) => c.id === sourceClassId);
+      if (!source) throw new Error("Class not found");
+      const { data: newClass, error: classErr } = await supabase.from("school_music_classes" as any).insert({
+        school_music_school_id: id!,
+        class_name: source.class_name + " (עותק)",
+        homeroom_teacher_name: source.homeroom_teacher_name || null,
+        homeroom_teacher_phone: source.homeroom_teacher_phone || null,
+        day_of_week: source.day_of_week,
+        start_time: source.start_time || null,
+        end_time: source.end_time || null,
+        notes: source.notes || null,
+      }).select("id").single() as { data: any; error: any };
+      if (classErr) throw classErr;
+      const sourceGroups = classGroups.filter((g: any) => g.school_music_class_id === sourceClassId);
+      if (sourceGroups.length > 0) {
+        const { error: groupErr } = await supabase.from("school_music_class_groups" as any).insert(
+          sourceGroups.map((g: any) => ({
+            school_music_class_id: newClass.id,
+            instrument_id: g.instrument_id,
+            teacher_id: g.teacher_id,
+          }))
+        );
+        if (groupErr) throw groupErr;
+      }
+      return newClass.id;
+    },
+    onSuccess: (newClassId: string) => {
+      invalidate();
+      toast.success("הכיתה שוכפלה – ערוך את הפרטים");
+      setExpandedClasses(prev => new Set(prev).add(newClassId));
+      setTimeout(() => {
+        const source = classes.find((c: any) => c.id === newClassId);
+        if (!source) return;
+        setEditingClassId(newClassId);
+        setEditClassForm({
+          class_name: source.class_name,
+          homeroom_teacher_name: source.homeroom_teacher_name || "",
+          homeroom_teacher_phone: source.homeroom_teacher_phone || "",
+          day_of_week: source.day_of_week != null ? String(source.day_of_week) : "",
+          start_time: source.start_time?.slice(0, 5) || "",
+          end_time: source.end_time?.slice(0, 5) || "",
+          notes: source.notes || "",
+        });
+      }, 500);
+    },
+    onError: () => toast.error("שגיאה בשכפול"),
+  });
+
   if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
 
@@ -450,6 +500,12 @@ const AdminSchoolMusicSchoolCard = () => {
                       <Badge variant="outline" className="text-xs">{groups.length} קבוצות</Badge>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      <Button size="icon" variant="ghost" className="h-7 w-7" title="שכפל כיתה" onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateClass.mutate(cls.id);
+                      }}>
+                        <Copy className="h-3 w-3" />
+                      </Button>
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => {
                         e.stopPropagation();
                         setEditingClassId(cls.id);
