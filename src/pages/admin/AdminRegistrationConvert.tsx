@@ -236,7 +236,7 @@ const AdminRegistrationConvert = () => {
         if (data.grade && data.grade !== "__none__") updates.grade = data.grade;
 
         if (Object.keys(updates).length > 0) {
-          await supabase.from("students").update(updates).eq("id", studentId);
+          await supabase.from("students").update(updates as any).eq("id", studentId);
         }
       } else {
         // Create new student
