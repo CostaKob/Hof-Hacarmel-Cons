@@ -93,6 +93,19 @@ const AdminSchoolMusicSchoolCard = () => {
     });
   };
 
+  // Expanded groups (for collapsible students)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => {
+      const next = new Set(prev);
+      next.has(groupId) ? next.delete(groupId) : next.add(groupId);
+      return next;
+    });
+  };
+
+  // Delete group confirmation
+  const [deleteGroupId, setDeleteGroupId] = useState<string | null>(null);
+
   const newClassForm = {
     class_name: newClassName,
     homeroom_teacher_name: newClassHomeroomName,
@@ -676,10 +689,18 @@ const AdminSchoolMusicSchoolCard = () => {
                       <div className="space-y-1.5">
                         {groups.map((g: any) => {
                           const groupStudents = getStudentsForGroup(g.id);
+                          const isGroupExpanded = expandedGroups.has(g.id);
                           return (
                             <div key={g.id} className="rounded-lg border overflow-hidden">
-                              <div className="flex items-center justify-between p-2 text-sm">
+                              <button
+                                type="button"
+                                className="w-full flex items-center justify-between p-2 text-sm hover:bg-muted/30 transition-colors"
+                                onClick={() => groupStudents.length > 0 && toggleGroup(g.id)}
+                              >
                                 <div className="flex items-center gap-2 min-w-0">
+                                  {groupStudents.length > 0 && (
+                                    <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform duration-200 ${isGroupExpanded ? "rotate-180" : ""}`} />
+                                  )}
                                   <Music className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                                   <span className="font-medium">{g.instruments?.name}</span>
                                   <span className="text-muted-foreground">–</span>
@@ -688,11 +709,11 @@ const AdminSchoolMusicSchoolCard = () => {
                                     <Badge variant="outline" className="text-xs">{groupStudents.length} תלמידים</Badge>
                                   )}
                                 </div>
-                                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeGroup.mutate(g.id)}>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={(e) => { e.stopPropagation(); setDeleteGroupId(g.id); }}>
                                   <X className="h-3 w-3 text-destructive" />
                                 </Button>
-                              </div>
-                              {groupStudents.length > 0 && (
+                              </button>
+                              {isGroupExpanded && groupStudents.length > 0 && (
                                 <div className="border-t bg-muted/20 px-3 py-1.5 space-y-0.5">
                                   {groupStudents.map((st: any) => (
                                     <div key={st.id} className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -771,6 +792,24 @@ const AdminSchoolMusicSchoolCard = () => {
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction onClick={() => deleteClassId && deleteClass.mutate(deleteClassId)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">מחק</AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete group dialog */}
+      <AlertDialog open={!!deleteGroupId} onOpenChange={(open) => !open && setDeleteGroupId(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת קבוצה</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteGroupId && getStudentsForGroup(deleteGroupId).length > 0
+                ? `בקבוצה זו ${getStudentsForGroup(deleteGroupId).length} תלמידים משויכים. מחיקת הקבוצה תבטל את שיוכם. האם להמשיך?`
+                : "האם למחוק את הקבוצה? פעולה זו אינה ניתנת לביטול."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction onClick={() => { if (deleteGroupId) { removeGroup.mutate(deleteGroupId); setDeleteGroupId(null); } }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">מחק</AlertDialogAction>
             <AlertDialogCancel>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
