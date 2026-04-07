@@ -15,6 +15,44 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
+const createClassFormState = (cls?: any) => ({
+  class_name: cls?.class_name ?? "",
+  homeroom_teacher_name: cls?.homeroom_teacher_name ?? "",
+  homeroom_teacher_phone: cls?.homeroom_teacher_phone ?? "",
+  day_of_week: cls?.day_of_week != null ? String(cls.day_of_week) : "",
+  start_time: cls?.start_time?.slice(0, 5) ?? "",
+  end_time: cls?.end_time?.slice(0, 5) ?? "",
+  notes: cls?.notes ?? "",
+});
+
+const hasRequiredClassFields = (form: {
+  class_name?: string;
+  homeroom_teacher_name?: string;
+  homeroom_teacher_phone?: string;
+  day_of_week?: string;
+  start_time?: string;
+  end_time?: string;
+}) => {
+  return [
+    form.class_name,
+    form.homeroom_teacher_name,
+    form.homeroom_teacher_phone,
+    form.day_of_week,
+    form.start_time,
+    form.end_time,
+  ].every((value) => typeof value === "string" && value.trim().length > 0);
+};
+
+const buildClassPayload = (form: any) => ({
+  class_name: form.class_name.trim(),
+  homeroom_teacher_name: form.homeroom_teacher_name.trim(),
+  homeroom_teacher_phone: form.homeroom_teacher_phone.trim(),
+  day_of_week: Number(form.day_of_week),
+  start_time: form.start_time,
+  end_time: form.end_time,
+  notes: form.notes?.trim() || null,
+});
+
 const AdminSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -54,6 +92,18 @@ const AdminSchoolMusicSchoolCard = () => {
       return next;
     });
   };
+
+  const newClassForm = {
+    class_name: newClassName,
+    homeroom_teacher_name: newClassHomeroomName,
+    homeroom_teacher_phone: newClassHomeroomPhone,
+    day_of_week: newClassDay,
+    start_time: newClassStart,
+    end_time: newClassEnd,
+  };
+
+  const canSaveNewClass = hasRequiredClassFields(newClassForm);
+  const canSaveEditedClass = hasRequiredClassFields(editClassForm);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["school-music-school", id] });
@@ -168,14 +218,11 @@ const AdminSchoolMusicSchoolCard = () => {
   // Class mutations
   const addClass = useMutation({
     mutationFn: async () => {
+      if (!canSaveNewClass) throw new Error("Missing required class fields");
+
       const { error } = await supabase.from("school_music_classes" as any).insert({
         school_music_school_id: id!,
-        class_name: newClassName,
-        homeroom_teacher_name: newClassHomeroomName || null,
-        homeroom_teacher_phone: newClassHomeroomPhone || null,
-        day_of_week: newClassDay ? Number(newClassDay) : null,
-        start_time: newClassStart || null,
-        end_time: newClassEnd || null,
+        ...buildClassPayload(newClassForm),
       });
       if (error) throw error;
     },
@@ -244,15 +291,15 @@ const AdminSchoolMusicSchoolCard = () => {
         .from("school_music_classes" as any)
         .insert({
           school_music_school_id: id!,
-          class_name: `${source.class_name} (עותק)`,
-          homeroom_teacher_name: source.homeroom_teacher_name || null,
-          homeroom_teacher_phone: source.homeroom_teacher_phone || null,
-          day_of_week: source.day_of_week,
-          start_time: source.start_time || null,
-          end_time: source.end_time || null,
-          notes: source.notes || null,
+          class_name: "",
+          homeroom_teacher_name: "",
+          homeroom_teacher_phone: "",
+          day_of_week: null,
+          start_time: null,
+          end_time: null,
+          notes: null,
         })
-        .select("id, class_name, homeroom_teacher_name, homeroom_teacher_phone, day_of_week, start_time, end_time, notes")
+        .select("id, school_music_school_id, class_name, homeroom_teacher_name, homeroom_teacher_phone, day_of_week, start_time, end_time, notes, created_at")
         .single();
 
       const newClass = insertedClass as any;
@@ -272,17 +319,22 @@ const AdminSchoolMusicSchoolCard = () => {
         teacher_id: group.teacher_id,
       }));
 
+      let insertedGroups: any[] = [];
+
       if (copiedGroups.length > 0) {
-        const { error: groupErr } = await supabase
+        const { data: insertedGroupsData, error: groupErr } = await supabase
           .from("school_music_class_groups" as any)
-          .insert(copiedGroups);
+          .insert(copiedGroups)
+          .select("id, school_music_class_id, instrument_id, teacher_id, created_at, instruments(name), teachers(first_name, last_name, phone)");
 
         if (groupErr) throw groupErr;
+        insertedGroups = insertedGroupsData ?? [];
       }
 
       return {
         sourceClassId,
         newClass,
+        insertedGroups,
         copiedGroupsCount: copiedGroups.length,
         copiedGroupsPreview: (sourceGroups ?? []).slice(0, 3).map((group: any) => ({
           instrument: group.instruments?.name ?? "—",
@@ -290,19 +342,13 @@ const AdminSchoolMusicSchoolCard = () => {
         })),
       };
     },
-    onSuccess: ({ newClass, copiedGroupsCount }: any) => {
-      invalidate();
+    onSuccess: ({ newClass, insertedGroups, copiedGroupsCount }: any) => {
+      queryClient.setQueryData(["school-music-classes", id], (prev: any[] = []) => [...prev, newClass]);
+      queryClient.setQueryData(["school-music-class-groups", id], (prev: any[] = []) => [...prev, ...(insertedGroups ?? [])]);
       setExpandedClasses(prev => new Set(prev).add(newClass.id));
       setEditingClassId(newClass.id);
-      setEditClassForm({
-        class_name: newClass.class_name,
-        homeroom_teacher_name: newClass.homeroom_teacher_name || "",
-        homeroom_teacher_phone: newClass.homeroom_teacher_phone || "",
-        day_of_week: newClass.day_of_week != null ? String(newClass.day_of_week) : "",
-        start_time: newClass.start_time?.slice(0, 5) || "",
-        end_time: newClass.end_time?.slice(0, 5) || "",
-        notes: newClass.notes || "",
-      });
+      setEditClassForm(createClassFormState());
+      invalidate();
       toast.success(`הכיתה שוכפלה עם ${copiedGroupsCount} קבוצות`);
     },
     onError: () => toast.error("שגיאה בשכפול"),
@@ -459,7 +505,7 @@ const AdminSchoolMusicSchoolCard = () => {
                     <Input value={newClassName} onChange={(e) => setNewClassName(e.target.value)} className="h-9 rounded-lg" placeholder="לדוגמה: ד1" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">יום</Label>
+                    <Label className="text-xs">יום *</Label>
                     <Select value={newClassDay} onValueChange={setNewClassDay}>
                       <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="יום" /></SelectTrigger>
                       <SelectContent>
@@ -470,25 +516,25 @@ const AdminSchoolMusicSchoolCard = () => {
                     </Select>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">משעה</Label>
+                    <Label className="text-xs">משעה *</Label>
                     <Input type="time" value={newClassStart} onChange={(e) => setNewClassStart(e.target.value)} className="h-9 text-xs rounded-lg" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">עד שעה</Label>
+                    <Label className="text-xs">עד שעה *</Label>
                     <Input type="time" value={newClassEnd} onChange={(e) => setNewClassEnd(e.target.value)} className="h-9 text-xs rounded-lg" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">שם מחנכת</Label>
+                    <Label className="text-xs">שם מחנכת *</Label>
                     <Input value={newClassHomeroomName} onChange={(e) => setNewClassHomeroomName(e.target.value)} className="h-9 rounded-lg" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">טלפון מחנכת</Label>
+                    <Label className="text-xs">טלפון מחנכת *</Label>
                     <Input value={newClassHomeroomPhone} onChange={(e) => setNewClassHomeroomPhone(e.target.value)} className="h-9 rounded-lg" dir="ltr" />
                   </div>
                 </div>
                 <div className="flex gap-2 justify-end">
                   <Button variant="ghost" size="sm" onClick={() => setAddingClass(false)}>ביטול</Button>
-                  <Button size="sm" disabled={!newClassName || addClass.isPending} onClick={() => addClass.mutate()}>הוסף</Button>
+                  <Button size="sm" disabled={!canSaveNewClass || addClass.isPending} onClick={() => addClass.mutate()}>הוסף</Button>
                 </div>
               </div>
             )}
@@ -532,15 +578,7 @@ const AdminSchoolMusicSchoolCard = () => {
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => {
                         e.stopPropagation();
                         setEditingClassId(cls.id);
-                        setEditClassForm({
-                          class_name: cls.class_name,
-                          homeroom_teacher_name: cls.homeroom_teacher_name || "",
-                          homeroom_teacher_phone: cls.homeroom_teacher_phone || "",
-                          day_of_week: cls.day_of_week != null ? String(cls.day_of_week) : "",
-                          start_time: cls.start_time?.slice(0, 5) || "",
-                          end_time: cls.end_time?.slice(0, 5) || "",
-                          notes: cls.notes || "",
-                        });
+                        setEditClassForm(createClassFormState(cls));
                       }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
@@ -556,11 +594,11 @@ const AdminSchoolMusicSchoolCard = () => {
                     <div className="border-t p-3 bg-muted/20 space-y-2">
                       <div className="grid grid-cols-2 gap-2">
                         <div className="space-y-1">
-                          <Label className="text-xs">שם כיתה</Label>
+                          <Label className="text-xs">שם כיתה *</Label>
                           <Input value={editClassForm.class_name} onChange={(e) => setEditClassForm((p: any) => ({ ...p, class_name: e.target.value }))} className="h-9 rounded-lg" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">יום</Label>
+                          <Label className="text-xs">יום *</Label>
                           <Select value={editClassForm.day_of_week} onValueChange={(v) => setEditClassForm((p: any) => ({ ...p, day_of_week: v }))}>
                             <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="יום" /></SelectTrigger>
                             <SelectContent>
@@ -571,36 +609,28 @@ const AdminSchoolMusicSchoolCard = () => {
                           </Select>
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">משעה</Label>
+                          <Label className="text-xs">משעה *</Label>
                           <Input type="time" value={editClassForm.start_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, start_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">עד שעה</Label>
+                          <Label className="text-xs">עד שעה *</Label>
                           <Input type="time" value={editClassForm.end_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, end_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">שם מחנכת</Label>
+                          <Label className="text-xs">שם מחנכת *</Label>
                           <Input value={editClassForm.homeroom_teacher_name} onChange={(e) => setEditClassForm((p: any) => ({ ...p, homeroom_teacher_name: e.target.value }))} className="h-9 rounded-lg" />
                         </div>
                         <div className="space-y-1">
-                          <Label className="text-xs">טלפון מחנכת</Label>
+                          <Label className="text-xs">טלפון מחנכת *</Label>
                           <Input value={editClassForm.homeroom_teacher_phone} onChange={(e) => setEditClassForm((p: any) => ({ ...p, homeroom_teacher_phone: e.target.value }))} className="h-9 rounded-lg" dir="ltr" />
                         </div>
                       </div>
                       <div className="flex gap-2 justify-end">
                         <Button variant="ghost" size="sm" onClick={() => setEditingClassId(null)}>ביטול</Button>
                         <Button size="sm" onClick={() => {
-                          const payload = {
-                            class_name: editClassForm.class_name,
-                            homeroom_teacher_name: editClassForm.homeroom_teacher_name || null,
-                            homeroom_teacher_phone: editClassForm.homeroom_teacher_phone || null,
-                            day_of_week: editClassForm.day_of_week ? Number(editClassForm.day_of_week) : null,
-                            start_time: editClassForm.start_time || null,
-                            end_time: editClassForm.end_time || null,
-                            notes: editClassForm.notes || null,
-                          };
+                          const payload = buildClassPayload(editClassForm);
                           updateClass.mutate({ classId: cls.id, data: payload });
-                        }}>שמור</Button>
+                        }} disabled={!canSaveEditedClass || updateClass.isPending}>שמור</Button>
                       </div>
                     </div>
                   )}
