@@ -380,8 +380,8 @@ const AdminSchoolMusicSchools = () => {
 
         {/* ── Students Tab ── */}
         <TabsContent value="students">
-          {/* Search + Filters like AdminStudents */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Search + Add button */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-sm">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -391,6 +391,10 @@ const AdminSchoolMusicSchools = () => {
                 className="pr-9 h-12 rounded-xl"
               />
             </div>
+            <Button className="h-12 rounded-xl text-base" onClick={openAddDialog}>
+              <Plus className="h-4 w-4" />
+              תלמיד חדש
+            </Button>
           </div>
 
           <div className="mb-4 flex flex-wrap gap-2">
