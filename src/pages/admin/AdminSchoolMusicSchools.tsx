@@ -17,17 +17,8 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
-const getTimeRange = (school: any) => {
-  const day = school.day_of_week != null ? `יום ${DAY_NAMES[school.day_of_week]}` : null;
-  const schedules: { start_time: string; end_time: string }[] = school.class_schedules || [];
-  if (schedules.length === 0) return day;
-  const starts = schedules.map((s) => s.start_time).filter(Boolean);
-  const ends = schedules.map((s) => s.end_time).filter(Boolean);
-  if (starts.length === 0 || ends.length === 0) return day;
-  const first = starts.sort()[0];
-  const last = ends.sort().reverse()[0];
-  const timeStr = `${first}–${last}`;
-  return day ? `${day}, ${timeStr}` : timeStr;
+const getDayName = (school: any) => {
+  return school.day_of_week != null ? `יום ${DAY_NAMES[school.day_of_week]}` : null;
 };
 
 const ALL = "__all__";
