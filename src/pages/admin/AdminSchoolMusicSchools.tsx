@@ -337,8 +337,14 @@ const AdminSchoolMusicSchools = () => {
     return allClasses.filter((c: any) => c.school_music_school_id === schoolId);
   };
 
-  const saveEdit = (id: string) => {
-    updateMutation.mutate({ id, data: editForm });
+  const saveEdit = (studentId: string) => {
+    // Auto-assign group based on class + instrument
+    const matchingGroup = findMatchingGroup(editForm.school_music_class_id, editForm.instrument_id);
+    const payload = {
+      ...editForm,
+      school_music_class_group_id: matchingGroup?.id || null,
+    };
+    updateMutation.mutate({ id: studentId, data: payload });
   };
 
   const EditField = ({ label, field, type = "text", dir }: { label: string; field: string; type?: string; dir?: string }) => (
