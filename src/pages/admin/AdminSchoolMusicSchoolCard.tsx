@@ -205,11 +205,11 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">פרטי בית הספר</CardTitle>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => navigate(`/admin/school-music-schools/${id}/edit`)}>
-                <Pencil className="h-4 w-4 ml-1" /> עריכה
+              <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteSchool(true)}>
+                <Trash2 className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="destructive" onClick={() => setShowDeleteSchool(true)}>
-                <Trash2 className="h-4 w-4 ml-1" /> מחיקה
+              <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/school-music-schools/${id}/edit`)}>
+                <Pencil className="h-4 w-4" /> עריכה
               </Button>
             </div>
           </CardHeader>

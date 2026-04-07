@@ -518,15 +518,14 @@ const AdminSchoolMusicSchools = () => {
                               <div className="flex justify-between items-center mb-3">
                                 <h4 className="text-sm font-semibold text-foreground">פרטים מלאים</h4>
                                 <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 gap-1.5 rounded-lg text-destructive border-destructive/30 hover:bg-destructive/10"
-                                    onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                    מחיקה
-                                  </Button>
+                                   <Button
+                                     variant="outline"
+                                     size="icon"
+                                     className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                                     onClick={(e) => { e.stopPropagation(); setDeleteId(s.id); }}
+                                   >
+                                     <Trash2 className="h-3.5 w-3.5" />
+                                   </Button>
                                   <Button
                                     variant="outline"
                                     size="sm"
