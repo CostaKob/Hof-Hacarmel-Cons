@@ -116,7 +116,7 @@ const AdminSchoolMusicSchools = () => {
   // ── Update mutation ──
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, any> }) => {
-      const { error } = await supabase.from("school_music_students").update(data).eq("id", id);
+      const { error } = await supabase.from("school_music_students").update(data as any).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
