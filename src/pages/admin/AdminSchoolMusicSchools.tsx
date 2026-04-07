@@ -74,15 +74,15 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
-  const { data: groupCounts = {} } = useQuery({
-    queryKey: ["school-music-groups-count"],
+  const { data: classCounts = {} } = useQuery({
+    queryKey: ["school-music-classes-count"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_groups")
+        .from("school_music_classes" as any)
         .select("school_music_school_id");
       if (error) throw error;
       const counts: Record<string, number> = {};
-      data.forEach((g: any) => {
+      (data as any[]).forEach((g: any) => {
         counts[g.school_music_school_id] = (counts[g.school_music_school_id] || 0) + 1;
       });
       return counts;
