@@ -51,6 +51,8 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-12 rounded-xl"
+              />
               />
             </div>
             <div className="space-y-2">
@@ -62,6 +64,8 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="h-12 rounded-xl"
+              />
               />
             </div>
             <Button type="submit" className="w-full h-12 rounded-xl text-base" disabled={isLoading}>
