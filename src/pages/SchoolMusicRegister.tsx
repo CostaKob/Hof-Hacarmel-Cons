@@ -228,44 +228,20 @@ const SchoolMusicRegister = () => {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-
-    if (!form.school_music_school_id) e.school_music_school_id = "שדה חובה";
-    if (!form.school_music_class_id) e.school_music_class_id = "שדה חובה";
-    if (!form.student_first_name.trim()) e.student_first_name = "שדה חובה";
-    if (!form.student_last_name.trim()) e.student_last_name = "שדה חובה";
-
-    if (!form.student_national_id.trim()) {
-      e.student_national_id = "שדה חובה";
-    } else if (!isExactDigits(form.student_national_id, 9)) {
-      e.student_national_id = "תעודת זהות חייבת להיות 9 ספרות";
-    }
-
-    if (!form.parent_name.trim()) e.parent_name = "שדה חובה";
-
-    if (!form.parent_national_id.trim()) {
-      e.parent_national_id = "שדה חובה";
-    } else if (!isExactDigits(form.parent_national_id, 9)) {
-      e.parent_national_id = "תעודת זהות חייבת להיות 9 ספרות";
-    }
-
-    if (!form.parent_phone.trim()) {
-      e.parent_phone = "שדה חובה";
-    } else if (!isExactDigits(form.parent_phone, 10)) {
-      e.parent_phone = "מספר טלפון חייב להיות 10 ספרות";
-    }
-
-    if (!form.parent_email.trim()) {
-      e.parent_email = "שדה חובה";
-    } else if (!isValidEmail(form.parent_email)) {
-      e.parent_email = "יש להזין אימייל תקין";
-    }
-
-    if (!form.instrument_id) e.instrument_id = "שדה חובה";
+    const fieldsToValidate = [
+      "school_music_school_id", "school_music_class_id",
+      "student_first_name", "student_last_name", "student_national_id",
+      "parent_name", "parent_national_id", "parent_phone", "parent_email",
+      "instrument_id",
+    ];
+    fieldsToValidate.forEach((key) => {
+      const err = validateField(key, (form as any)[key] ?? "");
+      if (err) e[key] = err;
+    });
     if (!approvalChecked) e.approval = "יש לאשר את התנאים";
 
     setErrors(e);
 
-    // scroll to first error
     const firstKey = Object.keys(e)[0];
     if (firstKey && fieldRefs[firstKey]?.current) {
       fieldRefs[firstKey].current.scrollIntoView({ behavior: "smooth", block: "center" });
