@@ -393,6 +393,7 @@ const AdminSchoolMusicSchoolCard = () => {
   };
 
   const getGroupsForClass = (classId: string) => classGroups.filter((g: any) => g.school_music_class_id === classId);
+  const getStudentsForGroup = (groupId: string) => schoolStudents.filter((s: any) => s.school_music_class_group_id === groupId);
 
   const RoleSection = ({ title, person, isEditing, setIsEditing, onSet, hours, effectiveHours, hoursField, isEditingHours, setIsEditingHours, hoursInput, setHoursInput }: any) => (
     <Card>
