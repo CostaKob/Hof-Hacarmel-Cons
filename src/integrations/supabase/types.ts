@@ -798,36 +798,88 @@ export type Database = {
           },
         ]
       }
+      school_music_class_groups: {
+        Row: {
+          created_at: string
+          id: string
+          instrument_id: string
+          school_music_class_id: string
+          teacher_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          instrument_id: string
+          school_music_class_id: string
+          teacher_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          instrument_id?: string
+          school_music_class_id?: string
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_class_groups_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_class_groups_school_music_class_id_fkey"
+            columns: ["school_music_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_class_groups_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_music_classes: {
         Row: {
           class_name: string
           created_at: string
-          grade_level: string | null
+          day_of_week: number | null
+          end_time: string | null
           homeroom_teacher_name: string | null
           homeroom_teacher_phone: string | null
           id: string
           notes: string | null
           school_music_school_id: string
+          start_time: string | null
         }
         Insert: {
           class_name: string
           created_at?: string
-          grade_level?: string | null
+          day_of_week?: number | null
+          end_time?: string | null
           homeroom_teacher_name?: string | null
           homeroom_teacher_phone?: string | null
           id?: string
           notes?: string | null
           school_music_school_id: string
+          start_time?: string | null
         }
         Update: {
           class_name?: string
           created_at?: string
-          grade_level?: string | null
+          day_of_week?: number | null
+          end_time?: string | null
           homeroom_teacher_name?: string | null
           homeroom_teacher_phone?: string | null
           id?: string
           notes?: string | null
           school_music_school_id?: string
+          start_time?: string | null
         }
         Relationships: [
           {
@@ -903,7 +955,11 @@ export type Database = {
           id: string
           is_active: boolean
           notes: string | null
+          principal_name: string | null
+          principal_phone: string | null
           school_name: string
+          vice_principal_name: string | null
+          vice_principal_phone: string | null
         }
         Insert: {
           academic_year_id?: string | null
@@ -919,7 +975,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           notes?: string | null
+          principal_name?: string | null
+          principal_phone?: string | null
           school_name: string
+          vice_principal_name?: string | null
+          vice_principal_phone?: string | null
         }
         Update: {
           academic_year_id?: string | null
@@ -935,7 +995,11 @@ export type Database = {
           id?: string
           is_active?: boolean
           notes?: string | null
+          principal_name?: string | null
+          principal_phone?: string | null
           school_name?: string
+          vice_principal_name?: string | null
+          vice_principal_phone?: string | null
         }
         Relationships: [
           {
