@@ -308,7 +308,33 @@ const AdminSchoolMusicSchools = () => {
       instrument_id: s.instrument_id || "",
       instrument_serial_number: s.instrument_serial_number || "",
       status: s.status,
+      school_music_class_id: s.school_music_class_id || "",
+      school_music_class_group_id: s.school_music_class_group_id || "",
+      school_music_school_id: s.school_music_school_id || "",
     });
+  };
+
+  // Get instruments available in a specific class
+  const getClassInstruments = (classId: string) => {
+    if (!classId) return [];
+    const groupsForClass = allClassGroups.filter((g: any) => g.school_music_class_id === classId);
+    const seen = new Set<string>();
+    return groupsForClass
+      .filter((g: any) => g.instruments && !seen.has(g.instrument_id) && seen.add(g.instrument_id))
+      .map((g: any) => ({ id: g.instrument_id, name: g.instruments.name }))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name, "he"));
+  };
+
+  // Find matching group for class + instrument
+  const findMatchingGroup = (classId: string, instrumentId: string) => {
+    if (!classId || !instrumentId) return null;
+    return allClassGroups.find((g: any) => g.school_music_class_id === classId && g.instrument_id === instrumentId) || null;
+  };
+
+  // Get classes for a school
+  const getSchoolClasses = (schoolId: string) => {
+    if (!schoolId) return [];
+    return allClasses.filter((c: any) => c.school_music_school_id === schoolId);
   };
 
   const saveEdit = (id: string) => {
