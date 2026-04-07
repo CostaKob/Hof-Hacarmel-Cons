@@ -235,6 +235,56 @@ const AdminSchoolMusicSchoolCard = () => {
     onError: () => toast.error("שגיאה"),
   });
 
+  const duplicateClass = useMutation({
+    mutationFn: async (sourceClassId: string) => {
+      const source = classes.find((c: any) => c.id === sourceClassId);
+      if (!source) throw new Error("Class not found");
+      const { data: newClass, error: classErr } = await supabase.from("school_music_classes" as any).insert({
+        school_music_school_id: id!,
+        class_name: source.class_name + " (עותק)",
+        homeroom_teacher_name: source.homeroom_teacher_name || null,
+        homeroom_teacher_phone: source.homeroom_teacher_phone || null,
+        day_of_week: source.day_of_week,
+        start_time: source.start_time || null,
+        end_time: source.end_time || null,
+        notes: source.notes || null,
+      }).select("id").single();
+      if (classErr) throw classErr;
+      const sourceGroups = classGroups.filter((g: any) => g.school_music_class_id === sourceClassId);
+      if (sourceGroups.length > 0) {
+        const { error: groupErr } = await supabase.from("school_music_class_groups" as any).insert(
+          sourceGroups.map((g: any) => ({
+            school_music_class_id: newClass.id,
+            instrument_id: g.instrument_id,
+            teacher_id: g.teacher_id,
+          }))
+        );
+        if (groupErr) throw groupErr;
+      }
+      return newClass.id;
+    },
+    onSuccess: (newClassId: string) => {
+      invalidate();
+      toast.success("הכיתה שוכפלה – ערוך את הפרטים");
+      setExpandedClasses(prev => new Set(prev).add(newClassId));
+      setTimeout(() => {
+        const source = classes.find((c: any) => c.id === newClassId);
+        if (!source) return;
+        setEditingClassId(newClassId);
+        setEditClassForm({
+          class_name: source.class_name,
+          homeroom_teacher_name: source.homeroom_teacher_name || "",
+          homeroom_teacher_phone: source.homeroom_teacher_phone || "",
+          day_of_week: source.day_of_week != null ? String(source.day_of_week) : "",
+          start_time: source.start_time?.slice(0, 5) || "",
+          end_time: source.end_time?.slice(0, 5) || "",
+          notes: source.notes || "",
+        });
+      }, 500);
+    },
+    onError: () => toast.error("שגיאה בשכפול"),
+  });
+
   if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
 
