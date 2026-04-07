@@ -136,6 +136,67 @@ const AdminSchoolMusicSchools = () => {
     onError: () => toast.error("שגיאה בעדכון הפרטים"),
   });
 
+  // ── Create mutation ──
+  const createMutation = useMutation({
+    mutationFn: async (data: Record<string, any>) => {
+      const { error } = await supabase.from("school_music_students").insert(data);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["school-music-students-all"] });
+      toast.success("התלמיד נוסף בהצלחה");
+      setAddDialogOpen(false);
+      setAddForm({});
+    },
+    onError: () => toast.error("שגיאה בהוספת התלמיד"),
+  });
+
+  // ── Delete mutation ──
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("school_music_students").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["school-music-students-all"] });
+      toast.success("התלמיד נמחק בהצלחה");
+      setExpandedId(null);
+      setDeleteId(null);
+    },
+    onError: () => toast.error("שגיאה במחיקת התלמיד"),
+  });
+
+  const openAddDialog = () => {
+    setAddForm({
+      student_first_name: "",
+      student_last_name: "",
+      student_national_id: "",
+      gender: "",
+      class_name: "",
+      city: "",
+      parent_name: "",
+      parent_national_id: "",
+      parent_phone: "",
+      parent_email: "",
+      school_music_school_id: "",
+      instrument_id: "",
+      instrument_serial_number: "",
+      status: "new",
+      academic_year_id: activeYear?.id || null,
+    });
+    setAddDialogOpen(true);
+  };
+
+  const submitAdd = () => {
+    if (!addForm.student_first_name || !addForm.student_last_name || !addForm.student_national_id || !addForm.school_music_school_id || !addForm.class_name || !addForm.parent_name || !addForm.parent_national_id || !addForm.parent_phone || !addForm.parent_email) {
+      toast.error("יש למלא את כל שדות החובה");
+      return;
+    }
+    const payload = { ...addForm };
+    if (!payload.instrument_id) delete payload.instrument_id;
+    if (!payload.gender) delete payload.gender;
+    createMutation.mutate(payload);
+  };
   // ── Derive filter options ──
   const filterOptions = useMemo(() => {
     const schoolSet = new Map<string, string>();
