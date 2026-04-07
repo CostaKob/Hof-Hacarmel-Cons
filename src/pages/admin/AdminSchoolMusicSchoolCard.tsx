@@ -158,6 +158,20 @@ const AdminSchoolMusicSchoolCard = () => {
     enabled: !!id && classes.length > 0,
   });
 
+  // Students assigned to groups in this school
+  const { data: schoolStudents = [] } = useQuery({
+    queryKey: ["school-music-students-for-school", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_students")
+        .select("id, student_first_name, student_last_name, school_music_class_group_id, school_music_class_id, class_name")
+        .eq("school_music_school_id", id!);
+      if (error) throw error;
+      return data as any[];
+    },
+    enabled: !!id,
+  });
+
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["all-teachers-active"],
     queryFn: async () => {
