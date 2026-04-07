@@ -379,6 +379,10 @@ const SchoolMusicRegister = () => {
               </Select>
             </Field>
 
+            <Field id="serial" label="מספר סידורי של כלי הנגינה">
+              <Input id="serial" value={form.instrument_serial_number} onChange={(e) => updateField("instrument_serial_number", e.target.value)} />
+            </Field>
+
             <hr className="my-2" />
 
             {/* Student details */}
@@ -429,11 +433,7 @@ const SchoolMusicRegister = () => {
               <Input id="parent_email" type="email" dir="ltr" value={form.parent_email} onChange={(e) => updateField("parent_email", e.target.value)} />
             </Field>
 
-            <hr className="my-2" />
-
-            <Field id="serial" label="מספר סידורי של כלי הנגינה">
-              <Input id="serial" value={form.instrument_serial_number} onChange={(e) => updateField("instrument_serial_number", e.target.value)} />
-            </Field>
+            
           </CardContent>
         </Card>
 
