@@ -248,7 +248,7 @@ const AdminSchoolMusicSchoolCard = () => {
         start_time: source.start_time || null,
         end_time: source.end_time || null,
         notes: source.notes || null,
-      }).select("id").single();
+      }).select("id").single() as { data: any; error: any };
       if (classErr) throw classErr;
       const sourceGroups = classGroups.filter((g: any) => g.school_music_class_id === sourceClassId);
       if (sourceGroups.length > 0) {
