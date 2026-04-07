@@ -33,8 +33,8 @@ const GENDER_LABELS: Record<string, string> = { male: "זכר", female: "נקב�
 const STATUS_LABELS: Record<string, string> = { new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" };
 
 const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: string | null; dir?: string }) => (
-  <div className="flex justify-between items-baseline py-1 text-sm">
-    <span className="text-muted-foreground shrink-0">{label}</span>
+  <div className="flex gap-2 text-sm py-0.5">
+    <span className="text-muted-foreground shrink-0">{label}:</span>
     <span className="text-foreground font-medium" dir={fieldDir}>{value || "—"}</span>
   </div>
 );
@@ -248,8 +248,7 @@ const AdminSchoolMusicSchools = () => {
 
   return (
     <AdminLayout title="בתי ספר מנגנים" backPath="/admin">
-      <div dir="rtl" className="w-full text-right">
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
+      <Tabs dir="rtl" value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full mb-4">
             <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
             <TabsTrigger value="students" className="flex-1">
@@ -581,7 +580,6 @@ const AdminSchoolMusicSchools = () => {
           )}
         </TabsContent>
       </Tabs>
-      </div>
     </AdminLayout>
   );
 };
