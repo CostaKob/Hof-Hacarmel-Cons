@@ -662,6 +662,118 @@ const AdminSchoolMusicSchools = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Add Student Dialog */}
+      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader>
+            <DialogTitle>הוספת תלמיד חדש</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">שם פרטי *</Label>
+                <Input value={addForm.student_first_name || ""} onChange={(e) => setAddForm(p => ({ ...p, student_first_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">שם משפחה *</Label>
+                <Input value={addForm.student_last_name || ""} onChange={(e) => setAddForm(p => ({ ...p, student_last_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">ת.ז תלמיד *</Label>
+                <Input value={addForm.student_national_id || ""} onChange={(e) => setAddForm(p => ({ ...p, student_national_id: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">מגדר</Label>
+                <Select value={addForm.gender || ""} onValueChange={(v) => setAddForm(p => ({ ...p, gender: v }))}>
+                  <SelectTrigger><SelectValue placeholder="בחר" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">זכר</SelectItem>
+                    <SelectItem value="female">נקבה</SelectItem>
+                    <SelectItem value="other">אחר</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">בית ספר מנגן *</Label>
+                <Select value={addForm.school_music_school_id || ""} onValueChange={(v) => setAddForm(p => ({ ...p, school_music_school_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                  <SelectContent>
+                    {schools.map((s: any) => (
+                      <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">כיתה *</Label>
+                <Input value={addForm.class_name || ""} onChange={(e) => setAddForm(p => ({ ...p, class_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">ישוב</Label>
+                <Input value={addForm.city || ""} onChange={(e) => setAddForm(p => ({ ...p, city: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">כלי נגינה</Label>
+                <Select value={addForm.instrument_id || ""} onValueChange={(v) => setAddForm(p => ({ ...p, instrument_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="בחר כלי" /></SelectTrigger>
+                  <SelectContent>
+                    {allInstruments.map((i: any) => (
+                      <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-xs font-semibold text-muted-foreground mt-2">פרטי הורה</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">שם הורה *</Label>
+                <Input value={addForm.parent_name || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_name: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">ת.ז הורה *</Label>
+                <Input value={addForm.parent_national_id || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_national_id: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">טלפון הורה *</Label>
+                <Input value={addForm.parent_phone || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_phone: e.target.value }))} type="tel" dir="ltr" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs text-muted-foreground">דוא"ל הורה *</Label>
+                <Input value={addForm.parent_email || ""} onChange={(e) => setAddForm(p => ({ ...p, parent_email: e.target.value }))} type="email" dir="ltr" />
+              </div>
+            </div>
+            <div className="flex justify-start gap-2 pt-2">
+              <Button onClick={submitAdd} disabled={createMutation.isPending}>
+                {createMutation.isPending ? "שומר..." : "הוסף תלמיד"}
+              </Button>
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)}>ביטול</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת תלמיד</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך למחוק תלמיד זה? פעולה זו אינה ניתנת לביטול.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => deleteId && deleteMutation.mutate(deleteId)}
+            >
+              מחק
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
