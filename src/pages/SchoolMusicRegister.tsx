@@ -82,11 +82,19 @@ const SchoolMusicRegister = () => {
   });
 
   const { data: instruments = [] } = useQuery({
-    queryKey: ["instruments-public"],
+    queryKey: ["instruments-for-school", form.school_music_school_id],
+    enabled: !!form.school_music_school_id,
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase
+        .from("school_music_groups")
+        .select("instrument_id, instruments(id, name)")
+        .eq("school_music_school_id", form.school_music_school_id);
       if (error) throw error;
-      return data;
+      const seen = new Set<string>();
+      return (data || [])
+        .map((g: any) => g.instruments)
+        .filter((i: any) => i && !seen.has(i.id) && seen.add(i.id))
+        .sort((a: any, b: any) => a.name.localeCompare(b.name));
     },
   });
 
@@ -105,6 +113,9 @@ const SchoolMusicRegister = () => {
 
   const updateField = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
+    if (key === "school_music_school_id") {
+      setForm((prev) => ({ ...prev, instrument_id: "" }));
+    }
     if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
   };
 
