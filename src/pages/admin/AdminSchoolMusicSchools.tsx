@@ -57,7 +57,10 @@ const AdminSchoolMusicSchools = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
-
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [addForm, setAddForm] = useState<Record<string, any>>({});
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const { activeYear } = useAcademicYear();
   // ── Schools data ──
   const { data: schools = [], isLoading } = useQuery({
     queryKey: ["school-music-schools"],
