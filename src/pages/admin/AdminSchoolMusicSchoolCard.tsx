@@ -239,48 +239,72 @@ const AdminSchoolMusicSchoolCard = () => {
     mutationFn: async (sourceClassId: string) => {
       const source = classes.find((c: any) => c.id === sourceClassId);
       if (!source) throw new Error("Class not found");
-      const { data: newClass, error: classErr } = await supabase.from("school_music_classes" as any).insert({
-        school_music_school_id: id!,
-        class_name: source.class_name + " (עותק)",
-        homeroom_teacher_name: source.homeroom_teacher_name || null,
-        homeroom_teacher_phone: source.homeroom_teacher_phone || null,
-        day_of_week: source.day_of_week,
-        start_time: source.start_time || null,
-        end_time: source.end_time || null,
-        notes: source.notes || null,
-      }).select("id").single() as { data: any; error: any };
-      if (classErr) throw classErr;
-      const sourceGroups = classGroups.filter((g: any) => g.school_music_class_id === sourceClassId);
-      if (sourceGroups.length > 0) {
-        const { error: groupErr } = await supabase.from("school_music_class_groups" as any).insert(
-          sourceGroups.map((g: any) => ({
-            school_music_class_id: newClass.id,
-            instrument_id: g.instrument_id,
-            teacher_id: g.teacher_id,
-          }))
-        );
+
+      const { data: insertedClass, error: classErr } = await supabase
+        .from("school_music_classes" as any)
+        .insert({
+          school_music_school_id: id!,
+          class_name: `${source.class_name} (עותק)`,
+          homeroom_teacher_name: source.homeroom_teacher_name || null,
+          homeroom_teacher_phone: source.homeroom_teacher_phone || null,
+          day_of_week: source.day_of_week,
+          start_time: source.start_time || null,
+          end_time: source.end_time || null,
+          notes: source.notes || null,
+        })
+        .select("id, class_name, homeroom_teacher_name, homeroom_teacher_phone, day_of_week, start_time, end_time, notes")
+        .single();
+
+      const newClass = insertedClass as any;
+
+      if (classErr || !newClass) throw classErr ?? new Error("Failed to create duplicated class");
+
+      const { data: sourceGroups, error: sourceGroupsErr } = await supabase
+        .from("school_music_class_groups" as any)
+        .select("instrument_id, teacher_id, weekly_hours, instruments(name), teachers(first_name, last_name)")
+        .eq("school_music_class_id", sourceClassId);
+
+      if (sourceGroupsErr) throw sourceGroupsErr;
+
+      const copiedGroups = (sourceGroups ?? []).map((group: any) => ({
+        school_music_class_id: newClass.id,
+        instrument_id: group.instrument_id,
+        teacher_id: group.teacher_id,
+        ...(group.weekly_hours !== undefined ? { weekly_hours: group.weekly_hours } : {}),
+      }));
+
+      if (copiedGroups.length > 0) {
+        const { error: groupErr } = await supabase
+          .from("school_music_class_groups" as any)
+          .insert(copiedGroups);
+
         if (groupErr) throw groupErr;
       }
-      return newClass.id;
+
+      return {
+        sourceClassId,
+        newClass,
+        copiedGroupsCount: copiedGroups.length,
+        copiedGroupsPreview: (sourceGroups ?? []).slice(0, 3).map((group: any) => ({
+          instrument: group.instruments?.name ?? "—",
+          teacher: `${group.teachers?.first_name ?? ""} ${group.teachers?.last_name ?? ""}`.trim() || "—",
+        })),
+      };
     },
-    onSuccess: (newClassId: string) => {
+    onSuccess: ({ newClass, copiedGroupsCount }: any) => {
       invalidate();
-      toast.success("הכיתה שוכפלה – ערוך את הפרטים");
-      setExpandedClasses(prev => new Set(prev).add(newClassId));
-      setTimeout(() => {
-        const source = classes.find((c: any) => c.id === newClassId);
-        if (!source) return;
-        setEditingClassId(newClassId);
-        setEditClassForm({
-          class_name: source.class_name,
-          homeroom_teacher_name: source.homeroom_teacher_name || "",
-          homeroom_teacher_phone: source.homeroom_teacher_phone || "",
-          day_of_week: source.day_of_week != null ? String(source.day_of_week) : "",
-          start_time: source.start_time?.slice(0, 5) || "",
-          end_time: source.end_time?.slice(0, 5) || "",
-          notes: source.notes || "",
-        });
-      }, 500);
+      setExpandedClasses(prev => new Set(prev).add(newClass.id));
+      setEditingClassId(newClass.id);
+      setEditClassForm({
+        class_name: newClass.class_name,
+        homeroom_teacher_name: newClass.homeroom_teacher_name || "",
+        homeroom_teacher_phone: newClass.homeroom_teacher_phone || "",
+        day_of_week: newClass.day_of_week != null ? String(newClass.day_of_week) : "",
+        start_time: newClass.start_time?.slice(0, 5) || "",
+        end_time: newClass.end_time?.slice(0, 5) || "",
+        notes: newClass.notes || "",
+      });
+      toast.success(`הכיתה שוכפלה עם ${copiedGroupsCount} קבוצות`);
     },
     onError: () => toast.error("שגיאה בשכפול"),
   });
