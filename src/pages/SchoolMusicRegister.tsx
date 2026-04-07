@@ -162,6 +162,47 @@ const SchoolMusicRegister = () => {
     },
   });
 
+  /* ── single-field validation ── */
+
+  const validateField = useCallback((key: string, value: string): string | null => {
+    switch (key) {
+      case "school_music_school_id":
+      case "school_music_class_id":
+      case "instrument_id":
+        return !value ? "שדה חובה" : null;
+      case "student_first_name":
+      case "student_last_name":
+      case "parent_name":
+        return !value.trim() ? "שדה חובה" : null;
+      case "student_national_id":
+        if (!value.trim()) return "שדה חובה";
+        return !isExactDigits(value, 9) ? "תעודת זהות חייבת להיות 9 ספרות" : null;
+      case "parent_national_id":
+        if (!value.trim()) return "שדה חובה";
+        return !isExactDigits(value, 9) ? "תעודת זהות חייבת להיות 9 ספרות" : null;
+      case "parent_phone":
+        if (!value.trim()) return "שדה חובה";
+        return !isExactDigits(value, 10) ? "מספר טלפון חייב להיות 10 ספרות" : null;
+      case "parent_email":
+        if (!value.trim()) return "שדה חובה";
+        return !isValidEmail(value) ? "יש להזין אימייל תקין" : null;
+      default:
+        return null;
+    }
+  }, []);
+
+  /* ── blur handler ── */
+
+  const handleBlur = useCallback((key: string) => {
+    const value = (form as any)[key] ?? "";
+    const err = validateField(key, value);
+    setErrors((prev) => {
+      const next = { ...prev };
+      if (err) { next[key] = err; } else { delete next[key]; }
+      return next;
+    });
+  }, [form, validateField]);
+
   /* ── cascading field update ── */
 
   const updateField = useCallback((key: string, value: string) => {
@@ -176,8 +217,12 @@ const SchoolMusicRegister = () => {
       }
       return next;
     });
-    if (errors[key]) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
-  }, [errors]);
+    // Clear error on change if value now valid
+    if (errors[key]) {
+      const err = validateField(key, value);
+      if (!err) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
+    }
+  }, [errors, validateField]);
 
   /* ── validation ── */
 
