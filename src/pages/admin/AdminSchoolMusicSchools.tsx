@@ -248,8 +248,7 @@ const AdminSchoolMusicSchools = () => {
 
   return (
     <AdminLayout title="בתי ספר מנגנים" backPath="/admin">
-      <div dir="rtl" className="w-full text-right">
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
+      <Tabs dir="rtl" value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full mb-4">
             <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
             <TabsTrigger value="students" className="flex-1">
