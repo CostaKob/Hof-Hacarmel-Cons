@@ -500,6 +500,12 @@ const AdminSchoolMusicSchoolCard = () => {
                       <Badge variant="outline" className="text-xs">{groups.length} קבוצות</Badge>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      <Button size="icon" variant="ghost" className="h-7 w-7" title="שכפל כיתה" onClick={(e) => {
+                        e.stopPropagation();
+                        duplicateClass.mutate(cls.id);
+                      }}>
+                        <Copy className="h-3 w-3" />
+                      </Button>
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => {
                         e.stopPropagation();
                         setEditingClassId(cls.id);
