@@ -104,6 +104,30 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
+  // ── Class groups for edit filtering ──
+  const { data: allClassGroups = [] } = useQuery({
+    queryKey: ["school-music-class-groups-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_class_groups" as any)
+        .select("id, school_music_class_id, instrument_id, teacher_id, instruments(name), teachers(first_name, last_name)");
+      if (error) throw error;
+      return data as any[] ?? [];
+    },
+  });
+
+  // ── Classes for edit filtering ──
+  const { data: allClasses = [] } = useQuery({
+    queryKey: ["school-music-classes-all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_classes" as any)
+        .select("id, class_name, school_music_school_id");
+      if (error) throw error;
+      return data as any[] ?? [];
+    },
+  });
+
   const { data: allInstruments = [] } = useQuery({
     queryKey: ["all-instruments"],
     queryFn: async () => {
