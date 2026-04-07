@@ -53,7 +53,6 @@ const Login = () => {
                 required
                 className="h-12 rounded-xl"
               />
-              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">סיסמה</Label>
@@ -65,7 +64,6 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="h-12 rounded-xl"
-              />
               />
             </div>
             <Button type="submit" className="w-full h-12 rounded-xl text-base" disabled={isLoading}>
