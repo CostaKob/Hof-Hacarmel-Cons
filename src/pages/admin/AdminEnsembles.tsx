@@ -38,17 +38,17 @@ const AdminEnsembles = () => {
     <AdminLayout title="הרכבים" backPath="/admin">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <div className="relative flex-1">
+          <div className="relative flex-1 max-w-sm">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="חיפוש הרכב..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pr-9"
+              className="pr-9 h-12 rounded-xl"
             />
           </div>
-          <Button onClick={() => navigate("/admin/ensembles/new")} className="shrink-0">
-            <Plus className="h-4 w-4 ml-1" />
+          <Button onClick={() => navigate("/admin/ensembles/new")} className="h-12 rounded-xl text-base shrink-0">
+            <Plus className="h-4 w-4" />
             הרכב חדש
           </Button>
         </div>
