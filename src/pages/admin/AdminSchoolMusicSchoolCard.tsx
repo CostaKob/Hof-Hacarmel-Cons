@@ -261,7 +261,7 @@ const AdminSchoolMusicSchoolCard = () => {
 
       const { data: sourceGroups, error: sourceGroupsErr } = await supabase
         .from("school_music_class_groups" as any)
-        .select("instrument_id, teacher_id, weekly_hours, instruments(name), teachers(first_name, last_name)")
+        .select("instrument_id, teacher_id, instruments(name), teachers(first_name, last_name)")
         .eq("school_music_class_id", sourceClassId);
 
       if (sourceGroupsErr) throw sourceGroupsErr;
@@ -270,7 +270,6 @@ const AdminSchoolMusicSchoolCard = () => {
         school_music_class_id: newClass.id,
         instrument_id: group.instrument_id,
         teacher_id: group.teacher_id,
-        ...(group.weekly_hours !== undefined ? { weekly_hours: group.weekly_hours } : {}),
       }));
 
       if (copiedGroups.length > 0) {
