@@ -32,10 +32,10 @@ const ALL = "__all__";
 const GENDER_LABELS: Record<string, string> = { male: "זכר", female: "נקבה", other: "אחר" };
 const STATUS_LABELS: Record<string, string> = { new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" };
 
-const DetailRow = ({ label, value }: { label: string; value?: string | null }) => (
-  <div className="flex gap-2 text-sm">
-    <span className="text-muted-foreground shrink-0">{label}:</span>
-    <span className="text-foreground">{value || "—"}</span>
+const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: string | null; dir?: string }) => (
+  <div className="flex justify-between items-baseline py-1 text-sm">
+    <span className="text-muted-foreground shrink-0">{label}</span>
+    <span className="text-foreground font-medium" dir={fieldDir}>{value || "—"}</span>
   </div>
 );
 
@@ -314,25 +314,24 @@ const AdminSchoolMusicSchools = () => {
 
         {/* ── Students Tab ── */}
         <TabsContent value="students">
-          {/* Search */}
-          <div className="relative mb-3">
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="חיפוש לפי שם, ת.ז, הורה..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-10 h-11 rounded-xl"
-            />
+          {/* Search + Filters like AdminStudents */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="חיפוש לפי שם, ת.ז, הורה..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pr-9 h-12 rounded-xl"
+              />
+            </div>
           </div>
 
-          {/* Filters */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+          <div className="mb-4 flex flex-wrap gap-2">
             <Select value={filterSchool} onValueChange={setFilterSchool}>
-              <SelectTrigger className="rounded-xl h-10 text-sm">
-                <SelectValue placeholder="בית ספר" />
-              </SelectTrigger>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>כל בתי הספר</SelectItem>
+                <SelectItem value={ALL}>בית ספר</SelectItem>
                 {filterOptions.schools.map(([id, name]) => (
                   <SelectItem key={id} value={id}>{name}</SelectItem>
                 ))}
@@ -340,11 +339,9 @@ const AdminSchoolMusicSchools = () => {
             </Select>
 
             <Select value={filterClass} onValueChange={setFilterClass}>
-              <SelectTrigger className="rounded-xl h-10 text-sm">
-                <SelectValue placeholder="כיתה" />
-              </SelectTrigger>
+              <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>כל הכיתות</SelectItem>
+                <SelectItem value={ALL}>כיתה</SelectItem>
                 {filterOptions.classes.map((c) => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
                 ))}
@@ -352,11 +349,9 @@ const AdminSchoolMusicSchools = () => {
             </Select>
 
             <Select value={filterTeacher} onValueChange={setFilterTeacher}>
-              <SelectTrigger className="rounded-xl h-10 text-sm">
-                <SelectValue placeholder="מורה" />
-              </SelectTrigger>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורה" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>כל המורים</SelectItem>
+                <SelectItem value={ALL}>מורה</SelectItem>
                 {filterOptions.teachers.map(([id, name]) => (
                   <SelectItem key={id} value={id}>{name}</SelectItem>
                 ))}
@@ -364,11 +359,9 @@ const AdminSchoolMusicSchools = () => {
             </Select>
 
             <Select value={filterInstrument} onValueChange={setFilterInstrument}>
-              <SelectTrigger className="rounded-xl h-10 text-sm">
-                <SelectValue placeholder="כלי נגינה" />
-              </SelectTrigger>
+              <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>כל הכלים</SelectItem>
+                <SelectItem value={ALL}>כלי נגינה</SelectItem>
                 {filterOptions.instruments.map(([id, name]) => (
                   <SelectItem key={id} value={id}>{name}</SelectItem>
                 ))}
@@ -376,11 +369,9 @@ const AdminSchoolMusicSchools = () => {
             </Select>
 
             <Select value={filterCity} onValueChange={setFilterCity}>
-              <SelectTrigger className="rounded-xl h-10 text-sm">
-                <SelectValue placeholder="ישוב" />
-              </SelectTrigger>
+              <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="ישוב" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL}>כל הישובים</SelectItem>
+                <SelectItem value={ALL}>ישוב</SelectItem>
                 {filterOptions.cities.map((c) => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
                 ))}
@@ -406,32 +397,42 @@ const AdminSchoolMusicSchools = () => {
                       key={s.id}
                       className="rounded-xl border border-border bg-card shadow-sm overflow-hidden transition-all"
                     >
-                      {/* Summary row - clickable */}
+                      {/* Summary row - matching AdminStudents style */}
                       <button
                         type="button"
-                        className="w-full p-4 text-right flex items-start gap-3 hover:bg-muted/30 transition-colors touch-manipulation"
+                        className="w-full p-4 flex items-center justify-between hover:bg-muted/30 transition-colors touch-manipulation"
                         onClick={() => {
                           setExpandedId(isExpanded ? null : s.id);
                           if (isEditing && !isExpanded) setEditingId(null);
                         }}
                       >
-                        <span className="text-xs text-muted-foreground w-6 shrink-0 text-center pt-0.5">{index + 1}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground">
-                            {s.student_first_name} {s.student_last_name}
-                          </p>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground mt-1">
-                            <span>🏫 {s.school_music_schools?.school_name || "—"}</span>
-                            <span>📚 {s.class_name}</span>
-                            <span>🎵 {s.instruments?.name || "—"}</span>
-                            <span>👨‍🏫 {getStudentTeacher(s)}</span>
-                            {s.city && <span>📍 {s.city}</span>}
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-foreground text-right">
+                              {s.student_first_name} {s.student_last_name}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                              <span>{s.school_music_schools?.school_name || "—"}</span>
+                              <span>·</span>
+                              <span>{s.class_name}</span>
+                              <span>·</span>
+                              <span>{s.instruments?.name || "—"}</span>
+                              <span>·</span>
+                              <span>{getStudentTeacher(s)}</span>
+                              {s.city && (
+                                <>
+                                  <span>·</span>
+                                  <span>{s.city}</span>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 mr-3 shrink-0">
                           <Badge
-                            variant={s.status === "assigned" ? "default" : "secondary"}
-                            className="rounded-lg text-xs"
+                            variant={s.status === "assigned" ? "default" : "outline"}
+                            className={`rounded-lg text-xs ${s.status === "inactive" ? "text-destructive border-destructive" : ""}`}
                           >
                             {STATUS_LABELS[s.status] || s.status}
                           </Badge>
@@ -441,10 +442,9 @@ const AdminSchoolMusicSchools = () => {
 
                       {/* Expanded details */}
                       {isExpanded && (
-                        <div dir="rtl" className="border-t border-border px-4 pb-4 pt-3 text-right">
+                        <div className="border-t border-border px-4 pb-4 pt-3">
                           {!isEditing ? (
                             <>
-                              {/* View mode */}
                               <div className="flex justify-between items-center mb-3">
                                 <h4 className="text-sm font-semibold text-foreground">פרטים מלאים</h4>
                                 <Button
@@ -457,9 +457,9 @@ const AdminSchoolMusicSchools = () => {
                                   עריכה
                                 </Button>
                               </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-                                <div className="space-y-2">
-                                  <p className="text-xs font-semibold text-muted-foreground mb-1">פרטי תלמיד</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">פרטי תלמיד</p>
                                   <DetailRow label="שם פרטי" value={s.student_first_name} />
                                   <DetailRow label="שם משפחה" value={s.student_last_name} />
                                   <DetailRow label="ת.ז תלמיד" value={s.student_national_id} />
@@ -467,25 +467,26 @@ const AdminSchoolMusicSchools = () => {
                                   <DetailRow label="כיתה" value={s.class_name} />
                                   <DetailRow label="ישוב" value={s.city} />
                                 </div>
-                                <div className="space-y-2">
-                                  <p className="text-xs font-semibold text-muted-foreground mb-1">פרטי הורה</p>
+                                <div>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">פרטי הורה</p>
                                   <DetailRow label="שם הורה" value={s.parent_name} />
                                   <DetailRow label="ת.ז הורה" value={s.parent_national_id} />
-                                  <DetailRow label="טלפון" value={s.parent_phone} />
-                                  <DetailRow label='דוא"ל' value={s.parent_email} />
+                                  <DetailRow label="טלפון" value={s.parent_phone} dir="ltr" />
+                                  <DetailRow label='דוא"ל' value={s.parent_email} dir="ltr" />
                                 </div>
                               </div>
-                              <div className="mt-3 space-y-2">
-                                <p className="text-xs font-semibold text-muted-foreground mb-1">כלי נגינה</p>
-                                <DetailRow label="כלי" value={s.instruments?.name} />
-                                <DetailRow label="מספר סידורי" value={s.instrument_serial_number} />
-                                <DetailRow label="מורה" value={getStudentTeacher(s)} />
-                                <DetailRow label="בית ספר" value={s.school_music_schools?.school_name} />
+                              <div className="mt-2">
+                                <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">כלי נגינה</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+                                  <DetailRow label="כלי" value={s.instruments?.name} />
+                                  <DetailRow label="מספר סידורי" value={s.instrument_serial_number} />
+                                  <DetailRow label="מורה" value={getStudentTeacher(s)} />
+                                  <DetailRow label="בית ספר" value={s.school_music_schools?.school_name} />
+                                </div>
                               </div>
                             </>
                           ) : (
                             <>
-                              {/* Edit mode */}
                               <div className="flex justify-between items-center mb-3">
                                 <h4 className="text-sm font-semibold text-foreground">עריכת פרטים</h4>
                                 <div className="flex gap-2">
