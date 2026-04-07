@@ -20,6 +20,10 @@ interface FormData {
   notes: string;
   is_active: boolean;
   day_of_week: string;
+  principal_name: string;
+  principal_phone: string;
+  vice_principal_name: string;
+  vice_principal_phone: string;
 }
 
 const AdminSchoolMusicSchoolForm = () => {
@@ -31,6 +35,7 @@ const AdminSchoolMusicSchoolForm = () => {
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       is_active: true, notes: "", school_name: "", academic_year_id: "", day_of_week: "",
+      principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
     },
   });
 
@@ -65,6 +70,10 @@ const AdminSchoolMusicSchoolForm = () => {
         notes: school.notes || "",
         is_active: school.is_active,
         day_of_week: school.day_of_week != null ? String(school.day_of_week) : "",
+        principal_name: (school as any).principal_name || "",
+        principal_phone: (school as any).principal_phone || "",
+        vice_principal_name: (school as any).vice_principal_name || "",
+        vice_principal_phone: (school as any).vice_principal_phone || "",
       });
     }
   }, [school, reset]);
@@ -84,6 +93,10 @@ const AdminSchoolMusicSchoolForm = () => {
         notes: data.notes || null,
         is_active: data.is_active,
         day_of_week: data.day_of_week ? Number(data.day_of_week) : null,
+        principal_name: data.principal_name || null,
+        principal_phone: data.principal_phone || null,
+        vice_principal_name: data.vice_principal_name || null,
+        vice_principal_phone: data.vice_principal_phone || null,
       };
       if (isEdit) {
         const { error } = await supabase.from("school_music_schools").update(payload as any).eq("id", id!);
@@ -135,19 +148,44 @@ const AdminSchoolMusicSchoolForm = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">הנהלת בית הספר</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label className="text-sm">הערות</Label>
-              <Textarea {...register("notes")} className="rounded-xl min-h-[80px]" />
+              <Label className="text-sm">שם מנהל/ת</Label>
+              <Input {...register("principal_name")} className="h-12 rounded-xl" />
             </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
-              <Label>פעיל</Label>
+            <div className="space-y-1.5">
+              <Label className="text-sm">טלפון מנהל/ת</Label>
+              <Input {...register("principal_phone")} className="h-12 rounded-xl" dir="ltr" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">שם סגן/ית</Label>
+              <Input {...register("vice_principal_name")} className="h-12 rounded-xl" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">טלפון סגן/ית</Label>
+              <Input {...register("vice_principal_phone")} className="h-12 rounded-xl" dir="ltr" />
             </div>
           </div>
         </div>
 
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-sm">הערות</Label>
+            <Textarea {...register("notes")} className="rounded-xl min-h-[80px]" />
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
+            <Label>פעיל</Label>
+          </div>
+        </div>
+
         <p className="text-sm text-muted-foreground">
-          כיתות, מפגשים וקבוצות מנוהלים מתוך כרטיס בית הספר לאחר היצירה.
+          כיתות וקבוצות מנוהלים מתוך כרטיס בית הספר לאחר היצירה.
         </p>
 
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
