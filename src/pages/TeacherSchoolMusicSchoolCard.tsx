@@ -1,10 +1,13 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useTeacherSchoolMusicDetail, useTeacherSchoolMusicGroups } from "@/hooks/useTeacherSchoolMusic";
+import { useTeacherProfile } from "@/hooks/useTeacherData";
+import { useTeacherSchoolMusicClasses, useTeacherSchoolMusicStudents } from "@/hooks/useTeacherSchoolMusic";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, MessageCircle, Phone } from "lucide-react";
-
-const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, MessageCircle, Phone, School, User, Users } from "lucide-react";
 
 const formatWhatsApp = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
@@ -12,7 +15,7 @@ const formatWhatsApp = (phone: string) => {
   return digits;
 };
 
-const PhoneLink = ({ phone }: { phone?: string | null }) => {
+const PhoneLink = ({ phone, label }: { phone?: string | null; label?: string }) => {
   if (!phone) return null;
   return (
     <span className="inline-flex items-center gap-2" dir="ltr">
@@ -20,172 +23,189 @@ const PhoneLink = ({ phone }: { phone?: string | null }) => {
         <Phone className="h-3 w-3" />
         {phone}
       </a>
-      <a href={`https://wa.me/${formatWhatsApp(phone)}`} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700">
+      <a
+        href={`https://wa.me/${formatWhatsApp(phone)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-green-600 hover:text-green-700"
+      >
         <MessageCircle className="h-4 w-4" />
       </a>
     </span>
   );
 };
 
+/** Inner component to fetch and display students for a class */
+const ClassStudents = ({ classId }: { classId: string }) => {
+  const { data: students = [], isLoading } = useTeacherSchoolMusicStudents(classId);
+
+  if (isLoading) return <p className="text-xs text-muted-foreground py-2">טוען תלמידים...</p>;
+  if (students.length === 0) return <p className="text-xs text-muted-foreground py-2">אין תלמידים משויכים</p>;
+
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+        <Users className="h-3.5 w-3.5" />
+        תלמידים ({students.length})
+      </p>
+      <div className="grid gap-1.5">
+        {students.map((st: any) => (
+          <div
+            key={st.id}
+            className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm"
+          >
+            <div className="flex items-center gap-2">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="font-medium">
+                {st.student_first_name} {st.student_last_name}
+              </span>
+              {st.instruments?.name && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                  {st.instruments.name}
+                </Badge>
+              )}
+            </div>
+            <PhoneLink phone={st.parent_phone} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
 const TeacherSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: school, isLoading } = useTeacherSchoolMusicDetail(id);
-  const { data: groups = [] } = useTeacherSchoolMusicGroups(id);
+  const { data: teacher } = useTeacherProfile();
 
-  const header = (
-    <header className="bg-primary px-5 pb-5 pt-6 text-primary-foreground">
-      <div className="mx-auto flex max-w-lg items-center gap-3">
-        <Button variant="ghost" size="icon" className="text-primary-foreground shrink-0" onClick={() => navigate("/teacher/school-music-schools")}>
-          <ChevronLeft className="h-5 w-5 rotate-180" />
-        </Button>
-        <h1 className="text-lg font-bold truncate">{school?.school_name ?? "טוען..."}</h1>
-      </div>
-    </header>
-  );
+  // Fetch school info
+  const { data: school, isLoading: schoolLoading } = useQuery({
+    queryKey: ["teacher-school-music-school-info", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_schools")
+        .select("id, school_name, principal_name, principal_phone, vice_principal_name, vice_principal_phone")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  if (isLoading) {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        {header}
-        <main className="mx-auto max-w-lg px-5 py-8">
-          <p className="text-center text-muted-foreground">טוען...</p>
-        </main>
-      </div>
-    );
-  }
+  // Fetch classes with groups
+  const { data: classes = [], isLoading: classesLoading } = useTeacherSchoolMusicClasses(id, teacher?.id);
 
-  if (!school) {
-    return (
-      <div dir="rtl" className="min-h-screen bg-background">
-        {header}
-        <main className="mx-auto max-w-lg px-5 py-8">
-          <p className="text-center text-muted-foreground">לא נמצא</p>
-        </main>
-      </div>
-    );
-  }
-
-  const coordinator = (school as any).coordinator;
-  const conductor = (school as any).conductor;
-  const classesCount = (school as any).classes_count || 0;
-  const dayOfWeek = (school as any).day_of_week;
-  const classSchedules: { start_time: string; end_time: string }[] = (school as any).class_schedules || [];
-  const homeroomTeachers: { name: string; phone: string }[] = (school as any).homeroom_teachers || [];
-
-  const starts = classSchedules.map((s) => s.start_time).filter(Boolean).sort();
-  const ends = classSchedules.map((s) => s.end_time).filter(Boolean).sort().reverse();
-  const timeRange = starts.length > 0 && ends.length > 0 ? `${starts[0]}–${ends[0]}` : null;
+  const isLoading = schoolLoading || classesLoading;
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      {header}
+      <header className="bg-primary px-5 pb-5 pt-6 text-primary-foreground">
+        <div className="mx-auto flex max-w-lg items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground shrink-0"
+            onClick={() => navigate("/teacher/school-music-schools")}
+          >
+            <ChevronLeft className="h-5 w-5 rotate-180" />
+          </Button>
+          <h1 className="text-lg font-bold truncate">{school?.school_name ?? "טוען..."}</h1>
+        </div>
+      </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
-        {/* A. School Details */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">פרטי בית הספר</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <div className="flex gap-2"><span className="text-muted-foreground">שם:</span><span>{school.school_name}</span></div>
-            <div className="flex gap-2"><span className="text-muted-foreground">שנה:</span><span>{(school as any).academic_years?.name || "—"}</span></div>
-            {classesCount > 0 && <div className="flex gap-2"><span className="text-muted-foreground">כיתות בשכבה:</span><span>{classesCount}</span></div>}
-            {dayOfWeek != null && <div className="flex gap-2"><span className="text-muted-foreground">יום:</span><span>יום {DAY_NAMES[dayOfWeek]}</span></div>}
-            {timeRange && <div className="flex gap-2"><span className="text-muted-foreground">שעות:</span><span dir="ltr">{timeRange}</span></div>}
-          </CardContent>
-        </Card>
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : (
+          <>
+            {/* School Info Card */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <School className="h-4 w-4" />
+                  פרטי בית הספר
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                {school?.principal_name && (
+                  <div className="flex items-center justify-between">
+                    <span>
+                      <span className="text-muted-foreground">מנהל/ת: </span>
+                      {school.principal_name}
+                    </span>
+                    <PhoneLink phone={school.principal_phone} />
+                  </div>
+                )}
+                {school?.vice_principal_name && (
+                  <div className="flex items-center justify-between">
+                    <span>
+                      <span className="text-muted-foreground">סגן/ית: </span>
+                      {school.vice_principal_name}
+                    </span>
+                    <PhoneLink phone={school.vice_principal_phone} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* B. Class Schedule */}
-        {classSchedules.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">שעות שיעורים</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                {classSchedules.map((s, i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl border p-2.5 text-sm">
-                    <span className="font-medium text-muted-foreground">כיתה {i + 1}</span>
-                    <span dir="ltr">{s.start_time || "—"} – {s.end_time || "—"}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* C. Homeroom Teachers */}
-        {homeroomTeachers.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">מחנכות כיתות</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                {homeroomTeachers.map((ht, i) => (
-                  <div key={i} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-muted-foreground">כיתה {i + 1}:</span>
-                      <span className="font-medium">{ht.name || "—"}</span>
-                    </div>
-                    <PhoneLink phone={ht.phone} />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* D. Coordinator & Conductor */}
-        {(coordinator || conductor) && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">בעלי תפקידים</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {coordinator && (
-                <div className="flex items-center justify-between rounded-xl border p-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">רכז</p>
-                    <p className="font-medium text-sm">{coordinator.first_name} {coordinator.last_name}</p>
-                  </div>
-                  <PhoneLink phone={coordinator.phone} />
-                </div>
-              )}
-              {conductor && (
-                <div className="flex items-center justify-between rounded-xl border p-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">מנצח</p>
-                    <p className="font-medium text-sm">{conductor.first_name} {conductor.last_name}</p>
-                  </div>
-                  <PhoneLink phone={conductor.phone} />
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* E. Groups */}
-        {groups.length > 0 && (
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">קבוצות ({groups.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-2">
-                {groups.map((g: any) => (
-                  <div key={g.id} className="flex items-center justify-between rounded-xl border p-2.5 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{g.instruments?.name}</span>
-                      <span className="text-muted-foreground">— {g.teachers?.first_name} {g.teachers?.last_name}</span>
-                    </div>
-                    <PhoneLink phone={g.teachers?.phone} />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+            {/* Classes Accordion */}
+            {classes.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">לא נמצאו כיתות</p>
+            ) : (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">הכיתות שלי ({classes.length})</CardTitle>
+                </CardHeader>
+                <CardContent className="pb-2">
+                  <Accordion type="multiple" className="space-y-1">
+                    {classes.map((cls: any) => (
+                      <AccordionItem key={cls.id} value={cls.id} className="border rounded-xl px-3">
+                        <AccordionTrigger className="py-3 hover:no-underline">
+                          <div className="flex flex-col items-start gap-1 text-right">
+                            <span className="font-semibold text-sm">{cls.class_name}</span>
+                            <div className="flex flex-wrap gap-1">
+                              {cls.groups?.map((g: any) => (
+                                <Badge key={g.id} variant="secondary" className="text-[10px]">
+                                  {g.instruments?.name}
+                                </Badge>
+                              ))}
+                              {cls.day_of_week != null && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  יום {DAY_NAMES[cls.day_of_week]}
+                                </Badge>
+                              )}
+                              {cls.start_time && cls.end_time && (
+                                <Badge variant="outline" className="text-[10px]" dir="ltr">
+                                  {cls.start_time?.slice(0, 5)}–{cls.end_time?.slice(0, 5)}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </AccordionTrigger>
+                        <AccordionContent className="pb-4 space-y-3">
+                          {/* Homeroom teacher */}
+                          {cls.homeroom_teacher_name && (
+                            <div className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
+                              <span>
+                                <span className="text-muted-foreground">מחנכת: </span>
+                                {cls.homeroom_teacher_name}
+                              </span>
+                              <PhoneLink phone={cls.homeroom_teacher_phone} />
+                            </div>
+                          )}
+                          {/* Students */}
+                          <ClassStudents classId={cls.id} />
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            )}
+          </>
         )}
       </main>
     </div>
