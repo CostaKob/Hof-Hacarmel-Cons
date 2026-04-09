@@ -291,7 +291,7 @@ const TeacherSchoolMusicSchoolCard = () => {
           <>
             {/* Role badges — with spacing from header */}
             {schoolMeta?.teacherRoles?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-3">
+              <div className="flex flex-wrap gap-1.5 pt-5">
                 {schoolMeta.teacherRoles.map((role: string) => (
                   <Badge
                     key={role}
