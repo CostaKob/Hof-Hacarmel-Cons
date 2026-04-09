@@ -72,28 +72,32 @@ const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; g
   if (students.length === 0) return <p className="text-xs text-muted-foreground py-2">אין תלמידים משויכים</p>;
 
   return (
-    <div className="space-y-4">
+    <Accordion type="multiple" className="space-y-1">
       {byTeacher.map((group, idx) => (
-        <div key={idx} className="space-y-1.5">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground border-b pb-1">
-            <User className="h-3.5 w-3.5 text-primary" />
-            <span>{group.teacherName}</span>
-            {group.instrumentName && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{group.instrumentName}</Badge>
-            )}
-            <span className="text-xs text-muted-foreground font-normal">({group.students.length})</span>
-          </div>
-          <div className="grid gap-1">
-            {group.students.map((st: any) => (
-              <div key={st.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
-                <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
-                <PhoneLink phone={st.parent_phone} />
-              </div>
-            ))}
-          </div>
-        </div>
+        <AccordionItem key={idx} value={`teacher-${idx}`} className="border rounded-lg bg-muted/20 px-2">
+          <AccordionTrigger className="py-2.5 hover:no-underline text-sm">
+            <div className="flex items-center gap-2 text-right">
+              <User className="h-3.5 w-3.5 text-primary" />
+              <span className="font-semibold">{group.teacherName}</span>
+              {group.instrumentName && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{group.instrumentName}</Badge>
+              )}
+              <span className="text-xs text-muted-foreground font-normal">({group.students.length})</span>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="pb-2">
+            <div className="grid gap-1">
+              {group.students.map((st: any) => (
+                <div key={st.id} className="flex items-center justify-between rounded-lg border bg-background px-3 py-2 text-sm">
+                  <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
+                  <PhoneLink phone={st.parent_phone} />
+                </div>
+              ))}
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       ))}
-    </div>
+    </Accordion>
   );
 };
 
@@ -414,8 +418,8 @@ const TeacherSchoolMusicSchoolCard = () => {
               </Card>
             )}
 
-            {/* Staff Section — only for coordinator/conductor */}
-            {isCoordinatorOrConductor && id && <StaffSection schoolId={id} />}
+            {/* Staff Section — visible to all teachers */}
+            {id && <StaffSection schoolId={id} />}
           </>
         )}
       </main>
