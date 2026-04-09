@@ -40,12 +40,42 @@ const PhoneLink = ({ phone }: { phone?: string | null }) => {
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
+/* ─── Student expandable row ─── */
+
+const StudentRow = ({ st }: { st: any }) => (
+  <AccordionItem value={st.id} className="border-0">
+    <AccordionTrigger className="py-2 px-3 hover:no-underline rounded-lg border bg-background text-sm font-medium">
+      {st.student_first_name} {st.student_last_name}
+    </AccordionTrigger>
+    <AccordionContent className="px-3 pt-1 pb-2">
+      <div className="space-y-1.5 text-sm">
+        {st.parent_name && (
+          <div className="flex items-center justify-between">
+            <span><span className="text-muted-foreground">שם ההורה: </span>{st.parent_name}</span>
+          </div>
+        )}
+        {st.parent_phone && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">טלפון הורה:</span>
+            <PhoneLink phone={st.parent_phone} />
+          </div>
+        )}
+        {st.instrument_serial_number && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">מס׳ סידורי כלי:</span>
+            <span dir="ltr" className="text-xs font-mono">{st.instrument_serial_number}</span>
+          </div>
+        )}
+      </div>
+    </AccordionContent>
+  </AccordionItem>
+);
+
 /* ─── Students grouped by teacher (coordinator view) ─── */
 
 const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; groups: any[] }) => {
   const { data: students = [], isLoading } = useTeacherSchoolMusicStudents(classId);
 
-  // Build a map: group_id → teacher info
   const groupMap = useMemo(() => {
     const m: Record<string, { teacherName: string; instrumentName: string }> = {};
     for (const g of groups) {
@@ -55,7 +85,6 @@ const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; g
     return m;
   }, [groups]);
 
-  // Group students by their group's teacher
   const byTeacher = useMemo(() => {
     const map: Record<string, { teacherName: string; instrumentName: string; students: any[] }> = {};
     for (const st of students) {
@@ -86,14 +115,11 @@ const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; g
             </div>
           </AccordionTrigger>
           <AccordionContent className="pb-2">
-            <div className="grid gap-1">
+            <Accordion type="multiple" className="space-y-1">
               {group.students.map((st: any) => (
-                <div key={st.id} className="flex items-center justify-between rounded-lg border bg-background px-3 py-2 text-sm">
-                  <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
-                  <PhoneLink phone={st.parent_phone} />
-                </div>
+                <StudentRow key={st.id} st={st} />
               ))}
-            </div>
+            </Accordion>
           </AccordionContent>
         </AccordionItem>
       ))}
@@ -126,19 +152,11 @@ const ClassStudentsForTeacher = ({ classId, teacherId, groups }: { classId: stri
         <Users className="h-3.5 w-3.5" />
         התלמידים שלי ({myStudents.length})
       </p>
-      <div className="grid gap-1">
+      <Accordion type="multiple" className="space-y-1">
         {myStudents.map((st: any) => (
-          <div key={st.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
-              {st.instruments?.name && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{st.instruments.name}</Badge>
-              )}
-            </div>
-            <PhoneLink phone={st.parent_phone} />
-          </div>
+          <StudentRow key={st.id} st={st} />
         ))}
-      </div>
+      </Accordion>
     </div>
   );
 };
