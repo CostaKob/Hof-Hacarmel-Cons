@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, MessageCircle, Phone, School, User, Users } from "lucide-react";
+import { ChevronLeft, MessageCircle, Phone, School, User, Users, Music } from "lucide-react";
 import { useMemo } from "react";
+
+/* ─── helpers ─── */
 
 const formatWhatsApp = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
@@ -36,33 +38,98 @@ const PhoneLink = ({ phone }: { phone?: string | null }) => {
   );
 };
 
-const ClassStudents = ({ classId }: { classId: string }) => {
+const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+
+/* ─── Students grouped by teacher (coordinator view) ─── */
+
+const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; groups: any[] }) => {
   const { data: students = [], isLoading } = useTeacherSchoolMusicStudents(classId);
 
   if (isLoading) return <p className="text-xs text-muted-foreground py-2">טוען תלמידים...</p>;
+
+  // Build a map: group_id → teacher info
+  const groupMap = useMemo(() => {
+    const m: Record<string, { teacherName: string; instrumentName: string }> = {};
+    for (const g of groups) {
+      const tName = g.teachers ? `${g.teachers.first_name} ${g.teachers.last_name}` : "ללא מורה";
+      m[g.id] = { teacherName: tName, instrumentName: g.instruments?.name ?? "" };
+    }
+    return m;
+  }, [groups]);
+
+  // Group students by their group's teacher
+  const byTeacher = useMemo(() => {
+    const map: Record<string, { teacherName: string; instrumentName: string; students: any[] }> = {};
+    for (const st of students) {
+      const gId = st.school_music_class_group_id;
+      const info = gId && groupMap[gId] ? groupMap[gId] : { teacherName: "לא משויך", instrumentName: "" };
+      const key = gId ?? "__unassigned";
+      if (!map[key]) map[key] = { ...info, students: [] };
+      map[key].students.push(st);
+    }
+    return Object.values(map);
+  }, [students, groupMap]);
+
   if (students.length === 0) return <p className="text-xs text-muted-foreground py-2">אין תלמידים משויכים</p>;
+
+  return (
+    <div className="space-y-4">
+      {byTeacher.map((group, idx) => (
+        <div key={idx} className="space-y-1.5">
+          <div className="flex items-center gap-2 text-sm font-semibold text-foreground border-b pb-1">
+            <User className="h-3.5 w-3.5 text-primary" />
+            <span>{group.teacherName}</span>
+            {group.instrumentName && (
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">{group.instrumentName}</Badge>
+            )}
+            <span className="text-xs text-muted-foreground font-normal">({group.students.length})</span>
+          </div>
+          <div className="grid gap-1">
+            {group.students.map((st: any) => (
+              <div key={st.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
+                <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
+                <PhoneLink phone={st.parent_phone} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/* ─── Students for regular teacher (only their own) ─── */
+
+const ClassStudentsForTeacher = ({ classId, teacherId, groups }: { classId: string; teacherId: string; groups: any[] }) => {
+  const { data: allStudents = [], isLoading } = useTeacherSchoolMusicStudents(classId);
+
+  // Filter to only students in my groups
+  const myGroupIds = useMemo(
+    () => new Set(groups.filter(g => g.teacher_id === teacherId).map(g => g.id)),
+    [groups, teacherId]
+  );
+
+  const myStudents = useMemo(
+    () => allStudents.filter(st => st.school_music_class_group_id && myGroupIds.has(st.school_music_class_group_id)),
+    [allStudents, myGroupIds]
+  );
+
+  if (isLoading) return <p className="text-xs text-muted-foreground py-2">טוען תלמידים...</p>;
+  if (myStudents.length === 0) return <p className="text-xs text-muted-foreground py-2">אין תלמידים משויכים</p>;
 
   return (
     <div className="space-y-2">
       <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
         <Users className="h-3.5 w-3.5" />
-        תלמידים ({students.length})
+        התלמידים שלי ({myStudents.length})
       </p>
-      <div className="grid gap-1.5">
-        {students.map((st: any) => (
-          <div
-            key={st.id}
-            className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm"
-          >
+      <div className="grid gap-1">
+        {myStudents.map((st: any) => (
+          <div key={st.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-sm">
             <div className="flex items-center gap-2">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-medium">
-                {st.student_first_name} {st.student_last_name}
-              </span>
+              <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
               {st.instruments?.name && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  {st.instruments.name}
-                </Badge>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{st.instruments.name}</Badge>
               )}
             </div>
             <PhoneLink phone={st.parent_phone} />
@@ -73,7 +140,73 @@ const ClassStudents = ({ classId }: { classId: string }) => {
   );
 };
 
-const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+/* ─── Staff Section ─── */
+
+const StaffSection = ({ schoolId }: { schoolId: string }) => {
+  const { data: staff = [], isLoading } = useQuery({
+    queryKey: ["school-music-staff-list", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      // Get all class groups for this school
+      const { data: classes } = await supabase
+        .from("school_music_classes")
+        .select("id")
+        .eq("school_music_school_id", schoolId);
+      if (!classes || classes.length === 0) return [];
+
+      const classIds = classes.map(c => c.id);
+      const { data: groups } = await supabase
+        .from("school_music_class_groups")
+        .select("teacher_id, instrument_id, instruments(name), teachers(first_name, last_name, phone)")
+        .in("school_music_class_id", classIds);
+      if (!groups) return [];
+
+      // Deduplicate by teacher_id
+      const seen = new Map<string, any>();
+      for (const g of groups) {
+        if (!seen.has(g.teacher_id)) {
+          seen.set(g.teacher_id, {
+            id: g.teacher_id,
+            name: g.teachers ? `${g.teachers.first_name} ${g.teachers.last_name}` : "",
+            phone: g.teachers?.phone,
+            instrument: g.instruments?.name ?? "",
+          });
+        }
+      }
+      return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name, "he"));
+    },
+  });
+
+  if (isLoading) return null;
+  if (staff.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Music className="h-4 w-4" />
+          צוות המורים ({staff.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-1.5">
+        {staff.map((t: any) => (
+          <div key={t.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2.5 text-sm">
+            <div className="flex items-center gap-2">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="font-medium">{t.name}</span>
+              {t.instrument && (
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{t.instrument}</Badge>
+              )}
+            </div>
+            <PhoneLink phone={t.phone} />
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
+
+/* ─── Main Page ─── */
 
 const TeacherSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
@@ -81,7 +214,6 @@ const TeacherSchoolMusicSchoolCard = () => {
   const { data: teacher } = useTeacherProfile();
   const { data: schools = [] } = useTeacherSchoolMusicSchools(teacher?.id);
 
-  // Determine role for this school
   const schoolMeta = useMemo(
     () => schools.find((s: any) => s.id === id),
     [schools, id]
@@ -127,7 +259,7 @@ const TeacherSchoolMusicSchoolCard = () => {
   const coordinator = staffTeachers?.find((t) => t.id === coordId);
   const conductor = staffTeachers?.find((t) => t.id === condId);
 
-  // Fetch classes — full visibility for coordinator/conductor
+  // Fetch classes
   const { data: classes = [], isLoading: classesLoading } = useTeacherSchoolMusicClasses(
     id,
     teacher?.id,
@@ -138,7 +270,8 @@ const TeacherSchoolMusicSchoolCard = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="bg-primary px-5 pb-5 pt-6 text-primary-foreground">
+      {/* Header */}
+      <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button
             variant="ghost"
@@ -152,18 +285,19 @@ const TeacherSchoolMusicSchoolCard = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
+      <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-5">
         {isLoading ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
         ) : (
           <>
-            {/* Role badges */}
+            {/* Role badges — with spacing from header */}
             {schoolMeta?.teacherRoles?.length > 0 && (
-              <div className="flex flex-wrap gap-1 pt-2">
+              <div className="flex flex-wrap gap-1.5 pt-3">
                 {schoolMeta.teacherRoles.map((role: string) => (
                   <Badge
                     key={role}
                     variant={role === "רכז" || role === "מנצח" ? "default" : "secondary"}
+                    className="text-xs"
                   >
                     {role}
                   </Badge>
@@ -225,22 +359,18 @@ const TeacherSchoolMusicSchoolCard = () => {
             ) : (
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">כיתות ({classes.length})</CardTitle>
+                  <CardTitle className="text-base">
+                    {isCoordinatorOrConductor ? `כל הכיתות (${classes.length})` : `הכיתות שלי (${classes.length})`}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="pb-2">
                   <Accordion type="multiple" className="space-y-1">
                     {classes.map((cls: any) => (
                       <AccordionItem key={cls.id} value={cls.id} className="border rounded-xl px-3">
                         <AccordionTrigger className="py-3 hover:no-underline">
-                          <div className="flex flex-col items-start gap-1 text-right">
+                          <div className="flex flex-col items-start gap-1 text-right w-full">
                             <span className="font-semibold text-sm">{cls.class_name}</span>
                             <div className="flex flex-wrap gap-1">
-                              {cls.groups?.map((g: any) => (
-                                <Badge key={g.id} variant="secondary" className="text-[10px]">
-                                  {g.instruments?.name}
-                                  {g.teachers && ` — ${g.teachers.first_name} ${g.teachers.last_name}`}
-                                </Badge>
-                              ))}
                               {cls.day_of_week != null && (
                                 <Badge variant="outline" className="text-[10px]">
                                   יום {DAY_NAMES[cls.day_of_week]}
@@ -251,6 +381,11 @@ const TeacherSchoolMusicSchoolCard = () => {
                                   {cls.start_time?.slice(0, 5)}–{cls.end_time?.slice(0, 5)}
                                 </Badge>
                               )}
+                              {!isCoordinatorOrConductor && cls.groups?.filter((g: any) => g.teacher_id === teacher?.id).map((g: any) => (
+                                <Badge key={g.id} variant="secondary" className="text-[10px]">
+                                  {g.instruments?.name}
+                                </Badge>
+                              ))}
                             </div>
                           </div>
                         </AccordionTrigger>
@@ -259,14 +394,19 @@ const TeacherSchoolMusicSchoolCard = () => {
                           {cls.homeroom_teacher_name && (
                             <div className="flex items-center justify-between rounded-lg border p-2.5 text-sm">
                               <span>
-                                <span className="text-muted-foreground">מחנכת: </span>
+                                <span className="text-muted-foreground">מחנכ/ת: </span>
                                 {cls.homeroom_teacher_name}
                               </span>
                               <PhoneLink phone={cls.homeroom_teacher_phone} />
                             </div>
                           )}
-                          {/* Students */}
-                          <ClassStudents classId={cls.id} />
+
+                          {/* Students — conditional rendering */}
+                          {isCoordinatorOrConductor ? (
+                            <ClassStudentsGroupedByTeacher classId={cls.id} groups={cls.groups ?? []} />
+                          ) : (
+                            <ClassStudentsForTeacher classId={cls.id} teacherId={teacher?.id!} groups={cls.groups ?? []} />
+                          )}
                         </AccordionContent>
                       </AccordionItem>
                     ))}
@@ -274,6 +414,9 @@ const TeacherSchoolMusicSchoolCard = () => {
                 </CardContent>
               </Card>
             )}
+
+            {/* Staff Section — only for coordinator/conductor */}
+            {isCoordinatorOrConductor && id && <StaffSection schoolId={id} />}
           </>
         )}
       </main>
