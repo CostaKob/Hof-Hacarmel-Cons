@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
-import { useTeacherSchoolMusicClasses, useTeacherSchoolMusicStudents } from "@/hooks/useTeacherSchoolMusic";
+import { useTeacherSchoolMusicSchools, useTeacherSchoolMusicClasses, useTeacherSchoolMusicStudents } from "@/hooks/useTeacherSchoolMusic";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, MessageCircle, Phone, School, User, Users } from "lucide-react";
+import { useMemo } from "react";
 
 const formatWhatsApp = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
@@ -15,7 +16,7 @@ const formatWhatsApp = (phone: string) => {
   return digits;
 };
 
-const PhoneLink = ({ phone, label }: { phone?: string | null; label?: string }) => {
+const PhoneLink = ({ phone }: { phone?: string | null }) => {
   if (!phone) return null;
   return (
     <span className="inline-flex items-center gap-2" dir="ltr">
@@ -35,7 +36,6 @@ const PhoneLink = ({ phone, label }: { phone?: string | null; label?: string }) 
   );
 };
 
-/** Inner component to fetch and display students for a class */
 const ClassStudents = ({ classId }: { classId: string }) => {
   const { data: students = [], isLoading } = useTeacherSchoolMusicStudents(classId);
 
@@ -79,6 +79,17 @@ const TeacherSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: teacher } = useTeacherProfile();
+  const { data: schools = [] } = useTeacherSchoolMusicSchools(teacher?.id);
+
+  // Determine role for this school
+  const schoolMeta = useMemo(
+    () => schools.find((s: any) => s.id === id),
+    [schools, id]
+  );
+  const isCoordinatorOrConductor = useMemo(() => {
+    if (!schoolMeta) return false;
+    return schoolMeta.teacherRoles?.includes("רכז") || schoolMeta.teacherRoles?.includes("מנצח");
+  }, [schoolMeta]);
 
   // Fetch school info
   const { data: school, isLoading: schoolLoading } = useQuery({
@@ -87,7 +98,7 @@ const TeacherSchoolMusicSchoolCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_schools")
-        .select("id, school_name, principal_name, principal_phone, vice_principal_name, vice_principal_phone")
+        .select("id, school_name, principal_name, principal_phone, vice_principal_name, vice_principal_phone, coordinator_teacher_id, conductor_teacher_id")
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -95,8 +106,33 @@ const TeacherSchoolMusicSchoolCard = () => {
     },
   });
 
-  // Fetch classes with groups
-  const { data: classes = [], isLoading: classesLoading } = useTeacherSchoolMusicClasses(id, teacher?.id);
+  // Fetch coordinator & conductor names
+  const coordId = school?.coordinator_teacher_id;
+  const condId = school?.conductor_teacher_id;
+  const { data: staffTeachers } = useQuery({
+    queryKey: ["school-music-staff-teachers", coordId, condId],
+    enabled: !!(coordId || condId),
+    queryFn: async () => {
+      const ids = [coordId, condId].filter(Boolean) as string[];
+      if (ids.length === 0) return [];
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("id, first_name, last_name, phone")
+        .in("id", ids);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const coordinator = staffTeachers?.find((t) => t.id === coordId);
+  const conductor = staffTeachers?.find((t) => t.id === condId);
+
+  // Fetch classes — full visibility for coordinator/conductor
+  const { data: classes = [], isLoading: classesLoading } = useTeacherSchoolMusicClasses(
+    id,
+    teacher?.id,
+    isCoordinatorOrConductor
+  );
 
   const isLoading = schoolLoading || classesLoading;
 
@@ -121,6 +157,20 @@ const TeacherSchoolMusicSchoolCard = () => {
           <p className="text-center text-muted-foreground py-8">טוען...</p>
         ) : (
           <>
+            {/* Role badges */}
+            {schoolMeta?.teacherRoles?.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-2">
+                {schoolMeta.teacherRoles.map((role: string) => (
+                  <Badge
+                    key={role}
+                    variant={role === "רכז" || role === "מנצח" ? "default" : "secondary"}
+                  >
+                    {role}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
             {/* School Info Card */}
             <Card>
               <CardHeader className="pb-3">
@@ -148,6 +198,24 @@ const TeacherSchoolMusicSchoolCard = () => {
                     <PhoneLink phone={school.vice_principal_phone} />
                   </div>
                 )}
+                {coordinator && (
+                  <div className="flex items-center justify-between">
+                    <span>
+                      <span className="text-muted-foreground">רכז/ת: </span>
+                      {coordinator.first_name} {coordinator.last_name}
+                    </span>
+                    <PhoneLink phone={coordinator.phone} />
+                  </div>
+                )}
+                {conductor && (
+                  <div className="flex items-center justify-between">
+                    <span>
+                      <span className="text-muted-foreground">מנצח/ת: </span>
+                      {conductor.first_name} {conductor.last_name}
+                    </span>
+                    <PhoneLink phone={conductor.phone} />
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -157,7 +225,7 @@ const TeacherSchoolMusicSchoolCard = () => {
             ) : (
               <Card>
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base">הכיתות שלי ({classes.length})</CardTitle>
+                  <CardTitle className="text-base">כיתות ({classes.length})</CardTitle>
                 </CardHeader>
                 <CardContent className="pb-2">
                   <Accordion type="multiple" className="space-y-1">
@@ -170,6 +238,7 @@ const TeacherSchoolMusicSchoolCard = () => {
                               {cls.groups?.map((g: any) => (
                                 <Badge key={g.id} variant="secondary" className="text-[10px]">
                                   {g.instruments?.name}
+                                  {g.teachers && ` — ${g.teachers.first_name} ${g.teachers.last_name}`}
                                 </Badge>
                               ))}
                               {cls.day_of_week != null && (

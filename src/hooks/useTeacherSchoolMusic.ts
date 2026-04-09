@@ -1,62 +1,103 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+export type TeacherSchoolRole = "רכז" | "מנצח" | "מורה לקבוצה";
+
 /**
- * Fetch schools where the teacher is assigned to at least one class group.
- * Uses school_music_class_groups → school_music_classes → school_music_schools.
+ * Fetch schools where the teacher is coordinator, conductor, or group teacher.
+ * Returns school data with roles.
  */
 export function useTeacherSchoolMusicSchools(teacherId: string | undefined) {
   return useQuery({
-    queryKey: ["teacher-school-music-schools-v2", teacherId],
+    queryKey: ["teacher-school-music-schools-v3", teacherId],
     enabled: !!teacherId,
     queryFn: async () => {
-      // 1. Get all class-group assignments for this teacher
+      // 1. Schools where teacher is coordinator or conductor
+      const { data: directSchools, error: dsErr } = await supabase
+        .from("school_music_schools")
+        .select("id, school_name, principal_name, principal_phone, coordinator_teacher_id, conductor_teacher_id, is_active")
+        .eq("is_active", true)
+        .or(`coordinator_teacher_id.eq.${teacherId},conductor_teacher_id.eq.${teacherId}`);
+      if (dsErr) throw dsErr;
+
+      // 2. Schools via class groups
       const { data: myGroups, error: gErr } = await supabase
         .from("school_music_class_groups")
-        .select("id, school_music_class_id, instrument_id")
+        .select("school_music_class_id")
         .eq("teacher_id", teacherId!);
       if (gErr) throw gErr;
-      if (!myGroups || myGroups.length === 0) return [];
 
-      // 2. Get the classes for those groups
-      const classIds = [...new Set(myGroups.map((g) => g.school_music_class_id))];
-      const { data: classes, error: cErr } = await supabase
-        .from("school_music_classes")
-        .select("id, school_music_school_id, class_name")
-        .in("id", classIds);
-      if (cErr) throw cErr;
+      let groupSchoolIds: string[] = [];
+      if (myGroups && myGroups.length > 0) {
+        const classIds = [...new Set(myGroups.map((g) => g.school_music_class_id))];
+        const { data: classes, error: cErr } = await supabase
+          .from("school_music_classes")
+          .select("school_music_school_id")
+          .in("id", classIds);
+        if (cErr) throw cErr;
+        groupSchoolIds = [...new Set((classes ?? []).map((c) => c.school_music_school_id))];
+      }
 
-      // 3. Get the unique school IDs
-      const schoolIds = [...new Set((classes ?? []).map((c) => c.school_music_school_id))];
-      if (schoolIds.length === 0) return [];
+      // 3. Merge and deduplicate
+      const directIds = new Set((directSchools ?? []).map((s) => s.id));
+      const missingIds = groupSchoolIds.filter((id) => !directIds.has(id));
 
-      // 4. Fetch those schools
-      const { data: schools, error: sErr } = await supabase
-        .from("school_music_schools")
-        .select("id, school_name, principal_name, principal_phone, academic_year_id, is_active")
-        .in("id", schoolIds)
-        .eq("is_active", true)
-        .order("school_name");
-      if (sErr) throw sErr;
+      let groupOnlySchools: any[] = [];
+      if (missingIds.length > 0) {
+        const { data, error } = await supabase
+          .from("school_music_schools")
+          .select("id, school_name, principal_name, principal_phone, coordinator_teacher_id, conductor_teacher_id, is_active")
+          .eq("is_active", true)
+          .in("id", missingIds);
+        if (error) throw error;
+        groupOnlySchools = data ?? [];
+      }
 
-      // Attach class count per school
-      return (schools ?? []).map((s) => {
-        const schoolClasses = (classes ?? []).filter((c) => c.school_music_school_id === s.id);
-        return { ...s, classCount: schoolClasses.length };
-      });
+      const allSchools = [...(directSchools ?? []), ...groupOnlySchools];
+      const groupSchoolIdSet = new Set(groupSchoolIds);
+
+      // 4. Count classes per school for each teacher
+      const schoolIds = allSchools.map((s) => s.id);
+      let classCounts: Record<string, number> = {};
+      if (schoolIds.length > 0) {
+        const { data: allClasses } = await supabase
+          .from("school_music_classes")
+          .select("id, school_music_school_id")
+          .in("school_music_school_id", schoolIds);
+        for (const c of allClasses ?? []) {
+          classCounts[c.school_music_school_id] = (classCounts[c.school_music_school_id] || 0) + 1;
+        }
+      }
+
+      return allSchools
+        .map((s) => {
+          const roles: TeacherSchoolRole[] = [];
+          if (s.coordinator_teacher_id === teacherId) roles.push("רכז");
+          if (s.conductor_teacher_id === teacherId) roles.push("מנצח");
+          if (groupSchoolIdSet.has(s.id)) roles.push("מורה לקבוצה");
+          return {
+            ...s,
+            teacherRoles: roles,
+            classCount: classCounts[s.id] || 0,
+          };
+        })
+        .filter((s) => s.teacherRoles.length > 0)
+        .sort((a, b) => a.school_name.localeCompare(b.school_name, "he"));
     },
   });
 }
 
 /**
- * Fetch classes + their groups for a specific school, filtered to the teacher's assignments.
+ * Fetch classes for a school.
+ * Coordinator/Conductor see ALL classes; group teachers see only their classes.
  */
 export function useTeacherSchoolMusicClasses(
   schoolId: string | undefined,
-  teacherId: string | undefined
+  teacherId: string | undefined,
+  isAdmin: boolean // coordinator or conductor
 ) {
   return useQuery({
-    queryKey: ["teacher-school-music-classes-v2", schoolId, teacherId],
+    queryKey: ["teacher-school-music-classes-v3", schoolId, teacherId, isAdmin],
     enabled: !!schoolId && !!teacherId,
     queryFn: async () => {
       // 1. All classes for this school
@@ -66,26 +107,35 @@ export function useTeacherSchoolMusicClasses(
         .eq("school_music_school_id", schoolId!)
         .order("class_name");
       if (cErr) throw cErr;
+      if (!classes || classes.length === 0) return [];
 
-      // 2. Teacher's groups in those classes
-      const classIds = (classes ?? []).map((c) => c.id);
-      if (classIds.length === 0) return [];
+      const classIds = classes.map((c) => c.id);
 
-      const { data: myGroups, error: gErr } = await supabase
+      // 2. All groups for those classes (with teacher + instrument info)
+      const { data: allGroups, error: gErr } = await supabase
         .from("school_music_class_groups")
-        .select("id, school_music_class_id, instrument_id, instruments(name)")
-        .eq("teacher_id", teacherId!)
+        .select("id, school_music_class_id, instrument_id, teacher_id, instruments(name), teachers(first_name, last_name)")
         .in("school_music_class_id", classIds);
       if (gErr) throw gErr;
 
-      // 3. Only return classes where the teacher has groups
-      const classIdsWithGroups = new Set((myGroups ?? []).map((g) => g.school_music_class_id));
+      if (isAdmin) {
+        // Coordinator/Conductor: see ALL classes with ALL groups
+        return classes.map((c) => ({
+          ...c,
+          groups: (allGroups ?? []).filter((g) => g.school_music_class_id === c.id),
+        }));
+      }
 
-      return (classes ?? [])
-        .filter((c) => classIdsWithGroups.has(c.id))
+      // Group teacher: only classes where they have groups
+      const myClassIds = new Set(
+        (allGroups ?? []).filter((g) => g.teacher_id === teacherId).map((g) => g.school_music_class_id)
+      );
+
+      return classes
+        .filter((c) => myClassIds.has(c.id))
         .map((c) => ({
           ...c,
-          groups: (myGroups ?? []).filter((g) => g.school_music_class_id === c.id),
+          groups: (allGroups ?? []).filter((g) => g.school_music_class_id === c.id),
         }));
     },
   });
@@ -96,7 +146,7 @@ export function useTeacherSchoolMusicClasses(
  */
 export function useTeacherSchoolMusicStudents(classId: string | undefined) {
   return useQuery({
-    queryKey: ["teacher-school-music-students-v2", classId],
+    queryKey: ["teacher-school-music-students-v3", classId],
     enabled: !!classId,
     queryFn: async () => {
       const { data, error } = await supabase
