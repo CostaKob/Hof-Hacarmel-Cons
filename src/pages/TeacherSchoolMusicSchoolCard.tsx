@@ -232,7 +232,7 @@ const TeacherSchoolMusicSchoolCard = () => {
         .from("school_music_schools")
         .select("id, school_name, principal_name, principal_phone, vice_principal_name, vice_principal_phone, coordinator_teacher_id, conductor_teacher_id")
         .eq("id", id!)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
