@@ -151,7 +151,7 @@ export function useTeacherSchoolMusicStudents(classId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_students")
-        .select("id, student_first_name, student_last_name, parent_name, parent_phone, instrument_id, instruments(name), school_music_class_group_id")
+        .select("id, student_first_name, student_last_name, parent_name, parent_phone, instrument_id, instrument_serial_number, instruments(name), school_music_class_group_id")
         .eq("school_music_class_id", classId!)
         .order("student_last_name");
       if (error) throw error;
