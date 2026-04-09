@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
-import { ChevronLeft, School, MessageCircle } from "lucide-react";
+import { ChevronLeft, School, MessageCircle, Phone } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 const formatWhatsApp = (phone: string) => {
@@ -47,12 +48,24 @@ const TeacherSchoolMusicSchools = () => {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate">{s.school_name}</p>
+                {/* Role badges */}
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {s.teacherRoles.map((role: string) => (
+                    <Badge
+                      key={role}
+                      variant={role === "רכז" || role === "מנצח" ? "default" : "secondary"}
+                      className="text-xs"
+                    >
+                      {role}
+                    </Badge>
+                  ))}
+                </div>
                 <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-1">
                   {s.principal_name && <span>מנהל/ת: {s.principal_name}</span>}
                   <span>{s.classCount} כיתות</span>
                 </div>
                 {s.principal_phone && (
-                  <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-2 mt-1" dir="ltr">
                     <a
                       href={`https://wa.me/${formatWhatsApp(s.principal_phone)}`}
                       target="_blank"
@@ -65,9 +78,9 @@ const TeacherSchoolMusicSchools = () => {
                     <a
                       href={`tel:${s.principal_phone}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-xs text-primary hover:underline"
-                      dir="ltr"
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
                     >
+                      <Phone className="h-3 w-3" />
                       {s.principal_phone}
                     </a>
                   </div>
