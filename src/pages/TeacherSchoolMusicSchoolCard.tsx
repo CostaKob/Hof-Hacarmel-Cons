@@ -45,8 +45,6 @@ const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמיש
 const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; groups: any[] }) => {
   const { data: students = [], isLoading } = useTeacherSchoolMusicStudents(classId);
 
-  if (isLoading) return <p className="text-xs text-muted-foreground py-2">טוען תלמידים...</p>;
-
   // Build a map: group_id → teacher info
   const groupMap = useMemo(() => {
     const m: Record<string, { teacherName: string; instrumentName: string }> = {};
@@ -70,6 +68,7 @@ const ClassStudentsGroupedByTeacher = ({ classId, groups }: { classId: string; g
     return Object.values(map);
   }, [students, groupMap]);
 
+  if (isLoading) return <p className="text-xs text-muted-foreground py-2">טוען תלמידים...</p>;
   if (students.length === 0) return <p className="text-xs text-muted-foreground py-2">אין תלמידים משויכים</p>;
 
   return (
