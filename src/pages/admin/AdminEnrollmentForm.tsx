@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -39,6 +40,7 @@ const AdminEnrollmentForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { selectedYearId } = useAcademicYear();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<EnrollmentFormData>({
     defaultValues: {
@@ -163,6 +165,7 @@ const AdminEnrollmentForm = () => {
         teacher_id: data.teacher_id,
         instrument_id: data.instrument_id,
         school_id: data.school_id,
+        academic_year_id: selectedYearId!,
         enrollment_role: data.enrollment_role as "primary" | "secondary",
         lesson_type: data.lesson_type as "individual" | "group",
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
