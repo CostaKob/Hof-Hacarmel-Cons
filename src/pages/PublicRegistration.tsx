@@ -334,8 +334,41 @@ const PublicRegistration = () => {
     }
   }, []);
 
+  // Validate a single field on blur
+  const validateField = useCallback((fieldKey: string) => {
+    const field = fields.find((f) => f.field_key === fieldKey);
+    if (!field) return;
+    const val = formValues[fieldKey];
+
+    let error: string | null = null;
+
+    if (field.is_required && (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0))) {
+      error = "שדה חובה";
+    }
+
+    if (!error && val) {
+      if (fieldKey === "student_national_id" || fieldKey === "parent_national_id") {
+        error = validateNationalId(String(val));
+      }
+      if (field.field_type === "phone") {
+        error = validateMobilePhone(String(val));
+      }
+      if (field.field_type === "email") {
+        error = validateEmail(String(val));
+      }
+    }
+
+    setValidationErrors((prev) => {
+      if (error) return { ...prev, [fieldKey]: error };
+      const next = { ...prev };
+      delete next[fieldKey];
+      return next;
+    });
+  }, [fields, formValues]);
+
   const setFieldValue = (key: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
+    // Clear error on change
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[key];
