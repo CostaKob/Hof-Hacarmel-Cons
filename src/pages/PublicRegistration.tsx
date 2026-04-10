@@ -55,21 +55,7 @@ function validateEmail(val: string): string | null {
   return null;
 }
 
-// Pre-defined educational schools list
-const EDUCATIONAL_SCHOOLS = [
-  "רמב\"ם",
-  "בגין",
-  "עמל",
-  "בן גוריון",
-  "הראל",
-  "דה שליט",
-  "רבין",
-  "ברנר",
-  "גולדה",
-  "תיכון עירוני",
-  "אורט",
-  "עתיד",
-];
+// Educational schools will be loaded from DB
 
 const PublicRegistration = () => {
   const { token } = useParams<{ token?: string }>();
