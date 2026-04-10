@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useTeacherProfile, useTeacherAllEnrollments, useTeacherSchools } from "@/hooks/useTeacherData";
+import { useTeacherProfile, useTeacherSchools } from "@/hooks/useTeacherData";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -12,15 +13,32 @@ import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySumma
 import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 import AppLogo from "@/components/AppLogo";
 
-function useTeacherReportLinesAll(teacherId: string | undefined) {
+function useTeacherEnrollmentsByYear(teacherId: string | undefined, yearId: string | null) {
   return useQuery({
-    queryKey: ["teacher-all-report-lines", teacherId],
-    enabled: !!teacherId,
+    queryKey: ["teacher-enrollments-year", teacherId, yearId],
+    enabled: !!teacherId && !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select(`*, students (*), instruments (name), schools (id, name)`)
+        .eq("teacher_id", teacherId!)
+        .eq("academic_year_id", yearId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+function useTeacherReportLinesByYear(teacherId: string | undefined, yearId: string | null) {
+  return useQuery({
+    queryKey: ["teacher-report-lines-year", teacherId, yearId],
+    enabled: !!teacherId && !!yearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("report_lines")
-        .select("enrollment_id, status, report_id, reports!inner(teacher_id)")
-        .eq("reports.teacher_id", teacherId!);
+        .select("enrollment_id, status, report_id, reports!inner(teacher_id, academic_year_id)")
+        .eq("reports.teacher_id", teacherId!)
+        .eq("reports.academic_year_id", yearId!);
       if (error) throw error;
       return data;
     },
