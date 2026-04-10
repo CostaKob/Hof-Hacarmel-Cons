@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -8,9 +9,10 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen, Star } from "lucide-react";
+import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle } from "lucide-react";
 
 const AdminAcademicYears = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
@@ -162,6 +164,9 @@ const AdminAcademicYears = () => {
         <div className="flex gap-2">
           <Button className="h-12 rounded-xl text-base" onClick={() => { setShowForm(!showForm); if (!showForm) handleAutoFill(); }}>
             <Plus className="h-4 w-4" /> שנה חדשה
+          </Button>
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-promotion")}>
+            <ArrowUpCircle className="h-4 w-4" /> מעבר שנה
           </Button>
         </div>
 
