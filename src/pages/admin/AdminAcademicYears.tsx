@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -8,7 +9,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen, Star } from "lucide-react";
+import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle } from "lucide-react";
 
 const AdminAcademicYears = () => {
   const queryClient = useQueryClient();
