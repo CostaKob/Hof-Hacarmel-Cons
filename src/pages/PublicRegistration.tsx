@@ -72,7 +72,6 @@ function normalizeGradeValue(value: unknown): string {
 
 const PublicRegistration = () => {
   const { token } = useParams<{ token?: string }>();
-  
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -87,17 +86,10 @@ const PublicRegistration = () => {
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Check for ?year= query param
-  const yearFromUrl = new URLSearchParams(window.location.search).get("year");
-
-  // Load active year (or specific year from URL)
+  // Load active year
   const { data: activeYear, isLoading: yearLoading } = useQuery({
-    queryKey: ["public-active-year", yearFromUrl],
+    queryKey: ["public-active-year"],
     queryFn: async () => {
-      if (yearFromUrl) {
-        const { data, error } = await supabase.from("academic_years").select("id, name").eq("id", yearFromUrl).single();
-        if (!error && data) return data;
-      }
       const { data, error } = await supabase.from("academic_years").select("id, name").eq("is_active", true).single();
       if (error) return null;
       return data;

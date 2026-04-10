@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 interface EnrollmentFormData {
   student_id: string;
@@ -25,7 +24,6 @@ interface EnrollmentFormData {
   lesson_duration_minutes: string;
   instrument_start_date: string;
   is_active: boolean;
-  total_lessons_allocated: string;
 }
 
 const DURATION_OPTIONS = [
@@ -41,7 +39,6 @@ const AdminEnrollmentForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { selectedYearId } = useAcademicYear();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<EnrollmentFormData>({
     defaultValues: {
@@ -51,7 +48,6 @@ const AdminEnrollmentForm = () => {
       lesson_type: "individual",
       lesson_duration_minutes: "45",
       instrument_start_date: "",
-      total_lessons_allocated: "30",
     },
   });
 
@@ -156,7 +152,6 @@ const AdminEnrollmentForm = () => {
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
         is_active: enrollment.is_active,
-        total_lessons_allocated: String((enrollment as any).total_lessons_allocated ?? 30),
       });
     }
   }, [enrollment, reset]);
@@ -174,8 +169,6 @@ const AdminEnrollmentForm = () => {
         start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
-        academic_year_id: selectedYearId!,
-        total_lessons_allocated: Number(data.total_lessons_allocated) || 30,
       };
 
       if (isEdit) {
@@ -294,29 +287,17 @@ const AdminEnrollmentForm = () => {
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label className="text-sm">תאריך תחילת נגינה *</Label>
-              <Controller
-                name="instrument_start_date"
-                control={control}
-                rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
-                render={({ field }) => (
-                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
-                )}
-              />
-              {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">מכסת שיעורים שנתית</Label>
-              <Controller
-                name="total_lessons_allocated"
-                control={control}
-                render={({ field }) => (
-                  <Input type="number" min="0" value={field.value} onChange={field.onChange} className="h-12 rounded-xl" placeholder="30" />
-                )}
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label className="text-sm">תאריך תחילת נגינה *</Label>
+            <Controller
+              name="instrument_start_date"
+              control={control}
+              rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
+              render={({ field }) => (
+                <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
+              )}
+            />
+            {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
           </div>
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
