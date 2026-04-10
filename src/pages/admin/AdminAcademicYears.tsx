@@ -9,7 +9,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, ArrowLeftRight, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen } from "lucide-react";
+import { Plus, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen } from "lucide-react";
 
 const AdminAcademicYears = () => {
   const navigate = useNavigate();
@@ -131,11 +131,6 @@ const AdminAcademicYears = () => {
           <Button className="h-12 rounded-xl text-base" onClick={() => { setShowForm(!showForm); if (!showForm) handleAutoFill(); }}>
             <Plus className="h-4 w-4" /> שנה חדשה
           </Button>
-          {years.length > 0 && (
-            <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-transition")}>
-              <ArrowLeftRight className="h-4 w-4" /> מעבר שנה
-            </Button>
-          )}
         </div>
 
         {showForm && (

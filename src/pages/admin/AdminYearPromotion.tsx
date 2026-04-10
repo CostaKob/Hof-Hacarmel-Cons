@@ -188,17 +188,13 @@ const AdminYearPromotion = () => {
   };
 
   return (
-    <AdminLayout title="מרכז הבקרה למעבר שנה" backPath="/admin/academic-years">
+    <AdminLayout title="מרכז הבקרה למעבר שנה" backPath="/admin">
       <div className="space-y-5 max-w-4xl">
         {/* Header info */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 className="font-semibold text-foreground text-base">מעבר שנה</h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {activeYear?.name ? `משנה ${activeYear.name}` : ""}
-                {nextYear?.name ? ` → ${nextYear.name}` : ""}
-              </p>
             </div>
             <div className="flex gap-3">
               <Badge variant="secondary" className="gap-1.5">
@@ -211,9 +207,25 @@ const AdminYearPromotion = () => {
               </Badge>
             </div>
           </div>
+
+          {/* FROM → TO display */}
+          <div className="flex items-center gap-3 rounded-xl bg-muted/50 p-4">
+            <div className="flex-1 text-center">
+              <p className="text-xs text-muted-foreground mb-1">משנה</p>
+              <p className="font-bold text-foreground text-lg">{activeYear?.name || "—"}</p>
+              <Badge className="mt-1">פעילה</Badge>
+            </div>
+            <span className="text-2xl text-primary font-bold">←</span>
+            <div className="flex-1 text-center">
+              <p className="text-xs text-muted-foreground mb-1">לשנה</p>
+              <p className="font-bold text-foreground text-lg">{nextYear?.name || "—"}</p>
+              {nextYear && <Badge variant="outline" className="mt-1">חדשה</Badge>}
+            </div>
+          </div>
+
           {!nextYear && (
-            <p className="text-sm text-destructive mt-3">
-              ⚠️ לא נמצאה שנת לימודים חדשה. יש ליצור שנה חדשה לפני ביצוע מעבר.
+            <p className="text-sm text-destructive">
+              ⚠️ לא נמצאה שנת לימודים חדשה. יש ליצור שנה חדשה בדף <a href="/admin/academic-years" className="underline">שנות לימודים</a> לפני ביצוע מעבר.
             </p>
           )}
         </div>
