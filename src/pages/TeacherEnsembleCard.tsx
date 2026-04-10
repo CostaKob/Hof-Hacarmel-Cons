@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { ArrowRight, Music, MapPin, Clock, CalendarDays, School, StickyNote, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,10 @@ import AppLogo from "@/components/AppLogo";
 const TeacherEnsembleCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { selectedYearId } = useAcademicYear();
   const { data: teacher } = useTeacherProfile();
   const { data: ensemble, isLoading } = useTeacherEnsembleDetail(id);
-  const { data: allEnrollments } = useTeacherAllEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherAllEnrollments(teacher?.id, selectedYearId);
 
 
   // Find the logged-in teacher's role in this ensemble

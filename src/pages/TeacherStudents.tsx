@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,8 +10,9 @@ import { ArrowRight, Search, User, ChevronLeft } from "lucide-react";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
+  const { selectedYearId } = useAcademicYear();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
-  const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id);
+  const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id, selectedYearId);
 
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("all");

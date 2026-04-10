@@ -58,15 +58,17 @@ export function useTeacherEnrollments(teacherId: string | undefined, yearId?: st
 }
 
 // ─── Teacher All Enrollments (active + inactive) ───
-export function useTeacherAllEnrollments(teacherId: string | undefined) {
+export function useTeacherAllEnrollments(teacherId: string | undefined, yearId?: string | null) {
   return useQuery({
-    queryKey: ["teacher-all-enrollments", teacherId],
+    queryKey: ["teacher-all-enrollments", teacherId, yearId],
     enabled: !!teacherId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("enrollments")
         .select(`*, students (*), instruments (name), schools (id, name)`)
         .eq("teacher_id", teacherId!);
+      if (yearId) q = q.eq("academic_year_id", yearId);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },

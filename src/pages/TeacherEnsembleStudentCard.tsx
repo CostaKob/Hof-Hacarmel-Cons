@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { DAYS_OF_WEEK_LABELS, ENSEMBLE_STAFF_ROLE_LABELS } from "@/lib/ensembleConstants";
 import { ArrowRight, CalendarDays, ChevronLeft, Clock, MapPin, Music, Phone, School, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,10 @@ import AppLogo from "@/components/AppLogo";
 const TeacherEnsembleStudentCard = () => {
   const { id, studentId } = useParams<{ id: string; studentId: string }>();
   const navigate = useNavigate();
+  const { selectedYearId } = useAcademicYear();
   const { data: teacher } = useTeacherProfile();
   const { data: ensemble, isLoading } = useTeacherEnsembleDetail(id);
-  const { data: allEnrollments } = useTeacherAllEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherAllEnrollments(teacher?.id, selectedYearId);
 
   const myStaff = (ensemble?.ensemble_staff ?? []).find((staff: any) => staff.teacher_id === teacher?.id);
   const participant = (ensemble?.ensemble_students ?? []).find((entry: any) => entry.student_id === studentId);
