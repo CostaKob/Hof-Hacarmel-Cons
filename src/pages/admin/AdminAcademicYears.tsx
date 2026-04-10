@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Plus, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen } from "lucide-react";
 
 const AdminAcademicYears = () => {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
