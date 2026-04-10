@@ -165,6 +165,9 @@ const AdminAcademicYears = () => {
           <Button className="h-12 rounded-xl text-base" onClick={() => { setShowForm(!showForm); if (!showForm) handleAutoFill(); }}>
             <Plus className="h-4 w-4" /> שנה חדשה
           </Button>
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-promotion")}>
+            <ArrowUpCircle className="h-4 w-4" /> מעבר שנה
+          </Button>
         </div>
 
         {showForm && (
