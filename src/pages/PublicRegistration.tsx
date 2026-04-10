@@ -611,13 +611,25 @@ const DynamicField = ({
         return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
       case "select":
         return (
-          <Select dir="rtl" value={value || ""} onValueChange={onChange}>
+          <Select dir="rtl" value={value || ""} onValueChange={(v) => {
+            // Prevent selecting disabled options (30-min restriction)
+            const opt = options.find((o) => o.value === v);
+            if ((opt as any)?.disabled) return;
+            onChange(v);
+          }}>
             <SelectTrigger>
               <SelectValue placeholder={placeholder || "בחרו..."} />
             </SelectTrigger>
             <SelectContent>
               {options.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  disabled={(opt as any)?.disabled}
+                  className={(opt as any)?.disabled ? "opacity-50" : ""}
+                >
+                  {opt.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
