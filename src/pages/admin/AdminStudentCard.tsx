@@ -129,7 +129,7 @@ const AdminStudentCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("*, schools(name), instruments(name), teachers(first_name, last_name)")
+        .select("*, schools(name), instruments(name), teachers(first_name, last_name), academic_years(name)")
         .eq("student_id", studentId!);
       if (error) throw error;
       return data;
@@ -266,7 +266,7 @@ const AdminStudentCard = () => {
               {enrollments.map((e: any) => (
                 <div key={e.id} className="flex items-center justify-between rounded-xl border border-border p-3">
                   <div>
-                    <p className="font-medium text-foreground text-sm">{e.schools?.name} — {e.instruments?.name}</p>
+                    <p className="font-medium text-foreground text-sm">{e.schools?.name} — {e.instruments?.name} <span className="text-muted-foreground font-normal">({e.academic_years?.name ?? "—"})</span></p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳ · {e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}
                       {(() => { const yrs = calcYearsOfPlaying((e as any).instrument_start_date); return yrs !== null ? ` · שנות נגינה: ${yrs}` : ""; })()}
@@ -304,7 +304,7 @@ const AdminStudentCard = () => {
                 <TabsList className="w-full flex-wrap h-auto gap-1">
                   {enrollments.map((e: any) => (
                     <TabsTrigger key={e.id} value={e.id} className="text-xs">
-                      {e.instruments?.name} — {e.schools?.name}
+                      {e.instruments?.name} — {e.schools?.name} ({e.academic_years?.name ?? "—"})
                     </TabsTrigger>
                   ))}
                 </TabsList>
