@@ -7,27 +7,32 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySummaryTable";
 import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
-function useAllEnrollments() {
+function useAllEnrollments(yearId: string | null) {
   return useQuery({
-    queryKey: ["admin-all-enrollments"],
+    queryKey: ["admin-all-enrollments", yearId],
+    enabled: !!yearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, is_active, lesson_duration_minutes, start_date, student_id, teacher_id, school_id, instrument_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name), schools(name)");
+        .select("id, is_active, lesson_duration_minutes, start_date, student_id, teacher_id, school_id, instrument_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name), schools(name)")
+        .eq("academic_year_id", yearId!);
       if (error) throw error;
       return data;
     },
   });
 }
 
-function useAllReportLines() {
+function useAllReportLines(yearId: string | null) {
   return useQuery({
-    queryKey: ["admin-all-report-lines"],
+    queryKey: ["admin-all-report-lines", yearId],
+    enabled: !!yearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("report_lines")
-        .select("enrollment_id, status");
+        .select("enrollment_id, status, reports!inner(academic_year_id)")
+        .eq("reports.academic_year_id", yearId!);
       if (error) throw error;
       return data;
     },
@@ -35,8 +40,9 @@ function useAllReportLines() {
 }
 
 const AdminYearlySummary = () => {
-  const { data: enrollments, isLoading: eLoading } = useAllEnrollments();
-  const { data: lines, isLoading: lLoading } = useAllReportLines();
+  const { selectedYearId } = useAcademicYear();
+  const { data: enrollments, isLoading: eLoading } = useAllEnrollments(selectedYearId);
+  const { data: lines, isLoading: lLoading } = useAllReportLines(selectedYearId);
 
   const [search, setSearch] = useState("");
   const [teacherFilter, setTeacherFilter] = useState("all");

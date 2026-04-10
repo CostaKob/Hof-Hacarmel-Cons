@@ -165,6 +165,7 @@ const AdminEnrollmentForm = () => {
         teacher_id: data.teacher_id,
         instrument_id: data.instrument_id,
         school_id: data.school_id,
+        academic_year_id: selectedYearId!,
         enrollment_role: data.enrollment_role as "primary" | "secondary",
         lesson_type: data.lesson_type as "individual" | "group",
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
