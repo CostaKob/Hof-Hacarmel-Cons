@@ -12,29 +12,28 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-interface SchoolFormData {
+interface FormData {
   name: string;
-  address: string;
   city: string;
   is_active: boolean;
 }
 
-const AdminSchoolForm = () => {
-  const { schoolId } = useParams();
-  const isEdit = !!schoolId;
+const AdminEducationalSchoolForm = () => {
+  const { id } = useParams();
+  const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<SchoolFormData>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: { is_active: true },
   });
 
   const isActive = watch("is_active");
 
   const { data: school } = useQuery({
-    queryKey: ["admin-school", schoolId],
+    queryKey: ["admin-educational-school", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("*").eq("id", schoolId!).single();
+      const { data, error } = await supabase.from("educational_schools").select("*").eq("id", id!).single();
       if (error) throw error;
       return data;
     },
@@ -45,7 +44,6 @@ const AdminSchoolForm = () => {
     if (school) {
       reset({
         name: school.name,
-        address: school.address ?? "",
         city: school.city ?? "",
         is_active: school.is_active,
       });
@@ -53,25 +51,24 @@ const AdminSchoolForm = () => {
   }, [school, reset]);
 
   const mutation = useMutation({
-    mutationFn: async (data: SchoolFormData) => {
+    mutationFn: async (data: FormData) => {
       const payload = {
         name: data.name,
-        address: data.address || null,
         city: data.city || null,
         is_active: data.is_active,
       };
       if (isEdit) {
-        const { error } = await supabase.from("schools").update(payload).eq("id", schoolId!);
+        const { error } = await supabase.from("educational_schools").update(payload).eq("id", id!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("schools").insert(payload);
+        const { error } = await supabase.from("educational_schools").insert(payload);
         if (error) throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-schools"] });
-      toast.success(isEdit ? "השלוחה עודכנה בהצלחה" : "השלוחה נוצרה בהצלחה");
-      navigate("/admin/schools");
+      queryClient.invalidateQueries({ queryKey: ["admin-educational-schools"] });
+      toast.success(isEdit ? "בית הספר עודכן בהצלחה" : "בית הספר נוצר בהצלחה");
+      navigate("/admin/educational-schools");
     },
     onError: () => toast.error("שגיאה בשמירת הנתונים"),
   });
@@ -80,42 +77,28 @@ const AdminSchoolForm = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      // Check for enrollments using this school
-      const { count } = await supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("school_id", schoolId!);
-      if (count && count > 0) {
-        throw new Error("linked");
-      }
-      // Clear teacher_schools references
-      await supabase.from("teacher_schools").delete().eq("school_id", schoolId!);
-      const { error } = await supabase.from("schools").delete().eq("id", schoolId!);
+      const { error } = await supabase.from("educational_schools").delete().eq("id", id!);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-schools"] });
-      toast.success("השלוחה נמחקה בהצלחה");
-      navigate("/admin/schools");
+      queryClient.invalidateQueries({ queryKey: ["admin-educational-schools"] });
+      toast.success("בית הספר נמחק בהצלחה");
+      navigate("/admin/educational-schools");
     },
-    onError: (err: any) => {
-      if (err.message === "linked") {
-        toast.error("לא ניתן למחוק שלוחה עם שיוכים פעילים. יש למחוק את השיוכים קודם.");
-      } else {
-        toast.error("שגיאה במחיקת השלוחה");
-      }
-    },
+    onError: () => toast.error("שגיאה במחיקת בית הספר"),
   });
 
-  const FIELDS: { name: keyof SchoolFormData; label: string; required?: boolean }[] = [
-    { name: "name", label: "שם שלוחה", required: true },
-    { name: "address", label: "כתובת" },
+  const FIELDS: { name: keyof FormData; label: string; required?: boolean }[] = [
+    { name: "name", label: "שם בית ספר", required: true },
     { name: "city", label: "עיר" },
   ];
 
   return (
-    <AdminLayout title={isEdit ? "עריכת שלוחה" : "שלוחה חדשה"} backPath="/admin/schools">
+    <AdminLayout title={isEdit ? "עריכת בית ספר" : "בית ספר חדש"} backPath="/admin/educational-schools">
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground text-base">פרטי שלוחה</h2>
+            <h2 className="font-semibold text-foreground text-base">פרטי בית ספר</h2>
             {isEdit && (
               <Button type="button" variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setShowDelete(true)}>
                 <Trash2 className="h-4 w-4 ml-1" />
@@ -141,15 +124,15 @@ const AdminSchoolForm = () => {
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/admin/schools")} className="h-14 rounded-2xl text-base px-6">ביטול</Button>
+          <Button type="button" variant="outline" onClick={() => navigate("/admin/educational-schools")} className="h-14 rounded-2xl text-base px-6">ביטול</Button>
         </div>
       </form>
 
       <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>מחיקת שלוחה</AlertDialogTitle>
-            <AlertDialogDescription>האם למחוק את השלוחה? פעולה זו אינה ניתנת לביטול.</AlertDialogDescription>
+            <AlertDialogTitle>מחיקת בית ספר</AlertDialogTitle>
+            <AlertDialogDescription>האם למחוק את בית הספר? פעולה זו אינה ניתנת לביטול.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
@@ -163,4 +146,4 @@ const AdminSchoolForm = () => {
   );
 };
 
-export default AdminSchoolForm;
+export default AdminEducationalSchoolForm;
