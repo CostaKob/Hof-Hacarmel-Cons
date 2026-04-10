@@ -980,7 +980,7 @@ const DynamicField = ({
           </div>
         );
       default:
-        return <Input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+        return <Input value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} />;
     }
   };
 
