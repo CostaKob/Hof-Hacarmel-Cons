@@ -292,7 +292,19 @@ const PublicRegistration = () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         lookupStudent(value || "");
+        checkEnrollmentHistory(value || "");
       }, 600);
+    }
+
+    // Re-check 30-min validity when grade changes
+    if (key === "grade") {
+      const nationalId = formValues["student_national_id"];
+      if (nationalId) checkEnrollmentHistory(nationalId);
+      // Reset lesson duration if 30 is no longer allowed
+      const allowedGrades = ["א", "ב", "ג", "ד"];
+      if (!allowedGrades.includes(value) && formValues["requested_lesson_duration"] === "30") {
+        setFormValues((prev) => ({ ...prev, requested_lesson_duration: "" }));
+      }
     }
   };
 
