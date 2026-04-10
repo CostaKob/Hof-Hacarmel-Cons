@@ -1,5 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ const STUDENT_TO_FIELD_MAP: Record<string, string> = {
 };
 
 const PublicRegistration = () => {
+  const { token } = useParams<{ token?: string }>();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -60,6 +62,7 @@ const PublicRegistration = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [existingStudent, setExistingStudent] = useState<any>(null);
   const [lookupDone, setLookupDone] = useState(false);
+  const [tokenRegistration, setTokenRegistration] = useState<any>(null);
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -142,9 +145,97 @@ const PublicRegistration = () => {
     },
   });
 
+  // Load registration by token for pre-fill
+  const { data: tokenData } = useQuery({
+    queryKey: ["registration-token", token],
+    queryFn: async () => {
+      if (!token) return null;
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("registration_token", token)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+    enabled: !!token,
+  });
+
+  // Check if student has enrollment history (for 30-min restriction)
+  const [hasEnrollmentHistory, setHasEnrollmentHistory] = useState(false);
+
+  const checkEnrollmentHistory = useCallback(async (nationalId: string) => {
+    if (!nationalId || nationalId.length < 5) {
+      setHasEnrollmentHistory(false);
+      return;
+    }
+    // Find student by national_id, then check enrollments
+    const { data: student } = await supabase
+      .from("students")
+      .select("id")
+      .eq("national_id", nationalId.trim())
+      .maybeSingle();
+    if (student) {
+      const { count } = await supabase
+        .from("enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", student.id);
+      setHasEnrollmentHistory((count || 0) > 0);
+    } else {
+      setHasEnrollmentHistory(false);
+    }
+  }, []);
+
+  // Pre-fill form from token registration
+  useEffect(() => {
+    if (tokenData && !tokenRegistration) {
+      setTokenRegistration(tokenData);
+      setFormValues((prev) => {
+        const updated = { ...prev };
+        const fullName = `${tokenData.student_first_name || ""} ${tokenData.student_last_name || ""}`.trim();
+        if (fullName) updated["student_full_name"] = fullName;
+        if (tokenData.student_national_id) updated["student_national_id"] = tokenData.student_national_id;
+        if (tokenData.parent_phone) updated["parent_phone"] = tokenData.parent_phone;
+        if (tokenData.parent_name) updated["parent_name"] = tokenData.parent_name;
+        if (tokenData.parent_email) updated["parent_email"] = tokenData.parent_email;
+        if (tokenData.parent_national_id) updated["parent_national_id"] = tokenData.parent_national_id;
+        if (tokenData.student_phone) updated["student_phone"] = tokenData.student_phone;
+        if (tokenData.city) updated["city"] = tokenData.city;
+        if (tokenData.grade) updated["grade"] = tokenData.grade;
+        if (tokenData.gender) updated["gender"] = tokenData.gender;
+        return updated;
+      });
+      setExistingStudent({ first_name: tokenData.student_first_name, last_name: tokenData.student_last_name });
+      setLookupDone(true);
+      // Check enrollment history for 30-min restriction
+      if (tokenData.student_national_id) {
+        checkEnrollmentHistory(tokenData.student_national_id);
+      }
+    }
+  }, [tokenData, tokenRegistration, checkEnrollmentHistory]);
+
+  // Helper: is 30-min option allowed for this student?
+  const is30MinAllowed = useCallback(() => {
+    const grade = formValues["grade"];
+    if (!grade) return true; // unknown grade, allow
+    const allowedGrades = ["א", "ב", "ג", "ד"];
+    if (!allowedGrades.includes(grade)) return false;
+    if (hasEnrollmentHistory) return false;
+    return true;
+  }, [formValues, hasEnrollmentHistory]);
+
   const getOptionsForField = (field: FieldDef) => {
     if (field.data_source === "instruments") return instruments.map((i) => ({ value: i.name, label: i.name }));
     if (field.data_source === "schools") return schools.map((s) => ({ value: s.name, label: s.name }));
+    // Filter 30-min option for lesson duration fields
+    if (field.field_key === "requested_lesson_duration") {
+      return field.options.map((opt) => {
+        if (opt.value === "30" && !is30MinAllowed()) {
+          return { ...opt, label: `${opt.label} (כיתה ד׳ ומטה, שנה ראשונה בלבד)`, disabled: true };
+        }
+        return opt;
+      });
+    }
     return field.options;
   };
 
@@ -201,7 +292,19 @@ const PublicRegistration = () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
         lookupStudent(value || "");
+        checkEnrollmentHistory(value || "");
       }, 600);
+    }
+
+    // Re-check 30-min validity when grade changes
+    if (key === "grade") {
+      const nationalId = formValues["student_national_id"];
+      if (nationalId) checkEnrollmentHistory(nationalId);
+      // Reset lesson duration if 30 is no longer allowed
+      const allowedGrades = ["א", "ב", "ג", "ד"];
+      if (!allowedGrades.includes(value) && formValues["requested_lesson_duration"] === "30") {
+        setFormValues((prev) => ({ ...prev, requested_lesson_duration: "" }));
+      }
     }
   };
 
@@ -294,6 +397,7 @@ const PublicRegistration = () => {
         notes: knownMap.notes || null,
         approval_checked: true,
         status: "new",
+        existing_student_id: tokenRegistration?.existing_student_id || null,
         custom_data: Object.keys(customData).length > 0 ? customData : {},
       };
 
@@ -507,13 +611,25 @@ const DynamicField = ({
         return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
       case "select":
         return (
-          <Select dir="rtl" value={value || ""} onValueChange={onChange}>
+          <Select dir="rtl" value={value || ""} onValueChange={(v) => {
+            // Prevent selecting disabled options (30-min restriction)
+            const opt = options.find((o) => o.value === v);
+            if ((opt as any)?.disabled) return;
+            onChange(v);
+          }}>
             <SelectTrigger>
               <SelectValue placeholder={placeholder || "בחרו..."} />
             </SelectTrigger>
             <SelectContent>
               {options.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                <SelectItem
+                  key={opt.value}
+                  value={opt.value}
+                  disabled={(opt as any)?.disabled}
+                  className={(opt as any)?.disabled ? "opacity-50" : ""}
+                >
+                  {opt.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>

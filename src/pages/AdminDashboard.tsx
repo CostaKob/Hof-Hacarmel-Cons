@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database } from "lucide-react";
+import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ArrowUpCircle } from "lucide-react";
 
 const MAIN_SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
@@ -17,6 +17,7 @@ const DATA_SECTIONS = [
 
 const TOOLS_SECTIONS = [
   { path: "/admin/yearly-summary", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכלל המערכת", icon: BarChart3 },
+  { path: "/admin/year-promotion", label: "מעבר שנה", description: "קידום כיתות ויצירת רישומי חידוש לשנה הבאה", icon: ArrowUpCircle },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים ומעבר שנה", icon: CalendarDays },
   { path: "/admin/exports", label: "דוחות וייצוא", description: "ייצוא תלמידים, מורים, דיווחים וסיכומים לאקסל", icon: FileDown },
 ];
