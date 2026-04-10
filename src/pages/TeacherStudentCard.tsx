@@ -153,6 +153,7 @@ const TeacherStudentCard = () => {
             <InfoRow icon={Calendar} label="תאריך התחלה" value={enrollment.start_date} />
             {enrollment.end_date && <InfoRow icon={Calendar} label="תאריך סיום" value={enrollment.end_date} />}
             {(() => { const yrs = calcYearsOfPlaying((enrollment as any).instrument_start_date); return yrs !== null ? <InfoRow icon={Music} label="שנות נגינה" value={String(yrs)} /> : null; })()}
+            <InfoRow icon={Music} label="מכסת שיעורים" value={String((enrollment as any).total_lessons_allocated ?? 30)} />
             <div className="flex items-center gap-2 pt-1">
               <Badge variant={enrollment.is_active ? "default" : "secondary"} className="rounded-lg">
                 {enrollment.is_active ? "פעיל" : "לא פעיל"}
@@ -161,8 +162,8 @@ const TeacherStudentCard = () => {
           </div>
         </div>
 
-        {/* Enrollment summary counts */}
-        <EnrollmentSummary lines={reportLines ?? []} startDate={enrollment.start_date} />
+        {/* Enrollment summary counts - show delivered vs allocated */}
+        <EnrollmentSummary lines={reportLines ?? []} startDate={enrollment.start_date} totalAllocated={(enrollment as any).total_lessons_allocated ?? 30} />
 
         {/* Lesson history */}
         <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={linesLoading} />

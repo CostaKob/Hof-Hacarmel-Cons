@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useAcademicYear } from "./useAcademicYear";
 
 // ─── Teacher Profile ───
 export function useTeacherProfile() {
@@ -37,17 +38,19 @@ export function useTeacherById(teacherId: string | undefined) {
   });
 }
 
-// ─── Teacher Enrollments (active) ───
+// ─── Teacher Enrollments (active, filtered by selected academic year) ───
 export function useTeacherEnrollments(teacherId: string | undefined) {
+  const { selectedYearId } = useAcademicYear();
   return useQuery({
-    queryKey: ["teacher-enrollments", teacherId],
-    enabled: !!teacherId,
+    queryKey: ["teacher-enrollments", teacherId, selectedYearId],
+    enabled: !!teacherId && !!selectedYearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(`*, students (*), instruments (name), schools (id, name)`)
         .eq("teacher_id", teacherId!)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .eq("academic_year_id", selectedYearId!);
       if (error) throw error;
       // Filter out students who stopped studying
       return (data ?? []).filter((e: any) => e.students?.student_status !== "הפסיק");

@@ -121,6 +121,7 @@ const AdminAcademicYears = () => {
 
   const YearCard = ({ y, isArchive = false }: { y: any; isArchive?: boolean }) => {
     const s = stats[y.id] ?? { students: 0, enrollments: 0, reports: 0 };
+    const regUrl = `${window.location.origin}/register?year=${y.id}`;
     return (
       <div className={`rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 ${isArchive ? "opacity-70" : ""}`}>
         <div className="flex items-center justify-between">
@@ -152,6 +153,26 @@ const AdminAcademicYears = () => {
             <CalendarDays className="h-4 w-4 mx-auto text-primary mb-1" />
             <p className={`font-bold text-foreground ${isArchive ? "text-lg" : "text-xl"}`}>{s.reports}</p>
             <p className="text-xs text-muted-foreground">דיווחים</p>
+          </div>
+        </div>
+        {/* Registration URL */}
+        <div className="rounded-xl bg-muted/30 p-3 space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">קישור רישום ייעודי לשנה</p>
+          <div className="flex items-center gap-2">
+            <code className="text-xs bg-muted rounded px-2 py-1 flex-1 truncate text-foreground" dir="ltr">
+              {regUrl}
+            </code>
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-lg text-xs shrink-0"
+              onClick={() => {
+                navigator.clipboard.writeText(regUrl);
+                toast.success("הקישור הועתק");
+              }}
+            >
+              העתק
+            </Button>
           </div>
         </div>
       </div>

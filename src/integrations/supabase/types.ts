@@ -109,7 +109,7 @@ export type Database = {
       }
       enrollments: {
         Row: {
-          academic_year_id: string | null
+          academic_year_id: string
           created_at: string
           end_date: string | null
           enrollment_role: Database["public"]["Enums"]["enrollment_role"]
@@ -125,9 +125,10 @@ export type Database = {
           student_id: string
           teacher_id: string
           teacher_rate_per_lesson: number | null
+          total_lessons_allocated: number
         }
         Insert: {
-          academic_year_id?: string | null
+          academic_year_id: string
           created_at?: string
           end_date?: string | null
           enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
@@ -143,9 +144,10 @@ export type Database = {
           student_id: string
           teacher_id: string
           teacher_rate_per_lesson?: number | null
+          total_lessons_allocated?: number
         }
         Update: {
-          academic_year_id?: string | null
+          academic_year_id?: string
           created_at?: string
           end_date?: string | null
           enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
@@ -161,6 +163,7 @@ export type Database = {
           student_id?: string
           teacher_id?: string
           teacher_rate_per_lesson?: number | null
+          total_lessons_allocated?: number
         }
         Relationships: [
           {
