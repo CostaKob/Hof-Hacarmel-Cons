@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle } from "lucide-react";
 
 const AdminAcademicYears = () => {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
   const [showArchive, setShowArchive] = useState(false);
