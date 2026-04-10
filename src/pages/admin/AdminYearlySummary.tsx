@@ -31,8 +31,8 @@ function useAllReportLines(yearId: string | null) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("report_lines")
-        .select("enrollment_id, status, reports!inner(academic_year_id)")
-        .eq("reports.academic_year_id", yearId!);
+        .select("enrollment_id, status, enrollments!inner(academic_year_id)")
+        .eq("enrollments.academic_year_id", yearId!);
       if (error) throw error;
       return data;
     },
