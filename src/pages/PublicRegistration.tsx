@@ -894,12 +894,14 @@ const DynamicField = ({
   field,
   value,
   onChange,
+  onBlur,
   error,
   options,
 }: {
   field: FieldDef;
   value: any;
   onChange: (val: any) => void;
+  onBlur?: () => void;
   error?: string;
   options: { value: string; label: string }[];
 }) => {
@@ -909,11 +911,11 @@ const DynamicField = ({
     switch (field_type) {
       case "text":
       case "number":
-        return <Input type={field_type} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+        return <Input type={field_type} value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} />;
       case "email":
-        return <Input type="email" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="ltr" className="text-left" />;
+        return <Input type="email" value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} dir="ltr" className="text-left" />;
       case "phone":
-        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || "05XXXXXXXX"} />;
+        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder || "05XXXXXXXX"} />;
       case "textarea":
         return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
       case "select":
