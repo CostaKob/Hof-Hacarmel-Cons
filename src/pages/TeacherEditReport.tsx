@@ -213,6 +213,7 @@ const TeacherEditReport = () => {
       .from("reports")
       .insert({
         teacher_id: teacher.id,
+        academic_year_id: selectedYearId ?? null,
         school_id: null,
         report_date: dateStr,
         kilometers: finalKm,

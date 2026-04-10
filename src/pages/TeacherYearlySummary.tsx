@@ -36,9 +36,9 @@ function useTeacherReportLinesByYear(teacherId: string | undefined, yearId: stri
     queryFn: async () => {
       const { data, error } = await supabase
         .from("report_lines")
-        .select("enrollment_id, status, report_id, reports!inner(teacher_id, academic_year_id)")
+        .select("enrollment_id, status, report_id, reports!inner(teacher_id), enrollments!inner(academic_year_id)")
         .eq("reports.teacher_id", teacherId!)
-        .eq("reports.academic_year_id", yearId!);
+        .eq("enrollments.academic_year_id", yearId!);
       if (error) throw error;
       return data;
     },
