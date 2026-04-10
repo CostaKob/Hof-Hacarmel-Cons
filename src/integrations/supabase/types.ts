@@ -551,6 +551,7 @@ export type Database = {
           parent_national_id: string
           parent_phone: string
           registration_page_id: string | null
+          registration_token: string | null
           requested_instruments: Json
           requested_lesson_duration: string
           status: Database["public"]["Enums"]["registration_status"]
@@ -579,6 +580,7 @@ export type Database = {
           parent_national_id: string
           parent_phone: string
           registration_page_id?: string | null
+          registration_token?: string | null
           requested_instruments?: Json
           requested_lesson_duration: string
           status?: Database["public"]["Enums"]["registration_status"]
@@ -607,6 +609,7 @@ export type Database = {
           parent_national_id?: string
           parent_phone?: string
           registration_page_id?: string | null
+          registration_token?: string | null
           requested_instruments?: Json
           requested_lesson_duration?: string
           status?: Database["public"]["Enums"]["registration_status"]
