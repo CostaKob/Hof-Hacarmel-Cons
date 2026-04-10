@@ -50,7 +50,7 @@ const TeacherNewReport = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: teacher } = useTeacherProfile();
-  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
 
   // Derive unique schools from enrollments (more reliable than teacher_schools)
   const enrollmentSchools = useMemo(() => {

@@ -79,7 +79,7 @@ const TeacherEditReport = () => {
   const { data: allDayLines, isLoading: linesLoading } = useReportLinesForReports(allDayReportIds);
 
   // Load ALL active enrollments for this teacher (not filtered by school)
-  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
 
   const [editDate, setEditDate] = useState<Date>(new Date());
   const [kilometers, setKilometers] = useState<string>("0");
