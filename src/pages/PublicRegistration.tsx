@@ -917,7 +917,7 @@ const DynamicField = ({
       case "phone":
         return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder || "05XXXXXXXX"} />;
       case "textarea":
-        return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
+        return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} dir="rtl" />;
       case "select":
         return (
           <Select dir="rtl" value={value || ""} onValueChange={(v) => {
