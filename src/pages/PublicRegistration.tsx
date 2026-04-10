@@ -53,6 +53,7 @@ const STUDENT_TO_FIELD_MAP: Record<string, string> = {
 };
 
 const PublicRegistration = () => {
+  const { token } = useParams<{ token?: string }>();
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -61,6 +62,7 @@ const PublicRegistration = () => {
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [existingStudent, setExistingStudent] = useState<any>(null);
   const [lookupDone, setLookupDone] = useState(false);
+  const [tokenRegistration, setTokenRegistration] = useState<any>(null);
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
