@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle, UserCheck } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { KNOWN_KEYS_SET } from "@/lib/registrationFieldKeys";
-import { isValidIsraeliPhone, normalizePhone } from "@/lib/phoneValidation";
+import { normalizePhone } from "@/lib/phoneValidation";
 
 interface FieldDef {
   id: string;
@@ -34,6 +34,25 @@ interface Section {
   title: string;
   content: string;
   sort_order: number;
+}
+
+// Strict validation helpers (consistent with school_music_students forms)
+function validateNationalId(val: string): string | null {
+  const digits = val.replace(/\D/g, "");
+  if (digits.length !== 9) return "ת.ז. חייבת להכיל 9 ספרות בדיוק";
+  return null;
+}
+
+function validateMobilePhone(val: string): string | null {
+  const digits = val.replace(/\D/g, "");
+  if (digits.length !== 10) return "מספר טלפון נייד חייב להכיל 10 ספרות בדיוק";
+  if (!/^05\d{8}$/.test(digits)) return "מספר טלפון נייד חייב להתחיל ב-05";
+  return null;
+}
+
+function validateEmail(val: string): string | null {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return 'כתובת דוא"ל לא תקינה';
+  return null;
 }
 
 // Map from student record fields to registration field keys
@@ -63,6 +82,7 @@ const PublicRegistration = () => {
   const [existingStudent, setExistingStudent] = useState<any>(null);
   const [lookupDone, setLookupDone] = useState(false);
   const [tokenRegistration, setTokenRegistration] = useState<any>(null);
+  const [schoolOtherMode, setSchoolOtherMode] = useState(false);
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -136,7 +156,7 @@ const PublicRegistration = () => {
     },
   });
 
-  // Load schools (for data_source)
+  // Load schools (for data_source and school select)
   const { data: schools = [] } = useQuery({
     queryKey: ["public-schools"],
     queryFn: async () => {
@@ -169,7 +189,6 @@ const PublicRegistration = () => {
       setHasEnrollmentHistory(false);
       return;
     }
-    // Find student by national_id, then check enrollments
     const { data: student } = await supabase
       .from("students")
       .select("id")
@@ -203,11 +222,11 @@ const PublicRegistration = () => {
         if (tokenData.city) updated["city"] = tokenData.city;
         if (tokenData.grade) updated["grade"] = tokenData.grade;
         if (tokenData.gender) updated["gender"] = tokenData.gender;
+        if (tokenData.student_school_text) updated["student_school_text"] = tokenData.student_school_text;
         return updated;
       });
       setExistingStudent({ first_name: tokenData.student_first_name, last_name: tokenData.student_last_name });
       setLookupDone(true);
-      // Check enrollment history for 30-min restriction
       if (tokenData.student_national_id) {
         checkEnrollmentHistory(tokenData.student_national_id);
       }
@@ -217,7 +236,7 @@ const PublicRegistration = () => {
   // Helper: is 30-min option allowed for this student?
   const is30MinAllowed = useCallback(() => {
     const grade = formValues["grade"];
-    if (!grade) return true; // unknown grade, allow
+    if (!grade) return true;
     const allowedGrades = ["א", "ב", "ג", "ד"];
     if (!allowedGrades.includes(grade)) return false;
     if (hasEnrollmentHistory) return false;
@@ -226,7 +245,13 @@ const PublicRegistration = () => {
 
   const getOptionsForField = (field: FieldDef) => {
     if (field.data_source === "instruments") return instruments.map((i) => ({ value: i.name, label: i.name }));
-    if (field.data_source === "schools") return schools.map((s) => ({ value: s.name, label: s.name }));
+    // School field: use select with "Other" option
+    if (field.field_key === "student_school_text" || field.data_source === "schools") {
+      return [
+        ...schools.map((s) => ({ value: s.name, label: s.name })),
+        { value: "__other__", label: "אחר" },
+      ];
+    }
     // Filter 30-min option for lesson duration fields
     if (field.field_key === "requested_lesson_duration") {
       return field.options.map((opt) => {
@@ -237,6 +262,15 @@ const PublicRegistration = () => {
       });
     }
     return field.options;
+  };
+
+  // Determine field type override for school field
+  const getFieldTypeOverride = (field: FieldDef): string => {
+    // student_status field: skip rendering (auto-determined)
+    if (field.field_key === "student_status") return "__hidden__";
+    // student_school_text: force to select
+    if (field.field_key === "student_school_text") return "select";
+    return field.field_type;
   };
 
   // Lookup student by national ID via secure RPC
@@ -257,7 +291,6 @@ const PublicRegistration = () => {
       setExistingStudent(student);
       setLookupDone(true);
 
-      // Prefill form values from student record
       setFormValues((prev) => {
         const updated = { ...prev };
         const fullName = `${student.first_name || ""} ${student.last_name || ""}`.trim();
@@ -287,6 +320,15 @@ const PublicRegistration = () => {
       return next;
     });
 
+    // Handle school "Other" mode
+    if (key === "student_school_text") {
+      if (value === "__other__") {
+        setSchoolOtherMode(true);
+        setFormValues((prev) => ({ ...prev, student_school_text: "" }));
+        return;
+      }
+    }
+
     // Trigger student lookup when national ID changes
     if (key === "student_national_id") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -300,7 +342,6 @@ const PublicRegistration = () => {
     if (key === "grade") {
       const nationalId = formValues["student_national_id"];
       if (nationalId) checkEnrollmentHistory(nationalId);
-      // Reset lesson duration if 30 is no longer allowed
       const allowedGrades = ["א", "ב", "ג", "ד"];
       if (!allowedGrades.includes(value) && formValues["requested_lesson_duration"] === "30") {
         setFormValues((prev) => ({ ...prev, requested_lesson_duration: "" }));
@@ -311,22 +352,40 @@ const PublicRegistration = () => {
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
     for (const field of fields) {
-      if (!field.is_required) continue;
+      // Skip hidden fields
+      if (field.field_key === "student_status") continue;
+
       const val = formValues[field.field_key];
-      if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
-        errors[field.field_key] = "שדה חובה";
-      }
-      if (field.field_type === "email" && val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-        errors[field.field_key] = 'כתובת דוא"ל לא תקינה';
-      }
-      // Phone validation for Israeli numbers
-      if (field.field_type === "phone" && val) {
-        const normalized = normalizePhone(val);
-        if (normalized && !isValidIsraeliPhone(normalized)) {
-          errors[field.field_key] = "יש להזין מספר טלפון ישראלי תקין";
+
+      // Required check
+      if (field.is_required) {
+        if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
+          errors[field.field_key] = "שדה חובה";
+          continue;
         }
       }
+
+      if (!val) continue;
+
+      // Strict National ID validation (9 digits)
+      if (field.field_key === "student_national_id" || field.field_key === "parent_national_id") {
+        const err = validateNationalId(String(val));
+        if (err) errors[field.field_key] = err;
+      }
+
+      // Strict mobile phone validation (10 digits, starts with 05)
+      if (field.field_type === "phone" && val) {
+        const err = validateMobilePhone(String(val));
+        if (err) errors[field.field_key] = err;
+      }
+
+      // Email validation
+      if (field.field_type === "email" && val) {
+        const err = validateEmail(String(val));
+        if (err) errors[field.field_key] = err;
+      }
     }
+
     if (!approvalChecked) {
       errors["__approval"] = "יש לאשר את תנאי ההרשמה";
     }
@@ -340,10 +399,16 @@ const PublicRegistration = () => {
       if (!approvalChecked && approvalRef.current) {
         approvalRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
       } else {
-        const firstErrorKey = Object.keys(validationErrors)[0];
-        if (firstErrorKey) {
-          const el = document.querySelector(`[data-field-key="${firstErrorKey}"]`);
-          if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        const errorKeys = Object.keys(validationErrors);
+        if (errorKeys.length > 0) {
+          // Use setTimeout to allow state to update before scrolling
+          setTimeout(() => {
+            const firstErrorKey = Object.keys(validationErrors)[0];
+            if (firstErrorKey) {
+              const el = document.querySelector(`[data-field-key="${firstErrorKey}"]`);
+              if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+          }, 50);
         }
       }
       return;
@@ -356,6 +421,9 @@ const PublicRegistration = () => {
       const customData: Record<string, any> = {};
 
       for (const field of fields) {
+        // Skip student_status – we set it automatically
+        if (field.field_key === "student_status") continue;
+
         const val = formValues[field.field_key];
         if (val === undefined || val === null) continue;
 
@@ -364,7 +432,6 @@ const PublicRegistration = () => {
           knownMap.student_first_name = parts[0];
           knownMap.student_last_name = parts.slice(1).join(" ") || parts[0];
         } else if (KNOWN_KEYS_SET.has(field.field_key)) {
-          // Normalize phone values before saving
           if (field.field_type === "phone" && val) {
             knownMap[field.field_key] = normalizePhone(val);
           } else {
@@ -375,6 +442,10 @@ const PublicRegistration = () => {
         }
       }
 
+      // Auto-determine student_status
+      const isReturning = !!(tokenRegistration?.existing_student_id || existingStudent);
+      const autoStatus = isReturning ? "ממשיך" : "חדש";
+
       const row: any = {
         academic_year_id: activeYear?.id || null,
         registration_page_id: page?.id || null,
@@ -382,7 +453,7 @@ const PublicRegistration = () => {
         student_last_name: knownMap.student_last_name || "",
         student_national_id: knownMap.student_national_id || "",
         gender: knownMap.gender || null,
-        student_status: knownMap.student_status || null,
+        student_status: autoStatus,
         branch_school_name: knownMap.branch_school_name || "",
         student_school_text: knownMap.student_school_text || "",
         grade: knownMap.grade || "",
@@ -430,6 +501,7 @@ const PublicRegistration = () => {
                 setApprovalChecked(false);
                 setExistingStudent(null);
                 setLookupDone(false);
+                setSchoolOtherMode(false);
               }}
               variant="outline"
               className="mt-2"
@@ -466,9 +538,10 @@ const PublicRegistration = () => {
     );
   }
 
-  // Group fields by section_title
+  // Group fields by section_title, filtering out hidden fields
+  const visibleFields = fields.filter((f) => getFieldTypeOverride(f) !== "__hidden__");
   const fieldGroups: { title: string; fields: FieldDef[] }[] = [];
-  for (const field of fields) {
+  for (const field of visibleFields) {
     if (field.section_title || fieldGroups.length === 0) {
       fieldGroups.push({ title: field.section_title || "", fields: [field] });
     } else {
@@ -534,7 +607,7 @@ const PublicRegistration = () => {
                   <UserCheck className="h-6 w-6 text-green-600 dark:text-green-400 shrink-0" />
                   <div>
                     <p className="font-semibold text-green-800 dark:text-green-300 text-sm">
-                      נמצא תלמיד/ה קיים/ת במערכת
+                      נמצא תלמיד/ה קיים/ת במערכת — סטטוס: ממשיך
                     </p>
                     <p className="text-green-700 dark:text-green-400 text-xs mt-0.5">
                       הפרטים מולאו אוטומטית. אנא עיינו ועדכנו פרטים שהשתנו.
@@ -554,16 +627,55 @@ const PublicRegistration = () => {
                 </CardHeader>
               )}
               <CardContent className="space-y-4">
-                {group.fields.map((field) => (
-                  <DynamicField
-                    key={field.id}
-                    field={field}
-                    value={formValues[field.field_key]}
-                    onChange={(val) => setFieldValue(field.field_key, val)}
-                    error={validationErrors[field.field_key]}
-                    options={getOptionsForField(field)}
-                  />
-                ))}
+                {group.fields.map((field) => {
+                  const typeOverride = getFieldTypeOverride(field);
+                  const isSchoolField = field.field_key === "student_school_text";
+
+                  // School field with "Other" mode active
+                  if (isSchoolField && schoolOtherMode) {
+                    return (
+                      <div key={field.id} className="space-y-1.5" data-field-key={field.field_key}>
+                        <Label className="text-sm font-medium">
+                          {field.label}
+                          {field.is_required && <span className="text-destructive mr-1">*</span>}
+                        </Label>
+                        <div className="flex gap-2">
+                          <Input
+                            value={formValues[field.field_key] || ""}
+                            onChange={(e) => setFieldValue(field.field_key, e.target.value)}
+                            placeholder="הקלידו שם בית ספר..."
+                            className="flex-1"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSchoolOtherMode(false);
+                              setFormValues((prev) => ({ ...prev, student_school_text: "" }));
+                            }}
+                          >
+                            חזרה לרשימה
+                          </Button>
+                        </div>
+                        {validationErrors[field.field_key] && (
+                          <p className="text-sm text-destructive">{validationErrors[field.field_key]}</p>
+                        )}
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <DynamicField
+                      key={field.id}
+                      field={{ ...field, field_type: typeOverride }}
+                      value={formValues[field.field_key]}
+                      onChange={(val) => setFieldValue(field.field_key, val)}
+                      error={validationErrors[field.field_key]}
+                      options={getOptionsForField(field)}
+                    />
+                  );
+                })}
               </CardContent>
             </Card>
           ))}
@@ -606,13 +718,12 @@ const DynamicField = ({
       case "email":
         return <Input type="email" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="ltr" className="text-left" />;
       case "phone":
-        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || "05XXXXXXXX"} />;
       case "textarea":
         return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
       case "select":
         return (
           <Select dir="rtl" value={value || ""} onValueChange={(v) => {
-            // Prevent selecting disabled options (30-min restriction)
             const opt = options.find((o) => o.value === v);
             if ((opt as any)?.disabled) return;
             onChange(v);
