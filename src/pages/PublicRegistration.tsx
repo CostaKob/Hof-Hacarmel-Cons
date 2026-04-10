@@ -397,6 +397,7 @@ const PublicRegistration = () => {
         notes: knownMap.notes || null,
         approval_checked: true,
         status: "new",
+        existing_student_id: tokenRegistration?.existing_student_id || null,
         custom_data: Object.keys(customData).length > 0 ? customData : {},
       };
 
