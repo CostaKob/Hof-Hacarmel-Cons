@@ -55,21 +55,21 @@ function validateEmail(val: string): string | null {
   return null;
 }
 
-// Map from student record fields to registration field keys
-const STUDENT_TO_FIELD_MAP: Record<string, string> = {
-  first_name: "__student_first_name",
-  last_name: "__student_last_name",
-  national_id: "student_national_id",
-  parent_phone: "parent_phone",
-  parent_phone_2: "__parent_phone_2",
-  parent_name: "parent_name",
-  parent_email: "parent_email",
-  phone: "student_phone",
-  city: "city",
-  grade: "grade",
-  gender: "gender",
-  address: "__address",
-};
+// Pre-defined educational schools list
+const EDUCATIONAL_SCHOOLS = [
+  "רמב\"ם",
+  "בגין",
+  "עמל",
+  "בן גוריון",
+  "הראל",
+  "דה שליט",
+  "רבין",
+  "ברנר",
+  "גולדה",
+  "תיכון עירוני",
+  "אורט",
+  "עתיד",
+];
 
 const PublicRegistration = () => {
   const { token } = useParams<{ token?: string }>();
@@ -82,7 +82,8 @@ const PublicRegistration = () => {
   const [existingStudent, setExistingStudent] = useState<any>(null);
   const [lookupDone, setLookupDone] = useState(false);
   const [tokenRegistration, setTokenRegistration] = useState<any>(null);
-  const [schoolOtherMode, setSchoolOtherMode] = useState(false);
+  const [branchOtherMode, setBranchOtherMode] = useState(false);
+  const [eduSchoolOtherMode, setEduSchoolOtherMode] = useState(false);
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -156,7 +157,7 @@ const PublicRegistration = () => {
     },
   });
 
-  // Load schools (for data_source and school select)
+  // Load schools (for branch/study branch select)
   const { data: schools = [] } = useQuery({
     queryKey: ["public-schools"],
     queryFn: async () => {
@@ -184,6 +185,26 @@ const PublicRegistration = () => {
   // Check if student has enrollment history (for 30-min restriction)
   const [hasEnrollmentHistory, setHasEnrollmentHistory] = useState(false);
 
+  // Fetch last enrollment's school for returning students (pre-fill branch)
+  const fetchLastEnrollmentBranch = useCallback(async (studentId: string) => {
+    const { data } = await supabase
+      .from("enrollments")
+      .select("school_id, schools(name)")
+      .eq("student_id", studentId)
+      .order("start_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data && (data as any).schools?.name) {
+      setFormValues((prev) => {
+        // Only set if not already set by user
+        if (!prev["branch_school_name"]) {
+          return { ...prev, branch_school_name: (data as any).schools.name };
+        }
+        return prev;
+      });
+    }
+  }, []);
+
   const checkEnrollmentHistory = useCallback(async (nationalId: string) => {
     if (!nationalId || nationalId.length < 5) {
       setHasEnrollmentHistory(false);
@@ -200,10 +221,13 @@ const PublicRegistration = () => {
         .select("id", { count: "exact", head: true })
         .eq("student_id", student.id);
       setHasEnrollmentHistory((count || 0) > 0);
+      if ((count || 0) > 0) {
+        fetchLastEnrollmentBranch(student.id);
+      }
     } else {
       setHasEnrollmentHistory(false);
     }
-  }, []);
+  }, [fetchLastEnrollmentBranch]);
 
   // Pre-fill form from token registration
   useEffect(() => {
@@ -222,7 +246,8 @@ const PublicRegistration = () => {
         if (tokenData.city) updated["city"] = tokenData.city;
         if (tokenData.grade) updated["grade"] = tokenData.grade;
         if (tokenData.gender) updated["gender"] = tokenData.gender;
-        if (tokenData.student_school_text) updated["student_school_text"] = tokenData.student_school_text;
+        if (tokenData.branch_school_name) updated["branch_school_name"] = tokenData.branch_school_name;
+        if ((tokenData as any).educational_school) updated["educational_school"] = (tokenData as any).educational_school;
         return updated;
       });
       setExistingStudent({ first_name: tokenData.student_first_name, last_name: tokenData.student_last_name });
@@ -245,8 +270,8 @@ const PublicRegistration = () => {
 
   const getOptionsForField = (field: FieldDef) => {
     if (field.data_source === "instruments") return instruments.map((i) => ({ value: i.name, label: i.name }));
-    // School field: use select with "Other" option
-    if (field.field_key === "student_school_text" || field.data_source === "schools") {
+    // Branch/study branch field: use schools table
+    if (field.field_key === "branch_school_name" || field.data_source === "schools") {
       return [
         ...schools.map((s) => ({ value: s.name, label: s.name })),
         { value: "__other__", label: "אחר" },
@@ -264,12 +289,13 @@ const PublicRegistration = () => {
     return field.options;
   };
 
-  // Determine field type override for school field
+  // Determine field type override
   const getFieldTypeOverride = (field: FieldDef): string => {
-    // student_status field: skip rendering (auto-determined)
     if (field.field_key === "student_status") return "__hidden__";
-    // student_school_text: force to select
-    if (field.field_key === "student_school_text") return "select";
+    // student_school_text is now replaced by branch_school_name (select) — hide it
+    if (field.field_key === "student_school_text") return "__hidden__";
+    // branch_school_name: force select
+    if (field.field_key === "branch_school_name") return "select";
     return field.field_type;
   };
 
@@ -320,11 +346,20 @@ const PublicRegistration = () => {
       return next;
     });
 
-    // Handle school "Other" mode
-    if (key === "student_school_text") {
+    // Handle branch "Other" mode
+    if (key === "branch_school_name") {
       if (value === "__other__") {
-        setSchoolOtherMode(true);
-        setFormValues((prev) => ({ ...prev, student_school_text: "" }));
+        setBranchOtherMode(true);
+        setFormValues((prev) => ({ ...prev, branch_school_name: "" }));
+        return;
+      }
+    }
+
+    // Handle educational school "Other" mode
+    if (key === "educational_school") {
+      if (value === "__other__") {
+        setEduSchoolOtherMode(true);
+        setFormValues((prev) => ({ ...prev, educational_school: "" }));
         return;
       }
     }
@@ -352,12 +387,11 @@ const PublicRegistration = () => {
   const validate = (): boolean => {
     const errors: Record<string, string> = {};
     for (const field of fields) {
-      // Skip hidden fields
       if (field.field_key === "student_status") continue;
+      if (field.field_key === "student_school_text") continue; // replaced by branch_school_name
 
       const val = formValues[field.field_key];
 
-      // Required check
       if (field.is_required) {
         if (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0)) {
           errors[field.field_key] = "שדה חובה";
@@ -367,23 +401,28 @@ const PublicRegistration = () => {
 
       if (!val) continue;
 
-      // Strict National ID validation (9 digits)
       if (field.field_key === "student_national_id" || field.field_key === "parent_national_id") {
         const err = validateNationalId(String(val));
         if (err) errors[field.field_key] = err;
       }
 
-      // Strict mobile phone validation (10 digits, starts with 05)
       if (field.field_type === "phone" && val) {
         const err = validateMobilePhone(String(val));
         if (err) errors[field.field_key] = err;
       }
 
-      // Email validation
       if (field.field_type === "email" && val) {
         const err = validateEmail(String(val));
         if (err) errors[field.field_key] = err;
       }
+    }
+
+    // Validate educational_school (injected field, not from DB fields)
+    // It's optional, no required validation needed
+
+    // Validate branch_school_name is required
+    if (!formValues["branch_school_name"]) {
+      errors["branch_school_name"] = "שדה חובה";
     }
 
     if (!approvalChecked) {
@@ -401,7 +440,6 @@ const PublicRegistration = () => {
       } else {
         const errorKeys = Object.keys(validationErrors);
         if (errorKeys.length > 0) {
-          // Use setTimeout to allow state to update before scrolling
           setTimeout(() => {
             const firstErrorKey = Object.keys(validationErrors)[0];
             if (firstErrorKey) {
@@ -421,8 +459,8 @@ const PublicRegistration = () => {
       const customData: Record<string, any> = {};
 
       for (const field of fields) {
-        // Skip student_status – we set it automatically
         if (field.field_key === "student_status") continue;
+        if (field.field_key === "student_school_text") continue;
 
         const val = formValues[field.field_key];
         if (val === undefined || val === null) continue;
@@ -454,8 +492,8 @@ const PublicRegistration = () => {
         student_national_id: knownMap.student_national_id || "",
         gender: knownMap.gender || null,
         student_status: autoStatus,
-        branch_school_name: knownMap.branch_school_name || "",
-        student_school_text: knownMap.student_school_text || "",
+        branch_school_name: formValues["branch_school_name"] || "",
+        student_school_text: formValues["branch_school_name"] || "", // keep sync for backward compat
         grade: knownMap.grade || "",
         city: knownMap.city || "",
         student_phone: knownMap.student_phone || null,
@@ -469,6 +507,7 @@ const PublicRegistration = () => {
         approval_checked: true,
         status: "new",
         existing_student_id: tokenRegistration?.existing_student_id || null,
+        educational_school: formValues["educational_school"] || null,
         custom_data: Object.keys(customData).length > 0 ? customData : {},
       };
 
@@ -501,7 +540,8 @@ const PublicRegistration = () => {
                 setApprovalChecked(false);
                 setExistingStudent(null);
                 setLookupDone(false);
-                setSchoolOtherMode(false);
+                setBranchOtherMode(false);
+                setEduSchoolOtherMode(false);
               }}
               variant="outline"
               className="mt-2"
@@ -538,16 +578,169 @@ const PublicRegistration = () => {
     );
   }
 
-  // Group fields by section_title, filtering out hidden fields
+  // Separate fields into groups, injecting educational_school and branch_school_name
   const visibleFields = fields.filter((f) => getFieldTypeOverride(f) !== "__hidden__");
-  const fieldGroups: { title: string; fields: FieldDef[] }[] = [];
-  for (const field of visibleFields) {
-    if (field.section_title || fieldGroups.length === 0) {
-      fieldGroups.push({ title: field.section_title || "", fields: [field] });
-    } else {
-      fieldGroups[fieldGroups.length - 1].fields.push(field);
+
+  // Find insertion points: grade field (for edu school), and requested_instruments/requested_lesson_duration (for branch)
+  const gradeFieldIdx = visibleFields.findIndex((f) => f.field_key === "grade");
+  const instrumentFieldIdx = visibleFields.findIndex(
+    (f) => f.field_key === "requested_instruments" || f.field_key === "requested_lesson_duration"
+  );
+  // Find last instrument-related field
+  const lastInstrumentIdx = visibleFields.reduce((last, f, i) => {
+    if (f.field_key === "requested_instruments" || f.field_key === "requested_lesson_duration") return i;
+    return last;
+  }, instrumentFieldIdx);
+
+  // Build ordered field keys with injected fields
+  type RenderItem = { type: "db_field"; field: FieldDef } | { type: "injected"; key: string };
+  const renderItems: RenderItem[] = [];
+
+  for (let i = 0; i < visibleFields.length; i++) {
+    renderItems.push({ type: "db_field", field: visibleFields[i] });
+
+    // After grade field: inject educational_school
+    if (i === gradeFieldIdx && gradeFieldIdx >= 0) {
+      renderItems.push({ type: "injected", key: "educational_school" });
+    }
+
+    // After last instrument/duration field: inject branch_school_name
+    if (i === lastInstrumentIdx && lastInstrumentIdx >= 0) {
+      renderItems.push({ type: "injected", key: "branch_school_name" });
     }
   }
+
+  // If no grade field found, add educational_school at end
+  if (gradeFieldIdx < 0) {
+    renderItems.push({ type: "injected", key: "educational_school" });
+  }
+  // If no instrument field found, add branch at end
+  if (lastInstrumentIdx < 0) {
+    renderItems.push({ type: "injected", key: "branch_school_name" });
+  }
+
+  // Group by section_title
+  const fieldGroups: { title: string; items: RenderItem[] }[] = [];
+  for (const item of renderItems) {
+    const sectionTitle = item.type === "db_field" ? (item.field.section_title || "") : "";
+    if (sectionTitle || fieldGroups.length === 0) {
+      fieldGroups.push({ title: sectionTitle, items: [item] });
+    } else {
+      fieldGroups[fieldGroups.length - 1].items.push(item);
+    }
+  }
+
+  // Render educational school field
+  const renderEducationalSchool = () => {
+    if (eduSchoolOtherMode) {
+      return (
+        <div className="space-y-1.5" data-field-key="educational_school">
+          <Label className="text-sm font-medium">בית ספר ללימודי בוקר</Label>
+          <div className="flex gap-2">
+            <Input
+              value={formValues["educational_school"] || ""}
+              onChange={(e) => setFieldValue("educational_school", e.target.value)}
+              placeholder="הקלידו שם בית ספר..."
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEduSchoolOtherMode(false);
+                setFormValues((prev) => ({ ...prev, educational_school: "" }));
+              }}
+            >
+              חזרה לרשימה
+            </Button>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1.5" data-field-key="educational_school">
+        <Label className="text-sm font-medium">בית ספר ללימודי בוקר</Label>
+        <Select
+          dir="rtl"
+          value={formValues["educational_school"] || ""}
+          onValueChange={(v) => setFieldValue("educational_school", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="בחרו בית ספר..." />
+          </SelectTrigger>
+          <SelectContent>
+            {EDUCATIONAL_SCHOOLS.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+            <SelectItem value="__other__">אחר</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  };
+
+  // Render branch/study-branch field
+  const renderBranchField = () => {
+    if (branchOtherMode) {
+      return (
+        <div className="space-y-1.5" data-field-key="branch_school_name">
+          <Label className="text-sm font-medium">
+            שלוחת לימודים
+            <span className="text-destructive mr-1">*</span>
+          </Label>
+          <div className="flex gap-2">
+            <Input
+              value={formValues["branch_school_name"] || ""}
+              onChange={(e) => setFieldValue("branch_school_name", e.target.value)}
+              placeholder="הקלידו שם שלוחה..."
+              className="flex-1"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setBranchOtherMode(false);
+                setFormValues((prev) => ({ ...prev, branch_school_name: "" }));
+              }}
+            >
+              חזרה לרשימה
+            </Button>
+          </div>
+          {validationErrors["branch_school_name"] && (
+            <p className="text-sm text-destructive">{validationErrors["branch_school_name"]}</p>
+          )}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1.5" data-field-key="branch_school_name">
+        <Label className="text-sm font-medium">
+          שלוחת לימודים
+          <span className="text-destructive mr-1">*</span>
+        </Label>
+        <Select
+          dir="rtl"
+          value={formValues["branch_school_name"] || ""}
+          onValueChange={(v) => setFieldValue("branch_school_name", v)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="בחרו שלוחה..." />
+          </SelectTrigger>
+          <SelectContent>
+            {schools.map((s) => (
+              <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+            ))}
+            <SelectItem value="__other__">אחר</SelectItem>
+          </SelectContent>
+        </Select>
+        {validationErrors["branch_school_name"] && (
+          <p className="text-sm text-destructive">{validationErrors["branch_school_name"]}</p>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-muted/30 py-6 px-4" dir="rtl">
@@ -627,43 +820,15 @@ const PublicRegistration = () => {
                 </CardHeader>
               )}
               <CardContent className="space-y-4">
-                {group.fields.map((field) => {
-                  const typeOverride = getFieldTypeOverride(field);
-                  const isSchoolField = field.field_key === "student_school_text";
-
-                  // School field with "Other" mode active
-                  if (isSchoolField && schoolOtherMode) {
-                    return (
-                      <div key={field.id} className="space-y-1.5" data-field-key={field.field_key}>
-                        <Label className="text-sm font-medium">
-                          {field.label}
-                          {field.is_required && <span className="text-destructive mr-1">*</span>}
-                        </Label>
-                        <div className="flex gap-2">
-                          <Input
-                            value={formValues[field.field_key] || ""}
-                            onChange={(e) => setFieldValue(field.field_key, e.target.value)}
-                            placeholder="הקלידו שם בית ספר..."
-                            className="flex-1"
-                          />
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSchoolOtherMode(false);
-                              setFormValues((prev) => ({ ...prev, student_school_text: "" }));
-                            }}
-                          >
-                            חזרה לרשימה
-                          </Button>
-                        </div>
-                        {validationErrors[field.field_key] && (
-                          <p className="text-sm text-destructive">{validationErrors[field.field_key]}</p>
-                        )}
-                      </div>
-                    );
+                {group.items.map((item, ii) => {
+                  if (item.type === "injected") {
+                    if (item.key === "educational_school") return <div key="edu_school">{renderEducationalSchool()}</div>;
+                    if (item.key === "branch_school_name") return <div key="branch">{renderBranchField()}</div>;
+                    return null;
                   }
+
+                  const field = item.field;
+                  const typeOverride = getFieldTypeOverride(field);
 
                   return (
                     <DynamicField

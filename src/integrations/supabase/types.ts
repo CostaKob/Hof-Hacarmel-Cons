@@ -540,6 +540,7 @@ export type Database = {
           city: string
           created_at: string
           custom_data: Json | null
+          educational_school: string | null
           existing_student_id: string | null
           gender: string | null
           grade: string
@@ -569,6 +570,7 @@ export type Database = {
           city: string
           created_at?: string
           custom_data?: Json | null
+          educational_school?: string | null
           existing_student_id?: string | null
           gender?: string | null
           grade: string
@@ -598,6 +600,7 @@ export type Database = {
           city?: string
           created_at?: string
           custom_data?: Json | null
+          educational_school?: string | null
           existing_student_id?: string | null
           gender?: string | null
           grade?: string
