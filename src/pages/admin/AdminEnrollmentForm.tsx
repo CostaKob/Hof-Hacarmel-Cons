@@ -41,6 +41,7 @@ const AdminEnrollmentForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { selectedYearId } = useAcademicYear();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<EnrollmentFormData>({
     defaultValues: {
@@ -50,6 +51,7 @@ const AdminEnrollmentForm = () => {
       lesson_type: "individual",
       lesson_duration_minutes: "45",
       instrument_start_date: "",
+      total_lessons_allocated: "30",
     },
   });
 
@@ -154,6 +156,7 @@ const AdminEnrollmentForm = () => {
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
         is_active: enrollment.is_active,
+        total_lessons_allocated: String((enrollment as any).total_lessons_allocated ?? 30),
       });
     }
   }, [enrollment, reset]);
@@ -171,6 +174,8 @@ const AdminEnrollmentForm = () => {
         start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
+        academic_year_id: selectedYearId!,
+        total_lessons_allocated: Number(data.total_lessons_allocated) || 30,
       };
 
       if (isEdit) {
