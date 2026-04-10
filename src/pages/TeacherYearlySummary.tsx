@@ -47,10 +47,11 @@ function useTeacherReportLinesByYear(teacherId: string | undefined, yearId: stri
 
 const TeacherYearlySummary = () => {
   const navigate = useNavigate();
+  const { selectedYearId } = useAcademicYear();
   const { data: teacher, isLoading: tLoading } = useTeacherProfile();
-  const { data: enrollments, isLoading: eLoading } = useTeacherAllEnrollments(teacher?.id);
+  const { data: enrollments, isLoading: eLoading } = useTeacherEnrollmentsByYear(teacher?.id, selectedYearId);
   const { data: schools } = useTeacherSchools(teacher?.id);
-  const { data: lines, isLoading: lLoading } = useTeacherReportLinesAll(teacher?.id);
+  const { data: lines, isLoading: lLoading } = useTeacherReportLinesByYear(teacher?.id, selectedYearId);
 
   const [search, setSearch] = useState("");
   const [schoolFilter, setSchoolFilter] = useState("all");
