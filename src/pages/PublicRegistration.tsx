@@ -256,7 +256,7 @@ const PublicRegistration = () => {
   // Helper: is 30-min option allowed for this student?
   const is30MinAllowed = useCallback(() => {
     const grade = formValues["grade"];
-    if (!grade) return true;
+    if (!grade) return false; // if no grade selected, don't allow 30min
     const allowedGrades = ["א", "ב", "ג", "ד"];
     if (!allowedGrades.includes(grade)) return false;
     if (hasEnrollmentHistory) return false;
@@ -287,10 +287,11 @@ const PublicRegistration = () => {
   // Determine field type override
   const getFieldTypeOverride = (field: FieldDef): string => {
     if (field.field_key === "student_status") return "__hidden__";
-    // student_school_text is now replaced by branch_school_name (select) — hide it
+    // student_school_text and branch_school_name from DB are hidden — we inject them manually
     if (field.field_key === "student_school_text") return "__hidden__";
-    // branch_school_name: force select
-    if (field.field_key === "branch_school_name") return "select";
+    if (field.field_key === "branch_school_name") return "__hidden__";
+    // educational_school from DB is hidden — we inject it manually
+    if (field.field_key === "educational_school") return "__hidden__";
     return field.field_type;
   };
 
@@ -630,7 +631,7 @@ const PublicRegistration = () => {
     if (eduSchoolOtherMode) {
       return (
         <div className="space-y-1.5" data-field-key="educational_school">
-          <Label className="text-sm font-medium">בית ספר ללימודי בוקר</Label>
+          <Label className="text-sm font-medium">בית ספר</Label>
           <div className="flex gap-2">
             <Input
               value={formValues["educational_school"] || ""}
@@ -655,7 +656,7 @@ const PublicRegistration = () => {
     }
     return (
       <div className="space-y-1.5" data-field-key="educational_school">
-        <Label className="text-sm font-medium">בית ספר ללימודי בוקר</Label>
+        <Label className="text-sm font-medium">בית ספר</Label>
         <Select
           dir="rtl"
           value={formValues["educational_school"] || ""}
