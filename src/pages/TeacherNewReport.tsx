@@ -8,6 +8,7 @@ import {
   useKilometersForDate,
 } from "@/hooks/useTeacherData";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,6 +50,7 @@ interface LineState {
 const TeacherNewReport = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { selectedYearId } = useAcademicYear();
   const { data: teacher } = useTeacherProfile();
   const { data: allEnrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
 
