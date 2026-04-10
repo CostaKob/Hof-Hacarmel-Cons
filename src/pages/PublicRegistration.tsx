@@ -953,7 +953,7 @@ const DynamicField = ({
                   key={opt.value}
                   value={opt.value}
                   disabled={(opt as any)?.disabled}
-                  className={(opt as any)?.disabled ? "opacity-50" : ""}
+                  className={(opt as any)?.disabled ? "opacity-40 line-through text-muted-foreground" : ""}
                 >
                   {opt.label}
                 </SelectItem>
