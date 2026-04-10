@@ -95,9 +95,34 @@ const TeacherDashboard = () => {
             יציאה
           </Button>
         </div>
+        {/* Year switcher */}
+        {years.length > 1 && (
+          <div className="mx-auto max-w-lg mt-3">
+            <Select value={selectedYearId ?? ""} onValueChange={setSelectedYearId}>
+              <SelectTrigger className="h-9 rounded-xl bg-primary-foreground/15 border-primary-foreground/20 text-primary-foreground text-sm w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {years.map((y) => (
+                  <SelectItem key={y.id} value={y.id}>{y.name}{y.is_active ? " (פעילה)" : ""}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-lg px-5 -mt-4 pb-8 space-y-5">
+        {/* Archive banner */}
+        {isArchive && selectedYear && (
+          <Alert className="border-yellow-500/50 bg-yellow-50 dark:bg-yellow-900/20 rounded-2xl">
+            <AlertTriangle className="h-5 w-5 text-yellow-600 !right-4 !left-auto" />
+            <AlertDescription className="pr-8 text-sm text-yellow-800 dark:text-yellow-300 font-medium">
+              אתה צופה בנתוני שנת {selectedYear.name} (ארכיון). הנתונים הם לצפייה בלבד.
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Stat cards row - 2x2 grid */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard icon={GraduationCap} label="מספר תלמידים" value={activeCount} onClick={() => navigate("/teacher/students")} />
