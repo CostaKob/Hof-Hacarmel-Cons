@@ -11,6 +11,7 @@ import {
   useReportLinesForReports,
 } from "@/hooks/useTeacherData";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,7 @@ const TeacherEditReport = () => {
   const navigate = useNavigate();
   const { user, roles } = useAuth();
   const queryClient = useQueryClient();
+  const { selectedYearId } = useAcademicYear();
   const isAdminContext = !!urlTeacherId && roles.includes("admin");
   const { data: teacherProfile } = useTeacherProfile();
   const { data: teacherById } = useTeacherById(isAdminContext ? urlTeacherId : undefined);
@@ -79,7 +81,7 @@ const TeacherEditReport = () => {
   const { data: allDayLines, isLoading: linesLoading } = useReportLinesForReports(allDayReportIds);
 
   // Load ALL active enrollments for this teacher (not filtered by school)
-  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: allEnrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
 
   const [editDate, setEditDate] = useState<Date>(new Date());
   const [kilometers, setKilometers] = useState<string>("0");
