@@ -33,11 +33,11 @@ const AdminRegistrationCard = () => {
   });
 
   const { data: existingStudent } = useQuery({
-    queryKey: ["existing-student", registration?.existing_student_id],
+    queryKey: ["existing-student-full", registration?.existing_student_id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, first_name, last_name, national_id")
+        .select("id, first_name, last_name, national_id, parent_phone, parent_name, parent_email, parent_national_id, phone, city, grade, gender")
         .eq("id", registration.existing_student_id)
         .single();
       if (error) return null;
