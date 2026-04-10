@@ -256,7 +256,7 @@ const PublicRegistration = () => {
   // Helper: is 30-min option allowed for this student?
   const is30MinAllowed = useCallback(() => {
     const grade = formValues["grade"];
-    if (!grade) return true;
+    if (!grade) return false; // if no grade selected, don't allow 30min
     const allowedGrades = ["א", "ב", "ג", "ד"];
     if (!allowedGrades.includes(grade)) return false;
     if (hasEnrollmentHistory) return false;
@@ -287,10 +287,11 @@ const PublicRegistration = () => {
   // Determine field type override
   const getFieldTypeOverride = (field: FieldDef): string => {
     if (field.field_key === "student_status") return "__hidden__";
-    // student_school_text is now replaced by branch_school_name (select) — hide it
+    // student_school_text and branch_school_name from DB are hidden — we inject them manually
     if (field.field_key === "student_school_text") return "__hidden__";
-    // branch_school_name: force select
-    if (field.field_key === "branch_school_name") return "select";
+    if (field.field_key === "branch_school_name") return "__hidden__";
+    // educational_school from DB is hidden — we inject it manually
+    if (field.field_key === "educational_school") return "__hidden__";
     return field.field_type;
   };
 
@@ -333,8 +334,41 @@ const PublicRegistration = () => {
     }
   }, []);
 
+  // Validate a single field on blur
+  const validateField = useCallback((fieldKey: string) => {
+    const field = fields.find((f) => f.field_key === fieldKey);
+    if (!field) return;
+    const val = formValues[fieldKey];
+
+    let error: string | null = null;
+
+    if (field.is_required && (val === undefined || val === null || val === "" || (Array.isArray(val) && val.length === 0))) {
+      error = "שדה חובה";
+    }
+
+    if (!error && val) {
+      if (fieldKey === "student_national_id" || fieldKey === "parent_national_id") {
+        error = validateNationalId(String(val));
+      }
+      if (field.field_type === "phone") {
+        error = validateMobilePhone(String(val));
+      }
+      if (field.field_type === "email") {
+        error = validateEmail(String(val));
+      }
+    }
+
+    setValidationErrors((prev) => {
+      if (error) return { ...prev, [fieldKey]: error };
+      const next = { ...prev };
+      delete next[fieldKey];
+      return next;
+    });
+  }, [fields, formValues]);
+
   const setFieldValue = (key: string, value: any) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
+    // Clear error on change
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -630,7 +664,7 @@ const PublicRegistration = () => {
     if (eduSchoolOtherMode) {
       return (
         <div className="space-y-1.5" data-field-key="educational_school">
-          <Label className="text-sm font-medium">בית ספר ללימודי בוקר</Label>
+          <Label className="text-sm font-medium">בית ספר</Label>
           <div className="flex gap-2">
             <Input
               value={formValues["educational_school"] || ""}
@@ -655,7 +689,7 @@ const PublicRegistration = () => {
     }
     return (
       <div className="space-y-1.5" data-field-key="educational_school">
-        <Label className="text-sm font-medium">בית ספר ללימודי בוקר</Label>
+        <Label className="text-sm font-medium">בית ספר</Label>
         <Select
           dir="rtl"
           value={formValues["educational_school"] || ""}
@@ -825,16 +859,17 @@ const PublicRegistration = () => {
                   const field = item.field;
                   const typeOverride = getFieldTypeOverride(field);
 
-                  return (
-                    <DynamicField
-                      key={field.id}
-                      field={{ ...field, field_type: typeOverride }}
-                      value={formValues[field.field_key]}
-                      onChange={(val) => setFieldValue(field.field_key, val)}
-                      error={validationErrors[field.field_key]}
-                      options={getOptionsForField(field)}
-                    />
-                  );
+                    return (
+                      <DynamicField
+                        key={field.id}
+                        field={{ ...field, field_type: typeOverride }}
+                        value={formValues[field.field_key]}
+                        onChange={(val) => setFieldValue(field.field_key, val)}
+                        onBlur={() => validateField(field.field_key)}
+                        error={validationErrors[field.field_key]}
+                        options={getOptionsForField(field)}
+                      />
+                    );
                 })}
               </CardContent>
             </Card>
@@ -859,12 +894,14 @@ const DynamicField = ({
   field,
   value,
   onChange,
+  onBlur,
   error,
   options,
 }: {
   field: FieldDef;
   value: any;
   onChange: (val: any) => void;
+  onBlur?: () => void;
   error?: string;
   options: { value: string; label: string }[];
 }) => {
@@ -874,13 +911,13 @@ const DynamicField = ({
     switch (field_type) {
       case "text":
       case "number":
-        return <Input type={field_type} value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+        return <Input type={field_type} value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} />;
       case "email":
-        return <Input type="email" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="ltr" className="text-left" />;
+        return <Input type="email" value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} dir="ltr" className="text-left" />;
       case "phone":
-        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder || "05XXXXXXXX"} />;
+        return <Input type="tel" value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder || "05XXXXXXXX"} />;
       case "textarea":
-        return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} dir="rtl" />;
+        return <Textarea value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} dir="rtl" />;
       case "select":
         return (
           <Select dir="rtl" value={value || ""} onValueChange={(v) => {
@@ -943,7 +980,7 @@ const DynamicField = ({
           </div>
         );
       default:
-        return <Input value={value || ""} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />;
+        return <Input value={value || ""} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} placeholder={placeholder} />;
     }
   };
 
