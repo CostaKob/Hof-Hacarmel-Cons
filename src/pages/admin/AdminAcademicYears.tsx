@@ -8,7 +8,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen } from "lucide-react";
+import { Plus, Users, GraduationCap, CalendarDays, Archive, Eye, BookOpen, Star } from "lucide-react";
 
 const AdminAcademicYears = () => {
   const queryClient = useQueryClient();
@@ -30,20 +30,16 @@ const AdminAcademicYears = () => {
     },
   });
 
-  // Fetch stats for all years
   const { data: stats = {} } = useQuery({
     queryKey: ["academic-years-stats"],
     queryFn: async () => {
-      const [{ data: enrollments }, { data: reports }, { data: teachers }] = await Promise.all([
-        supabase.from("enrollments").select("academic_year_id, student_id, teacher_id"),
+      const [{ data: enrollments }, { data: reports }] = await Promise.all([
+        supabase.from("enrollments").select("academic_year_id, student_id"),
         supabase.from("reports").select("academic_year_id, id"),
-        supabase.from("teachers").select("id").eq("is_active", true),
       ]);
 
-      const result: Record<string, { students: number; teachers: number; enrollments: number; reports: number }> = {};
-      const activeTeacherCount = teachers?.length ?? 0;
+      const result: Record<string, { students: number; enrollments: number; reports: number }> = {};
 
-      // Count unique students and enrollments per year
       const studentSets: Record<string, Set<string>> = {};
       const enrollmentCounts: Record<string, number> = {};
       (enrollments ?? []).forEach((e: any) => {
@@ -55,7 +51,7 @@ const AdminAcademicYears = () => {
       });
 
       Object.keys(studentSets).forEach((yid) => {
-        if (!result[yid]) result[yid] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
+        if (!result[yid]) result[yid] = { students: 0, enrollments: 0, reports: 0 };
         result[yid].students = studentSets[yid].size;
         result[yid].enrollments = enrollmentCounts[yid] ?? 0;
       });
@@ -63,13 +59,12 @@ const AdminAcademicYears = () => {
       (reports ?? []).forEach((r: any) => {
         const yid = r.academic_year_id;
         if (!yid) return;
-        if (!result[yid]) result[yid] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
+        if (!result[yid]) result[yid] = { students: 0, enrollments: 0, reports: 0 };
         result[yid].reports++;
       });
 
-      // Ensure all years have an entry
       years.forEach((y: any) => {
-        if (!result[y.id]) result[y.id] = { students: 0, teachers: activeTeacherCount, enrollments: 0, reports: 0 };
+        if (!result[y.id]) result[y.id] = { students: 0, enrollments: 0, reports: 0 };
       });
 
       return result;
@@ -101,7 +96,7 @@ const AdminAcademicYears = () => {
 
   const activateMutation = useMutation({
     mutationFn: async (yearId: string) => {
-      await supabase.from("academic_years").update({ is_active: false }).neq("id", "");
+      // The DB trigger handles deactivating all others
       const { error } = await supabase.from("academic_years").update({ is_active: true }).eq("id", yearId);
       if (error) throw error;
     },
@@ -122,8 +117,47 @@ const AdminAcademicYears = () => {
   const activeYears = years.filter((y: any) => y.is_active);
   const archivedYears = years.filter((y: any) => !y.is_active);
 
+  const YearCard = ({ y, isArchive = false }: { y: any; isArchive?: boolean }) => {
+    const s = stats[y.id] ?? { students: 0, enrollments: 0, reports: 0 };
+    return (
+      <div className={`rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 ${isArchive ? "opacity-70" : ""}`}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className={`font-semibold text-foreground ${isArchive ? "" : "text-lg"}`}>{y.name}</p>
+            <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
+          </div>
+          {y.is_active ? (
+            <Badge className="rounded-lg">פעילה</Badge>
+          ) : (
+            <Button variant="outline" size="sm" className="rounded-lg" onClick={() => activateMutation.mutate(y.id)}>
+              <Star className="h-3.5 w-3.5 ml-1" />
+              הפעל
+            </Button>
+          )}
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-xl bg-muted/50 p-3 text-center">
+            <Users className="h-4 w-4 mx-auto text-primary mb-1" />
+            <p className={`font-bold text-foreground ${isArchive ? "text-lg" : "text-xl"}`}>{s.students}</p>
+            <p className="text-xs text-muted-foreground">תלמידים</p>
+          </div>
+          <div className="rounded-xl bg-muted/50 p-3 text-center">
+            <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
+            <p className={`font-bold text-foreground ${isArchive ? "text-lg" : "text-xl"}`}>{s.enrollments}</p>
+            <p className="text-xs text-muted-foreground">רישומים</p>
+          </div>
+          <div className="rounded-xl bg-muted/50 p-3 text-center">
+            <CalendarDays className="h-4 w-4 mx-auto text-primary mb-1" />
+            <p className={`font-bold text-foreground ${isArchive ? "text-lg" : "text-xl"}`}>{s.reports}</p>
+            <p className="text-xs text-muted-foreground">דיווחים</p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <AdminLayout title="שנות לימודים" backPath="/admin">
+    <AdminLayout title="ניהול שנות לימוד" backPath="/admin">
       <div className="space-y-4 max-w-2xl">
         <div className="flex gap-2">
           <Button className="h-12 rounded-xl text-base" onClick={() => { setShowForm(!showForm); if (!showForm) handleAutoFill(); }}>
@@ -163,47 +197,12 @@ const AdminAcademicYears = () => {
           <p className="text-center text-muted-foreground py-8">אין שנות לימודים. צור את השנה הראשונה.</p>
         ) : (
           <>
-            {/* Active years */}
             <div className="space-y-3">
-              {activeYears.map((y: any) => {
-                const s = stats[y.id] ?? { students: 0, teachers: 0, enrollments: 0, reports: 0 };
-                return (
-                  <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-foreground text-lg">{y.name}</p>
-                        <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
-                      </div>
-                      <Badge className="rounded-lg">פעילה</Badge>
-                    </div>
-                    <div className="grid grid-cols-4 gap-3">
-                      <div className="rounded-xl bg-muted/50 p-3 text-center">
-                        <Users className="h-4 w-4 mx-auto text-primary mb-1" />
-                        <p className="text-xl font-bold text-foreground">{s.students}</p>
-                        <p className="text-xs text-muted-foreground">תלמידים</p>
-                      </div>
-                      <div className="rounded-xl bg-muted/50 p-3 text-center">
-                        <BookOpen className="h-4 w-4 mx-auto text-primary mb-1" />
-                        <p className="text-xl font-bold text-foreground">{s.enrollments}</p>
-                        <p className="text-xs text-muted-foreground">רישומים</p>
-                      </div>
-                      <div className="rounded-xl bg-muted/50 p-3 text-center">
-                        <GraduationCap className="h-4 w-4 mx-auto text-primary mb-1" />
-                        <p className="text-xl font-bold text-foreground">{s.teachers}</p>
-                        <p className="text-xs text-muted-foreground">מורים</p>
-                      </div>
-                      <div className="rounded-xl bg-muted/50 p-3 text-center">
-                        <CalendarDays className="h-4 w-4 mx-auto text-primary mb-1" />
-                        <p className="text-xl font-bold text-foreground">{s.reports}</p>
-                        <p className="text-xs text-muted-foreground">דיווחים</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {activeYears.map((y: any) => (
+                <YearCard key={y.id} y={y} />
+              ))}
             </div>
 
-            {/* Archived years */}
             {archivedYears.length > 0 && (
               <div className="space-y-3">
                 <Button
@@ -216,40 +215,9 @@ const AdminAcademicYears = () => {
                   {showArchive && <Eye className="h-4 w-4 mr-1" />}
                 </Button>
 
-                {showArchive && archivedYears.map((y: any) => {
-                  const s = stats[y.id] ?? { students: 0, teachers: 0, enrollments: 0, reports: 0 };
-                  return (
-                    <div key={y.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 opacity-70">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-foreground">{y.name}</p>
-                          <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
-                        </div>
-                        <Button variant="outline" size="sm" className="rounded-lg" onClick={() => activateMutation.mutate(y.id)}>
-                          הפעל
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-3">
-                        <div className="rounded-xl bg-muted/50 p-3 text-center">
-                          <p className="text-lg font-bold text-foreground">{s.students}</p>
-                          <p className="text-xs text-muted-foreground">תלמידים</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/50 p-3 text-center">
-                          <p className="text-lg font-bold text-foreground">{s.enrollments}</p>
-                          <p className="text-xs text-muted-foreground">רישומים</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/50 p-3 text-center">
-                          <p className="text-lg font-bold text-foreground">{s.teachers}</p>
-                          <p className="text-xs text-muted-foreground">מורים</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/50 p-3 text-center">
-                          <p className="text-lg font-bold text-foreground">{s.reports}</p>
-                          <p className="text-xs text-muted-foreground">דיווחים</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {showArchive && archivedYears.map((y: any) => (
+                  <YearCard key={y.id} y={y} isArchive />
+                ))}
               </div>
             )}
           </>
