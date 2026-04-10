@@ -72,7 +72,7 @@ function normalizeGradeValue(value: unknown): string {
 
 const PublicRegistration = () => {
   const { token } = useParams<{ token?: string }>();
-  const [searchParams] = (await import("react-router-dom")).useSearchParams ? [] : [];
+  
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
