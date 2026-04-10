@@ -2,11 +2,14 @@ import { ReactNode, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2 } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ArchiveYearBanner from "./ArchiveYearBanner";
 
 const NAV_ITEMS = [
   { path: "/admin", label: "ראשי", icon: Home },
@@ -29,6 +32,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
   const location = useLocation();
   const { signOut } = useAuth();
   const { logoUrl, refreshLogo } = useAppLogo();
+  const { years, selectedYearId, setSelectedYearId, isLoading: yearsLoading } = useAcademicYear();
   const [uploading, setUploading] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -114,47 +118,72 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
             </Popover>
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
-          <nav className="hidden items-center gap-1 md:flex">
-            {NAV_ITEMS.map((item) => (
+
+          <div className="flex items-center gap-2">
+            {/* Year Switcher */}
+            {!yearsLoading && years.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <CalendarDays className="h-4 w-4 text-primary-foreground/70 hidden sm:block" />
+                <Select value={selectedYearId ?? ""} onValueChange={setSelectedYearId}>
+                  <SelectTrigger className="w-32 sm:w-36 h-8 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:text-sm">
+                    <SelectValue placeholder="שנה" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((y) => (
+                      <SelectItem key={y.id} value={y.id}>
+                        {y.name} {y.is_active ? "✦" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <nav className="hidden items-center gap-1 md:flex">
+              {NAV_ITEMS.map((item) => (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  size="sm"
+                  className={`text-primary-foreground hover:bg-primary-foreground/10 ${
+                    (location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path)))
+                      ? "bg-primary-foreground/15"
+                      : ""
+                  }`}
+                  onClick={() => navigate(item.path)}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Button>
+              ))}
               <Button
-                key={item.path}
                 variant="ghost"
                 size="sm"
-                className={`text-primary-foreground hover:bg-primary-foreground/10 ${
-                  (location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path)))
-                    ? "bg-primary-foreground/15"
-                    : ""
-                }`}
-                onClick={() => navigate(item.path)}
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+                onClick={signOut}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <LogOut className="h-4 w-4" />
+                התנתק
               </Button>
-            ))}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={signOut}
-            >
-              <LogOut className="h-4 w-4" />
-              התנתק
-            </Button>
-          </nav>
-          <div className="flex items-center gap-1 md:hidden">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-primary-foreground hover:bg-primary-foreground/10"
-              onClick={signOut}
-            >
-              <LogOut className="h-5 w-5" />
-            </Button>
+            </nav>
+            <div className="flex items-center gap-1 md:hidden">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-primary-foreground/10"
+                onClick={signOut}
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-5 -mt-2 pb-24 md:pb-6">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-5 -mt-2 pb-24 md:pb-6">
+        <ArchiveYearBanner />
+        {children}
+      </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-10 flex border-t border-border bg-card shadow-lg md:hidden safe-area-pb">
         {NAV_ITEMS.map((item) => {
