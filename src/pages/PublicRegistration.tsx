@@ -36,6 +36,12 @@ interface Section {
   sort_order: number;
 }
 
+interface FieldOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+
 // Strict validation helpers (consistent with school_music_students forms)
 function validateNationalId(val: string): string | null {
   const digits = val.replace(/\D/g, "");
@@ -53,6 +59,13 @@ function validateMobilePhone(val: string): string | null {
 function validateEmail(val: string): string | null {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim())) return 'כתובת דוא"ל לא תקינה';
   return null;
+}
+
+function normalizeGradeValue(value: unknown): string {
+  return String(value ?? "")
+    .trim()
+    .replace(/^כיתה\s*/u, "")
+    .replace(/["'׳״\s]/g, "");
 }
 
 // Educational schools will be loaded from DB
@@ -255,13 +268,19 @@ const PublicRegistration = () => {
 
   // Helper: is 30-min option allowed for this student?
   const is30MinAllowed = useCallback(() => {
-    const grade = formValues["grade"];
+    const grade = normalizeGradeValue(formValues["grade"]);
     if (!grade) return false; // if no grade selected, don't allow 30min
     const allowedGrades = ["א", "ב", "ג", "ד"];
     if (!allowedGrades.includes(grade)) return false;
     if (hasEnrollmentHistory) return false;
     return true;
   }, [formValues, hasEnrollmentHistory]);
+
+  useEffect(() => {
+    if (formValues["requested_lesson_duration"] === "30" && !is30MinAllowed()) {
+      setFormValues((prev) => ({ ...prev, requested_lesson_duration: "" }));
+    }
+  }, [formValues, is30MinAllowed]);
 
   const getOptionsForField = (field: FieldDef) => {
     if (field.data_source === "instruments") return instruments.map((i) => ({ value: i.name, label: i.name }));
@@ -274,7 +293,7 @@ const PublicRegistration = () => {
     }
     // Filter 30-min option for lesson duration fields
     if (field.field_key === "requested_lesson_duration") {
-      return field.options.map((opt) => {
+       return field.options.map((opt) => {
         if (opt.value === "30" && !is30MinAllowed()) {
           return { ...opt, label: `${opt.label} (כיתה ד׳ ומטה, שנה ראשונה בלבד)`, disabled: true };
         }
@@ -407,7 +426,7 @@ const PublicRegistration = () => {
       const nationalId = formValues["student_national_id"];
       if (nationalId) checkEnrollmentHistory(nationalId);
       const allowedGrades = ["א", "ב", "ג", "ד"];
-      if (!allowedGrades.includes(value) && formValues["requested_lesson_duration"] === "30") {
+      if (!allowedGrades.includes(normalizeGradeValue(value)) && formValues["requested_lesson_duration"] === "30") {
         setFormValues((prev) => ({ ...prev, requested_lesson_duration: "" }));
       }
     }
@@ -903,7 +922,7 @@ const DynamicField = ({
   onChange: (val: any) => void;
   onBlur?: () => void;
   error?: string;
-  options: { value: string; label: string }[];
+  options: FieldOption[];
 }) => {
   const { field_type, label, is_required, placeholder, help_text } = field;
 
