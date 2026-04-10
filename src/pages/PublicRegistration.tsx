@@ -859,16 +859,17 @@ const PublicRegistration = () => {
                   const field = item.field;
                   const typeOverride = getFieldTypeOverride(field);
 
-                  return (
-                    <DynamicField
-                      key={field.id}
-                      field={{ ...field, field_type: typeOverride }}
-                      value={formValues[field.field_key]}
-                      onChange={(val) => setFieldValue(field.field_key, val)}
-                      error={validationErrors[field.field_key]}
-                      options={getOptionsForField(field)}
-                    />
-                  );
+                    return (
+                      <DynamicField
+                        key={field.id}
+                        field={{ ...field, field_type: typeOverride }}
+                        value={formValues[field.field_key]}
+                        onChange={(val) => setFieldValue(field.field_key, val)}
+                        onBlur={() => validateField(field.field_key)}
+                        error={validationErrors[field.field_key]}
+                        options={getOptionsForField(field)}
+                      />
+                    );
                 })}
               </CardContent>
             </Card>
