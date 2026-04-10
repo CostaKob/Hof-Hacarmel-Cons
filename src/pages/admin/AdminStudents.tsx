@@ -16,7 +16,9 @@ const AdminStudents = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
-  const { activeYear } = useAcademicYear();
+  const { selectedYearId, years } = useAcademicYear();
+
+  const selectedYear = years.find((y) => y.id === selectedYearId);
 
   const search = searchParams.get("q") || "";
   const teacherFilter = searchParams.get("teacher") || "all";
@@ -40,12 +42,14 @@ const AdminStudents = () => {
   }, [setSearchParams]);
 
   const { data: rows = [], isLoading } = useQuery({
-    queryKey: ["admin-students-enrollments"],
+    queryKey: ["admin-students-enrollments", selectedYearId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("enrollments")
         .select("id, lesson_duration_minutes, is_active, academic_year_id, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
       if (error) throw error;
       return (data as any[]).sort((a: any, b: any) => {
         const nameA = `${a.students?.last_name ?? ""} ${a.students?.first_name ?? ""}`;
@@ -56,20 +60,19 @@ const AdminStudents = () => {
   });
 
   const { data: yearPayments = [] } = useQuery({
-    queryKey: ["admin-year-payments", activeYear?.id],
+    queryKey: ["admin-year-payments", selectedYearId],
     queryFn: async () => {
-      if (!activeYear) return [];
+      if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
         .select("student_id, enrollment_id")
-        .eq("academic_year_id", activeYear.id);
+        .eq("academic_year_id", selectedYearId);
       if (error) throw error;
       return data ?? [];
     },
-    enabled: !!activeYear,
+    enabled: !!selectedYearId,
   });
 
-  // Set of enrollment IDs that have payments this year
   const paidEnrollmentIds = useMemo(() => {
     return new Set<string>(yearPayments.map((p: any) => p.enrollment_id).filter(Boolean));
   }, [yearPayments]);
@@ -209,7 +212,11 @@ const AdminStudents = () => {
       {isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
+        <p className="text-center text-muted-foreground py-8">
+          {rows.length === 0 && selectedYear
+            ? `אין נתונים לשנת ${selectedYear.name}`
+            : "לא נמצאו תלמידים"}
+        </p>
       ) : (
         <>
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>

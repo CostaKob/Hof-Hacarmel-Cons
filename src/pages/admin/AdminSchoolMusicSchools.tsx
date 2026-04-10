@@ -52,14 +52,19 @@ const AdminSchoolMusicSchools = () => {
   const [addForm, setAddForm] = useState<Record<string, any>>({});
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const { activeYear } = useAcademicYear();
+  const { selectedYearId, years } = useAcademicYear();
+  const selectedYear = years.find((y) => y.id === selectedYearId);
+
   // ── Schools data ──
   const { data: schools = [], isLoading } = useQuery({
-    queryKey: ["school-music-schools"],
+    queryKey: ["school-music-schools", selectedYearId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("school_music_schools")
         .select("*, academic_years(name)")
         .order("school_name");
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -82,12 +87,14 @@ const AdminSchoolMusicSchools = () => {
 
   // ── Students data ──
   const { data: students = [], isLoading: studentsLoading } = useQuery({
-    queryKey: ["school-music-students-all"],
+    queryKey: ["school-music-students-all", selectedYearId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("school_music_students")
         .select("*, school_music_schools(id, school_name), instruments(id, name)")
         .order("student_last_name");
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },

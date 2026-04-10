@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,9 @@ const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "
 
 const AdminEnrollments = () => {
   const navigate = useNavigate();
+  const { selectedYearId, years } = useAcademicYear();
+  const selectedYear = years.find((y) => y.id === selectedYearId);
+
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
   const [teacherFilter, setTeacherFilter] = useState("all");
@@ -21,12 +25,14 @@ const AdminEnrollments = () => {
   const [instrumentFilter, setInstrumentFilter] = useState("all");
 
   const { data: enrollments = [], isLoading } = useQuery({
-    queryKey: ["admin-enrollments"],
+    queryKey: ["admin-enrollments", selectedYearId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("enrollments")
         .select("*, students(first_name, last_name), teachers(first_name, last_name), instruments(name), schools(name)")
         .order("created_at", { ascending: false });
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
@@ -131,7 +137,11 @@ const AdminEnrollments = () => {
       {isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">לא נמצאו שיוכים</p>
+        <p className="text-center text-muted-foreground py-8">
+          {enrollments.length === 0 && selectedYear
+            ? `אין נתונים לשנת ${selectedYear.name}`
+            : "לא נמצאו שיוכים"}
+        </p>
       ) : (
         <div className="space-y-2">
           {filtered.map((e: any) => (

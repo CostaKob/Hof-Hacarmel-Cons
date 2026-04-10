@@ -12,7 +12,7 @@ import { useState } from "react";
 
 const AdminEnsembles = () => {
   const navigate = useNavigate();
-  const { selectedYearId } = useAcademicYear();
+  const { selectedYearId, years } = useAcademicYear();
   const [search, setSearch] = useState("");
 
   const { data: ensembles = [], isLoading } = useQuery({
@@ -56,7 +56,11 @@ const AdminEnsembles = () => {
         {isLoading ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">לא נמצאו הרכבים</p>
+          <p className="text-center text-muted-foreground py-8">
+            {ensembles.length === 0 && selectedYearId
+              ? `אין נתונים לשנת ${years.find(y => y.id === selectedYearId)?.name || ""}`
+              : "לא נמצאו הרכבים"}
+          </p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             {filtered.map((e: any) => (
