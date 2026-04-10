@@ -59,6 +59,8 @@ import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
 import PublicRegistration from "./pages/PublicRegistration";
 import SchoolMusicRegister from "./pages/SchoolMusicRegister";
+import AdminEducationalSchools from "./pages/admin/AdminEducationalSchools";
+import AdminEducationalSchoolForm from "./pages/admin/AdminEducationalSchoolForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -98,6 +100,9 @@ const App = () => (
               <Route path="/admin/schools" element={<AdminRoute><AdminSchools /></AdminRoute>} />
               <Route path="/admin/schools/new" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
               <Route path="/admin/schools/:schoolId/edit" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
+              <Route path="/admin/educational-schools" element={<AdminRoute><AdminEducationalSchools /></AdminRoute>} />
+              <Route path="/admin/educational-schools/new" element={<AdminRoute><AdminEducationalSchoolForm /></AdminRoute>} />
+              <Route path="/admin/educational-schools/:id/edit" element={<AdminRoute><AdminEducationalSchoolForm /></AdminRoute>} />
               <Route path="/admin/enrollments" element={<AdminRoute><AdminEnrollments /></AdminRoute>} />
               <Route path="/admin/enrollments/new" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
               <Route path="/admin/enrollments/:id/edit" element={<AdminRoute><AdminEnrollmentForm /></AdminRoute>} />
