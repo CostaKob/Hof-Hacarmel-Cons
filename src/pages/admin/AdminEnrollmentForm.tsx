@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 interface EnrollmentFormData {
   student_id: string;
@@ -24,6 +25,7 @@ interface EnrollmentFormData {
   lesson_duration_minutes: string;
   instrument_start_date: string;
   is_active: boolean;
+  total_lessons_allocated: string;
 }
 
 const DURATION_OPTIONS = [
