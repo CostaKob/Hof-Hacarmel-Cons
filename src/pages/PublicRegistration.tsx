@@ -991,9 +991,22 @@ const DynamicField = ({
         return (
           <div className="flex flex-col gap-2">
             {options.map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                <input type="radio" checked={value === opt.value} onChange={() => onChange(opt.value)} className="accent-primary" />
-                <span className="text-sm">{opt.label}</span>
+              <label
+                key={opt.value}
+                className={`flex items-center gap-2 ${
+                  opt.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+                }`}
+              >
+                <input
+                  type="radio"
+                  checked={value === opt.value}
+                  onChange={() => { if (!opt.disabled) onChange(opt.value); }}
+                  disabled={opt.disabled}
+                  className="accent-primary"
+                />
+                <span className={`text-sm ${opt.disabled ? "line-through text-muted-foreground" : ""}`}>
+                  {opt.label}
+                </span>
               </label>
             ))}
           </div>
