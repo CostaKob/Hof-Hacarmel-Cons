@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { UserCheck, AlertTriangle, UserPlus, Link2, Trash2 } from "lucide-react";
+import { UserCheck, AlertTriangle, UserPlus, Link2, Trash2, ArrowLeftRight } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { REGISTRATION_STATUSES, SETTABLE_STATUSES, daysAgoLabel } from "@/lib/registrationStatuses";
 
@@ -354,5 +355,66 @@ const InfoGrid = ({ items }: { items: { label: string; value: string }[] }) => (
     ))}
   </div>
 );
+
+// Diff comparison component for returning students
+const DIFF_FIELDS: { label: string; regKey: string; studentKey: string; format?: (v: any) => string }[] = [
+  { label: "טלפון הורה", regKey: "parent_phone", studentKey: "parent_phone" },
+  { label: "שם הורה", regKey: "parent_name", studentKey: "parent_name" },
+  { label: 'דוא"ל הורה', regKey: "parent_email", studentKey: "parent_email" },
+  { label: "ת.ז. הורה", regKey: "parent_national_id", studentKey: "parent_national_id" },
+  { label: "טלפון תלמיד/ה", regKey: "student_phone", studentKey: "phone" },
+  { label: "ישוב", regKey: "city", studentKey: "city" },
+  { label: "כיתה", regKey: "grade", studentKey: "grade" },
+];
+
+const DiffCard = ({ registration, student }: { registration: any; student: any }) => {
+  const diffs = useMemo(() => {
+    return DIFF_FIELDS.filter((f) => {
+      const regVal = (registration[f.regKey] || "").trim();
+      const studentVal = (student[f.studentKey] || "").trim();
+      return regVal && studentVal && regVal !== studentVal;
+    }).map((f) => ({
+      label: f.label,
+      oldValue: student[f.studentKey] || "—",
+      newValue: registration[f.regKey] || "—",
+    }));
+  }, [registration, student]);
+
+  if (diffs.length === 0) return null;
+
+  return (
+    <Card className="border-amber-200 dark:border-amber-800">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2 text-amber-700 dark:text-amber-400">
+          <ArrowLeftRight className="h-4 w-4" />
+          שינויים שזוהו ({diffs.length})
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          הפרטים הבאים שונים מהנתונים הקיימים במערכת
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {diffs.map((d, i) => (
+          <div key={i} className="rounded-lg border border-border p-3 space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">{d.label}</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
+                <p className="text-[11px] text-muted-foreground">ערך קיים</p>
+                <p className="text-sm line-through text-muted-foreground">{d.oldValue}</p>
+              </div>
+              <span className="text-muted-foreground">←</span>
+              <div className="flex-1">
+                <p className="text-[11px] text-muted-foreground">ערך חדש</p>
+                <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400 font-medium">
+                  {d.newValue}
+                </Badge>
+              </div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
 
 export default AdminRegistrationCard;
