@@ -3,11 +3,13 @@ import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import AppLogo from "@/components/AppLogo";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
@@ -30,8 +32,11 @@ function getMonthName(offset: number) {
 const TeacherDashboard = () => {
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  const { years, activeYear, selectedYearId, setSelectedYearId } = useAcademicYear();
+  const isArchive = selectedYearId !== activeYear?.id;
+  const selectedYear = years.find((y) => y.id === selectedYearId);
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
-  const { data: enrollments } = useTeacherEnrollments(teacher?.id);
+  const { data: enrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
   const { data: lastReport } = useTeacherLastReport(teacher?.id);
 
   const { data: currentMonthReports } = useTeacherMonthReports(teacher?.id, 0);
