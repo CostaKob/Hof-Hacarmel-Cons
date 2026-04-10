@@ -389,7 +389,9 @@ const AdminSchoolMusicSchools = () => {
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">טוען...</p>
           ) : schools.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">לא נמצאו בתי ספר מנגנים</p>
+            <p className="text-center text-muted-foreground py-8">
+              {selectedYear ? `אין נתונים לשנת ${selectedYear.name}` : "לא נמצאו בתי ספר מנגנים"}
+            </p>
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-2">{schools.length} בתי ספר</p>
