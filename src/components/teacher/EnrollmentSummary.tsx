@@ -6,15 +6,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface Props {
   lines: { status: string }[];
   startDate?: string | null;
+  totalAllocated?: number;
 }
 
-export default function EnrollmentSummary({ lines, startDate }: Props) {
+export default function EnrollmentSummary({ lines, startDate, totalAllocated }: Props) {
   const counts: StatusCounts = emptyStatusCounts();
   for (const l of lines) {
     if (l.status in counts) counts[l.status as keyof StatusCounts]++;
   }
   const total = calcTotal(counts);
-  const expected = getExpectedLessons(startDate);
+  const expected = totalAllocated ?? getExpectedLessons(startDate);
   const { rate, status } = getMonthlyRate(total, startDate);
 
   const items: { key: keyof StatusCounts; label: string }[] = [
