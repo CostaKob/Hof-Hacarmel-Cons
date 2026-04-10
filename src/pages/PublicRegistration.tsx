@@ -143,6 +143,15 @@ const PublicRegistration = () => {
     },
   });
 
+   // Load educational schools from DB
+  const { data: educationalSchools = [] } = useQuery({
+    queryKey: ["public-educational-schools"],
+    queryFn: async () => {
+      const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true).order("name");
+      return data || [];
+    },
+  });
+
   // Load schools (for branch/study branch select)
   const { data: schools = [] } = useQuery({
     queryKey: ["public-schools"],
@@ -656,8 +665,8 @@ const PublicRegistration = () => {
             <SelectValue placeholder="בחרו בית ספר..." />
           </SelectTrigger>
           <SelectContent>
-            {EDUCATIONAL_SCHOOLS.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+            {educationalSchools.map((s: any) => (
+              <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
             ))}
             <SelectItem value="__other__">אחר</SelectItem>
           </SelectContent>
