@@ -293,12 +293,10 @@ const PublicRegistration = () => {
     }
     // Filter 30-min option for lesson duration fields
     if (field.field_key === "requested_lesson_duration") {
-       return field.options.map((opt) => {
-        if (opt.value === "30" && !is30MinAllowed()) {
-          return { ...opt, label: `${opt.label} (כיתה ד׳ ומטה, שנה ראשונה בלבד)`, disabled: true };
-        }
-        return opt;
-      });
+      if (!is30MinAllowed()) {
+        return field.options.filter((opt) => opt.value !== "30");
+      }
+      return field.options;
     }
     return field.options;
   };
