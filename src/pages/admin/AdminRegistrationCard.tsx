@@ -325,6 +325,11 @@ const AdminRegistrationCard = () => {
           </CardContent>
         </Card>
 
+        {/* Diff comparison for returning students */}
+        {hasExistingStudent && existingStudent && (
+          <DiffCard registration={r} student={existingStudent} />
+        )}
+
         {/* Meta */}
         <Card>
           <CardContent className="pt-5">
