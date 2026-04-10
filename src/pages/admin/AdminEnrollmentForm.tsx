@@ -294,17 +294,29 @@ const AdminEnrollmentForm = () => {
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
-          <div className="space-y-1.5">
-            <Label className="text-sm">תאריך תחילת נגינה *</Label>
-            <Controller
-              name="instrument_start_date"
-              control={control}
-              rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
-              render={({ field }) => (
-                <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
-              )}
-            />
-            {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm">תאריך תחילת נגינה *</Label>
+              <Controller
+                name="instrument_start_date"
+                control={control}
+                rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
+                render={({ field }) => (
+                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
+                )}
+              />
+              {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">מכסת שיעורים שנתית</Label>
+              <Controller
+                name="total_lessons_allocated"
+                control={control}
+                render={({ field }) => (
+                  <Input type="number" min="0" value={field.value} onChange={field.onChange} className="h-12 rounded-xl" placeholder="30" />
+                )}
+              />
+            </div>
           </div>
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
