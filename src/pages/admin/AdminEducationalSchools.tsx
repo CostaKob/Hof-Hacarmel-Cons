@@ -6,38 +6,38 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, ChevronLeft } from "lucide-react";
 
-const AdminSchools = () => {
+const AdminEducationalSchools = () => {
   const navigate = useNavigate();
 
   const { data: schools = [], isLoading } = useQuery({
-    queryKey: ["admin-schools"],
+    queryKey: ["admin-educational-schools"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("*").order("name");
+      const { data, error } = await supabase.from("educational_schools").select("*").order("name");
       if (error) throw error;
       return data;
     },
   });
 
   return (
-    <AdminLayout title="שלוחות" backPath="/admin">
+    <AdminLayout title="בתי ספר" backPath="/admin">
       <div className="mb-4 flex justify-end">
-        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/schools/new")}>
-          <Plus className="h-4 w-4" /> שלוחה חדשה
+        <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/educational-schools/new")}>
+          <Plus className="h-4 w-4" /> בית ספר חדש
         </Button>
       </div>
 
       {isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : schools.length === 0 ? (
-        <p className="text-center text-muted-foreground py-8">לא נמצאו שלוחות</p>
+        <p className="text-center text-muted-foreground py-8">לא נמצאו בתי ספר</p>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground mb-2">{schools.length} שלוחות</p>
+          <p className="text-sm text-muted-foreground mb-2">{schools.length} בתי ספר</p>
           <div className="space-y-2">
-            {schools.map((s, index) => (
+            {schools.map((s: any, index: number) => (
               <div
                 key={s.id}
-                onClick={() => navigate(`/admin/schools/${s.id}/edit`)}
+                onClick={() => navigate(`/admin/educational-schools/${s.id}/edit`)}
                 className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3">
@@ -62,4 +62,4 @@ const AdminSchools = () => {
   );
 };
 
-export default AdminSchools;
+export default AdminEducationalSchools;

@@ -55,21 +55,7 @@ function validateEmail(val: string): string | null {
   return null;
 }
 
-// Pre-defined educational schools list
-const EDUCATIONAL_SCHOOLS = [
-  "רמב\"ם",
-  "בגין",
-  "עמל",
-  "בן גוריון",
-  "הראל",
-  "דה שליט",
-  "רבין",
-  "ברנר",
-  "גולדה",
-  "תיכון עירוני",
-  "אורט",
-  "עתיד",
-];
+// Educational schools will be loaded from DB
 
 const PublicRegistration = () => {
   const { token } = useParams<{ token?: string }>();
@@ -153,6 +139,15 @@ const PublicRegistration = () => {
     queryKey: ["public-instruments"],
     queryFn: async () => {
       const { data } = await supabase.from("instruments").select("id, name").order("name");
+      return data || [];
+    },
+  });
+
+   // Load educational schools from DB
+  const { data: educationalSchools = [] } = useQuery({
+    queryKey: ["public-educational-schools"],
+    queryFn: async () => {
+      const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true).order("name");
       return data || [];
     },
   });
@@ -670,8 +665,8 @@ const PublicRegistration = () => {
             <SelectValue placeholder="בחרו בית ספר..." />
           </SelectTrigger>
           <SelectContent>
-            {EDUCATIONAL_SCHOOLS.map((s) => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
+            {educationalSchools.map((s: any) => (
+              <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
             ))}
             <SelectItem value="__other__">אחר</SelectItem>
           </SelectContent>
