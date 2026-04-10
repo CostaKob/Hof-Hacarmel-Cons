@@ -259,7 +259,14 @@ const AdminEnrollmentForm = () => {
     <AdminLayout title={isEdit ? "עריכת שיוך" : "שיוך חדש"} backPath={presetStudentId ? `/admin/students/${presetStudentId}` : "/admin/enrollments"}>
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-          <h2 className="font-semibold text-foreground text-base">פרטי שיוך</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-foreground text-base">פרטי שיוך</h2>
+            <span className="text-sm text-muted-foreground bg-muted px-3 py-1 rounded-lg">
+              {isEdit
+                ? years.find((y) => y.id === enrollment?.academic_year_id)?.name ?? "—"
+                : years.find((y) => y.id === selectedYearId)?.name ?? "—"}
+            </span>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {SELECT_FIELDS.map((f) => (
               <div key={f.name} className="space-y-1.5">
