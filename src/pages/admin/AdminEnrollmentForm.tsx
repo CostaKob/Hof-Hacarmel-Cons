@@ -40,7 +40,7 @@ const AdminEnrollmentForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { selectedYearId } = useAcademicYear();
+  const { selectedYearId, years } = useAcademicYear();
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<EnrollmentFormData>({
     defaultValues: {
