@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,6 +72,8 @@ function normalizeGradeValue(value: unknown): string {
 
 const PublicRegistration = () => {
   const { token } = useParams<{ token?: string }>();
+  const [searchParams] = useSearchParams();
+  const urlYearId = searchParams.get("yearId");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -86,10 +88,19 @@ const PublicRegistration = () => {
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load active year
+  // Resolve academic year: URL param or active year
   const { data: activeYear, isLoading: yearLoading } = useQuery({
-    queryKey: ["public-active-year"],
+    queryKey: ["public-active-year", urlYearId],
     queryFn: async () => {
+      if (urlYearId) {
+        const { data, error } = await supabase
+          .from("academic_years")
+          .select("id, name")
+          .eq("id", urlYearId)
+          .single();
+        if (error) return null;
+        return data;
+      }
       const { data, error } = await supabase.from("academic_years").select("id, name").eq("is_active", true).single();
       if (error) return null;
       return data;
