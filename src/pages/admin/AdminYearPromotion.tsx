@@ -238,6 +238,9 @@ const AdminYearPromotion = () => {
           )}
         </div>
 
+        {/* Structure Cloning Section */}
+        <StructureCloningSection activeYear={activeYear} nextYear={nextYear} />
+
         {/* Search */}
         <div className="relative max-w-sm">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
