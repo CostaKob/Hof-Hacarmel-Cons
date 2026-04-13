@@ -205,6 +205,36 @@ const AdminAcademicYears = () => {
             <p className="text-xs text-muted-foreground">דיווחים</p>
           </div>
         </div>
+
+        {/* Registration Links */}
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-xs h-8 gap-1"
+            onClick={() => {
+              const url = `${window.location.origin}/school-music-register?yearId=${y.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("קישור בית ספר מנגן הועתק");
+            }}
+          >
+            <Copy className="h-3 w-3" />
+            קישור בי״ס מנגן
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-xs h-8 gap-1"
+            onClick={() => {
+              const url = `${window.location.origin}/register?yearId=${y.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("קישור שיעורים פרטיים הועתק");
+            }}
+          >
+            <Copy className="h-3 w-3" />
+            קישור שיעורים פרטיים
+          </Button>
+        </div>
       </div>
     );
   };
