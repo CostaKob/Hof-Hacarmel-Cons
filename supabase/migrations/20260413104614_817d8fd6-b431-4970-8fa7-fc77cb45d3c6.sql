@@ -1,0 +1,1 @@
+ALTER TABLE public.academic_years ADD COLUMN registration_open boolean NOT NULL DEFAULT false;

@@ -21,6 +21,7 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          registration_open: boolean
           start_date: string
         }
         Insert: {
@@ -29,6 +30,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          registration_open?: boolean
           start_date: string
         }
         Update: {
@@ -37,6 +39,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          registration_open?: boolean
           start_date?: string
         }
         Relationships: []
