@@ -141,7 +141,42 @@ const SchoolMusicRegister = () => {
     },
   });
 
-  /* ── single-field validation ── */
+  const { data: classes = [] } = useQuery({
+    queryKey: ["school-music-classes-public", form.school_music_school_id],
+    enabled: !!form.school_music_school_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_classes")
+        .select("id, class_name")
+        .eq("school_music_school_id", form.school_music_school_id)
+        .order("class_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: classGroups = [] } = useQuery({
+    queryKey: ["school-music-class-groups-public", form.school_music_class_id],
+    enabled: !!form.school_music_class_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_class_groups")
+        .select("id, instrument_id, teacher_id, instruments(id, name)")
+        .eq("school_music_class_id", form.school_music_class_id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // Derive unique instruments from groups in selected class
+  const instruments = (() => {
+    const seen = new Set<string>();
+    return classGroups
+      .map((g: any) => g.instruments)
+      .filter((i: any) => i && !seen.has(i.id) && seen.add(i.id))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+  })();
+
 
   const validateField = useCallback((key: string, value: string): string | null => {
     switch (key) {
