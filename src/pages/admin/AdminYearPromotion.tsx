@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { GRADE_PROMOTION } from "@/lib/constants";
-import { Search, ArrowUpCircle, GraduationCap, Users, Loader2 } from "lucide-react";
+import { Search, ArrowUpCircle, GraduationCap, Users, Loader2, MessageCircle } from "lucide-react";
+import WhatsAppLinkDialog from "@/components/admin/WhatsAppLinkDialog";
 
 function generateToken(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
