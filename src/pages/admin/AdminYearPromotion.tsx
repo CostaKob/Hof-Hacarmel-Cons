@@ -10,7 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { GRADE_PROMOTION } from "@/lib/constants";
-import { Search, ArrowUpCircle, GraduationCap, Users, Loader2 } from "lucide-react";
+import { Search, ArrowUpCircle, GraduationCap, Users, Loader2, MessageCircle } from "lucide-react";
+import WhatsAppLinkDialog from "@/components/admin/WhatsAppLinkDialog";
 
 function generateToken(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -25,6 +26,7 @@ const AdminYearPromotion = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
 
   // Load active academic year
   const { data: activeYear } = useQuery({
@@ -377,8 +379,17 @@ const AdminYearPromotion = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Action button - sticky */}
+        {/* Action buttons - sticky */}
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
+          <Button
+            variant="outline"
+            onClick={() => setWhatsappOpen(true)}
+            disabled={selectedIds.size === 0 || !nextYear}
+            className="h-14 px-5 text-sm font-semibold rounded-2xl shadow-lg gap-2"
+          >
+            <MessageCircle className="h-5 w-5" />
+            הודעות WhatsApp ({selectedIds.size})
+          </Button>
           <Button
             onClick={() => promoteMutation.mutate()}
             disabled={promoteMutation.isPending || !nextYear || selectedIds.size === 0}
@@ -397,6 +408,15 @@ const AdminYearPromotion = () => {
             )}
           </Button>
         </div>
+
+        {/* WhatsApp Dialog */}
+        <WhatsAppLinkDialog
+          open={whatsappOpen}
+          onOpenChange={setWhatsappOpen}
+          students={regularStudents.filter((s) => selectedIds.has(s.id))}
+          nextYear={nextYear ? { id: nextYear.id, name: nextYear.name } : null}
+          baseUrl={window.location.origin}
+        />
       </div>
     </AdminLayout>
   );
