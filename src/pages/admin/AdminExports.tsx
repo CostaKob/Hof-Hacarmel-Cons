@@ -54,7 +54,7 @@ const AdminExports = () => {
       student_phone: e.students?.phone ?? "",
       address: e.students?.address ?? "",
       city: e.students?.city ?? "",
-      grade: e.students?.grade ?? "",
+      grade: e.grade ?? e.students?.grade ?? "",
       playing_level: e.students?.playing_level ?? "",
       parent_name: e.students?.parent_name ?? "",
       parent_phone: e.students?.parent_phone ?? "",
