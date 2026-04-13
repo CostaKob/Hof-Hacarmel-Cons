@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,8 @@ const GENDER_OPTIONS = [
 
 const SchoolMusicRegister = () => {
   const { logoUrl } = useAppLogo();
+  const [searchParams] = useSearchParams();
+  const urlYearId = searchParams.get("yearId");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [approvalChecked, setApprovalChecked] = useState(false);
@@ -100,13 +103,38 @@ const SchoolMusicRegister = () => {
 
   /* ── queries ── */
 
+  // Resolve academic year: URL param or active year
+  const { data: resolvedYear, isLoading: yearLoading } = useQuery({
+    queryKey: ["school-music-year", urlYearId],
+    queryFn: async () => {
+      if (urlYearId) {
+        const { data, error } = await supabase
+          .from("academic_years")
+          .select("id, name")
+          .eq("id", urlYearId)
+          .single();
+        if (error) return null;
+        return data;
+      }
+      const { data, error } = await supabase
+        .from("academic_years")
+        .select("id, name")
+        .eq("is_active", true)
+        .single();
+      if (error) return null;
+      return data;
+    },
+  });
+
   const { data: schools = [] } = useQuery({
-    queryKey: ["school-music-schools-public"],
+    queryKey: ["school-music-schools-public", resolvedYear?.id],
+    enabled: !!resolvedYear?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_schools")
         .select("id, school_name")
         .eq("is_active", true)
+        .eq("academic_year_id", resolvedYear!.id)
         .order("school_name");
       if (error) throw error;
       return data;
@@ -149,20 +177,6 @@ const SchoolMusicRegister = () => {
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
   })();
 
-  const { data: activeYear } = useQuery({
-    queryKey: ["active-academic-year-public"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("academic_years")
-        .select("id")
-        .eq("is_active", true)
-        .single();
-      if (error) return null;
-      return data;
-    },
-  });
-
-  /* ── single-field validation ── */
 
   const validateField = useCallback((key: string, value: string): string | null => {
     switch (key) {
@@ -267,7 +281,7 @@ const SchoolMusicRegister = () => {
         school_music_school_id: form.school_music_school_id,
         school_music_class_id: form.school_music_class_id,
         school_music_class_group_id: matchingGroup?.id || null,
-        academic_year_id: activeYear?.id || null,
+        academic_year_id: resolvedYear?.id || null,
         student_first_name: form.student_first_name.trim(),
         student_last_name: form.student_last_name.trim(),
         student_national_id: form.student_national_id.replace(/[^\d]/g, ""),
@@ -308,6 +322,30 @@ const SchoolMusicRegister = () => {
     );
   }
 
+  /* ── year closed / loading guard ── */
+
+  if (yearLoading) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <p className="text-muted-foreground">טוען...</p>
+      </div>
+    );
+  }
+
+  if (!resolvedYear) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full text-center">
+          <CardContent className="py-12 space-y-4">
+            <div className="text-4xl">⚠️</div>
+            <h2 className="text-xl font-bold">הרישום לשנת לימודים זו אינו פעיל כרגע.</h2>
+            <p className="text-muted-foreground">אנא פנו למזכירות לפרטים נוספים.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   /* ── form ── */
 
   return (
@@ -316,7 +354,7 @@ const SchoolMusicRegister = () => {
         {/* Header */}
         <div className="text-center space-y-3">
           {logoUrl && <AppLogo size="lg" />}
-          <h1 className="text-xl font-bold">טופס השאלת כלי נגינה - תשפ״ז (2026-2027)</h1>
+          <h1 className="text-xl font-bold">טופס השאלת כלי נגינה — {resolvedYear.name}</h1>
         </div>
 
         {/* Info text */}

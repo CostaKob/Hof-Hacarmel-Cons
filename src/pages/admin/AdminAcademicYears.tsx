@@ -9,7 +9,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle, Trash2 } from "lucide-react";
+import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle, Trash2, Link2, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const AdminAcademicYears = () => {
@@ -204,6 +204,36 @@ const AdminAcademicYears = () => {
             <p className={`font-bold text-foreground ${isArchive ? "text-lg" : "text-xl"}`}>{s.reports}</p>
             <p className="text-xs text-muted-foreground">דיווחים</p>
           </div>
+        </div>
+
+        {/* Registration Links */}
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-xs h-8 gap-1"
+            onClick={() => {
+              const url = `${window.location.origin}/school-music-register?yearId=${y.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("קישור בית ספר מנגן הועתק");
+            }}
+          >
+            <Copy className="h-3 w-3" />
+            קישור בי״ס מנגן
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="rounded-lg text-xs h-8 gap-1"
+            onClick={() => {
+              const url = `${window.location.origin}/register?yearId=${y.id}`;
+              navigator.clipboard.writeText(url);
+              toast.success("קישור שיעורים פרטיים הועתק");
+            }}
+          >
+            <Copy className="h-3 w-3" />
+            קישור שיעורים פרטיים
+          </Button>
         </div>
       </div>
     );
