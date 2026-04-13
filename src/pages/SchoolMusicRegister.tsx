@@ -322,6 +322,30 @@ const SchoolMusicRegister = () => {
     );
   }
 
+  /* ── year closed / loading guard ── */
+
+  if (yearLoading) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <p className="text-muted-foreground">טוען...</p>
+      </div>
+    );
+  }
+
+  if (!resolvedYear) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full text-center">
+          <CardContent className="py-12 space-y-4">
+            <div className="text-4xl">⚠️</div>
+            <h2 className="text-xl font-bold">הרישום לשנת לימודים זו אינו פעיל כרגע.</h2>
+            <p className="text-muted-foreground">אנא פנו למזכירות לפרטים נוספים.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   /* ── form ── */
 
   return (
@@ -330,7 +354,7 @@ const SchoolMusicRegister = () => {
         {/* Header */}
         <div className="text-center space-y-3">
           {logoUrl && <AppLogo size="lg" />}
-          <h1 className="text-xl font-bold">טופס השאלת כלי נגינה - תשפ״ז (2026-2027)</h1>
+          <h1 className="text-xl font-bold">טופס השאלת כלי נגינה — {resolvedYear.name}</h1>
         </div>
 
         {/* Info text */}
