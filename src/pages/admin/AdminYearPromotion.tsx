@@ -26,6 +26,7 @@ const AdminYearPromotion = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [whatsappOpen, setWhatsappOpen] = useState(false);
 
   // Load active academic year
   const { data: activeYear } = useQuery({
