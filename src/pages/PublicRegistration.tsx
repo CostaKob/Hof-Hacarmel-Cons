@@ -71,9 +71,10 @@ function normalizeGradeValue(value: unknown): string {
 // Educational schools will be loaded from DB
 
 const PublicRegistration = () => {
-  const { token } = useParams<{ token?: string }>();
+  const { token: routeToken } = useParams<{ token?: string }>();
   const [searchParams] = useSearchParams();
   const urlYearId = searchParams.get("yearId");
+  const token = routeToken || searchParams.get("token") || undefined;
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
