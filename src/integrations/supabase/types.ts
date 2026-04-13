@@ -113,6 +113,7 @@ export type Database = {
           created_at: string
           end_date: string | null
           enrollment_role: Database["public"]["Enums"]["enrollment_role"]
+          grade: string | null
           id: string
           instrument_id: string
           instrument_start_date: string | null
@@ -132,6 +133,7 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
+          grade?: string | null
           id?: string
           instrument_id: string
           instrument_start_date?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           created_at?: string
           end_date?: string | null
           enrollment_role?: Database["public"]["Enums"]["enrollment_role"]
+          grade?: string | null
           id?: string
           instrument_id?: string
           instrument_start_date?: string | null
@@ -283,7 +286,7 @@ export type Database = {
       }
       ensembles: {
         Row: {
-          academic_year_id: string | null
+          academic_year_id: string
           created_at: string
           day_of_week: number | null
           ensemble_type: Database["public"]["Enums"]["ensemble_type"]
@@ -297,7 +300,7 @@ export type Database = {
           weekly_hours: number
         }
         Insert: {
-          academic_year_id?: string | null
+          academic_year_id: string
           created_at?: string
           day_of_week?: number | null
           ensemble_type: Database["public"]["Enums"]["ensemble_type"]
@@ -311,7 +314,7 @@ export type Database = {
           weekly_hours?: number
         }
         Update: {
-          academic_year_id?: string | null
+          academic_year_id?: string
           created_at?: string
           day_of_week?: number | null
           ensemble_type?: Database["public"]["Enums"]["ensemble_type"]
@@ -721,7 +724,7 @@ export type Database = {
       }
       reports: {
         Row: {
-          academic_year_id: string | null
+          academic_year_id: string
           created_at: string
           created_by_user_id: string | null
           id: string
@@ -734,7 +737,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          academic_year_id?: string | null
+          academic_year_id: string
           created_at?: string
           created_by_user_id?: string | null
           id?: string
@@ -747,7 +750,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          academic_year_id?: string | null
+          academic_year_id?: string
           created_at?: string
           created_by_user_id?: string | null
           id?: string
@@ -975,7 +978,7 @@ export type Database = {
       }
       school_music_schools: {
         Row: {
-          academic_year_id: string | null
+          academic_year_id: string
           class_schedules: Json
           classes_count: number
           conductor_hours: number | null
@@ -995,7 +998,7 @@ export type Database = {
           vice_principal_phone: string | null
         }
         Insert: {
-          academic_year_id?: string | null
+          academic_year_id: string
           class_schedules?: Json
           classes_count?: number
           conductor_hours?: number | null
@@ -1015,7 +1018,7 @@ export type Database = {
           vice_principal_phone?: string | null
         }
         Update: {
-          academic_year_id?: string | null
+          academic_year_id?: string
           class_schedules?: Json
           classes_count?: number
           conductor_hours?: number | null
@@ -1151,7 +1154,7 @@ export type Database = {
       }
       school_music_students: {
         Row: {
-          academic_year_id: string | null
+          academic_year_id: string
           approval_checked: boolean
           city: string | null
           class_name: string
@@ -1173,7 +1176,7 @@ export type Database = {
           student_national_id: string
         }
         Insert: {
-          academic_year_id?: string | null
+          academic_year_id: string
           approval_checked?: boolean
           city?: string | null
           class_name: string
@@ -1195,7 +1198,7 @@ export type Database = {
           student_national_id: string
         }
         Update: {
-          academic_year_id?: string | null
+          academic_year_id?: string
           approval_checked?: boolean
           city?: string | null
           class_name?: string
