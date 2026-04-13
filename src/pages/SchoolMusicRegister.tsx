@@ -281,7 +281,7 @@ const SchoolMusicRegister = () => {
         school_music_school_id: form.school_music_school_id,
         school_music_class_id: form.school_music_class_id,
         school_music_class_group_id: matchingGroup?.id || null,
-        academic_year_id: activeYear?.id || null,
+        academic_year_id: resolvedYear?.id || null,
         student_first_name: form.student_first_name.trim(),
         student_last_name: form.student_last_name.trim(),
         student_national_id: form.student_national_id.replace(/[^\d]/g, ""),
