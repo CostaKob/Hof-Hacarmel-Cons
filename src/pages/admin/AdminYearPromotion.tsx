@@ -135,15 +135,22 @@ const AdminYearPromotion = () => {
 
       const selectedStudents = regularStudents.filter((s) => selectedIds.has(s.id));
 
-      // 1. Promote grades
+      // 1. Promote grades on students table + enrollments
       const gradeUpdates = selectedStudents
         .filter((s) => s.grade && GRADE_PROMOTION[s.grade])
-        .map((s) =>
+        .map((s) => Promise.all([
           supabase
             .from("students")
             .update({ grade: GRADE_PROMOTION[s.grade]! })
-            .eq("id", s.id)
-        );
+            .eq("id", s.id),
+          // Also update grade on current year enrollments for historical record
+          ...((s.enrollments || []).map((e: any) =>
+            supabase
+              .from("enrollments")
+              .update({ grade: s.grade })
+              .eq("id", e.id)
+          )),
+        ]));
       await Promise.all(gradeUpdates);
 
       // 2. Create registration records with tokens

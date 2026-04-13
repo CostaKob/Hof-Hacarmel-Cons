@@ -46,7 +46,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -91,7 +91,7 @@ const AdminStudents = () => {
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (gradeFilter !== "all" && r.students?.grade !== gradeFilter) return false;
+    if (gradeFilter !== "all" && (r.grade ?? r.students?.grade) !== gradeFilter) return false;
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
@@ -247,10 +247,10 @@ const AdminStudents = () => {
                             <span>{r.teachers.first_name} {r.teachers.last_name}</span>
                           </>
                         )}
-                        {r.students?.grade && (
+                        {(r.grade ?? r.students?.grade) && (
                           <>
                             <span>·</span>
-                            <span>כיתה {r.students.grade}</span>
+                            <span>כיתה {r.grade ?? r.students?.grade}</span>
                           </>
                         )}
                         {r.students?.playing_level && (

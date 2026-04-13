@@ -262,6 +262,7 @@ const AdminRegistrationConvert = () => {
       }
 
       // Create enrollment
+      const enrollGrade = data.grade === "__none__" ? null : data.grade || null;
       const { error: enrollErr } = await supabase.from("enrollments").insert({
         student_id: studentId,
         teacher_id: data.teacher_id,
@@ -273,6 +274,7 @@ const AdminRegistrationConvert = () => {
         instrument_start_date: data.instrument_start_date || null,
         academic_year_id: activeYear?.id || r.academic_year_id || null,
         is_active: true,
+        grade: enrollGrade,
       });
       if (enrollErr) throw enrollErr;
 

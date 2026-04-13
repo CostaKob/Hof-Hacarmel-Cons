@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { GRADES } from "@/lib/constants";
 
 interface EnrollmentFormData {
   student_id: string;
@@ -25,6 +26,7 @@ interface EnrollmentFormData {
   lesson_duration_minutes: string;
   instrument_start_date: string;
   is_active: boolean;
+  grade: string;
 }
 
 const DURATION_OPTIONS = [
@@ -50,6 +52,7 @@ const AdminEnrollmentForm = () => {
       lesson_type: "individual",
       lesson_duration_minutes: "45",
       instrument_start_date: "",
+      grade: "",
     },
   });
 
@@ -154,6 +157,7 @@ const AdminEnrollmentForm = () => {
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
         is_active: enrollment.is_active,
+        grade: (enrollment as any).grade ?? "",
       });
     }
   }, [enrollment, reset]);
@@ -172,6 +176,7 @@ const AdminEnrollmentForm = () => {
         start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
+        grade: data.grade || null,
       };
 
       if (isEdit) {
@@ -296,18 +301,40 @@ const AdminEnrollmentForm = () => {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-          <h2 className="font-semibold text-foreground text-base">תאריך וסטטוס</h2>
-          <div className="space-y-1.5">
-            <Label className="text-sm">תאריך תחילת נגינה *</Label>
-            <Controller
-              name="instrument_start_date"
-              control={control}
-              rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
-              render={({ field }) => (
-                <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
-              )}
-            />
-            {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
+          <h2 className="font-semibold text-foreground text-base">תאריך, כיתה וסטטוס</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-sm">תאריך תחילת נגינה *</Label>
+              <Controller
+                name="instrument_start_date"
+                control={control}
+                rules={{ required: "תאריך תחילת נגינה שדה חובה" }}
+                render={({ field }) => (
+                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך תחילת נגינה" />
+                )}
+              />
+              {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">כיתה</Label>
+              <Controller
+                name="grade"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}>
+                    <SelectTrigger className="h-12 rounded-xl">
+                      <SelectValue placeholder="בחר כיתה" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">ללא</SelectItem>
+                      {GRADES.map((g) => (
+                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
           </div>
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
