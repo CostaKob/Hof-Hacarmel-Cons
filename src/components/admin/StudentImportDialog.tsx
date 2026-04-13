@@ -368,6 +368,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           instrument_start_date: row.data.instrument_start_date || null,
           academic_year_id: activeYearId,
           is_active: true,
+          grade: row.data.grade || null,
         });
         if (eErr) { failed++; continue; }
         enrollments++;
