@@ -648,6 +648,21 @@ const PublicRegistration = () => {
     );
   }
 
+  // Registration not open for this year
+  if (!activeYear.registration_open) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <Card className="w-full max-w-lg text-center">
+          <CardContent className="pt-10 pb-10 space-y-4">
+            <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">הרישום לשנה {activeYear.name} טרם נפתח.</h2>
+            <p className="text-muted-foreground text-lg">אנא פנו למזכירות לפרטים נוספים.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Closed
   if (!page) {
     return (
