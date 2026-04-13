@@ -218,6 +218,18 @@ const AdminAcademicYears = () => {
           </div>
         </div>
 
+        {/* Registration toggle */}
+        <div className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
+          <Label className="text-sm font-medium cursor-pointer" htmlFor={`reg-toggle-${y.id}`}>
+            פתח/סגור רישום
+          </Label>
+          <Switch
+            id={`reg-toggle-${y.id}`}
+            checked={!!y.registration_open}
+            onCheckedChange={(checked) => toggleRegistrationMutation.mutate({ yearId: y.id, open: checked })}
+          />
+        </div>
+
         {/* Registration Links */}
         <div className="flex gap-2 flex-wrap">
           <Button
