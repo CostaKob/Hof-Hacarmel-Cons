@@ -82,6 +82,32 @@ const WhatsAppLinkDialog = ({
 
   const yearName = nextYear?.name || "השנה הבאה";
 
+  // Fetch existing registration tokens for these students + next year
+  const studentIds = students.map((s) => s.id);
+  const { data: existingTokens = [] } = useQuery({
+    queryKey: ["registration-tokens", nextYear?.id, studentIds],
+    enabled: open && !!nextYear?.id && studentIds.length > 0,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("registrations")
+        .select("existing_student_id, registration_token")
+        .eq("academic_year_id", nextYear!.id)
+        .in("existing_student_id", studentIds)
+        .not("registration_token", "is", null);
+      return data ?? [];
+    },
+  });
+
+  const tokenMap = useMemo(() => {
+    const map = new Map<string, string>();
+    existingTokens.forEach((r: any) => {
+      if (r.existing_student_id && r.registration_token) {
+        map.set(r.existing_student_id, r.registration_token);
+      }
+    });
+    return map;
+  }, [existingTokens]);
+
   const studentMessages = useMemo(() => {
     return students.map((s) => {
       const token = s.registration_token || "";
