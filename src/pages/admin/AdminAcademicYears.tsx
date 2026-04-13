@@ -109,6 +109,25 @@ const AdminAcademicYears = () => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (yearId: string) => {
+      const { error } = await supabase.from("academic_years").delete().eq("id", yearId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["academic-years"] });
+      queryClient.invalidateQueries({ queryKey: ["academic-years-stats"] });
+      toast.success("שנת לימודים נמחקה");
+    },
+    onError: (err: any) => {
+      if (err?.message?.includes("foreign key") || err?.message?.includes("violates")) {
+        toast.error("לא ניתן למחוק שנה שיש בה נתונים (רישומים, דיווחים וכו׳)");
+      } else {
+        toast.error("שגיאה במחיקת שנת לימודים");
+      }
+    },
+  });
+
   const handleAutoFill = () => {
     const now = new Date();
     const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
@@ -122,6 +141,7 @@ const AdminAcademicYears = () => {
 
   const YearCard = ({ y, isArchive = false }: { y: any; isArchive?: boolean }) => {
     const s = stats[y.id] ?? { students: 0, enrollments: 0, reports: 0 };
+    const hasData = s.students > 0 || s.enrollments > 0 || s.reports > 0;
     return (
       <div className={`rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3 ${isArchive ? "opacity-70" : ""}`}>
         <div className="flex items-center justify-between">
@@ -129,14 +149,44 @@ const AdminAcademicYears = () => {
             <p className={`font-semibold text-foreground ${isArchive ? "" : "text-lg"}`}>{y.name}</p>
             <p className="text-sm text-muted-foreground">{y.start_date} — {y.end_date}</p>
           </div>
-          {y.is_active ? (
-            <Badge className="rounded-lg">פעילה</Badge>
-          ) : (
-            <Button variant="outline" size="sm" className="rounded-lg" onClick={() => activateMutation.mutate(y.id)}>
-              <Star className="h-3.5 w-3.5 ml-1" />
-              הפעל
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {!y.is_active && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm" className="rounded-lg text-destructive hover:text-destructive hover:bg-destructive/10">
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>מחיקת שנת לימודים</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {hasData
+                        ? `לשנה "${y.name}" יש ${s.students} תלמידים, ${s.enrollments} רישומים ו-${s.reports} דיווחים. המחיקה תיכשל אם קיימים נתונים מקושרים.`
+                        : `האם למחוק את שנת הלימודים "${y.name}"?`}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>ביטול</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      onClick={() => deleteMutation.mutate(y.id)}
+                    >
+                      מחק
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+            {y.is_active ? (
+              <Badge className="rounded-lg">פעילה</Badge>
+            ) : (
+              <Button variant="outline" size="sm" className="rounded-lg" onClick={() => activateMutation.mutate(y.id)}>
+                <Star className="h-3.5 w-3.5 ml-1" />
+                הפעל
+              </Button>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl bg-muted/50 p-3 text-center">
