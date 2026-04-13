@@ -110,7 +110,7 @@ const WhatsAppLinkDialog = ({
 
   const studentMessages = useMemo(() => {
     return students.map((s) => {
-      const token = s.registration_token || "";
+      const token = tokenMap.get(s.id) || s.registration_token || "";
       const link = token
         ? `${baseUrl}/register?yearId=${nextYear?.id || ""}&token=${token}`
         : `${baseUrl}/register?yearId=${nextYear?.id || ""}`;
@@ -121,7 +121,7 @@ const WhatsAppLinkDialog = ({
         : "";
       return { student: s, message, waLink, hasPhone: !!waPhone };
     });
-  }, [students, template, yearName, nextYear, baseUrl]);
+  }, [students, template, yearName, nextYear, baseUrl, tokenMap]);
 
   const handleCopy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
