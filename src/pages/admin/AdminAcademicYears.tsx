@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle, Trash2, Link2, Copy } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 
 const AdminAcademicYears = () => {
   const navigate = useNavigate();
@@ -128,6 +129,17 @@ const AdminAcademicYears = () => {
     },
   });
 
+  const toggleRegistrationMutation = useMutation({
+    mutationFn: async ({ yearId, open }: { yearId: string; open: boolean }) => {
+      const { error } = await supabase.from("academic_years").update({ registration_open: open }).eq("id", yearId);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["academic-years"] });
+      toast.success(vars.open ? "הרישום נפתח" : "הרישום נסגר");
+    },
+  });
+
   const handleAutoFill = () => {
     const now = new Date();
     const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
@@ -204,6 +216,18 @@ const AdminAcademicYears = () => {
             <p className={`font-bold text-foreground ${isArchive ? "text-lg" : "text-xl"}`}>{s.reports}</p>
             <p className="text-xs text-muted-foreground">דיווחים</p>
           </div>
+        </div>
+
+        {/* Registration toggle */}
+        <div className="flex items-center justify-between rounded-xl bg-muted/50 p-3">
+          <Label className="text-sm font-medium cursor-pointer" htmlFor={`reg-toggle-${y.id}`}>
+            פתח/סגור רישום
+          </Label>
+          <Switch
+            id={`reg-toggle-${y.id}`}
+            checked={!!y.registration_open}
+            onCheckedChange={(checked) => toggleRegistrationMutation.mutate({ yearId: y.id, open: checked })}
+          />
         </div>
 
         {/* Registration Links */}

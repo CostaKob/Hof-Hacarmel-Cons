@@ -103,22 +103,31 @@ const SchoolMusicRegister = () => {
 
   /* ── queries ── */
 
-  // Resolve academic year: URL param or active year
+  // Resolve academic year: URL param or active year (with registration_open)
   const { data: resolvedYear, isLoading: yearLoading } = useQuery({
     queryKey: ["school-music-year", urlYearId],
     queryFn: async () => {
       if (urlYearId) {
         const { data, error } = await supabase
           .from("academic_years")
-          .select("id, name")
+          .select("id, name, registration_open")
           .eq("id", urlYearId)
           .single();
         if (error) return null;
         return data;
       }
+      // Fallback: find any year with registration_open, or active year
+      const { data: openYear } = await supabase
+        .from("academic_years")
+        .select("id, name, registration_open")
+        .eq("registration_open", true)
+        .order("start_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (openYear) return openYear;
       const { data, error } = await supabase
         .from("academic_years")
-        .select("id, name")
+        .select("id, name, registration_open")
         .eq("is_active", true)
         .single();
       if (error) return null;
@@ -339,6 +348,20 @@ const SchoolMusicRegister = () => {
           <CardContent className="py-12 space-y-4">
             <div className="text-4xl">⚠️</div>
             <h2 className="text-xl font-bold">הרישום לשנת לימודים זו אינו פעיל כרגע.</h2>
+            <p className="text-muted-foreground">אנא פנו למזכירות לפרטים נוספים.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!resolvedYear.registration_open) {
+    return (
+      <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="max-w-lg w-full text-center">
+          <CardContent className="py-12 space-y-4">
+            <div className="text-4xl">🔒</div>
+            <h2 className="text-xl font-bold">הרישום לשנה {resolvedYear.name} טרם נפתח.</h2>
             <p className="text-muted-foreground">אנא פנו למזכירות לפרטים נוספים.</p>
           </CardContent>
         </Card>

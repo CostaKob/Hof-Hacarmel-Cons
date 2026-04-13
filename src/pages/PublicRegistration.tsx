@@ -88,20 +88,33 @@ const PublicRegistration = () => {
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Resolve academic year: URL param or active year
+  // Resolve academic year: URL param or active year (with registration_open)
   const { data: activeYear, isLoading: yearLoading } = useQuery({
     queryKey: ["public-active-year", urlYearId],
     queryFn: async () => {
       if (urlYearId) {
         const { data, error } = await supabase
           .from("academic_years")
-          .select("id, name")
+          .select("id, name, registration_open")
           .eq("id", urlYearId)
           .single();
         if (error) return null;
         return data;
       }
-      const { data, error } = await supabase.from("academic_years").select("id, name").eq("is_active", true).single();
+      // Fallback: find any year with registration_open, or active year
+      const { data: openYear } = await supabase
+        .from("academic_years")
+        .select("id, name, registration_open")
+        .eq("registration_open", true)
+        .order("start_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (openYear) return openYear;
+      const { data, error } = await supabase
+        .from("academic_years")
+        .select("id, name, registration_open")
+        .eq("is_active", true)
+        .single();
       if (error) return null;
       return data;
     },
@@ -628,6 +641,21 @@ const PublicRegistration = () => {
           <CardContent className="pt-10 pb-10 space-y-4">
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
             <h2 className="text-2xl font-bold text-foreground">הרישום לשנת לימודים זו אינו פעיל כרגע.</h2>
+            <p className="text-muted-foreground text-lg">אנא פנו למזכירות לפרטים נוספים.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Registration not open for this year
+  if (!activeYear.registration_open) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <Card className="w-full max-w-lg text-center">
+          <CardContent className="pt-10 pb-10 space-y-4">
+            <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
+            <h2 className="text-2xl font-bold text-foreground">הרישום לשנה {activeYear.name} טרם נפתח.</h2>
             <p className="text-muted-foreground text-lg">אנא פנו למזכירות לפרטים נוספים.</p>
           </CardContent>
         </Card>
