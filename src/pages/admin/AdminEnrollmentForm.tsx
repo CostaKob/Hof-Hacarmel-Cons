@@ -25,6 +25,7 @@ interface EnrollmentFormData {
   lesson_duration_minutes: string;
   instrument_start_date: string;
   is_active: boolean;
+  grade: string;
 }
 
 const DURATION_OPTIONS = [
@@ -50,6 +51,7 @@ const AdminEnrollmentForm = () => {
       lesson_type: "individual",
       lesson_duration_minutes: "45",
       instrument_start_date: "",
+      grade: "",
     },
   });
 
@@ -154,6 +156,7 @@ const AdminEnrollmentForm = () => {
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
         is_active: enrollment.is_active,
+        grade: (enrollment as any).grade ?? "",
       });
     }
   }, [enrollment, reset]);
@@ -172,6 +175,7 @@ const AdminEnrollmentForm = () => {
         start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
         is_active: data.is_active,
+        grade: data.grade || null,
       };
 
       if (isEdit) {
