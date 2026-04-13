@@ -129,6 +129,17 @@ const AdminAcademicYears = () => {
     },
   });
 
+  const toggleRegistrationMutation = useMutation({
+    mutationFn: async ({ yearId, open }: { yearId: string; open: boolean }) => {
+      const { error } = await supabase.from("academic_years").update({ registration_open: open }).eq("id", yearId);
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({ queryKey: ["academic-years"] });
+      toast.success(vars.open ? "הרישום נפתח" : "הרישום נסגר");
+    },
+  });
+
   const handleAutoFill = () => {
     const now = new Date();
     const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
