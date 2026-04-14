@@ -428,7 +428,8 @@ const WhatsAppLinkDialog = ({
                         {messageItem.message}
                       </p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
