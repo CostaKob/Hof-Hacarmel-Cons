@@ -192,6 +192,23 @@ const AdminYearPromotion = () => {
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הרישומים"),
   });
 
+  // Fix grade mutation - update student grade in DB and refresh
+  const fixGradeMutation = useMutation({
+    mutationFn: async ({ studentId, newGrade }: { studentId: string; newGrade: string }) => {
+      const { error } = await supabase
+        .from("students")
+        .update({ grade: newGrade })
+        .eq("id", studentId);
+      if (error) throw error;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["year-promotion-students"] });
+      setSelectedIds((prev) => new Set([...prev, variables.studentId]));
+      toast.success("הכיתה עודכנה והתלמיד הועבר לרשימת ההעברה");
+    },
+    onError: () => toast.error("שגיאה בעדכון הכיתה"),
+  });
+
   const getPromotedGrade = (grade: string | null) => {
     if (!grade) return "—";
     const promoted = GRADE_PROMOTION[grade];
