@@ -441,7 +441,7 @@ const WhatsAppLinkDialog = ({
                 disabled={withPhone.length === 0}
               >
                 <Send className="h-4 w-4" />
-                שלח לכולם ({withPhone.length})
+                שלח לנבחרים ({withPhone.length})
               </Button>
               <Button
                 variant="outline"
