@@ -8,9 +8,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { GRADE_PROMOTION } from "@/lib/constants";
-import { Search, ArrowUpCircle, GraduationCap, Users, Loader2, MessageCircle } from "lucide-react";
+import { GRADES, GRADE_PROMOTION } from "@/lib/constants";
+import { Search, ArrowUpCircle, GraduationCap, Users, Loader2, MessageCircle, Edit2 } from "lucide-react";
 import WhatsAppLinkDialog from "@/components/admin/WhatsAppLinkDialog";
 
 function generateToken(): string {
