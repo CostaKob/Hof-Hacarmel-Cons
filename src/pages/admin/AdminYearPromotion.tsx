@@ -139,14 +139,15 @@ const AdminYearPromotion = () => {
 
       const selectedStudents = regularStudents.filter((s) => selectedIds.has(s.id));
 
-      // 1. Promote grades on students table + enrollments
+      // 1. Promote grades on students table + enrollments (only if not already promoted for this year)
       const gradeUpdates = selectedStudents
         .filter((s) => s.grade && GRADE_PROMOTION[s.grade])
         .map((s) => Promise.all([
           supabase
             .from("students")
-            .update({ grade: GRADE_PROMOTION[s.grade]! })
-            .eq("id", s.id),
+            .update({ grade: GRADE_PROMOTION[s.grade]!, last_promoted_year_id: nextYear.id } as any)
+            .eq("id", s.id)
+            .neq("last_promoted_year_id", nextYear.id),
           // Also update grade on current year enrollments for historical record
           ...((s.enrollments || []).map((e: any) =>
             supabase
