@@ -346,6 +346,7 @@ const WhatsAppLinkDialog = ({
             </Button>
           </div>
           </>
+        )}
       </DialogContent>
     </Dialog>
   );
