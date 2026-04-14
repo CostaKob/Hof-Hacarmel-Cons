@@ -352,13 +352,33 @@ const WhatsAppLinkDialog = ({
                 </div>
 
                 <div className="space-y-2">
-                  {studentMessages.map((messageItem) => (
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleAll}
+                      id="select-all"
+                    />
+                    <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none">
+                      {allSelected ? "בטל בחירת הכל" : "בחר הכל"}
+                    </label>
+                    <span className="text-xs text-muted-foreground">
+                      ({selectedIds.size}/{students.length})
+                    </span>
+                  </div>
+
+                  {studentMessages.map((messageItem) => {
+                    const isSelected = selectedIds.has(messageItem.student.id);
+                    return (
                     <div
                       key={messageItem.student.id}
-                      className="rounded-xl border border-border p-3 space-y-2 overflow-hidden"
+                      className={`rounded-xl border p-3 space-y-2 overflow-hidden transition-colors ${isSelected ? "border-border" : "border-border/40 opacity-60"}`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleOne(messageItem.student.id)}
+                          />
                           <span className="text-sm font-medium text-foreground break-words">
                             {messageItem.student.first_name} {messageItem.student.last_name}
                           </span>
