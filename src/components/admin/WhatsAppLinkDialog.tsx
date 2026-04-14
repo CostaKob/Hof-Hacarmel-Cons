@@ -215,7 +215,7 @@ const WhatsAppLinkDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col" dir="rtl">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-green-600" />
@@ -234,40 +234,41 @@ const WhatsAppLinkDialog = ({
           </div>
         ) : (
           <>
-            {/* Template editor */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">תבנית הודעה</Label>
-              <div className="flex flex-wrap gap-1.5 mb-1">
-                {PLACEHOLDERS.map((p) => (
-                  <Badge
-                    key={p.key}
-                    variant="outline"
-                    className="text-xs cursor-pointer hover:bg-primary/10"
-                    onClick={() => setTemplate((prev) => prev + " " + p.key)}
-                  >
-                    {p.label}: <code className="mr-1 text-primary">{p.key}</code>
-                  </Badge>
-                ))}
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="space-y-4 px-1 pb-2">
+              {/* Template editor */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">תבנית הודעה</Label>
+                <div className="flex flex-wrap gap-1.5 mb-1">
+                  {PLACEHOLDERS.map((p) => (
+                    <Badge
+                      key={p.key}
+                      variant="outline"
+                      className="text-xs cursor-pointer hover:bg-primary/10"
+                      onClick={() => setTemplate((prev) => prev + " " + p.key)}
+                    >
+                      {p.label}: <code className="mr-1 text-primary">{p.key}</code>
+                    </Badge>
+                  ))}
+                </div>
+                <Textarea
+                  value={template}
+                  onChange={(e) => setTemplate(e.target.value)}
+                  className="min-h-[100px] text-sm leading-relaxed"
+                  dir="rtl"
+                />
               </div>
-              <Textarea
-                value={template}
-                onChange={(e) => setTemplate(e.target.value)}
-                className="min-h-[100px] text-sm leading-relaxed"
-                dir="rtl"
-              />
-            </div>
 
-            {/* Info */}
-            <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-              <Info className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>
-                {students.length} תלמידים נבחרו. תלמידים ללא טלפון הורה יוכלו רק להעתיק הודעה (ללא קישור ישיר לוואטסאפ).
-              </span>
-            </div>
+              {/* Info */}
+              <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                <Info className="h-4 w-4 mt-0.5 shrink-0" />
+                <span>
+                  {students.length} תלמידים נבחרו. תלמידים ללא טלפון הורה יוכלו רק להעתיק הודעה (ללא קישור ישיר לוואטסאפ).
+                </span>
+              </div>
 
-            {/* Student list */}
-            <ScrollArea className="flex-1 min-h-0 max-h-[40vh]">
-              <div className="space-y-2 pr-2">
+              {/* Student list */}
+              <div className="space-y-2">
                 {studentMessages.map((m) => (
                   <div
                     key={m.student.id}
@@ -323,26 +324,27 @@ const WhatsAppLinkDialog = ({
                   </div>
                 ))}
               </div>
-            </ScrollArea>
-
-            {/* Footer */}
-            <div className="flex gap-2 pt-2 border-t border-border">
-              <Button
-                variant="outline"
-                className="flex-1 gap-2 rounded-xl"
-                onClick={handleCopyAll}
-              >
-                <Copy className="h-4 w-4" />
-                העתק הכל (טקסט + טלפון)
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-xl"
-                onClick={() => onOpenChange(false)}
-              >
-                סגור
-              </Button>
             </div>
+          </ScrollArea>
+
+          {/* Footer - stays fixed at bottom */}
+          <div className="flex gap-2 pt-2 border-t border-border shrink-0">
+            <Button
+              variant="outline"
+              className="flex-1 gap-2 rounded-xl"
+              onClick={handleCopyAll}
+            >
+              <Copy className="h-4 w-4" />
+              העתק הכל (טקסט + טלפון)
+            </Button>
+            <Button
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => onOpenChange(false)}
+            >
+              סגור
+            </Button>
+          </div>
           </>
         )}
       </DialogContent>
