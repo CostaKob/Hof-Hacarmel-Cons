@@ -25,24 +25,28 @@ const AdminGradeCorrection = () => {
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Load active year (תשפ"ה - current)
-  const { data: activeYear } = useQuery({
-    queryKey: ["active-year"],
+  // Load the source-of-truth year (תשפ"ו)
+  const { data: sourceYear } = useQuery({
+    queryKey: ["grade-correction-source-year"],
     queryFn: async () => {
+      // Find תשפ"ו by name pattern, or fallback to active year
       const { data } = await supabase
         .from("academic_years")
         .select("*")
-        .eq("is_active", true)
-        .single();
-      return data;
+        .order("start_date", { ascending: false });
+      // Try to find תשפ"ו first
+      const tashpav = (data || []).find((y: any) => y.name.includes("תשפ\"ו") || y.name.includes("תשפ״ו") || y.name.includes("2025-2026") || y.name.includes("2025/2026"));
+      if (tashpav) return tashpav;
+      // Fallback: active year
+      return (data || []).find((y: any) => y.is_active) || (data || [])[0] || null;
     },
   });
 
   // Load all active students with their latest enrollment grade
   const { data: students = [], isLoading } = useQuery({
-    queryKey: ["grade-correction-students", activeYear?.id],
+    queryKey: ["grade-correction-students", sourceYear?.id],
     queryFn: async () => {
-      if (!activeYear?.id) return [];
+      if (!sourceYear?.id) return [];
 
       // Get all active students
       const { data: allStudents, error: studErr } = await supabase
@@ -51,11 +55,11 @@ const AdminGradeCorrection = () => {
         .eq("is_active", true);
       if (studErr) throw studErr;
 
-      // Get all enrollments for the active year
+      // Get all enrollments for the source year
       const { data: enrollments, error: enrErr } = await supabase
         .from("enrollments")
         .select("student_id, grade")
-        .eq("academic_year_id", activeYear.id)
+        .eq("academic_year_id", sourceYear.id)
         .eq("is_active", true);
       if (enrErr) throw enrErr;
 
@@ -94,7 +98,7 @@ const AdminGradeCorrection = () => {
         `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
       );
     },
-    enabled: !!activeYear?.id,
+    enabled: !!sourceYear?.id,
   });
 
   const filtered = useMemo(() => {
@@ -169,8 +173,8 @@ const AdminGradeCorrection = () => {
             <div>
               <h2 className="font-semibold text-foreground text-base">תיקון כיתות לאחר הרצות מעבר שנה</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                כלי זה מזהה תלמידים שהכיתה שלהם בטבלת התלמידים לא תואמת את הכיתה בשיוך האחרון שלהם + קידום אחד.
-                לדוגמה: אם בשיוך של שנת {activeYear?.name || "..."} התלמיד רשום בכיתה ח׳, הכיתה הנכונה שלו צריכה להיות ט׳.
+                כלי זה מזהה תלמידים שהכיתה שלהם בטבלת התלמידים לא תואמת את הכיתה בשיוך של שנת {sourceYear?.name || "..."} + קידום אחד.
+                לדוגמה: אם בשיוך של שנת {sourceYear?.name || "..."} התלמיד רשום בכיתה ח׳, הכיתה הנכונה שלו צריכה להיות ט׳.
               </p>
             </div>
           </div>
