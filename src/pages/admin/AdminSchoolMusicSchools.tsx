@@ -292,7 +292,7 @@ const AdminSchoolMusicSchools = () => {
       }
       if (search) {
         const q = search.toLowerCase();
-        const full = `${s.student_first_name} ${s.student_last_name} ${s.parent_name} ${s.student_national_id}`.toLowerCase();
+        const full = `${s.student_first_name} ${s.student_last_name} ${s.parent_name} ${s.student_national_id} ${s.parent_phone || ""} ${s.parent_email || ""} ${s.class_name || ""} ${s.city || ""}`.toLowerCase();
         if (!full.includes(q)) return false;
       }
       return true;

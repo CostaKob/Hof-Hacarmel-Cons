@@ -46,7 +46,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -85,8 +85,11 @@ const AdminStudents = () => {
   const durations = [...new Set(rows.map((r: any) => r.lesson_duration_minutes))].sort((a, b) => a - b);
 
   const filtered = rows.filter((r: any) => {
-    const name = `${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""}`.toLowerCase();
-    if (search && !name.includes(search.toLowerCase())) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const searchStr = `${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""} ${r.students?.national_id ?? ""} ${r.students?.parent_name ?? ""} ${r.students?.parent_phone ?? ""} ${r.students?.phone ?? ""} ${r.grade ?? ""} ${r.students?.grade ?? ""}`.toLowerCase();
+      if (!searchStr.includes(q)) return false;
+    }
     if (teacherFilter !== "all" && r.teachers?.id !== teacherFilter) return false;
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
@@ -107,7 +110,7 @@ const AdminStudents = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="חיפוש לפי שם תלמיד..."
+            placeholder="חיפוש לפי שם, ת.ז, הורה, טלפון..."
             value={search}
             onChange={(e) => setFilter("q", e.target.value)}
             className="pr-9 h-12 rounded-xl"
