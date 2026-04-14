@@ -106,6 +106,11 @@ const WhatsAppLinkDialog = ({
   const queryClient = useQueryClient();
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [sendSummary, setSendSummary] = useState<{
+    sent: Array<{ name: string; phone: string }>;
+    failed: Array<{ name: string; reason: string }>;
+  } | null>(null);
 
   const yearName = nextYear?.name || "השנה הבאה";
   const studentIds = students.map((s) => s.id);
