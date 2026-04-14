@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send, CheckCircle2, XCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { GRADE_PROMOTION } from "@/lib/constants";
 
 interface StudentData {
@@ -107,6 +108,7 @@ const WhatsAppLinkDialog = ({
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendSummary, setSendSummary] = useState<{
     sent: Array<{ name: string; phone: string }>;
     failed: Array<{ name: string; reason: string }>;
@@ -206,6 +208,13 @@ const WhatsAppLinkDialog = ({
 
   const isReady = !tokensLoading && !createMissingMutation.isPending;
 
+  // Initialize selectedIds when students load
+  useEffect(() => {
+    if (open && students.length > 0) {
+      setSelectedIds(new Set(students.map((s) => s.id)));
+    }
+  }, [open, students]);
+
   const studentMessages = useMemo(() => {
     return students.map((student) => {
       const token = tokenMap.get(student.id) || student.registration_token || "";
@@ -246,14 +255,33 @@ const WhatsAppLinkDialog = ({
     toast.success(`${studentMessages.length} הודעות הועתקו ללוח!`);
   };
 
-  const withPhone = studentMessages.filter((m) => m.hasPhone);
-  const withoutPhone = studentMessages.filter((m) => !m.hasPhone);
+  const selectedMessages = studentMessages.filter((m) => selectedIds.has(m.student.id));
+  const withPhone = selectedMessages.filter((m) => m.hasPhone);
+  const withoutPhone = selectedMessages.filter((m) => !m.hasPhone);
+
+  const allSelected = selectedIds.size === students.length;
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(students.map((s) => s.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleSendAll = () => {
     const sent: Array<{ name: string; phone: string }> = [];
     const failed: Array<{ name: string; reason: string }> = [];
 
-    studentMessages.forEach((messageItem) => {
+    selectedMessages.forEach((messageItem) => {
       const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
       if (!messageItem.hasPhone) {
         failed.push({ name, reason: "ללא מספר טלפון הורה" });
@@ -324,13 +352,33 @@ const WhatsAppLinkDialog = ({
                 </div>
 
                 <div className="space-y-2">
-                  {studentMessages.map((messageItem) => (
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={toggleAll}
+                      id="select-all"
+                    />
+                    <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none">
+                      {allSelected ? "בטל בחירת הכל" : "בחר הכל"}
+                    </label>
+                    <span className="text-xs text-muted-foreground">
+                      ({selectedIds.size}/{students.length})
+                    </span>
+                  </div>
+
+                  {studentMessages.map((messageItem) => {
+                    const isSelected = selectedIds.has(messageItem.student.id);
+                    return (
                     <div
                       key={messageItem.student.id}
-                      className="rounded-xl border border-border p-3 space-y-2 overflow-hidden"
+                      className={`rounded-xl border p-3 space-y-2 overflow-hidden transition-colors ${isSelected ? "border-border" : "border-border/40 opacity-60"}`}
                     >
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                         <div className="flex min-w-0 flex-wrap items-center gap-2">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => toggleOne(messageItem.student.id)}
+                          />
                           <span className="text-sm font-medium text-foreground break-words">
                             {messageItem.student.first_name} {messageItem.student.last_name}
                           </span>
@@ -380,7 +428,8 @@ const WhatsAppLinkDialog = ({
                         {messageItem.message}
                       </p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -392,7 +441,7 @@ const WhatsAppLinkDialog = ({
                 disabled={withPhone.length === 0}
               >
                 <Send className="h-4 w-4" />
-                שלח לכולם ({withPhone.length})
+                שלח לנבחרים ({withPhone.length})
               </Button>
               <Button
                 variant="outline"
