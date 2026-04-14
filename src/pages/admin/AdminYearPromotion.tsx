@@ -340,7 +340,10 @@ const AdminYearPromotion = () => {
           </TabsContent>
 
           {/* Graduating students tab */}
-          <TabsContent value="graduating" className="mt-4">
+          <TabsContent value="graduating" className="mt-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              תלמידים אלו מסומנים ככיתה י״ב ולכן לא יועברו. אם הכיתה לא מדויקת, שנו אותה והתלמיד יחזור לרשימת ההעברה.
+            </p>
             <div className="rounded-xl border border-border overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-muted/50">
@@ -348,7 +351,7 @@ const AdminYearPromotion = () => {
                     <th className="p-3 font-medium text-muted-foreground">שם תלמיד/ה</th>
                     <th className="p-3 font-medium text-muted-foreground hidden sm:table-cell">ת.ז.</th>
                     <th className="p-3 font-medium text-muted-foreground">כיתה</th>
-                    <th className="p-3 font-medium text-muted-foreground">סטטוס</th>
+                    <th className="p-3 font-medium text-muted-foreground">שינוי כיתה</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -361,13 +364,23 @@ const AdminYearPromotion = () => {
                         {s.national_id || "—"}
                       </td>
                       <td className="p-3">
-                        <Badge variant="outline">יב</Badge>
+                        <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">
+                          {s.grade || "—"}
+                        </Badge>
                       </td>
                       <td className="p-3">
-                        <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400">
-                          <GraduationCap className="h-3 w-3 ml-1" />
-                          בוגר — לא להעברה
-                        </Badge>
+                        <Select
+                          onValueChange={(newGrade) => fixGradeMutation.mutate({ studentId: s.id, newGrade })}
+                        >
+                          <SelectTrigger className="w-24 h-8 text-xs rounded-lg">
+                            <SelectValue placeholder="שנה כיתה" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {GRADES.filter((g) => g !== "יב" && g !== "בוגר").map((g) => (
+                              <SelectItem key={g} value={g}>{g}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                     </tr>
                   ))}
