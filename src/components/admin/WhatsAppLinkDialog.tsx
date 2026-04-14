@@ -255,14 +255,33 @@ const WhatsAppLinkDialog = ({
     toast.success(`${studentMessages.length} הודעות הועתקו ללוח!`);
   };
 
-  const withPhone = studentMessages.filter((m) => m.hasPhone);
-  const withoutPhone = studentMessages.filter((m) => !m.hasPhone);
+  const selectedMessages = studentMessages.filter((m) => selectedIds.has(m.student.id));
+  const withPhone = selectedMessages.filter((m) => m.hasPhone);
+  const withoutPhone = selectedMessages.filter((m) => !m.hasPhone);
+
+  const allSelected = selectedIds.size === students.length;
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(students.map((s) => s.id)));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleSendAll = () => {
     const sent: Array<{ name: string; phone: string }> = [];
     const failed: Array<{ name: string; reason: string }> = [];
 
-    studentMessages.forEach((messageItem) => {
+    selectedMessages.forEach((messageItem) => {
       const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
       if (!messageItem.hasPhone) {
         failed.push({ name, reason: "ללא מספר טלפון הורה" });
