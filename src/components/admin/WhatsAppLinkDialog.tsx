@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send, CheckCircle2, XCircle } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { GRADE_PROMOTION } from "@/lib/constants";
 
 interface StudentData {
