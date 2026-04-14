@@ -380,30 +380,30 @@ const AdminYearPromotion = () => {
         </Tabs>
 
         {/* Action buttons - sticky */}
-        <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button
             variant="outline"
             onClick={() => setWhatsappOpen(true)}
             disabled={selectedIds.size === 0 || !nextYear}
-            className="h-14 px-5 text-sm font-semibold rounded-2xl shadow-lg gap-2"
+            className="h-12 sm:h-14 px-4 text-sm font-semibold rounded-2xl shadow-lg gap-2 whitespace-nowrap"
           >
-            <MessageCircle className="h-5 w-5" />
-            הודעות WhatsApp ({selectedIds.size})
+            <MessageCircle className="h-5 w-5 shrink-0" />
+            הודעות ({selectedIds.size})
           </Button>
           <Button
             onClick={() => promoteMutation.mutate()}
             disabled={promoteMutation.isPending || !nextYear || selectedIds.size === 0}
-            className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg gap-2"
+            className="flex-1 h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-2xl shadow-lg gap-2 min-w-0"
           >
             {promoteMutation.isPending ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin shrink-0" />
                 מעבד...
               </>
             ) : (
               <>
-                <ArrowUpCircle className="h-5 w-5" />
-                צור רישומי {nextYear?.name || "שנה הבאה"} ({selectedIds.size} תלמידים)
+                <ArrowUpCircle className="h-5 w-5 shrink-0" />
+                <span className="truncate">צור רישומי {nextYear?.name || "שנה הבאה"} ({selectedIds.size})</span>
               </>
             )}
           </Button>
