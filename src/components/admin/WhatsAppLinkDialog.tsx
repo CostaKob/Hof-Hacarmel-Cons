@@ -208,6 +208,13 @@ const WhatsAppLinkDialog = ({
 
   const isReady = !tokensLoading && !createMissingMutation.isPending;
 
+  // Initialize selectedIds when students load
+  useEffect(() => {
+    if (open && students.length > 0) {
+      setSelectedIds(new Set(students.map((s) => s.id)));
+    }
+  }, [open, students]);
+
   const studentMessages = useMemo(() => {
     return students.map((student) => {
       const token = tokenMap.get(student.id) || student.registration_token || "";
