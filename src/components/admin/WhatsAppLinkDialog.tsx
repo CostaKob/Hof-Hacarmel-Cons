@@ -2,12 +2,22 @@ import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, MessageCircle, CopyCheck, Info, Loader2 } from "lucide-react";
+import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send, CheckCircle2, XCircle } from "lucide-react";
 import { GRADE_PROMOTION } from "@/lib/constants";
 
 interface StudentData {
@@ -96,6 +106,11 @@ const WhatsAppLinkDialog = ({
   const queryClient = useQueryClient();
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [sendSummary, setSendSummary] = useState<{
+    sent: Array<{ name: string; phone: string }>;
+    failed: Array<{ name: string; reason: string }>;
+  } | null>(null);
 
   const yearName = nextYear?.name || "השנה הבאה";
   const studentIds = students.map((s) => s.id);
@@ -231,6 +246,27 @@ const WhatsAppLinkDialog = ({
     toast.success(`${studentMessages.length} הודעות הועתקו ללוח!`);
   };
 
+  const withPhone = studentMessages.filter((m) => m.hasPhone);
+  const withoutPhone = studentMessages.filter((m) => !m.hasPhone);
+
+  const handleSendAll = () => {
+    const sent: Array<{ name: string; phone: string }> = [];
+    const failed: Array<{ name: string; reason: string }> = [];
+
+    studentMessages.forEach((messageItem) => {
+      const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
+      if (!messageItem.hasPhone) {
+        failed.push({ name, reason: "ללא מספר טלפון הורה" });
+        return;
+      }
+      window.open(messageItem.waLink, "_blank");
+      sent.push({ name, phone: messageItem.student.parent_phone || "" });
+    });
+
+    setSendSummary({ sent, failed });
+    setShowConfirm(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -351,12 +387,20 @@ const WhatsAppLinkDialog = ({
 
             <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-border pt-3 sm:flex-row">
               <Button
+                className="w-full gap-2 rounded-xl bg-green-600 text-white hover:bg-green-700 sm:flex-1"
+                onClick={() => setShowConfirm(true)}
+                disabled={withPhone.length === 0}
+              >
+                <Send className="h-4 w-4" />
+                שלח לכולם ({withPhone.length})
+              </Button>
+              <Button
                 variant="outline"
                 className="w-full gap-2 rounded-xl sm:flex-1"
                 onClick={handleCopyAll}
               >
                 <Copy className="h-4 w-4" />
-                העתק הכל (טקסט + טלפון)
+                העתק הכל
               </Button>
               <Button
                 variant="outline"
@@ -369,6 +413,86 @@ const WhatsAppLinkDialog = ({
           </>
         )}
       </DialogContent>
+
+      {/* Confirmation dialog */}
+      <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
+        <AlertDialogContent dir="rtl" className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-right">שליחת הודעות לכולם</AlertDialogTitle>
+            <AlertDialogDescription className="text-right space-y-2">
+              <p>
+                פעולה זו תפתח {withPhone.length} חלונות WhatsApp חדשים — אחד לכל הורה עם מספר טלפון.
+              </p>
+              {withoutPhone.length > 0 && (
+                <p className="text-amber-600 font-medium">
+                  ⚠ {withoutPhone.length} תלמידים ללא מספר טלפון הורה — ההודעה שלהם לא תישלח.
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                שים לב: ייתכן שהדפדפן יחסום חלק מהחלונות. אם זה קורה, אפשר את החלונות הקופצים (pop-ups) בהגדרות הדפדפן.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2 sm:flex-row-reverse">
+            <AlertDialogAction
+              className="bg-green-600 text-white hover:bg-green-700"
+              onClick={handleSendAll}
+            >
+              <Send className="h-4 w-4 ml-2" />
+              שלח {withPhone.length} הודעות
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Summary dialog */}
+      <Dialog open={!!sendSummary} onOpenChange={() => setSendSummary(null)}>
+        <DialogContent dir="rtl" className="max-w-md max-h-[80dvh] flex flex-col">
+          <DialogHeader className="text-right">
+            <DialogTitle className="text-right">סיכום שליחה</DialogTitle>
+          </DialogHeader>
+          {sendSummary && (
+            <div className="flex-1 overflow-y-auto space-y-4">
+              {sendSummary.sent.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-semibold flex items-center gap-1.5 text-green-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    נשלחו ({sendSummary.sent.length})
+                  </h4>
+                  <div className="rounded-lg bg-green-50 dark:bg-green-950/30 p-2 space-y-1">
+                    {sendSummary.sent.map((s, i) => (
+                      <p key={i} className="text-xs text-foreground">
+                        {s.name} — <span className="font-mono text-muted-foreground">{s.phone}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {sendSummary.failed.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-semibold flex items-center gap-1.5 text-destructive">
+                    <XCircle className="h-4 w-4" />
+                    לא נשלחו ({sendSummary.failed.length})
+                  </h4>
+                  <div className="rounded-lg bg-destructive/10 p-2 space-y-1">
+                    {sendSummary.failed.map((f, i) => (
+                      <p key={i} className="text-xs text-foreground">
+                        {f.name} — <span className="text-muted-foreground">{f.reason}</span>
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="pt-2 border-t">
+            <Button variant="outline" className="w-full rounded-xl" onClick={() => setSendSummary(null)}>
+              סגור
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
