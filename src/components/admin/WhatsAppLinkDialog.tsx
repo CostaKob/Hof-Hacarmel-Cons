@@ -246,6 +246,27 @@ const WhatsAppLinkDialog = ({
     toast.success(`${studentMessages.length} הודעות הועתקו ללוח!`);
   };
 
+  const withPhone = studentMessages.filter((m) => m.hasPhone);
+  const withoutPhone = studentMessages.filter((m) => !m.hasPhone);
+
+  const handleSendAll = () => {
+    const sent: Array<{ name: string; phone: string }> = [];
+    const failed: Array<{ name: string; reason: string }> = [];
+
+    studentMessages.forEach((messageItem) => {
+      const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
+      if (!messageItem.hasPhone) {
+        failed.push({ name, reason: "ללא מספר טלפון הורה" });
+        return;
+      }
+      window.open(messageItem.waLink, "_blank");
+      sent.push({ name, phone: messageItem.student.parent_phone || "" });
+    });
+
+    setSendSummary({ sent, failed });
+    setShowConfirm(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
