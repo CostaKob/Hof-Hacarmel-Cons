@@ -215,7 +215,7 @@ const WhatsAppLinkDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col" dir="rtl">
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col overflow-hidden" dir="rtl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-green-600" />
