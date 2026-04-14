@@ -1428,6 +1428,7 @@ export type Database = {
           id: string
           is_active: boolean
           last_name: string
+          last_promoted_year_id: string | null
           national_id: string | null
           parent_email: string | null
           parent_email_2: string | null
@@ -1452,6 +1453,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_name: string
+          last_promoted_year_id?: string | null
           national_id?: string | null
           parent_email?: string | null
           parent_email_2?: string | null
@@ -1476,6 +1478,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_name?: string
+          last_promoted_year_id?: string | null
           national_id?: string | null
           parent_email?: string | null
           parent_email_2?: string | null
@@ -1489,7 +1492,15 @@ export type Database = {
           playing_level?: string | null
           student_status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "students_last_promoted_year_id_fkey"
+            columns: ["last_promoted_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teacher_instruments: {
         Row: {

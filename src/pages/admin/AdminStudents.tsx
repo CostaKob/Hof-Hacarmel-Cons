@@ -250,7 +250,12 @@ const AdminStudents = () => {
                         {(r.grade ?? r.students?.grade) && (
                           <>
                             <span>·</span>
-                            <span>כיתה {r.grade ?? r.students?.grade}</span>
+                            <span>כיתה {r.students?.grade}</span>
+                            {r.grade && r.grade !== r.students?.grade && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-amber-400 text-amber-600 dark:text-amber-400">
+                                שיוך: {r.grade}
+                              </Badge>
+                            )}
                           </>
                         )}
                         {r.students?.playing_level && (
