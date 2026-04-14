@@ -233,7 +233,7 @@ const WhatsAppLinkDialog = ({
             </p>
           </div>
         ) : (
-          <ScrollArea className="flex-1 min-h-0">
+          <>
             <div className="space-y-4 px-1 pb-2">
               {/* Template editor */}
               <div className="space-y-2">
