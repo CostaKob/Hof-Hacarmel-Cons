@@ -108,6 +108,7 @@ const WhatsAppLinkDialog = ({
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [sendSummary, setSendSummary] = useState<{
     sent: Array<{ name: string; phone: string }>;
     failed: Array<{ name: string; reason: string }>;
