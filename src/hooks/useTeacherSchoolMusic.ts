@@ -9,15 +9,25 @@ export type TeacherSchoolRole = "רכז" | "מנצח" | "מורה לקבוצה";
  */
 export function useTeacherSchoolMusicSchools(teacherId: string | undefined) {
   return useQuery({
-    queryKey: ["teacher-school-music-schools-v3", teacherId],
+    queryKey: ["teacher-school-music-schools-v4", teacherId],
     enabled: !!teacherId,
     queryFn: async () => {
-      // 1. Schools where teacher is coordinator or conductor
-      const { data: directSchools, error: dsErr } = await supabase
+      // 0. Get active academic year to filter
+      const { data: activeYear } = await supabase
+        .from("academic_years")
+        .select("id")
+        .eq("is_active", true)
+        .maybeSingle();
+      const yearId = activeYear?.id ?? null;
+
+      // 1. Schools where teacher is coordinator or conductor (current year)
+      let directQuery = supabase
         .from("school_music_schools")
-        .select("id, school_name, principal_name, principal_phone, coordinator_teacher_id, conductor_teacher_id, is_active")
+        .select("id, school_name, principal_name, principal_phone, coordinator_teacher_id, conductor_teacher_id, is_active, academic_year_id")
         .eq("is_active", true)
         .or(`coordinator_teacher_id.eq.${teacherId},conductor_teacher_id.eq.${teacherId}`);
+      if (yearId) directQuery = directQuery.eq("academic_year_id", yearId);
+      const { data: directSchools, error: dsErr } = await directQuery;
       if (dsErr) throw dsErr;
 
       // 2. Schools via class groups
@@ -44,11 +54,13 @@ export function useTeacherSchoolMusicSchools(teacherId: string | undefined) {
 
       let groupOnlySchools: any[] = [];
       if (missingIds.length > 0) {
-        const { data, error } = await supabase
+        let q = supabase
           .from("school_music_schools")
-          .select("id, school_name, principal_name, principal_phone, coordinator_teacher_id, conductor_teacher_id, is_active")
+          .select("id, school_name, principal_name, principal_phone, coordinator_teacher_id, conductor_teacher_id, is_active, academic_year_id")
           .eq("is_active", true)
           .in("id", missingIds);
+        if (yearId) q = q.eq("academic_year_id", yearId);
+        const { data, error } = await q;
         if (error) throw error;
         groupOnlySchools = data ?? [];
       }
