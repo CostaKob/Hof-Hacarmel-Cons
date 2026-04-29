@@ -409,7 +409,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
 
     setImporting(false);
     setDone(true);
-    setImportResult({ created, reused, enrollments, failed });
+    setImportResult({ created, reused, enrollments, updated, failed });
     queryClient.invalidateQueries({ queryKey: ["admin-students-enrollments"] });
     if (enrollments > 0) toast.success(`${enrollments} שיוכים יובאו בהצלחה`);
     if (failed > 0) toast.error(`${failed} שורות נכשלו`);
