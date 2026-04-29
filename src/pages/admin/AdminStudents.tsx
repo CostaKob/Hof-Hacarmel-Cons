@@ -18,6 +18,7 @@ const AdminStudents = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
   const { selectedYearId, years } = useAcademicYear();
+  useListStatePreservation("/admin/students");
 
   const selectedYear = years.find((y) => y.id === selectedYearId);
 
