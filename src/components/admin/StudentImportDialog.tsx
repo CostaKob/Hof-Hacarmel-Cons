@@ -462,6 +462,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
                 <li>סוג שיעור: <strong>individual</strong> או <strong>group</strong></li>
                 <li>משך שיעור: 30, 45, או 60</li>
                 <li>תאריך בפורמט DD/MM/YYYY</li>
+                <li><strong>עדכון ת.ז. לתלמידים קיימים:</strong> ניתן להעלות קובץ עם שם פרטי, שם משפחה ות.ז. בלבד — ת.ז. תתעדכן לתלמיד הקיים ללא יצירת שיוך חדש</li>
               </ul>
             </div>
 
