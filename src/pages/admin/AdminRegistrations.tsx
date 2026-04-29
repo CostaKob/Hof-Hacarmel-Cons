@@ -98,7 +98,11 @@ const AdminRegistrations = () => {
         {isLoading ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">לא נמצאו הרשמות</p>
+          <p className="text-center text-muted-foreground py-8">
+            {registrations.length === 0 && selectedYear
+              ? `אין הרשמות לשנת ${selectedYear.name}`
+              : "לא נמצאו הרשמות"}
+          </p>
         ) : (
           <div className="space-y-2">
             {filtered.map((r, idx) => {
