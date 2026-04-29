@@ -273,6 +273,9 @@ const AdminAcademicYears = () => {
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-promotion")}>
             <ArrowUpCircle className="h-4 w-4" /> מעבר שנה
           </Button>
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/registration-pages")}>
+            <Link2 className="h-4 w-4" /> דפי הרשמה
+          </Button>
         </div>
 
         {showForm && (

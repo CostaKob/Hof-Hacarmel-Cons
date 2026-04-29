@@ -206,7 +206,7 @@ const AdminRegistrationPages = () => {
   });
 
   return (
-    <AdminLayout title="דפי הרשמה" backPath="/admin">
+    <AdminLayout title="דפי הרשמה" backPath="/admin/academic-years">
       <div className="space-y-4">
         {/* Create new */}
         <div className="flex flex-wrap gap-2">

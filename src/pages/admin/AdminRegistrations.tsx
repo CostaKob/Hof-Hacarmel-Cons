@@ -53,10 +53,6 @@ const AdminRegistrations = () => {
               className="pr-9 h-12 rounded-xl"
             />
           </div>
-          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/registration-pages")}>
-            <Settings className="h-4 w-4" />
-            ניהול דפי הרשמה
-          </Button>
         </div>
 
         {/* Filters */}
