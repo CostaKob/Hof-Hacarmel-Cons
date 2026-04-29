@@ -328,7 +328,14 @@ const AdminRegistrationCard = () => {
 
         {/* Diff comparison for returning students */}
         {hasExistingStudent && existingStudent && (
-          <DiffCard registration={r} student={existingStudent} />
+          <DiffCard
+            registration={r}
+            student={existingStudent}
+            onApplied={() => {
+              queryClient.invalidateQueries({ queryKey: ["existing-student-full", r.existing_student_id] });
+              queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+            }}
+          />
         )}
 
         {/* Meta */}
