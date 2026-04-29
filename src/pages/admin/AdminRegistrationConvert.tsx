@@ -519,13 +519,52 @@ const AdminRegistrationConvert = () => {
             <CardHeader>
               <CardTitle className="text-base">תלמיד קיים — {existingStudent.first_name} {existingStudent.last_name}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div><span className="text-muted-foreground">ת.ז.: </span>{existingStudent.national_id || "—"}</div>
                 <div><span className="text-muted-foreground">כיתה: </span>{existingStudent.grade || "—"}</div>
                 <div><span className="text-muted-foreground">ישוב: </span>{existingStudent.city || "—"}</div>
                 <div><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone || "—"}</div>
               </div>
+
+              {/* Existing enrollments in active year */}
+              {existingEnrollments.length > 0 && (
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-sm font-medium">
+                    שיוכים קיימים לשנה {activeYear?.name || "הפעילה"}:
+                  </p>
+                  <div className="space-y-1.5">
+                    {existingEnrollments.map((e: any) => (
+                      <div
+                        key={e.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-2.5 text-sm"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">
+                            {e.instruments?.name}
+                            {!e.is_active && <span className="text-xs text-muted-foreground"> (לא פעיל)</span>}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {e.teachers?.first_name} {e.teachers?.last_name} · {e.schools?.name} · {e.lesson_duration_minutes} דק׳
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 h-9 rounded-lg"
+                          onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
+                        >
+                          ערוך
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-amber-600">
+                    שים לב: לא ניתן ליצור שיוך נוסף לאותו כלי באותה שנה. ערוך שיוך קיים או בחר כלי אחר.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
