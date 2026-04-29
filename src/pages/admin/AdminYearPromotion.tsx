@@ -95,6 +95,19 @@ const AdminYearPromotion = () => {
         regular.push(s);
       }
     });
+    // Stable sort by grade order, then by name — so list doesn't jump after edits
+    const gradeIndex = (g: string | null) => {
+      if (!g) return 999;
+      const i = (GRADES as readonly string[]).indexOf(g);
+      return i === -1 ? 998 : i;
+    };
+    const sortFn = (a: any, b: any) => {
+      const d = gradeIndex(a.grade) - gradeIndex(b.grade);
+      if (d !== 0) return d;
+      return `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he");
+    };
+    regular.sort(sortFn);
+    graduating.sort(sortFn);
     return { regularStudents: regular, graduatingStudents: graduating };
   }, [students]);
 
