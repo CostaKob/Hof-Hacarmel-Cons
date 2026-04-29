@@ -18,6 +18,7 @@ const readSavedScroll = (key: string) => {
     const stored = window.sessionStorage.getItem(`${SESSION_PREFIX}${key}`);
     return stored ? Number(stored) : undefined;
   } catch {
+    // sessionStorage can be unavailable in restricted browser contexts.
     return undefined;
   }
 };
@@ -27,7 +28,9 @@ const writeSavedScroll = (key: string, value: number) => {
   scrollPositions.set(key, scrollY);
   try {
     window.sessionStorage.setItem(`${SESSION_PREFIX}${key}`, String(scrollY));
-  } catch {}
+  } catch {
+    // Ignore storage failures; in-memory restoration still works.
+  }
 };
 
 export const saveListScrollPosition = (key: string, value = window.scrollY) => {
@@ -96,9 +99,10 @@ export const useListStatePreservation = (key?: string) => {
       }
       try {
         window.history.scrollRestoration = prevRestoration;
-      } catch {}
+      } catch {
+        // Some browsers expose scrollRestoration as read-only.
+      }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 };
 
