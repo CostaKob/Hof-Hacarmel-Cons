@@ -279,6 +279,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
     let created = 0;
     let reused = 0;
     let enrollments = 0;
+    let updated = 0;
     let failed = 0;
 
     // Fetch teachers, instruments, schools for lookup
