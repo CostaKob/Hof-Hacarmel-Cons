@@ -90,20 +90,29 @@ const PublicRegistration = () => {
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Resolve academic year: URL param or active year (with registration_open)
+  // Resolve academic year: URL param (year name or yearId) or active year (with registration_open)
   const { data: activeYear, isLoading: yearLoading } = useQuery({
-    queryKey: ["public-active-year", urlYearId],
+    queryKey: ["public-active-year", urlYearParam, urlYearId],
     queryFn: async () => {
+      // 1. Try by year name (e.g. "2025-2026")
+      if (urlYearParam) {
+        const { data } = await supabase
+          .from("academic_years")
+          .select("id, name, registration_open")
+          .eq("name", urlYearParam)
+          .maybeSingle();
+        if (data) return data;
+      }
+      // 2. Try by legacy UUID
       if (urlYearId) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from("academic_years")
           .select("id, name, registration_open")
           .eq("id", urlYearId)
-          .single();
-        if (error) return null;
-        return data;
+          .maybeSingle();
+        if (data) return data;
       }
-      // Fallback: find any year with registration_open, or active year
+      // 3. Fallback: find any year with registration_open, or active year
       const { data: openYear } = await supabase
         .from("academic_years")
         .select("id, name, registration_open")
