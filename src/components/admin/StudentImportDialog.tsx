@@ -133,7 +133,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
   const [parsed, setParsed] = useState<ParsedRow[] | null>(null);
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState(false);
-  const [importResult, setImportResult] = useState<{ created: number; reused: number; enrollments: number; failed: number } | null>(null);
+  const [importResult, setImportResult] = useState<{ created: number; reused: number; enrollments: number; updated: number; failed: number } | null>(null);
 
   const reset = useCallback(() => {
     setParsed(null);
