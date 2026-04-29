@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -38,6 +38,7 @@ const PAYMENT_METHOD_MAP: Record<string, string> = {
 const AdminStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
@@ -203,7 +204,11 @@ const AdminStudentCard = () => {
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
               <Trash2 className="h-4 w-4" />
             </Button>
-            <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/students/${studentId}/edit`)}>
+            <Button
+              variant="outline"
+              className="h-11 rounded-xl"
+              onClick={() => navigate(`/admin/students/${studentId}/edit`, { state: location.state })}
+            >
               <Pencil className="h-4 w-4" /> עריכה
             </Button>
           </div>
