@@ -41,6 +41,7 @@ interface ParsedRow {
   data: StudentRowData;
   errors: string[];
   existingStudentId?: string;
+  updateOnly?: boolean; // when true, only update student's national_id, no enrollment created
 }
 
 interface Props {
