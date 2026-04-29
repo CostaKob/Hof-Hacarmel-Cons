@@ -375,10 +375,18 @@ const TeacherStudents = () => {
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-foreground truncate">
                             {r.firstName} {r.lastName}
+                            {r.previousGrade === "יב" && (
+                              <span className="mr-2 text-xs font-normal text-amber-700 dark:text-amber-400">
+                                (סיים יב)
+                              </span>
+                            )}
                           </p>
                           <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                             {r.instrumentName && <span>{r.instrumentName}</span>}
                             {r.schoolName && <><span>·</span><span>{r.schoolName}</span></>}
+                            {r.previousGrade && r.previousGrade !== "יב" && (
+                              <><span>·</span><span>כיתה {r.previousGrade}</span></>
+                            )}
                           </div>
                         </div>
                         <Badge
