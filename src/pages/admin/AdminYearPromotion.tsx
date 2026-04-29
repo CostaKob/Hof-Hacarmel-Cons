@@ -98,7 +98,7 @@ const AdminYearPromotion = () => {
     // Stable sort by grade order, then by name — so list doesn't jump after edits
     const gradeIndex = (g: string | null) => {
       if (!g) return 999;
-      const i = GRADES.indexOf(g);
+      const i = (GRADES as readonly string[]).indexOf(g);
       return i === -1 ? 998 : i;
     };
     const sortFn = (a: any, b: any) => {
