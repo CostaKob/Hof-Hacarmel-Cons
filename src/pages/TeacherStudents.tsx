@@ -326,9 +326,11 @@ const TeacherStudents = () => {
               <>
                 {/* Summary + copy link */}
                 <div className="rounded-2xl bg-card p-4 shadow-sm border border-border space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">תלמידים מ־</span>
-                    <span className="font-semibold">{previousYear.name} → {activeYear?.name}</span>
+                  <div className="text-sm text-center leading-relaxed">
+                    <span className="text-muted-foreground">מעבר משנת </span>
+                    <span className="font-semibold">{previousYear.name}</span>
+                    <span className="text-muted-foreground"> לשנת </span>
+                    <span className="font-semibold">{activeYear?.name}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2.5 text-center">
