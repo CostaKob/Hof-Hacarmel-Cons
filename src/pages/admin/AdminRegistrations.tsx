@@ -9,11 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Settings, AlertTriangle, Phone, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const AdminRegistrations = () => {
   const navigate = useNavigate();
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
+  useListStatePreservation("/admin/registrations");
+  const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
+  const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
     queryKey: ["admin-registrations"],
