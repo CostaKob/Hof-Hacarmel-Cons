@@ -9,7 +9,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle, Trash2, Link2, Copy, GraduationCap } from "lucide-react";
+import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle, Trash2, Link2, Copy, GraduationCap, FileSpreadsheet } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 
@@ -275,6 +275,9 @@ const AdminAcademicYears = () => {
           </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-grade-fixer")}>
             <GraduationCap className="h-4 w-4" /> תיקון כיתות
+          </Button>
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/grade-import")}>
+            <FileSpreadsheet className="h-4 w-4" /> ייבוא כיתות מאקסל
           </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/registration-pages")}>
             <Link2 className="h-4 w-4" /> דפי הרשמה
