@@ -133,6 +133,21 @@ const AdminRegistrationConvert = () => {
     },
   });
 
+  // Existing student's enrollments in active year (to warn about duplicates)
+  const { data: existingEnrollments = [] } = useQuery({
+    queryKey: ["existing-enrollments-year", registration?.existing_student_id, activeYear?.id],
+    enabled: !!registration?.existing_student_id && !!activeYear?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, is_active, instrument_id, instruments(name), teachers(first_name, last_name), schools(name), lesson_duration_minutes")
+        .eq("student_id", registration!.existing_student_id)
+        .eq("academic_year_id", activeYear!.id);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<ConvertFormData>({
     defaultValues: {
       lesson_duration_minutes: "45",
