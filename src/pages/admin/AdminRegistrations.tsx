@@ -22,13 +22,13 @@ const AdminRegistrations = () => {
 
   const { data: registrations = [], isLoading } = useQuery({
     queryKey: ["admin-registrations", selectedYearId],
+    enabled: !!selectedYearId,
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("registrations" as any)
         .select("*")
+        .eq("academic_year_id", selectedYearId!)
         .order("created_at", { ascending: false });
-      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
-      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
