@@ -282,19 +282,25 @@ const WhatsAppLinkDialog = ({
     });
   };
 
-  const handleSendAll = () => {
+  const handleSendAll = async () => {
     const sent: Array<{ name: string; phone: string }> = [];
     const failed: Array<{ name: string; reason: string }> = [];
 
-    selectedMessages.forEach((messageItem) => {
+    for (const messageItem of selectedMessages) {
       const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
       if (!messageItem.hasPhone) {
         failed.push({ name, reason: "ללא מספר טלפון הורה" });
-        return;
+        continue;
       }
-      window.open(messageItem.waLink, "_blank");
-      sent.push({ name, phone: messageItem.student.parent_phone || "" });
-    });
+      const win = window.open(messageItem.waLink, "_blank", "noopener,noreferrer");
+      if (!win) {
+        failed.push({ name, reason: "הדפדפן חסם פתיחת חלון - יש לאשר חלונות קופצים" });
+      } else {
+        sent.push({ name, phone: messageItem.student.parent_phone || "" });
+      }
+      // Small delay to avoid popup blocker on rapid sequential opens
+      await new Promise((r) => setTimeout(r, 250));
+    }
 
     setSendSummary({ sent, failed });
     setShowConfirm(false);
