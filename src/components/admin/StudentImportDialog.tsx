@@ -41,6 +41,7 @@ interface ParsedRow {
   data: StudentRowData;
   errors: string[];
   existingStudentId?: string;
+  updateOnly?: boolean; // when true, only update student's national_id, no enrollment created
 }
 
 interface Props {
@@ -132,7 +133,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
   const [parsed, setParsed] = useState<ParsedRow[] | null>(null);
   const [importing, setImporting] = useState(false);
   const [done, setDone] = useState(false);
-  const [importResult, setImportResult] = useState<{ created: number; reused: number; enrollments: number; failed: number } | null>(null);
+  const [importResult, setImportResult] = useState<{ created: number; reused: number; enrollments: number; updated: number; failed: number } | null>(null);
 
   const reset = useCallback(() => {
     setParsed(null);
@@ -185,36 +186,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
       const lessonType = String(row.lesson_type ?? "").trim().toLowerCase();
       const instrumentStartDate = parseDateValue(row.instrument_start_date);
 
-      // Required fields
-      if (!firstName) errors.push("שם פרטי חסר");
-      if (!lastName) errors.push("שם משפחה חסר");
-      if (!teacherEmail) errors.push("אימייל מורה חסר");
-      if (!instrument) errors.push("כלי נגינה חסר");
-      if (!school) errors.push("בית ספר חסר");
-      if (!lessonDuration) errors.push("משך שיעור חסר");
-      if (!lessonType) errors.push("סוג שיעור חסר");
-
-      // Validations
-      if (teacherEmail && !teacherByEmail.has(teacherEmail)) {
-        errors.push(`מורה עם אימייל ${teacherEmail} לא נמצא`);
-      }
-      if (lessonDuration && !VALID_DURATIONS.includes(lessonDuration)) {
-        errors.push("משך שיעור חייב להיות 30, 45 או 60");
-      }
-      if (lessonType && !VALID_LESSON_TYPES.includes(lessonType)) {
-        errors.push("סוג שיעור חייב להיות individual או group");
-      }
-      if (grade && !VALID_GRADES.includes(grade)) {
-        errors.push("כיתה לא תקינה");
-      }
-      if (playingLevel && !VALID_LEVELS.includes(playingLevel)) {
-        errors.push("רמת נגינה חייבת להיות א, ב או ג");
-      }
-      if (gender && !VALID_GENDERS.includes(gender)) {
-        errors.push("מין חייב להיות male או female");
-      }
-
-      // Check if student exists (by national_id or name)
+      // Check if student exists (by national_id or name) — needed before validation to enable update-only mode
       let existingStudentId: string | undefined;
       if (nationalId) {
         const match = (students ?? []).find(s => s.national_id === nationalId);
@@ -225,6 +197,43 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           s => s.first_name === firstName && s.last_name === lastName
         );
         if (match) existingStudentId = match.id;
+      }
+
+      // Detect "update-only" rows: existing student + national_id provided + no enrollment data
+      const hasEnrollmentData = !!(teacherEmail || instrument || school || lessonDuration || lessonType);
+      const updateOnly = !!existingStudentId && !!nationalId && !hasEnrollmentData;
+
+      // Required fields
+      if (!firstName) errors.push("שם פרטי חסר");
+      if (!lastName) errors.push("שם משפחה חסר");
+
+      if (!updateOnly) {
+        if (!teacherEmail) errors.push("אימייל מורה חסר");
+        if (!instrument) errors.push("כלי נגינה חסר");
+        if (!school) errors.push("בית ספר חסר");
+        if (!lessonDuration) errors.push("משך שיעור חסר");
+        if (!lessonType) errors.push("סוג שיעור חסר");
+
+        // Validations
+        if (teacherEmail && !teacherByEmail.has(teacherEmail)) {
+          errors.push(`מורה עם אימייל ${teacherEmail} לא נמצא`);
+        }
+        if (lessonDuration && !VALID_DURATIONS.includes(lessonDuration)) {
+          errors.push("משך שיעור חייב להיות 30, 45 או 60");
+        }
+        if (lessonType && !VALID_LESSON_TYPES.includes(lessonType)) {
+          errors.push("סוג שיעור חייב להיות individual או group");
+        }
+      }
+
+      if (grade && !VALID_GRADES.includes(grade)) {
+        errors.push("כיתה לא תקינה");
+      }
+      if (playingLevel && !VALID_LEVELS.includes(playingLevel)) {
+        errors.push("רמת נגינה חייבת להיות א, ב או ג");
+      }
+      if (gender && !VALID_GENDERS.includes(gender)) {
+        errors.push("מין חייב להיות male או female");
       }
 
       return {
@@ -251,6 +260,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
         },
         errors,
         existingStudentId,
+        updateOnly,
       };
     });
 
@@ -269,6 +279,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
     let created = 0;
     let reused = 0;
     let enrollments = 0;
+    let updated = 0;
     let failed = 0;
 
     // Fetch teachers, instruments, schools for lookup
@@ -294,6 +305,17 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
 
     for (const row of validRows) {
       try {
+        // Update-only mode: just patch national_id on existing student
+        if (row.updateOnly && row.existingStudentId) {
+          const { error: uErr } = await supabase
+            .from("students")
+            .update({ national_id: row.data.national_id || null })
+            .eq("id", row.existingStudentId);
+          if (uErr) { failed++; continue; }
+          updated++;
+          continue;
+        }
+
         // 1. Resolve student
         const studentKey = `${row.data.student_first_name}_${row.data.student_last_name}`.toLowerCase();
         let studentId = row.existingStudentId || createdStudents.get(studentKey);
@@ -322,6 +344,14 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           createdStudents.set(studentKey, studentId);
           created++;
         } else {
+          // For existing students: backfill national_id if provided and currently missing
+          if (row.existingStudentId && row.data.national_id) {
+            await supabase
+              .from("students")
+              .update({ national_id: row.data.national_id })
+              .eq("id", row.existingStudentId)
+              .is("national_id", null);
+          }
           reused++;
         }
 
@@ -379,9 +409,10 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
 
     setImporting(false);
     setDone(true);
-    setImportResult({ created, reused, enrollments, failed });
+    setImportResult({ created, reused, enrollments, updated, failed });
     queryClient.invalidateQueries({ queryKey: ["admin-students-enrollments"] });
     if (enrollments > 0) toast.success(`${enrollments} שיוכים יובאו בהצלחה`);
+    if (updated > 0) toast.success(`${updated} ת.ז. עודכנו לתלמידים קיימים`);
     if (failed > 0) toast.error(`${failed} שורות נכשלו`);
   };
 
@@ -406,6 +437,9 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
               <p>{importResult.created} תלמידים חדשים נוצרו</p>
               <p>{importResult.reused} תלמידים קיימים שויכו מחדש</p>
               <p>{importResult.enrollments} שיוכים נוצרו</p>
+              {importResult.updated > 0 && (
+                <p>{importResult.updated} ת.ז. עודכנו לתלמידים קיימים</p>
+              )}
               {importResult.failed > 0 && (
                 <p className="text-destructive">{importResult.failed} שורות נכשלו</p>
               )}
@@ -428,6 +462,7 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
                 <li>סוג שיעור: <strong>individual</strong> או <strong>group</strong></li>
                 <li>משך שיעור: 30, 45, או 60</li>
                 <li>תאריך בפורמט DD/MM/YYYY</li>
+                <li><strong>עדכון ת.ז. לתלמידים קיימים:</strong> ניתן להעלות קובץ עם שם פרטי, שם משפחה ות.ז. בלבד — ת.ז. תתעדכן לתלמיד הקיים ללא יצירת שיוך חדש</li>
               </ul>
             </div>
 
