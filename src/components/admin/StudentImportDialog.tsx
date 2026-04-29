@@ -436,6 +436,9 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
               <p>{importResult.created} תלמידים חדשים נוצרו</p>
               <p>{importResult.reused} תלמידים קיימים שויכו מחדש</p>
               <p>{importResult.enrollments} שיוכים נוצרו</p>
+              {importResult.updated > 0 && (
+                <p>{importResult.updated} ת.ז. עודכנו לתלמידים קיימים</p>
+              )}
               {importResult.failed > 0 && (
                 <p className="text-destructive">{importResult.failed} שורות נכשלו</p>
               )}
