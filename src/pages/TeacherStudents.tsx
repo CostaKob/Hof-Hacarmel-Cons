@@ -108,6 +108,7 @@ const TeacherStudents = () => {
           parentPhone: s.parent_phone,
           instrumentName: e.instruments?.name,
           schoolName: e.schools?.name,
+          previousGrade: e.grade ?? null,
         });
       }
     });
