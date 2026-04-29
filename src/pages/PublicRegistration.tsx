@@ -121,19 +121,28 @@ const PublicRegistration = () => {
     },
   });
 
-  // Load active registration page
+  // Load active registration page (fallback to any open page if year-specific doesn't exist)
   const { data: page, isLoading: pageLoading } = useQuery({
     queryKey: ["public-registration-page", activeYear?.id],
     queryFn: async () => {
       if (!activeYear?.id) return null;
-      const { data, error } = await supabase
+      // Try year-specific first
+      const { data: yearPage } = await supabase
         .from("registration_pages")
         .select("*")
         .eq("academic_year_id", activeYear.id)
         .eq("is_open", true)
         .maybeSingle();
-      if (error) throw error;
-      return data;
+      if (yearPage) return yearPage;
+      // Fallback: any open page (template)
+      const { data: anyPage } = await supabase
+        .from("registration_pages")
+        .select("*")
+        .eq("is_open", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return anyPage;
     },
     enabled: !!activeYear?.id,
   });
