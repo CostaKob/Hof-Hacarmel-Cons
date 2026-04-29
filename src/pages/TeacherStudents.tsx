@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock } from "lucide-react";
+import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
