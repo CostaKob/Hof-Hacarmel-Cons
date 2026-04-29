@@ -80,7 +80,11 @@ const AdminYearlySummary = () => {
   const filtered = useMemo(() => {
     return rows
       .filter((r) => {
-        if (search && !r.studentName.includes(search)) return false;
+        if (search) {
+          const q = search.trim().toLowerCase();
+          const hay = `${r.studentName} ${r.teacherName} ${r.schoolName} ${r.instrumentName}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
         if (teacherFilter !== "all" && r.teacherName !== teacherFilter) return false;
         if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
         if (activeFilter === "active" && !r.isActive) return false;
