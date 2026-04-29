@@ -29,8 +29,11 @@ const AdminTeachers = () => {
 
 
   const filtered = teachers.filter((t) => {
-    const name = `${t.first_name} ${t.last_name}`.toLowerCase();
-    if (search && !name.includes(search.toLowerCase())) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const searchStr = `${t.first_name ?? ""} ${t.last_name ?? ""} ${t.national_id ?? ""} ${t.phone ?? ""} ${t.email ?? ""} ${t.city ?? ""} ${t.address ?? ""}`.toLowerCase();
+      if (!searchStr.includes(q)) return false;
+    }
     if (activeFilter === "active" && !t.is_active) return false;
     if (activeFilter === "inactive" && t.is_active) return false;
     if (typeFilter === "freelance" && !t.is_freelance) return false;
