@@ -63,6 +63,7 @@ import SchoolMusicRegister from "./pages/SchoolMusicRegister";
 import AdminEducationalSchools from "./pages/admin/AdminEducationalSchools";
 import AdminEducationalSchoolForm from "./pages/admin/AdminEducationalSchoolForm";
 import AdminGradeCorrection from "./pages/admin/AdminGradeCorrection";
+import AdminGradeFixer from "./pages/admin/AdminGradeFixer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -116,6 +117,7 @@ const App = () => (
               
               <Route path="/admin/year-promotion" element={<AdminRoute><AdminYearPromotion /></AdminRoute>} />
               <Route path="/admin/grade-correction" element={<AdminRoute><AdminGradeCorrection /></AdminRoute>} />
+              <Route path="/admin/year-grade-fixer" element={<AdminRoute><AdminGradeFixer /></AdminRoute>} />
               <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
               <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
               <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
