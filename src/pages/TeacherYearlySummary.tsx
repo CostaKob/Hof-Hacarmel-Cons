@@ -121,9 +121,9 @@ const TeacherYearlySummary = () => {
       <main className="mx-auto max-w-5xl px-4 py-5 space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
-          <div className="w-full sm:w-48 space-y-1">
-            <Label className="text-xs text-muted-foreground">חיפוש תלמיד/ה</Label>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="שם תלמיד..." className="h-10 rounded-xl bg-card" />
+          <div className="w-full sm:w-64 space-y-1">
+            <Label className="text-xs text-muted-foreground">חיפוש</Label>
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="שם תלמיד, בית ספר או כלי..." className="h-10 rounded-xl bg-card" />
           </div>
           <div className="w-full sm:w-48 space-y-1">
             <Label className="text-xs text-muted-foreground">בית ספר</Label>
