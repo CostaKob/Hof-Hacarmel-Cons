@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +38,13 @@ interface StudentData {
     instruments?: { name: string } | null;
   }>;
   registration_token?: string;
+}
+
+interface StudentMessage {
+  student: StudentData;
+  message: string;
+  waLink: string;
+  hasPhone: boolean;
 }
 
 interface WhatsAppLinkDialogProps {
@@ -118,6 +125,7 @@ const WhatsAppLinkDialog = ({
     sent: Array<{ name: string; phone: string }>;
     failed: Array<{ name: string; reason: string }>;
   } | null>(null);
+  const [sendQueue, setSendQueue] = useState<StudentMessage[] | null>(null);
 
   const yearName = nextYear?.name || "השנה הבאה";
   const studentIds = students.map((s) => s.id);
