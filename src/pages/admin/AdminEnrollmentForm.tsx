@@ -199,7 +199,14 @@ const AdminEnrollmentForm = () => {
         navigate(-1 as any);
       }
     },
-    onError: (err: any) => toast.error(err.message || "שגיאה בשמירת הנתונים"),
+    onError: (err: any) => {
+      const msg = String(err?.message || "");
+      if (msg.includes("enrollments_student_instrument_year_unique") || (err?.code === "23505" && msg.includes("enrollments"))) {
+        toast.error("לתלמיד כבר קיים שיוך לכלי הנגינה הזה בשנה הנוכחית. ערוך את השיוך הקיים במקום ליצור חדש.");
+      } else {
+        toast.error(msg || "שגיאה בשמירת הנתונים");
+      }
+    },
   });
 
   const SELECT_FIELDS: {
