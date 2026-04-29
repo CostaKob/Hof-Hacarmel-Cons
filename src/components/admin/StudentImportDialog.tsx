@@ -305,6 +305,17 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
 
     for (const row of validRows) {
       try {
+        // Update-only mode: just patch national_id on existing student
+        if (row.updateOnly && row.existingStudentId) {
+          const { error: uErr } = await supabase
+            .from("students")
+            .update({ national_id: row.data.national_id || null })
+            .eq("id", row.existingStudentId);
+          if (uErr) { failed++; continue; }
+          updated++;
+          continue;
+        }
+
         // 1. Resolve student
         const studentKey = `${row.data.student_first_name}_${row.data.student_last_name}`.toLowerCase();
         let studentId = row.existingStudentId || createdStudents.get(studentKey);
@@ -333,6 +344,14 @@ export default function StudentImportDialog({ open, onOpenChange }: Props) {
           createdStudents.set(studentKey, studentId);
           created++;
         } else {
+          // For existing students: backfill national_id if provided and currently missing
+          if (row.existingStudentId && row.data.national_id) {
+            await supabase
+              .from("students")
+              .update({ national_id: row.data.national_id })
+              .eq("id", row.existingStudentId)
+              .is("national_id", null);
+          }
           reused++;
         }
 
