@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
+import { useListStatePreservation } from "@/hooks/useListStatePreservation";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ const AdminStudents = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
   const { selectedYearId, years } = useAcademicYear();
+  useListStatePreservation("/admin/students");
 
   const selectedYear = years.find((y) => y.id === selectedYearId);
 

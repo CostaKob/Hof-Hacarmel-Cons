@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +14,10 @@ import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
 
 const AdminTeachers = () => {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<string>("active");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  useListStatePreservation("/admin/teachers");
+  const [search, setSearch] = usePersistedState<string>("/admin/teachers", "search", "");
+  const [activeFilter, setActiveFilter] = usePersistedState<string>("/admin/teachers", "active", "active");
+  const [typeFilter, setTypeFilter] = usePersistedState<string>("/admin/teachers", "type", "all");
   const [importOpen, setImportOpen] = useState(false);
 
   const { data: teachers = [], isLoading } = useQuery({

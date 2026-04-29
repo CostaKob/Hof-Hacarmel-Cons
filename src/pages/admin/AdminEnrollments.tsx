@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +18,13 @@ const AdminEnrollments = () => {
   const navigate = useNavigate();
   const { selectedYearId, years } = useAcademicYear();
   const selectedYear = years.find((y) => y.id === selectedYearId);
+  useListStatePreservation("/admin/enrollments");
 
-  const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [teacherFilter, setTeacherFilter] = useState("all");
-  const [schoolFilter, setSchoolFilter] = useState("all");
-  const [instrumentFilter, setInstrumentFilter] = useState("all");
+  const [search, setSearch] = usePersistedState<string>("/admin/enrollments", "search", "");
+  const [activeFilter, setActiveFilter] = usePersistedState<string>("/admin/enrollments", "active", "all");
+  const [teacherFilter, setTeacherFilter] = usePersistedState<string>("/admin/enrollments", "teacher", "all");
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string>("/admin/enrollments", "school", "all");
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string>("/admin/enrollments", "instrument", "all");
 
   const { data: enrollments = [], isLoading } = useQuery({
     queryKey: ["admin-enrollments", selectedYearId],
