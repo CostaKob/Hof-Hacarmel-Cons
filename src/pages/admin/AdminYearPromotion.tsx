@@ -11,23 +11,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { GRADES, GRADE_PROMOTION } from "@/lib/constants";
-import { Search, ArrowUpCircle, GraduationCap, Users, Loader2, MessageCircle, Edit2 } from "lucide-react";
-import WhatsAppLinkDialog from "@/components/admin/WhatsAppLinkDialog";
-
-function generateToken(): string {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  let token = "";
-  for (let i = 0; i < 24; i++) {
-    token += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return token;
-}
+import { Search, GraduationCap, Users, Edit2 } from "lucide-react";
 
 const AdminYearPromotion = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [whatsappOpen, setWhatsappOpen] = useState(false);
+  
 
   // Load active academic year
   const { data: activeYear } = useQuery({
@@ -144,7 +134,7 @@ const AdminYearPromotion = () => {
     }
   }, [regularStudents]);
 
-  // Promote mutation
+  // Promote grades only — no registrations created (parents fill the public form themselves)
   const promoteMutation = useMutation({
     mutationFn: async () => {
       if (!nextYear) throw new Error("לא נמצאה שנת לימודים חדשה. צור שנה חדשה תחילה.");
@@ -152,7 +142,6 @@ const AdminYearPromotion = () => {
 
       const selectedStudents = regularStudents.filter((s) => selectedIds.has(s.id));
 
-      // 1. Promote grades on students table + enrollments (only if not already promoted for this year)
       const gradeUpdates = selectedStudents
         .filter((s) => s.grade && GRADE_PROMOTION[s.grade])
         .map((s) => Promise.all([
@@ -161,7 +150,6 @@ const AdminYearPromotion = () => {
             .update({ grade: GRADE_PROMOTION[s.grade]!, last_promoted_year_id: nextYear.id } as any)
             .eq("id", s.id)
             .neq("last_promoted_year_id", nextYear.id),
-          // Also update grade on current year enrollments for historical record
           ...((s.enrollments || []).map((e: any) =>
             supabase
               .from("enrollments")
@@ -170,40 +158,12 @@ const AdminYearPromotion = () => {
           )),
         ]));
       await Promise.all(gradeUpdates);
-
-      // 2. Create registration records with tokens
-      const registrations = selectedStudents.map((s) => ({
-        academic_year_id: nextYear.id,
-        student_first_name: s.first_name,
-        student_last_name: s.last_name,
-        student_national_id: s.national_id || "",
-        gender: s.gender || null,
-        student_status: "continuing",
-        branch_school_name: "",
-        student_school_text: "",
-        grade: GRADE_PROMOTION[s.grade] || s.grade || "",
-        city: s.city || "",
-        student_phone: s.phone || null,
-        requested_instruments: (s.enrollments || []).map((e: any) => e.instruments?.name).filter(Boolean),
-        requested_lesson_duration: "",
-        parent_name: s.parent_name || "",
-        parent_national_id: s.parent_national_id || "",
-        parent_phone: s.parent_phone || "",
-        parent_email: s.parent_email || "",
-        approval_checked: false,
-        status: "new" as const,
-        existing_student_id: s.id,
-        registration_token: generateToken(),
-      }));
-
-      const { error } = await supabase.from("registrations").insert(registrations);
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
-      toast.success(`נוצרו ${selectedIds.size} רישומי חידוש לשנה הבאה!`);
+      toast.success(`עודכנו כיתות עבור ${selectedIds.size} תלמידים`);
     },
-    onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הרישומים"),
+    onError: (err: any) => toast.error(err.message || "שגיאה בעדכון הכיתות"),
   });
 
   // Fix grade mutation - update student grade in DB and refresh
@@ -444,44 +404,6 @@ const AdminYearPromotion = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Action buttons - sticky */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sticky bottom-20 md:bottom-4 z-10">
-          <Button
-            variant="outline"
-            onClick={() => setWhatsappOpen(true)}
-            disabled={selectedIds.size === 0 || !nextYear}
-            className="h-12 sm:h-14 px-4 text-sm font-semibold rounded-2xl shadow-lg gap-2 whitespace-nowrap"
-          >
-            <MessageCircle className="h-5 w-5 shrink-0" />
-            הודעות ({selectedIds.size})
-          </Button>
-          <Button
-            onClick={() => promoteMutation.mutate()}
-            disabled={promoteMutation.isPending || !nextYear || selectedIds.size === 0}
-            className="flex-1 h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-2xl shadow-lg gap-2 min-w-0"
-          >
-            {promoteMutation.isPending ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin shrink-0" />
-                מעבד...
-              </>
-            ) : (
-              <>
-                <ArrowUpCircle className="h-5 w-5 shrink-0" />
-                <span className="truncate">צור רישומי {nextYear?.name || "שנה הבאה"} ({selectedIds.size})</span>
-              </>
-            )}
-          </Button>
-        </div>
-
-        {/* WhatsApp Dialog */}
-        <WhatsAppLinkDialog
-          open={whatsappOpen}
-          onOpenChange={setWhatsappOpen}
-          students={regularStudents.filter((s) => selectedIds.has(s.id))}
-          nextYear={nextYear ? { id: nextYear.id, name: nextYear.name } : null}
-          baseUrl={window.location.origin}
-        />
       </div>
     </AdminLayout>
   );
