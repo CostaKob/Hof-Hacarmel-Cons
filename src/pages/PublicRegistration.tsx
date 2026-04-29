@@ -73,7 +73,8 @@ function normalizeGradeValue(value: unknown): string {
 const PublicRegistration = () => {
   const { token: routeToken } = useParams<{ token?: string }>();
   const [searchParams] = useSearchParams();
-  const urlYearId = searchParams.get("yearId");
+  const urlYearParam = searchParams.get("year"); // e.g. "2025-2026"
+  const urlYearId = searchParams.get("yearId"); // legacy UUID support
   const token = routeToken || searchParams.get("token") || undefined;
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
