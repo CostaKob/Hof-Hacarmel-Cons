@@ -333,7 +333,19 @@ const AdminYearPromotion = () => {
                           {s.national_id || "—"}
                         </td>
                         <td className="p-3">
-                          <Badge variant="outline">{s.grade || "—"}</Badge>
+                          <Select
+                            value={s.grade || undefined}
+                            onValueChange={(newGrade) => fixGradeMutation.mutate({ studentId: s.id, newGrade })}
+                          >
+                            <SelectTrigger className="w-24 h-8 text-xs rounded-lg">
+                              <SelectValue placeholder={s.grade || "—"} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {GRADES.map((g) => (
+                                <SelectItem key={g} value={g}>{g}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="p-3">
                           <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300">
