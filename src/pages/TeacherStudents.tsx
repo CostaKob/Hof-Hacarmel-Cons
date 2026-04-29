@@ -24,25 +24,42 @@ const TeacherStudents = () => {
   const [instrumentFilter, setInstrumentFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("active");
 
-  // ── "Next" year = newest year that is NOT active (registration target) ──
-  const nextYear = useMemo(() => {
-    if (!years?.length) return null;
-    const candidates = years.filter((y) => !y.is_active);
+  // ── Previous year = newest year that is NOT active (e.g. תשפ"ו when תשפ"ז is active) ──
+  const previousYear = useMemo(() => {
+    if (!years?.length || !activeYear) return null;
+    const candidates = years.filter(
+      (y) => !y.is_active && new Date(y.start_date).getTime() < new Date(activeYear.start_date).getTime()
+    );
     if (!candidates.length) return null;
     return [...candidates].sort((a, b) =>
       new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
     )[0];
-  }, [years]);
+  }, [years, activeYear]);
 
-  // ── Fetch registrations for the next year ──
-  const { data: nextYearRegistrations } = useQuery({
-    queryKey: ["next-year-registrations", nextYear?.id],
-    enabled: !!nextYear?.id && tab === "registration",
+  // ── Fetch teacher's enrollments from PREVIOUS year ──
+  const { data: previousYearEnrollments, isLoading: prevLoading } = useQuery({
+    queryKey: ["teacher-prev-year-enrollments", teacher?.id, previousYear?.id],
+    enabled: !!teacher?.id && !!previousYear?.id && tab === "registration",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select(`*, students (*), instruments (name), schools (id, name)`)
+        .eq("teacher_id", teacher!.id)
+        .eq("academic_year_id", previousYear!.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  // ── Fetch registrations for the CURRENT (active) year ──
+  const { data: currentYearRegistrations } = useQuery({
+    queryKey: ["current-year-registrations", activeYear?.id],
+    enabled: !!activeYear?.id && tab === "registration",
     queryFn: async () => {
       const { data, error } = await supabase
         .from("registrations")
         .select("student_national_id, student_first_name, student_last_name, status, created_at")
-        .eq("academic_year_id", nextYear!.id);
+        .eq("academic_year_id", activeYear!.id);
       if (error) throw error;
       return data ?? [];
     },
@@ -50,17 +67,17 @@ const TeacherStudents = () => {
 
   const registeredIds = useMemo(() => {
     const set = new Set<string>();
-    nextYearRegistrations?.forEach((r) => {
+    currentYearRegistrations?.forEach((r) => {
       if (r.student_national_id) set.add(r.student_national_id.trim());
     });
     return set;
-  }, [nextYearRegistrations]);
+  }, [currentYearRegistrations]);
 
-  // ── Unique students from current-year enrollments (active only) ──
+  // ── Unique students from PREVIOUS-year enrollments (active only) ──
   const previousYearStudents = useMemo(() => {
-    if (!enrollments) return [];
+    if (!previousYearEnrollments) return [];
     const map = new Map<string, any>();
-    enrollments.forEach((e: any) => {
+    previousYearEnrollments.forEach((e: any) => {
       if (!e.is_active) return;
       if ((e.students as any)?.student_status === "הפסיק") return;
       const s = e.students;
