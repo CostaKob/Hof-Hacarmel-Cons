@@ -29,10 +29,14 @@ const AdminEnsembles = () => {
     },
   });
 
-  const filtered = ensembles.filter((e: any) =>
-    e.name.includes(search) ||
-    (ENSEMBLE_TYPE_LABELS[e.ensemble_type] || "").includes(search)
-  );
+  const filtered = ensembles.filter((e: any) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    const teacherNames = (e.ensemble_staff ?? []).map((s: any) => `${s.teachers?.first_name ?? ""} ${s.teachers?.last_name ?? ""}`).join(" ");
+    const dayLabel = e.day_of_week != null ? (DAYS_OF_WEEK_LABELS[e.day_of_week] ?? "") : "";
+    const searchStr = `${e.name ?? ""} ${ENSEMBLE_TYPE_LABELS[e.ensemble_type] ?? ""} ${e.schools?.name ?? ""} ${e.room ?? ""} ${teacherNames} ${dayLabel}`.toLowerCase();
+    return searchStr.includes(q);
+  });
 
   return (
     <AdminLayout title="הרכבים" backPath="/admin">
