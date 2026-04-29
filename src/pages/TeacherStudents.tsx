@@ -51,27 +51,44 @@ const TeacherStudents = () => {
     },
   });
 
-  // ── Fetch registrations for the CURRENT (active) year ──
-  const { data: currentYearRegistrations } = useQuery({
-    queryKey: ["current-year-registrations", activeYear?.id],
+  // ── Registered national IDs for the active year (via SECURITY DEFINER RPC; teachers can't read registrations directly) ──
+  const { data: registeredFromForms } = useQuery({
+    queryKey: ["registered-nids-for-year", activeYear?.id],
+    enabled: !!activeYear?.id && tab === "registration",
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_registered_national_ids_for_year", {
+        _year_id: activeYear!.id,
+      });
+      if (error) throw error;
+      return (data ?? []) as { national_id: string }[];
+    },
+  });
+
+  // ── Also count students already enrolled in the active year (e.g. promoted by admin) as "registered" ──
+  const { data: activeYearEnrollmentNids } = useQuery({
+    queryKey: ["teacher-active-year-enrolled-nids", activeYear?.id],
     enabled: !!activeYear?.id && tab === "registration",
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("registrations")
-        .select("student_national_id, student_first_name, student_last_name, status, created_at")
+        .from("enrollments")
+        .select("students!inner(national_id)")
         .eq("academic_year_id", activeYear!.id);
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as { students: { national_id: string | null } }[];
     },
   });
 
   const registeredIds = useMemo(() => {
     const set = new Set<string>();
-    currentYearRegistrations?.forEach((r) => {
-      if (r.student_national_id) set.add(r.student_national_id.trim());
+    registeredFromForms?.forEach((r) => {
+      if (r.national_id) set.add(r.national_id.trim());
+    });
+    activeYearEnrollmentNids?.forEach((e) => {
+      const nid = e.students?.national_id;
+      if (nid) set.add(nid.trim());
     });
     return set;
-  }, [currentYearRegistrations]);
+  }, [registeredFromForms, activeYearEnrollmentNids]);
 
   // ── Unique students from PREVIOUS-year enrollments (active only) ──
   const previousYearStudents = useMemo(() => {
