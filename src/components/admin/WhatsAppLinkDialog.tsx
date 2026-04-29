@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send, CheckCircle2, XCircle } from "lucide-react";
+import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GRADE_PROMOTION } from "@/lib/constants";
 
@@ -121,10 +121,6 @@ const WhatsAppLinkDialog = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [sendSummary, setSendSummary] = useState<{
-    sent: Array<{ name: string; phone: string }>;
-    failed: Array<{ name: string; reason: string }>;
-  } | null>(null);
   const [sendQueue, setSendQueue] = useState<StudentMessage[] | null>(null);
 
   const yearName = nextYear?.name || "השנה הבאה";
@@ -288,27 +284,8 @@ const WhatsAppLinkDialog = ({
     });
   };
 
-  const handleSendAll = async () => {
-    const sent: Array<{ name: string; phone: string }> = [];
-    const failed: Array<{ name: string; reason: string }> = [];
-
-    for (const messageItem of selectedMessages) {
-      const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
-      if (!messageItem.hasPhone) {
-        failed.push({ name, reason: "ללא מספר טלפון הורה" });
-        continue;
-      }
-      const win = window.open(messageItem.waLink, "_blank", "noopener,noreferrer");
-      if (!win) {
-        failed.push({ name, reason: "הדפדפן חסם פתיחת חלון - יש לאשר חלונות קופצים" });
-      } else {
-        sent.push({ name, phone: messageItem.student.parent_phone || "" });
-      }
-      // Small delay to avoid popup blocker on rapid sequential opens
-      await new Promise((r) => setTimeout(r, 250));
-    }
-
-    setSendSummary({ sent, failed });
+  const handleSendAll = () => {
+    setSendQueue(selectedMessages.filter((messageItem) => messageItem.hasPhone));
     setShowConfirm(false);
   };
 
