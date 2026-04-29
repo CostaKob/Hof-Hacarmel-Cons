@@ -314,7 +314,14 @@ const AdminRegistrationConvert = () => {
       toast.success("ההרשמה הומרה בהצלחה — תלמיד ושיוך נוצרו");
       navigate(`/admin/students/${studentId}`);
     },
-    onError: (err: any) => toast.error(err.message || "שגיאה בהמרת ההרשמה"),
+    onError: (err: any) => {
+      const msg = String(err?.message || "");
+      if (msg.includes("enrollments_student_instrument_year_unique") || (err?.code === "23505" && msg.includes("enrollments"))) {
+        toast.error("לתלמיד כבר קיים שיוך לכלי הזה בשנה הנוכחית. ערוך את השיוך הקיים או בחר כלי נגינה אחר.");
+      } else {
+        toast.error(msg || "שגיאה בהמרת ההרשמה");
+      }
+    },
   });
 
   if (regLoading) {
