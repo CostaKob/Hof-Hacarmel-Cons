@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send, CheckCircle2, XCircle } from "lucide-react";
+import { Copy, MessageCircle, CopyCheck, Info, Loader2, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GRADE_PROMOTION } from "@/lib/constants";
 
@@ -38,6 +38,13 @@ interface StudentData {
     instruments?: { name: string } | null;
   }>;
   registration_token?: string;
+}
+
+interface StudentMessage {
+  student: StudentData;
+  message: string;
+  waLink: string;
+  hasPhone: boolean;
 }
 
 interface WhatsAppLinkDialogProps {
@@ -114,10 +121,7 @@ const WhatsAppLinkDialog = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [sendSummary, setSendSummary] = useState<{
-    sent: Array<{ name: string; phone: string }>;
-    failed: Array<{ name: string; reason: string }>;
-  } | null>(null);
+  const [sendQueue, setSendQueue] = useState<StudentMessage[] | null>(null);
 
   const yearName = nextYear?.name || "השנה הבאה";
   const studentIds = students.map((s) => s.id);
@@ -280,27 +284,8 @@ const WhatsAppLinkDialog = ({
     });
   };
 
-  const handleSendAll = async () => {
-    const sent: Array<{ name: string; phone: string }> = [];
-    const failed: Array<{ name: string; reason: string }> = [];
-
-    for (const messageItem of selectedMessages) {
-      const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
-      if (!messageItem.hasPhone) {
-        failed.push({ name, reason: "ללא מספר טלפון הורה" });
-        continue;
-      }
-      const win = window.open(messageItem.waLink, "_blank", "noopener,noreferrer");
-      if (!win) {
-        failed.push({ name, reason: "הדפדפן חסם פתיחת חלון - יש לאשר חלונות קופצים" });
-      } else {
-        sent.push({ name, phone: messageItem.student.parent_phone || "" });
-      }
-      // Small delay to avoid popup blocker on rapid sequential opens
-      await new Promise((r) => setTimeout(r, 250));
-    }
-
-    setSendSummary({ sent, failed });
+  const handleSendAll = () => {
+    setSendQueue(selectedMessages.filter((messageItem) => messageItem.hasPhone));
     setShowConfirm(false);
   };
 
@@ -479,16 +464,13 @@ const WhatsAppLinkDialog = ({
             <AlertDialogTitle className="text-right">שליחת הודעות לכולם</AlertDialogTitle>
             <AlertDialogDescription className="text-right space-y-2">
               <p>
-                פעולה זו תפתח {withPhone.length} חלונות WhatsApp חדשים — אחד לכל הורה עם מספר טלפון.
+                פעולה זו תכין רשימת שליחה של {withPhone.length} הודעות WhatsApp — כל הודעה תיפתח בלחיצה ידנית כדי למנוע חסימת חלונות קופצים.
               </p>
               {withoutPhone.length > 0 && (
                 <p className="text-amber-600 font-medium">
                   ⚠ {withoutPhone.length} תלמידים ללא מספר טלפון הורה — ההודעה שלהם לא תישלח.
                 </p>
               )}
-              <p className="text-xs text-muted-foreground">
-                שים לב: ייתכן שהדפדפן יחסום חלק מהחלונות. אם זה קורה, אפשר את החלונות הקופצים (pop-ups) בהגדרות הדפדפן.
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2 sm:flex-row-reverse">
@@ -504,48 +486,32 @@ const WhatsAppLinkDialog = ({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Summary dialog */}
-      <Dialog open={!!sendSummary} onOpenChange={() => setSendSummary(null)}>
-        <DialogContent dir="rtl" className="max-w-md max-h-[80dvh] flex flex-col">
+      {/* Manual send queue dialog */}
+      <Dialog open={!!sendQueue} onOpenChange={() => setSendQueue(null)}>
+        <DialogContent dir="rtl" className="max-h-[80dvh] max-w-md overflow-hidden flex flex-col">
           <DialogHeader className="text-right">
-            <DialogTitle className="text-right">סיכום שליחה</DialogTitle>
+            <DialogTitle className="text-right">שליחה ידנית ב-WhatsApp</DialogTitle>
+            <DialogDescription className="text-right">
+              לחצו על כל הורה כדי לפתוח את ההודעה. כך הדפדפן לא חוסם את WhatsApp.
+            </DialogDescription>
           </DialogHeader>
-          {sendSummary && (
-            <div className="flex-1 overflow-y-auto space-y-4">
-              {sendSummary.sent.length > 0 && (
-                <div className="space-y-1.5">
-                  <h4 className="text-sm font-semibold flex items-center gap-1.5 text-green-700">
-                    <CheckCircle2 className="h-4 w-4" />
-                    נשלחו ({sendSummary.sent.length})
-                  </h4>
-                  <div className="rounded-lg bg-green-50 dark:bg-green-950/30 p-2 space-y-1">
-                    {sendSummary.sent.map((s, i) => (
-                      <p key={i} className="text-xs text-foreground">
-                        {s.name} — <span className="font-mono text-muted-foreground">{s.phone}</span>
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {sendSummary.failed.length > 0 && (
-                <div className="space-y-1.5">
-                  <h4 className="text-sm font-semibold flex items-center gap-1.5 text-destructive">
-                    <XCircle className="h-4 w-4" />
-                    לא נשלחו ({sendSummary.failed.length})
-                  </h4>
-                  <div className="rounded-lg bg-destructive/10 p-2 space-y-1">
-                    {sendSummary.failed.map((f, i) => (
-                      <p key={i} className="text-xs text-foreground">
-                        {f.name} — <span className="text-muted-foreground">{f.reason}</span>
-                      </p>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          <div className="pt-2 border-t">
-            <Button variant="outline" className="w-full rounded-xl" onClick={() => setSendSummary(null)}>
+          <div className="flex-1 space-y-2 overflow-y-auto overscroll-contain pr-1">
+            {sendQueue?.map((messageItem, index) => (
+              <Button key={messageItem.student.id} asChild variant="outline" className="h-auto w-full justify-between rounded-xl p-3">
+                <a href={messageItem.waLink} target="_blank" rel="noopener noreferrer">
+                  <span className="flex items-center gap-2 text-right">
+                    <MessageCircle className="h-4 w-4 text-green-600" />
+                    <span>
+                      {index + 1}. {messageItem.student.first_name} {messageItem.student.last_name}
+                    </span>
+                  </span>
+                  <Send className="h-4 w-4" />
+                </a>
+              </Button>
+            ))}
+          </div>
+          <div className="border-t pt-2">
+            <Button variant="outline" className="w-full rounded-xl" onClick={() => setSendQueue(null)}>
               סגור
             </Button>
           </div>
