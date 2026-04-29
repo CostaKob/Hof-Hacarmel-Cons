@@ -266,12 +266,15 @@ const AdminAcademicYears = () => {
   return (
     <AdminLayout title="ניהול שנות לימוד" backPath="/admin">
       <div className="space-y-4 max-w-2xl">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           <Button className="h-12 rounded-xl text-base" onClick={() => { setShowForm(!showForm); if (!showForm) handleAutoFill(); }}>
             <Plus className="h-4 w-4" /> שנה חדשה
           </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-promotion")}>
             <ArrowUpCircle className="h-4 w-4" /> מעבר שנה
+          </Button>
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-grade-fixer")}>
+            <GraduationCap className="h-4 w-4" /> תיקון כיתות
           </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/registration-pages")}>
             <Link2 className="h-4 w-4" /> דפי הרשמה
