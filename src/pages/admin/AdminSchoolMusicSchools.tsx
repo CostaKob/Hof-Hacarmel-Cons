@@ -14,7 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Search, Users, Pencil, Save, X, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 const getDayName = (school: any) => {
