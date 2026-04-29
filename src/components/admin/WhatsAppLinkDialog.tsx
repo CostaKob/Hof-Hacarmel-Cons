@@ -97,6 +97,11 @@ function formatPhoneForWhatsApp(phone: string | null | undefined): string {
   return digits;
 }
 
+function buildWhatsAppRedirectLink(phone: string, message: string): string {
+  const params = new URLSearchParams({ phone, text: message });
+  return `/whatsapp?${params.toString()}`;
+}
+
 const WhatsAppLinkDialog = ({
   open,
   onOpenChange,
@@ -223,9 +228,7 @@ const WhatsAppLinkDialog = ({
         : `${baseUrl}/register?yearId=${nextYear?.id || ""}`;
       const message = buildMessage(template, student, yearName, link);
       const waPhone = formatPhoneForWhatsApp(student.parent_phone);
-      const waLink = waPhone
-        ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`
-        : "";
+      const waLink = waPhone ? buildWhatsAppRedirectLink(waPhone, message) : "";
 
       return {
         student,

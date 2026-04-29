@@ -59,6 +59,7 @@ import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
 import PublicRegistration from "./pages/PublicRegistration";
 import SchoolMusicRegister from "./pages/SchoolMusicRegister";
+import WhatsAppRedirect from "./pages/WhatsAppRedirect";
 import AdminEducationalSchools from "./pages/admin/AdminEducationalSchools";
 import AdminEducationalSchoolForm from "./pages/admin/AdminEducationalSchoolForm";
 import AdminGradeCorrection from "./pages/admin/AdminGradeCorrection";
@@ -135,6 +136,7 @@ const App = () => (
               {/* Public */}
               <Route path="/register" element={<PublicRegistration />} />
               <Route path="/register/:token" element={<PublicRegistration />} />
+              <Route path="/whatsapp" element={<WhatsAppRedirect />} />
               <Route path="/school-music-register" element={<SchoolMusicRegister />} />
               {/* Teacher routes */}
               <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
