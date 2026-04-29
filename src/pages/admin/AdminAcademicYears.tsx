@@ -276,6 +276,9 @@ const AdminAcademicYears = () => {
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/year-grade-fixer")}>
             <GraduationCap className="h-4 w-4" /> תיקון כיתות
           </Button>
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/grade-import")}>
+            <FileSpreadsheet className="h-4 w-4" /> ייבוא כיתות מאקסל
+          </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/registration-pages")}>
             <Link2 className="h-4 w-4" /> דפי הרשמה
           </Button>
