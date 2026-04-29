@@ -64,6 +64,7 @@ import AdminEducationalSchools from "./pages/admin/AdminEducationalSchools";
 import AdminEducationalSchoolForm from "./pages/admin/AdminEducationalSchoolForm";
 import AdminGradeCorrection from "./pages/admin/AdminGradeCorrection";
 import AdminGradeFixer from "./pages/admin/AdminGradeFixer";
+import AdminGradeImport from "./pages/admin/AdminGradeImport";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
