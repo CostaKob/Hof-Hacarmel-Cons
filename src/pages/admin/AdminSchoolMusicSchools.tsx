@@ -36,15 +36,16 @@ const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: str
 const AdminSchoolMusicSchools = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("schools");
+  useListStatePreservation("/admin/school-music");
+  const [tab, setTab] = usePersistedState<string>("/admin/school-music", "tab", "schools");
 
   // ── Students tab state ──
-  const [search, setSearch] = useState("");
-  const [filterSchool, setFilterSchool] = useState(ALL);
-  const [filterClass, setFilterClass] = useState(ALL);
-  const [filterTeacher, setFilterTeacher] = useState(ALL);
-  const [filterInstrument, setFilterInstrument] = useState(ALL);
-  const [filterCity, setFilterCity] = useState(ALL);
+  const [search, setSearch] = usePersistedState<string>("/admin/school-music", "search", "");
+  const [filterSchool, setFilterSchool] = usePersistedState<string>("/admin/school-music", "fSchool", ALL);
+  const [filterClass, setFilterClass] = usePersistedState<string>("/admin/school-music", "fClass", ALL);
+  const [filterTeacher, setFilterTeacher] = usePersistedState<string>("/admin/school-music", "fTeacher", ALL);
+  const [filterInstrument, setFilterInstrument] = usePersistedState<string>("/admin/school-music", "fInstr", ALL);
+  const [filterCity, setFilterCity] = usePersistedState<string>("/admin/school-music", "fCity", ALL);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Record<string, any>>({});
