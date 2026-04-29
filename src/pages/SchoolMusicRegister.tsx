@@ -63,6 +63,7 @@ const GENDER_OPTIONS = [
 const SchoolMusicRegister = () => {
   const { logoUrl } = useAppLogo();
   const [searchParams] = useSearchParams();
+  const urlYearParam = searchParams.get("year");
   const urlYearId = searchParams.get("yearId");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
