@@ -80,7 +80,11 @@ const AdminYearlySummary = () => {
   const filtered = useMemo(() => {
     return rows
       .filter((r) => {
-        if (search && !r.studentName.includes(search)) return false;
+        if (search) {
+          const q = search.trim().toLowerCase();
+          const hay = `${r.studentName} ${r.teacherName} ${r.schoolName} ${r.instrumentName}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
         if (teacherFilter !== "all" && r.teacherName !== teacherFilter) return false;
         if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
         if (activeFilter === "active" && !r.isActive) return false;
@@ -107,9 +111,9 @@ const AdminYearlySummary = () => {
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
-          <div className="w-full sm:w-48 space-y-1">
-            <Label className="text-xs text-muted-foreground">חיפוש תלמיד/ה</Label>
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="שם תלמיד..." className="h-10 rounded-xl bg-card" />
+          <div className="w-full sm:w-64 space-y-1">
+            <Label className="text-xs text-muted-foreground">חיפוש</Label>
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="שם תלמיד, מורה, בית ספר או כלי..." className="h-10 rounded-xl bg-card" />
           </div>
           <div className="w-full sm:w-48 space-y-1">
             <Label className="text-xs text-muted-foreground">מורה</Label>
