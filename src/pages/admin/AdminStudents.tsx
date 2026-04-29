@@ -1,5 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -15,10 +15,15 @@ import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
   const { selectedYearId, years } = useAcademicYear();
   useListStatePreservation("/admin/students");
+
+  useEffect(() => {
+    sessionStorage.setItem("admin-students-return-url", `${location.pathname}${location.search}`);
+  }, [location.pathname, location.search]);
 
   const selectedYear = years.find((y) => y.id === selectedYearId);
 
@@ -233,7 +238,9 @@ const AdminStudents = () => {
                   key={r.id}
                   onClick={() => {
                     saveListScrollPosition("/admin/students");
-                    navigate(`/admin/students/${r.students?.id}`);
+                    navigate(`/admin/students/${r.students?.id}`, {
+                      state: { returnTo: `${location.pathname}${location.search}` },
+                    });
                   }}
                   className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
                 >

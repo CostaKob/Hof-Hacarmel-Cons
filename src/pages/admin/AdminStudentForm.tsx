@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { DateInput } from "@/components/ui/date-input";
@@ -45,7 +45,13 @@ const AdminStudentForm = () => {
   const { studentId } = useParams();
   const isEdit = !!studentId;
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
+
+  const returnTo =
+    (location.state as { returnTo?: string } | null)?.returnTo ||
+    sessionStorage.getItem("admin-students-return-url") ||
+    "/admin/students";
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
     defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל" },
@@ -126,7 +132,7 @@ const AdminStudentForm = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       toast.success(isEdit ? "התלמיד עודכן בהצלחה" : "התלמיד נוצר בהצלחה");
-      navigate("/admin/students");
+      navigate(returnTo);
     },
     onError: () => toast.error("שגיאה בשמירת הנתונים"),
   });
@@ -284,7 +290,7 @@ const AdminStudentForm = () => {
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
           </Button>
-          <Button type="button" variant="outline" onClick={() => navigate("/admin/students")} className="h-14 rounded-2xl text-base px-6">
+          <Button type="button" variant="outline" onClick={() => navigate(returnTo)} className="h-14 rounded-2xl text-base px-6">
             ביטול
           </Button>
         </div>
