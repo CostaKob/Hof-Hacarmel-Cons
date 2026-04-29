@@ -1656,6 +1656,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_registered_national_ids_for_year: {
+        Args: { _year_id: string }
+        Returns: {
+          national_id: string
+        }[]
+      }
       get_teacher_id_for_user: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
