@@ -374,7 +374,7 @@ const DIFF_FIELDS: { label: string; regKey: string; studentKey: string; format?:
   { label: "כיתה", regKey: "grade", studentKey: "grade" },
 ];
 
-const DiffCard = ({ registration, student }: { registration: any; student: any }) => {
+const DiffCard = ({ registration, student, onApplied }: { registration: any; student: any; onApplied?: () => void }) => {
   const diffs = useMemo(() => {
     return DIFF_FIELDS.filter((f) => {
       const regVal = (registration[f.regKey] || "").trim();
@@ -382,12 +382,44 @@ const DiffCard = ({ registration, student }: { registration: any; student: any }
       return regVal && studentVal && regVal !== studentVal;
     }).map((f) => ({
       label: f.label,
+      studentKey: f.studentKey,
       oldValue: student[f.studentKey] || "—",
       newValue: registration[f.regKey] || "—",
     }));
   }, [registration, student]);
 
+  // By default — all selected for replacement
+  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  useEffect(() => {
+    const init: Record<string, boolean> = {};
+    diffs.forEach((d) => { init[d.studentKey] = true; });
+    setSelected(init);
+  }, [diffs.length]);
+
+  const applyMutation = useMutation({
+    mutationFn: async () => {
+      const updates: Record<string, any> = {};
+      diffs.forEach((d) => {
+        if (selected[d.studentKey]) {
+          updates[d.studentKey] = d.newValue === "—" ? null : d.newValue;
+        }
+      });
+      if (Object.keys(updates).length === 0) return;
+      const { error } = await supabase
+        .from("students")
+        .update(updates as any)
+        .eq("id", student.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("הנתונים עודכנו בכרטיס התלמיד");
+      onApplied?.();
+    },
+    onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
+  });
+
   if (diffs.length === 0) return null;
+  const selectedCount = Object.values(selected).filter(Boolean).length;
 
   return (
     <Card className="border-amber-200 dark:border-amber-800">
@@ -397,28 +429,48 @@ const DiffCard = ({ registration, student }: { registration: any; student: any }
           שינויים שזוהו ({diffs.length})
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          הפרטים הבאים שונים מהנתונים הקיימים במערכת
+          סמן אילו שדות להחליף בכרטיס התלמיד הקיים
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
         {diffs.map((d, i) => (
-          <div key={i} className="rounded-lg border border-border p-3 space-y-1.5">
-            <p className="text-xs font-medium text-muted-foreground">{d.label}</p>
-            <div className="flex items-center gap-3">
-              <div className="flex-1">
-                <p className="text-[11px] text-muted-foreground">ערך קיים</p>
-                <p className="text-sm line-through text-muted-foreground">{d.oldValue}</p>
-              </div>
-              <span className="text-muted-foreground">←</span>
-              <div className="flex-1">
-                <p className="text-[11px] text-muted-foreground">ערך חדש</p>
-                <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400 font-medium">
-                  {d.newValue}
-                </Badge>
+          <label
+            key={i}
+            className="flex gap-3 items-start rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/30"
+          >
+            <input
+              type="checkbox"
+              checked={!!selected[d.studentKey]}
+              onChange={(e) => setSelected((s) => ({ ...s, [d.studentKey]: e.target.checked }))}
+              className="mt-1 h-4 w-4 accent-primary shrink-0"
+            />
+            <div className="flex-1 space-y-1.5">
+              <p className="text-xs font-medium text-muted-foreground">{d.label}</p>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <p className="text-[11px] text-muted-foreground">ערך קיים</p>
+                  <p className="text-sm line-through text-muted-foreground">{d.oldValue}</p>
+                </div>
+                <span className="text-muted-foreground">←</span>
+                <div className="flex-1">
+                  <p className="text-[11px] text-muted-foreground">ערך חדש</p>
+                  <Badge variant="outline" className="border-amber-300 text-amber-700 dark:text-amber-400 font-medium">
+                    {d.newValue}
+                  </Badge>
+                </div>
               </div>
             </div>
-          </div>
+          </label>
         ))}
+        <Button
+          type="button"
+          size="sm"
+          onClick={() => applyMutation.mutate()}
+          disabled={selectedCount === 0 || applyMutation.isPending}
+          className="w-full sm:w-auto h-11 rounded-xl"
+        >
+          {applyMutation.isPending ? "מעדכן..." : `החל ${selectedCount} שינויים`}
+        </Button>
       </CardContent>
     </Card>
   );
