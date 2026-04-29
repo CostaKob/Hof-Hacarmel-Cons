@@ -78,18 +78,28 @@ const AdminRegistrationConvert = () => {
     enabled: !!registration?.existing_student_id,
   });
 
-  const { data: activeYear } = useQuery({
-    queryKey: ["active-year"],
+  // Target year = registration's year (fallback to active year)
+  const { data: targetYear } = useQuery({
+    queryKey: ["target-year-for-registration", registration?.academic_year_id],
+    enabled: !!registration,
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (registration?.academic_year_id) {
+        const { data } = await supabase
+          .from("academic_years")
+          .select("id, name")
+          .eq("id", registration.academic_year_id)
+          .single();
+        if (data) return data;
+      }
+      const { data } = await supabase
         .from("academic_years")
         .select("id, name")
         .eq("is_active", true)
         .single();
-      if (error) return null;
       return data;
     },
   });
+  const activeYear = targetYear; // alias to minimize diff
 
   const { data: teachers = [] } = useQuery({
     queryKey: ["admin-teachers-select"],
