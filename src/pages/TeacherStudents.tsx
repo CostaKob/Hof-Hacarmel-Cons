@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock } from "lucide-react";
+import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
@@ -125,10 +125,16 @@ const TeacherStudents = () => {
   }, [previousYearStudents, registeredIds]);
 
   const registrationFiltered = useMemo(() => {
-    return registrationRows.filter((r) => {
+    const filtered = registrationRows.filter((r) => {
       if (!search) return true;
       const q = search.toLowerCase();
       return `${r.firstName} ${r.lastName}`.toLowerCase().includes(q);
+    });
+    // Push יב graduates to the bottom
+    return filtered.sort((a, b) => {
+      const aGrad = a.previousGrade === "יב" ? 1 : 0;
+      const bGrad = b.previousGrade === "יב" ? 1 : 0;
+      return aGrad - bGrad;
     });
   }, [registrationRows, search]);
 
@@ -357,27 +363,35 @@ const TeacherStudents = () => {
                   <p className="text-center text-muted-foreground py-8">אין תלמידים להצגה</p>
                 ) : (
                   <div className="space-y-2.5">
-                    {registrationFiltered.map((r) => (
+                    {registrationFiltered.map((r) => {
+                      const isGraduated = r.previousGrade === "יב";
+                      return (
                       <div
                         key={r.studentId}
-                        className={`flex items-center gap-3 rounded-2xl bg-card p-3.5 shadow-sm border ${
-                          r.isRegistered ? "border-emerald-300/60" : "border-amber-300/60"
+                        className={`flex items-center gap-3 rounded-2xl p-3.5 shadow-sm border ${
+                          isGraduated
+                            ? "bg-muted/40 border-border opacity-75"
+                            : `bg-card ${r.isRegistered ? "border-emerald-300/60" : "border-amber-300/60"}`
                         }`}
                       >
                         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
-                          r.isRegistered ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-amber-100 dark:bg-amber-950/40"
+                          isGraduated
+                            ? "bg-muted"
+                            : r.isRegistered ? "bg-emerald-100 dark:bg-emerald-950/40" : "bg-amber-100 dark:bg-amber-950/40"
                         }`}>
-                          {r.isRegistered ? (
+                          {isGraduated ? (
+                            <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                          ) : r.isRegistered ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                           ) : (
                             <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground truncate">
+                          <p className={`font-semibold truncate ${isGraduated ? "text-muted-foreground" : "text-foreground"}`}>
                             {r.firstName} {r.lastName}
-                            {r.previousGrade === "יב" && (
-                              <span className="mr-2 text-xs font-normal text-amber-700 dark:text-amber-400">
+                            {isGraduated && (
+                              <span className="mr-2 text-xs font-normal">
                                 (סיים יב)
                               </span>
                             )}
@@ -385,7 +399,7 @@ const TeacherStudents = () => {
                           <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                             {r.instrumentName && <span>{r.instrumentName}</span>}
                             {r.schoolName && <><span>·</span><span>{r.schoolName}</span></>}
-                            {r.previousGrade && r.previousGrade !== "יב" && (
+                            {r.previousGrade && !isGraduated && (
                               <><span>·</span><span>כיתה {r.previousGrade}</span></>
                             )}
                           </div>
@@ -393,15 +407,18 @@ const TeacherStudents = () => {
                         <Badge
                           variant="outline"
                           className={`rounded-lg shrink-0 ${
-                            r.isRegistered
+                            isGraduated
+                              ? "border-border text-muted-foreground"
+                              : r.isRegistered
                               ? "border-emerald-500 text-emerald-700 dark:text-emerald-400"
                               : "border-amber-500 text-amber-700 dark:text-amber-400"
                           }`}
                         >
-                          {r.isRegistered ? "נרשם" : "ממתין"}
+                          {isGraduated ? "סיים" : r.isRegistered ? "נרשם" : "ממתין"}
                         </Badge>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </>
