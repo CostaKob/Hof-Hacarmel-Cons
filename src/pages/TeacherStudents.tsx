@@ -125,10 +125,16 @@ const TeacherStudents = () => {
   }, [previousYearStudents, registeredIds]);
 
   const registrationFiltered = useMemo(() => {
-    return registrationRows.filter((r) => {
+    const filtered = registrationRows.filter((r) => {
       if (!search) return true;
       const q = search.toLowerCase();
       return `${r.firstName} ${r.lastName}`.toLowerCase().includes(q);
+    });
+    // Push יב graduates to the bottom
+    return filtered.sort((a, b) => {
+      const aGrad = a.previousGrade === "יב" ? 1 : 0;
+      const bGrad = b.previousGrade === "יב" ? 1 : 0;
+      return aGrad - bGrad;
     });
   }, [registrationRows, search]);
 
