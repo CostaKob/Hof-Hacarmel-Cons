@@ -102,7 +102,11 @@ const AdminStudents = () => {
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (gradeFilter !== "all" && (r.grade ?? r.students?.grade) !== gradeFilter) return false;
+    if (gradeFilter !== "all") {
+      const stripMarks = (s: string) => (s ?? "").replace(/['"׳״']/g, "").trim();
+      const rowGrade = stripMarks(r.grade ?? r.students?.grade ?? "");
+      if (rowGrade !== stripMarks(gradeFilter)) return false;
+    }
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
