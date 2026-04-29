@@ -157,8 +157,8 @@ const TeacherStudents = () => {
 
   const isLoading = teacherLoading || enrollmentsLoading;
 
-  const registrationLink = nextYear
-    ? `${window.location.origin}/register?year=${encodeURIComponent(nextYear.name)}`
+  const registrationLink = activeYear
+    ? `${window.location.origin}/register?year=${encodeURIComponent(activeYear.name)}`
     : "";
 
   const copyLink = async () => {
