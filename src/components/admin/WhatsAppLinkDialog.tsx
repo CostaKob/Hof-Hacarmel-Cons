@@ -223,13 +223,8 @@ const WhatsAppLinkDialog = ({
         : `${baseUrl}/register?yearId=${nextYear?.id || ""}`;
       const message = buildMessage(template, student, yearName, link);
       const waPhone = formatPhoneForWhatsApp(student.parent_phone);
-      // Use web.whatsapp.com on desktop and wa.me on mobile to avoid api.whatsapp.com redirect
-      // which gets blocked inside iframes (X-Frame-Options) and popup contexts
-      const isMobile = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       const waLink = waPhone
-        ? isMobile
-          ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`
-          : `https://web.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(message)}`
+        ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`
         : "";
 
       return {
