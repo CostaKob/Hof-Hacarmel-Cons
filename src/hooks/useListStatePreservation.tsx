@@ -48,7 +48,9 @@ export const useListStatePreservation = (key?: string) => {
     const prevRestoration = window.history.scrollRestoration;
     try {
       window.history.scrollRestoration = "manual";
-    } catch {}
+    } catch {
+      // Some browsers expose scrollRestoration as read-only.
+    }
 
     const saved = readSavedScroll(storageKey);
     let cancelled = false;
