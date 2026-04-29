@@ -48,7 +48,7 @@ const AdminTeachers = () => {
         <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="חיפוש לפי שם..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9 h-12 rounded-xl" />
+            <Input placeholder="חיפוש: שם, ת.ז, טלפון, אימייל, עיר..." value={search} onChange={(e) => setSearch(e.target.value)} className="pr-9 h-12 rounded-xl" />
           </div>
           <Select value={activeFilter} onValueChange={setActiveFilter}>
             <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue /></SelectTrigger>
