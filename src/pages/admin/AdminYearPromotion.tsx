@@ -215,10 +215,18 @@ const AdminYearPromotion = () => {
         .eq("id", studentId);
       if (error) throw error;
     },
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["year-promotion-students"] });
+    onMutate: () => {
+      // Capture scroll position before refetch causes re-render/reorder
+      return { scrollY: window.scrollY };
+    },
+    onSuccess: async (_data, variables, context) => {
+      await queryClient.invalidateQueries({ queryKey: ["year-promotion-students"] });
       setSelectedIds((prev) => new Set([...prev, variables.studentId]));
-      toast.success("הכיתה עודכנה והתלמיד הועבר לרשימת ההעברה");
+      // Restore scroll after DOM updates
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: context?.scrollY ?? 0, behavior: "instant" as ScrollBehavior });
+      });
+      toast.success("הכיתה עודכנה");
     },
     onError: () => toast.error("שגיאה בעדכון הכיתה"),
   });
