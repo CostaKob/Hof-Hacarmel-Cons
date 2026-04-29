@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { useListStatePreservation } from "@/hooks/useListStatePreservation";
+import { saveListScrollPosition, useListStatePreservation } from "@/hooks/useListStatePreservation";
 import AdminLayout from "@/components/admin/AdminLayout";
 
 import { Button } from "@/components/ui/button";
@@ -231,7 +231,10 @@ const AdminStudents = () => {
               return (
                 <div
                   key={r.id}
-                  onClick={() => navigate(`/admin/students/${r.students?.id}`)}
+                  onClick={() => {
+                    saveListScrollPosition("/admin/students");
+                    navigate(`/admin/students/${r.students?.id}`);
+                  }}
                   className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
