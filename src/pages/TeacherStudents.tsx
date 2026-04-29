@@ -301,17 +301,17 @@ const TeacherStudents = () => {
 
         {tab === "registration" && (
           <>
-            {!nextYear ? (
+            {!previousYear ? (
               <div className="rounded-2xl bg-card p-5 text-center text-muted-foreground border border-border shadow-sm">
-                לא הוגדרה שנת לימודים חדשה במערכת.
+                לא נמצאה שנת לימודים קודמת להשוואה.
               </div>
             ) : (
               <>
                 {/* Summary + copy link */}
                 <div className="rounded-2xl bg-card p-4 shadow-sm border border-border space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">משווה תלמידים מ־</span>
-                    <span className="font-semibold">{activeYear?.name} → {nextYear.name}</span>
+                    <span className="text-muted-foreground">תלמידים מ־</span>
+                    <span className="font-semibold">{previousYear.name} → {activeYear?.name}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-3 py-2.5 text-center">
