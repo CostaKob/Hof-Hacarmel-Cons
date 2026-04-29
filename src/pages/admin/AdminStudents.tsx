@@ -87,7 +87,7 @@ const AdminStudents = () => {
   const filtered = rows.filter((r: any) => {
     if (search) {
       const q = search.toLowerCase();
-      const searchStr = `${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""} ${r.students?.national_id ?? ""} ${r.students?.parent_name ?? ""} ${r.students?.parent_phone ?? ""} ${r.students?.phone ?? ""} ${r.grade ?? ""} ${r.students?.grade ?? ""}`.toLowerCase();
+      const searchStr = `${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""} ${r.students?.national_id ?? ""} ${r.students?.parent_name ?? ""} ${r.students?.parent_phone ?? ""} ${r.students?.phone ?? ""} ${r.grade ?? ""} ${r.students?.grade ?? ""} ${r.students?.city ?? ""} ${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""} ${r.schools?.name ?? ""} ${r.instruments?.name ?? ""} ${r.students?.playing_level ?? ""} ${r.lesson_duration_minutes ?? ""}`.toLowerCase();
       if (!searchStr.includes(q)) return false;
     }
     if (teacherFilter !== "all" && r.teachers?.id !== teacherFilter) return false;
@@ -110,7 +110,7 @@ const AdminStudents = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="חיפוש לפי שם, ת.ז, הורה, טלפון..."
+            placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, עיר, כלי..."
             value={search}
             onChange={(e) => setFilter("q", e.target.value)}
             className="pr-9 h-12 rounded-xl"

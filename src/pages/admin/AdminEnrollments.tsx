@@ -29,7 +29,7 @@ const AdminEnrollments = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("*, students(first_name, last_name, national_id, parent_name, parent_phone, phone, grade), teachers(first_name, last_name), instruments(name), schools(name)")
+        .select("*, students(first_name, last_name, national_id, parent_name, parent_phone, phone, grade, city), teachers(first_name, last_name), instruments(name), schools(name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -68,7 +68,7 @@ const AdminEnrollments = () => {
   const filtered = enrollments.filter((e: any) => {
     if (search) {
       const q = search.toLowerCase();
-      const searchStr = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""} ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""} ${e.students?.national_id ?? ""} ${e.students?.parent_name ?? ""} ${e.students?.parent_phone ?? ""} ${e.students?.phone ?? ""} ${e.grade ?? ""} ${e.students?.grade ?? ""}`.toLowerCase();
+      const searchStr = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""} ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""} ${e.students?.national_id ?? ""} ${e.students?.parent_name ?? ""} ${e.students?.parent_phone ?? ""} ${e.students?.phone ?? ""} ${e.grade ?? ""} ${e.students?.grade ?? ""} ${e.students?.city ?? ""} ${e.schools?.name ?? ""} ${e.instruments?.name ?? ""}`.toLowerCase();
       if (!searchStr.includes(q)) return false;
     }
     if (activeFilter === "active" && !e.is_active) return false;
@@ -86,7 +86,7 @@ const AdminEnrollments = () => {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="חיפוש לפי שם, ת.ז, הורה, טלפון..."
+              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, עיר, כלי..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pr-9 h-12 rounded-xl"

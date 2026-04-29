@@ -31,9 +31,8 @@ const AdminRegistrations = () => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (search) {
       const q = search.toLowerCase();
-      const fullName = `${r.student_first_name} ${r.student_last_name}`.toLowerCase();
-      if (!fullName.includes(q) && !r.parent_name?.toLowerCase().includes(q) && !r.student_national_id?.includes(q))
-        return false;
+      const searchStr = `${r.student_first_name ?? ""} ${r.student_last_name ?? ""} ${r.parent_name ?? ""} ${r.student_national_id ?? ""} ${r.parent_national_id ?? ""} ${r.parent_phone ?? ""} ${r.student_phone ?? ""} ${r.parent_email ?? ""} ${r.city ?? ""} ${r.grade ?? ""} ${r.branch_school_name ?? ""} ${r.student_school_text ?? ""} ${r.educational_school ?? ""}`.toLowerCase();
+      if (!searchStr.includes(q)) return false;
     }
     return true;
   });
@@ -48,7 +47,7 @@ const AdminRegistrations = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חיפוש לפי שם תלמיד, הורה או ת.ז..."
+              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, עיר, שלוחה..."
               className="pr-9 h-12 rounded-xl"
             />
           </div>
