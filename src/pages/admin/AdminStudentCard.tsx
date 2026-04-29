@@ -43,7 +43,7 @@ const AdminStudentCard = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
-  const { activeYear } = useAcademicYear();
+  const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
     mutationFn: async (newStatus: string) => {
@@ -126,16 +126,18 @@ const AdminStudentCard = () => {
   });
 
   const { data: enrollments = [] } = useQuery({
-    queryKey: ["admin-student-enrollments", studentId],
+    queryKey: ["admin-student-enrollments", studentId, selectedYearId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("enrollments")
         .select("*, schools(name), instruments(name), teachers(first_name, last_name), academic_years(name)")
         .eq("student_id", studentId!);
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
       if (error) throw error;
       return data;
     },
-    enabled: !!studentId,
+    enabled: !!studentId && !!selectedYearId,
   });
 
   const { data: notes = [] } = useQuery({
