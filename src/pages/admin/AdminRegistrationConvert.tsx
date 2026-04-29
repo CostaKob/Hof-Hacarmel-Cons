@@ -133,6 +133,21 @@ const AdminRegistrationConvert = () => {
     },
   });
 
+  // Existing student's enrollments in active year (to warn about duplicates)
+  const { data: existingEnrollments = [] } = useQuery({
+    queryKey: ["existing-enrollments-year", registration?.existing_student_id, activeYear?.id],
+    enabled: !!registration?.existing_student_id && !!activeYear?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, is_active, instrument_id, instruments(name), teachers(first_name, last_name), schools(name), lesson_duration_minutes")
+        .eq("student_id", registration!.existing_student_id)
+        .eq("academic_year_id", activeYear!.id);
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const { register, handleSubmit, reset, control, watch, formState: { errors } } = useForm<ConvertFormData>({
     defaultValues: {
       lesson_duration_minutes: "45",
@@ -299,7 +314,14 @@ const AdminRegistrationConvert = () => {
       toast.success("ההרשמה הומרה בהצלחה — תלמיד ושיוך נוצרו");
       navigate(`/admin/students/${studentId}`);
     },
-    onError: (err: any) => toast.error(err.message || "שגיאה בהמרת ההרשמה"),
+    onError: (err: any) => {
+      const msg = String(err?.message || "");
+      if (msg.includes("enrollments_student_instrument_year_unique") || (err?.code === "23505" && msg.includes("enrollments"))) {
+        toast.error("לתלמיד כבר קיים שיוך לכלי הזה בשנה הנוכחית. ערוך את השיוך הקיים או בחר כלי נגינה אחר.");
+      } else {
+        toast.error(msg || "שגיאה בהמרת ההרשמה");
+      }
+    },
   });
 
   if (regLoading) {
@@ -497,13 +519,52 @@ const AdminRegistrationConvert = () => {
             <CardHeader>
               <CardTitle className="text-base">תלמיד קיים — {existingStudent.first_name} {existingStudent.last_name}</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div><span className="text-muted-foreground">ת.ז.: </span>{existingStudent.national_id || "—"}</div>
                 <div><span className="text-muted-foreground">כיתה: </span>{existingStudent.grade || "—"}</div>
                 <div><span className="text-muted-foreground">ישוב: </span>{existingStudent.city || "—"}</div>
                 <div><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone || "—"}</div>
               </div>
+
+              {/* Existing enrollments in active year */}
+              {existingEnrollments.length > 0 && (
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-sm font-medium">
+                    שיוכים קיימים לשנה {activeYear?.name || "הפעילה"}:
+                  </p>
+                  <div className="space-y-1.5">
+                    {existingEnrollments.map((e: any) => (
+                      <div
+                        key={e.id}
+                        className="flex items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-2.5 text-sm"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium">
+                            {e.instruments?.name}
+                            {!e.is_active && <span className="text-xs text-muted-foreground"> (לא פעיל)</span>}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {e.teachers?.first_name} {e.teachers?.last_name} · {e.schools?.name} · {e.lesson_duration_minutes} דק׳
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0 h-9 rounded-lg"
+                          onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
+                        >
+                          ערוך
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-amber-600">
+                    שים לב: לא ניתן ליצור שיוך נוסף לאותו כלי באותה שנה. ערוך שיוך קיים או בחר כלי אחר.
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
