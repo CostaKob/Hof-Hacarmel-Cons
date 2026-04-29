@@ -14,14 +14,40 @@ export const useListStatePreservation = (key?: string) => {
   const restored = useRef(false);
 
   useEffect(() => {
-    // Restore on mount
+    // Disable browser's automatic scroll restoration so it doesn't fight us
+    const prevRestoration = window.history.scrollRestoration;
+    try {
+      window.history.scrollRestoration = "manual";
+    } catch {}
+
     const saved = scrollPositions.get(storageKey);
-    if (saved != null && !restored.current) {
+    let cancelled = false;
+
+    if (saved != null && saved > 0 && !restored.current) {
       restored.current = true;
-      // Wait for content render
-      requestAnimationFrame(() => {
-        window.scrollTo(0, saved);
-      });
+      // Poll until the document is tall enough to reach the saved position
+      // (lists fetch async, so content height grows after mount).
+      const start = performance.now();
+      const tryRestore = () => {
+        if (cancelled) return;
+        const maxScroll =
+          document.documentElement.scrollHeight - window.innerHeight;
+        if (maxScroll >= saved - 2) {
+          window.scrollTo(0, saved);
+          // Re-assert on the next frame in case layout shifts again
+          requestAnimationFrame(() => {
+            if (!cancelled) window.scrollTo(0, saved);
+          });
+          return;
+        }
+        if (performance.now() - start < 4000) {
+          requestAnimationFrame(tryRestore);
+        } else {
+          // Give up gracefully — scroll as far as possible
+          window.scrollTo(0, Math.min(saved, Math.max(maxScroll, 0)));
+        }
+      };
+      requestAnimationFrame(tryRestore);
     }
 
     const handleScroll = () => {
@@ -30,9 +56,12 @@ export const useListStatePreservation = (key?: string) => {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
+      cancelled = true;
       window.removeEventListener("scroll", handleScroll);
-      // Save final position
       scrollPositions.set(storageKey, window.scrollY);
+      try {
+        window.history.scrollRestoration = prevRestoration;
+      } catch {}
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
