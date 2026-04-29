@@ -99,18 +99,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Public Forms */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <ExternalLink className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground">טפסים ציבוריים</h2>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {FORM_LINKS.map((s) => (
-              <ExternalLinkCard key={s.href} item={s} />
-            ))}
-          </div>
-        </div>
       </div>
     </AdminLayout>
   );
