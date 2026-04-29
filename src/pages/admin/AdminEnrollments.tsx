@@ -29,7 +29,7 @@ const AdminEnrollments = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("*, students(first_name, last_name, national_id, parent_name, parent_phone, phone, grade), teachers(first_name, last_name), instruments(name), schools(name)")
+        .select("*, students(first_name, last_name, national_id, parent_name, parent_phone, phone, grade, city), teachers(first_name, last_name), instruments(name), schools(name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
