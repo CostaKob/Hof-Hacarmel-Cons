@@ -110,7 +110,7 @@ const AdminStudents = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="חיפוש לפי שם, ת.ז, הורה, טלפון..."
+            placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, עיר, כלי..."
             value={search}
             onChange={(e) => setFilter("q", e.target.value)}
             className="pr-9 h-12 rounded-xl"
