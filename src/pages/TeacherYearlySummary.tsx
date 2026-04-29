@@ -87,7 +87,11 @@ const TeacherYearlySummary = () => {
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
-      if (search && !r.studentName.includes(search)) return false;
+      if (search) {
+        const q = search.trim().toLowerCase();
+        const hay = `${r.studentName} ${r.schoolName} ${r.instrumentName}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
       if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
       if (activeFilter === "active" && !r.isActive) return false;
       if (activeFilter === "inactive" && r.isActive) return false;
