@@ -68,7 +68,7 @@ const AdminEnrollments = () => {
   const filtered = enrollments.filter((e: any) => {
     if (search) {
       const q = search.toLowerCase();
-      const searchStr = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""} ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""} ${e.students?.national_id ?? ""} ${e.students?.parent_name ?? ""} ${e.students?.parent_phone ?? ""} ${e.students?.phone ?? ""} ${e.grade ?? ""} ${e.students?.grade ?? ""}`.toLowerCase();
+      const searchStr = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""} ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""} ${e.students?.national_id ?? ""} ${e.students?.parent_name ?? ""} ${e.students?.parent_phone ?? ""} ${e.students?.phone ?? ""} ${e.grade ?? ""} ${e.students?.grade ?? ""} ${e.students?.city ?? ""} ${e.schools?.name ?? ""} ${e.instruments?.name ?? ""}`.toLowerCase();
       if (!searchStr.includes(q)) return false;
     }
     if (activeFilter === "active" && !e.is_active) return false;
