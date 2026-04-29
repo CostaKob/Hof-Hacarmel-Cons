@@ -47,7 +47,7 @@ const AdminRegistrations = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חיפוש לפי שם תלמיד, הורה או ת.ז..."
+              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, עיר, שלוחה..."
               className="pr-9 h-12 rounded-xl"
             />
           </div>
