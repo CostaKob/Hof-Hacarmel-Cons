@@ -115,7 +115,7 @@ const TeacherStudents = () => {
     return Array.from(map.values()).sort((a, b) =>
       `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, "he")
     );
-  }, [enrollments]);
+  }, [previousYearEnrollments]);
 
   const registrationRows = useMemo(() => {
     return previousYearStudents.map((s) => ({
@@ -174,6 +174,7 @@ const TeacherStudents = () => {
   }, [enrollments, search, schoolFilter, instrumentFilter, activeFilter]);
 
   const isLoading = teacherLoading || enrollmentsLoading;
+  const registrationLoading = teacherLoading || prevLoading;
 
   const registrationLink = activeYear
     ? `${window.location.origin}/register?year=${encodeURIComponent(activeYear.name)}`
@@ -350,7 +351,7 @@ const TeacherStudents = () => {
                 </div>
 
                 {/* List */}
-                {isLoading ? (
+                {registrationLoading ? (
                   <p className="text-center text-muted-foreground py-8">טוען...</p>
                 ) : registrationFiltered.length === 0 ? (
                   <p className="text-center text-muted-foreground py-8">אין תלמידים להצגה</p>
