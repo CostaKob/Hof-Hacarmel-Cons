@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,17 +14,21 @@ import { useListStatePreservation, usePersistedState } from "@/hooks/useListStat
 
 const AdminRegistrations = () => {
   const navigate = useNavigate();
+  const { selectedYearId, years } = useAcademicYear();
+  const selectedYear = years.find((y) => y.id === selectedYearId);
   useListStatePreservation("/admin/registrations");
   const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
   const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
-    queryKey: ["admin-registrations"],
+    queryKey: ["admin-registrations", selectedYearId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from("registrations" as any)
         .select("*")
         .order("created_at", { ascending: false });
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
       if (error) throw error;
       return data as any[];
     },
@@ -93,7 +98,11 @@ const AdminRegistrations = () => {
         {isLoading ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
         ) : filtered.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">לא נמצאו הרשמות</p>
+          <p className="text-center text-muted-foreground py-8">
+            {registrations.length === 0 && selectedYear
+              ? `אין הרשמות לשנת ${selectedYear.name}`
+              : "לא נמצאו הרשמות"}
+          </p>
         ) : (
           <div className="space-y-2">
             {filtered.map((r, idx) => {
