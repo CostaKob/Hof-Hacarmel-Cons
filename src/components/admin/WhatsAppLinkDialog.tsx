@@ -223,8 +223,13 @@ const WhatsAppLinkDialog = ({
         : `${baseUrl}/register?yearId=${nextYear?.id || ""}`;
       const message = buildMessage(template, student, yearName, link);
       const waPhone = formatPhoneForWhatsApp(student.parent_phone);
+      // Use web.whatsapp.com on desktop and wa.me on mobile to avoid api.whatsapp.com redirect
+      // which gets blocked inside iframes (X-Frame-Options) and popup contexts
+      const isMobile = typeof navigator !== "undefined" && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       const waLink = waPhone
-        ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`
+        ? isMobile
+          ? `https://wa.me/${waPhone}?text=${encodeURIComponent(message)}`
+          : `https://web.whatsapp.com/send?phone=${waPhone}&text=${encodeURIComponent(message)}`
         : "";
 
       return {
@@ -277,19 +282,25 @@ const WhatsAppLinkDialog = ({
     });
   };
 
-  const handleSendAll = () => {
+  const handleSendAll = async () => {
     const sent: Array<{ name: string; phone: string }> = [];
     const failed: Array<{ name: string; reason: string }> = [];
 
-    selectedMessages.forEach((messageItem) => {
+    for (const messageItem of selectedMessages) {
       const name = `${messageItem.student.first_name} ${messageItem.student.last_name}`;
       if (!messageItem.hasPhone) {
         failed.push({ name, reason: "ללא מספר טלפון הורה" });
-        return;
+        continue;
       }
-      window.open(messageItem.waLink, "_blank");
-      sent.push({ name, phone: messageItem.student.parent_phone || "" });
-    });
+      const win = window.open(messageItem.waLink, "_blank", "noopener,noreferrer");
+      if (!win) {
+        failed.push({ name, reason: "הדפדפן חסם פתיחת חלון - יש לאשר חלונות קופצים" });
+      } else {
+        sent.push({ name, phone: messageItem.student.parent_phone || "" });
+      }
+      // Small delay to avoid popup blocker on rapid sequential opens
+      await new Promise((r) => setTimeout(r, 250));
+    }
 
     setSendSummary({ sent, failed });
     setShowConfirm(false);
