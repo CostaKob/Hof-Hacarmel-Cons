@@ -60,8 +60,6 @@ export const setPersistedState = (
   stateStore.set(key, { ...prev, ...patch });
 };
 
-import { useState as useReactState, useEffect as useReactEffect } from "react";
-
 /**
  * Drop-in replacement for useState that persists value in module memory
  * keyed by `${routeKey}:${field}`. Survives unmount during in-app nav.
@@ -73,9 +71,9 @@ export const usePersistedState = <T,>(
 ): [T, (v: T | ((prev: T) => T)) => void] => {
   const fullKey = `${routeKey}::${field}`;
   const saved = stateStore.get(fullKey)?.value as T | undefined;
-  const [value, setValue] = useReactState<T>(saved !== undefined ? saved : initial);
+  const [value, setValue] = useState<T>(saved !== undefined ? saved : initial);
 
-  useReactEffect(() => {
+  useEffect(() => {
     stateStore.set(fullKey, { value });
   }, [fullKey, value]);
 
