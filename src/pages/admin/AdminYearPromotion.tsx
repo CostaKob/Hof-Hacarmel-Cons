@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { GRADES, GRADE_PROMOTION } from "@/lib/constants";
-import { Search, GraduationCap, Users, Edit2 } from "lucide-react";
+import { Search, GraduationCap, Users, ArrowUpCircle, Loader2 } from "lucide-react";
 
 const AdminYearPromotion = () => {
   const queryClient = useQueryClient();
@@ -404,6 +404,26 @@ const AdminYearPromotion = () => {
           </TabsContent>
         </Tabs>
 
+        {/* Promote button - sticky */}
+        <div className="sticky bottom-20 md:bottom-4 z-10">
+          <Button
+            onClick={() => promoteMutation.mutate()}
+            disabled={promoteMutation.isPending || !nextYear || selectedIds.size === 0}
+            className="w-full h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-2xl shadow-lg gap-2"
+          >
+            {promoteMutation.isPending ? (
+              <>
+                <Loader2 className="h-5 w-5 animate-spin shrink-0" />
+                מעבד...
+              </>
+            ) : (
+              <>
+                <ArrowUpCircle className="h-5 w-5 shrink-0" />
+                <span className="truncate">העלה כיתות לשנה {nextYear?.name || "הבאה"} ({selectedIds.size})</span>
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </AdminLayout>
   );
