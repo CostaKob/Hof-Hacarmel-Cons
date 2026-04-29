@@ -104,7 +104,7 @@ const AdminStudents = () => {
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
     if (gradeFilter !== "all") {
       const stripMarks = (s: string) => (s ?? "").replace(/['"׳״']/g, "").trim();
-      const rowGrade = stripMarks(r.grade ?? r.students?.grade ?? "");
+      const rowGrade = stripMarks(r.students?.grade ?? "");
       if (rowGrade !== stripMarks(gradeFilter)) return false;
     }
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
