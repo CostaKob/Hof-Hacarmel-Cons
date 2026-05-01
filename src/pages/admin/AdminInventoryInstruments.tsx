@@ -30,6 +30,7 @@ const AdminInventoryInstruments = () => {
   const [filterCondition, setFilterCondition] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
