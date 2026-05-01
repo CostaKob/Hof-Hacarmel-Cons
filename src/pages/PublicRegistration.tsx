@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle, UserCheck } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { KNOWN_KEYS_SET } from "@/lib/registrationFieldKeys";
+import { CitySelect } from "@/components/CitySelect";
 import { normalizePhone } from "@/lib/phoneValidation";
 
 interface FieldDef {
@@ -996,9 +997,13 @@ const DynamicField = ({
   error?: string;
   options: FieldOption[];
 }) => {
-  const { field_type, label, is_required, placeholder, help_text } = field;
+  const { field_type, field_key, label, is_required, placeholder, help_text } = field;
 
   const renderInput = () => {
+    // Special-case: city always uses the managed-list picker with "Other" fallback
+    if (field_key === "city") {
+      return <CitySelect value={value || ""} onChange={onChange} onBlur={onBlur} placeholder={placeholder || "בחרו ישוב"} />;
+    }
     switch (field_type) {
       case "text":
       case "number":
