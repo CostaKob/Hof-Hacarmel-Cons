@@ -173,6 +173,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
                     {availableInstruments.map((it: any) => (
                       <SelectItem key={it.id} value={it.id}>
                         {it.instruments?.name} #{it.serial_number}
+                        {it.size && ` (${it.size})`}
                         {(it.brand || it.model) && ` — ${[it.brand, it.model].filter(Boolean).join(" ")}`}
                       </SelectItem>
                     ))}
