@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft, Trash2, MapPin } from "lucide-react";
+import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload } from "lucide-react";
+import InventoryImportDialog from "@/components/admin/InventoryImportDialog";
 import {
   AlertDialog,
   AlertDialogAction,
