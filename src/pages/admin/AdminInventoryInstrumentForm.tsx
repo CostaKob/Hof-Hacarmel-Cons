@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition } from "@/lib/instrumentInventory";
+import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
 import { User, ExternalLink } from "lucide-react";
 
 interface FormData {
@@ -20,6 +20,7 @@ interface FormData {
   serial_number: string;
   brand: string;
   model: string;
+  size: string | null;
   condition: InstrumentCondition;
   storage_location_id: string | null;
   purchase_date: string;
