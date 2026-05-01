@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { GRADES, PLAYING_LEVELS, STUDENT_STATUSES } from "@/lib/constants";
+import { CitySelect } from "@/components/CitySelect";
 
 const GENDERS = [
   { value: "male", label: "זכר" },
@@ -144,7 +145,6 @@ const AdminStudentForm = () => {
     { name: "date_of_birth", label: "תאריך לידה", type: "date" },
     { name: "phone", label: "נייד תלמיד", type: "tel" },
     { name: "address", label: "כתובת" },
-    { name: "city", label: "עיר" },
   ];
 
   const PARENT_FIELDS: { name: keyof StudentFormData; label: string; type?: string }[] = [
@@ -186,6 +186,18 @@ const AdminStudentForm = () => {
                 {errors[f.name] && <p className="text-sm text-destructive">{errors[f.name]?.message}</p>}
               </div>
             ))}
+
+            {/* City picker */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">עיר</Label>
+              <Controller
+                name="city"
+                control={control}
+                render={({ field }) => (
+                  <CitySelect value={field.value} onChange={field.onChange} />
+                )}
+              />
+            </div>
 
             {/* Gender dropdown */}
             <div className="space-y-1.5">

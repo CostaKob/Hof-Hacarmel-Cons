@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import AppLogo from "@/components/AppLogo";
+import { CitySelect } from "@/components/CitySelect";
 
 /* ── helpers ── */
 
@@ -500,7 +501,7 @@ const SchoolMusicRegister = () => {
             </Field>
 
             <Field id="city" label="ישוב מגורים">
-              <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
+              <CitySelect id="city" value={form.city} onChange={(v) => updateField("city", v)} />
             </Field>
 
             <hr className="my-2" />

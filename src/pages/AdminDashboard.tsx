@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
-import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink } from "lucide-react";
+import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin } from "lucide-react";
 
 const MAIN_SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
@@ -14,6 +14,7 @@ const DATA_SECTIONS = [
   { path: "/admin/schools", label: "שלוחות", description: "ניהול שלוחות לימוד וכתובות", icon: School },
   { path: "/admin/educational-schools", label: "בתי ספר", description: "ניהול בתי ספר ללימודי בוקר", icon: School },
   { path: "/admin/instruments", label: "כלי נגינה", description: "ניהול כלי נגינה", icon: Music },
+  { path: "/admin/cities", label: "ישובי מגורים", description: "ניהול רשימת הישובים בטפסי ההרשמה", icon: MapPin },
 ];
 
 const TOOLS_SECTIONS = [
