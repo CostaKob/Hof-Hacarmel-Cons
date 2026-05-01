@@ -66,6 +66,9 @@ import AdminGradeCorrection from "./pages/admin/AdminGradeCorrection";
 import AdminGradeFixer from "./pages/admin/AdminGradeFixer";
 import AdminGradeImport from "./pages/admin/AdminGradeImport";
 import AdminCities from "./pages/admin/AdminCities";
+import AdminInventoryInstruments from "./pages/admin/AdminInventoryInstruments";
+import AdminInventoryInstrumentForm from "./pages/admin/AdminInventoryInstrumentForm";
+import AdminInstrumentStorageLocations from "./pages/admin/AdminInstrumentStorageLocations";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
