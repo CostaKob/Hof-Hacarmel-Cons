@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft, Trash2, MapPin } from "lucide-react";
+import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload } from "lucide-react";
+import InventoryImportDialog from "@/components/admin/InventoryImportDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +30,7 @@ const AdminInventoryInstruments = () => {
   const [filterCondition, setFilterCondition] = useState<string>("all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
@@ -133,6 +135,13 @@ const AdminInventoryInstruments = () => {
           <Button
             variant="outline"
             className="h-12 rounded-xl text-base"
+            onClick={() => setImportOpen(true)}
+          >
+            <Upload className="h-4 w-4" /> ייבוא מאקסל
+          </Button>
+          <Button
+            variant="outline"
+            className="h-12 rounded-xl text-base"
             onClick={() => navigate("/admin/instrument-storage-locations")}
           >
             <MapPin className="h-4 w-4" /> מיקומי אחסון
@@ -194,6 +203,7 @@ const AdminInventoryInstruments = () => {
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="font-semibold text-foreground">{it.instruments?.name}</span>
                     <span className="text-sm text-muted-foreground">#{it.serial_number}</span>
+                    {it.size && <Badge variant="outline" className="text-[10px]">גודל {it.size}</Badge>}
                     <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
                       {CONDITION_LABELS[it.condition as InstrumentCondition]}
                     </Badge>
@@ -250,6 +260,8 @@ const AdminInventoryInstruments = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <InventoryImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
   );
 };

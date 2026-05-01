@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition } from "@/lib/instrumentInventory";
+import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
 import { User, ExternalLink } from "lucide-react";
 
 interface FormData {
@@ -20,6 +20,7 @@ interface FormData {
   serial_number: string;
   brand: string;
   model: string;
+  size: string | null;
   condition: InstrumentCondition;
   storage_location_id: string | null;
   purchase_date: string;
@@ -96,6 +97,7 @@ const AdminInventoryInstrumentForm = () => {
         serial_number: item.serial_number,
         brand: item.brand || "",
         model: item.model || "",
+        size: item.size || null,
         condition: item.condition,
         storage_location_id: item.storage_location_id,
         purchase_date: item.purchase_date || "",
@@ -111,6 +113,7 @@ const AdminInventoryInstrumentForm = () => {
         serial_number: data.serial_number.trim(),
         brand: data.brand.trim() || null,
         model: data.model.trim() || null,
+        size: data.size || null,
         condition: data.condition,
         storage_location_id: data.storage_location_id || null,
         purchase_date: data.purchase_date || null,
@@ -181,6 +184,27 @@ const AdminInventoryInstrumentForm = () => {
             <div className="space-y-1.5">
               <Label className="text-sm">דגם</Label>
               <Input {...register("model")} className="h-12 rounded-xl" />
+            </div>
+
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-sm">גודל (לכלים מתאימים: כינור, צ'לו וכו')</Label>
+              <Controller
+                name="size"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="ללא גודל" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">ללא גודל</SelectItem>
+                      {INSTRUMENT_SIZES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             <div className="space-y-1.5">

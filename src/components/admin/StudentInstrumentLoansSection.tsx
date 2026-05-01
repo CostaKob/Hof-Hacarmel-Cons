@@ -37,7 +37,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
         .from("instrument_loans")
         .select(`
           *,
-          inventory_instruments(id, serial_number, brand, model, condition, instruments(name))
+          inventory_instruments(id, serial_number, brand, model, size, condition, instruments(name))
         `)
         .eq(filterColumn, studentId)
         .order("loan_date", { ascending: false });
@@ -60,7 +60,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
     queryFn: async () => {
       let q = supabase
         .from("inventory_instruments")
-        .select("id, serial_number, brand, model, instruments(name)")
+        .select("id, serial_number, brand, model, size, instruments(name)")
         .eq("condition", "available")
         .order("created_at", { ascending: false });
       if (selectedInstrumentType !== "all") q = q.eq("instrument_id", selectedInstrumentType);
@@ -173,6 +173,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
                     {availableInstruments.map((it: any) => (
                       <SelectItem key={it.id} value={it.id}>
                         {it.instruments?.name} #{it.serial_number}
+                        {it.size && ` (${it.size})`}
                         {(it.brand || it.model) && ` — ${[it.brand, it.model].filter(Boolean).join(" ")}`}
                       </SelectItem>
                     ))}
@@ -218,6 +219,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-foreground">{inv?.instruments?.name}</span>
                       <span className="text-sm text-muted-foreground">#{inv?.serial_number}</span>
+                      {inv?.size && <Badge variant="outline" className="text-[10px]">גודל {inv.size}</Badge>}
                       <ExternalLink className="h-3 w-3 text-muted-foreground" />
                     </div>
                     {(inv?.brand || inv?.model) && (
