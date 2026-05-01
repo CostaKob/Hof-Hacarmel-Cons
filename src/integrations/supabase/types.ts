@@ -476,6 +476,7 @@ export type Database = {
           notes: string | null
           purchase_date: string | null
           serial_number: string
+          size: string | null
           storage_location_id: string | null
           updated_at: string
         }
@@ -489,6 +490,7 @@ export type Database = {
           notes?: string | null
           purchase_date?: string | null
           serial_number: string
+          size?: string | null
           storage_location_id?: string | null
           updated_at?: string
         }
@@ -502,6 +504,7 @@ export type Database = {
           notes?: string | null
           purchase_date?: string | null
           serial_number?: string
+          size?: string | null
           storage_location_id?: string | null
           updated_at?: string
         }
@@ -1853,7 +1856,11 @@ export type Database = {
         | "large_ensemble"
         | "small_ensemble"
         | "chamber_ensemble"
-      instrument_condition: "available" | "loaned" | "in_repair" | "unusable"
+      instrument_condition:
+        | "available"
+        | "loaned"
+        | "in_repair"
+        | "needs_repair"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
       registration_status:
@@ -2017,7 +2024,12 @@ export const Constants = {
         "small_ensemble",
         "chamber_ensemble",
       ],
-      instrument_condition: ["available", "loaned", "in_repair", "unusable"],
+      instrument_condition: [
+        "available",
+        "loaned",
+        "in_repair",
+        "needs_repair",
+      ],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],
       registration_status: [
