@@ -14,6 +14,7 @@ const DATA_SECTIONS = [
   { path: "/admin/schools", label: "שלוחות", description: "ניהול שלוחות לימוד וכתובות", icon: School },
   { path: "/admin/educational-schools", label: "בתי ספר", description: "ניהול בתי ספר ללימודי בוקר", icon: School },
   { path: "/admin/instruments", label: "כלי נגינה", description: "ניהול כלי נגינה", icon: Music },
+  { path: "/admin/inventory-instruments", label: "מאגר כלי נגינה", description: "ניהול מלאי הכלים, מספרים סידוריים והשאלות", icon: Guitar },
   { path: "/admin/cities", label: "ישובי מגורים", description: "ניהול רשימת הישובים בטפסי ההרשמה", icon: MapPin },
 ];
 
