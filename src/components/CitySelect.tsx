@@ -25,9 +25,8 @@ export function CitySelect({ id, value, onChange, onBlur, placeholder = "בחר�
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cities")
-        .select("id, name, sort_order")
+        .select("id, name")
         .eq("is_active", true)
-        .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
       return data ?? [];
