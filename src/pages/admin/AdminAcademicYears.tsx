@@ -237,7 +237,8 @@ const AdminAcademicYears = () => {
             size="sm"
             className="rounded-lg text-xs h-8 gap-1"
             onClick={() => {
-              const url = `${window.location.origin}/school-music-register?year=${encodeURIComponent(y.name)}`;
+              const origin = window.location.hostname.includes("lovable") ? "https://musichof.com" : window.location.origin;
+              const url = `${origin}/school-music-register?year=${encodeURIComponent(y.name)}`;
               navigator.clipboard.writeText(url);
               toast.success("קישור בית ספר מנגן הועתק");
             }}
@@ -250,7 +251,8 @@ const AdminAcademicYears = () => {
             size="sm"
             className="rounded-lg text-xs h-8 gap-1"
             onClick={() => {
-              const url = `${window.location.origin}/register?year=${encodeURIComponent(y.name)}`;
+              const origin = window.location.hostname.includes("lovable") ? "https://musichof.com" : window.location.origin;
+              const url = `${origin}/register?year=${encodeURIComponent(y.name)}`;
               navigator.clipboard.writeText(url);
               toast.success("קישור שיעורים פרטיים הועתק");
             }}
