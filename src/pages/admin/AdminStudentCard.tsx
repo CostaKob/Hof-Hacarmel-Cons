@@ -18,6 +18,7 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
@@ -324,6 +325,8 @@ const AdminStudentCard = () => {
             )}
           </div>
         )}
+
+        <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <h2 className="font-semibold text-foreground text-base">הערות ({notes.length})</h2>

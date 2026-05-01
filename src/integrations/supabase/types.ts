@@ -371,6 +371,82 @@ export type Database = {
           },
         ]
       }
+      instrument_loans: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_instrument_id: string
+          loan_date: string
+          notes: string | null
+          return_date: string | null
+          school_music_student_id: string | null
+          student_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_instrument_id: string
+          loan_date?: string
+          notes?: string | null
+          return_date?: string | null
+          school_music_student_id?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_instrument_id?: string
+          loan_date?: string
+          notes?: string | null
+          return_date?: string | null
+          school_music_student_id?: string | null
+          student_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instrument_loans_inventory_instrument_id_fkey"
+            columns: ["inventory_instrument_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instrument_loans_school_music_student_id_fkey"
+            columns: ["school_music_student_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instrument_loans_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instrument_storage_locations: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       instruments: {
         Row: {
           created_at: string
@@ -388,6 +464,63 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      inventory_instruments: {
+        Row: {
+          brand: string | null
+          condition: Database["public"]["Enums"]["instrument_condition"]
+          created_at: string
+          id: string
+          instrument_id: string
+          model: string | null
+          notes: string | null
+          purchase_date: string | null
+          serial_number: string
+          storage_location_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand?: string | null
+          condition?: Database["public"]["Enums"]["instrument_condition"]
+          created_at?: string
+          id?: string
+          instrument_id: string
+          model?: string | null
+          notes?: string | null
+          purchase_date?: string | null
+          serial_number: string
+          storage_location_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand?: string | null
+          condition?: Database["public"]["Enums"]["instrument_condition"]
+          created_at?: string
+          id?: string
+          instrument_id?: string
+          model?: string | null
+          notes?: string | null
+          purchase_date?: string | null
+          serial_number?: string
+          storage_location_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_instruments_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_instruments_storage_location_id_fkey"
+            columns: ["storage_location_id"]
+            isOneToOne: false
+            referencedRelation: "instrument_storage_locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -1720,6 +1853,7 @@ export type Database = {
         | "large_ensemble"
         | "small_ensemble"
         | "chamber_ensemble"
+      instrument_condition: "available" | "loaned" | "in_repair" | "unusable"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
       registration_status:
@@ -1883,6 +2017,7 @@ export const Constants = {
         "small_ensemble",
         "chamber_ensemble",
       ],
+      instrument_condition: ["available", "loaned", "in_repair", "unusable"],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],
       registration_status: [

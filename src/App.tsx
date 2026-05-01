@@ -66,6 +66,9 @@ import AdminGradeCorrection from "./pages/admin/AdminGradeCorrection";
 import AdminGradeFixer from "./pages/admin/AdminGradeFixer";
 import AdminGradeImport from "./pages/admin/AdminGradeImport";
 import AdminCities from "./pages/admin/AdminCities";
+import AdminInventoryInstruments from "./pages/admin/AdminInventoryInstruments";
+import AdminInventoryInstrumentForm from "./pages/admin/AdminInventoryInstrumentForm";
+import AdminInstrumentStorageLocations from "./pages/admin/AdminInstrumentStorageLocations";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -122,6 +125,10 @@ const App = () => (
               <Route path="/admin/year-grade-fixer" element={<AdminRoute><AdminGradeFixer /></AdminRoute>} />
               <Route path="/admin/grade-import" element={<AdminRoute><AdminGradeImport /></AdminRoute>} />
               <Route path="/admin/cities" element={<AdminRoute><AdminCities /></AdminRoute>} />
+              <Route path="/admin/inventory-instruments" element={<AdminRoute><AdminInventoryInstruments /></AdminRoute>} />
+              <Route path="/admin/inventory-instruments/new" element={<AdminRoute><AdminInventoryInstrumentForm /></AdminRoute>} />
+              <Route path="/admin/inventory-instruments/:id/edit" element={<AdminRoute><AdminInventoryInstrumentForm /></AdminRoute>} />
+              <Route path="/admin/instrument-storage-locations" element={<AdminRoute><AdminInstrumentStorageLocations /></AdminRoute>} />
               <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
               <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
               <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
