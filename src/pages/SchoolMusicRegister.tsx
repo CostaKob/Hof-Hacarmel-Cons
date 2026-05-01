@@ -500,7 +500,7 @@ const SchoolMusicRegister = () => {
             </Field>
 
             <Field id="city" label="ישוב מגורים">
-              <Input id="city" value={form.city} onChange={(e) => updateField("city", e.target.value)} />
+              <CitySelect id="city" value={form.city} onChange={(v) => updateField("city", v)} />
             </Field>
 
             <hr className="my-2" />

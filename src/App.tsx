@@ -121,6 +121,7 @@ const App = () => (
               <Route path="/admin/grade-correction" element={<AdminRoute><AdminGradeCorrection /></AdminRoute>} />
               <Route path="/admin/year-grade-fixer" element={<AdminRoute><AdminGradeFixer /></AdminRoute>} />
               <Route path="/admin/grade-import" element={<AdminRoute><AdminGradeImport /></AdminRoute>} />
+              <Route path="/admin/cities" element={<AdminRoute><AdminCities /></AdminRoute>} />
               <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
               <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
               <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
