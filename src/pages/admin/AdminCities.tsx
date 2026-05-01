@@ -30,7 +30,6 @@ const AdminCities = () => {
       const { data, error } = await supabase
         .from("cities")
         .select("*")
-        .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
       if (error) throw error;
       return data as City[];
@@ -41,8 +40,7 @@ const AdminCities = () => {
     mutationFn: async (name: string) => {
       const trimmed = name.trim();
       if (!trimmed) throw new Error("שם הישוב חסר");
-      const maxOrder = cities.reduce((m, c) => Math.max(m, c.sort_order), 0);
-      const { error } = await supabase.from("cities").insert({ name: trimmed, sort_order: maxOrder + 10 });
+      const { error } = await supabase.from("cities").insert({ name: trimmed });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -133,7 +131,6 @@ const AdminCities = () => {
               {cities.map((c) => {
                 const draft = edits[c.id] ?? {};
                 const name = draft.name ?? c.name;
-                const sortOrder = draft.sort_order ?? c.sort_order;
                 const isActive = draft.is_active ?? c.is_active;
                 return (
                   <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-3 bg-background">
@@ -141,13 +138,6 @@ const AdminCities = () => {
                       value={name}
                       onChange={(e) => setEdit(c.id, { name: e.target.value })}
                       className="h-10 rounded-lg flex-1 min-w-40"
-                    />
-                    <Input
-                      type="number"
-                      value={sortOrder}
-                      onChange={(e) => setEdit(c.id, { sort_order: Number(e.target.value) || 0 })}
-                      className="h-10 rounded-lg w-20"
-                      title="סדר תצוגה"
                     />
                     <div className="flex items-center gap-2 px-2">
                       <Switch
