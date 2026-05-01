@@ -60,7 +60,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
     queryFn: async () => {
       let q = supabase
         .from("inventory_instruments")
-        .select("id, serial_number, brand, model, instruments(name)")
+        .select("id, serial_number, brand, model, size, instruments(name)")
         .eq("condition", "available")
         .order("created_at", { ascending: false });
       if (selectedInstrumentType !== "all") q = q.eq("instrument_id", selectedInstrumentType);
