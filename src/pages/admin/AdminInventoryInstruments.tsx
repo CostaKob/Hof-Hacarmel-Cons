@@ -135,6 +135,13 @@ const AdminInventoryInstruments = () => {
           <Button
             variant="outline"
             className="h-12 rounded-xl text-base"
+            onClick={() => setImportOpen(true)}
+          >
+            <Upload className="h-4 w-4" /> ייבוא מאקסל
+          </Button>
+          <Button
+            variant="outline"
+            className="h-12 rounded-xl text-base"
             onClick={() => navigate("/admin/instrument-storage-locations")}
           >
             <MapPin className="h-4 w-4" /> מיקומי אחסון
