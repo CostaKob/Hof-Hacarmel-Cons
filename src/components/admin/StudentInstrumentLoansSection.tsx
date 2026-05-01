@@ -219,6 +219,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-foreground">{inv?.instruments?.name}</span>
                       <span className="text-sm text-muted-foreground">#{inv?.serial_number}</span>
+                      {inv?.size && <Badge variant="outline" className="text-[10px]">גודל {inv.size}</Badge>}
                       <ExternalLink className="h-3 w-3 text-muted-foreground" />
                     </div>
                     {(inv?.brand || inv?.model) && (
