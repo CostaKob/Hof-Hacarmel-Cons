@@ -194,6 +194,7 @@ const AdminInventoryInstruments = () => {
                   <div className="flex flex-wrap items-center gap-2 mb-1">
                     <span className="font-semibold text-foreground">{it.instruments?.name}</span>
                     <span className="text-sm text-muted-foreground">#{it.serial_number}</span>
+                    {it.size && <Badge variant="outline" className="text-[10px]">גודל {it.size}</Badge>}
                     <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
                       {CONDITION_LABELS[it.condition as InstrumentCondition]}
                     </Badge>
