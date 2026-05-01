@@ -37,7 +37,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
         .from("instrument_loans")
         .select(`
           *,
-          inventory_instruments(id, serial_number, brand, model, condition, instruments(name))
+          inventory_instruments(id, serial_number, brand, model, size, condition, instruments(name))
         `)
         .eq(filterColumn, studentId)
         .order("loan_date", { ascending: false });
