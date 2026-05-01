@@ -18,6 +18,7 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
