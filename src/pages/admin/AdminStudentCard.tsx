@@ -326,6 +326,8 @@ const AdminStudentCard = () => {
           </div>
         )}
 
+        <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
+
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <h2 className="font-semibold text-foreground text-base">הערות ({notes.length})</h2>
           {notes.length === 0 ? (
