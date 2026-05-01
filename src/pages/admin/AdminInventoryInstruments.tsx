@@ -260,6 +260,8 @@ const AdminInventoryInstruments = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <InventoryImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
   );
 };
