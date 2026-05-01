@@ -186,6 +186,27 @@ const AdminInventoryInstrumentForm = () => {
               <Input {...register("model")} className="h-12 rounded-xl" />
             </div>
 
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label className="text-sm">גודל (לכלים מתאימים: כינור, צ'לו וכו')</Label>
+              <Controller
+                name="size"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}>
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue placeholder="ללא גודל" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">ללא גודל</SelectItem>
+                      {INSTRUMENT_SIZES.map((s) => (
+                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
             <div className="space-y-1.5">
               <Label className="text-sm">מצב *</Label>
               <Controller
