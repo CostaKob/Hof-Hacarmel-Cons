@@ -84,8 +84,20 @@ const AdminStudents = () => {
     return new Set<string>(yearPayments.map((p: any) => p.enrollment_id).filter(Boolean));
   }, [yearPayments]);
 
-  const teachers = [...new Map(rows.map((r: any) => [r.teachers?.id, r.teachers] as [string, any]).filter(([id]) => id)).values()]
-    .sort((a: any, b: any) => `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he"));
+  const { data: allTeachers = [] } = useQuery({
+    queryKey: ["admin-students-all-teachers"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("teachers")
+        .select("id, first_name, last_name")
+        .eq("is_active", true);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const teachers = [...allTeachers].sort((a: any, b: any) =>
+    `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he")
+  );
   const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()]
     .sort((a: any, b: any) => (a.name ?? "").localeCompare(b.name ?? "", "he"));
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
