@@ -102,13 +102,25 @@ const AdminTeachers = () => {
                     <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
                       {t.phone && <span>{t.phone}</span>}
                       {t.city && <><span>·</span><span>{t.city}</span></>}
-                      {(() => {
-                        const names = (((t as any).teacher_instruments ?? []) as any[])
-                          .map((ti) => ti?.instrument?.name)
-                          .filter(Boolean);
-                        return names.length > 0 ? (<><span>·</span><span>{names.join(", ")}</span></>) : null;
-                      })()}
                     </div>
+                    {(() => {
+                      const names = (((t as any).teacher_instruments ?? []) as any[])
+                        .map((ti) => ti?.instrument?.name)
+                        .filter(Boolean);
+                      if (names.length === 0) return null;
+                      return (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {names.map((n: string) => (
+                            <span
+                              key={n}
+                              className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 text-xs font-medium"
+                            >
+                              🎵 {n}
+                            </span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
