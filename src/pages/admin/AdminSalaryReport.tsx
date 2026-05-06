@@ -102,9 +102,9 @@ const AdminSalaryReport = () => {
   const { data: teachers } = useQuery({
     queryKey: ["salary-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id, is_freelance, is_office").eq("is_active", true).order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, national_id, is_freelance, is_office").eq("is_active", true);
       if (error) throw error;
-      return data ?? [];
+      return [...(data ?? [])].sort((a: any, b: any) => `${a.last_name || ""} ${a.first_name || ""}`.localeCompare(`${b.last_name || ""} ${b.first_name || ""}`, "he"));
     },
   });
 

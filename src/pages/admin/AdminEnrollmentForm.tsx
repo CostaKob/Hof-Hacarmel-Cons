@@ -83,27 +83,31 @@ const AdminEnrollmentForm = () => {
   const { data: students = [] } = useQuery({
     queryKey: ["admin-students-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("students").select("id, first_name, last_name").order("last_name");
+      const { data, error } = await supabase.from("students").select("id, first_name, last_name");
       if (error) throw error;
-      return data;
+      return (data || []).sort((a, b) =>
+        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
+      );
     },
   });
 
   const { data: teachers = [] } = useQuery({
     queryKey: ["admin-teachers-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name");
       if (error) throw error;
-      return data;
+      return (data || []).sort((a, b) =>
+        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
+      );
     },
   });
 
   const { data: instruments = [] } = useQuery({
     queryKey: ["admin-instruments-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return (data || []).sort((a, b) => a.name.localeCompare(b.name, "he"));
     },
   });
 

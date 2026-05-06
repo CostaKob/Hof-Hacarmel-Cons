@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft } from "lucide-react";
+import { sortByName, sortByPerson } from "@/lib/sortHebrew";
 
 const ROLE_LABELS: Record<string, string> = { primary: "ראשי", secondary: "משני" };
 const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "קבוצתי" };
@@ -43,27 +44,27 @@ const AdminEnrollments = () => {
   const { data: teachers = [] } = useQuery({
     queryKey: ["admin-teachers-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name");
       if (error) throw error;
-      return data;
+      return sortByPerson(data);
     },
   });
 
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-schools-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("id, name").order("name");
+      const { data, error } = await supabase.from("schools").select("id, name");
       if (error) throw error;
-      return data;
+      return sortByName(data);
     },
   });
 
   const { data: instruments = [] } = useQuery({
     queryKey: ["admin-instruments-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return sortByName(data);
     },
   });
 

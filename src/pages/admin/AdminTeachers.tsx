@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft, FileSpreadsheet } from "lucide-react";
 import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
+import { sortByPerson } from "@/lib/sortHebrew";
 
 const AdminTeachers = () => {
   const navigate = useNavigate();
@@ -23,9 +24,9 @@ const AdminTeachers = () => {
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("*").order("last_name").order("first_name");
+      const { data, error } = await supabase.from("teachers").select("*");
       if (error) throw error;
-      return data;
+      return sortByPerson(data as any);
     },
   });
 

@@ -94,9 +94,9 @@ const AdminInventoryInstruments = () => {
   const { data: instruments = [] } = useQuery({
     queryKey: ["admin-instruments-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 

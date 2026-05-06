@@ -188,18 +188,20 @@ const AdminSchoolMusicSchoolCard = () => {
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["all-teachers-active"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, phone").eq("is_active", true).order("first_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name, phone").eq("is_active", true);
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) =>
+        `${a.last_name || ""} ${a.first_name || ""}`.localeCompare(`${b.last_name || ""} ${b.first_name || ""}`, "he")
+      );
     },
   });
 
   const { data: allInstruments = [] } = useQuery({
     queryKey: ["all-instruments"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 

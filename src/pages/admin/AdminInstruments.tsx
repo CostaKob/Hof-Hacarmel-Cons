@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { sortByName } from "@/lib/sortHebrew";
 
 const AdminInstruments = () => {
   const navigate = useNavigate();
@@ -27,9 +28,9 @@ const AdminInstruments = () => {
   const { data: instruments = [], isLoading } = useQuery({
     queryKey: ["admin-instruments"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("*").order("name");
+      const { data, error } = await supabase.from("instruments").select("*");
       if (error) throw error;
-      return data;
+      return sortByName(data as any);
     },
   });
 
