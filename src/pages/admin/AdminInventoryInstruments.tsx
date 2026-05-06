@@ -133,17 +133,27 @@ const AdminInventoryInstruments = () => {
       if (filterLocation === "none" && it.storage_location_id) return false;
       if (filterLocation !== "none" && it.storage_location_id !== filterLocation) return false;
     }
+    if (filterSchool !== "all") {
+      if (filterSchool === "none" && it._borrower_school) return false;
+      if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const matches =
         it.serial_number?.toLowerCase().includes(s) ||
         it.instruments?.name?.toLowerCase().includes(s) ||
         it.brand?.toLowerCase().includes(s) ||
-        it.model?.toLowerCase().includes(s);
+        it.model?.toLowerCase().includes(s) ||
+        it._borrower_name?.toLowerCase().includes(s) ||
+        it._borrower_school?.toLowerCase().includes(s);
       if (!matches) return false;
     }
     return true;
   });
+
+  const borrowerSchools = Array.from(
+    new Set(items.map((it: any) => it._borrower_school).filter(Boolean)),
+  ).sort() as string[];
 
   const stats = items.reduce(
     (acc: Record<string, number>, it: any) => {
