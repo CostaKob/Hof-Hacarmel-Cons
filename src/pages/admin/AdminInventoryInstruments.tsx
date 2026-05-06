@@ -33,7 +33,8 @@ const AdminInventoryInstruments = () => {
   const [search, setSearch] = usePersistedState<string>(ROUTE_KEY, "search", "");
   const [filterInstrument, setFilterInstrument] = usePersistedState<string>(ROUTE_KEY, "filterInstrument", "all");
   const [filterCondition, setFilterCondition] = usePersistedState<string>(ROUTE_KEY, "filterCondition", "all");
-  const [filterLocation, setFilterLocation] = useState<string>("all");
+  const [filterLocation, setFilterLocation] = usePersistedState<string>(ROUTE_KEY, "filterLocation", "all");
+  const [filterSchool, setFilterSchool] = usePersistedState<string>(ROUTE_KEY, "filterSchool", "all");
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
