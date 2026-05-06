@@ -24,6 +24,8 @@ interface RowData {
   storage_location_name?: string | null;
   purchase_date?: string | null;
   notes?: string | null;
+  loaned_to_national_id?: string | null;
+  loaned_to_student_id?: string | null;
 }
 
 interface ParsedRow {
@@ -49,6 +51,7 @@ const TEMPLATE_COLUMNS = [
   "storage_location",
   "purchase_date",
   "notes",
+  "loaned_to_national_id",
 ];
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -61,6 +64,7 @@ const COLUMN_LABELS: Record<string, string> = {
   storage_location: "מיקום אחסון",
   purchase_date: "תאריך רכישה",
   notes: "הערות",
+  loaned_to_national_id: "ת.ז. תלמיד מושאל",
 };
 
 // Hebrew header aliases
@@ -78,6 +82,11 @@ const HEADER_ALIASES: Record<string, string> = {
   "מיקום אחסון": "storage_location",
   "תאריך רכישה": "purchase_date",
   "הערות": "notes",
+  "ת.ז. תלמיד מושאל": "loaned_to_national_id",
+  "תז תלמיד מושאל": "loaned_to_national_id",
+  "ת.ז תלמיד מושאל": "loaned_to_national_id",
+  "מושאל ל": "loaned_to_national_id",
+  "ת.ז. מושאל": "loaned_to_national_id",
 };
 
 const normalizeHeader = (h: string): string => {
@@ -98,9 +107,9 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
   const downloadTemplate = () => {
     const headers = TEMPLATE_COLUMNS.map((c) => COLUMN_LABELS[c]);
     const example = [
-      ["כינור", "V-001", "Yamaha", "V3", "1/2", "זמין", "מחסן ראשי", "2024-09-01", ""],
-      ["צ'לו", "C-001", "", "", "3/4", "דרוש תיקון", "מחסן ראשי", "", "סדק קל"],
-      ["חצוצרה", "T-100", "Bach", "TR300", "", "מושאל", "", "", ""],
+      ["כינור", "V-001", "Yamaha", "V3", "1/2", "זמין", "מחסן ראשי", "2024-09-01", "", ""],
+      ["צ'לו", "C-001", "", "", "3/4", "דרוש תיקון", "מחסן ראשי", "", "סדק קל", ""],
+      ["חצוצרה", "T-100", "Bach", "TR300", "", "מושאל", "", "", "", "123456789"],
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...example]);
     // RTL friendly column widths
@@ -118,6 +127,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
       ["סוג כלי: חייב להתאים בדיוק לשם בטבלת כלי נגינה במערכת"],
       ["מיקום אחסון: חייב להתאים לשם מיקום אחסון פעיל במערכת (אופציונלי)"],
       ["תאריך רכישה: בפורמט YYYY-MM-DD (אופציונלי)"],
+      ["ת.ז. תלמיד מושאל: למילוי כשהמצב 'מושאל' - תייצר רשומת השאלה אוטומטית. התלמיד חייב להיות קיים במערכת"],
       ["מספר סידורי כפול עבור אותו סוג כלי - יידחה"],
     ];
     const wsI = XLSX.utils.aoa_to_sheet(instructions);
@@ -174,6 +184,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
         const sizeRaw = String(row.size || "").trim();
         const locName = String(row.storage_location || "").trim();
         const purchaseDateRaw = String(row.purchase_date || "").trim();
+        const loanedNationalId = String(row.loaned_to_national_id || "").trim();
 
         if (!instrumentName) errors.push("חסר סוג כלי");
         if (!serial) errors.push("חסר מספר סידורי");
@@ -204,6 +215,11 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
 
         const sizeNorm = normalizeSize(sizeRaw);
 
+        // If loaned national ID provided, force condition to "loaned"
+        if (loanedNationalId && conditionValue !== "loaned") {
+          conditionValue = "loaned";
+        }
+
         let duplicate = false;
         if (instrumentId && serial) {
           const key = `${instrumentId}|${serial.toLowerCase()}`;
@@ -228,6 +244,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
           storage_location_name: locName || null,
           purchase_date: purchaseDate,
           notes: String(row.notes || "").trim() || null,
+          loaned_to_national_id: loanedNationalId || null,
         } : undefined;
 
         parsed.push({
@@ -276,12 +293,55 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
         notes: r.data!.notes,
       }));
 
-      const { error } = await supabase.from("inventory_instruments").insert(payloads);
+      const { data: inserted, error } = await supabase
+        .from("inventory_instruments")
+        .insert(payloads)
+        .select("id, instrument_id, serial_number");
       if (error) throw error;
+
+      // Build loans for rows with loaned_to_national_id
+      const loanRows = valid
+        .map((r, idx) => ({ r, inv: inserted?.[idx] }))
+        .filter((x) => x.r.data!.loaned_to_national_id && x.inv);
+
+      let loansCreated = 0;
+      let loansSkipped = 0;
+      if (loanRows.length > 0) {
+        const ids = Array.from(new Set(loanRows.map((x) => x.r.data!.loaned_to_national_id!)));
+        const { data: studentsData } = await supabase
+          .from("students")
+          .select("id, national_id")
+          .in("national_id", ids);
+        const stuMap = new Map<string, string>();
+        (studentsData || []).forEach((s: any) => stuMap.set(s.national_id, s.id));
+
+        const loanPayloads: any[] = [];
+        for (const { r, inv } of loanRows) {
+          const nid = r.data!.loaned_to_national_id!;
+          const sid = stuMap.get(nid);
+          if (sid) {
+            loanPayloads.push({
+              inventory_instrument_id: inv!.id,
+              student_id: sid,
+              loan_date: new Date().toISOString().split("T")[0],
+            });
+          } else {
+            loansSkipped++;
+          }
+        }
+        if (loanPayloads.length > 0) {
+          const { error: loanErr } = await supabase.from("instrument_loans").insert(loanPayloads);
+          if (loanErr) throw loanErr;
+          loansCreated = loanPayloads.length;
+        }
+      }
 
       qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
       setImportDone({ created: valid.length, skipped: parsedRows.length - valid.length });
-      toast.success(`יובאו ${valid.length} כלים`);
+      let msg = `יובאו ${valid.length} כלים`;
+      if (loansCreated > 0) msg += `, ${loansCreated} השאלות נוצרו`;
+      if (loansSkipped > 0) msg += ` (${loansSkipped} ת.ז. תלמידים לא נמצאו)`;
+      toast.success(msg);
     } catch (e: any) {
       toast.error("שגיאה בייבוא: " + (e.message || ""));
     } finally {
