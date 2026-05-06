@@ -47,10 +47,10 @@ const TEMPLATE_COLUMNS = [
   "model",
   "size",
   "condition",
+  "loaned_to_student_name",
   "storage_location",
   "purchase_date",
   "notes",
-  "loaned_to_student_name",
 ];
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -60,10 +60,10 @@ const COLUMN_LABELS: Record<string, string> = {
   model: "דגם",
   size: "גודל",
   condition: "מצב",
+  loaned_to_student_name: "מושאל ל",
   storage_location: "מיקום אחסון",
   purchase_date: "תאריך רכישה",
   notes: "הערות",
-  loaned_to_student_name: "מושאל לתלמיד (שם מלא)",
 };
 
 // Hebrew header aliases
@@ -106,9 +106,9 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
   const downloadTemplate = () => {
     const headers = TEMPLATE_COLUMNS.map((c) => COLUMN_LABELS[c]);
     const example = [
-      ["כינור", "V-001", "Yamaha", "V3", "1/2", "זמין", "מחסן ראשי", "2024-09-01", "", ""],
-      ["צ'לו", "C-001", "", "", "3/4", "דרוש תיקון", "מחסן ראשי", "", "סדק קל", ""],
-      ["חצוצרה", "T-100", "Bach", "TR300", "", "מושאל", "", "", "", "ישראל ישראלי"],
+      ["כינור", "V-001", "Yamaha", "V3", "1/2", "זמין", "", "מחסן ראשי", "2024-09-01", ""],
+      ["צ'לו", "C-001", "", "", "3/4", "דרוש תיקון", "", "מחסן ראשי", "", "סדק קל"],
+      ["חצוצרה", "T-100", "Bach", "TR300", "", "מושאל", "ישראל ישראלי", "", "", ""],
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...example]);
     // RTL friendly column widths
@@ -126,14 +126,14 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
       ["סוג כלי: חייב להתאים בדיוק לשם בטבלת כלי נגינה במערכת"],
       ["מיקום אחסון: חייב להתאים לשם מיקום אחסון פעיל במערכת (אופציונלי)"],
       ["תאריך רכישה: בפורמט YYYY-MM-DD (אופציונלי)"],
-      ["מושאל לתלמיד (שם מלא): שם פרטי + משפחה. תייצר רשומת השאלה אוטומטית. אם השם לא נמצא או יש כפילות - יידלג"],
+      ["מושאל ל: שם מלא של תלמיד/ה (שם פרטי + משפחה). תייצר רשומת השאלה אוטומטית. אם השם לא נמצא או יש כפילות - יידלג"],
       ["מספר סידורי כפול עבור אותו סוג כלי - יידחה"],
     ];
     const wsI = XLSX.utils.aoa_to_sheet(instructions);
     wsI["!cols"] = [{ wch: 80 }];
     XLSX.utils.book_append_sheet(wb, wsI, "הוראות");
 
-    XLSX.writeFile(wb, "תבנית_מלאי_כלים.xlsx");
+    XLSX.writeFile(wb, "תבנית_מלאי_כלים_כולל_מושאל_ל.xlsx");
   };
 
   const reset = () => {
