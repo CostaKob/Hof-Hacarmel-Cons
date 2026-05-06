@@ -22,13 +22,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { CONDITION_LABELS, CONDITION_COLORS, CONDITION_OPTIONS, InstrumentCondition } from "@/lib/instrumentInventory";
+import { useListStatePreservation, usePersistedState, saveListScrollPosition } from "@/hooks/useListStatePreservation";
+
+const ROUTE_KEY = "/admin/inventory-instruments";
 
 const AdminInventoryInstruments = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [filterInstrument, setFilterInstrument] = useState<string>("all");
-  const [filterCondition, setFilterCondition] = useState<string>("all");
+  useListStatePreservation(ROUTE_KEY);
+  const [search, setSearch] = usePersistedState<string>(ROUTE_KEY, "search", "");
+  const [filterInstrument, setFilterInstrument] = usePersistedState<string>(ROUTE_KEY, "filterInstrument", "all");
+  const [filterCondition, setFilterCondition] = usePersistedState<string>(ROUTE_KEY, "filterCondition", "all");
   const [filterLocation, setFilterLocation] = useState<string>("all");
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
