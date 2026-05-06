@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
-import { User, ExternalLink } from "lucide-react";
+import { User, ExternalLink, Pencil, Check, X } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 
 interface FormData {
@@ -33,6 +33,27 @@ const AdminInventoryInstrumentForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
+  const [editLoanDate, setEditLoanDate] = useState("");
+  const [editReturnDate, setEditReturnDate] = useState("");
+
+  const updateLoanMutation = useMutation({
+    mutationFn: async ({ loanId, loan_date, return_date }: { loanId: string; loan_date: string; return_date: string | null }) => {
+      const { error } = await supabase
+        .from("instrument_loans")
+        .update({ loan_date, return_date })
+        .eq("id", loanId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["instrument-loans", id] });
+      qc.invalidateQueries({ queryKey: ["student-instrument-loans"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      setEditingLoanId(null);
+      toast.success("התאריכים עודכנו");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה בעדכון"),
+  });
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
@@ -306,10 +327,73 @@ const AdminInventoryInstrumentForm = () => {
                           <Badge variant="outline" className={CONDITION_COLORS.loaned}>פעיל</Badge>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(new Date(loan.loan_date), "dd/MM/yyyy")}
-                        {loan.return_date && ` — ${format(new Date(loan.return_date), "dd/MM/yyyy")}`}
-                      </div>
+                      {editingLoanId === loan.id ? (
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                          <div className="flex items-center gap-1">
+                            <Label className="text-[11px] text-muted-foreground">השאלה:</Label>
+                            <Input
+                              type="date"
+                              value={editLoanDate}
+                              onChange={(e) => setEditLoanDate(e.target.value)}
+                              className="h-9 rounded-lg w-36 text-xs"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Label className="text-[11px] text-muted-foreground">החזרה:</Label>
+                            <Input
+                              type="date"
+                              value={editReturnDate}
+                              onChange={(e) => setEditReturnDate(e.target.value)}
+                              className="h-9 rounded-lg w-36 text-xs"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-9 rounded-lg"
+                            disabled={!editLoanDate || updateLoanMutation.isPending}
+                            onClick={() =>
+                              updateLoanMutation.mutate({
+                                loanId: loan.id,
+                                loan_date: editLoanDate,
+                                return_date: editReturnDate || null,
+                              })
+                            }
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-9 rounded-lg"
+                            onClick={() => setEditingLoanId(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-muted-foreground">
+                            {format(new Date(loan.loan_date), "dd/MM/yyyy")}
+                            {loan.return_date && ` — ${format(new Date(loan.return_date), "dd/MM/yyyy")}`}
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-lg"
+                            onClick={() => {
+                              setEditingLoanId(loan.id);
+                              setEditLoanDate(loan.loan_date);
+                              setEditReturnDate(loan.return_date || "");
+                            }}
+                            title="ערוך תאריכים"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
