@@ -51,7 +51,7 @@ const TEMPLATE_COLUMNS = [
   "storage_location",
   "purchase_date",
   "notes",
-  "loaned_to_national_id",
+  "loaned_to_student_name",
 ];
 
 const COLUMN_LABELS: Record<string, string> = {
@@ -64,7 +64,7 @@ const COLUMN_LABELS: Record<string, string> = {
   storage_location: "מיקום אחסון",
   purchase_date: "תאריך רכישה",
   notes: "הערות",
-  loaned_to_national_id: "ת.ז. תלמיד מושאל",
+  loaned_to_student_name: "מושאל לתלמיד (שם מלא)",
 };
 
 // Hebrew header aliases
@@ -82,11 +82,11 @@ const HEADER_ALIASES: Record<string, string> = {
   "מיקום אחסון": "storage_location",
   "תאריך רכישה": "purchase_date",
   "הערות": "notes",
-  "ת.ז. תלמיד מושאל": "loaned_to_national_id",
-  "תז תלמיד מושאל": "loaned_to_national_id",
-  "ת.ז תלמיד מושאל": "loaned_to_national_id",
-  "מושאל ל": "loaned_to_national_id",
-  "ת.ז. מושאל": "loaned_to_national_id",
+  "מושאל לתלמיד (שם מלא)": "loaned_to_student_name",
+  "מושאל לתלמיד": "loaned_to_student_name",
+  "מושאל ל": "loaned_to_student_name",
+  "שם תלמיד מושאל": "loaned_to_student_name",
+  "שם התלמיד": "loaned_to_student_name",
 };
 
 const normalizeHeader = (h: string): string => {
