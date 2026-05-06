@@ -22,14 +22,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { CONDITION_LABELS, CONDITION_COLORS, CONDITION_OPTIONS, InstrumentCondition } from "@/lib/instrumentInventory";
+import { useListStatePreservation, usePersistedState, saveListScrollPosition } from "@/hooks/useListStatePreservation";
+
+const ROUTE_KEY = "/admin/inventory-instruments";
 
 const AdminInventoryInstruments = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
-  const [filterInstrument, setFilterInstrument] = useState<string>("all");
-  const [filterCondition, setFilterCondition] = useState<string>("all");
-  const [filterLocation, setFilterLocation] = useState<string>("all");
+  useListStatePreservation(ROUTE_KEY);
+  const [search, setSearch] = usePersistedState<string>(ROUTE_KEY, "search", "");
+  const [filterInstrument, setFilterInstrument] = usePersistedState<string>(ROUTE_KEY, "filterInstrument", "all");
+  const [filterCondition, setFilterCondition] = usePersistedState<string>(ROUTE_KEY, "filterCondition", "all");
+  const [filterLocation, setFilterLocation] = usePersistedState<string>(ROUTE_KEY, "filterLocation", "all");
+  const [filterSchool, setFilterSchool] = usePersistedState<string>(ROUTE_KEY, "filterSchool", "all");
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -38,17 +43,50 @@ const AdminInventoryInstruments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory_instruments")
-        .select("*, instruments(name), instrument_storage_locations(name), instrument_loans(id, return_date, students(first_name, last_name), school_music_students(student_first_name, student_last_name))")
+        .select("*, instruments(name), instrument_storage_locations(name), instrument_loans(id, return_date, student_id, school_music_student_id, students(first_name, last_name), school_music_students(student_first_name, student_last_name, school_music_schools(school_name)))")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []).map((it: any) => {
+      const rows = data || [];
+
+      // For private-student loans we need to look up their school via active enrollments
+      const privateStudentIds = Array.from(
+        new Set(
+          rows.flatMap((it: any) =>
+            (it.instrument_loans || [])
+              .filter((l: any) => !l.return_date && l.student_id)
+              .map((l: any) => l.student_id),
+          ),
+        ),
+      );
+
+      const studentSchoolMap = new Map<string, string>();
+      if (privateStudentIds.length > 0) {
+        const { data: enr } = await supabase
+          .from("enrollments")
+          .select("student_id, is_active, created_at, schools(name)")
+          .in("student_id", privateStudentIds)
+          .order("created_at", { ascending: false });
+        (enr || []).forEach((e: any) => {
+          if (!studentSchoolMap.has(e.student_id) && e.schools?.name) {
+            studentSchoolMap.set(e.student_id, e.schools.name);
+          }
+        });
+      }
+
+      return rows.map((it: any) => {
         const activeLoan = (it.instrument_loans || []).find((l: any) => !l.return_date);
         let borrower = "";
+        let borrowerSchool = "";
         if (activeLoan) {
-          if (activeLoan.students) borrower = `${activeLoan.students.first_name} ${activeLoan.students.last_name}`.trim();
-          else if (activeLoan.school_music_students) borrower = `${activeLoan.school_music_students.student_first_name} ${activeLoan.school_music_students.student_last_name}`.trim();
+          if (activeLoan.students) {
+            borrower = `${activeLoan.students.first_name} ${activeLoan.students.last_name}`.trim();
+            borrowerSchool = studentSchoolMap.get(activeLoan.student_id) || "";
+          } else if (activeLoan.school_music_students) {
+            borrower = `${activeLoan.school_music_students.student_first_name} ${activeLoan.school_music_students.student_last_name}`.trim();
+            borrowerSchool = activeLoan.school_music_students.school_music_schools?.school_name || "";
+          }
         }
-        return { ...it, _borrower_name: borrower };
+        return { ...it, _borrower_name: borrower, _borrower_school: borrowerSchool };
       });
     },
   });
@@ -95,17 +133,27 @@ const AdminInventoryInstruments = () => {
       if (filterLocation === "none" && it.storage_location_id) return false;
       if (filterLocation !== "none" && it.storage_location_id !== filterLocation) return false;
     }
+    if (filterSchool !== "all") {
+      if (filterSchool === "none" && it._borrower_school) return false;
+      if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const matches =
         it.serial_number?.toLowerCase().includes(s) ||
         it.instruments?.name?.toLowerCase().includes(s) ||
         it.brand?.toLowerCase().includes(s) ||
-        it.model?.toLowerCase().includes(s);
+        it.model?.toLowerCase().includes(s) ||
+        it._borrower_name?.toLowerCase().includes(s) ||
+        it._borrower_school?.toLowerCase().includes(s);
       if (!matches) return false;
     }
     return true;
   });
+
+  const borrowerSchools = Array.from(
+    new Set(items.map((it: any) => it._borrower_school).filter(Boolean)),
+  ).sort() as string[];
 
   const stats = items.reduce(
     (acc: Record<string, number>, it: any) => {
@@ -180,7 +228,7 @@ const AdminInventoryInstruments = () => {
             <MapPin className="h-4 w-4" /> מיקומי אחסון
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           <Select value={filterInstrument} onValueChange={setFilterInstrument}>
             <SelectTrigger className="h-11 rounded-xl">
               <SelectValue placeholder="סוג כלי" />
@@ -215,6 +263,18 @@ const AdminInventoryInstruments = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={filterSchool} onValueChange={setFilterSchool}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="בית ספר של המושאל" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל בתי הספר</SelectItem>
+              <SelectItem value="none">לא מושאל / ללא בי״ס</SelectItem>
+              {borrowerSchools.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -229,7 +289,10 @@ const AdminInventoryInstruments = () => {
             {filtered.map((it: any) => (
               <div
                 key={it.id}
-                onClick={() => navigate(`/admin/inventory-instruments/${it.id}/edit`)}
+                onClick={() => {
+                  saveListScrollPosition(ROUTE_KEY);
+                  navigate(`/admin/inventory-instruments/${it.id}/edit`);
+                }}
                 className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
               >
                 <div className="flex-1 min-w-0">
@@ -249,7 +312,10 @@ const AdminInventoryInstruments = () => {
                       </span>
                     )}
                     {it.condition === "loaned" && it._borrower_name && (
-                      <span className="text-blue-700 font-medium">מושאל ל: {it._borrower_name}</span>
+                      <span className="text-blue-700 font-medium">
+                        מושאל ל: {it._borrower_name}
+                        {it._borrower_school ? ` · ${it._borrower_school}` : ""}
+                      </span>
                     )}
                   </div>
                 </div>
