@@ -33,6 +33,27 @@ const AdminInventoryInstrumentForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
+  const [editLoanDate, setEditLoanDate] = useState("");
+  const [editReturnDate, setEditReturnDate] = useState("");
+
+  const updateLoanMutation = useMutation({
+    mutationFn: async ({ loanId, loan_date, return_date }: { loanId: string; loan_date: string; return_date: string | null }) => {
+      const { error } = await supabase
+        .from("instrument_loans")
+        .update({ loan_date, return_date })
+        .eq("id", loanId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["instrument-loans", id] });
+      qc.invalidateQueries({ queryKey: ["student-instrument-loans"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      setEditingLoanId(null);
+      toast.success("התאריכים עודכנו");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה בעדכון"),
+  });
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
