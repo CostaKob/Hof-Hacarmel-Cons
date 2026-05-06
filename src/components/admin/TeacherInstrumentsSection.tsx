@@ -32,7 +32,7 @@ const TeacherInstrumentsSection = ({ teacherId }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 
