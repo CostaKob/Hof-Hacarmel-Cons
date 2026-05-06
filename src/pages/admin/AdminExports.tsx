@@ -72,7 +72,7 @@ const AdminExports = () => {
     const { data, error } = await supabase.from("teachers").select("*");
     if (error) throw error;
     const sorted = [...(data ?? [])].sort((a: any, b: any) => `${a.last_name || ""} ${a.first_name || ""}`.localeCompare(`${b.last_name || ""} ${b.first_name || ""}`, "he"));
-    return (data ?? []).map((t) => ({
+    return sorted.map((t: any) => ({
       "שם פרטי": t.first_name,
       "שם משפחה": t.last_name,
       "ת.ז.": t.national_id ?? "",
