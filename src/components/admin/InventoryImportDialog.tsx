@@ -81,7 +81,9 @@ const HEADER_ALIASES: Record<string, string> = {
 };
 
 const normalizeHeader = (h: string): string => {
-  const t = String(h || "").trim();
+  let t = String(h || "").trim();
+  // Strip parenthesized suffixes like "(חובה)" from template headers
+  t = t.replace(/\s*\([^)]*\)\s*$/, "").trim();
   return HEADER_ALIASES[t] || t;
 };
 
