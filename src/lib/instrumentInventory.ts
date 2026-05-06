@@ -50,8 +50,10 @@ export const CONDITION_LABEL_TO_VALUE: Record<string, InstrumentCondition> = {
   "מושאל": "loaned",
   "בתיקון": "in_repair",
   "דרוש תיקון": "needs_repair",
+  "לא מאותר": "missing",
   "available": "available",
   "loaned": "loaned",
   "in_repair": "in_repair",
   "needs_repair": "needs_repair",
+  "missing": "missing",
 };
