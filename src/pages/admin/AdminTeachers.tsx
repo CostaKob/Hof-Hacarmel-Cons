@@ -24,7 +24,7 @@ const AdminTeachers = () => {
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("*");
+      const { data, error } = await supabase.from("teachers").select("*, teacher_instruments(instrument:instruments(name))");
       if (error) throw error;
       return sortByPerson(data as any);
     },
