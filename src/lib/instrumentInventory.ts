@@ -1,10 +1,11 @@
-export type InstrumentCondition = "available" | "loaned" | "in_repair" | "needs_repair";
+export type InstrumentCondition = "available" | "loaned" | "in_repair" | "needs_repair" | "missing";
 
 export const CONDITION_LABELS: Record<InstrumentCondition, string> = {
   available: "זמין",
   loaned: "מושאל",
   in_repair: "בתיקון",
   needs_repair: "דרוש תיקון",
+  missing: "לא מאותר",
 };
 
 export const CONDITION_COLORS: Record<InstrumentCondition, string> = {
@@ -12,6 +13,7 @@ export const CONDITION_COLORS: Record<InstrumentCondition, string> = {
   loaned: "bg-blue-100 text-blue-800 border-blue-200",
   in_repair: "bg-amber-100 text-amber-800 border-amber-200",
   needs_repair: "bg-destructive/10 text-destructive border-destructive/20",
+  missing: "bg-muted text-muted-foreground border-border",
 };
 
 export const CONDITION_OPTIONS: { value: InstrumentCondition; label: string }[] = [
@@ -19,6 +21,7 @@ export const CONDITION_OPTIONS: { value: InstrumentCondition; label: string }[] 
   { value: "loaned", label: "מושאל" },
   { value: "in_repair", label: "בתיקון" },
   { value: "needs_repair", label: "דרוש תיקון" },
+  { value: "missing", label: "לא מאותר" },
 ];
 
 // Global instrument size list
