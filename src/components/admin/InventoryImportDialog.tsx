@@ -24,6 +24,8 @@ interface RowData {
   storage_location_name?: string | null;
   purchase_date?: string | null;
   notes?: string | null;
+  loaned_to_national_id?: string | null;
+  loaned_to_student_id?: string | null;
 }
 
 interface ParsedRow {
