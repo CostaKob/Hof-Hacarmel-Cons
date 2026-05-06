@@ -125,15 +125,21 @@ const AdminStudentForm = () => {
       if (isEdit) {
         const { error } = await supabase.from("students").update(payload).eq("id", studentId!);
         if (error) throw error;
+        return studentId!;
       } else {
-        const { error } = await supabase.from("students").insert(payload);
+        const { data: created, error } = await supabase.from("students").insert(payload).select("id").single();
         if (error) throw error;
+        return created.id as string;
       }
     },
-    onSuccess: () => {
+    onSuccess: (newId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
-      toast.success(isEdit ? "התלמיד עודכן בהצלחה" : "התלמיד נוצר בהצלחה");
-      navigate(returnTo);
+      toast.success(isEdit ? "התלמיד עודכן בהצלחה" : "התלמיד נוצר — הוסף רישום והשאלת כלי");
+      if (isEdit) {
+        navigate(returnTo);
+      } else {
+        navigate(`/admin/students/${newId}`);
+      }
     },
     onError: () => toast.error("שגיאה בשמירת הנתונים"),
   });
