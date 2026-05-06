@@ -327,11 +327,78 @@ const AdminInventoryInstrumentForm = () => {
                           <Badge variant="outline" className={CONDITION_COLORS.loaned}>פעיל</Badge>
                         )}
                       </div>
-                      <div className="text-xs text-muted-foreground">
-                        {format(new Date(loan.loan_date), "dd/MM/yyyy")}
-                        {loan.return_date && ` — ${format(new Date(loan.return_date), "dd/MM/yyyy")}`}
-                      </div>
+                      {editingLoanId === loan.id ? (
+                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                          <div className="flex items-center gap-1">
+                            <Label className="text-[11px] text-muted-foreground">השאלה:</Label>
+                            <Input
+                              type="date"
+                              value={editLoanDate}
+                              onChange={(e) => setEditLoanDate(e.target.value)}
+                              className="h-9 rounded-lg w-36 text-xs"
+                            />
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Label className="text-[11px] text-muted-foreground">החזרה:</Label>
+                            <Input
+                              type="date"
+                              value={editReturnDate}
+                              onChange={(e) => setEditReturnDate(e.target.value)}
+                              className="h-9 rounded-lg w-36 text-xs"
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="h-9 rounded-lg"
+                            disabled={!editLoanDate || updateLoanMutation.isPending}
+                            onClick={() =>
+                              updateLoanMutation.mutate({
+                                loanId: loan.id,
+                                loan_date: editLoanDate,
+                                return_date: editReturnDate || null,
+                              })
+                            }
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-9 rounded-lg"
+                            onClick={() => setEditingLoanId(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-muted-foreground">
+                            {format(new Date(loan.loan_date), "dd/MM/yyyy")}
+                            {loan.return_date && ` — ${format(new Date(loan.return_date), "dd/MM/yyyy")}`}
+                          </div>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-lg"
+                            onClick={() => {
+                              setEditingLoanId(loan.id);
+                              setEditLoanDate(loan.loan_date);
+                              setEditReturnDate(loan.return_date || "");
+                            }}
+                            title="ערוך תאריכים"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
+              </div>
+            )}
                   );
                 })}
               </div>
