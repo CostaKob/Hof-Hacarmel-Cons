@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
 import { User, ExternalLink } from "lucide-react";
+import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 
 interface FormData {
   instrument_id: string;
