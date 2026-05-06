@@ -38,10 +38,18 @@ const AdminInventoryInstruments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory_instruments")
-        .select("*, instruments(name), instrument_storage_locations(name)")
+        .select("*, instruments(name), instrument_storage_locations(name), instrument_loans(id, return_date, students(first_name, last_name), school_music_students(student_first_name, student_last_name))")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data || []).map((it: any) => {
+        const activeLoan = (it.instrument_loans || []).find((l: any) => !l.return_date);
+        let borrower = "";
+        if (activeLoan) {
+          if (activeLoan.students) borrower = `${activeLoan.students.first_name} ${activeLoan.students.last_name}`.trim();
+          else if (activeLoan.school_music_students) borrower = `${activeLoan.school_music_students.student_first_name} ${activeLoan.school_music_students.student_last_name}`.trim();
+        }
+        return { ...it, _borrower_name: borrower };
+      });
     },
   });
 
