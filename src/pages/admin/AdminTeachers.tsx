@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft, FileSpreadsheet } from "lucide-react";
 import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
+import { sortByPerson } from "@/lib/sortHebrew";
 
 const AdminTeachers = () => {
   const navigate = useNavigate();
