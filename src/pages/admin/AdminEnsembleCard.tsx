@@ -13,6 +13,7 @@ import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES 
 import { toast } from "sonner";
 import { useState } from "react";
 import EnsembleStudentPicker from "@/components/admin/EnsembleStudentPicker";
+import { sortByPerson } from "@/lib/sortHebrew";
 
 const AdminEnsembleCard = () => {
   const { id } = useParams<{ id: string }>();
