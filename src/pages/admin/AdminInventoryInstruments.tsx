@@ -160,6 +160,7 @@ const AdminInventoryInstruments = () => {
                 "גודל": it.size || "",
                 "מצב": CONDITION_LABELS[it.condition as InstrumentCondition] || "",
                 "מיקום אחסון": it.instrument_storage_locations?.name || "",
+                "מושאל ל": it._borrower_name || "",
                 "תאריך רכישה": it.purchase_date || "",
                 "הערות": it.notes || "",
               }));
