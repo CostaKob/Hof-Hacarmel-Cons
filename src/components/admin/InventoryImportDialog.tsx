@@ -298,34 +298,50 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
         .select("id, instrument_id, serial_number");
       if (error) throw error;
 
-      // Build loans for rows with loaned_to_national_id
+      // Build loans for rows with loaned_to_student_name
       const loanRows = valid
         .map((r, idx) => ({ r, inv: inserted?.[idx] }))
-        .filter((x) => x.r.data!.loaned_to_national_id && x.inv);
+        .filter((x) => x.r.data!.loaned_to_student_name && x.inv);
 
       let loansCreated = 0;
       let loansSkipped = 0;
+      const skippedNames: string[] = [];
       if (loanRows.length > 0) {
-        const ids = Array.from(new Set(loanRows.map((x) => x.r.data!.loaned_to_national_id!)));
         const { data: studentsData } = await supabase
           .from("students")
-          .select("id, national_id")
-          .in("national_id", ids);
-        const stuMap = new Map<string, string>();
-        (studentsData || []).forEach((s: any) => stuMap.set(s.national_id, s.id));
+          .select("id, first_name, last_name")
+          .eq("is_active", true);
+
+        const norm = (s: string) => s.trim().replace(/\s+/g, " ").toLowerCase();
+        const nameMap = new Map<string, string[]>();
+        (studentsData || []).forEach((s: any) => {
+          const fn = (s.first_name || "").trim();
+          const ln = (s.last_name || "").trim();
+          const k1 = norm(`${fn} ${ln}`);
+          const k2 = norm(`${ln} ${fn}`);
+          [k1, k2].forEach((k) => {
+            if (!k) return;
+            const arr = nameMap.get(k) || [];
+            arr.push(s.id);
+            nameMap.set(k, arr);
+          });
+        });
 
         const loanPayloads: any[] = [];
         for (const { r, inv } of loanRows) {
-          const nid = r.data!.loaned_to_national_id!;
-          const sid = stuMap.get(nid);
-          if (sid) {
+          const name = r.data!.loaned_to_student_name!;
+          const matches = nameMap.get(norm(name));
+          // dedupe ids
+          const unique = matches ? Array.from(new Set(matches)) : [];
+          if (unique.length === 1) {
             loanPayloads.push({
               inventory_instrument_id: inv!.id,
-              student_id: sid,
+              student_id: unique[0],
               loan_date: new Date().toISOString().split("T")[0],
             });
           } else {
             loansSkipped++;
+            skippedNames.push(name + (unique.length > 1 ? " (כפילות)" : ""));
           }
         }
         if (loanPayloads.length > 0) {
@@ -339,7 +355,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
       setImportDone({ created: valid.length, skipped: parsedRows.length - valid.length });
       let msg = `יובאו ${valid.length} כלים`;
       if (loansCreated > 0) msg += `, ${loansCreated} השאלות נוצרו`;
-      if (loansSkipped > 0) msg += ` (${loansSkipped} ת.ז. תלמידים לא נמצאו)`;
+      if (loansSkipped > 0) msg += ` (${loansSkipped} שמות לא נמצאו: ${skippedNames.slice(0, 3).join(", ")}${skippedNames.length > 3 ? "..." : ""})`;
       toast.success(msg);
     } catch (e: any) {
       toast.error("שגיאה בייבוא: " + (e.message || ""));
