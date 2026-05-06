@@ -28,9 +28,9 @@ const AdminInstruments = () => {
   const { data: instruments = [], isLoading } = useQuery({
     queryKey: ["admin-instruments"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("*").order("name");
+      const { data, error } = await supabase.from("instruments").select("*");
       if (error) throw error;
-      return data;
+      return sortByName(data as any);
     },
   });
 
