@@ -196,7 +196,7 @@ const PublicRegistration = () => {
   const { data: instruments = [] } = useQuery({
     queryKey: ["public-instruments"],
     queryFn: async () => {
-      const { data } = await supabase.from("instruments").select("id, name").order("name");
+      const { data } = await supabase.from("instruments").select("id, name");
       return data || [];
     },
   });

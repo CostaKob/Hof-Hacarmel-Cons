@@ -139,7 +139,7 @@ const AdminSchoolMusicSchools = () => {
   const { data: allInstruments = [] } = useQuery({
     queryKey: ["all-instruments"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
       return data;
     },
