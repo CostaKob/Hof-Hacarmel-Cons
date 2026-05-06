@@ -319,6 +319,8 @@ const AdminInventoryInstrumentForm = () => {
           </div>
         )}
 
+        {isEdit && id && <InstrumentRepairsSection inventoryInstrumentId={id} />}
+
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
