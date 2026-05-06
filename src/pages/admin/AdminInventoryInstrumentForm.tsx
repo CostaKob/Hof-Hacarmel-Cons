@@ -399,10 +399,6 @@ const AdminInventoryInstrumentForm = () => {
                 })}
               </div>
             )}
-                  );
-                })}
-              </div>
-            )}
             <p className="text-xs text-muted-foreground">להשאלת כלי לתלמיד — בכרטיס התלמיד.</p>
           </div>
         )}
