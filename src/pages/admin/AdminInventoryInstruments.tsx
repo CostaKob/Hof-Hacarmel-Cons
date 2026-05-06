@@ -228,7 +228,7 @@ const AdminInventoryInstruments = () => {
             <MapPin className="h-4 w-4" /> מיקומי אחסון
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           <Select value={filterInstrument} onValueChange={setFilterInstrument}>
             <SelectTrigger className="h-11 rounded-xl">
               <SelectValue placeholder="סוג כלי" />
@@ -260,6 +260,18 @@ const AdminInventoryInstruments = () => {
               <SelectItem value="none">ללא מיקום</SelectItem>
               {locations.map((l) => (
                 <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterSchool} onValueChange={setFilterSchool}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="בית ספר של המושאל" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל בתי הספר</SelectItem>
+              <SelectItem value="none">לא מושאל / ללא בי״ס</SelectItem>
+              {borrowerSchools.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
               ))}
             </SelectContent>
           </Select>
