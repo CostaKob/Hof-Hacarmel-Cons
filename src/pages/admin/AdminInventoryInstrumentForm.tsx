@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
 import { User, ExternalLink } from "lucide-react";
+import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 
 interface FormData {
   instrument_id: string;
@@ -317,6 +318,8 @@ const AdminInventoryInstrumentForm = () => {
             <p className="text-xs text-muted-foreground">להשאלת כלי לתלמיד — בכרטיס התלמיד.</p>
           </div>
         )}
+
+        {isEdit && id && <InstrumentRepairsSection inventoryInstrumentId={id} />}
 
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">

@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload } from "lucide-react";
+import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload, FileDown } from "lucide-react";
+import * as XLSX from "xlsx";
 import InventoryImportDialog from "@/components/admin/InventoryImportDialog";
 import {
   AlertDialog,
@@ -138,6 +139,29 @@ const AdminInventoryInstruments = () => {
             onClick={() => setImportOpen(true)}
           >
             <Upload className="h-4 w-4" /> ייבוא מאקסל
+          </Button>
+          <Button
+            variant="outline"
+            className="h-12 rounded-xl text-base"
+            onClick={() => {
+              const rows = filtered.map((it: any) => ({
+                "סוג כלי": it.instruments?.name || "",
+                "מספר סידורי": it.serial_number || "",
+                "יצרן": it.brand || "",
+                "דגם": it.model || "",
+                "גודל": it.size || "",
+                "מצב": CONDITION_LABELS[it.condition as InstrumentCondition] || "",
+                "מיקום אחסון": it.instrument_storage_locations?.name || "",
+                "תאריך רכישה": it.purchase_date || "",
+                "הערות": it.notes || "",
+              }));
+              const ws = XLSX.utils.json_to_sheet(rows);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, "מאגר כלים");
+              XLSX.writeFile(wb, `instrument-inventory-${new Date().toISOString().slice(0, 10)}.xlsx`);
+            }}
+          >
+            <FileDown className="h-4 w-4" /> ייצוא לאקסל
           </Button>
           <Button
             variant="outline"

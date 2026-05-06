@@ -426,6 +426,50 @@ export type Database = {
           },
         ]
       }
+      instrument_repairs: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_instrument_id: string
+          issue_description: string | null
+          return_date: string | null
+          sent_date: string
+          technician_name: string | null
+          treatment_description: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_instrument_id: string
+          issue_description?: string | null
+          return_date?: string | null
+          sent_date?: string
+          technician_name?: string | null
+          treatment_description?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_instrument_id?: string
+          issue_description?: string | null
+          return_date?: string | null
+          sent_date?: string
+          technician_name?: string | null
+          treatment_description?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instrument_repairs_inventory_instrument_id_fkey"
+            columns: ["inventory_instrument_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_instruments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instrument_storage_locations: {
         Row: {
           created_at: string
