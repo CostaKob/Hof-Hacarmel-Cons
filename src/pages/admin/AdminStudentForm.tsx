@@ -99,10 +99,25 @@ const AdminStudentForm = () => {
 
   const mutation = useMutation({
     mutationFn: async (data: StudentFormData) => {
+      const nationalId = (data.national_id || "").trim();
+
+      // Block duplicate national_id on create / when changed on edit
+      if (nationalId) {
+        const { data: existing, error: chkErr } = await supabase
+          .from("students")
+          .select("id, first_name, last_name")
+          .eq("national_id", nationalId);
+        if (chkErr) throw chkErr;
+        const conflict = (existing || []).find((s) => s.id !== studentId);
+        if (conflict) {
+          throw new Error(`תעודת הזהות כבר קיימת אצל: ${conflict.first_name} ${conflict.last_name}`);
+        }
+      }
+
       const payload = {
         first_name: data.first_name,
         last_name: data.last_name,
-        national_id: data.national_id || null,
+        national_id: nationalId || null,
         date_of_birth: data.date_of_birth || null,
         address: data.address || null,
         city: data.city || null,
