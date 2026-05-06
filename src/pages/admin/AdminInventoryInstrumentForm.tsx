@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
-import { User, ExternalLink } from "lucide-react";
+import { User, ExternalLink, Pencil, Check, X } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 
 interface FormData {
