@@ -289,7 +289,10 @@ const AdminInventoryInstruments = () => {
             {filtered.map((it: any) => (
               <div
                 key={it.id}
-                onClick={() => navigate(`/admin/inventory-instruments/${it.id}/edit`)}
+                onClick={() => {
+                  saveListScrollPosition(ROUTE_KEY);
+                  navigate(`/admin/inventory-instruments/${it.id}/edit`);
+                }}
                 className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
               >
                 <div className="flex-1 min-w-0">
@@ -309,7 +312,10 @@ const AdminInventoryInstruments = () => {
                       </span>
                     )}
                     {it.condition === "loaned" && it._borrower_name && (
-                      <span className="text-blue-700 font-medium">מושאל ל: {it._borrower_name}</span>
+                      <span className="text-blue-700 font-medium">
+                        מושאל ל: {it._borrower_name}
+                        {it._borrower_school ? ` · ${it._borrower_school}` : ""}
+                      </span>
                     )}
                   </div>
                 </div>
