@@ -183,7 +183,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
         const sizeRaw = String(row.size || "").trim();
         const locName = String(row.storage_location || "").trim();
         const purchaseDateRaw = String(row.purchase_date || "").trim();
-        const loanedNationalId = String(row.loaned_to_national_id || "").trim();
+        const loanedStudentName = String(row.loaned_to_student_name || "").trim();
 
         if (!instrumentName) errors.push("חסר סוג כלי");
         if (!serial) errors.push("חסר מספר סידורי");
