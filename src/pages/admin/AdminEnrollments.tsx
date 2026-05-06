@@ -43,27 +43,27 @@ const AdminEnrollments = () => {
   const { data: teachers = [] } = useQuery({
     queryKey: ["admin-teachers-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").order("last_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name");
       if (error) throw error;
-      return data;
+      return sortByPerson(data);
     },
   });
 
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-schools-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("id, name").order("name");
+      const { data, error } = await supabase.from("schools").select("id, name");
       if (error) throw error;
-      return data;
+      return sortByName(data);
     },
   });
 
   const { data: instruments = [] } = useQuery({
     queryKey: ["admin-instruments-list"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return sortByName(data);
     },
   });
 
