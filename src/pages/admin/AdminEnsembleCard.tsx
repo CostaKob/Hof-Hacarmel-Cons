@@ -77,18 +77,18 @@ const AdminEnsembleCard = () => {
   const { data: allStudents = [] } = useQuery({
     queryKey: ["all-students-active"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("students").select("id, first_name, last_name").eq("is_active", true).order("first_name");
+      const { data, error } = await supabase.from("students").select("id, first_name, last_name").eq("is_active", true);
       if (error) throw error;
-      return data;
+      return sortByPerson(data);
     },
   });
 
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["all-teachers-active"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true).order("first_name");
+      const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true);
       if (error) throw error;
-      return data;
+      return sortByPerson(data);
     },
   });
 
