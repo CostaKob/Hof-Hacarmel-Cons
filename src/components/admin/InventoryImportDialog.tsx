@@ -243,7 +243,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
           storage_location_name: locName || null,
           purchase_date: purchaseDate,
           notes: String(row.notes || "").trim() || null,
-          loaned_to_national_id: loanedNationalId || null,
+          loaned_to_student_name: loanedStudentName || null,
         } : undefined;
 
         parsed.push({
