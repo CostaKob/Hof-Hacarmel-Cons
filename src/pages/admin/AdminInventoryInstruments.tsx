@@ -248,6 +248,9 @@ const AdminInventoryInstruments = () => {
                         <MapPin className="h-3 w-3" /> {it.instrument_storage_locations.name}
                       </span>
                     )}
+                    {it.condition === "loaned" && it._borrower_name && (
+                      <span className="text-blue-700 font-medium">מושאל ל: {it._borrower_name}</span>
+                    )}
                   </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
