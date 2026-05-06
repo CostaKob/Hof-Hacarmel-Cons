@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { sortByName } from "@/lib/sortHebrew";
 
 const AdminInstruments = () => {
   const navigate = useNavigate();
