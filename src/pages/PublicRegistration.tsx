@@ -197,7 +197,7 @@ const PublicRegistration = () => {
     queryKey: ["public-instruments"],
     queryFn: async () => {
       const { data } = await supabase.from("instruments").select("id, name");
-      return data || [];
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 
@@ -205,8 +205,8 @@ const PublicRegistration = () => {
   const { data: educationalSchools = [] } = useQuery({
     queryKey: ["public-educational-schools"],
     queryFn: async () => {
-      const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true).order("name");
-      return data || [];
+      const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true);
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 
@@ -214,8 +214,8 @@ const PublicRegistration = () => {
   const { data: schools = [] } = useQuery({
     queryKey: ["public-schools"],
     queryFn: async () => {
-      const { data } = await supabase.from("schools").select("id, name").eq("is_active", true).order("name");
-      return data || [];
+      const { data } = await supabase.from("schools").select("id, name").eq("is_active", true);
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 
