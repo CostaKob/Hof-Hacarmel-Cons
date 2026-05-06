@@ -69,8 +69,9 @@ const AdminExports = () => {
   };
 
   const exportTeachers = async () => {
-    const { data, error } = await supabase.from("teachers").select("*").order("last_name");
+    const { data, error } = await supabase.from("teachers").select("*");
     if (error) throw error;
+    const sorted = [...(data ?? [])].sort((a: any, b: any) => `${a.last_name || ""} ${a.first_name || ""}`.localeCompare(`${b.last_name || ""} ${b.first_name || ""}`, "he"));
     return (data ?? []).map((t) => ({
       "שם פרטי": t.first_name,
       "שם משפחה": t.last_name,
