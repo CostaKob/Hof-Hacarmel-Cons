@@ -293,12 +293,55 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
         notes: r.data!.notes,
       }));
 
-      const { error } = await supabase.from("inventory_instruments").insert(payloads);
+      const { data: inserted, error } = await supabase
+        .from("inventory_instruments")
+        .insert(payloads)
+        .select("id, instrument_id, serial_number");
       if (error) throw error;
+
+      // Build loans for rows with loaned_to_national_id
+      const loanRows = valid
+        .map((r, idx) => ({ r, inv: inserted?.[idx] }))
+        .filter((x) => x.r.data!.loaned_to_national_id && x.inv);
+
+      let loansCreated = 0;
+      let loansSkipped = 0;
+      if (loanRows.length > 0) {
+        const ids = Array.from(new Set(loanRows.map((x) => x.r.data!.loaned_to_national_id!)));
+        const { data: studentsData } = await supabase
+          .from("students")
+          .select("id, national_id")
+          .in("national_id", ids);
+        const stuMap = new Map<string, string>();
+        (studentsData || []).forEach((s: any) => stuMap.set(s.national_id, s.id));
+
+        const loanPayloads: any[] = [];
+        for (const { r, inv } of loanRows) {
+          const nid = r.data!.loaned_to_national_id!;
+          const sid = stuMap.get(nid);
+          if (sid) {
+            loanPayloads.push({
+              inventory_instrument_id: inv!.id,
+              student_id: sid,
+              loan_date: new Date().toISOString().split("T")[0],
+            });
+          } else {
+            loansSkipped++;
+          }
+        }
+        if (loanPayloads.length > 0) {
+          const { error: loanErr } = await supabase.from("instrument_loans").insert(loanPayloads);
+          if (loanErr) throw loanErr;
+          loansCreated = loanPayloads.length;
+        }
+      }
 
       qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
       setImportDone({ created: valid.length, skipped: parsedRows.length - valid.length });
-      toast.success(`יובאו ${valid.length} כלים`);
+      let msg = `יובאו ${valid.length} כלים`;
+      if (loansCreated > 0) msg += `, ${loansCreated} השאלות נוצרו`;
+      if (loansSkipped > 0) msg += ` (${loansSkipped} ת.ז. תלמידים לא נמצאו)`;
+      toast.success(msg);
     } catch (e: any) {
       toast.error("שגיאה בייבוא: " + (e.message || ""));
     } finally {
