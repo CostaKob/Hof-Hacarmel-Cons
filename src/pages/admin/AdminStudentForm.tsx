@@ -156,7 +156,7 @@ const AdminStudentForm = () => {
         navigate(`/admin/students/${newId}`);
       }
     },
-    onError: () => toast.error("שגיאה בשמירת הנתונים"),
+    onError: (e: any) => toast.error(e?.message || "שגיאה בשמירת הנתונים"),
   });
 
   const FIELDS: { name: keyof StudentFormData; label: string; type?: string; required?: boolean }[] = [
