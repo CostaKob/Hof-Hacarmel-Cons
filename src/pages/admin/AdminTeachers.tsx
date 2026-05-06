@@ -24,7 +24,7 @@ const AdminTeachers = () => {
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("teachers").select("*");
+      const { data, error } = await supabase.from("teachers").select("*, teacher_instruments(instrument:instruments(name))");
       if (error) throw error;
       return sortByPerson(data as any);
     },
@@ -102,6 +102,12 @@ const AdminTeachers = () => {
                     <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
                       {t.phone && <span>{t.phone}</span>}
                       {t.city && <><span>·</span><span>{t.city}</span></>}
+                      {(() => {
+                        const names = (((t as any).teacher_instruments ?? []) as any[])
+                          .map((ti) => ti?.instrument?.name)
+                          .filter(Boolean);
+                        return names.length > 0 ? (<><span>·</span><span>{names.join(", ")}</span></>) : null;
+                      })()}
                     </div>
                   </div>
                 </div>
