@@ -107,19 +107,20 @@ const AdminRegistrationConvert = () => {
       const { data, error } = await supabase
         .from("teachers")
         .select("id, first_name, last_name")
-        .eq("is_active", true)
-        .order("last_name");
+        .eq("is_active", true);
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) =>
+        `${a.last_name || ""} ${a.first_name || ""}`.localeCompare(`${b.last_name || ""} ${b.first_name || ""}`, "he")
+      );
     },
   });
 
   const { data: instruments = [] } = useQuery({
     queryKey: ["admin-instruments-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("instruments").select("id, name").order("name");
+      const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 
@@ -137,9 +138,9 @@ const AdminRegistrationConvert = () => {
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-schools-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("id, name").eq("is_active", true).order("name");
+      const { data, error } = await supabase.from("schools").select("id, name").eq("is_active", true);
       if (error) throw error;
-      return data;
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
 
