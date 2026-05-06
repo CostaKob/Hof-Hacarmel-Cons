@@ -1905,6 +1905,7 @@ export type Database = {
         | "loaned"
         | "in_repair"
         | "needs_repair"
+        | "missing"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
       registration_status:
@@ -2073,6 +2074,7 @@ export const Constants = {
         "loaned",
         "in_repair",
         "needs_repair",
+        "missing",
       ],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],

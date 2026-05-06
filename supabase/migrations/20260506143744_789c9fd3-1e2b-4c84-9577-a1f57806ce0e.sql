@@ -1,0 +1,1 @@
+ALTER TYPE public.instrument_condition ADD VALUE IF NOT EXISTS 'missing';
