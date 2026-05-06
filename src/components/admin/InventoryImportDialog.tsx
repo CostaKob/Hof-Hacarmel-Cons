@@ -214,8 +214,8 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
 
         const sizeNorm = normalizeSize(sizeRaw);
 
-        // If loaned national ID provided, force condition to "loaned"
-        if (loanedNationalId && conditionValue !== "loaned") {
+        // If student name provided, force condition to "loaned"
+        if (loanedStudentName && conditionValue !== "loaned") {
           conditionValue = "loaned";
         }
 
