@@ -26,10 +26,9 @@ export function CitySelect({ id, value, onChange, onBlur, placeholder = "בחר�
       const { data, error } = await supabase
         .from("cities")
         .select("id, name")
-        .eq("is_active", true)
-        .order("name", { ascending: true });
+        .eq("is_active", true);
       if (error) throw error;
-      return data ?? [];
+      return [...(data ?? [])].sort((a: any, b: any) => (a.name || "").localeCompare(b.name || "", "he"));
     },
     staleTime: 5 * 60 * 1000,
   });
