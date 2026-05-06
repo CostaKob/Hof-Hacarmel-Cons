@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft } from "lucide-react";
+import { sortByName, sortByPerson } from "@/lib/sortHebrew";
 
 const ROLE_LABELS: Record<string, string> = { primary: "ראשי", secondary: "משני" };
 const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "קבוצתי" };
