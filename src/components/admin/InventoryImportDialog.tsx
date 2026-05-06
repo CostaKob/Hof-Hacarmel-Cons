@@ -108,7 +108,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
     const example = [
       ["כינור", "V-001", "Yamaha", "V3", "1/2", "זמין", "מחסן ראשי", "2024-09-01", "", ""],
       ["צ'לו", "C-001", "", "", "3/4", "דרוש תיקון", "מחסן ראשי", "", "סדק קל", ""],
-      ["חצוצרה", "T-100", "Bach", "TR300", "", "מושאל", "", "", "", "123456789"],
+      ["חצוצרה", "T-100", "Bach", "TR300", "", "מושאל", "", "", "", "ישראל ישראלי"],
     ];
     const ws = XLSX.utils.aoa_to_sheet([headers, ...example]);
     // RTL friendly column widths
