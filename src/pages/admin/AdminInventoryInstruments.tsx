@@ -43,17 +43,50 @@ const AdminInventoryInstruments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("inventory_instruments")
-        .select("*, instruments(name), instrument_storage_locations(name), instrument_loans(id, return_date, students(first_name, last_name), school_music_students(student_first_name, student_last_name))")
+        .select("*, instruments(name), instrument_storage_locations(name), instrument_loans(id, return_date, student_id, school_music_student_id, students(first_name, last_name), school_music_students(student_first_name, student_last_name, school_music_schools(school_name)))")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data || []).map((it: any) => {
+      const rows = data || [];
+
+      // For private-student loans we need to look up their school via active enrollments
+      const privateStudentIds = Array.from(
+        new Set(
+          rows.flatMap((it: any) =>
+            (it.instrument_loans || [])
+              .filter((l: any) => !l.return_date && l.student_id)
+              .map((l: any) => l.student_id),
+          ),
+        ),
+      );
+
+      const studentSchoolMap = new Map<string, string>();
+      if (privateStudentIds.length > 0) {
+        const { data: enr } = await supabase
+          .from("enrollments")
+          .select("student_id, is_active, created_at, schools(name)")
+          .in("student_id", privateStudentIds)
+          .order("created_at", { ascending: false });
+        (enr || []).forEach((e: any) => {
+          if (!studentSchoolMap.has(e.student_id) && e.schools?.name) {
+            studentSchoolMap.set(e.student_id, e.schools.name);
+          }
+        });
+      }
+
+      return rows.map((it: any) => {
         const activeLoan = (it.instrument_loans || []).find((l: any) => !l.return_date);
         let borrower = "";
+        let borrowerSchool = "";
         if (activeLoan) {
-          if (activeLoan.students) borrower = `${activeLoan.students.first_name} ${activeLoan.students.last_name}`.trim();
-          else if (activeLoan.school_music_students) borrower = `${activeLoan.school_music_students.student_first_name} ${activeLoan.school_music_students.student_last_name}`.trim();
+          if (activeLoan.students) {
+            borrower = `${activeLoan.students.first_name} ${activeLoan.students.last_name}`.trim();
+            borrowerSchool = studentSchoolMap.get(activeLoan.student_id) || "";
+          } else if (activeLoan.school_music_students) {
+            borrower = `${activeLoan.school_music_students.student_first_name} ${activeLoan.school_music_students.student_last_name}`.trim();
+            borrowerSchool = activeLoan.school_music_students.school_music_schools?.school_name || "";
+          }
         }
-        return { ...it, _borrower_name: borrower };
+        return { ...it, _borrower_name: borrower, _borrower_school: borrowerSchool };
       });
     },
   });
