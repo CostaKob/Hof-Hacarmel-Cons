@@ -184,6 +184,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
         const sizeRaw = String(row.size || "").trim();
         const locName = String(row.storage_location || "").trim();
         const purchaseDateRaw = String(row.purchase_date || "").trim();
+        const loanedNationalId = String(row.loaned_to_national_id || "").trim();
 
         if (!instrumentName) errors.push("חסר סוג כלי");
         if (!serial) errors.push("חסר מספר סידורי");
@@ -214,6 +215,11 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
 
         const sizeNorm = normalizeSize(sizeRaw);
 
+        // If loaned national ID provided, force condition to "loaned"
+        if (loanedNationalId && conditionValue !== "loaned") {
+          conditionValue = "loaned";
+        }
+
         let duplicate = false;
         if (instrumentId && serial) {
           const key = `${instrumentId}|${serial.toLowerCase()}`;
@@ -238,6 +244,7 @@ const InventoryImportDialog = ({ open, onOpenChange }: Props) => {
           storage_location_name: locName || null,
           purchase_date: purchaseDate,
           notes: String(row.notes || "").trim() || null,
+          loaned_to_national_id: loanedNationalId || null,
         } : undefined;
 
         parsed.push({
