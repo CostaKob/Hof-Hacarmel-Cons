@@ -319,18 +319,34 @@ const AdminStudentPaymentCalc = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>הנחות מותאמות</Label>
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => setCustomDiscounts([...customDiscounts, { label: "", pct: "" }])}>
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }])}>
                 <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
             {customDiscounts.map((c, i) => (
-              <div key={i} className="grid grid-cols-[1fr_120px_44px] gap-2">
+              <div key={i} className="grid grid-cols-[1fr_110px_90px_44px] gap-2">
                 <Input placeholder="תיאור" value={c.label} onChange={(e) => {
                   const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; setCustomDiscounts(arr);
                 }} className="h-11 rounded-xl" />
-                <Input placeholder="%" type="number" min="0" max="100" value={c.pct} onChange={(e) => {
-                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], pct: e.target.value }; setCustomDiscounts(arr);
-                }} className="h-11 rounded-xl" />
+                <Input
+                  placeholder={c.mode === "pct" ? "%" : "₪"}
+                  type="number"
+                  min="0"
+                  value={c.value}
+                  onChange={(e) => {
+                    const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; setCustomDiscounts(arr);
+                  }}
+                  className="h-11 rounded-xl"
+                />
+                <Select value={c.mode} onValueChange={(v) => {
+                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; setCustomDiscounts(arr);
+                }}>
+                  <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pct">אחוזים</SelectItem>
+                    <SelectItem value="amount">סכום ₪</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => setCustomDiscounts(customDiscounts.filter((_, idx) => idx !== i))}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -344,8 +360,8 @@ const AdminStudentPaymentCalc = () => {
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
           <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
           <SummaryRow label="לפי פרו-ראטה (לפי שיעורים נותרים מתוך 32)" value={proratedTotal} />
-          {totalDiscount > 0 && (
-            <SummaryRow label={`הנחה (${totalDiscount}%)`} value={-(proratedTotal - totalIncVat)} />
+          {totalDiscountAmount > 0 && (
+            <SummaryRow label="סה״כ הנחות" value={-totalDiscountAmount} />
           )}
           <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
