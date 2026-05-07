@@ -245,8 +245,9 @@ const AdminStudentPaymentCalc = () => {
                     <TableHead className="text-right">סניף</TableHead>
                     <TableHead className="text-right">משך</TableHead>
                     <TableHead className="text-right">תאריך התחלה</TableHead>
-                    <TableHead className="text-right">בסיס שנתי</TableHead>
-                    <TableHead className="text-right">חודשים נותרים</TableHead>
+                    <TableHead className="text-right">בסיס שנתי (כולל מע"מ)</TableHead>
+                    <TableHead className="text-right">מחיר לשיעור</TableHead>
+                    <TableHead className="text-right">שיעורים נותרים</TableHead>
                     <TableHead className="text-right">פרו-ראטה</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -265,7 +266,8 @@ const AdminStudentPaymentCalc = () => {
                           {r.source === "override" && <span className="text-[10px] text-muted-foreground mr-1">(override)</span>}
                           {r.source === "missing" && <span className="text-[10px] text-destructive mr-1">(חסר מחיר)</span>}
                         </TableCell>
-                        <TableCell>{r.monthsRemaining} / {r.monthsTotal}</TableCell>
+                        <TableCell>₪{Math.round(r.pricePerLesson).toLocaleString()}</TableCell>
+                        <TableCell>{r.lessonsRemaining} / {r.lessonsTotal}</TableCell>
                         <TableCell className="font-medium">₪{r.prorated.toLocaleString()}</TableCell>
                       </TableRow>
                     );
