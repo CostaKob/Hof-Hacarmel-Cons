@@ -106,6 +106,7 @@ const AdminStudentPaymentCalc = () => {
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
 
   useEffect(() => {
     if (student?.is_major_student) setMajorStudent(true);
