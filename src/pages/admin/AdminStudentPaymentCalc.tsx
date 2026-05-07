@@ -143,8 +143,7 @@ const AdminStudentPaymentCalc = () => {
   const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
   const vatAmount = totalIncVat - beforeVat;
 
-  const autoPaid = paymentsAggr?.net ?? 0;
-  const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : autoPaid;
+  const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : 0;
   const balance = totalIncVat - effectivePaid;
 
   const handleGenerateLink = async () => {
