@@ -38,7 +38,7 @@ interface AddPaymentDialogProps {
   defaultType?: "payment" | "credit";
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType }: AddPaymentDialogProps) => {
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
   const today = format(new Date(), "yyyy-MM-dd");
