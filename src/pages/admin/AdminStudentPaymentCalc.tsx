@@ -122,6 +122,8 @@ const AdminStudentPaymentCalc = () => {
 
   const annualTotal = rows.reduce((s, r) => s + r.annualBase, 0);
   const proratedTotal = rows.reduce((s, r) => s + r.prorated, 0);
+  const lessonsRemainingTotal = rows.reduce((s, r) => s + (r.lessonsRemaining || 0), 0);
+  const lessonsTotalAll = rows.reduce((s, r) => s + (r.lessonsTotal || 0), 0);
 
   const discountRates = {
     sibling: Number(yearFull?.discount_sibling_pct ?? 0),
@@ -360,7 +362,7 @@ const AdminStudentPaymentCalc = () => {
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-sm space-y-2.5">
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
           <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
-          <SummaryRow label="חישוב לפי שיעורים נותרים מתוך 32" value={proratedTotal} />
+          <SummaryRow label={`חישוב לפי שיעורים נותרים (${lessonsRemainingTotal} מתוך ${lessonsTotalAll})`} value={proratedTotal} />
           {sibling && discountRates.sibling > 0 && (
             <SummaryRow label={`הנחת אחים (${discountRates.sibling}%)`} value={-Math.round(proratedTotal * discountRates.sibling / 100)} />
           )}
