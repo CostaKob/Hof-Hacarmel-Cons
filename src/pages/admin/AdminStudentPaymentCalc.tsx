@@ -425,12 +425,16 @@ const AdminStudentPaymentCalc = () => {
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <Label className="flex items-center gap-2 cursor-pointer">
                 <Checkbox checked={paidOverrideEnabled} onCheckedChange={(v) => setPaidOverrideEnabled(!!v)} />
-                <span className="text-sm">הזן כבר שולם ידנית</span>
+                <span className="text-sm">רשום תשלום חדש</span>
               </Label>
-              
             </div>
             {paidOverrideEnabled && (
-              <Input type="number" min="0" placeholder="סכום ששולם" value={paidOverride} onChange={(e) => setPaidOverride(e.target.value)} className="h-11 rounded-xl" />
+              <div className="flex gap-2">
+                <Input type="number" min="0" placeholder="סכום ששולם" value={paidOverride} onChange={(e) => setPaidOverride(e.target.value)} className="h-11 rounded-xl flex-1" />
+                <Button className="h-11 rounded-xl" onClick={handleSavePaid} disabled={savingPaid || !paidOverride}>
+                  <Save className="h-4 w-4 ml-1" /> {savingPaid ? "שומר..." : "שמור"}
+                </Button>
+              </div>
             )}
           </div>
 
@@ -438,6 +442,11 @@ const AdminStudentPaymentCalc = () => {
           <div className="border-t border-primary/20 pt-2">
             <SummaryRow label="יתרה לתשלום" value={balance} bold large highlight={balance > 0} />
           </div>
+          {isFullyPaid && (
+            <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
+              <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
+            </div>
+          )}
         </div>
 
         {/* Generate iCount link */}
