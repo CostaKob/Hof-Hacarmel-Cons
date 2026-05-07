@@ -262,13 +262,13 @@ const AdminStudentCard = () => {
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground text-base">רישומים ({enrollments.length})</h2>
+            <h2 className="font-semibold text-foreground text-base">שיוכים ({enrollments.length})</h2>
             <Button className="h-10 rounded-xl text-sm" onClick={() => navigate(`/admin/enrollments/new?student_id=${studentId}`)}>
               <Plus className="h-4 w-4" /> שיוך חדש
             </Button>
           </div>
           {enrollments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">אין רישומים</p>
+            <p className="text-sm text-muted-foreground">אין שיוכים</p>
           ) : (
             <div className="space-y-2">
               {enrollments.map((e: any) => (
