@@ -103,9 +103,9 @@ const AdminStudentPaymentCalc = () => {
   const [majorStudent, setMajorStudent] = useState(false);
   const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
 
-  const [paidOverride, setPaidOverride] = useState<string>("");
-  const [paidOverrideEnabled, setPaidOverrideEnabled] = useState(false);
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
 
   useEffect(() => {
     if (student?.is_major_student) setMajorStudent(true);
@@ -165,39 +165,9 @@ const AdminStudentPaymentCalc = () => {
   const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
   const vatAmount = totalIncVat - beforeVat;
 
-  const alreadyPaidNet = paymentsAggr?.net ?? 0;
-  const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : alreadyPaidNet;
+  const effectivePaid = paymentsAggr?.net ?? 0;
   const balance = totalIncVat - effectivePaid;
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
-
-  const [savingPaid, setSavingPaid] = useState(false);
-  const handleSavePaid = async () => {
-    const amount = Number(paidOverride) || 0;
-    if (amount <= 0) { toast.error("יש להזין סכום חיובי"); return; }
-    if (!enrollments || enrollments.length === 0) { toast.error("אין שיוכים פעילים"); return; }
-    setSavingPaid(true);
-    try {
-      const { error } = await supabase.from("student_payments").insert({
-        student_id: studentId!,
-        academic_year_id: yearId!,
-        enrollment_id: enrollments[0].id,
-        amount,
-        payment_date: new Date().toISOString().slice(0, 10),
-        transaction_type: "payment",
-        notes: "נרשם דרך מסך חישוב תשלום",
-      } as any);
-      if (error) throw error;
-      toast.success("התשלום נשמר");
-      setPaidOverride("");
-      setPaidOverrideEnabled(false);
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId, yearId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
-    } catch (err: any) {
-      toast.error(err.message || "שגיאה בשמירה");
-    } finally {
-      setSavingPaid(false);
-    }
-  };
 
   const handleGenerateLink = async () => {
     if (!student) return;
