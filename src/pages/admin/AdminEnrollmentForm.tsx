@@ -50,6 +50,7 @@ const AdminEnrollmentForm = () => {
       is_active: true,
       enrollment_role: "primary",
       lesson_type: "individual",
+      // enrollment_role kept as 'primary' silently — UI removed
       lesson_duration_minutes: "45",
       instrument_start_date: "",
       grade: "",
@@ -244,15 +245,6 @@ const AdminEnrollmentForm = () => {
       label: "בית ספר",
       required: true,
       options: schools.map((s) => ({ value: s.id, label: s.name })),
-    },
-    {
-      name: "enrollment_role",
-      label: "תפקיד שיוך",
-      required: true,
-      options: [
-        { value: "primary", label: "ראשי" },
-        { value: "secondary", label: "משני" },
-      ],
     },
     {
       name: "lesson_type",

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
@@ -28,6 +28,7 @@ const AdminStudents = () => {
   const selectedYear = years.find((y) => y.id === selectedYearId);
 
   const search = searchParams.get("q") || "";
+  const view = searchParams.get("view") || "enrollments"; // enrollments | all
   const teacherFilter = searchParams.get("teacher") || "all";
   const schoolFilter = searchParams.get("school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
@@ -83,6 +84,39 @@ const AdminStudents = () => {
   const paidEnrollmentIds = useMemo(() => {
     return new Set<string>(yearPayments.map((p: any) => p.enrollment_id).filter(Boolean));
   }, [yearPayments]);
+
+  // All-students view: raw students table (independent of enrollments)
+  const { data: allStudents = [], isLoading: loadingAll } = useQuery({
+    queryKey: ["admin-all-students-raw"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, first_name, last_name, national_id, phone, parent_name, parent_phone, city, grade, student_status, is_active, created_at");
+      if (error) throw error;
+      return (data ?? []).sort((a: any, b: any) =>
+        `${a.last_name ?? ""} ${a.first_name ?? ""}`.localeCompare(`${b.last_name ?? ""} ${b.first_name ?? ""}`, "he")
+      );
+    },
+  });
+
+  const activeStudentsCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק").length;
+
+  const filteredAll = allStudents.filter((s: any) => {
+    if (search) {
+      const normalize = (str: string) => (str ?? "").toLowerCase().replace(/['"׳״']/g, "").trim();
+      const q = normalize(search);
+      const haystack = normalize(`${s.first_name ?? ""} ${s.last_name ?? ""} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.parent_phone ?? ""} ${s.phone ?? ""} ${s.city ?? ""} ${s.grade ?? ""}`);
+      if (!haystack.includes(q)) return false;
+    }
+    if (cityFilter !== "all" && s.city !== cityFilter) return false;
+    if (gradeFilter !== "all") {
+      const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
+      if (stripMarks(s.grade ?? "") !== stripMarks(gradeFilter)) return false;
+    }
+    if (statusFilter === "active" && (!s.is_active || s.student_status === "הפסיק")) return false;
+    if (statusFilter === "stopped" && s.is_active && s.student_status !== "הפסיק") return false;
+    return true;
+  });
 
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["admin-students-all-teachers"],
@@ -152,39 +186,64 @@ const AdminStudents = () => {
         </div>
       </div>
 
+      {/* View toggle */}
+      <div className="mb-4 inline-flex rounded-xl border border-border bg-card p-1 shadow-sm">
+        <button
+          onClick={() => setFilter("view", "enrollments")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "enrollments" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <ListChecks className="h-4 w-4" />
+          לפי שיוכים
+        </button>
+        <button
+          onClick={() => setFilter("view", "all")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "all" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <Users className="h-4 w-4" />
+          כל התלמידים
+          <Badge variant="secondary" className="rounded-md text-[10px] px-1.5 py-0 ml-1">
+            {activeStudentsCount} פעילים
+          </Badge>
+        </button>
+      </div>
+
       <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap gap-2">
-        <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
-          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">מורים</SelectItem>
-            {(teachers as any[]).map((t: any) => (
-              <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {view === "enrollments" && (
+          <>
+            <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="מורים" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">מורים</SelectItem>
+                {(teachers as any[]).map((t: any) => (
+                  <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
-          <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בתי ספר" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">בתי ספר</SelectItem>
-            {(schools as any[]).map((s: any) => (
-              <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בתי ספר" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">בתי ספר</SelectItem>
+                {(schools as any[]).map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
-          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">משך שיעור</SelectItem>
-            {durations.map((d) => (
-              <SelectItem key={d} value={String(d)}>{d} דק׳</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+            <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
+              <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">משך שיעור</SelectItem>
+                {durations.map((d) => (
+                  <SelectItem key={d} value={String(d)}>{d} דק׳</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </>
+        )}
 
         <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
           <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
@@ -215,28 +274,81 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
-        <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמת לימוד" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">רמת לימוד</SelectItem>
-            {["א","ב","ג"].map((l) => (
-              <SelectItem key={l} value={l}>{l}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {view === "enrollments" && (
+          <>
+            <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
+              <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="רמת לימוד" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">רמת לימוד</SelectItem>
+                {["א","ב","ג"].map((l) => (
+                  <SelectItem key={l} value={l}>{l}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-        <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
-          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">תשלומים</SelectItem>
-            <SelectItem value="paid">שולם</SelectItem>
-            <SelectItem value="unpaid">לא שולם</SelectItem>
-          </SelectContent>
-        </Select>
+            <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
+              <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">תשלומים</SelectItem>
+                <SelectItem value="paid">שולם</SelectItem>
+                <SelectItem value="unpaid">לא שולם</SelectItem>
+              </SelectContent>
+            </Select>
+          </>
+        )}
       </div>
 
       {/* Card-based list */}
-      {isLoading ? (
+      {view === "all" ? (
+        loadingAll ? (
+          <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : filteredAll.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground mb-2">
+              {filteredAll.length} תלמידים · {activeStudentsCount} פעילים בסך הכול
+            </p>
+            <div className="space-y-2">
+              {filteredAll.map((s: any, index: number) => {
+                const stopped = !s.is_active || s.student_status === "הפסיק";
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => {
+                      saveListScrollPosition("/admin/students");
+                      navigate(`/admin/students/${s.id}`, {
+                        state: { returnTo: `${location.pathname}${location.search}` },
+                      });
+                    }}
+                    className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${stopped ? "opacity-60" : ""}`}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {s.first_name} {s.last_name}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                          {s.national_id && <span>ת.ז {s.national_id}</span>}
+                          {s.grade && (<><span>·</span><span>כיתה {s.grade}</span></>)}
+                          {s.city && (<><span>·</span><span>{s.city}</span></>)}
+                          {s.parent_phone && (<><span>·</span><span>{s.parent_phone}</span></>)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mr-3 shrink-0">
+                      <Badge variant={stopped ? "outline" : "default"} className={`rounded-lg ${stopped ? "text-destructive border-destructive" : ""}`}>
+                        {stopped ? (s.student_status === "הפסיק" ? "הפסיק" : "לא פעיל") : "פעיל"}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )
+      ) : isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">
