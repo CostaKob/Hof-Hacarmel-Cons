@@ -327,12 +327,14 @@ const AdminStudentPaymentCalc = () => {
         {/* Summary */}
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-sm space-y-2.5">
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
-          <SummaryRow label="בסיס שנתי מלא" value={annualTotal} />
-          <SummaryRow label="לפי פרו-ראטה (מתאריך התחלה עד סוף שנה)" value={proratedTotal} />
-          <SummaryRow label={`אחרי הנחות (${totalDiscount}%)`} value={afterDiscounts} bold />
-          <SummaryRow label={`מע"מ (${vatRate}%)`} value={vatAmount} />
+          <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
+          <SummaryRow label="לפי פרו-ראטה (לפי שיעורים נותרים מתוך 32)" value={proratedTotal} />
+          {totalDiscount > 0 && (
+            <SummaryRow label={`הנחה (${totalDiscount}%)`} value={-(proratedTotal - totalIncVat)} />
+          )}
+          <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
-            <SummaryRow label='סה"כ כולל מע"מ' value={totalIncVat} bold large />
+            <SummaryRow label='סה"כ לתשלום (כולל מע"מ)' value={totalIncVat} bold large />
           </div>
 
           <div className="mt-3 pt-3 border-t border-primary/20 space-y-2">
