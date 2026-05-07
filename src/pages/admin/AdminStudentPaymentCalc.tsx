@@ -361,8 +361,25 @@ const AdminStudentPaymentCalc = () => {
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
           <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
           <SummaryRow label="לפי פרו-ראטה (לפי שיעורים נותרים מתוך 32)" value={proratedTotal} />
+          {sibling && discountRates.sibling > 0 && (
+            <SummaryRow label={`הנחת אחים (${discountRates.sibling}%)`} value={-Math.round(proratedTotal * discountRates.sibling / 100)} />
+          )}
+          {secondInstrument && discountRates.secondInstrument > 0 && (
+            <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}%)`} value={-Math.round(proratedTotal * discountRates.secondInstrument / 100)} />
+          )}
+          {majorStudent && discountRates.majorStudent > 0 && (
+            <SummaryRow label={`הנחת מגמה (${discountRates.majorStudent}%)`} value={-Math.round(proratedTotal * discountRates.majorStudent / 100)} />
+          )}
+          {customDiscounts.map((c, i) => {
+            const v = Number(c.value) || 0;
+            if (!v) return null;
+            const amount = c.mode === "pct" ? Math.round(afterStdDiscount * v / 100) : v;
+            const name = c.label?.trim() || "הנחה מותאמת";
+            const suffix = c.mode === "pct" ? ` (${v}%)` : "";
+            return <SummaryRow key={i} label={`${name}${suffix}`} value={-amount} />;
+          })}
           {totalDiscountAmount > 0 && (
-            <SummaryRow label="סה״כ הנחות" value={-totalDiscountAmount} />
+            <SummaryRow label="סה״כ הנחות" value={-totalDiscountAmount} bold />
           )}
           <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
