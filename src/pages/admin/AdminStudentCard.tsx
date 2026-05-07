@@ -38,6 +38,7 @@ const AdminStudentCard = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
