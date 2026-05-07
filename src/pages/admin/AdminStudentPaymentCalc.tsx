@@ -67,25 +67,33 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
-  const { data: paymentsAggr } = useQuery({
+  const { data: paymentsList = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: enrs } = await supabase.from("enrollments").select("id").eq("student_id", studentId!);
+      const ids = (enrs ?? []).map((e) => e.id);
+      const query = supabase
         .from("student_payments")
-        .select("amount, transaction_type")
-        .eq("student_id", studentId!)
-        .eq("academic_year_id", yearId!);
+        .select("*")
+        .eq("academic_year_id", yearId!)
+        .order("payment_date", { ascending: false });
+      const { data, error } = ids.length > 0
+        ? await query.or(`student_id.eq.${studentId},enrollment_id.in.(${ids.join(",")})`)
+        : await query.eq("student_id", studentId!);
       if (error) throw error;
-      let paid = 0;
-      let credit = 0;
-      for (const r of data ?? []) {
-        if ((r as any).transaction_type === "payment") paid += Number((r as any).amount);
-        else if ((r as any).transaction_type === "credit") credit += Number((r as any).amount);
-      }
-      return { net: paid - credit, paid, credit };
+      return data ?? [];
     },
   });
+
+  const paymentsAggr = useMemo(() => {
+    let paid = 0, credit = 0;
+    for (const r of paymentsList as any[]) {
+      if (r.transaction_type === "payment") paid += Number(r.amount);
+      else if (r.transaction_type === "credit") credit += Number(r.amount);
+    }
+    return { net: paid - credit, paid, credit };
+  }, [paymentsList]);
 
   // Discount state
   const [sibling, setSibling] = useState(false);
