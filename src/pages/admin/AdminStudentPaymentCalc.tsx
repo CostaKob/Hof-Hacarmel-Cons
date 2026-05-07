@@ -376,7 +376,12 @@ const AdminStudentPaymentCalc = () => {
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-sm space-y-2.5">
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
           <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
-          <SummaryRow label={`חישוב לפי שיעורים נותרים (${lessonsRemainingTotal} מתוך ${lessonsTotalAll})`} value={proratedTotal} />
+          {rows.map((r) => {
+            const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
+            const label = `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"} (${r.lessonsRemaining}/${r.lessonsTotal})`;
+            return <SummaryRow key={r.enrollmentId} label={label} value={r.prorated} />;
+          })}
+          <SummaryRow label={`סה״כ חישוב לפי שיעורים נותרים (${lessonsRemainingTotal} מתוך ${lessonsTotalAll})`} value={proratedTotal} bold />
           {sibling && discountRates.sibling > 0 && (
             <SummaryRow label={`הנחת אחים (${discountRates.sibling}%)`} value={-Math.round(proratedTotal * discountRates.sibling / 100)} />
           )}
