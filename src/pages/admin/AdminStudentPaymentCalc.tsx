@@ -468,6 +468,7 @@ const AdminStudentPaymentCalc = () => {
           studentId={studentId!}
           enrollments={enrollments ?? []}
           editPayment={editingPayment}
+          defaultType={paymentDialogType}
         />
       </div>
     </AdminLayout>
