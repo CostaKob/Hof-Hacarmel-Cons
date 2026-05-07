@@ -117,7 +117,7 @@ const AdminStudentPaymentCalc = () => {
         yearFull.end_date
       )
     );
-  }, [enrollments, yearFull, settings]);
+  }, [enrollments, yearFull, settings, startDateOverrides]);
 
   const annualTotal = rows.reduce((s, r) => s + r.annualBase, 0);
   const proratedTotal = rows.reduce((s, r) => s + r.prorated, 0);
