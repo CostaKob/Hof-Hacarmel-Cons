@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, Send } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
@@ -88,7 +89,7 @@ const AdminStudentPaymentCalc = () => {
   const [sibling, setSibling] = useState(false);
   const [secondInstrument, setSecondInstrument] = useState(false);
   const [majorStudent, setMajorStudent] = useState(false);
-  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; pct: string }[]>([]);
+  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
 
   const [paidOverride, setPaidOverride] = useState<string>("");
   const [paidOverrideEnabled, setPaidOverrideEnabled] = useState(false);
@@ -128,18 +129,24 @@ const AdminStudentPaymentCalc = () => {
     majorStudent: Number(yearFull?.discount_major_student_pct ?? 0),
   };
 
-  const totalDiscount = totalDiscountPct(
-    {
-      sibling,
-      secondInstrument,
-      majorStudent,
-      custom: customDiscounts.map((c) => ({ label: c.label, pct: Number(c.pct) || 0 })),
-    },
+  // Standard percentage discounts (sibling/secondInstrument/majorStudent only)
+  const stdDiscountPct = totalDiscountPct(
+    { sibling, secondInstrument, majorStudent },
     discountRates
   );
 
-  // Prices already include VAT — discount applies to the full incl-VAT amount
-  const totalIncVat = Math.round(proratedTotal * (1 - totalDiscount / 100));
+  const afterStdDiscount = Math.round(proratedTotal * (1 - stdDiscountPct / 100));
+
+  // Custom discounts: each is either a percentage of afterStdDiscount, or a flat ILS amount
+  const customDiscountAmount = customDiscounts.reduce((sum, c) => {
+    const v = Number(c.value) || 0;
+    if (c.mode === "pct") return sum + (afterStdDiscount * v) / 100;
+    return sum + v;
+  }, 0);
+
+  // Prices already include VAT
+  const totalIncVat = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
+  const totalDiscountAmount = proratedTotal - totalIncVat;
   const vatRate = Number(settings?.vat_rate ?? 18);
   const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
   const vatAmount = totalIncVat - beforeVat;
@@ -173,8 +180,10 @@ const AdminStudentPaymentCalc = () => {
         sibling: sibling ? discountRates.sibling : 0,
         second_instrument: secondInstrument ? discountRates.secondInstrument : 0,
         major_student: majorStudent ? discountRates.majorStudent : 0,
-        custom: customDiscounts.map((c) => ({ label: c.label, pct: Number(c.pct) || 0 })),
-        total_pct: totalDiscount,
+        custom: customDiscounts.map((c) => ({ label: c.label, mode: c.mode, value: Number(c.value) || 0 })),
+        std_total_pct: stdDiscountPct,
+        custom_total_amount: Math.round(customDiscountAmount),
+        total_discount_amount: totalDiscountAmount,
       },
       before_vat: beforeVat,
       vat_rate: vatRate,
@@ -311,18 +320,34 @@ const AdminStudentPaymentCalc = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>הנחות מותאמות</Label>
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => setCustomDiscounts([...customDiscounts, { label: "", pct: "" }])}>
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }])}>
                 <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
             {customDiscounts.map((c, i) => (
-              <div key={i} className="grid grid-cols-[1fr_120px_44px] gap-2">
+              <div key={i} className="grid grid-cols-[1fr_110px_90px_44px] gap-2">
                 <Input placeholder="תיאור" value={c.label} onChange={(e) => {
                   const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; setCustomDiscounts(arr);
                 }} className="h-11 rounded-xl" />
-                <Input placeholder="%" type="number" min="0" max="100" value={c.pct} onChange={(e) => {
-                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], pct: e.target.value }; setCustomDiscounts(arr);
-                }} className="h-11 rounded-xl" />
+                <Input
+                  placeholder={c.mode === "pct" ? "%" : "₪"}
+                  type="number"
+                  min="0"
+                  value={c.value}
+                  onChange={(e) => {
+                    const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; setCustomDiscounts(arr);
+                  }}
+                  className="h-11 rounded-xl"
+                />
+                <Select value={c.mode} onValueChange={(v) => {
+                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; setCustomDiscounts(arr);
+                }}>
+                  <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pct">אחוזים</SelectItem>
+                    <SelectItem value="amount">סכום ₪</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => setCustomDiscounts(customDiscounts.filter((_, idx) => idx !== i))}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -336,8 +361,8 @@ const AdminStudentPaymentCalc = () => {
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
           <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
           <SummaryRow label="לפי פרו-ראטה (לפי שיעורים נותרים מתוך 32)" value={proratedTotal} />
-          {totalDiscount > 0 && (
-            <SummaryRow label={`הנחה (${totalDiscount}%)`} value={-(proratedTotal - totalIncVat)} />
+          {totalDiscountAmount > 0 && (
+            <SummaryRow label="סה״כ הנחות" value={-totalDiscountAmount} />
           )}
           <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
