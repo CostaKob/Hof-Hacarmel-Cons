@@ -2,87 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Apple-inspired design: soft cool neutrals with a subtle blue accent. All colors MUST be HSL. */
+/* Apple-inspired design with olive green accent on warm off-white. All colors MUST be HSL. */
 
 @layer base {
   :root {
-    --background: 220 30% 99%;
-    --foreground: 220 25% 14%;
+    --background: 60 20% 98%;
+    --foreground: 80 15% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 14%;
+    --card-foreground: 80 15% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 14%;
+    --popover-foreground: 80 15% 12%;
 
-    --primary: 211 90% 52%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 75 35% 32%;
+    --primary-foreground: 60 25% 98%;
 
-    --secondary: 220 20% 96%;
-    --secondary-foreground: 220 25% 20%;
+    --secondary: 70 15% 94%;
+    --secondary-foreground: 80 15% 20%;
 
-    --muted: 220 20% 96%;
-    --muted-foreground: 220 9% 48%;
+    --muted: 70 15% 95%;
+    --muted-foreground: 80 8% 45%;
 
-    --accent: 211 70% 96%;
-    --accent-foreground: 211 90% 40%;
+    --accent: 75 30% 92%;
+    --accent-foreground: 75 35% 25%;
 
-    --destructive: 4 75% 55%;
+    --destructive: 4 70% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 16% 91%;
-    --input: 220 16% 91%;
-    --ring: 211 90% 52%;
+    --border: 70 12% 89%;
+    --input: 70 12% 89%;
+    --ring: 75 35% 32%;
 
     --radius: 0.875rem;
 
-    --sidebar-background: 220 25% 98%;
-    --sidebar-foreground: 220 15% 28%;
-    --sidebar-primary: 211 90% 52%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 211 70% 96%;
-    --sidebar-accent-foreground: 211 90% 40%;
-    --sidebar-border: 220 16% 91%;
-    --sidebar-ring: 211 90% 52%;
+    --sidebar-background: 60 20% 97%;
+    --sidebar-foreground: 80 12% 28%;
+    --sidebar-primary: 75 35% 32%;
+    --sidebar-primary-foreground: 60 25% 98%;
+    --sidebar-accent: 75 30% 92%;
+    --sidebar-accent-foreground: 75 35% 25%;
+    --sidebar-border: 70 12% 89%;
+    --sidebar-ring: 75 35% 32%;
   }
 
   .dark {
-    --background: 220 18% 8%;
-    --foreground: 220 15% 96%;
+    --background: 80 12% 8%;
+    --foreground: 60 15% 95%;
 
-    --card: 220 18% 11%;
-    --card-foreground: 220 15% 96%;
+    --card: 80 12% 11%;
+    --card-foreground: 60 15% 95%;
 
-    --popover: 220 18% 11%;
-    --popover-foreground: 220 15% 96%;
+    --popover: 80 12% 11%;
+    --popover-foreground: 60 15% 95%;
 
-    --primary: 211 95% 62%;
-    --primary-foreground: 220 25% 10%;
+    --primary: 75 40% 58%;
+    --primary-foreground: 80 20% 10%;
 
-    --secondary: 220 12% 17%;
-    --secondary-foreground: 220 15% 92%;
+    --secondary: 80 10% 17%;
+    --secondary-foreground: 60 15% 92%;
 
-    --muted: 220 12% 17%;
-    --muted-foreground: 220 8% 62%;
+    --muted: 80 10% 17%;
+    --muted-foreground: 60 8% 60%;
 
-    --accent: 211 40% 22%;
-    --accent-foreground: 211 90% 78%;
+    --accent: 75 25% 22%;
+    --accent-foreground: 75 40% 78%;
 
-    --destructive: 4 65% 48%;
+    --destructive: 4 60% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 12% 19%;
-    --input: 220 12% 19%;
-    --ring: 211 95% 62%;
+    --border: 80 10% 19%;
+    --input: 80 10% 19%;
+    --ring: 75 40% 58%;
 
-    --sidebar-background: 220 18% 8%;
-    --sidebar-foreground: 220 15% 88%;
-    --sidebar-primary: 211 95% 62%;
-    --sidebar-primary-foreground: 220 25% 10%;
-    --sidebar-accent: 211 40% 22%;
-    --sidebar-accent-foreground: 211 90% 78%;
-    --sidebar-border: 220 12% 19%;
-    --sidebar-ring: 211 95% 62%;
+    --sidebar-background: 80 12% 8%;
+    --sidebar-foreground: 60 15% 88%;
+    --sidebar-primary: 75 40% 58%;
+    --sidebar-primary-foreground: 80 20% 10%;
+    --sidebar-accent: 75 25% 22%;
+    --sidebar-accent-foreground: 75 40% 78%;
+    --sidebar-border: 80 10% 19%;
+    --sidebar-ring: 75 40% 58%;
   }
 }
 
