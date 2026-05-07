@@ -435,7 +435,10 @@ const AdminStudentPaymentCalc = () => {
             )}
           </div>
 
-          <SummaryRow label="כבר שולם" value={effectivePaid} />
+          <SummaryRow label="כבר שולם" value={paymentsAggr.paid} />
+          {paymentsAggr.credit > 0 && (
+            <SummaryRow label="זיכויים" value={-paymentsAggr.credit} />
+          )}
           <div className="border-t border-primary/20 pt-2">
             <SummaryRow label="יתרה לתשלום" value={balance} bold large highlight={balance > 0} />
           </div>
