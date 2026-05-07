@@ -385,6 +385,7 @@ const AdminStudentCard = () => {
           studentId={studentId!}
           enrollments={enrollments}
           editPayment={editingPayment}
+          defaultType={paymentDialogType}
         />
 
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
