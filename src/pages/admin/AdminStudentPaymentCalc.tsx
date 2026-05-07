@@ -9,11 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send, Save } from "lucide-react";
+import { Loader2, Plus, Trash2, Send } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 
 const AdminStudentPaymentCalc = () => {
   const { studentId } = useParams<{ studentId: string }>();
@@ -67,25 +69,33 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
-  const { data: paymentsAggr } = useQuery({
+  const { data: paymentsList = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: enrs } = await supabase.from("enrollments").select("id").eq("student_id", studentId!);
+      const ids = (enrs ?? []).map((e) => e.id);
+      const query = supabase
         .from("student_payments")
-        .select("amount, transaction_type")
-        .eq("student_id", studentId!)
-        .eq("academic_year_id", yearId!);
+        .select("*")
+        .eq("academic_year_id", yearId!)
+        .order("payment_date", { ascending: false });
+      const { data, error } = ids.length > 0
+        ? await query.or(`student_id.eq.${studentId},enrollment_id.in.(${ids.join(",")})`)
+        : await query.eq("student_id", studentId!);
       if (error) throw error;
-      let paid = 0;
-      let credit = 0;
-      for (const r of data ?? []) {
-        if ((r as any).transaction_type === "payment") paid += Number((r as any).amount);
-        else if ((r as any).transaction_type === "credit") credit += Number((r as any).amount);
-      }
-      return { net: paid - credit, paid, credit };
+      return data ?? [];
     },
   });
+
+  const paymentsAggr = useMemo(() => {
+    let paid = 0, credit = 0;
+    for (const r of paymentsList as any[]) {
+      if (r.transaction_type === "payment") paid += Number(r.amount);
+      else if (r.transaction_type === "credit") credit += Number(r.amount);
+    }
+    return { net: paid - credit, paid, credit };
+  }, [paymentsList]);
 
   // Discount state
   const [sibling, setSibling] = useState(false);
@@ -93,9 +103,9 @@ const AdminStudentPaymentCalc = () => {
   const [majorStudent, setMajorStudent] = useState(false);
   const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
 
-  const [paidOverride, setPaidOverride] = useState<string>("");
-  const [paidOverrideEnabled, setPaidOverrideEnabled] = useState(false);
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
 
   useEffect(() => {
     if (student?.is_major_student) setMajorStudent(true);
@@ -155,39 +165,9 @@ const AdminStudentPaymentCalc = () => {
   const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
   const vatAmount = totalIncVat - beforeVat;
 
-  const alreadyPaidNet = paymentsAggr?.net ?? 0;
-  const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : alreadyPaidNet;
+  const effectivePaid = paymentsAggr?.net ?? 0;
   const balance = totalIncVat - effectivePaid;
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
-
-  const [savingPaid, setSavingPaid] = useState(false);
-  const handleSavePaid = async () => {
-    const amount = Number(paidOverride) || 0;
-    if (amount <= 0) { toast.error("יש להזין סכום חיובי"); return; }
-    if (!enrollments || enrollments.length === 0) { toast.error("אין שיוכים פעילים"); return; }
-    setSavingPaid(true);
-    try {
-      const { error } = await supabase.from("student_payments").insert({
-        student_id: studentId!,
-        academic_year_id: yearId!,
-        enrollment_id: enrollments[0].id,
-        amount,
-        payment_date: new Date().toISOString().slice(0, 10),
-        transaction_type: "payment",
-        notes: "נרשם דרך מסך חישוב תשלום",
-      } as any);
-      if (error) throw error;
-      toast.success("התשלום נשמר");
-      setPaidOverride("");
-      setPaidOverrideEnabled(false);
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId, yearId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
-    } catch (err: any) {
-      toast.error(err.message || "שגיאה בשמירה");
-    } finally {
-      setSavingPaid(false);
-    }
-  };
 
   const handleGenerateLink = async () => {
     if (!student) return;
@@ -423,17 +403,34 @@ const AdminStudentPaymentCalc = () => {
 
           <div className="mt-3 pt-3 border-t border-primary/20 space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={paidOverrideEnabled} onCheckedChange={(v) => setPaidOverrideEnabled(!!v)} />
-                <span className="text-sm">רשום תשלום חדש</span>
-              </Label>
+              <span className="text-sm font-semibold">תשלומים ({paymentsList.length})</span>
+              <Button size="sm" className="h-9 rounded-lg" onClick={() => { setEditingPayment(null); setPaymentDialogOpen(true); }} disabled={!enrollments || enrollments.length === 0}>
+                <Plus className="h-4 w-4" /> הוסף תשלום
+              </Button>
             </div>
-            {paidOverrideEnabled && (
-              <div className="flex gap-2">
-                <Input type="number" min="0" placeholder="סכום ששולם" value={paidOverride} onChange={(e) => setPaidOverride(e.target.value)} className="h-11 rounded-xl flex-1" />
-                <Button className="h-11 rounded-xl" onClick={handleSavePaid} disabled={savingPaid || !paidOverride}>
-                  <Save className="h-4 w-4 ml-1" /> {savingPaid ? "שומר..." : "שמור"}
-                </Button>
+            {paymentsList.length === 0 ? (
+              <p className="text-xs text-muted-foreground">לא בוצעו תשלומים עדיין</p>
+            ) : (
+              <div className="space-y-1.5">
+                {(paymentsList as any[]).map((p) => {
+                  const isCredit = p.transaction_type !== "payment";
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
+                      className="flex items-center justify-between rounded-lg bg-card border border-border px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="text-xs">
+                        <span className="font-medium">{format(new Date(p.payment_date), "dd/MM/yyyy")}</span>
+                        <span className="text-muted-foreground"> · {isCredit ? "זיכוי" : "תשלום"}</span>
+                        {p.notes && <span className="text-muted-foreground"> · {p.notes}</span>}
+                      </div>
+                      <span className={`text-sm font-semibold ${isCredit ? "text-destructive" : "text-primary"}`}>
+                        {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -455,6 +452,14 @@ const AdminStudentPaymentCalc = () => {
             <Send className="h-4 w-4 ml-2" /> צור קישור לתשלום
           </Button>
         </div>
+
+        <AddPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          studentId={studentId!}
+          enrollments={enrollments ?? []}
+          editPayment={editingPayment}
+        />
       </div>
     </AdminLayout>
   );

@@ -19,6 +19,7 @@ import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
+import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
@@ -35,6 +36,8 @@ const AdminStudentCard = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
@@ -327,8 +330,13 @@ const AdminStudentCard = () => {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
-            <div className="text-sm text-muted-foreground">
-              סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.filter((p: any) => p.transaction_type === "payment").reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-muted-foreground">
+                סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.filter((p: any) => p.transaction_type === "payment").reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
+              </div>
+              <Button className="h-10 rounded-xl text-sm" onClick={() => { setEditingPayment(null); setPaymentDialogOpen(true); }} disabled={enrollments.length === 0}>
+                <Plus className="h-4 w-4" /> הוסף תשלום
+              </Button>
             </div>
           </div>
           {payments.length === 0 ? (
@@ -338,7 +346,11 @@ const AdminStudentCard = () => {
               {payments.map((p: any) => {
                 const isCredit = p.transaction_type !== "payment";
                 return (
-                  <div key={p.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+                  <div
+                    key={p.id}
+                    onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
+                    className="flex items-center justify-between rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
                     <div className="min-w-0">
                       <p className="font-medium text-foreground text-sm">
                         {format(new Date(p.payment_date), "dd/MM/yyyy")}
@@ -362,6 +374,14 @@ const AdminStudentCard = () => {
             </div>
           )}
         </div>
+
+        <AddPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          studentId={studentId!}
+          enrollments={enrollments}
+          editPayment={editingPayment}
+        />
 
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
 
