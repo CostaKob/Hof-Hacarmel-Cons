@@ -82,9 +82,8 @@ const AdminStudents = () => {
     enabled: !!selectedYearId,
   });
 
-  const paidEnrollmentIds = useMemo(() => {
-    return new Set<string>(yearPayments.map((p: any) => p.enrollment_id).filter(Boolean));
-  }, [yearPayments]);
+  // Payment status disabled — old payments module removed; new calculator handles billing.
+  const paidEnrollmentIds = useMemo(() => new Set<string>(), []);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
