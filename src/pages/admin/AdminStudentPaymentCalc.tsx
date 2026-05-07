@@ -405,14 +405,9 @@ const AdminStudentPaymentCalc = () => {
           <div className="mt-3 pt-3 border-t border-primary/20 space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <span className="text-sm font-semibold">תשלומים ({paymentsList.length})</span>
-              <div className="flex gap-2">
-                <Button size="sm" className="h-9 rounded-lg" onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }} disabled={!enrollments || enrollments.length === 0}>
-                  <Plus className="h-4 w-4" /> תשלום
-                </Button>
-                <Button variant="outline" size="sm" className="h-9 rounded-lg border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => { setEditingPayment(null); setPaymentDialogType("credit"); setPaymentDialogOpen(true); }} disabled={!enrollments || enrollments.length === 0}>
-                  <Plus className="h-4 w-4" /> זיכוי
-                </Button>
-              </div>
+              <Button size="sm" className="h-9 rounded-lg" onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }} disabled={!enrollments || enrollments.length === 0}>
+                <Plus className="h-4 w-4" /> תשלום / זיכוי
+              </Button>
             </div>
             {paymentsList.length === 0 ? (
               <p className="text-xs text-muted-foreground">לא בוצעו תשלומים עדיין</p>
