@@ -13,6 +13,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminStudentForm from "./pages/admin/AdminStudentForm";
 import AdminStudentCard from "./pages/admin/AdminStudentCard";
+import AdminStudentPaymentCalc from "./pages/admin/AdminStudentPaymentCalc";
+import AdminPaymentSettings from "./pages/admin/AdminPaymentSettings";
 import AdminTeachers from "./pages/admin/AdminTeachers";
 import AdminTeacherForm from "./pages/admin/AdminTeacherForm";
 import AdminTeacherCard from "./pages/admin/AdminTeacherCard";
