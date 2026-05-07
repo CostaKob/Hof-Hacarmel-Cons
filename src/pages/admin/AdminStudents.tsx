@@ -85,6 +85,39 @@ const AdminStudents = () => {
     return new Set<string>(yearPayments.map((p: any) => p.enrollment_id).filter(Boolean));
   }, [yearPayments]);
 
+  // All-students view: raw students table (independent of enrollments)
+  const { data: allStudents = [], isLoading: loadingAll } = useQuery({
+    queryKey: ["admin-all-students-raw"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, first_name, last_name, national_id, phone, parent_name, parent_phone, city, grade, student_status, is_active, created_at");
+      if (error) throw error;
+      return (data ?? []).sort((a: any, b: any) =>
+        `${a.last_name ?? ""} ${a.first_name ?? ""}`.localeCompare(`${b.last_name ?? ""} ${b.first_name ?? ""}`, "he")
+      );
+    },
+  });
+
+  const activeStudentsCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק").length;
+
+  const filteredAll = allStudents.filter((s: any) => {
+    if (search) {
+      const normalize = (str: string) => (str ?? "").toLowerCase().replace(/['"׳״']/g, "").trim();
+      const q = normalize(search);
+      const haystack = normalize(`${s.first_name ?? ""} ${s.last_name ?? ""} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.parent_phone ?? ""} ${s.phone ?? ""} ${s.city ?? ""} ${s.grade ?? ""}`);
+      if (!haystack.includes(q)) return false;
+    }
+    if (cityFilter !== "all" && s.city !== cityFilter) return false;
+    if (gradeFilter !== "all") {
+      const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
+      if (stripMarks(s.grade ?? "") !== stripMarks(gradeFilter)) return false;
+    }
+    if (statusFilter === "active" && (!s.is_active || s.student_status === "הפסיק")) return false;
+    if (statusFilter === "stopped" && s.is_active && s.student_status !== "הפסיק") return false;
+    return true;
+  });
+
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["admin-students-all-teachers"],
     queryFn: async () => {
