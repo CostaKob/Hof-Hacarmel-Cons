@@ -342,7 +342,7 @@ const AdminStudentPaymentCalc = () => {
                 <Checkbox checked={paidOverrideEnabled} onCheckedChange={(v) => setPaidOverrideEnabled(!!v)} />
                 <span className="text-sm">הזן כבר שולם ידנית</span>
               </Label>
-              <span className="text-xs text-muted-foreground">אוטומטי: ₪{autoPaid.toLocaleString()}</span>
+              
             </div>
             {paidOverrideEnabled && (
               <Input type="number" min="0" placeholder="סכום ששולם" value={paidOverride} onChange={(e) => setPaidOverride(e.target.value)} className="h-11 rounded-xl" />
