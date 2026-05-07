@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 
 const AdminStudents = () => {
