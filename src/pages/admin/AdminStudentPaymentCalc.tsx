@@ -88,7 +88,7 @@ const AdminStudentPaymentCalc = () => {
   const [sibling, setSibling] = useState(false);
   const [secondInstrument, setSecondInstrument] = useState(false);
   const [majorStudent, setMajorStudent] = useState(false);
-  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; pct: string }[]>([]);
+  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
 
   const [paidOverride, setPaidOverride] = useState<string>("");
   const [paidOverrideEnabled, setPaidOverrideEnabled] = useState(false);
