@@ -181,7 +181,7 @@ const TeacherReportView = () => {
         {/* Report Lines */}
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground text-base">שורות דיווח</h2>
+            <h2 className="font-semibold text-foreground text-base">דיווח</h2>
             <Badge variant="secondary" className="rounded-lg">{lines?.length ?? 0}</Badge>
           </div>
 
