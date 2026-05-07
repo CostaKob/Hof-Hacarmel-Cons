@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Calculator } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
@@ -206,6 +206,13 @@ const AdminStudentCard = () => {
           <div className="flex gap-2">
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
               <Trash2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 rounded-xl"
+              onClick={() => navigate(`/admin/students/${studentId}/payment`)}
+            >
+              <Calculator className="h-4 w-4" /> חשב תשלום
             </Button>
             <Button
               variant="outline"

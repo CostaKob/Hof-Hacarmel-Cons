@@ -17,6 +17,9 @@ export type Database = {
       academic_years: {
         Row: {
           created_at: string
+          discount_major_student_pct: number
+          discount_second_instrument_pct: number
+          discount_sibling_pct: number
           end_date: string
           id: string
           is_active: boolean
@@ -26,6 +29,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          discount_major_student_pct?: number
+          discount_second_instrument_pct?: number
+          discount_sibling_pct?: number
           end_date: string
           id?: string
           is_active?: boolean
@@ -35,6 +41,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          discount_major_student_pct?: number
+          discount_second_instrument_pct?: number
+          discount_sibling_pct?: number
           end_date?: string
           id?: string
           is_active?: boolean
@@ -568,6 +577,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_settings: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_prices: Json
+          updated_at: string
+          vat_rate: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_prices?: Json
+          updated_at?: string
+          vat_rate?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_prices?: Json
+          updated_at?: string
+          vat_rate?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1631,6 +1664,7 @@ export type Database = {
           grade: string | null
           id: string
           is_active: boolean
+          is_major_student: boolean
           last_name: string
           last_promoted_year_id: string | null
           national_id: string | null
@@ -1656,6 +1690,7 @@ export type Database = {
           grade?: string | null
           id?: string
           is_active?: boolean
+          is_major_student?: boolean
           last_name: string
           last_promoted_year_id?: string | null
           national_id?: string | null
@@ -1681,6 +1716,7 @@ export type Database = {
           grade?: string | null
           id?: string
           is_active?: boolean
+          is_major_student?: boolean
           last_name?: string
           last_promoted_year_id?: string | null
           national_id?: string | null
