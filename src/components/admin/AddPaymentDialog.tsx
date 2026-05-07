@@ -35,9 +35,10 @@ interface AddPaymentDialogProps {
   studentId: string;
   enrollments: any[];
   editPayment?: PaymentData | null;
+  defaultType?: "payment" | "credit";
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType }: AddPaymentDialogProps) => {
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
   const today = format(new Date(), "yyyy-MM-dd");
@@ -65,8 +66,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
       resetForm();
+      if (defaultType) setTransactionType(defaultType);
     }
-  }, [editPayment, open]);
+  }, [editPayment, open, defaultType]);
 
   const academicYearId = activeYear?.id ?? enrollments.find((e: any) => e.is_active)?.academic_year_id;
 

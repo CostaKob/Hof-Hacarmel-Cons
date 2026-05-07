@@ -38,6 +38,7 @@ const AdminStudentCard = () => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
@@ -334,8 +335,11 @@ const AdminStudentCard = () => {
               <div className="text-sm text-muted-foreground">
                 סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.filter((p: any) => p.transaction_type === "payment").reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
               </div>
-              <Button className="h-10 rounded-xl text-sm" onClick={() => { setEditingPayment(null); setPaymentDialogOpen(true); }} disabled={enrollments.length === 0}>
-                <Plus className="h-4 w-4" /> הוסף תשלום
+              <Button className="h-10 rounded-xl text-sm" onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }} disabled={enrollments.length === 0}>
+                <Plus className="h-4 w-4" /> תשלום
+              </Button>
+              <Button variant="outline" className="h-10 rounded-xl text-sm border-destructive/40 text-destructive hover:bg-destructive/10" onClick={() => { setEditingPayment(null); setPaymentDialogType("credit"); setPaymentDialogOpen(true); }} disabled={enrollments.length === 0}>
+                <Plus className="h-4 w-4" /> זיכוי
               </Button>
             </div>
           </div>
@@ -381,6 +385,7 @@ const AdminStudentCard = () => {
           studentId={studentId!}
           enrollments={enrollments}
           editPayment={editingPayment}
+          defaultType={paymentDialogType}
         />
 
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
