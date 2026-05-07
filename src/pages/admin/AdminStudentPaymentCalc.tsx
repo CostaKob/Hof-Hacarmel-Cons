@@ -106,7 +106,7 @@ const AdminStudentPaymentCalc = () => {
         {
           id: e.id,
           duration: e.lesson_duration_minutes,
-          startDate: e.start_date,
+          startDate: startDateOverrides[e.id] ?? e.start_date,
           pricePerLessonOverride: e.price_per_lesson,
           instrumentName: e.instruments?.name,
           schoolName: e.schools?.name,
