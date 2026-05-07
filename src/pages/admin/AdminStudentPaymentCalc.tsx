@@ -137,10 +137,11 @@ const AdminStudentPaymentCalc = () => {
     discountRates
   );
 
-  const afterDiscounts = Math.round(proratedTotal * (1 - totalDiscount / 100));
+  // Prices already include VAT — discount applies to the full incl-VAT amount
+  const totalIncVat = Math.round(proratedTotal * (1 - totalDiscount / 100));
   const vatRate = Number(settings?.vat_rate ?? 18);
-  const vatAmount = Math.round(afterDiscounts * (vatRate / 100));
-  const totalIncVat = afterDiscounts + vatAmount;
+  const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
+  const vatAmount = totalIncVat - beforeVat;
 
   const autoPaid = paymentsAggr?.net ?? 0;
   const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : autoPaid;
