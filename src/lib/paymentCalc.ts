@@ -1,11 +1,8 @@
 // Payment calculation utilities
-export const monthsBetween = (from: Date, to: Date): number => {
-  // Inclusive months count, partial month counts as 1
-  const start = new Date(from.getFullYear(), from.getMonth(), 1);
-  const end = new Date(to.getFullYear(), to.getMonth(), 1);
-  const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-  return Math.max(0, months);
-};
+// Convention: lesson_prices in payment_settings are ANNUAL totals INCLUDING VAT.
+// Annual = total for full year (LESSONS_PER_YEAR lessons). Per-lesson = annual / LESSONS_PER_YEAR.
+
+export const LESSONS_PER_YEAR = 32;
 
 export interface DiscountFlags {
   sibling?: boolean;
@@ -33,7 +30,7 @@ export interface EnrollmentForCalc {
   id: string;
   duration: number; // 30/45/60
   startDate: string; // ISO
-  pricePerLessonOverride?: number | null;
+  pricePerLessonOverride?: number | null; // annual total (incl VAT) override
   instrumentName?: string | null;
   schoolName?: string | null;
   teacherName?: string | null;
@@ -41,12 +38,15 @@ export interface EnrollmentForCalc {
 
 export interface CalcRow {
   enrollmentId: string;
-  annualBase: number;
-  monthsTotal: number;
-  monthsRemaining: number;
-  prorated: number;
+  annualBase: number; // annual total incl VAT (full 32 lessons)
+  pricePerLesson: number; // annual / 32
+  lessonsTotal: number; // = 32
+  lessonsRemaining: number; // pro-rated by start date
+  prorated: number; // pricePerLesson * lessonsRemaining
   source: "override" | "global" | "missing";
 }
+
+const dayMs = 1000 * 60 * 60 * 24;
 
 export const calcEnrollment = (
   enrollment: EnrollmentForCalc,
@@ -56,13 +56,12 @@ export const calcEnrollment = (
 ): CalcRow => {
   const ys = new Date(yearStart);
   const ye = new Date(yearEnd);
-  const monthsTotal = monthsBetween(ys, ye);
+  const totalDays = Math.max(1, Math.round((ye.getTime() - ys.getTime()) / dayMs));
 
   let annualBase = 0;
   let source: "override" | "global" | "missing" = "missing";
 
   if (enrollment.pricePerLessonOverride && enrollment.pricePerLessonOverride > 0) {
-    // override is annual price (same convention as global)
     annualBase = Number(enrollment.pricePerLessonOverride);
     source = "override";
   } else {
@@ -73,11 +72,24 @@ export const calcEnrollment = (
     }
   }
 
+  const pricePerLesson = annualBase / LESSONS_PER_YEAR;
+
   const enrollStart = new Date(enrollment.startDate);
   const fromDate = enrollStart > ys ? enrollStart : ys;
-  const monthsRemaining = monthsBetween(fromDate, ye);
-  const monthlyRate = monthsTotal > 0 ? annualBase / monthsTotal : 0;
-  const prorated = Math.round(monthlyRate * monthsRemaining);
+  const remainingDays = Math.max(0, Math.round((ye.getTime() - fromDate.getTime()) / dayMs));
+  const lessonsRemaining = Math.min(
+    LESSONS_PER_YEAR,
+    Math.max(0, Math.round((remainingDays / totalDays) * LESSONS_PER_YEAR))
+  );
+  const prorated = Math.round(pricePerLesson * lessonsRemaining);
 
-  return { enrollmentId: enrollment.id, annualBase, monthsTotal, monthsRemaining, prorated, source };
+  return {
+    enrollmentId: enrollment.id,
+    annualBase,
+    pricePerLesson,
+    lessonsTotal: LESSONS_PER_YEAR,
+    lessonsRemaining,
+    prorated,
+    source,
+  };
 };
