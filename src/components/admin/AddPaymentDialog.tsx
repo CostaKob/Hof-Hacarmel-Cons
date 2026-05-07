@@ -35,6 +35,7 @@ interface AddPaymentDialogProps {
   studentId: string;
   enrollments: any[];
   editPayment?: PaymentData | null;
+  defaultType?: "payment" | "credit";
 }
 
 const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment }: AddPaymentDialogProps) => {
