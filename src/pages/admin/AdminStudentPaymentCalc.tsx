@@ -164,7 +164,8 @@ const AdminStudentPaymentCalc = () => {
         const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
         return {
           description: `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"} (${e?.lesson_duration_minutes} דק׳)`,
-          months: r.monthsRemaining,
+          lessons: r.lessonsRemaining,
+          price_per_lesson: r.pricePerLesson,
           amount: r.prorated,
         };
       }),
@@ -175,7 +176,7 @@ const AdminStudentPaymentCalc = () => {
         custom: customDiscounts.map((c) => ({ label: c.label, pct: Number(c.pct) || 0 })),
         total_pct: totalDiscount,
       },
-      after_discounts: afterDiscounts,
+      before_vat: beforeVat,
       vat_rate: vatRate,
       vat_amount: vatAmount,
       total_inc_vat: totalIncVat,
