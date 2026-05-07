@@ -28,13 +28,6 @@ const STATUS_MAP: Record<string, string> = {
   vacation: "חופש",
 };
 
-const PAYMENT_METHOD_MAP: Record<string, string> = {
-  cash: "מזומן",
-  check: "צ׳ק",
-  transfer: "העברה",
-  credit_card: "כרטיס אשראי",
-  other: "אחר",
-};
 
 const AdminStudentCard = () => {
   const { studentId } = useParams();
