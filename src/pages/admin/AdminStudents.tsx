@@ -28,6 +28,7 @@ const AdminStudents = () => {
   const selectedYear = years.find((y) => y.id === selectedYearId);
 
   const search = searchParams.get("q") || "";
+  const view = searchParams.get("view") || "enrollments"; // enrollments | all
   const teacherFilter = searchParams.get("teacher") || "all";
   const schoolFilter = searchParams.get("school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
