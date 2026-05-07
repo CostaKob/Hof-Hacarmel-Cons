@@ -260,7 +260,14 @@ const AdminStudentPaymentCalc = () => {
                         <TableCell>{e?.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "—"}</TableCell>
                         <TableCell>{e?.schools?.name ?? "—"}</TableCell>
                         <TableCell>{e?.lesson_duration_minutes} דק׳</TableCell>
-                        <TableCell>{e?.start_date ?? "—"}</TableCell>
+                        <TableCell>
+                          <Input
+                            type="date"
+                            value={startDateOverrides[r.enrollmentId] ?? e?.start_date ?? ""}
+                            onChange={(ev) => setStartDateOverrides({ ...startDateOverrides, [r.enrollmentId]: ev.target.value })}
+                            className="h-9 rounded-lg w-36"
+                          />
+                        </TableCell>
                         <TableCell>
                           ₪{r.annualBase.toLocaleString()}
                           {r.source === "override" && <span className="text-[10px] text-muted-foreground mr-1">(override)</span>}
