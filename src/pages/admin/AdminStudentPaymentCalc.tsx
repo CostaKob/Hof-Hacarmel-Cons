@@ -403,17 +403,34 @@ const AdminStudentPaymentCalc = () => {
 
           <div className="mt-3 pt-3 border-t border-primary/20 space-y-2">
             <div className="flex items-center justify-between gap-2 flex-wrap">
-              <Label className="flex items-center gap-2 cursor-pointer">
-                <Checkbox checked={paidOverrideEnabled} onCheckedChange={(v) => setPaidOverrideEnabled(!!v)} />
-                <span className="text-sm">רשום תשלום חדש</span>
-              </Label>
+              <span className="text-sm font-semibold">תשלומים ({paymentsList.length})</span>
+              <Button size="sm" className="h-9 rounded-lg" onClick={() => { setEditingPayment(null); setPaymentDialogOpen(true); }} disabled={!enrollments || enrollments.length === 0}>
+                <Plus className="h-4 w-4" /> הוסף תשלום
+              </Button>
             </div>
-            {paidOverrideEnabled && (
-              <div className="flex gap-2">
-                <Input type="number" min="0" placeholder="סכום ששולם" value={paidOverride} onChange={(e) => setPaidOverride(e.target.value)} className="h-11 rounded-xl flex-1" />
-                <Button className="h-11 rounded-xl" onClick={handleSavePaid} disabled={savingPaid || !paidOverride}>
-                  <Save className="h-4 w-4 ml-1" /> {savingPaid ? "שומר..." : "שמור"}
-                </Button>
+            {paymentsList.length === 0 ? (
+              <p className="text-xs text-muted-foreground">לא בוצעו תשלומים עדיין</p>
+            ) : (
+              <div className="space-y-1.5">
+                {(paymentsList as any[]).map((p) => {
+                  const isCredit = p.transaction_type !== "payment";
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
+                      className="flex items-center justify-between rounded-lg bg-card border border-border px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="text-xs">
+                        <span className="font-medium">{format(new Date(p.payment_date), "dd/MM/yyyy")}</span>
+                        <span className="text-muted-foreground"> · {isCredit ? "זיכוי" : "תשלום"}</span>
+                        {p.notes && <span className="text-muted-foreground"> · {p.notes}</span>}
+                      </div>
+                      <span className={`text-sm font-semibold ${isCredit ? "text-destructive" : "text-primary"}`}>
+                        {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -435,6 +452,14 @@ const AdminStudentPaymentCalc = () => {
             <Send className="h-4 w-4 ml-2" /> צור קישור לתשלום
           </Button>
         </div>
+
+        <AddPaymentDialog
+          open={paymentDialogOpen}
+          onOpenChange={setPaymentDialogOpen}
+          studentId={studentId!}
+          enrollments={enrollments ?? []}
+          editPayment={editingPayment}
+        />
       </div>
     </AdminLayout>
   );
