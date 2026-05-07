@@ -1,6 +1,9 @@
 // iCount payment webhook receiver - placeholder.
 // In the future, will validate signature and update student_payments.is_paid / amount_paid.
-import { corsHeaders } from "@supabase/supabase-js/cors";
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
