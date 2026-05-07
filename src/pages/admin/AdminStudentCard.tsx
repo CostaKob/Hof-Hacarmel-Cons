@@ -17,7 +17,7 @@ import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
-import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 
 const STATUS_MAP: Record<string, string> = {
@@ -28,13 +28,6 @@ const STATUS_MAP: Record<string, string> = {
   vacation: "חופש",
 };
 
-const PAYMENT_METHOD_MAP: Record<string, string> = {
-  cash: "מזומן",
-  check: "צ׳ק",
-  transfer: "העברה",
-  credit_card: "כרטיס אשראי",
-  other: "אחר",
-};
 
 const AdminStudentCard = () => {
   const { studentId } = useParams();
@@ -42,8 +35,6 @@ const AdminStudentCard = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<any>(null);
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
@@ -353,98 +344,6 @@ const AdminStudentCard = () => {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
-            <Button className="h-10 rounded-xl text-sm" onClick={() => { setEditingPayment(null); setShowPaymentDialog(true); }}>
-              <Plus className="h-4 w-4" /> הוסף תשלום
-            </Button>
-          </div>
-
-          {/* Yearly summary */}
-          {(() => {
-            const yearPayments = payments.filter((p: any) => activeYear && p.academic_year_id === activeYear.id);
-            const totalPaid = yearPayments
-              .filter((p: any) => p.transaction_type === "payment")
-              .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
-            const totalCredit = yearPayments
-              .filter((p: any) => p.transaction_type === "credit")
-              .reduce((sum: number, p: any) => sum + Number(p.amount), 0);
-            const net = totalPaid - totalCredit;
-            return (
-              <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-center space-y-1">
-                <div>
-                  <span className="text-sm text-muted-foreground">שולם השנה: </span>
-                  <span className="font-bold text-primary text-lg">₪{net.toLocaleString()}</span>
-                </div>
-                {totalCredit > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    (תשלומים: ₪{totalPaid.toLocaleString()} | זיכויים: ₪{totalCredit.toLocaleString()})
-                  </p>
-                )}
-              </div>
-            );
-          })()}
-
-           {payments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">אין תשלומים</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-right">סוג</TableHead>
-                    <TableHead className="text-right">שיוך</TableHead>
-                    <TableHead className="text-right">שנת לימודים</TableHead>
-                    <TableHead className="text-right">סכום</TableHead>
-                    <TableHead className="text-right">תאריך</TableHead>
-                    <TableHead className="text-right">אופן תשלום</TableHead>
-                    <TableHead className="text-right">תשלומים</TableHead>
-                    <TableHead className="text-right">הערות</TableHead>
-                    <TableHead className="text-right"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {payments.map((p: any) => {
-                    const enrollment = enrollments.find((e: any) => e.id === p.enrollment_id);
-                    const isCredit = p.transaction_type === "credit";
-                    return (
-                      <TableRow key={p.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setEditingPayment(p); setShowPaymentDialog(true); }}>
-                        <TableCell className="text-sm">
-                          <Badge variant={isCredit ? "destructive" : "default"} className="text-xs">
-                            {isCredit ? "זיכוי" : "תשלום"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm">{enrollment ? `${enrollment.instruments?.name} — ${enrollment.schools?.name}` : "—"}</TableCell>
-                        <TableCell className="text-sm">{p.academic_years?.name ?? "—"}</TableCell>
-                        <TableCell className={`text-sm font-medium ${isCredit ? "text-destructive" : ""}`}>
-                          {isCredit ? "-" : ""}₪{Number(p.amount).toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-sm">{p.payment_date ? format(new Date(p.payment_date), "dd/MM/yyyy") : "—"}</TableCell>
-                        <TableCell className="text-sm">{PAYMENT_METHOD_MAP[p.payment_method] ?? p.payment_method ?? "—"}</TableCell>
-                        <TableCell className="text-sm">{(p as any).installments ?? 1}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground">{p.notes ?? "—"}</TableCell>
-                        <TableCell className="text-sm">
-                          <Button variant="ghost" size="sm" className="rounded-xl" onClick={(e) => { e.stopPropagation(); setEditingPayment(p); setShowPaymentDialog(true); }}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </div>
-
-        <AddPaymentDialog
-          open={showPaymentDialog}
-          onOpenChange={(v) => { setShowPaymentDialog(v); if (!v) setEditingPayment(null); }}
-          studentId={studentId!}
-          enrollments={enrollments}
-          editPayment={editingPayment}
-        />
       </div>
     </AdminLayout>
   );

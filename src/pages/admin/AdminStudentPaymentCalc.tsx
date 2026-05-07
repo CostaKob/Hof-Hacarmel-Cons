@@ -137,10 +137,11 @@ const AdminStudentPaymentCalc = () => {
     discountRates
   );
 
-  const afterDiscounts = Math.round(proratedTotal * (1 - totalDiscount / 100));
+  // Prices already include VAT — discount applies to the full incl-VAT amount
+  const totalIncVat = Math.round(proratedTotal * (1 - totalDiscount / 100));
   const vatRate = Number(settings?.vat_rate ?? 18);
-  const vatAmount = Math.round(afterDiscounts * (vatRate / 100));
-  const totalIncVat = afterDiscounts + vatAmount;
+  const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
+  const vatAmount = totalIncVat - beforeVat;
 
   const autoPaid = paymentsAggr?.net ?? 0;
   const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : autoPaid;
@@ -163,7 +164,8 @@ const AdminStudentPaymentCalc = () => {
         const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
         return {
           description: `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"} (${e?.lesson_duration_minutes} דק׳)`,
-          months: r.monthsRemaining,
+          lessons: r.lessonsRemaining,
+          price_per_lesson: r.pricePerLesson,
           amount: r.prorated,
         };
       }),
@@ -174,7 +176,7 @@ const AdminStudentPaymentCalc = () => {
         custom: customDiscounts.map((c) => ({ label: c.label, pct: Number(c.pct) || 0 })),
         total_pct: totalDiscount,
       },
-      after_discounts: afterDiscounts,
+      before_vat: beforeVat,
       vat_rate: vatRate,
       vat_amount: vatAmount,
       total_inc_vat: totalIncVat,
@@ -243,8 +245,9 @@ const AdminStudentPaymentCalc = () => {
                     <TableHead className="text-right">סניף</TableHead>
                     <TableHead className="text-right">משך</TableHead>
                     <TableHead className="text-right">תאריך התחלה</TableHead>
-                    <TableHead className="text-right">בסיס שנתי</TableHead>
-                    <TableHead className="text-right">חודשים נותרים</TableHead>
+                    <TableHead className="text-right">בסיס שנתי (כולל מע"מ)</TableHead>
+                    <TableHead className="text-right">מחיר לשיעור</TableHead>
+                    <TableHead className="text-right">שיעורים נותרים</TableHead>
                     <TableHead className="text-right">פרו-ראטה</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -263,7 +266,8 @@ const AdminStudentPaymentCalc = () => {
                           {r.source === "override" && <span className="text-[10px] text-muted-foreground mr-1">(override)</span>}
                           {r.source === "missing" && <span className="text-[10px] text-destructive mr-1">(חסר מחיר)</span>}
                         </TableCell>
-                        <TableCell>{r.monthsRemaining} / {r.monthsTotal}</TableCell>
+                        <TableCell>₪{Math.round(r.pricePerLesson).toLocaleString()}</TableCell>
+                        <TableCell>{r.lessonsRemaining} / {r.lessonsTotal}</TableCell>
                         <TableCell className="font-medium">₪{r.prorated.toLocaleString()}</TableCell>
                       </TableRow>
                     );
@@ -323,12 +327,14 @@ const AdminStudentPaymentCalc = () => {
         {/* Summary */}
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-sm space-y-2.5">
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
-          <SummaryRow label="בסיס שנתי מלא" value={annualTotal} />
-          <SummaryRow label="לפי פרו-ראטה (מתאריך התחלה עד סוף שנה)" value={proratedTotal} />
-          <SummaryRow label={`אחרי הנחות (${totalDiscount}%)`} value={afterDiscounts} bold />
-          <SummaryRow label={`מע"מ (${vatRate}%)`} value={vatAmount} />
+          <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
+          <SummaryRow label="לפי פרו-ראטה (לפי שיעורים נותרים מתוך 32)" value={proratedTotal} />
+          {totalDiscount > 0 && (
+            <SummaryRow label={`הנחה (${totalDiscount}%)`} value={-(proratedTotal - totalIncVat)} />
+          )}
+          <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
-            <SummaryRow label='סה"כ כולל מע"מ' value={totalIncVat} bold large />
+            <SummaryRow label='סה"כ לתשלום (כולל מע"מ)' value={totalIncVat} bold large />
           </div>
 
           <div className="mt-3 pt-3 border-t border-primary/20 space-y-2">
