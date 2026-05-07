@@ -98,7 +98,6 @@ const AdminExports = () => {
       "כלי": e.instruments?.name ?? "",
       "משך שיעור (דק')": e.lesson_duration_minutes,
       "סוג שיעור": e.lesson_type === "individual" ? "פרטני" : "קבוצתי",
-      "תפקיד": e.enrollment_role === "primary" ? "ראשי" : "משני",
       "תאריך התחלה": e.start_date,
       "פעיל": e.is_active ? "כן" : "לא",
     }));

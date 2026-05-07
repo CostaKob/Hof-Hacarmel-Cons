@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, ChevronLeft } from "lucide-react";
 import { sortByName, sortByPerson } from "@/lib/sortHebrew";
 
-const ROLE_LABELS: Record<string, string> = { primary: "ראשי", secondary: "משני" };
 const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "קבוצתי" };
 
 const AdminEnrollments = () => {
@@ -169,8 +168,6 @@ const AdminEnrollments = () => {
                   <span>{e.lesson_duration_minutes} דק׳</span>
                   <span>·</span>
                   <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
-                  <span>·</span>
-                  <span>{ROLE_LABELS[e.enrollment_role] ?? e.enrollment_role}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0 mr-3">
