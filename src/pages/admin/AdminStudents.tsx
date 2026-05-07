@@ -299,7 +299,56 @@ const AdminStudents = () => {
       </div>
 
       {/* Card-based list */}
-      {isLoading ? (
+      {view === "all" ? (
+        loadingAll ? (
+          <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : filteredAll.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
+        ) : (
+          <>
+            <p className="text-sm text-muted-foreground mb-2">
+              {filteredAll.length} תלמידים · {activeStudentsCount} פעילים בסך הכול
+            </p>
+            <div className="space-y-2">
+              {filteredAll.map((s: any, index: number) => {
+                const stopped = !s.is_active || s.student_status === "הפסיק";
+                return (
+                  <div
+                    key={s.id}
+                    onClick={() => {
+                      saveListScrollPosition("/admin/students");
+                      navigate(`/admin/students/${s.id}`, {
+                        state: { returnTo: `${location.pathname}${location.search}` },
+                      });
+                    }}
+                    className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${stopped ? "opacity-60" : ""}`}
+                  >
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground">
+                          {s.first_name} {s.last_name}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                          {s.national_id && <span>ת.ז {s.national_id}</span>}
+                          {s.grade && (<><span>·</span><span>כיתה {s.grade}</span></>)}
+                          {s.city && (<><span>·</span><span>{s.city}</span></>)}
+                          {s.parent_phone && (<><span>·</span><span>{s.parent_phone}</span></>)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mr-3 shrink-0">
+                      <Badge variant={stopped ? "outline" : "default"} className={`rounded-lg ${stopped ? "text-destructive border-destructive" : ""}`}>
+                        {stopped ? (s.student_status === "הפסיק" ? "הפסיק" : "לא פעיל") : "פעיל"}
+                      </Badge>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
+        )
+      ) : isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       ) : filtered.length === 0 ? (
         <p className="text-center text-muted-foreground py-8">
