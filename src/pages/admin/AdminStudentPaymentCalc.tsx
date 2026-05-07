@@ -375,11 +375,17 @@ const AdminStudentPaymentCalc = () => {
         {/* Summary */}
         <div className="rounded-2xl border border-primary/30 bg-primary/5 p-5 shadow-sm space-y-2.5">
           <h2 className="font-semibold text-foreground text-base mb-2">סיכום</h2>
-          <SummaryRow label="בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} />
+          {rows.map((r) => {
+            const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
+            const label = `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"}`;
+            return <SummaryRow key={`base-${r.enrollmentId}`} label={label} value={r.annualBase} />;
+          })}
+          <SummaryRow label="סה״כ בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} bold />
+          <div className="border-t border-primary/20 pt-2 mt-2" />
           {rows.map((r) => {
             const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
             const label = `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"} (${r.lessonsRemaining}/${r.lessonsTotal})`;
-            return <SummaryRow key={r.enrollmentId} label={label} value={r.prorated} />;
+            return <SummaryRow key={`pro-${r.enrollmentId}`} label={label} value={r.prorated} />;
           })}
           <SummaryRow label={`סה״כ חישוב לפי שיעורים נותרים (${lessonsRemainingTotal} מתוך ${lessonsTotalAll})`} value={proratedTotal} bold />
           {sibling && discountRates.sibling > 0 && (
