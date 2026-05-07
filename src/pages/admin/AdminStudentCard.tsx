@@ -324,6 +324,45 @@ const AdminStudentCard = () => {
           </div>
         )}
 
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
+            <div className="text-sm text-muted-foreground">
+              סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.filter((p: any) => p.transaction_type === "payment").reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
+            </div>
+          </div>
+          {payments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">לא בוצעו תשלומים עדיין</p>
+          ) : (
+            <div className="space-y-2">
+              {payments.map((p: any) => {
+                const isCredit = p.transaction_type !== "payment";
+                return (
+                  <div key={p.id} className="flex items-center justify-between rounded-xl border border-border p-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground text-sm">
+                        {format(new Date(p.payment_date), "dd/MM/yyyy")}
+                        {p.academic_years?.name && <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {isCredit ? "זיכוי" : "תשלום"}
+                        {p.payment_method && ` · ${p.payment_method}`}
+                        {p.installments > 1 && ` · ${p.installments} תשלומים`}
+                        {p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                        {p.month_reference && ` · ${p.month_reference}`}
+                      </p>
+                      {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
+                    </div>
+                    <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
+                      {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
