@@ -210,6 +210,13 @@ const AdminStudentCard = () => {
             <Button
               variant="outline"
               className="h-11 rounded-xl"
+              onClick={() => navigate(`/admin/students/${studentId}/payment`)}
+            >
+              <Calculator className="h-4 w-4" /> חשב תשלום
+            </Button>
+            <Button
+              variant="outline"
+              className="h-11 rounded-xl"
               onClick={() => navigate(`/admin/students/${studentId}/edit`, { state: location.state })}
             >
               <Pencil className="h-4 w-4" /> עריכה
