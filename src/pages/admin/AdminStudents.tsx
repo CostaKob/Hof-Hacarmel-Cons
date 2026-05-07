@@ -186,6 +186,27 @@ const AdminStudents = () => {
         </div>
       </div>
 
+      {/* View toggle */}
+      <div className="mb-4 inline-flex rounded-xl border border-border bg-card p-1 shadow-sm">
+        <button
+          onClick={() => setFilter("view", "enrollments")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "enrollments" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <ListChecks className="h-4 w-4" />
+          לפי שיוכים
+        </button>
+        <button
+          onClick={() => setFilter("view", "all")}
+          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "all" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          <Users className="h-4 w-4" />
+          כל התלמידים
+          <Badge variant="secondary" className="rounded-md text-[10px] px-1.5 py-0 ml-1">
+            {activeStudentsCount} פעילים
+          </Badge>
+        </button>
+      </div>
+
       <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
       {/* Filters */}
