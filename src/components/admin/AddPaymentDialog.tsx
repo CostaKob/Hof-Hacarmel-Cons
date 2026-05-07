@@ -119,6 +119,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
       toast.success("התשלום נמחק בהצלחה");
       setShowDeleteConfirm(false);
       onOpenChange(false);
