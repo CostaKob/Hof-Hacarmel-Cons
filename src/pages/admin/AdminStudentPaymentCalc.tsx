@@ -9,14 +9,16 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send } from "lucide-react";
+import { Loader2, Plus, Trash2, Send, Save } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminStudentPaymentCalc = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { activeYear, selectedYearId, years } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id;
   const year = years.find((y) => y.id === yearId);
@@ -153,8 +155,39 @@ const AdminStudentPaymentCalc = () => {
   const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
   const vatAmount = totalIncVat - beforeVat;
 
-  const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : 0;
+  const alreadyPaidNet = paymentsAggr?.net ?? 0;
+  const effectivePaid = paidOverrideEnabled ? Number(paidOverride) || 0 : alreadyPaidNet;
   const balance = totalIncVat - effectivePaid;
+  const isFullyPaid = totalIncVat > 0 && balance <= 0;
+
+  const [savingPaid, setSavingPaid] = useState(false);
+  const handleSavePaid = async () => {
+    const amount = Number(paidOverride) || 0;
+    if (amount <= 0) { toast.error("יש להזין סכום חיובי"); return; }
+    if (!enrollments || enrollments.length === 0) { toast.error("אין שיוכים פעילים"); return; }
+    setSavingPaid(true);
+    try {
+      const { error } = await supabase.from("student_payments").insert({
+        student_id: studentId!,
+        academic_year_id: yearId!,
+        enrollment_id: enrollments[0].id,
+        amount,
+        payment_date: new Date().toISOString().slice(0, 10),
+        transaction_type: "payment",
+        notes: "נרשם דרך מסך חישוב תשלום",
+      } as any);
+      if (error) throw error;
+      toast.success("התשלום נשמר");
+      setPaidOverride("");
+      setPaidOverrideEnabled(false);
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId, yearId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+    } catch (err: any) {
+      toast.error(err.message || "שגיאה בשמירה");
+    } finally {
+      setSavingPaid(false);
+    }
+  };
 
   const handleGenerateLink = async () => {
     if (!student) return;
