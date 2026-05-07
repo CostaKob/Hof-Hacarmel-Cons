@@ -82,8 +82,14 @@ const AdminStudents = () => {
     enabled: !!selectedYearId,
   });
 
-  // Payment status disabled — old payments module removed; new calculator handles billing.
-  const paidEnrollmentIds = useMemo(() => new Set<string>(), []);
+  // An enrollment is considered "paid" if it has any payment record for the selected year
+  const paidEnrollmentIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of yearPayments as any[]) {
+      if (p.enrollment_id) set.add(p.enrollment_id);
+    }
+    return set;
+  }, [yearPayments]);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
