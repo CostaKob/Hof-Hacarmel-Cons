@@ -128,18 +128,24 @@ const AdminStudentPaymentCalc = () => {
     majorStudent: Number(yearFull?.discount_major_student_pct ?? 0),
   };
 
-  const totalDiscount = totalDiscountPct(
-    {
-      sibling,
-      secondInstrument,
-      majorStudent,
-      custom: customDiscounts.map((c) => ({ label: c.label, pct: Number(c.pct) || 0 })),
-    },
+  // Standard percentage discounts (sibling/secondInstrument/majorStudent only)
+  const stdDiscountPct = totalDiscountPct(
+    { sibling, secondInstrument, majorStudent },
     discountRates
   );
 
-  // Prices already include VAT — discount applies to the full incl-VAT amount
-  const totalIncVat = Math.round(proratedTotal * (1 - totalDiscount / 100));
+  const afterStdDiscount = Math.round(proratedTotal * (1 - stdDiscountPct / 100));
+
+  // Custom discounts: each is either a percentage of afterStdDiscount, or a flat ILS amount
+  const customDiscountAmount = customDiscounts.reduce((sum, c) => {
+    const v = Number(c.value) || 0;
+    if (c.mode === "pct") return sum + (afterStdDiscount * v) / 100;
+    return sum + v;
+  }, 0);
+
+  // Prices already include VAT
+  const totalIncVat = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
+  const totalDiscountAmount = proratedTotal - totalIncVat;
   const vatRate = Number(settings?.vat_rate ?? 18);
   const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
   const vatAmount = totalIncVat - beforeVat;
