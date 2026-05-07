@@ -43,7 +43,8 @@ const AdminStudents = () => {
       const next = new URLSearchParams(prev);
       if (value === "") next.delete(key);
       else if (key === "status" && value === "active") next.delete(key);
-      else if (key !== "status" && value === "all") next.delete(key);
+      else if (key === "view" && value === "enrollments") next.delete(key);
+      else if (key !== "status" && key !== "view" && value === "all") next.delete(key);
       else next.set(key, value);
       return next;
     }, { replace: true });
