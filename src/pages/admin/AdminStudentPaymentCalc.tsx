@@ -92,6 +92,7 @@ const AdminStudentPaymentCalc = () => {
 
   const [paidOverride, setPaidOverride] = useState<string>("");
   const [paidOverrideEnabled, setPaidOverrideEnabled] = useState(false);
+  const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (student?.is_major_student) setMajorStudent(true);
