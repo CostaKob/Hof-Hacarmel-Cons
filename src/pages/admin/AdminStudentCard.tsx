@@ -460,13 +460,12 @@ const AdminStudentCard = () => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                          title="בצע זיכוי מלא ב-iCount"
+                          title={`בצע זיכוי ב-iCount (נותר ₪${remaining.toLocaleString()})`}
                           disabled={refundMutation.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (confirm(`לבצע זיכוי מלא של ₪${Number(p.amount).toLocaleString()} לחשבונית ${p.icount_doc_number ?? ""}?`)) {
-                              refundMutation.mutate(p.id);
-                            }
+                            setRefundTarget({ ...p, _remaining: remaining });
+                            setRefundAmount(String(remaining));
                           }}
                         >
                           <Undo2 className="h-4 w-4" />
