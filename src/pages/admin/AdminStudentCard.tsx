@@ -347,7 +347,8 @@ const AdminStudentCard = () => {
               {payments.map((p: any) => {
                 const isCredit = p.transaction_type !== "payment";
                 const hasInvoice = !!p.invoice_url;
-                const canRefund = !isCredit && p.icount_doc_id && !payments.some((x: any) => x.refund_of_payment_id === p.id);
+                const hasDoc = !!p.icount_doc_id;
+                const canRefund = !isCredit && hasDoc && !payments.some((x: any) => x.refund_of_payment_id === p.id);
                 return (
                   <div
                     key={p.id}
