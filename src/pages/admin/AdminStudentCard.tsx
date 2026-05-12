@@ -96,8 +96,8 @@ const AdminStudentCard = () => {
   });
 
   const refundMutation = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { data, error } = await supabase.functions.invoke("icount-create-refund", { body: { paymentId } });
+    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-refund", { body: { paymentId, amount } });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
@@ -105,6 +105,8 @@ const AdminStudentCard = () => {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
       toast.success(`זיכוי ${data?.doc_number ?? ""} בוצע`);
+      setRefundTarget(null);
+      setRefundAmount("");
       if (data?.url) window.open(data.url, "_blank");
     },
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
