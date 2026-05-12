@@ -1580,13 +1580,18 @@ export type Database = {
           created_at: string
           created_by_user_id: string | null
           enrollment_id: string
+          icount_doc_id: string | null
+          icount_doc_number: string | null
+          icount_doc_type: string | null
           id: string
           installments: number
+          invoice_url: string | null
           month_reference: string | null
           notes: string | null
           payment_date: string
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           reference_number: string | null
+          refund_of_payment_id: string | null
           student_id: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
@@ -1596,13 +1601,18 @@ export type Database = {
           created_at?: string
           created_by_user_id?: string | null
           enrollment_id: string
+          icount_doc_id?: string | null
+          icount_doc_number?: string | null
+          icount_doc_type?: string | null
           id?: string
           installments?: number
+          invoice_url?: string | null
           month_reference?: string | null
           notes?: string | null
           payment_date: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           reference_number?: string | null
+          refund_of_payment_id?: string | null
           student_id?: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
@@ -1612,13 +1622,18 @@ export type Database = {
           created_at?: string
           created_by_user_id?: string | null
           enrollment_id?: string
+          icount_doc_id?: string | null
+          icount_doc_number?: string | null
+          icount_doc_type?: string | null
           id?: string
           installments?: number
+          invoice_url?: string | null
           month_reference?: string | null
           notes?: string | null
           payment_date?: string
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           reference_number?: string | null
+          refund_of_payment_id?: string | null
           student_id?: string | null
           transaction_type?: Database["public"]["Enums"]["transaction_type"]
         }
@@ -1642,6 +1657,13 @@ export type Database = {
             columns: ["enrollment_id"]
             isOneToOne: false
             referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payments_refund_of_payment_id_fkey"
+            columns: ["refund_of_payment_id"]
+            isOneToOne: false
+            referencedRelation: "student_payments"
             referencedColumns: ["id"]
           },
           {
