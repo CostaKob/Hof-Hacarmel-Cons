@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
       currency_code: "ILS",
       vat_included: 1,
       based_on: [payment.icount_doc_id],
-      items: [{ description, unitprice_incvat: refundAmount, quantity: 1 }],
+      items: [{ description, unitprice_incvat: -Math.abs(refundAmount), quantity: 1 }],
     };
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
         student_id: payment.student_id,
         enrollment_id: payment.enrollment_id,
         academic_year_id: payment.academic_year_id,
-        amount: refundAmount,
+        amount: -Math.abs(refundAmount),
         transaction_type: "credit",
         payment_method: payment.payment_method,
         payment_date: new Date().toISOString().slice(0, 10),
