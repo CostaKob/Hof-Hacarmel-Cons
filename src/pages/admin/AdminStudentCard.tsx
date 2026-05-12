@@ -458,7 +458,7 @@ const AdminStudentCard = () => {
                         </Button>
                       )}
                       <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                        {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
+                        {Number(p.amount || 0) < 0 ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Number(p.amount || 0).toLocaleString()}`}
                       </span>
                     </div>
                   </div>
