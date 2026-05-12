@@ -54,6 +54,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [transactionType, setTransactionType] = useState<"payment" | "credit">("payment");
+  const [invoiceMode, setInvoiceMode] = useState<"combined" | "separate">("combined");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isEdit = !!editPayment;
@@ -138,6 +139,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         .filter((x) => x.eid && x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
 
+      const groupId = entries.length > 1 && invoiceMode === "combined"
+        ? (typeof crypto !== "undefined" && (crypto as any).randomUUID ? crypto.randomUUID() : null)
+        : null;
+
       const rows = entries.map(({ eid, amt }) => ({
         amount: amt,
         payment_date: paymentDate,
@@ -148,6 +153,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         transaction_type: transactionType,
         student_id: studentId,
         academic_year_id: academicYearId,
+        payment_group_id: groupId,
       }));
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
@@ -191,6 +197,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSelectedAmounts({});
     setEditEnrollmentId("");
     setEditAmount("");
+    setInvoiceMode("combined");
   };
 
   const canSubmit = isEdit
@@ -311,9 +318,35 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       );
                     })}
                     {Object.keys(selectedAmounts).length > 1 && (
-                      <p className="text-xs text-muted-foreground text-end">
-                        סה״כ: ₪{totalSelected.toLocaleString()}
-                      </p>
+                      <>
+                        <p className="text-xs text-muted-foreground text-end">
+                          סה״כ: ₪{totalSelected.toLocaleString()}
+                        </p>
+                        <div className="rounded-lg border border-border p-2 space-y-2 bg-muted/30">
+                          <Label className="text-xs">מצב חשבונית</Label>
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "combined" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                              onClick={() => setInvoiceMode("combined")}
+                            >
+                              חשבונית מאוחדת אחת
+                            </button>
+                            <button
+                              type="button"
+                              className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "separate" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                              onClick={() => setInvoiceMode("separate")}
+                            >
+                              חשבונית נפרדת לכל שיוך
+                            </button>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground">
+                            {invoiceMode === "combined"
+                              ? "ייווצר רישום נפרד לכל שיוך, אך חשבונית אחת מאוחדת עם פירוט פר שיוך."
+                              : "ייווצר רישום נפרד לכל שיוך וחשבונית נפרדת לכל אחד."}
+                          </p>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}

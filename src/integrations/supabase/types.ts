@@ -1589,6 +1589,7 @@ export type Database = {
           month_reference: string | null
           notes: string | null
           payment_date: string
+          payment_group_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           reference_number: string | null
           refund_of_payment_id: string | null
@@ -1610,6 +1611,7 @@ export type Database = {
           month_reference?: string | null
           notes?: string | null
           payment_date: string
+          payment_group_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           reference_number?: string | null
           refund_of_payment_id?: string | null
@@ -1631,6 +1633,7 @@ export type Database = {
           month_reference?: string | null
           notes?: string | null
           payment_date?: string
+          payment_group_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           reference_number?: string | null
           refund_of_payment_id?: string | null
