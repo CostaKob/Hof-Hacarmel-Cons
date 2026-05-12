@@ -205,13 +205,6 @@ const AdminStudentCard = () => {
             <Button
               variant="outline"
               className="h-11 rounded-xl"
-              onClick={() => navigate(`/admin/students/${studentId}/payment`)}
-            >
-              <Calculator className="h-4 w-4" /> חשב תשלום
-            </Button>
-            <Button
-              variant="outline"
-              className="h-11 rounded-xl"
               onClick={() => navigate(`/admin/students/${studentId}/edit`, { state: location.state })}
             >
               <Pencil className="h-4 w-4" /> עריכה
@@ -335,6 +328,13 @@ const AdminStudentCard = () => {
               <div className="text-sm text-muted-foreground">
                 סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.filter((p: any) => p.transaction_type === "payment").reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
               </div>
+              <Button
+                variant="outline"
+                className="h-10 rounded-xl text-sm"
+                onClick={() => navigate(`/admin/students/${studentId}/payment`)}
+              >
+                <Calculator className="h-4 w-4" /> חשב תשלום
+              </Button>
               <Button className="h-10 rounded-xl text-sm" onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }} disabled={enrollments.length === 0}>
                 <Plus className="h-4 w-4" /> תשלום / זיכוי
               </Button>
