@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: payment, error: payErr } = await supabase
       .from("student_payments")
-      .select("*, students(first_name,last_name,parent_name,parent_email,parent_email_2)")
+      .select("*, students(first_name,last_name,address,city,parent_name,parent_phone,parent_phone_2,parent_email,parent_email_2)")
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -53,15 +53,25 @@ Deno.serve(async (req: Request) => {
     const auth = getAuth();
     const student: any = payment.students || {};
     const studentFullName = `${student.first_name} ${student.last_name}`.trim();
-    const refundAmount = Number(amountOverride ?? payment.amount ?? 0);
-    const description = `זיכוי — ${studentFullName}${reason ? ` (${reason})` : ""} — חשבונית מקור ${payment.icount_doc_number ?? payment.icount_doc_id}`;
+    const originalAmount = Number(payment.amount ?? 0);
+    const refundAmount = Number(amountOverride ?? originalAmount);
+    const isPartial = Math.abs(refundAmount) < Math.abs(originalAmount);
+    const description = `זיכוי ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — חשבונית מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, זיכוי ₪${Math.abs(refundAmount).toLocaleString()})`;
+    const phone = student.parent_phone || student.parent_phone_2 || undefined;
+    const email = student.parent_email || student.parent_email_2 || undefined;
 
     const payload: any = {
       ...auth,
       doctype: "refund",
       client_name: student.parent_name || studentFullName,
-      email: student.parent_email || student.parent_email_2 || undefined,
-      send_email: !!(student.parent_email || student.parent_email_2),
+      client_address: student.address || student.city || undefined,
+      client_city: student.city || undefined,
+      client_phone: phone,
+      client_mobile: phone,
+      phone,
+      mobile: phone,
+      email,
+      send_email: !!email,
       lang: "he",
       currency_code: "ILS",
       vat_included: 1,
