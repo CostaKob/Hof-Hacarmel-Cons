@@ -197,6 +197,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSelectedAmounts({});
     setEditEnrollmentId("");
     setEditAmount("");
+    setInvoiceMode("combined");
   };
 
   const canSubmit = isEdit
