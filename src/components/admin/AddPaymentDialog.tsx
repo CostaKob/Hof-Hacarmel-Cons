@@ -354,7 +354,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                           </div>
                           <p className="text-[11px] text-muted-foreground">
                             {invoiceMode === "combined"
-                              ? "ייווצר רישום נפרד לכל שיוך, אך חשבונית אחת מאוחדת עם פירוט פר שיוך."
+                              ? "ייווצר רישום תשלום אחד מאוחד וחשבונית אחת עם פירוט פר שיוך."
                               : "ייווצר רישום נפרד לכל שיוך וחשבונית נפרדת לכל אחד."}
                           </p>
                         </div>
