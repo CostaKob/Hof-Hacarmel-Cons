@@ -436,7 +436,7 @@ const AdminStudentCard = () => {
                           variant="outline"
                           size="sm"
                           className="h-8 rounded-lg text-xs"
-                          title={p.payment_group_id ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים בקבוצה" : "הפק חשבונית מס/קבלה ב-iCount"}
+                          title={Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1 ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים" : "הפק חשבונית מס/קבלה ב-iCount"}
                           disabled={createInvoiceMutation.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
@@ -448,7 +448,7 @@ const AdminStudentCard = () => {
                           }}
                         >
                           <FileDown className="h-3.5 w-3.5" />
-                          {createInvoiceMutation.isPending ? "..." : (p.payment_group_id ? "הפק חשבונית מאוחדת" : "הפק חשבונית")}
+                          {createInvoiceMutation.isPending ? "..." : (Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1 ? "הפק חשבונית מאוחדת" : "הפק חשבונית")}
                         </Button>
                       )}
                       {isCredit && hasInvoice && (
