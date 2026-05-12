@@ -9,7 +9,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Pencil, Plus, Trash2, Calculator } from "lucide-react";
+import { Pencil, Plus, Trash2, Calculator, FileDown, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
@@ -346,13 +346,15 @@ const AdminStudentCard = () => {
             <div className="space-y-2">
               {payments.map((p: any) => {
                 const isCredit = p.transaction_type !== "payment";
+                const hasInvoice = !!p.invoice_url;
+                const canRefund = !isCredit && p.icount_doc_id && !payments.some((x: any) => x.refund_of_payment_id === p.id);
                 return (
                   <div
                     key={p.id}
                     onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
-                    className="flex items-center justify-between rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors gap-2"
                   >
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="font-medium text-foreground text-sm">
                         {format(new Date(p.payment_date), "dd/MM/yyyy")}
                         {p.academic_years?.name && <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>}
@@ -362,13 +364,41 @@ const AdminStudentCard = () => {
                         {p.payment_method && ` · ${p.payment_method}`}
                         {p.installments > 1 && ` · ${p.installments} תשלומים`}
                         {p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                        {p.icount_doc_number && ` · חשבונית ${p.icount_doc_number}`}
                         {p.month_reference && ` · ${p.month_reference}`}
                       </p>
                       {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                     </div>
-                    <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                      {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {hasInvoice && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg"
+                          title="הורד חשבונית"
+                          onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}
+                        >
+                          <FileDown className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {canRefund && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                          title="בצע זיכוי"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toast.info("התשתית מוכנה - הזיכוי יבוצע אוטומטית כש-iCount יחובר");
+                          }}
+                        >
+                          <Undo2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
+                        {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
+                      </span>
+                    </div>
                   </div>
                 );
               })}
