@@ -101,7 +101,7 @@ Deno.serve(async (req: Request) => {
     // iCount doc/create payload (חשבונית מס קבלה = invrec)
     const payload: any = {
       ...auth,
-      doc_type: "invrec",
+      doctype: "invrec",
       client_name: clientName,
       email: student.parent_email || student.parent_email_2 || undefined,
       send_email: !!(student.parent_email || student.parent_email_2),
@@ -111,7 +111,7 @@ Deno.serve(async (req: Request) => {
       items: [
         {
           description,
-          unitprice_with_vat: amount,
+          unitprice_incvat: amount,
           quantity: 1,
         },
       ],
