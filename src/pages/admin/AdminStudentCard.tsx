@@ -405,7 +405,7 @@ const AdminStudentCard = () => {
                       {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {hasInvoice && (
+                      {!isCredit && hasInvoice && (
                         <Button
                           variant="outline"
                           size="icon"
@@ -416,15 +416,42 @@ const AdminStudentCard = () => {
                           <FileDown className="h-4 w-4" />
                         </Button>
                       )}
+                      {!isCredit && !hasDoc && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 rounded-lg text-xs"
+                          title="הפק חשבונית מס/קבלה ב-iCount"
+                          disabled={createInvoiceMutation.isPending}
+                          onClick={(e) => { e.stopPropagation(); createInvoiceMutation.mutate(p.id); }}
+                        >
+                          <FileDown className="h-3.5 w-3.5" />
+                          {createInvoiceMutation.isPending ? "..." : "הפק חשבונית"}
+                        </Button>
+                      )}
+                      {isCredit && hasInvoice && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg"
+                          title="הורד חשבונית זיכוי"
+                          onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}
+                        >
+                          <FileDown className="h-4 w-4" />
+                        </Button>
+                      )}
                       {canRefund && (
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                          title="בצע זיכוי"
+                          title="בצע זיכוי מלא ב-iCount"
+                          disabled={refundMutation.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toast.info("התשתית מוכנה - הזיכוי יבוצע אוטומטית כש-iCount יחובר");
+                            if (confirm(`לבצע זיכוי מלא של ₪${Number(p.amount).toLocaleString()} לחשבונית ${p.icount_doc_number ?? ""}?`)) {
+                              refundMutation.mutate(p.id);
+                            }
                           }}
                         >
                           <Undo2 className="h-4 w-4" />
