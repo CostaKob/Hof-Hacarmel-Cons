@@ -89,13 +89,21 @@ const AdminStudentPaymentCalc = () => {
   });
 
   const paymentsAggr = useMemo(() => {
-    let paid = 0, credit = 0;
+    let paid = 0, credit = 0, net = 0;
     for (const r of paymentsList as any[]) {
       const amount = Number(r.amount || 0);
-      if (r.transaction_type === "payment") paid += amount;
-      else if (r.transaction_type === "credit") credit += Math.abs(amount);
+      if (amount < 0) {
+        credit += Math.abs(amount);
+        net += amount;
+      } else if (r.transaction_type === "payment") {
+        paid += amount;
+        net += amount;
+      } else {
+        credit += amount;
+        net -= amount;
+      }
     }
-    return { net: paid - credit, paid, credit };
+    return { net, paid, credit };
   }, [paymentsList]);
 
   // Discount state
@@ -439,7 +447,7 @@ const AdminStudentPaymentCalc = () => {
                         {p.notes && <span className="text-muted-foreground"> · {p.notes}</span>}
                       </div>
                       <span className={`text-sm font-semibold ${isCredit ? "text-destructive" : "text-primary"}`}>
-                        {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Number(p.amount || 0).toLocaleString()}`}
+                        {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
                       </span>
                     </div>
                   );
