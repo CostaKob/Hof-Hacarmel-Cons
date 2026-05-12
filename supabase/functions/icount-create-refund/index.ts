@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
         student_id: payment.student_id,
         enrollment_id: payment.enrollment_id,
         academic_year_id: payment.academic_year_id,
-        amount: refundAmount,
+        amount: -Math.abs(refundAmount),
         transaction_type: "credit",
         payment_method: payment.payment_method,
         payment_date: new Date().toISOString().slice(0, 10),
