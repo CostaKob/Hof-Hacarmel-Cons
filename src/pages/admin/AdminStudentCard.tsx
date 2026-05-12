@@ -361,7 +361,8 @@ const AdminStudentCard = () => {
             <div className="flex items-center gap-3">
               <div className="text-sm text-muted-foreground">
                 סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.reduce((s: number, p: any) => {
-                  const amount = Math.abs(Number(p.amount || 0));
+                  const amount = Number(p.amount || 0);
+                  if (amount < 0) return s + amount;
                   return p.transaction_type === "payment" ? s + amount : s - amount;
                 }, 0).toLocaleString()}</span>
               </div>
