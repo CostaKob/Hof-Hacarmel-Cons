@@ -436,12 +436,19 @@ const AdminStudentCard = () => {
                           variant="outline"
                           size="sm"
                           className="h-8 rounded-lg text-xs"
-                          title="הפק חשבונית מס/קבלה ב-iCount"
+                          title={p.payment_group_id ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים בקבוצה" : "הפק חשבונית מס/קבלה ב-iCount"}
                           disabled={createInvoiceMutation.isPending}
-                          onClick={(e) => { e.stopPropagation(); createInvoiceMutation.mutate(p.id); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            createInvoiceMutation.mutate(
+                              p.payment_group_id
+                                ? { groupId: p.payment_group_id }
+                                : { paymentId: p.id }
+                            );
+                          }}
                         >
                           <FileDown className="h-3.5 w-3.5" />
-                          {createInvoiceMutation.isPending ? "..." : "הפק חשבונית"}
+                          {createInvoiceMutation.isPending ? "..." : (p.payment_group_id ? "הפק חשבונית מאוחדת" : "הפק חשבונית")}
                         </Button>
                       )}
                       {isCredit && hasInvoice && (
