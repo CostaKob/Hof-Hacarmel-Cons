@@ -96,13 +96,23 @@ Deno.serve(async (req: Request) => {
     const pm = mapPaymentMethod(payment.payment_method);
     const amount = Number(payment.amount || 0);
 
+    // Fetch academic year name
+    let yearName = "";
+    if (payment.academic_year_id) {
+      const { data: yr } = await supabase
+        .from("academic_years")
+        .select("name")
+        .eq("id", payment.academic_year_id)
+        .maybeSingle();
+      yearName = yr?.name || "";
+    }
+
     // Load all active enrollments for this student in the payment's academic year
-    const HEB_DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
     let enrollmentsLines: string[] = [];
     if (student.id) {
       const { data: enrolls } = await supabase
         .from("enrollments")
-        .select("lesson_duration_minutes, lesson_type, schools(name), instruments(name), teachers:teacher_id(first_name,last_name), grade")
+        .select("lesson_duration_minutes, lesson_type, schools(name), instruments(name)")
         .eq("student_id", student.id)
         .eq("is_active", true)
         .eq("academic_year_id", payment.academic_year_id);
@@ -110,10 +120,9 @@ Deno.serve(async (req: Request) => {
         const parts = [
           e.schools?.name && `שלוחה: ${e.schools.name}`,
           e.instruments?.name && `כלי: ${e.instruments.name}`,
-          e.teachers && `מורה: ${e.teachers.first_name ?? ""} ${e.teachers.last_name ?? ""}`.trim(),
+          yearName && `שנת לימוד: ${yearName}`,
           e.lesson_duration_minutes && `משך: ${e.lesson_duration_minutes} דק'`,
           e.lesson_type && `סוג: ${e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
-          e.grade && `כיתה: ${e.grade}`,
         ].filter(Boolean);
         enrollmentsLines.push("• " + parts.join(" | "));
       }
