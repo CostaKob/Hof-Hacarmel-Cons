@@ -491,6 +491,53 @@ const AdminStudentCard = () => {
           defaultType={paymentDialogType}
         />
 
+        <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>זיכוי לחשבונית {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
+              <DialogDescription>
+                סכום מקורי: ₪{Number(refundTarget?.amount || 0).toLocaleString()}
+                {refundTarget && refundTarget._remaining !== Number(refundTarget.amount) && (
+                  <> · נותר לזיכוי: ₪{Number(refundTarget?._remaining || 0).toLocaleString()}</>
+                )}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="refund-amount">סכום הזיכוי (₪)</Label>
+              <Input
+                id="refund-amount"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max={refundTarget?._remaining ?? undefined}
+                step="0.01"
+                className="h-12 rounded-xl"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">הסכום יוחזר ב-iCount ויירשם כשורת זיכוי בתשלומים.</p>
+            </div>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
+                ביטול
+              </Button>
+              <Button
+                className="h-11 rounded-xl"
+                disabled={refundMutation.isPending}
+                onClick={() => {
+                  const amt = Number(refundAmount);
+                  const max = Number(refundTarget?._remaining || 0);
+                  if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                  if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר לזיכוי (₪${max.toLocaleString()})`); return; }
+                  refundMutation.mutate({ paymentId: refundTarget.id, amount: amt });
+                }}
+              >
+                {refundMutation.isPending ? "מבצע..." : "בצע זיכוי"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
