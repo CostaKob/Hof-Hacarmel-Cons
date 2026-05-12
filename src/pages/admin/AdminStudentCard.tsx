@@ -360,7 +360,7 @@ const AdminStudentCard = () => {
             <h2 className="font-semibold text-foreground text-base">תשלומים ({payments.length})</h2>
             <div className="flex items-center gap-3">
               <div className="text-sm text-muted-foreground">
-                סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.filter((p: any) => p.transaction_type === "payment").reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
+                סה״כ שולם: <span className="font-semibold text-foreground">₪{payments.reduce((s: number, p: any) => s + Number(p.amount || 0), 0).toLocaleString()}</span>
               </div>
               <Button
                 variant="outline"
