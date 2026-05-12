@@ -456,7 +456,7 @@ const AdminStudentPaymentCalc = () => {
             )}
           </div>
 
-          <SummaryRow label="כבר שולם" value={effectivePaid} />
+          <SummaryRow label="כבר שולם" value={paymentsAggr.paid} />
           {paymentsAggr.credit > 0 && (
             <SummaryRow label="זיכויים" value={-paymentsAggr.credit} />
           )}
