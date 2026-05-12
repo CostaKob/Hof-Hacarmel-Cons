@@ -72,7 +72,7 @@ Deno.serve(async (req: Request) => {
     // Load payment + student
     const { data: payment, error: payErr } = await supabase
       .from("student_payments")
-      .select("*, students(first_name,last_name,national_id,parent_name,parent_email,parent_phone,parent_name_2,parent_email_2,parent_phone_2)")
+      .select("*, students(id,first_name,last_name,national_id,address,city,parent_name,parent_email,parent_phone,parent_name_2,parent_email_2,parent_phone_2)")
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -96,13 +96,41 @@ Deno.serve(async (req: Request) => {
     const pm = mapPaymentMethod(payment.payment_method);
     const amount = Number(payment.amount || 0);
 
-    const description = `שכר לימוד — ${studentFullName}${payment.month_reference ? ` (${payment.month_reference})` : ""}`;
+    // Load all active enrollments for this student in the payment's academic year
+    const HEB_DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+    let enrollmentsLines: string[] = [];
+    if (student.id) {
+      const { data: enrolls } = await supabase
+        .from("enrollments")
+        .select("lesson_duration_minutes, lesson_type, schools(name), instruments(name), teachers:teacher_id(first_name,last_name), grade")
+        .eq("student_id", student.id)
+        .eq("is_active", true)
+        .eq("academic_year_id", payment.academic_year_id);
+      for (const e of (enrolls ?? []) as any[]) {
+        const parts = [
+          e.schools?.name && `שלוחה: ${e.schools.name}`,
+          e.instruments?.name && `כלי: ${e.instruments.name}`,
+          e.teachers && `מורה: ${e.teachers.first_name ?? ""} ${e.teachers.last_name ?? ""}`.trim(),
+          e.lesson_duration_minutes && `משך: ${e.lesson_duration_minutes} דק'`,
+          e.lesson_type && `סוג: ${e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
+          e.grade && `כיתה: ${e.grade}`,
+        ].filter(Boolean);
+        enrollmentsLines.push("• " + parts.join(" | "));
+      }
+    }
+
+    const headerLine = `שכר לימוד — ${studentFullName}${payment.month_reference ? ` (${payment.month_reference})` : ""}`;
+    const description = enrollmentsLines.length
+      ? `${headerLine}\n${enrollmentsLines.join("\n")}`
+      : headerLine;
 
     // iCount doc/create payload (חשבונית מס קבלה = invrec)
     const payload: any = {
       ...auth,
       doctype: "invrec",
       client_name: clientName,
+      client_address: student.address || undefined,
+      client_city: student.city || undefined,
       email: student.parent_email || student.parent_email_2 || undefined,
       send_email: !!(student.parent_email || student.parent_email_2),
       lang: "he",
