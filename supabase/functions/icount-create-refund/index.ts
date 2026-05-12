@@ -58,7 +58,7 @@ Deno.serve(async (req: Request) => {
 
     const payload: any = {
       ...auth,
-      doc_type: "credit_invoice",
+      doctype: "refund",
       client_name: student.parent_name || studentFullName,
       email: student.parent_email || student.parent_email_2 || undefined,
       send_email: !!(student.parent_email || student.parent_email_2),
@@ -66,7 +66,7 @@ Deno.serve(async (req: Request) => {
       currency_code: "ILS",
       vat_included: 1,
       based_on: [payment.icount_doc_id],
-      items: [{ description, unitprice_with_vat: refundAmount, quantity: 1 }],
+      items: [{ description, unitprice_incvat: refundAmount, quantity: 1 }],
     };
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
