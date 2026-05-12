@@ -187,8 +187,7 @@ const AdminStudents = () => {
     if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
     if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
-    if (paymentFilter === "paid" && !paidEnrollmentIds.has(r.id)) return false;
-    if (paymentFilter === "unpaid" && paidEnrollmentIds.has(r.id)) return false;
+    if (paymentFilter !== "all" && getPaymentStatus(r) !== paymentFilter) return false;
     return true;
   });
 
