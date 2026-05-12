@@ -71,6 +71,40 @@ const AdminStudentCard = () => {
     onError: () => toast.error("שגיאה בעדכון סטטוס רישום"),
   });
 
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: { paymentId } });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      if (data?.url) {
+        toast.success(`חשבונית ${data.doc_number ?? ""} נוצרה`);
+        window.open(data.url, "_blank");
+      } else {
+        toast.success("חשבונית נוצרה");
+      }
+    },
+    onError: (e: any) => toast.error(`שגיאה ביצירת חשבונית: ${e?.message ?? ""}`),
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-refund", { body: { paymentId } });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      toast.success(`זיכוי ${data?.doc_number ?? ""} בוצע`);
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       // Get enrollment IDs for this student
@@ -347,7 +381,8 @@ const AdminStudentCard = () => {
               {payments.map((p: any) => {
                 const isCredit = p.transaction_type !== "payment";
                 const hasInvoice = !!p.invoice_url;
-                const canRefund = !isCredit && p.icount_doc_id && !payments.some((x: any) => x.refund_of_payment_id === p.id);
+                const hasDoc = !!p.icount_doc_id;
+                const canRefund = !isCredit && hasDoc && !payments.some((x: any) => x.refund_of_payment_id === p.id);
                 return (
                   <div
                     key={p.id}
@@ -370,7 +405,7 @@ const AdminStudentCard = () => {
                       {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      {hasInvoice && (
+                      {!isCredit && hasInvoice && (
                         <Button
                           variant="outline"
                           size="icon"
@@ -381,15 +416,42 @@ const AdminStudentCard = () => {
                           <FileDown className="h-4 w-4" />
                         </Button>
                       )}
+                      {!isCredit && !hasDoc && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 rounded-lg text-xs"
+                          title="הפק חשבונית מס/קבלה ב-iCount"
+                          disabled={createInvoiceMutation.isPending}
+                          onClick={(e) => { e.stopPropagation(); createInvoiceMutation.mutate(p.id); }}
+                        >
+                          <FileDown className="h-3.5 w-3.5" />
+                          {createInvoiceMutation.isPending ? "..." : "הפק חשבונית"}
+                        </Button>
+                      )}
+                      {isCredit && hasInvoice && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 rounded-lg"
+                          title="הורד חשבונית זיכוי"
+                          onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}
+                        >
+                          <FileDown className="h-4 w-4" />
+                        </Button>
+                      )}
                       {canRefund && (
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                          title="בצע זיכוי"
+                          title="בצע זיכוי מלא ב-iCount"
+                          disabled={refundMutation.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toast.info("התשתית מוכנה - הזיכוי יבוצע אוטומטית כש-iCount יחובר");
+                            if (confirm(`לבצע זיכוי מלא של ₪${Number(p.amount).toLocaleString()} לחשבונית ${p.icount_doc_number ?? ""}?`)) {
+                              refundMutation.mutate(p.id);
+                            }
                           }}
                         >
                           <Undo2 className="h-4 w-4" />
