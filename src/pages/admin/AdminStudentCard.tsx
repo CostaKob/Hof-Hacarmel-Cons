@@ -393,7 +393,11 @@ const AdminStudentCard = () => {
                 const isCredit = p.transaction_type !== "payment";
                 const hasInvoice = !!p.invoice_url;
                 const hasDoc = !!p.icount_doc_id;
-                const canRefund = !isCredit && hasDoc && !payments.some((x: any) => x.refund_of_payment_id === p.id);
+                const refundedSoFar = payments
+                  .filter((x: any) => x.refund_of_payment_id === p.id)
+                  .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+                const remaining = Math.max(0, Number(p.amount || 0) - refundedSoFar);
+                const canRefund = !isCredit && hasDoc && remaining > 0;
                 return (
                   <div
                     key={p.id}
