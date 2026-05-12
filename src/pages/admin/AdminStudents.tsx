@@ -392,7 +392,13 @@ const AdminStudents = () => {
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>
           <div className="space-y-2">
             {filtered.map((r: any, index: number) => {
-              const isPaid = paidEnrollmentIds.has(r.id);
+              const payStatus = getPaymentStatus(r);
+              const payLabel = payStatus === "full" ? "שולם" : payStatus === "partial" ? "שולם חלקית" : "לא שולם";
+              const payClass = payStatus === "full"
+                ? "bg-green-500/10 text-green-700 border-green-500/30"
+                : payStatus === "partial"
+                ? "bg-amber-500/10 text-amber-700 border-amber-500/30"
+                : "bg-destructive/10 text-destructive border-destructive/30";
               return (
                 <div
                   key={r.id}
