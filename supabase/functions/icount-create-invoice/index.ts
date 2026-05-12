@@ -72,7 +72,7 @@ Deno.serve(async (req: Request) => {
     // Load payment + student
     const { data: payment, error: payErr } = await supabase
       .from("student_payments")
-      .select("*, students(first_name,last_name,national_id,parent_name,parent_email,parent_phone,parent_name_2,parent_email_2,parent_phone_2)")
+      .select("*, students(id,first_name,last_name,national_id,address,city,parent_name,parent_email,parent_phone,parent_name_2,parent_email_2,parent_phone_2)")
       .eq("id", paymentId)
       .maybeSingle();
 
