@@ -453,9 +453,9 @@ const AdminStudents = () => {
                   <div className="flex items-center gap-2 mr-3 shrink-0">
                     <Badge
                       variant="outline"
-                      className={`rounded-lg text-xs ${isPaid ? "bg-green-500/10 text-green-700 border-green-500/30" : "bg-destructive/10 text-destructive border-destructive/30"}`}
+                      className={`rounded-lg text-xs ${payClass}`}
                     >
-                      {isPaid ? "שולם" : "לא שולם"}
+                      {payLabel}
                     </Badge>
                     <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
                       {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
