@@ -77,8 +77,8 @@ const AdminStudentCard = () => {
   });
 
   const createInvoiceMutation = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: { paymentId } });
+    mutationFn: async (params: { paymentId?: string; groupId?: string }) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
