@@ -42,6 +42,8 @@ const AdminStudentCard = () => {
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
+  const [refundTarget, setRefundTarget] = useState<any>(null);
+  const [refundAmount, setRefundAmount] = useState<string>("");
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
