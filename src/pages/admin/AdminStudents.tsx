@@ -320,7 +320,8 @@ const AdminStudents = () => {
               <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">תשלומים</SelectItem>
-                <SelectItem value="paid">שולם</SelectItem>
+                <SelectItem value="full">שולם במלואו</SelectItem>
+                <SelectItem value="partial">שולם חלקית</SelectItem>
                 <SelectItem value="unpaid">לא שולם</SelectItem>
               </SelectContent>
             </Select>
