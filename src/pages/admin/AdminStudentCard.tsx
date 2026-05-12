@@ -71,6 +71,40 @@ const AdminStudentCard = () => {
     onError: () => toast.error("שגיאה בעדכון סטטוס רישום"),
   });
 
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: { paymentId } });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      if (data?.url) {
+        toast.success(`חשבונית ${data.doc_number ?? ""} נוצרה`);
+        window.open(data.url, "_blank");
+      } else {
+        toast.success("חשבונית נוצרה");
+      }
+    },
+    onError: (e: any) => toast.error(`שגיאה ביצירת חשבונית: ${e?.message ?? ""}`),
+  });
+
+  const refundMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-refund", { body: { paymentId } });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      toast.success(`זיכוי ${data?.doc_number ?? ""} בוצע`);
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async () => {
       // Get enrollment IDs for this student
