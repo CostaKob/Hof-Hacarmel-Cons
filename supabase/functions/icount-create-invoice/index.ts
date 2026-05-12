@@ -107,22 +107,21 @@ Deno.serve(async (req: Request) => {
       yearName = yr?.name || "";
     }
 
-    // Load all active enrollments for this student in the payment's academic year
+    // Load only the enrollment linked to this payment row
     let enrollmentsLines: string[] = [];
-    if (student.id) {
-      const { data: enrolls } = await supabase
+    if (payment.enrollment_id) {
+      const { data: e } = await supabase
         .from("enrollments")
         .select("lesson_duration_minutes, lesson_type, schools(name), instruments(name)")
-        .eq("student_id", student.id)
-        .eq("is_active", true)
-        .eq("academic_year_id", payment.academic_year_id);
-      for (const e of (enrolls ?? []) as any[]) {
+        .eq("id", payment.enrollment_id)
+        .maybeSingle();
+      if (e) {
         const parts = [
-          e.schools?.name && `שלוחה: ${e.schools.name}`,
-          e.instruments?.name && `כלי: ${e.instruments.name}`,
+          (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
+          (e as any).instruments?.name && `כלי: ${(e as any).instruments.name}`,
           yearName && `שנת לימוד: ${yearName}`,
-          e.lesson_duration_minutes && `משך: ${e.lesson_duration_minutes} דק'`,
-          e.lesson_type && `סוג: ${e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
+          (e as any).lesson_duration_minutes && `משך: ${(e as any).lesson_duration_minutes} דק'`,
+          (e as any).lesson_type && `סוג: ${(e as any).lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
         ].filter(Boolean);
         enrollmentsLines.push("• " + parts.join(" | "));
       }
