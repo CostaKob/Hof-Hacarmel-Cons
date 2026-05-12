@@ -91,8 +91,9 @@ const AdminStudentPaymentCalc = () => {
   const paymentsAggr = useMemo(() => {
     let paid = 0, credit = 0;
     for (const r of paymentsList as any[]) {
-      if (r.transaction_type === "payment") paid += Number(r.amount);
-      else if (r.transaction_type === "credit") credit += Number(r.amount);
+      const amount = Number(r.amount || 0);
+      if (r.transaction_type === "payment") paid += amount;
+      else if (r.transaction_type === "credit") credit += Math.abs(amount);
     }
     return { net: paid - credit, paid, credit };
   }, [paymentsList]);
@@ -438,7 +439,7 @@ const AdminStudentPaymentCalc = () => {
                         {p.notes && <span className="text-muted-foreground"> · {p.notes}</span>}
                       </div>
                       <span className={`text-sm font-semibold ${isCredit ? "text-destructive" : "text-primary"}`}>
-                        {isCredit ? "−" : ""}₪{Number(p.amount || 0).toLocaleString()}
+                        {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Number(p.amount || 0).toLocaleString()}`}
                       </span>
                     </div>
                   );
@@ -447,7 +448,7 @@ const AdminStudentPaymentCalc = () => {
             )}
           </div>
 
-          <SummaryRow label="כבר שולם" value={paymentsAggr.paid} />
+          <SummaryRow label="כבר שולם" value={effectivePaid} />
           {paymentsAggr.credit > 0 && (
             <SummaryRow label="זיכויים" value={-paymentsAggr.credit} />
           )}
