@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -43,26 +44,36 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const { activeYear } = useAcademicYear();
   const today = format(new Date(), "yyyy-MM-dd");
 
-  const [amount, setAmount] = useState("");
   const [paymentDate, setPaymentDate] = useState(today);
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [installments, setInstallments] = useState("1");
   const [notes, setNotes] = useState("");
-  const [selectedEnrollmentId, setSelectedEnrollmentId] = useState("");
+  // Multi-select map: enrollmentId -> amount string
+  const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
+  // Edit-mode single enrollment + amount
+  const [editEnrollmentId, setEditEnrollmentId] = useState("");
+  const [editAmount, setEditAmount] = useState("");
   const [transactionType, setTransactionType] = useState<"payment" | "credit">("payment");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isEdit = !!editPayment;
 
+  const suggestedFor = (e: any) => {
+    const ppl = Number(e?.price_per_lesson || 0);
+    const total = Number(e?.total_lessons_allocated || 0);
+    const v = Math.round(ppl * total);
+    return v > 0 ? String(v) : "";
+  };
+
   // Pre-fill form when editing or reset for new
   useEffect(() => {
     if (editPayment) {
-      setAmount(String(editPayment.amount));
+      setEditAmount(String(editPayment.amount));
       setPaymentDate(editPayment.payment_date);
       setPaymentMethod(editPayment.payment_method || "credit_card");
       setInstallments(String((editPayment as any).installments ?? 1));
       setNotes(editPayment.notes || "");
-      setSelectedEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
+      setEditEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
       setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
       resetForm();
@@ -75,41 +86,82 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const getEnrollmentLabel = (e: any) =>
     `${e.instruments?.name ?? "—"} — ${e.schools?.name ?? "—"}`;
 
+  const activeEnrollments = useMemo(() => enrollments.filter((e: any) => e.is_active), [enrollments]);
+
+  const totalSelected = useMemo(() => {
+    return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+  }, [selectedAmounts]);
+
+  const toggleEnrollment = (e: any, checked: boolean) => {
+    setSelectedAmounts((prev) => {
+      const next = { ...prev };
+      if (checked) {
+        next[e.id] = prev[e.id] ?? suggestedFor(e);
+      } else {
+        delete next[e.id];
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    const next: Record<string, string> = {};
+    for (const e of activeEnrollments) next[e.id] = selectedAmounts[e.id] ?? suggestedFor(e);
+    setSelectedAmounts(next);
+  };
+  const clearAll = () => setSelectedAmounts({});
+
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!selectedEnrollmentId) throw new Error("יש לבחור שיוך");
+      if (isEdit) {
+        if (!editEnrollmentId) throw new Error("יש לבחור שיוך");
+        const amt = parseFloat(editAmount);
+        if (!amt || amt <= 0) throw new Error("יש להזין סכום");
+        const { error } = await supabase
+          .from("student_payments")
+          .update({
+            amount: amt,
+            payment_date: paymentDate,
+            payment_method: paymentMethod as any,
+            installments: parseInt(installments),
+            notes: notes || null,
+            enrollment_id: editEnrollmentId,
+            transaction_type: transactionType,
+          })
+          .eq("id", editPayment!.id);
+        if (error) throw error;
+        return;
+      }
 
-      const paymentData = {
-        amount: parseFloat(amount),
+      const entries = Object.entries(selectedAmounts)
+        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
+        .filter((x) => x.eid && x.amt > 0);
+      if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+
+      const rows = entries.map(({ eid, amt }) => ({
+        amount: amt,
         payment_date: paymentDate,
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
         notes: notes || null,
-        enrollment_id: selectedEnrollmentId,
+        enrollment_id: eid,
         transaction_type: transactionType,
-      };
+        student_id: studentId,
+        academic_year_id: academicYearId,
+      }));
 
-      if (isEdit) {
-        const { error } = await supabase.from("student_payments").update(paymentData).eq("id", editPayment!.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("student_payments").insert({
-          ...paymentData,
-          student_id: studentId,
-          academic_year_id: academicYearId,
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.from("student_payments").insert(rows as any);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
       queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
-      toast.success(isEdit ? "התשלום עודכן בהצלחה" : "התשלום נוסף בהצלחה");
+      toast.success(isEdit ? "הרישום עודכן בהצלחה" : "הרישום נוסף בהצלחה");
       onOpenChange(false);
       resetForm();
     },
-    onError: (err: any) => toast.error(err.message || "שגיאה בשמירת תשלום"),
+    onError: (err: any) => toast.error(err.message || "שגיאה בשמירת הרישום"),
   });
 
   const deleteMutation = useMutation({
@@ -131,28 +183,33 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   });
 
   const resetForm = () => {
-    setAmount("");
     setPaymentDate(today);
     setPaymentMethod("credit_card");
     setInstallments("1");
     setNotes("");
     setTransactionType("payment");
-    const defaultEnrollment = enrollments.find((e: any) => e.is_active) || enrollments[0];
-    setSelectedEnrollmentId(defaultEnrollment?.id || "");
+    setSelectedAmounts({});
+    setEditEnrollmentId("");
+    setEditAmount("");
   };
 
-  const canSubmit = amount && parseFloat(amount) > 0 && paymentDate && selectedEnrollmentId;
+  const canSubmit = isEdit
+    ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
+    : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate;
 
-  const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
+  const selectClass =
+    "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md" dir="rtl">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto overscroll-contain" dir="rtl">
           <DialogHeader>
             <DialogTitle>{isEdit ? "עריכת רישום" : "הוסף תשלום / זיכוי"}</DialogTitle>
             <DialogDescription>
-              {isEdit ? "עדכון פרטי רישום קיים." : "הוספת רישום תשלום או זיכוי פנימי לצורכי מעקב בלבד."}
+              {isEdit
+                ? "עדכון פרטי רישום קיים."
+                : "כל שיוך ייווצר כרישום נפרד עם הסכום שלו (וכפריט נפרד בחשבונית)."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
@@ -176,27 +233,93 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 </button>
               </div>
             </div>
+
             {/* Enrollment selector */}
-            <div>
-              <Label htmlFor="enrollment-select">שיוך (כלי + בי״ס)</Label>
-              <select
-                id="enrollment-select"
-                value={selectedEnrollmentId}
-                onChange={(e) => setSelectedEnrollmentId(e.target.value)}
-                className={selectClass}
-              >
-                <option value="" disabled>בחר שיוך...</option>
-                {enrollments.map((e: any) => (
-                  <option key={e.id} value={e.id}>
-                    {getEnrollmentLabel(e)}{!e.is_active ? " (לא פעיל)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <Label>סכום (₪)</Label>
-              <Input type="number" min="1" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" />
-            </div>
+            {isEdit ? (
+              <>
+                <div>
+                  <Label htmlFor="enrollment-select">שיוך (כלי + בי״ס)</Label>
+                  <select
+                    id="enrollment-select"
+                    value={editEnrollmentId}
+                    onChange={(e) => setEditEnrollmentId(e.target.value)}
+                    className={selectClass}
+                  >
+                    <option value="" disabled>בחר שיוך...</option>
+                    {enrollments.map((e: any) => (
+                      <option key={e.id} value={e.id}>
+                        {getEnrollmentLabel(e)}{!e.is_active ? " (לא פעיל)" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <Label>סכום (₪)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={editAmount}
+                    onChange={(e) => setEditAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label>שיוכים וסכומים</Label>
+                  <div className="flex gap-2 text-xs">
+                    <button type="button" className="text-primary hover:underline" onClick={selectAll}>בחר הכל</button>
+                    <span className="text-muted-foreground">·</span>
+                    <button type="button" className="text-muted-foreground hover:underline" onClick={clearAll}>נקה</button>
+                  </div>
+                </div>
+                {activeEnrollments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground mt-2">אין שיוכים פעילים</p>
+                ) : (
+                  <div className="mt-2 space-y-2">
+                    {activeEnrollments.map((e: any) => {
+                      const checked = selectedAmounts[e.id] !== undefined;
+                      return (
+                        <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={(v) => toggleEnrollment(e, !!v)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{getEnrollmentLabel(e)}</p>
+                            {e.price_per_lesson ? (
+                              <p className="text-xs text-muted-foreground">
+                                ₪{Number(e.price_per_lesson).toLocaleString()} × {e.total_lessons_allocated || 0} שיעורים
+                              </p>
+                            ) : null}
+                          </div>
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            disabled={!checked}
+                            value={selectedAmounts[e.id] ?? ""}
+                            onChange={(ev) =>
+                              setSelectedAmounts((prev) => ({ ...prev, [e.id]: ev.target.value }))
+                            }
+                            placeholder={suggestedFor(e) || "0.00"}
+                            className="w-28 h-9"
+                          />
+                        </div>
+                      );
+                    })}
+                    {Object.keys(selectedAmounts).length > 1 && (
+                      <p className="text-xs text-muted-foreground text-end">
+                        סה״כ: ₪{totalSelected.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             <div>
               <Label>תאריך תשלום</Label>
               <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
