@@ -139,6 +139,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         .filter((x) => x.eid && x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
 
+      const groupId = entries.length > 1 && invoiceMode === "combined"
+        ? (typeof crypto !== "undefined" && (crypto as any).randomUUID ? crypto.randomUUID() : null)
+        : null;
+
       const rows = entries.map(({ eid, amt }) => ({
         amount: amt,
         payment_date: paymentDate,
@@ -149,6 +153,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         transaction_type: transactionType,
         student_id: studentId,
         academic_year_id: academicYearId,
+        payment_group_id: groupId,
       }));
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
