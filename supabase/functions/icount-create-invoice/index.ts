@@ -57,9 +57,9 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { paymentId } = await req.json();
-    if (!paymentId) {
-      return new Response(JSON.stringify({ error: "paymentId required" }), {
+    const { paymentId, groupId } = await req.json();
+    if (!paymentId && !groupId) {
+      return new Response(JSON.stringify({ error: "paymentId or groupId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -69,68 +69,93 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Load payment + student
-    const { data: payment, error: payErr } = await supabase
-      .from("student_payments")
-      .select("*, students(id,first_name,last_name,national_id,address,city,parent_name,parent_email,parent_phone,parent_name_2,parent_email_2,parent_phone_2)")
-      .eq("id", paymentId)
-      .maybeSingle();
-
-    if (payErr || !payment) {
-      return new Response(JSON.stringify({ error: "payment not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Load payment row(s) — group mode loads all rows in the group
+    const baseSelect = "*, students(id,first_name,last_name,national_id,address,city,parent_name,parent_email,parent_phone,parent_name_2,parent_email_2,parent_phone_2)";
+    let payments: any[] = [];
+    if (groupId) {
+      const { data, error } = await supabase
+        .from("student_payments")
+        .select(baseSelect)
+        .eq("payment_group_id", groupId)
+        .order("created_at", { ascending: true });
+      if (error || !data || data.length === 0) {
+        return new Response(JSON.stringify({ error: "group payments not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      payments = data;
+    } else {
+      const { data, error } = await supabase
+        .from("student_payments")
+        .select(baseSelect)
+        .eq("id", paymentId)
+        .maybeSingle();
+      if (error || !data) {
+        return new Response(JSON.stringify({ error: "payment not found" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      payments = [data];
     }
 
-    if (payment.icount_doc_id) {
+    // If any row already has a doc, return existing
+    const existing = payments.find((p) => p.icount_doc_id);
+    if (existing) {
       return new Response(JSON.stringify({
         ok: true, alreadyExists: true,
-        doc_id: payment.icount_doc_id, doc_number: payment.icount_doc_number, url: payment.invoice_url,
+        doc_id: existing.icount_doc_id, doc_number: existing.icount_doc_number, url: existing.invoice_url,
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const auth = getAuth();
-    const student: any = payment.students || {};
+    const head = payments[0];
+    const student: any = head.students || {};
     const clientName = student.parent_name || `${student.first_name} ${student.last_name}`;
     const studentFullName = `${student.first_name} ${student.last_name}`.trim();
-    const pm = mapPaymentMethod(payment.payment_method);
-    const amount = Number(payment.amount || 0);
+    const pm = mapPaymentMethod(head.payment_method);
+    const totalAmount = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
 
-    // Fetch academic year name
+    // Fetch academic year name (use head's year)
     let yearName = "";
-    if (payment.academic_year_id) {
+    if (head.academic_year_id) {
       const { data: yr } = await supabase
         .from("academic_years")
         .select("name")
-        .eq("id", payment.academic_year_id)
+        .eq("id", head.academic_year_id)
         .maybeSingle();
       yearName = yr?.name || "";
     }
 
-    // Load only the enrollment linked to this payment row
-    let enrollmentsLines: string[] = [];
-    if (payment.enrollment_id) {
-      const { data: e } = await supabase
+    // Load enrollment details for each payment row → one item per enrollment
+    const enrollmentIds = payments.map((p) => p.enrollment_id).filter(Boolean);
+    const enrollMap: Record<string, any> = {};
+    if (enrollmentIds.length > 0) {
+      const { data: ens } = await supabase
         .from("enrollments")
-        .select("lesson_duration_minutes, lesson_type, schools(name), instruments(name)")
-        .eq("id", payment.enrollment_id)
-        .maybeSingle();
-      if (e) {
-        const parts = [
-          (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
-          (e as any).instruments?.name && `כלי: ${(e as any).instruments.name}`,
-          yearName && `שנת לימוד: ${yearName}`,
-          (e as any).lesson_duration_minutes && `משך: ${(e as any).lesson_duration_minutes} דק'`,
-          (e as any).lesson_type && `סוג: ${(e as any).lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
-        ].filter(Boolean);
-        enrollmentsLines.push("• " + parts.join(" | "));
-      }
+        .select("id, lesson_duration_minutes, lesson_type, schools(name), instruments(name)")
+        .in("id", enrollmentIds);
+      for (const e of ens ?? []) enrollMap[(e as any).id] = e;
     }
 
-    const headerLine = `שכר לימוד — ${studentFullName}${payment.month_reference ? ` (${payment.month_reference})` : ""}`;
-    const description = enrollmentsLines.length
-      ? `${headerLine}\n${enrollmentsLines.join("\n")}`
-      : headerLine;
+    const buildItemDescription = (p: any) => {
+      const e = p.enrollment_id ? enrollMap[p.enrollment_id] : null;
+      const headerLine = `שכר לימוד — ${studentFullName}${p.month_reference ? ` (${p.month_reference})` : ""}`;
+      if (!e) return headerLine;
+      const parts = [
+        (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
+        (e as any).instruments?.name && `כלי: ${(e as any).instruments.name}`,
+        yearName && `שנת לימוד: ${yearName}`,
+        (e as any).lesson_duration_minutes && `משך: ${(e as any).lesson_duration_minutes} דק'`,
+        (e as any).lesson_type && `סוג: ${(e as any).lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
+      ].filter(Boolean);
+      return `${headerLine}\n• ${parts.join(" | ")}`;
+    };
+
+    const items = payments.map((p) => ({
+      description: buildItemDescription(p),
+      unitprice_incvat: Number(p.amount || 0),
+      quantity: 1,
+    }));
 
     // iCount doc/create payload (חשבונית מס קבלה = invrec)
     const payload: any = {
@@ -148,26 +173,20 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_included: 1, // amounts already include VAT
-      items: [
-        {
-          description,
-          unitprice_incvat: amount,
-          quantity: 1,
-        },
-      ],
+      items,
     };
 
-    // Payment line(s)
+    // Payment line(s) — total amount across all rows
     if (pm.type === 1) {
-      payload.cash = { sum: amount };
+      payload.cash = { sum: totalAmount };
     } else if (pm.type === 3) {
-      payload.cheques = [{ sum: amount, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
+      payload.cheques = [{ sum: totalAmount, bank: "", branch: "", account: "", num: head.reference_number || "" }];
     } else if (pm.type === 4) {
-      payload.banktransfer = { sum: amount, account: payment.reference_number || "" };
+      payload.banktransfer = { sum: totalAmount, account: head.reference_number || "" };
     } else if (pm.type === 5) {
-      payload.cc = { sum: amount, num: payment.reference_number || "", payments_count: payment.installments || 1 };
+      payload.cc = { sum: totalAmount, num: head.reference_number || "", payments_count: head.installments || 1 };
     } else {
-      payload.other = { sum: amount, info: pm.label };
+      payload.other = { sum: totalAmount, info: pm.label };
     }
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
@@ -188,12 +207,14 @@ Deno.serve(async (req: Request) => {
     const docNumber = String(data.docnum ?? data.doc_number ?? "");
     const docUrl = data.doc_url || data.pdf_link || data.url || null;
 
+    // Update all rows with same invoice info
+    const ids = payments.map((p) => p.id);
     await supabase.from("student_payments").update({
       icount_doc_id: docId,
       icount_doc_number: docNumber,
       invoice_url: docUrl,
       icount_doc_type: "invrec",
-    }).eq("id", paymentId);
+    }).in("id", ids);
 
     return new Response(JSON.stringify({
       ok: true, doc_id: docId, doc_number: docNumber, url: docUrl,
