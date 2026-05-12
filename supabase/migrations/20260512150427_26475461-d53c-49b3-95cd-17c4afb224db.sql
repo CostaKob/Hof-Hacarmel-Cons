@@ -1,0 +1,1 @@
+ALTER TABLE public.student_payments ADD COLUMN IF NOT EXISTS enrollment_breakdown jsonb;

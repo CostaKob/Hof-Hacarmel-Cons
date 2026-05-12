@@ -126,8 +126,32 @@ Deno.serve(async (req: Request) => {
       yearName = yr?.name || "";
     }
 
-    // Load enrollment details for each payment row → one item per enrollment
-    const enrollmentIds = payments.map((p) => p.enrollment_id).filter(Boolean);
+    // Build line items.
+    // - Combined single-row payment with `enrollment_breakdown`: one item per breakdown entry.
+    // - Group of payments (legacy): one item per payment row.
+    // - Single payment: one item.
+    type LineRef = { enrollment_id: string | null; amount: number; month_reference?: string | null };
+    const lineRefs: LineRef[] = [];
+    for (const p of payments) {
+      const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
+      if (breakdown && breakdown.length > 0) {
+        for (const b of breakdown) {
+          lineRefs.push({
+            enrollment_id: b.enrollment_id ?? null,
+            amount: Number(b.amount || 0),
+            month_reference: p.month_reference,
+          });
+        }
+      } else {
+        lineRefs.push({
+          enrollment_id: p.enrollment_id ?? null,
+          amount: Number(p.amount || 0),
+          month_reference: p.month_reference,
+        });
+      }
+    }
+
+    const enrollmentIds = lineRefs.map((l) => l.enrollment_id).filter(Boolean) as string[];
     const enrollMap: Record<string, any> = {};
     if (enrollmentIds.length > 0) {
       const { data: ens } = await supabase
@@ -137,9 +161,9 @@ Deno.serve(async (req: Request) => {
       for (const e of ens ?? []) enrollMap[(e as any).id] = e;
     }
 
-    const buildItemDescription = (p: any) => {
-      const e = p.enrollment_id ? enrollMap[p.enrollment_id] : null;
-      const headerLine = `שכר לימוד — ${studentFullName}${p.month_reference ? ` (${p.month_reference})` : ""}`;
+    const buildItemDescription = (ref: LineRef) => {
+      const e = ref.enrollment_id ? enrollMap[ref.enrollment_id] : null;
+      const headerLine = `שכר לימוד — ${studentFullName}${ref.month_reference ? ` (${ref.month_reference})` : ""}`;
       if (!e) return headerLine;
       const parts = [
         (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
@@ -151,9 +175,9 @@ Deno.serve(async (req: Request) => {
       return `${headerLine}\n• ${parts.join(" | ")}`;
     };
 
-    const items = payments.map((p) => ({
-      description: buildItemDescription(p),
-      unitprice_incvat: Number(p.amount || 0),
+    const items = lineRefs.map((ref) => ({
+      description: buildItemDescription(ref),
+      unitprice_incvat: ref.amount,
       quantity: 1,
     }));
 

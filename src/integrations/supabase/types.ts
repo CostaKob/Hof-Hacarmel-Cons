@@ -1579,6 +1579,7 @@ export type Database = {
           amount: number
           created_at: string
           created_by_user_id: string | null
+          enrollment_breakdown: Json | null
           enrollment_id: string
           icount_doc_id: string | null
           icount_doc_number: string | null
@@ -1601,6 +1602,7 @@ export type Database = {
           amount: number
           created_at?: string
           created_by_user_id?: string | null
+          enrollment_breakdown?: Json | null
           enrollment_id: string
           icount_doc_id?: string | null
           icount_doc_number?: string | null
@@ -1623,6 +1625,7 @@ export type Database = {
           amount?: number
           created_at?: string
           created_by_user_id?: string | null
+          enrollment_breakdown?: Json | null
           enrollment_id?: string
           icount_doc_id?: string | null
           icount_doc_number?: string | null

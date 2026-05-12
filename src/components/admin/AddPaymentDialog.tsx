@@ -139,22 +139,34 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         .filter((x) => x.eid && x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
 
-      const groupId = entries.length > 1 && invoiceMode === "combined"
-        ? (typeof crypto !== "undefined" && (crypto as any).randomUUID ? crypto.randomUUID() : null)
-        : null;
-
-      const rows = entries.map(({ eid, amt }) => ({
-        amount: amt,
+      const baseFields = {
         payment_date: paymentDate,
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
         notes: notes || null,
-        enrollment_id: eid,
         transaction_type: transactionType,
         student_id: studentId,
         academic_year_id: academicYearId,
-        payment_group_id: groupId,
-      }));
+      };
+
+      let rows: any[];
+      if (entries.length > 1 && invoiceMode === "combined") {
+        // Single payment row covering multiple enrollments → single combined invoice
+        const total = entries.reduce((s, x) => s + x.amt, 0);
+        rows = [{
+          ...baseFields,
+          amount: total,
+          enrollment_id: entries[0].eid,
+          enrollment_breakdown: entries.map(({ eid, amt }) => ({ enrollment_id: eid, amount: amt })),
+        }];
+      } else {
+        // Separate row per enrollment → separate invoice per row
+        rows = entries.map(({ eid, amt }) => ({
+          ...baseFields,
+          amount: amt,
+          enrollment_id: eid,
+        }));
+      }
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
       if (error) throw error;
@@ -342,7 +354,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                           </div>
                           <p className="text-[11px] text-muted-foreground">
                             {invoiceMode === "combined"
-                              ? "ייווצר רישום נפרד לכל שיוך, אך חשבונית אחת מאוחדת עם פירוט פר שיוך."
+                              ? "ייווצר רישום תשלום אחד מאוחד וחשבונית אחת עם פירוט פר שיוך."
                               : "ייווצר רישום נפרד לכל שיוך וחשבונית נפרדת לכל אחד."}
                           </p>
                         </div>
