@@ -55,7 +55,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -74,7 +74,7 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
-        .select("student_id, enrollment_id")
+        .select("enrollment_id, amount, transaction_type, enrollment_breakdown")
         .eq("academic_year_id", selectedYearId);
       if (error) throw error;
       return data ?? [];
@@ -82,14 +82,39 @@ const AdminStudents = () => {
     enabled: !!selectedYearId,
   });
 
-  // An enrollment is considered "paid" if it has any payment record for the selected year
-  const paidEnrollmentIds = useMemo(() => {
-    const set = new Set<string>();
+  // Sum net paid per enrollment (payment − credit), attributing combined invoices via breakdown
+  const paidByEnrollment = useMemo(() => {
+    const map = new Map<string, number>();
+    const add = (eid: string, amt: number) => map.set(eid, (map.get(eid) ?? 0) + amt);
     for (const p of yearPayments as any[]) {
-      if (p.enrollment_id) set.add(p.enrollment_id);
+      const sign = p.transaction_type === "credit" ? -1 : 1;
+      const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
+      if (breakdown && breakdown.length > 0) {
+        for (const b of breakdown) {
+          if (b?.enrollment_id) add(b.enrollment_id, sign * Number(b.amount || 0));
+        }
+      } else if (p.enrollment_id) {
+        add(p.enrollment_id, sign * Number(p.amount || 0));
+      }
     }
-    return set;
+    return map;
   }, [yearPayments]);
+
+  // Expected amount per enrollment = price_per_lesson * total_lessons_allocated
+  const getExpected = useCallback((r: any) => {
+    const ppl = Number(r?.price_per_lesson || 0);
+    const total = Number(r?.total_lessons_allocated || 0);
+    return Math.round(ppl * total);
+  }, []);
+
+  // Returns "full" | "partial" | "unpaid"
+  const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" => {
+    const paid = paidByEnrollment.get(r.id) ?? 0;
+    const expected = getExpected(r);
+    if (paid <= 0.5) return "unpaid";
+    if (expected > 0 && paid + 1 >= expected) return "full";
+    return "partial";
+  }, [paidByEnrollment, getExpected]);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
