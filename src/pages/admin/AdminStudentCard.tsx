@@ -23,6 +23,7 @@ import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
