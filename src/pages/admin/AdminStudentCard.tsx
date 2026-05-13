@@ -249,7 +249,7 @@ const AdminStudentCard = () => {
           <h2 className="font-semibold text-foreground text-base mb-2">פרטים אישיים</h2>
           <DetailRow label="תעודת זהות" value={student.national_id} />
           <DetailRow label="מין" value={(student as any).gender === "male" ? "זכר" : (student as any).gender === "female" ? "נקבה" : null} />
-          <DetailRow label="נייד תלמיד/ה" value={(student as any).phone} />
+          <PhoneRow label="נייד תלמיד/ה" value={(student as any).phone} />
           <DetailRow label="תאריך לידה" value={student.date_of_birth} />
           <DetailRow label="כתובת" value={student.address} />
           <DetailRow label="עיר" value={student.city} />
@@ -260,10 +260,10 @@ const AdminStudentCard = () => {
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <h2 className="font-semibold text-foreground text-base mb-2">פרטי הורים</h2>
           <DetailRow label="שם הורה 1" value={student.parent_name} />
-          <DetailRow label="טלפון הורה 1" value={student.parent_phone} />
+          <PhoneRow label="טלפון הורה 1" value={student.parent_phone} />
           <DetailRow label="אימייל הורה 1" value={student.parent_email} />
           <DetailRow label="שם הורה 2" value={student.parent_name_2} />
-          <DetailRow label="טלפון הורה 2" value={student.parent_phone_2} />
+          <PhoneRow label="טלפון הורה 2" value={student.parent_phone_2} />
           <DetailRow label="אימייל הורה 2" value={student.parent_email_2} />
         </div>
 
