@@ -139,6 +139,37 @@ const AdminSchoolMusicAttendance = () => {
   return (
     <AdminLayout title="נוכחות מורים — בתי ספר מנגנים" backPath="/admin">
       <div className="space-y-4">
+        <div className="flex justify-end">
+          <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+            <DialogTrigger asChild>
+              <Button className="h-11 rounded-xl"><ClipboardEdit className="h-4 w-4 ml-1" />יצירת דיווח ידני</Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl">
+              <DialogHeader>
+                <DialogTitle>יצירת דיווח נוכחות ידני</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">בית ספר</Label>
+                  <Select value={manualSchool} onValueChange={setManualSchool}>
+                    <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                    <SelectContent>
+                      {schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">תאריך</Label>
+                  <Input type="date" max={today} value={manualDate} onChange={(e) => setManualDate(e.target.value)} className="h-11 rounded-xl" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setManualOpen(false)} className="h-11 rounded-xl">ביטול</Button>
+                <Button onClick={submitManual} className="h-11 rounded-xl">המשך לדיווח</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
