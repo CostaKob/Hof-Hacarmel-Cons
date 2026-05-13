@@ -131,8 +131,8 @@ const StudentPaymentsSection = ({
             return (
               <div
                 key={p.id}
-                onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
-                className="flex items-center justify-between rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors gap-2"
+                onClick={readOnly ? undefined : () => { setEditingPayment(p); setPaymentDialogOpen(true); }}
+                className={`flex items-center justify-between rounded-xl border border-border p-3 gap-2 transition-colors ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground text-sm">
