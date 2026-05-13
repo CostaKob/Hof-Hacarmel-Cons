@@ -569,7 +569,13 @@ const AdminSchoolMusicSchools = () => {
                               <span>·</span>
                               <span>{s.class_name}</span>
                               <span>·</span>
-                              <span>{s.instruments?.name || "—"}</span>
+                              <span>
+                                {s.instruments?.name || "—"}
+                                {(() => {
+                                  const sn = (activeLoansByStudent as any)[s.id]?.inventory_instruments?.serial_number;
+                                  return sn ? <span className="font-mono text-xs"> (<span dir="ltr">{sn}</span>)</span> : null;
+                                })()}
+                              </span>
                               <span>·</span>
                               <span>{getStudentTeacher(s)}</span>
                               {s.city && (
