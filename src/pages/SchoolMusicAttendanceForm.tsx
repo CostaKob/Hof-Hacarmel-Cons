@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSchoolMusicTeachers } from "@/hooks/useSchoolMusicTeachers";
@@ -23,12 +23,14 @@ interface Props {
 
 const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
   const { id: schoolId } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
   const today = format(new Date(), "yyyy-MM-dd");
+  const initialDate = searchParams.get("date") || today;
 
-  const [date, setDate] = useState(today);
+  const [date, setDate] = useState(initialDate);
   const [rows, setRows] = useState<Record<string, Row>>({});
 
   const { data: school } = useQuery({
