@@ -111,11 +111,14 @@ const Landing = () => {
                 </a>
               </div>
             </div>
-            <div className="relative aspect-[4/3] rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-border shadow-xl flex items-center justify-center text-muted-foreground">
-              <div className="text-center space-y-2">
-                <Music2 className="h-16 w-16 mx-auto text-primary/40" />
-                <p className="text-sm">תמונה ראשית</p>
-              </div>
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border shadow-xl">
+              <img
+                src={heroImage}
+                alt="תזמורת המגמה בקונצרט"
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
             </div>
           </div>
         </section>
