@@ -6,17 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 
-const formatWhatsApp = (phone: string) => {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("0")) return "972" + digits.slice(1);
-  return digits;
-};
-
-const formatWhatsApp = (phone: string) => {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("0")) return "972" + digits.slice(1);
-  return digits;
-};
 
 const TeacherSchoolMusicSchools = () => {
   const navigate = useNavigate();
