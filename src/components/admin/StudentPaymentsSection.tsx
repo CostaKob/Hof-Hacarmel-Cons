@@ -102,13 +102,15 @@ const StudentPaymentsSection = ({
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
           </div>
           {extraHeaderActions}
-          <Button
-            className="h-10 rounded-xl text-sm"
-            onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }}
-            disabled={enrollments.length === 0}
-          >
-            <Plus className="h-4 w-4" /> תשלום / זיכוי
-          </Button>
+          {!readOnly && (
+            <Button
+              className="h-10 rounded-xl text-sm"
+              onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }}
+              disabled={enrollments.length === 0}
+            >
+              <Plus className="h-4 w-4" /> תשלום / זיכוי
+            </Button>
+          )}
         </div>
       </div>
 
