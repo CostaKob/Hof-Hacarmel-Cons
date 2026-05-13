@@ -186,6 +186,14 @@ const AdminStudentCard = () => {
       </div>
     ) : null;
 
+  const PhoneRow = ({ label, value }: { label: string; value?: string | null }) =>
+    value ? (
+      <div className="flex justify-between items-center border-b border-border py-2.5 last:border-0">
+        <span className="text-muted-foreground text-sm">{label}</span>
+        <PhoneDisplay phone={value} textClassName="text-sm font-medium" />
+      </div>
+    ) : null;
+
   return (
     <AdminLayout title={`${(student as any).gender === "female" ? "👧" : (student as any).gender === "male" ? "👦" : ""} ${student.first_name} ${student.last_name}`} backPath="/admin/students" onBack={() => navigate(-1)}>
       <div className="space-y-5">
