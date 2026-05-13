@@ -158,7 +158,7 @@ const StudentPaymentsSection = ({
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
-                  {!isCredit && !hasDoc && (
+                  {!readOnly && !isCredit && !hasDoc && (
                     <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                       title={isCombined ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים" : "הפק חשבונית מס/קבלה ב-iCount"}
                       disabled={createInvoiceMutation.isPending}
@@ -176,7 +176,7 @@ const StudentPaymentsSection = ({
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
-                  {canRefund && (
+                  {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
                       title={`בצע זיכוי ב-iCount (נותר ₪${remaining.toLocaleString()})`}
                       disabled={refundMutation.isPending}
