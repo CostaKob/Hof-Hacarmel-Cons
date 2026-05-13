@@ -57,9 +57,7 @@ const Landing = () => {
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
           <a href="#top" className="flex items-center gap-2 min-w-0">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shrink-0">
-              <Music2 className="h-5 w-5" />
-            </div>
+            <img src={logoUrl} alt="לוגו אולפן ומגמת המוסיקה חוף הכרמל" className="h-12 w-12 object-contain shrink-0" />
             <div className="leading-tight min-w-0">
               <p className="text-sm font-bold truncate">אולפן ומגמת המוסיקה</p>
               <p className="text-[11px] text-muted-foreground truncate">חוף הכרמל</p>
@@ -79,15 +77,6 @@ const Landing = () => {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Official logos placeholder */}
-            <div className="hidden lg:flex items-center gap-2 text-[10px] text-muted-foreground">
-              <div className="h-9 w-9 rounded-md border border-border bg-muted/40 flex items-center justify-center text-center leading-tight px-1">
-                לוגו<br/>עירייה
-              </div>
-              <div className="h-9 w-9 rounded-md border border-border bg-muted/40 flex items-center justify-center text-center leading-tight px-1">
-                משרד<br/>החינוך
-              </div>
-            </div>
             <Link to="/login">
               <Button size="sm" className="h-10 rounded-xl gap-1.5">
                 <LogIn className="h-4 w-4" />
