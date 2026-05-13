@@ -99,7 +99,6 @@ const Landing = () => {
               </span>
               <h1 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight">
                 אולפן ומגמת המוסיקה חוף הכרמל
-                <span className="block text-primary mt-2">הבית למוסיקה בקהילה</span>
               </h1>
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                 מוסד חינוכי מקצועי המציע מגוון רחב של תוכניות לימוד מהגיל הרך ועד הבגרות,
