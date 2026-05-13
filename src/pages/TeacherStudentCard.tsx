@@ -169,66 +169,7 @@ const TeacherStudentCard = () => {
         <EnrollmentHistory lines={(reportLines ?? []) as any} isLoading={linesLoading} />
 
         {/* Notes */}
-        <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <StickyNote className="h-4 w-4 text-primary" />
-            הערות
-          </h2>
-
-          {/* Add note */}
-          <div className="space-y-3 rounded-xl border border-border bg-muted/30 p-4">
-            <Textarea
-              placeholder="כתוב הערה חדשה..."
-              value={noteContent}
-              onChange={(e) => setNoteContent(e.target.value)}
-              rows={3}
-              className="bg-card rounded-xl text-base"
-            />
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="general-note"
-                  checked={isGeneralNote}
-                  onCheckedChange={setIsGeneralNote}
-                />
-                <Label htmlFor="general-note" className="text-sm text-muted-foreground">
-                  הערה כללית
-                </Label>
-              </div>
-              <Button
-                size="sm"
-                className="rounded-xl h-10 px-4"
-                onClick={handleAddNote}
-                disabled={!noteContent.trim() || submitting}
-              >
-                <Plus className="ml-1 h-4 w-4" />
-                הוסף
-              </Button>
-            </div>
-          </div>
-
-          {/* Notes list */}
-          {!notes || notes.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-4">אין הערות עדיין</p>
-          ) : (
-            <div className="space-y-3">
-              {notes.map((note) => (
-                <div key={note.id} className="rounded-xl border border-border p-4 space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{note.profiles?.full_name ?? "לא ידוע"}</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-xs rounded-lg">
-                        {note.enrollment_id ? "צמוד לרישום" : "כללי"}
-                      </Badge>
-                      <span>{new Date(note.created_at).toLocaleDateString("he-IL")}</span>
-                    </div>
-                  </div>
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{note.content}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <StudentNotesSection studentId={enrollment.student_id} enrollmentId={enrollment.id} />
       </main>
     </div>
   );
