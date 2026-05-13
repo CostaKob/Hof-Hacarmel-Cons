@@ -60,6 +60,7 @@ import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
 import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
 import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
+import AdminSchoolMusicStudentCard from "./pages/admin/AdminSchoolMusicStudentCard";
 import AdminSchoolMusicAttendance from "./pages/admin/AdminSchoolMusicAttendance";
 import SchoolMusicAttendanceForm from "./pages/SchoolMusicAttendanceForm";
 import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
@@ -155,6 +156,7 @@ const App = () => (
               <Route path="/admin/school-music-schools/new" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id" element={<AdminRoute><AdminSchoolMusicSchoolCard /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/edit" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
+              <Route path="/admin/school-music-students/:studentId" element={<AdminRoute><AdminSchoolMusicStudentCard /></AdminRoute>} />
               <Route path="/admin/school-music-attendance" element={<AdminRoute><AdminSchoolMusicAttendance /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/attendance" element={<AdminRoute><SchoolMusicAttendanceList variant="admin" /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/attendance/new" element={<AdminRoute><SchoolMusicAttendanceForm variant="admin" /></AdminRoute>} />

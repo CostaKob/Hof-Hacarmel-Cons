@@ -595,6 +595,14 @@ const AdminSchoolMusicSchools = () => {
                                     variant="outline"
                                     size="sm"
                                     className="h-8 gap-1.5 rounded-lg"
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/admin/school-music-students/${s.id}`); }}
+                                  >
+                                    פתח כרטיס
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 gap-1.5 rounded-lg"
                                     onClick={(e) => { e.stopPropagation(); startEditing(s); }}
                                   >
                                     <Pencil className="h-3.5 w-3.5" />
