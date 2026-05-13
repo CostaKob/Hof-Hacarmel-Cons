@@ -329,6 +329,7 @@ const AdminStudentCard = () => {
           payments={payments}
           enrollments={enrollments}
           showYear
+          readOnly
           extraInvalidateKeys={[["admin-student-payments", studentId]]}
           extraHeaderActions={
             <Button

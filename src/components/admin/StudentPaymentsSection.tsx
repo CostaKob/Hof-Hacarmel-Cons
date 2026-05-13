@@ -21,6 +21,8 @@ interface StudentPaymentsSectionProps {
   extraInvalidateKeys?: (string | undefined)[][];
   /** Show academic year next to date (used in student card). */
   showYear?: boolean;
+  /** Read-only mode: only show existing payments/credits + download receipt. No add/edit/refund/create-invoice. */
+  readOnly?: boolean;
 }
 
 const StudentPaymentsSection = ({
@@ -30,6 +32,7 @@ const StudentPaymentsSection = ({
   extraHeaderActions,
   extraInvalidateKeys = [],
   showYear = false,
+  readOnly = false,
 }: StudentPaymentsSectionProps) => {
   const queryClient = useQueryClient();
 
@@ -99,13 +102,15 @@ const StudentPaymentsSection = ({
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
           </div>
           {extraHeaderActions}
-          <Button
-            className="h-10 rounded-xl text-sm"
-            onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }}
-            disabled={enrollments.length === 0}
-          >
-            <Plus className="h-4 w-4" /> תשלום / זיכוי
-          </Button>
+          {!readOnly && (
+            <Button
+              className="h-10 rounded-xl text-sm"
+              onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }}
+              disabled={enrollments.length === 0}
+            >
+              <Plus className="h-4 w-4" /> תשלום / זיכוי
+            </Button>
+          )}
         </div>
       </div>
 
@@ -126,8 +131,8 @@ const StudentPaymentsSection = ({
             return (
               <div
                 key={p.id}
-                onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
-                className="flex items-center justify-between rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/50 transition-colors gap-2"
+                onClick={readOnly ? undefined : () => { setEditingPayment(p); setPaymentDialogOpen(true); }}
+                className={`flex items-center justify-between rounded-xl border border-border p-3 gap-2 transition-colors ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
               >
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground text-sm">
@@ -153,7 +158,7 @@ const StudentPaymentsSection = ({
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
-                  {!isCredit && !hasDoc && (
+                  {!readOnly && !isCredit && !hasDoc && (
                     <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                       title={isCombined ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים" : "הפק חשבונית מס/קבלה ב-iCount"}
                       disabled={createInvoiceMutation.isPending}
@@ -171,7 +176,7 @@ const StudentPaymentsSection = ({
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
-                  {canRefund && (
+                  {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
                       title={`בצע זיכוי ב-iCount (נותר ₪${remaining.toLocaleString()})`}
                       disabled={refundMutation.isPending}
