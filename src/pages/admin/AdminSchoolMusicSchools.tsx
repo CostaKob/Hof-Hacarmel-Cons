@@ -616,7 +616,7 @@ const AdminSchoolMusicSchools = () => {
                                   <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">פרטי הורה</p>
                                   <DetailRow label="שם הורה" value={s.parent_name} />
                                   <DetailRow label="ת.ז הורה" value={s.parent_national_id} />
-                                  <DetailRow label="טלפון" value={s.parent_phone} dir="ltr" />
+                                  <PhoneDetailRow label="טלפון" value={s.parent_phone} />
                                   <DetailRow label='דוא"ל' value={s.parent_email} dir="ltr" />
                                 </div>
                               </div>
