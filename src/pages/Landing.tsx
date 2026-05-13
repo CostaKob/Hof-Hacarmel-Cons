@@ -149,12 +149,16 @@ const Landing = () => {
 
         {/* About */}
         <section id="about" className="py-16 md:py-20">
-          <div className="mx-auto max-w-4xl px-5 text-center space-y-4">
-            <h2 className="text-2xl md:text-3xl font-bold">אודות האולפן</h2>
+          <div className="mx-auto max-w-4xl px-5 text-right space-y-5">
+            <h2 className="text-2xl md:text-3xl font-bold text-center">אודות האולפן</h2>
             <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
-              אולפן ומגמת המוסיקה של המועצה האזורית חוף הכרמל פועל לקידום החינוך המוסיקלי
-              במרחב הקהילתי. אנו מציעים לימודים פרטניים וקבוצתיים, הרכבים, תזמורות
-              ותוכניות חינוכיות בבתי הספר ובגני הילדים, בהובלת צוות מורים מקצועי ומסור.
+              אולפן המוסיקה חוף הכרמל הינו קונסרבטוריון מוכר ע״י משרד החינוך המאפשר לכל תלמיד/ה שמעוניין/ת להירשם ללימודי נגינה במגוון כלים רחב: כינור, צ׳לו, סקסופון, קלרינט, חליל צד, חליליות, חצוצרה, טרומבון, קרן יער, טובה, פסנתר, גיטרה קלאסית, גיטרה חשמלית, גיטרה בס, תופים וכלי הקשה, פיתוח קול, תיאוריה והלחנה.
+            </p>
+            <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
+              רק במקרה של הרשמה נמוכה לכלי כלשהו, או נרשמים רבים מדי, ניאלץ לענות בשלילה או לדחות לזמן מה את בקשת הרישומים.
+            </p>
+            <p className="text-muted-foreground leading-relaxed text-base md:text-lg">
+              לצד השיעורים הפרטניים פועלים במסגרת האולפן הרכבים מוסיקליים (תזמורות, מקהלות, הרכבים קאמריים קלאסיים, הרכבי ג׳אז ומוסיקה קלה) ושיעורי תיאוריה קבוצתיים.
             </p>
           </div>
         </section>
