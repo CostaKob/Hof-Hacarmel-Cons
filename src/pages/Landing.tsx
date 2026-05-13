@@ -243,9 +243,18 @@ const Landing = () => {
         <div className="mx-auto max-w-6xl px-5 py-12 grid gap-8 md:grid-cols-3 text-right">
           <div className="space-y-2">
             <h3 className="font-bold text-base mb-3">משרד האולפן</h3>
-            <a href="tel:046299711" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Phone className="h-4 w-4" /> 04-6299711
-            </a>
+              <a
+                href="https://wa.me/97246299711"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="פתח צ'אט בוואטסאפ"
+                className="text-green-600 hover:text-green-700"
+              >
+                <MessageCircle className="h-4 w-4" />
+              </a>
+            </div>
             <a href="mailto:music.hof@gmail.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
               <Mail className="h-4 w-4" /> music.hof@gmail.com
             </a>
