@@ -88,7 +88,7 @@ const AdminSchoolMusicStudentCard = () => {
                 )}
               </div>
             </div>
-            <Badge>{student.status}</Badge>
+            <Badge>{({ new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" } as Record<string, string>)[student.status] ?? student.status}</Badge>
           </div>
         </div>
 
