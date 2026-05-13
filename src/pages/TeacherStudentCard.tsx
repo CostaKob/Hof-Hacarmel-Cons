@@ -1,57 +1,22 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { useTeacherProfile, useEnrollmentDetails, useStudentNotes } from "@/hooks/useTeacherData";
+import { useEnrollmentDetails } from "@/hooks/useTeacherData";
 import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
-import { supabase } from "@/integrations/supabase/client";
 import { calcYearsOfPlaying } from "@/lib/constants";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, StickyNote, Plus, User, Phone, Mail, MapPin, Music, School, Calendar } from "lucide-react";
+import { ArrowRight, User, Phone, Mail, MapPin, Music, School, Calendar } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
-import { toast } from "sonner";
 
 const TeacherStudentCard = () => {
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const { data: teacher } = useTeacherProfile();
   const { data: enrollment, isLoading } = useEnrollmentDetails(enrollmentId);
-  const { data: notes } = useStudentNotes(enrollment?.student_id, teacher?.id);
   const { data: reportLines, isLoading: linesLoading } = useEnrollmentReportLines(enrollmentId);
 
-  const [noteContent, setNoteContent] = useState("");
-  const [isGeneralNote, setIsGeneralNote] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-
   const student = enrollment?.students;
-
-  const handleAddNote = async () => {
-    if (!noteContent.trim() || !enrollment || !user) return;
-    setSubmitting(true);
-    const { error } = await supabase.from("student_notes").insert({
-      student_id: enrollment.student_id,
-      enrollment_id: isGeneralNote ? null : enrollment.id,
-      author_user_id: user.id,
-      content: noteContent.trim(),
-    });
-    setSubmitting(false);
-    if (error) {
-      toast.error("שגיאה בשמירת ההערה");
-      return;
-    }
-    toast.success("ההערה נשמרה");
-    setNoteContent("");
-    queryClient.invalidateQueries({ queryKey: ["student-notes"] });
-  };
 
   if (isLoading) {
     return (
