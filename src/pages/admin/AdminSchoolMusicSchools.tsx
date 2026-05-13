@@ -211,7 +211,7 @@ const AdminSchoolMusicSchools = () => {
       parent_email: "",
       school_music_school_id: "",
       instrument_id: "",
-      instrument_serial_number: "",
+      
       status: "new",
       academic_year_id: activeYear?.id || null,
     });
@@ -322,7 +322,7 @@ const AdminSchoolMusicSchools = () => {
       parent_phone: s.parent_phone,
       parent_email: s.parent_email,
       instrument_id: s.instrument_id || "",
-      instrument_serial_number: s.instrument_serial_number || "",
+      
       status: s.status,
       school_music_class_id: s.school_music_class_id || "",
       school_music_class_group_id: s.school_music_class_group_id || "",
@@ -632,7 +632,6 @@ const AdminSchoolMusicSchools = () => {
                                 <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">כלי נגינה</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
                                   <DetailRow label="כלי" value={s.instruments?.name} />
-                                  <DetailRow label="מספר סידורי" value={s.instrument_serial_number} />
                                   <DetailRow label="מורה" value={getStudentTeacher(s)} />
                                   <DetailRow label="בית ספר" value={s.school_music_schools?.school_name} />
                                 </div>
@@ -740,7 +739,7 @@ const AdminSchoolMusicSchools = () => {
                                     </div>
                                   );
                                 })()}
-                                <EditField label="מספר סידורי" field="instrument_serial_number" />
+                                
                                 <div className="space-y-1">
                                   <Label className="text-xs text-muted-foreground">סטטוס</Label>
                                   <Select value={editForm.status} onValueChange={(v) => setEditForm((p: any) => ({ ...p, status: v }))}>
