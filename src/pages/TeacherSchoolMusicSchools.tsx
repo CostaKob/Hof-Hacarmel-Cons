@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
-import { ChevronLeft, School, MessageCircle, Phone } from "lucide-react";
+import { ChevronLeft, School, MessageCircle, Phone, ClipboardCheck, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -37,58 +37,55 @@ const TeacherSchoolMusicSchools = () => {
         ) : schools.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">לא נמצאו בתי ספר מנגנים</p>
         ) : (
-          schools.map((s: any) => (
-            <button
-              key={s.id}
-              onClick={() => navigate(`/teacher/school-music-schools/${s.id}`)}
-              className="flex w-full items-center gap-4 rounded-2xl bg-card p-4 shadow-sm border border-border text-right transition-all active:scale-[0.98] hover:shadow-md"
-            >
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
-                <School className="h-5 w-5 text-accent-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">{s.school_name}</p>
-                {/* Role badges */}
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {s.teacherRoles.map((role: string) => (
-                    <Badge
-                      key={role}
-                      variant={role === "רכז" || role === "מנצח" ? "default" : "secondary"}
-                      className="text-xs"
-                    >
-                      {role}
-                    </Badge>
-                  ))}
+          schools.map((s: any) => {
+            const isCoordinator = s.teacherRoles.includes("רכז");
+            return (
+            <div key={s.id} className="rounded-2xl bg-card shadow-sm border border-border overflow-hidden">
+              <button
+                onClick={() => navigate(`/teacher/school-music-schools/${s.id}`)}
+                className="flex w-full items-center gap-4 p-4 text-right transition-all active:scale-[0.98] hover:shadow-md"
+              >
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent">
+                  <School className="h-5 w-5 text-accent-foreground" />
                 </div>
-                <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-1">
-                  {s.principal_name && <span>מנהל/ת: {s.principal_name}</span>}
-                  <span>{s.classCount} כיתות</span>
-                </div>
-                {s.principal_phone && (
-                  <div className="flex items-center gap-2 mt-1" dir="ltr">
-                    <a
-                      href={`https://wa.me/${formatWhatsApp(s.principal_phone)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-green-600 hover:text-green-700"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                    </a>
-                    <a
-                      href={`tel:${s.principal_phone}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                    >
-                      <Phone className="h-3 w-3" />
-                      {s.principal_phone}
-                    </a>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground truncate">{s.school_name}</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {s.teacherRoles.map((role: string) => (
+                      <Badge key={role} variant={role === "רכז" || role === "מנצח" ? "default" : "secondary"} className="text-xs">{role}</Badge>
+                    ))}
                   </div>
-                )}
-              </div>
-              <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
-            </button>
-          ))
+                  <div className="flex flex-wrap gap-x-3 text-xs text-muted-foreground mt-1">
+                    {s.principal_name && <span>מנהל/ת: {s.principal_name}</span>}
+                    <span>{s.classCount} כיתות</span>
+                  </div>
+                  {s.principal_phone && (
+                    <div className="flex items-center gap-2 mt-1" dir="ltr">
+                      <a href={`https://wa.me/${formatWhatsApp(s.principal_phone)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-green-600 hover:text-green-700">
+                        <MessageCircle className="h-4 w-4" />
+                      </a>
+                      <a href={`tel:${s.principal_phone}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                        <Phone className="h-3 w-3" />
+                        {s.principal_phone}
+                      </a>
+                    </div>
+                  )}
+                </div>
+                <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
+              </button>
+              {isCoordinator && (
+                <div className="border-t border-border grid grid-cols-2 divide-x divide-x-reverse divide-border">
+                  <Button variant="ghost" className="rounded-none h-11 text-xs gap-1" onClick={() => navigate(`/teacher/school-music-schools/${s.id}/attendance/new`)}>
+                    <ClipboardCheck className="h-4 w-4" /> דיווח נוכחות
+                  </Button>
+                  <Button variant="ghost" className="rounded-none h-11 text-xs gap-1" onClick={() => navigate(`/teacher/school-music-schools/${s.id}/attendance`)}>
+                    <FileText className="h-4 w-4" /> דוח נוכחות
+                  </Button>
+                </div>
+              )}
+            </div>
+            );
+          })
         )}
       </main>
     </div>

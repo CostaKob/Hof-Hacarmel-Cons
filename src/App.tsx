@@ -59,6 +59,9 @@ import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
 import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
 import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
+import AdminSchoolMusicAttendance from "./pages/admin/AdminSchoolMusicAttendance";
+import SchoolMusicAttendanceForm from "./pages/SchoolMusicAttendanceForm";
+import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
 import PublicRegistration from "./pages/PublicRegistration";
 import SchoolMusicRegister from "./pages/SchoolMusicRegister";
 
@@ -150,6 +153,9 @@ const App = () => (
               <Route path="/admin/school-music-schools/new" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id" element={<AdminRoute><AdminSchoolMusicSchoolCard /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/edit" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
+              <Route path="/admin/school-music-attendance" element={<AdminRoute><AdminSchoolMusicAttendance /></AdminRoute>} />
+              <Route path="/admin/school-music-schools/:id/attendance" element={<AdminRoute><SchoolMusicAttendanceList variant="admin" /></AdminRoute>} />
+              <Route path="/admin/school-music-schools/:id/attendance/new" element={<AdminRoute><SchoolMusicAttendanceForm variant="admin" /></AdminRoute>} />
               {/* Public */}
               <Route path="/register" element={<PublicRegistration />} />
               <Route path="/register/:token" element={<PublicRegistration />} />
@@ -171,6 +177,8 @@ const App = () => (
               <Route path="/teacher/ensembles/:id/students/:studentId" element={<TeacherRoute><TeacherEnsembleStudentCard /></TeacherRoute>} />
               <Route path="/teacher/school-music-schools" element={<TeacherRoute><TeacherSchoolMusicSchools /></TeacherRoute>} />
               <Route path="/teacher/school-music-schools/:id" element={<TeacherRoute><TeacherSchoolMusicSchoolCard /></TeacherRoute>} />
+              <Route path="/teacher/school-music-schools/:id/attendance" element={<TeacherRoute><SchoolMusicAttendanceList variant="teacher" /></TeacherRoute>} />
+              <Route path="/teacher/school-music-schools/:id/attendance/new" element={<TeacherRoute><SchoolMusicAttendanceForm variant="teacher" /></TeacherRoute>} />
               {/* Secretary */}
               <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />

@@ -10,16 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+const OPERATING_DAYS = [0, 1, 2, 3, 4, 5]; // Sun-Fri
 
 interface FormData {
   school_name: string;
   academic_year_id: string;
   notes: string;
   is_active: boolean;
-  day_of_week: string;
+  operating_days: number[];
   principal_name: string;
   principal_phone: string;
   vice_principal_name: string;
@@ -34,14 +36,14 @@ const AdminSchoolMusicSchoolForm = () => {
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      is_active: true, notes: "", school_name: "", academic_year_id: "", day_of_week: "",
+      is_active: true, notes: "", school_name: "", academic_year_id: "", operating_days: [],
       principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
     },
   });
 
   const isActive = watch("is_active");
   const selectedYearId = watch("academic_year_id");
-  const dayOfWeek = watch("day_of_week");
+  const operatingDays = watch("operating_days") || [];
 
   const { data: years = [] } = useQuery({
     queryKey: ["academic-years"],
@@ -64,12 +66,14 @@ const AdminSchoolMusicSchoolForm = () => {
 
   useEffect(() => {
     if (school) {
+      const opDays = (school as any).operating_days as number[] | null;
+      const fallback = (school as any).day_of_week != null ? [(school as any).day_of_week] : [];
       reset({
         school_name: school.school_name,
         academic_year_id: school.academic_year_id || "",
         notes: school.notes || "",
         is_active: school.is_active,
-        day_of_week: school.day_of_week != null ? String(school.day_of_week) : "",
+        operating_days: Array.isArray(opDays) && opDays.length > 0 ? opDays : fallback,
         principal_name: (school as any).principal_name || "",
         principal_phone: (school as any).principal_phone || "",
         vice_principal_name: (school as any).vice_principal_name || "",
@@ -85,24 +89,33 @@ const AdminSchoolMusicSchoolForm = () => {
     }
   }, [years, isEdit, selectedYearId, setValue]);
 
+  const toggleDay = (day: number, checked: boolean) => {
+    const current = (watch("operating_days") || []) as number[];
+    const next = checked ? [...current, day].sort((a, b) => a - b) : current.filter((d) => d !== day);
+    setValue("operating_days", [...new Set(next)]);
+  };
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const payload = {
+      const days = (data.operating_days || []).map((d) => Number(d)).filter((d) => !Number.isNaN(d));
+      const payload: any = {
         school_name: data.school_name,
         academic_year_id: data.academic_year_id || null,
         notes: data.notes || null,
         is_active: data.is_active,
-        day_of_week: data.day_of_week ? Number(data.day_of_week) : null,
+        operating_days: days,
+        // keep legacy day_of_week in sync for backward compat (first day or null)
+        day_of_week: days.length > 0 ? days[0] : null,
         principal_name: data.principal_name || null,
         principal_phone: data.principal_phone || null,
         vice_principal_name: data.vice_principal_name || null,
         vice_principal_phone: data.vice_principal_phone || null,
       };
       if (isEdit) {
-        const { error } = await supabase.from("school_music_schools").update(payload as any).eq("id", id!);
+        const { error } = await supabase.from("school_music_schools").update(payload).eq("id", id!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("school_music_schools").insert(payload as any);
+        const { error } = await supabase.from("school_music_schools").insert(payload);
         if (error) throw error;
       }
     },
@@ -138,15 +151,19 @@ const AdminSchoolMusicSchoolForm = () => {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">יום פעילות ראשי</Label>
-              <Select value={dayOfWeek} onValueChange={(v) => setValue("day_of_week", v)}>
-                <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר יום" /></SelectTrigger>
-                <SelectContent>
-                  {DAY_NAMES.map((name, i) => (
-                    <SelectItem key={i} value={String(i)}>{name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label className="text-sm">ימי פעילות</Label>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6 rounded-xl border border-input p-3 bg-background">
+                {OPERATING_DAYS.map((d) => {
+                  const checked = operatingDays.includes(d);
+                  return (
+                    <label key={d} className="flex items-center gap-2 cursor-pointer text-sm">
+                      <Checkbox checked={checked} onCheckedChange={(v) => toggleDay(d, !!v)} />
+                      <span>{DAY_NAMES[d]}</span>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">בחר/י ימים בהם בית הספר פועל (לזיהוי דיווחי נוכחות חסרים).</p>
             </div>
           </div>
         </div>

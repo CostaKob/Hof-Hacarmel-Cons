@@ -44,6 +44,8 @@ const AdminStudentCard = () => {
   const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
+  const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
+  const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
@@ -440,7 +442,7 @@ const AdminStudentCard = () => {
                           disabled={createInvoiceMutation.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
-                            createInvoiceMutation.mutate(
+                            setPendingInvoiceParams(
                               p.payment_group_id
                                 ? { groupId: p.payment_group_id }
                                 : { paymentId: p.id }
@@ -536,7 +538,7 @@ const AdminStudentCard = () => {
                   const max = Number(refundTarget?._remaining || 0);
                   if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
                   if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר לזיכוי (₪${max.toLocaleString()})`); return; }
-                  refundMutation.mutate({ paymentId: refundTarget.id, amount: amt });
+                  setPendingRefund({ paymentId: refundTarget.id, amount: amt });
                 }}
               >
                 {refundMutation.isPending ? "מבצע..." : "בצע זיכוי"}
@@ -564,6 +566,53 @@ const AdminStudentCard = () => {
             </div>
           )}
         </div>
+
+        <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) setPendingInvoiceParams(null); }}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>אישור הפקת חשבונית</AlertDialogTitle>
+              <AlertDialogDescription>
+                ⚠️ הפקת חשבונית מס/קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+                החשבונית תישלח באופן מיידי. האם להמשיך?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogAction
+                onClick={() => {
+                  if (pendingInvoiceParams) createInvoiceMutation.mutate(pendingInvoiceParams);
+                  setPendingInvoiceParams(null);
+                }}
+              >
+                כן, הפק חשבונית
+              </AlertDialogAction>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>אישור הפקת זיכוי</AlertDialogTitle>
+              <AlertDialogDescription>
+                ⚠️ הפקת חשבונית זיכוי ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+                האם להמשיך?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (pendingRefund) refundMutation.mutate(pendingRefund);
+                  setPendingRefund(null);
+                }}
+              >
+                כן, בצע זיכוי
+              </AlertDialogAction>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
       </div>
     </AdminLayout>

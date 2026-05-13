@@ -396,6 +396,9 @@ const AdminSchoolMusicSchoolCard = () => {
   const effectiveCoordHours = coordinatorHours ?? classesCount;
   const effectiveConductHours = conductorHours ?? classesCount;
   const dayOfWeek = (school as any).day_of_week;
+  const operatingDays: number[] = Array.isArray((school as any).operating_days) && (school as any).operating_days.length > 0
+    ? (school as any).operating_days
+    : (dayOfWeek != null ? [dayOfWeek] : []);
 
   const PhoneLink = ({ phone }: { phone?: string | null }) => {
     if (!phone) return null;
@@ -481,7 +484,7 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardContent className="space-y-2 text-sm">
             <div className="flex gap-2"><span className="text-muted-foreground">שם:</span><span>{school.school_name}</span></div>
             <div className="flex gap-2"><span className="text-muted-foreground">שנה:</span><span>{(school as any).academic_years?.name || "—"}</span></div>
-            {dayOfWeek != null && <div className="flex gap-2"><span className="text-muted-foreground">יום פעילות:</span><span>{DAY_NAMES[dayOfWeek]}</span></div>}
+            {operatingDays.length > 0 && <div className="flex gap-2"><span className="text-muted-foreground">ימי פעילות:</span><span>{operatingDays.map((d) => DAY_NAMES[d]).join(", ")}</span></div>}
             {(school as any).principal_name && (
               <div className="flex gap-2 items-center">
                 <span className="text-muted-foreground">מנהל/ת:</span>
