@@ -56,13 +56,15 @@ Deno.serve(async (req: Request) => {
     const originalAmount = Number(payment.amount ?? 0);
     const refundAmount = Number(amountOverride ?? originalAmount);
     const isPartial = Math.abs(refundAmount) < Math.abs(originalAmount);
-    const description = `זיכוי ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — חשבונית מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, זיכוי ₪${Math.abs(refundAmount).toLocaleString()})`;
+    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — חשבונית מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})`;
     const phone = student.parent_phone || student.parent_phone_2 || undefined;
     const email = student.parent_email || student.parent_email_2 || undefined;
+    const negSum = -Math.abs(refundAmount);
 
+    // Negative Tax Invoice/Receipt (invrec) linked to the original document.
     const payload: any = {
       ...auth,
-      doctype: "refund",
+      doctype: "invrec",
       client_name: student.parent_name || studentFullName,
       client_address: student.address || student.city || undefined,
       client_city: student.city || undefined,
@@ -76,8 +78,27 @@ Deno.serve(async (req: Request) => {
       currency_code: "ILS",
       vat_included: 1,
       based_on: [payment.icount_doc_id],
-      items: [{ description, unitprice_incvat: -Math.abs(refundAmount), quantity: 1 }],
+      items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
+
+    // Mirror the original payment method on the refund side with a negative sum
+    // so the negative invoice is balanced by a negative receipt line.
+    switch (payment.payment_method) {
+      case "cash":
+        payload.cash = { sum: negSum };
+        break;
+      case "cheque":
+        payload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
+        break;
+      case "bank_transfer":
+        payload.banktransfer = { sum: negSum, account: payment.reference_number || "" };
+        break;
+      case "credit_card":
+        payload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 };
+        break;
+      default:
+        payload.other = { sum: negSum, info: "החזר" };
+    }
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
       method: "POST",
@@ -85,7 +106,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    console.log("[icount credit_invoice]", JSON.stringify(data));
+    console.log("[icount negative invrec]", JSON.stringify(data));
 
     if (!data.status) {
       return new Response(JSON.stringify({ error: "icount failed", details: data }), {
@@ -104,16 +125,16 @@ Deno.serve(async (req: Request) => {
         student_id: payment.student_id,
         enrollment_id: payment.enrollment_id,
         academic_year_id: payment.academic_year_id,
-        amount: -Math.abs(refundAmount),
+        amount: negSum,
         transaction_type: "credit",
         payment_method: payment.payment_method,
         payment_date: new Date().toISOString().slice(0, 10),
-        notes: reason || `זיכוי לחשבונית ${payment.icount_doc_number ?? ""}`.trim(),
+        notes: reason || `החזר לחשבונית ${payment.icount_doc_number ?? ""}`.trim(),
         refund_of_payment_id: payment.id,
         icount_doc_id: docId,
         icount_doc_number: docNumber,
         invoice_url: docUrl,
-        icount_doc_type: "credit_invoice",
+        icount_doc_type: "invrec",
       })
       .select()
       .single();
