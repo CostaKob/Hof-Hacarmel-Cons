@@ -112,51 +112,7 @@ const AdminStudentPaymentCalc = () => {
   const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
 
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<any>(null);
-  const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
-  const [refundTarget, setRefundTarget] = useState<any>(null);
-  const [refundAmount, setRefundAmount] = useState<string>("");
-  const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
-  const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
 
-  const createInvoiceMutation = useMutation({
-    mutationFn: async (params: { paymentId?: string; groupId?: string }) => {
-      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
-      if (data?.url) {
-        toast.success(`חשבונית ${data.doc_number ?? ""} נוצרה`);
-        window.open(data.url, "_blank");
-      } else {
-        toast.success("חשבונית נוצרה");
-      }
-    },
-    onError: (e: any) => toast.error(`שגיאה ביצירת חשבונית: ${e?.message ?? ""}`),
-  });
-
-  const refundMutation = useMutation({
-    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke("icount-create-refund", { body: { paymentId, amount } });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
-    },
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
-      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
-      toast.success(`זיכוי ${data?.doc_number ?? ""} בוצע`);
-      setRefundTarget(null);
-      setRefundAmount("");
-      if (data?.url) window.open(data.url, "_blank");
-    },
-    onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
-  });
 
   useEffect(() => {
     if (student?.is_major_student) setMajorStudent(true);
