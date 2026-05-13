@@ -536,7 +536,7 @@ const AdminRegistrationConvert = () => {
                 <div><span className="text-muted-foreground">ת.ז.: </span>{existingStudent.national_id || "—"}</div>
                 <div><span className="text-muted-foreground">כיתה: </span>{existingStudent.grade || "—"}</div>
                 <div><span className="text-muted-foreground">ישוב: </span>{existingStudent.city || "—"}</div>
-                <div><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone || "—"}</div>
+                <div className="flex items-center gap-1"><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone ? <PhoneDisplay phone={existingStudent.phone} /> : "—"}</div>
               </div>
 
               {/* Existing enrollments in active year */}
