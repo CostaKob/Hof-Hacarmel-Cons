@@ -8,6 +8,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import logoUrl from "@/assets/logo.png";
+import heroImage from "@/assets/hero-orchestra.jpg";
 import {
   Baby,
   School,
