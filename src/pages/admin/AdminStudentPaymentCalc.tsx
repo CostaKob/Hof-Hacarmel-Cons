@@ -150,13 +150,28 @@ const AdminStudentPaymentCalc = () => {
     majorStudent: Number(yearFull?.discount_major_student_pct ?? 0),
   };
 
-  // Standard percentage discounts (sibling/secondInstrument/majorStudent only)
-  const stdDiscountPct = totalDiscountPct(
-    { sibling, secondInstrument, majorStudent },
-    discountRates
-  );
+  // Discounts that apply on ALL enrollments
+  const globalDiscountPct =
+    (sibling ? discountRates.sibling : 0) +
+    (majorStudent ? discountRates.majorStudent : 0);
 
-  const afterStdDiscount = Math.round(proratedTotal * (1 - stdDiscountPct / 100));
+  // "Second instrument" discount applies ONLY to one enrollment (the cheapest one),
+  // not to all. Active only when there are 2+ enrollments.
+  const secondInstrumentEnrollmentId =
+    secondInstrument && rows.length >= 2
+      ? [...rows].sort((a, b) => a.prorated - b.prorated)[0].enrollmentId
+      : null;
+
+  const rowsAfterStd = rows.map((r) => {
+    const pct =
+      globalDiscountPct +
+      (r.enrollmentId === secondInstrumentEnrollmentId ? discountRates.secondInstrument : 0);
+    return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100)) };
+  });
+
+  const afterStdDiscount = rowsAfterStd.reduce((s, r) => s + r.afterStd, 0);
+  // For display/payload — effective overall discount %
+  const stdDiscountPct = proratedTotal > 0 ? ((proratedTotal - afterStdDiscount) / proratedTotal) * 100 : 0;
 
   // Custom discounts: each is either a percentage of afterStdDiscount, or a flat ILS amount
   const customDiscountAmount = customDiscounts.reduce((sum, c) => {
