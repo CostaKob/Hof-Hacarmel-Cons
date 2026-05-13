@@ -651,6 +651,15 @@ const AdminSchoolMusicSchools = () => {
                                   <DetailRow label="כלי" value={s.instruments?.name} />
                                   <DetailRow label="מורה" value={getStudentTeacher(s)} />
                                   <DetailRow label="בית ספר" value={s.school_music_schools?.school_name} />
+                                  {(() => {
+                                    const loan = (activeLoansByStudent as any)[s.id];
+                                    const inv = loan?.inventory_instruments;
+                                    if (!inv) {
+                                      return <DetailRow label="כלי משויך" value="לא שויך עדיין כלי נגינה" />;
+                                    }
+                                    const desc = [inv.serial_number, [inv.brand, inv.model].filter(Boolean).join(" "), inv.size].filter(Boolean).join(" · ");
+                                    return <DetailRow label="כלי משויך" value={desc} />;
+                                  })()}
                                 </div>
                               </div>
                             </>
