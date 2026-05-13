@@ -1,5 +1,5 @@
-// Creates an iCount credit invoice (חשבונית זיכוי) for an existing paid invoice.
-// Inserts a matching credit row into student_payments, linked via refund_of_payment_id.
+// Creates a NEGATIVE iCount Tax Invoice/Receipt (חשבונית מס קבלה - invrec) for a refund,
+// linked to the original document via `based_on`. Inserts a matching credit row into student_payments.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
