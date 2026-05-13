@@ -442,7 +442,7 @@ const AdminStudentCard = () => {
                           disabled={createInvoiceMutation.isPending}
                           onClick={(e) => {
                             e.stopPropagation();
-                            createInvoiceMutation.mutate(
+                            setPendingInvoiceParams(
                               p.payment_group_id
                                 ? { groupId: p.payment_group_id }
                                 : { paymentId: p.id }
