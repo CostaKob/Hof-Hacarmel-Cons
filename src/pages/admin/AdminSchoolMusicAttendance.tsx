@@ -1,13 +1,18 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ClipboardEdit, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -24,6 +29,7 @@ const STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive" =>
 
 const AdminSchoolMusicAttendance = () => {
   const { activeYear } = useAcademicYear();
+  const navigate = useNavigate();
   const today = format(new Date(), "yyyy-MM-dd");
   const monthAgo = format(addDays(new Date(), -30), "yyyy-MM-dd");
 
@@ -32,6 +38,22 @@ const AdminSchoolMusicAttendance = () => {
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Manual report dialog state
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualSchool, setManualSchool] = useState<string>("");
+  const [manualDate, setManualDate] = useState<string>(today);
+
+  const goReport = (schoolId: string, date: string) => {
+    navigate(`/admin/school-music-schools/${schoolId}/attendance/new?date=${date}`);
+  };
+
+  const submitManual = () => {
+    if (!manualSchool) { toast.error("יש לבחור בית ספר"); return; }
+    if (!manualDate) { toast.error("יש לבחור תאריך"); return; }
+    setManualOpen(false);
+    goReport(manualSchool, manualDate);
+  };
 
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-attendance-schools", activeYear?.id],
@@ -117,6 +139,37 @@ const AdminSchoolMusicAttendance = () => {
   return (
     <AdminLayout title="נוכחות מורים — בתי ספר מנגנים" backPath="/admin">
       <div className="space-y-4">
+        <div className="flex justify-end">
+          <Dialog open={manualOpen} onOpenChange={setManualOpen}>
+            <DialogTrigger asChild>
+              <Button className="h-11 rounded-xl"><ClipboardEdit className="h-4 w-4 ml-1" />יצירת דיווח ידני</Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl">
+              <DialogHeader>
+                <DialogTitle>יצירת דיווח נוכחות ידני</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">בית ספר</Label>
+                  <Select value={manualSchool} onValueChange={setManualSchool}>
+                    <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                    <SelectContent>
+                      {schools.map((s) => <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">תאריך</Label>
+                  <Input type="date" max={today} value={manualDate} onChange={(e) => setManualDate(e.target.value)} className="h-11 rounded-xl" />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setManualOpen(false)} className="h-11 rounded-xl">ביטול</Button>
+                <Button onClick={submitManual} className="h-11 rounded-xl">המשך לדיווח</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
@@ -168,11 +221,12 @@ const AdminSchoolMusicAttendance = () => {
                 <TableHead className="text-right">מורה</TableHead>
                 <TableHead className="text-right">סטטוס</TableHead>
                 <TableHead className="text-right">הערות</TableHead>
+                <TableHead className="text-right">פעולות</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">טוען...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">טוען...</TableCell></TableRow>
               ) : (
                 <>
                   {missing.map((m, i) => (
@@ -182,6 +236,11 @@ const AdminSchoolMusicAttendance = () => {
                       <TableCell className="text-muted-foreground">—</TableCell>
                       <TableCell><Badge variant="destructive">טרם דווח</Badge></TableCell>
                       <TableCell className="text-muted-foreground text-xs">לא הוגש דיווח ביום פעילות</TableCell>
+                      <TableCell>
+                        <Button size="sm" className="h-8 rounded-lg" onClick={() => goReport(m.school.id, m.date)}>
+                          <ClipboardEdit className="h-3.5 w-3.5 ml-1" />דווח עכשיו
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {filteredRows.map((r: any) => {
@@ -194,11 +253,16 @@ const AdminSchoolMusicAttendance = () => {
                         <TableCell>{t ? `${t.first_name} ${t.last_name}` : "—"}</TableCell>
                         <TableCell><Badge variant={STATUS_VARIANT(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</Badge></TableCell>
                         <TableCell className="text-muted-foreground text-xs">{r.notes || "—"}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="outline" className="h-8 rounded-lg" onClick={() => goReport(r.school_music_school_id, r.attendance_date)}>
+                            <Pencil className="h-3.5 w-3.5 ml-1" />עריכה
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                   {missing.length === 0 && filteredRows.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">אין נתונים בטווח שנבחר</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">אין נתונים בטווח שנבחר</TableCell></TableRow>
                   )}
                 </>
               )}
