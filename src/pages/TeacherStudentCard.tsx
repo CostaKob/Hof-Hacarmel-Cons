@@ -112,10 +112,10 @@ const TeacherStudentCard = () => {
           <div className="grid grid-cols-1 gap-3 text-sm">
             {student.parent_name && <InfoRow icon={User} label="הורה 1" value={student.parent_name} />}
             {student.parent_phone && (
-              <a href={`tel:${student.parent_phone}`} className="flex items-center gap-2 text-primary">
-                <Phone className="h-4 w-4" />
-                <span>{student.parent_phone}</span>
-              </a>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <PhoneDisplay phone={student.parent_phone} />
+              </div>
             )}
             {student.parent_email && (
               <a href={`mailto:${student.parent_email}`} className="flex items-center gap-2 text-primary">
