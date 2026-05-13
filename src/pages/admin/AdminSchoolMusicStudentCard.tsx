@@ -36,22 +36,6 @@ const AdminSchoolMusicStudentCard = () => {
     },
   });
 
-  const { data: activeLoan } = useQuery({
-    queryKey: ["school-music-student-active-loan", studentId],
-    enabled: !!studentId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("instrument_loans")
-        .select("id, loan_date, inventory_instruments(serial_number, brand, model, size, instruments(name))")
-        .eq("school_music_student_id", studentId!)
-        .is("return_date", null)
-        .order("loan_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data as any;
-    },
-  });
 
   if (isLoading) {
     return (
