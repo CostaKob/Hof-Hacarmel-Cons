@@ -315,7 +315,7 @@ const SchoolMusicRegister = () => {
 
       const phone = form.parent_phone.replace(/[^\d]/g, "");
 
-      const { error } = await supabase.from("school_music_students" as any).insert({
+      const payload = {
         school_music_school_id: form.school_music_school_id,
         school_music_class_id: form.school_music_class_id,
         school_music_class_group_id: matchingGroup?.id || null,
@@ -331,9 +331,13 @@ const SchoolMusicRegister = () => {
         parent_phone: phone,
         parent_email: form.parent_email.trim(),
         instrument_id: form.instrument_id,
-        instrument_serial_number: form.instrument_serial_number.trim() || null,
         approval_checked: true,
-      } as any);
+      };
+
+      const { error } = await supabase.rpc("register_school_music_student_with_loan" as any, {
+        _payload: payload,
+        _inventory_instrument_id: form.inventory_instrument_id || null,
+      });
       if (error) throw error;
       setSubmitted(true);
     } catch (err) {
