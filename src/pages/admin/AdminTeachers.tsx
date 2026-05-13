@@ -101,7 +101,7 @@ const AdminTeachers = () => {
                   <div>
                     <p className="font-semibold text-foreground">{t.first_name} {t.last_name}</p>
                     <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                      {t.phone && <span>{t.phone}</span>}
+                      {t.phone && <PhoneDisplay phone={t.phone} stopPropagation textClassName="text-sm text-muted-foreground" />}
                       {t.city && <><span>·</span><span>{t.city}</span></>}
                     </div>
                     {(() => {
