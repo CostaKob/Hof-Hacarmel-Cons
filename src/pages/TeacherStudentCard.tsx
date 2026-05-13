@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, StickyNote, Plus, User, Phone, Mail, MapPin, Music, School, Calendar } from "lucide-react";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
 
 const TeacherStudentCard = () => {
