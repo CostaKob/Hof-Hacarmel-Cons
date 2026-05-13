@@ -84,7 +84,7 @@ const SchoolMusicRegister = () => {
     parent_phone: "",
     parent_email: "",
     instrument_id: "",
-    instrument_serial_number: "",
+    inventory_instrument_id: "",
   });
 
   // refs for scroll-to-error
@@ -185,6 +185,22 @@ const SchoolMusicRegister = () => {
     },
   });
 
+  // Available inventory instruments matching the chosen instrument type
+  const { data: availableInventory = [] } = useQuery({
+    queryKey: ["school-music-available-inventory", form.instrument_id],
+    enabled: !!form.instrument_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("inventory_instruments")
+        .select("id, serial_number, brand, model, size")
+        .eq("condition", "available")
+        .eq("instrument_id", form.instrument_id)
+        .order("serial_number");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // Derive unique instruments from groups in selected class
   const instruments = (() => {
     const seen = new Set<string>();
@@ -242,9 +258,14 @@ const SchoolMusicRegister = () => {
       if (key === "school_music_school_id") {
         next.school_music_class_id = "";
         next.instrument_id = "";
+        next.inventory_instrument_id = "";
       }
       if (key === "school_music_class_id") {
         next.instrument_id = "";
+        next.inventory_instrument_id = "";
+      }
+      if (key === "instrument_id") {
+        next.inventory_instrument_id = "";
       }
       return next;
     });
