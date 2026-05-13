@@ -10,16 +10,18 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+const OPERATING_DAYS = [0, 1, 2, 3, 4, 5]; // Sun-Fri
 
 interface FormData {
   school_name: string;
   academic_year_id: string;
   notes: string;
   is_active: boolean;
-  day_of_week: string;
+  operating_days: number[];
   principal_name: string;
   principal_phone: string;
   vice_principal_name: string;
