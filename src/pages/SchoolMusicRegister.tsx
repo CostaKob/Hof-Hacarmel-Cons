@@ -164,7 +164,7 @@ const SchoolMusicRegister = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_classes")
-        .select("id, class_name")
+        .select("id, class_name, homeroom_teacher_name")
         .eq("school_music_school_id", form.school_music_school_id)
         .order("class_name");
       if (error) throw error;
@@ -470,7 +470,7 @@ const SchoolMusicRegister = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.class_name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>{c.class_name}{c.homeroom_teacher_name ? ` - ${c.homeroom_teacher_name}` : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
