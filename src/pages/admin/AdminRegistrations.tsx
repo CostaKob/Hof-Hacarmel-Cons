@@ -143,7 +143,7 @@ const AdminRegistrations = () => {
                         {r.parent_phone && (
                           <span className="flex items-center gap-1 shrink-0">
                             <Phone className="h-3 w-3" />
-                            {r.parent_phone}
+                            <PhoneDisplay phone={r.parent_phone} stopPropagation textClassName="text-xs text-muted-foreground" />
                           </span>
                         )}
                       </div>
