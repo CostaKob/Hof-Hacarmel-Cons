@@ -221,7 +221,7 @@ const AdminStudentPaymentCalc = () => {
 
   if (loadingStudent || loadingEnrollments || !settings || !yearFull) {
     return (
-      <AdminLayout title="חישוב תשלום" backPath={`/admin/students/${studentId}`}>
+      <AdminLayout title="חשב/צור תשלום" backPath={`/admin/students/${studentId}`}>
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       </AdminLayout>
     );
@@ -229,7 +229,7 @@ const AdminStudentPaymentCalc = () => {
 
   if (!student) {
     return (
-      <AdminLayout title="חישוב תשלום" backPath={`/admin/students/${studentId}`}>
+      <AdminLayout title="חשב/צור תשלום" backPath={`/admin/students/${studentId}`}>
         <p className="text-center text-muted-foreground py-12">תלמיד לא נמצא</p>
       </AdminLayout>
     );
@@ -238,7 +238,7 @@ const AdminStudentPaymentCalc = () => {
   const hasMissing = rows.some((r) => r.source === "missing");
 
   return (
-    <AdminLayout title="חישוב תשלום" backPath={`/admin/students/${studentId}`}>
+    <AdminLayout title="חשב/צור תשלום" backPath={`/admin/students/${studentId}`}>
       <div className="space-y-5">
         {/* Student & Parent header */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
