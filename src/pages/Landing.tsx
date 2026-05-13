@@ -140,7 +140,7 @@ const Landing = () => {
                 <div className="rounded-2xl bg-card text-card-foreground p-7 shadow-xl hover:scale-[1.02] transition-transform text-right border border-border">
                   <School className="h-10 w-10 text-primary mb-3" />
                   <h3 className="text-xl font-bold mb-1">רישום לבתי ספר מנגנים</h3>
-                  <p className="text-sm text-muted-foreground">לימודי כלי נגינה במסגרת בית הספר היסודי</p>
+                  <p className="text-sm text-muted-foreground">לימודי נגינה קבוצתיים במסגרת תוכנית בית ספר מנגן</p>
                 </div>
               </Link>
             </div>
