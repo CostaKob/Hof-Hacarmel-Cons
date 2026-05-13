@@ -353,12 +353,12 @@ const AdminRegistrationCard = () => {
   );
 };
 
-const InfoGrid = ({ items }: { items: { label: string; value: string }[] }) => (
+const InfoGrid = ({ items }: { items: { label: string; value: React.ReactNode }[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
     {items.map((item, i) => (
       <div key={i}>
         <p className="text-xs text-muted-foreground">{item.label}</p>
-        <p className="text-sm font-medium text-foreground">{item.value}</p>
+        <div className="text-sm font-medium text-foreground">{item.value}</div>
       </div>
     ))}
   </div>
