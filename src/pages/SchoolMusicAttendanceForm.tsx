@@ -109,7 +109,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
       if (payload.length === 0) throw new Error("אין מורים לדיווח");
       const { error } = await supabase
         .from("teacher_attendance")
-        .upsert(payload, { onConflict: "school_music_school_id,teacher_id,attendance_date" });
+        .upsert(payload as any, { onConflict: "school_music_school_id,teacher_id,attendance_date" });
       if (error) throw error;
     },
     onSuccess: () => {
