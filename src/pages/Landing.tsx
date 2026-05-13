@@ -7,6 +7,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import logoUrl from "@/assets/logo.png";
 import {
   Baby,
   School,
