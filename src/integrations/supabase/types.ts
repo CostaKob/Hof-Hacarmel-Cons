@@ -1993,6 +1993,7 @@ export type Database = {
         | "justified_absence"
         | "unjustified_absence"
         | "vacation"
+        | "absent"
       enrollment_role: "primary" | "secondary"
       ensemble_staff_role:
         | "conductor"
@@ -2159,6 +2160,7 @@ export const Constants = {
         "justified_absence",
         "unjustified_absence",
         "vacation",
+        "absent",
       ],
       enrollment_role: ["primary", "secondary"],
       ensemble_staff_role: [
