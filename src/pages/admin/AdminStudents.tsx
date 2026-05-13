@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { saveListScrollPosition, useListStatePreservation } from "@/hooks/useListStatePreservation";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
