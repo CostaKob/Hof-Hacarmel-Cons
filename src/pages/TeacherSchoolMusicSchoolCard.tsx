@@ -39,12 +39,6 @@ const StudentRow = ({ st }: { st: any }) => (
             <PhoneLink phone={st.parent_phone} />
           </div>
         )}
-        {st.instrument_serial_number && (
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">מס׳ סידורי כלי:</span>
-            <span dir="ltr" className="text-xs font-mono">{st.instrument_serial_number}</span>
-          </div>
-        )}
       </div>
     </AccordionContent>
   </AccordionItem>
