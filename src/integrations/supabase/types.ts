@@ -1987,6 +1987,10 @@ export type Database = {
         Args: { _national_id: string }
         Returns: Json
       }
+      register_school_music_student_with_loan: {
+        Args: { _inventory_instrument_id?: string; _payload: Json }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "teacher" | "secretary"
