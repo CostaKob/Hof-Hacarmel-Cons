@@ -8,6 +8,7 @@ import { AcademicYearProvider } from "@/hooks/useAcademicYear";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
@@ -96,7 +97,8 @@ const App = () => (
           <AcademicYearProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Landing />} />
+              <Route path="/dashboard" element={<Index />} />
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/students" element={<AdminRoute><AdminStudents /></AdminRoute>} />
