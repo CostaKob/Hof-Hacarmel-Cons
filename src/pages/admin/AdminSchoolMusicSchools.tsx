@@ -632,7 +632,6 @@ const AdminSchoolMusicSchools = () => {
                                 <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">כלי נגינה</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
                                   <DetailRow label="כלי" value={s.instruments?.name} />
-                                  <DetailRow label="מספר סידורי" value={s.instrument_serial_number} />
                                   <DetailRow label="מורה" value={getStudentTeacher(s)} />
                                   <DetailRow label="בית ספר" value={s.school_music_schools?.school_name} />
                                 </div>
