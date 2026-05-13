@@ -221,11 +221,12 @@ const AdminSchoolMusicAttendance = () => {
                 <TableHead className="text-right">מורה</TableHead>
                 <TableHead className="text-right">סטטוס</TableHead>
                 <TableHead className="text-right">הערות</TableHead>
+                <TableHead className="text-right">פעולות</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">טוען...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">טוען...</TableCell></TableRow>
               ) : (
                 <>
                   {missing.map((m, i) => (
@@ -235,6 +236,11 @@ const AdminSchoolMusicAttendance = () => {
                       <TableCell className="text-muted-foreground">—</TableCell>
                       <TableCell><Badge variant="destructive">טרם דווח</Badge></TableCell>
                       <TableCell className="text-muted-foreground text-xs">לא הוגש דיווח ביום פעילות</TableCell>
+                      <TableCell>
+                        <Button size="sm" className="h-8 rounded-lg" onClick={() => goReport(m.school.id, m.date)}>
+                          <ClipboardEdit className="h-3.5 w-3.5 ml-1" />דווח עכשיו
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {filteredRows.map((r: any) => {
@@ -247,11 +253,16 @@ const AdminSchoolMusicAttendance = () => {
                         <TableCell>{t ? `${t.first_name} ${t.last_name}` : "—"}</TableCell>
                         <TableCell><Badge variant={STATUS_VARIANT(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</Badge></TableCell>
                         <TableCell className="text-muted-foreground text-xs">{r.notes || "—"}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="outline" className="h-8 rounded-lg" onClick={() => goReport(r.school_music_school_id, r.attendance_date)}>
+                            <Pencil className="h-3.5 w-3.5 ml-1" />עריכה
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                   {missing.length === 0 && filteredRows.length === 0 && (
-                    <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">אין נתונים בטווח שנבחר</TableCell></TableRow>
+                    <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">אין נתונים בטווח שנבחר</TableCell></TableRow>
                   )}
                 </>
               )}
