@@ -6,6 +6,7 @@ import { DAYS_OF_WEEK_LABELS, ENSEMBLE_STAFF_ROLE_LABELS } from "@/lib/ensembleC
 import { ArrowRight, CalendarDays, ChevronLeft, Clock, MapPin, Music, Phone, School, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLogo from "@/components/AppLogo";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const TeacherEnsembleStudentCard = () => {
   const { id, studentId } = useParams<{ id: string; studentId: string }>();
