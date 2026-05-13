@@ -40,13 +40,6 @@ const AdminStudentCard = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<any>(null);
-  const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
-  const [refundTarget, setRefundTarget] = useState<any>(null);
-  const [refundAmount, setRefundAmount] = useState<string>("");
-  const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
-  const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
