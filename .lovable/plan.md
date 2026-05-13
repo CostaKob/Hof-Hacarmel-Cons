@@ -1,51 +1,78 @@
-# תשתית מודול תשלומים - תוכנית מפורטת
+## תכנית פיתוח: מודול נוכחות מורים בבתי ספר מנגנים
 
-מודול חישוב תשלומים שלם עם הכנה לחיבור עתידי ל-iCount API. זו עבודה גדולה - אני מציע תוכנית בשלבים, כדי שתאשר/תכוון לפני שאני בונה.
+### 1. שינויי מסד נתונים
 
-## הערה חשובה לפני שמתחילים
+**school_music_schools — שינוי שדה ימי פעילות**
+- הוספת עמודה חדשה `operating_days smallint[]` (מערך של ימי שבוע 0-6, ראשון עד שישי)
+- מיגרציה: העברת `day_of_week` הקיים למערך (אם קיים ערך → `[day_of_week]`, אחרת `[]`)
+- השארת `day_of_week` הישן לתאימות לאחור (לא נמחק כעת כדי לא לשבור קוד קיים)
 
-יש כבר במערכת לוגיקת תשלומים קיימת (`student_payments`, `AddPaymentDialog`, "Admin Student Card" עם enrollments + payments + credits). הפיצ'ר החדש שונה: הוא לא רישום ידני של תשלומים בודדים - אלא **מחשבון שכר לימוד שנתי עם הנחות** + הכנה ל-iCount.
+**טבלה חדשה: `teacher_attendance`**
+- `id UUID PK`
+- `school_music_school_id UUID NOT NULL` — בית ספר מנגן
+- `teacher_id UUID NOT NULL` — מורה
+- `attendance_date DATE NOT NULL`
+- `status TEXT NOT NULL` — enum חדש `attendance_status`: `present` / `absent`
+- `notes TEXT` — סיבת היעדרות
+- `academic_year_id UUID NOT NULL`
+- `created_by_user_id UUID`, `created_at`, `updated_at`
+- UNIQUE על (school_music_school_id, teacher_id, attendance_date)
+- RLS:
+  - אדמין: ניהול מלא
+  - רכז (coordinator_teacher_id של בית הספר): ניהול נוכחות עבור בתי הספר שלו
+  - מורה: צפייה בנוכחות שלו
 
-לפני שאני בונה דברים מקבילים - חשוב להחליט:
+### 2. ממשק אדמין — טופס בית ספר מנגן
 
-### שאלות קריטיות:
+`AdminSchoolMusicSchoolForm.tsx`:
+- החלפת השדה הקיים "יום פעילות" ברכיב MultiSelect (Checkboxes לראשון–שישי)
+- הצגה בכרטיס בית הספר: "ימי פעילות: ראשון, שלישי, חמישי"
 
-1. **מחירון**: בסכמה הקיימת `enrollments.price_per_lesson` כבר קיים פר-רישום. האם להוסיף **מחירון גלובלי לפי משך שיעור** (30/45/60 דק') בנוסף, או להמשיך להשתמש במחיר פר-enrollment הקיים?
+### 3. ממשק מורה רכז — "בתי הספר המנגנים שלי"
 
-2. **תאריכי שנת לימודים**: כבר קיים `academic_years` עם `start_date`/`end_date`. נשתמש בו (לא ניצור טבלה חדשה), נכון?
+ב-`TeacherSchoolMusicSchools.tsx`, לכל בית ספר שהמורה הוא רכז שלו:
+- כפתור **"דיווח נוכחות"** → `/teacher/school-music/:schoolId/attendance/new`
+- כפתור **"דוח נוכחות"** → `/teacher/school-music/:schoolId/attendance`
 
-3. **הנחות**: לאחסן בטבלת `payment_settings` חדשה (אחת גלובלית) או כעמודות ב-`academic_years`? + האם הסטטוס "תלמיד מגמה" כבר נגזר ממקום קיים (playing_level?) או צריך עמודה חדשה ב-students?
+### 4. דף דיווח נוכחות (רכז)
 
-4. **"כבר שולם"**: יש כבר חישוב `paid` דינמי מ-`student_payments`. האם החדש יציג את הסכום הקיים (קריאה בלבד) או יאפשר override ידני?
+`TeacherSchoolMusicAttendanceReport.tsx`:
+- בורר תאריך (ברירת מחדל: היום, מותר עבר)
+- שליפת כל המורים המשויכים לבית הספר (קבוצות + מנצח + רכז)
+- כפתור "כולם הגיעו" — סימון כל המורים כנוכחים
+- לכל שורה: Toggle נוכח/נעדר. אם נעדר → תיבת טקסט לסיבה
+- כפתור "שמירה" — upsert לפי unique constraint
+- אם כבר קיימים נתונים לתאריך, טעינתם
 
-## תוכנית מוצעת
+### 5. דוח נוכחות רכז
 
-### שלב 1 - סכמה
-- טבלה `payment_settings` (singleton): `vat_rate`, `lesson_prices` (jsonb: `{"30":X, "45":Y, "60":Z}`), `discount_sibling`, `discount_second_instrument`, `discount_major_student`
-- עמודה `is_major_student` ב-`students` (boolean)
-- RLS: admin manages, secretary/teacher view
+`TeacherSchoolMusicAttendanceList.tsx`:
+- מסננים: טווח תאריכים, מורה (dropdown), סטטוס
+- טבלה: תאריך, שם מורה, סטטוס, הערות
+- מסונן רק לבתי הספר שהמורה רכז שלהם
 
-### שלב 2 - דף הגדרות מנהל
-`/admin/payment-settings` עם טופס למחירון, מע"מ 18%, אחוזי הנחות
+### 6. דוח נוכחות אדמין
 
-### שלב 3 - מחשבון תשלום
-- כפתור "חשב תשלום" ב-`AdminStudentCard`
-- עמוד חדש `/admin/students/:id/calculate-payment`:
-  - ראש: פרטי תלמיד + הורים (קריאה בלבד מהקיים)
-  - רשימת enrollments פעילים עם מורה/כלי/משך/סניף/תאריך
-  - צ'קבוקסים: אח שני, כלי שני, מגמה + הנחה מותאמת (label+%)
-  - חישוב פרו-ראטה: `(annual_price/12) × months_remaining_to_year_end`
-  - סיכום: בסיס שנתי, פרו-ראטה, אחרי הנחות, "כבר שולם" (מ-payments הקיים), יתרה
-  - כולל הצגת מע"מ 18%
+`AdminSchoolMusicAttendance.tsx` בדשבורד האדמין:
+- מסננים: בית ספר, מורה, טווח תאריכים, סטטוס
+- טבלה ראשית: תאריך, בית ספר, מורה, סטטוס, הערות
+- **לוגיקת "טרם דווח"**: לכל יום בטווח שבו `day_of_week ∈ operating_days` של בית הספר ולא קיימת רשומת נוכחות → שורה מסומנת "טרם דווח" (badge בולט)
 
-### שלב 4 - תשתית iCount (placeholder בלבד)
-- כפתור "צור קישור לתשלום" → קורא ל-edge function `generate-icount-link`
-- הפונקציה: בונה payload (פרטי הורה, שורות חיוב, מע"מ 18%, סכום), מדפיסה ל-console, מחזירה `{ ready: true }`
-- Toast: "התשתית מוכנה - הקישור ייווצר כשiCount יחובר"
-- Edge function `icount-webhook` (verify_jwt=false): כרגע רק לוג + 200 OK, מוכן לעדכן `is_paid`+`amount_paid` בעתיד
+### 7. אזהרה במודול תשלומים
 
-### שלב 5 - עיצוב
-RTL מלא, shadcn/ui, פלטת ירוק זית הקיימת, h-12/h-11/rounded-xl לפי הסטנדרט.
+ב-`AddPaymentDialog` (וכל מקום נוסף שמפיק חשבונית/זיכוי iCount):
+- לפני קריאת ה-edge function `icount-create-invoice` / `icount-create-refund` — `AlertDialog` אישור:
+  - "הפקת חשבונית סופית — לא ניתנת לביטול. להמשיך?"
+  - "הפקת זיכוי — פעולה בלתי הפיכה. להמשיך?"
 
-## מה אני צריך ממך
-תענה על 4 השאלות למעלה (ולו במשפט קצר לכל אחת), ואני יוצא לדרך עם שלב 1 (מיגרציה).
+### 8. ניווט
+
+- הוספת ראוטים חדשים ב-`App.tsx`
+- הוספת קישור "נוכחות מורים" בדשבורד האדמין
+
+### פרטים טכניים
+
+- Enum: `CREATE TYPE attendance_status AS ENUM ('present', 'absent')`
+- אינדקסים: `(school_music_school_id, attendance_date)`, `(teacher_id, attendance_date)`
+- Helper לרשימת מורי בית ספר: רכז + מנצח + מורי `school_music_groups` (DISTINCT)
+- כל הטפסים RTL, h-12 inputs, rounded-xl, sticky footer במובייל
