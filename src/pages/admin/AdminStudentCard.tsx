@@ -356,23 +356,7 @@ const AdminStudentCard = () => {
 
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
 
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-          <h2 className="font-semibold text-foreground text-base">הערות ({notes.length})</h2>
-          {notes.length === 0 ? (
-            <p className="text-sm text-muted-foreground">אין הערות</p>
-          ) : (
-            <div className="space-y-2">
-              {notes.map((n: any) => (
-                <div key={n.id} className="rounded-xl border border-border p-3">
-                  <p className="text-sm text-foreground">{n.content}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {n.profiles?.full_name ?? "—"} · {format(new Date(n.created_at), "dd/MM/yyyy HH:mm")}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <StudentNotesSection studentId={studentId!} />
 
 
 
