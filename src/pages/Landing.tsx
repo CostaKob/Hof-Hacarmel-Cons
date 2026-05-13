@@ -123,8 +123,7 @@ const Landing = () => {
         <section id="registration" className="py-16 md:py-24 bg-primary text-primary-foreground">
           <div className="mx-auto max-w-4xl px-5 text-center space-y-8">
             <div className="space-y-2">
-              <h2 className="text-2xl md:text-4xl font-bold">להרשמה לשנת הלימודים</h2>
-              <p className="text-primary-foreground/80">בחרו את המסלול המתאים</p>
+              <h2 className="text-2xl md:text-4xl font-bold">להרשמה לשנת הלימודים תשפ״ז</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <Link to="/register" className="group">
