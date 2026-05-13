@@ -419,92 +419,6 @@ const AdminStudentPaymentCalc = () => {
             <SummaryRow label='סה"כ לתשלום (כולל מע"מ)' value={totalIncVat} bold large />
           </div>
 
-          <div className="mt-3 pt-3 border-t border-primary/20 space-y-2">
-            <div className="flex items-center justify-between gap-2 flex-wrap">
-              <span className="text-sm font-semibold">תשלומים ({paymentsList.length})</span>
-              <Button size="sm" className="h-9 rounded-lg" onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }} disabled={!enrollments || enrollments.length === 0}>
-                <Plus className="h-4 w-4" /> תשלום / זיכוי
-              </Button>
-            </div>
-            {paymentsList.length === 0 ? (
-              <p className="text-xs text-muted-foreground">לא בוצעו תשלומים עדיין</p>
-            ) : (
-              <div className="space-y-2">
-                {(paymentsList as any[]).map((p: any) => {
-                  const isCredit = p.transaction_type !== "payment";
-                  const hasInvoice = !!p.invoice_url;
-                  const hasDoc = !!p.icount_doc_id;
-                  const refundedSoFar = (paymentsList as any[])
-                    .filter((x: any) => x.refund_of_payment_id === p.id)
-                    .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-                  const remaining = Math.max(0, Number(p.amount || 0) - refundedSoFar);
-                  const canRefund = !isCredit && hasDoc && remaining > 0;
-                  return (
-                    <div
-                      key={p.id}
-                      onClick={() => { setEditingPayment(p); setPaymentDialogOpen(true); }}
-                      className="flex items-center justify-between rounded-xl border border-border bg-card p-3 cursor-pointer hover:bg-muted/50 transition-colors gap-2"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-foreground text-sm">
-                          {format(new Date(p.payment_date), "dd/MM/yyyy")}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {isCredit ? "זיכוי" : "תשלום"}
-                          {p.payment_method && ` · ${p.payment_method}`}
-                          {p.installments > 1 && ` · ${p.installments} תשלומים`}
-                          {p.icount_doc_number && ` · חשבונית ${p.icount_doc_number}`}
-                        </p>
-                        {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {!isCredit && hasInvoice && (
-                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד חשבונית"
-                            onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
-                            <FileDown className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {!isCredit && !hasDoc && (
-                          <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                            title={Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1 ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים" : "הפק חשבונית מס/קבלה ב-iCount"}
-                            disabled={createInvoiceMutation.isPending}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPendingInvoiceParams(p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id });
-                            }}>
-                            <FileDown className="h-3.5 w-3.5" />
-                            {createInvoiceMutation.isPending ? "..." : (Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1 ? "הפק חשבונית מאוחדת" : "הפק חשבונית")}
-                          </Button>
-                        )}
-                        {isCredit && hasInvoice && (
-                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד חשבונית זיכוי"
-                            onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
-                            <FileDown className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canRefund && (
-                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                            title={`בצע זיכוי ב-iCount (נותר ₪${remaining.toLocaleString()})`}
-                            disabled={refundMutation.isPending}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRefundTarget({ ...p, _remaining: remaining });
-                              setRefundAmount(String(remaining));
-                            }}>
-                            <Undo2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                        <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                          {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
           <SummaryRow label="כבר שולם" value={paymentsAggr.paid} />
           {paymentsAggr.credit > 0 && (
             <SummaryRow label="זיכויים" value={-paymentsAggr.credit} />
@@ -518,6 +432,12 @@ const AdminStudentPaymentCalc = () => {
             </div>
           )}
         </div>
+
+        <StudentPaymentsSection
+          studentId={studentId!}
+          payments={paymentsList as any[]}
+          enrollments={enrollments ?? []}
+        />
 
         {/* Generate iCount link */}
         <div className="flex justify-end">
