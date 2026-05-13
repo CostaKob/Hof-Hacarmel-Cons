@@ -396,6 +396,9 @@ const AdminSchoolMusicSchoolCard = () => {
   const effectiveCoordHours = coordinatorHours ?? classesCount;
   const effectiveConductHours = conductorHours ?? classesCount;
   const dayOfWeek = (school as any).day_of_week;
+  const operatingDays: number[] = Array.isArray((school as any).operating_days) && (school as any).operating_days.length > 0
+    ? (school as any).operating_days
+    : (dayOfWeek != null ? [dayOfWeek] : []);
 
   const PhoneLink = ({ phone }: { phone?: string | null }) => {
     if (!phone) return null;
