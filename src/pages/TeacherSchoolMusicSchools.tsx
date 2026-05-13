@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
-import { ChevronLeft, School, MessageCircle, Phone } from "lucide-react";
+import { ChevronLeft, School, MessageCircle, Phone, ClipboardCheck, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
