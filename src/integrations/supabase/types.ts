@@ -1231,6 +1231,7 @@ export type Database = {
           id: string
           is_active: boolean
           notes: string | null
+          operating_days: number[]
           principal_name: string | null
           principal_phone: string | null
           school_name: string
@@ -1251,6 +1252,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           notes?: string | null
+          operating_days?: number[]
           principal_name?: string | null
           principal_phone?: string | null
           school_name: string
@@ -1271,6 +1273,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           notes?: string | null
+          operating_days?: number[]
           principal_name?: string | null
           principal_phone?: string | null
           school_name?: string
@@ -1769,6 +1772,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      teacher_attendance: {
+        Row: {
+          academic_year_id: string
+          attendance_date: string
+          created_at: string
+          created_by_user_id: string | null
+          id: string
+          notes: string | null
+          school_music_school_id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id: string
+          attendance_date: string
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          notes?: string | null
+          school_music_school_id: string
+          status: Database["public"]["Enums"]["attendance_status"]
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string
+          attendance_date?: string
+          created_at?: string
+          created_by_user_id?: string | null
+          id?: string
+          notes?: string | null
+          school_music_school_id?: string
+          status?: Database["public"]["Enums"]["attendance_status"]
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       teacher_instruments: {
         Row: {
