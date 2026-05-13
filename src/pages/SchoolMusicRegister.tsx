@@ -470,7 +470,7 @@ const SchoolMusicRegister = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.class_name}</SelectItem>
+                    <SelectItem key={c.id} value={c.id}>{c.class_name}{c.homeroom_teacher_name ? ` - ${c.homeroom_teacher_name}` : ""}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
