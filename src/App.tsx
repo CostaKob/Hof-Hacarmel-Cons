@@ -59,6 +59,9 @@ import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
 import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
 import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
+import AdminSchoolMusicAttendance from "./pages/admin/AdminSchoolMusicAttendance";
+import SchoolMusicAttendanceForm from "./pages/SchoolMusicAttendanceForm";
+import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
 import PublicRegistration from "./pages/PublicRegistration";
 import SchoolMusicRegister from "./pages/SchoolMusicRegister";
 
