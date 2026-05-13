@@ -321,7 +321,7 @@ const AdminRegistrationCard = () => {
             <InfoGrid items={[
               { label: "שם הורה", value: r.parent_name },
               { label: "ת.ז. הורה", value: r.parent_national_id },
-              { label: "טלפון", value: r.parent_phone },
+              { label: "טלפון", value: r.parent_phone ? <PhoneDisplay phone={r.parent_phone} /> : "—" },
               { label: 'דוא"ל', value: r.parent_email },
             ]} />
           </CardContent>
