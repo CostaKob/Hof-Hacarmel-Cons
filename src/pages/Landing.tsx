@@ -126,7 +126,7 @@ const Landing = () => {
               <h2 className="text-2xl md:text-4xl font-bold">להרשמה לשנת הלימודים תשפ״ז</h2>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Link to="/register" className="group">
+              <Link to="/register?year=2026-2027" className="group">
                 <div className="rounded-2xl bg-card text-card-foreground p-7 shadow-xl hover:scale-[1.02] transition-transform text-right border border-border">
                   <Music2 className="h-10 w-10 text-primary mb-3" />
                   <h3 className="text-xl font-bold mb-1">רישום ללימודים פרטניים</h3>
