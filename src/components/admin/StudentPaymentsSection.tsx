@@ -21,6 +21,8 @@ interface StudentPaymentsSectionProps {
   extraInvalidateKeys?: (string | undefined)[][];
   /** Show academic year next to date (used in student card). */
   showYear?: boolean;
+  /** Read-only mode: only show existing payments/credits + download receipt. No add/edit/refund/create-invoice. */
+  readOnly?: boolean;
 }
 
 const StudentPaymentsSection = ({
@@ -30,6 +32,7 @@ const StudentPaymentsSection = ({
   extraHeaderActions,
   extraInvalidateKeys = [],
   showYear = false,
+  readOnly = false,
 }: StudentPaymentsSectionProps) => {
   const queryClient = useQueryClient();
 
