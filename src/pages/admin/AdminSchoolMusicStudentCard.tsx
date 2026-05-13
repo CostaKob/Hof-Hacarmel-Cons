@@ -100,9 +100,6 @@ const AdminSchoolMusicStudentCard = () => {
           <Row label="ת.ז." value={<span dir="ltr" className="font-mono">{student.student_national_id}</span>} />
           <Row label="מין" value={student.gender === "male" ? "זכר" : student.gender === "female" ? "נקבה" : student.gender || "—"} />
           <Row label="עיר" value={student.city} />
-          {student.instrument_serial_number && (
-            <Row label="מס' סידורי כלי" value={<span dir="ltr" className="font-mono">{student.instrument_serial_number}</span>} />
-          )}
         </div>
 
         {/* Parent details */}
