@@ -26,7 +26,7 @@ const Login = () => {
         description: "אימייל או סיסמה שגויים",
       });
     } else {
-      navigate("/");
+      navigate("/dashboard");
     }
   };
 
