@@ -15,6 +15,7 @@ import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Searc
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 const getDayName = (school: any) => {
