@@ -224,31 +224,6 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Registration Hub */}
-        <section id="registration" className="py-16 md:py-24 bg-primary text-primary-foreground">
-          <div className="mx-auto max-w-4xl px-5 text-center space-y-8">
-            <div className="space-y-2">
-              <h2 className="text-2xl md:text-4xl font-bold">להרשמה לשנת הלימודים</h2>
-              <p className="text-primary-foreground/80">בחרו את המסלול המתאים</p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Link to="/register" className="group">
-                <div className="rounded-2xl bg-card text-card-foreground p-7 shadow-xl hover:scale-[1.02] transition-transform text-right border border-border">
-                  <Music2 className="h-10 w-10 text-primary mb-3" />
-                  <h3 className="text-xl font-bold mb-1">רישום ללימודים פרטניים</h3>
-                  <p className="text-sm text-muted-foreground">כינור, פסנתר, גיטרה, כלי נשיפה, פיתוח קול ועוד</p>
-                </div>
-              </Link>
-              <Link to="/school-music-register" className="group">
-                <div className="rounded-2xl bg-card text-card-foreground p-7 shadow-xl hover:scale-[1.02] transition-transform text-right border border-border">
-                  <School className="h-10 w-10 text-primary mb-3" />
-                  <h3 className="text-xl font-bold mb-1">רישום לבתי ספר מנגנים</h3>
-                  <p className="text-sm text-muted-foreground">לימודי כלי נגינה במסגרת בית הספר היסודי</p>
-                </div>
-              </Link>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
