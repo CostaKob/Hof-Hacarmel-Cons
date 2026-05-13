@@ -1535,6 +1535,7 @@ export type Database = {
           enrollment_id: string | null
           id: string
           student_id: string
+          title: string | null
         }
         Insert: {
           author_user_id?: string | null
@@ -1543,6 +1544,7 @@ export type Database = {
           enrollment_id?: string | null
           id?: string
           student_id: string
+          title?: string | null
         }
         Update: {
           author_user_id?: string | null
@@ -1551,6 +1553,7 @@ export type Database = {
           enrollment_id?: string | null
           id?: string
           student_id?: string
+          title?: string | null
         }
         Relationships: [
           {
