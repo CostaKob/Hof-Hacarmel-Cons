@@ -494,8 +494,30 @@ const SchoolMusicRegister = () => {
               </Select>
             </Field>
 
-            <Field id="serial" label="מספר סידורי של כלי הנגינה">
-              <Input id="serial" value={form.instrument_serial_number} onChange={(e) => updateField("instrument_serial_number", e.target.value)} />
+            <Field id="inventory" label="כלי מהמלאי" error={errors.inventory_instrument_id}>
+              <Select
+                value={form.inventory_instrument_id}
+                onValueChange={(v) => updateField("inventory_instrument_id", v)}
+                disabled={!form.instrument_id || availableInventory.length === 0}
+              >
+                <SelectTrigger id="inventory">
+                  <SelectValue placeholder={
+                    !form.instrument_id ? "בחרו קודם כלי נגינה" :
+                    availableInventory.length === 0 ? "אין כלים זמינים מסוג זה" :
+                    "בחרו כלי מהמלאי (אופציונלי)"
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableInventory.map((it: any) => (
+                    <SelectItem key={it.id} value={it.id}>
+                      #{it.serial_number}
+                      {it.size && ` (${it.size})`}
+                      {(it.brand || it.model) && ` — ${[it.brand, it.model].filter(Boolean).join(" ")}`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">בחירת כלי מהמלאי תיצור השאלה אוטומטית לתלמיד.</p>
             </Field>
 
             <hr className="my-2" />
