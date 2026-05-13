@@ -100,14 +100,16 @@ const Landing = () => {
                 אולפן ומגמת המוסיקה חוף הכרמל
                 <span className="block text-primary mt-2">הבית למוסיקה בקהילה</span>
               </h1>
+              <div className="pt-1">
+                <a href="#registration">
+                  <Button size="lg" className="h-12 rounded-xl px-6">להרשמה לשנת הלימודים תשפ״ז</Button>
+                </a>
+              </div>
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
                 מוסד חינוכי מקצועי המציע מגוון רחב של תוכניות לימוד מהגיל הרך ועד הבגרות,
                 בליווי צוות מורים מהשורה הראשונה.
               </p>
               <div className="flex flex-wrap gap-3 pt-2">
-                <a href="#registration">
-                  <Button size="lg" className="h-12 rounded-xl px-6">להרשמה</Button>
-                </a>
                 <a href="#programs">
                   <Button size="lg" variant="outline" className="h-12 rounded-xl px-6">לתוכניות הלימוד</Button>
                 </a>
