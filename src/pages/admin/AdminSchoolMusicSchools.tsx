@@ -322,7 +322,7 @@ const AdminSchoolMusicSchools = () => {
       parent_phone: s.parent_phone,
       parent_email: s.parent_email,
       instrument_id: s.instrument_id || "",
-      instrument_serial_number: s.instrument_serial_number || "",
+      
       status: s.status,
       school_music_class_id: s.school_music_class_id || "",
       school_music_class_group_id: s.school_music_class_group_id || "",
