@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -270,7 +271,7 @@ const AdminStudentPaymentCalc = () => {
               <h2 className="font-semibold text-foreground text-base mb-2">הורה לחיוב</h2>
               <p className="text-sm"><span className="text-muted-foreground">שם:</span> {student.parent_name ?? "—"}</p>
               <p className="text-sm"><span className="text-muted-foreground">ת.ז. הורה:</span> {student.parent_national_id ?? "—"}</p>
-              <p className="text-sm"><span className="text-muted-foreground">טלפון:</span> {student.parent_phone ?? "—"}</p>
+              <div className="text-sm flex items-center gap-1"><span className="text-muted-foreground">טלפון:</span> {student.parent_phone ? <PhoneDisplay phone={student.parent_phone} /> : "—"}</div>
               <p className="text-sm"><span className="text-muted-foreground">אימייל:</span> {student.parent_email ?? "—"}</p>
             </div>
           </div>

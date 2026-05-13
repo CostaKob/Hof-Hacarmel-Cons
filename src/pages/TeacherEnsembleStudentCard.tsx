@@ -6,6 +6,7 @@ import { DAYS_OF_WEEK_LABELS, ENSEMBLE_STAFF_ROLE_LABELS } from "@/lib/ensembleC
 import { ArrowRight, CalendarDays, ChevronLeft, Clock, MapPin, Music, Phone, School, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLogo from "@/components/AppLogo";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const TeacherEnsembleStudentCard = () => {
   const { id, studentId } = useParams<{ id: string; studentId: string }>();
@@ -60,9 +61,21 @@ const TeacherEnsembleStudentCard = () => {
           </h2>
           <InfoRow label="שם מלא" value={`${student.first_name} ${student.last_name}`} />
           {instrumentName && <InfoRow label="כלי נגינה" value={instrumentName} />}
-          {student.phone && <InfoRow label="טלפון תלמיד" value={student.phone} icon={<Phone className="h-4 w-4 text-muted-foreground" />} />}
+          {student.phone && (
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">טלפון תלמיד:</span>
+              <PhoneDisplay phone={student.phone} />
+            </div>
+          )}
           {student.parent_name && <InfoRow label="שם הורה" value={student.parent_name} />}
-          {student.parent_phone && <InfoRow label="טלפון הורה" value={student.parent_phone} icon={<Phone className="h-4 w-4 text-muted-foreground" />} />}
+          {student.parent_phone && (
+            <div className="flex items-center gap-2 text-sm">
+              <Phone className="h-4 w-4 text-muted-foreground" />
+              <span className="text-muted-foreground">טלפון הורה:</span>
+              <PhoneDisplay phone={student.parent_phone} />
+            </div>
+          )}
         </section>
 
         <section className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">

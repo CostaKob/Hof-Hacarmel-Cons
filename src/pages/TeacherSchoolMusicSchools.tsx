@@ -1,15 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
-import { ChevronLeft, School, MessageCircle, Phone, ClipboardCheck, FileText } from "lucide-react";
+import { ChevronLeft, School, ClipboardCheck, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
-const formatWhatsApp = (phone: string) => {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("0")) return "972" + digits.slice(1);
-  return digits;
-};
 
 const TeacherSchoolMusicSchools = () => {
   const navigate = useNavigate();
@@ -60,14 +56,8 @@ const TeacherSchoolMusicSchools = () => {
                     <span>{s.classCount} כיתות</span>
                   </div>
                   {s.principal_phone && (
-                    <div className="flex items-center gap-2 mt-1" dir="ltr">
-                      <a href={`https://wa.me/${formatWhatsApp(s.principal_phone)}`} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-green-600 hover:text-green-700">
-                        <MessageCircle className="h-4 w-4" />
-                      </a>
-                      <a href={`tel:${s.principal_phone}`} onClick={(e) => e.stopPropagation()} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                        <Phone className="h-3 w-3" />
-                        {s.principal_phone}
-                      </a>
+                    <div className="mt-1" onClick={(e) => e.stopPropagation()}>
+                      <PhoneDisplay phone={s.principal_phone} showIcon textClassName="text-xs" stopPropagation />
                     </div>
                   )}
                 </div>

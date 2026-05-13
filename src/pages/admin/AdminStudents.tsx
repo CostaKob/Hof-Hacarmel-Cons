@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { saveListScrollPosition, useListStatePreservation } from "@/hooks/useListStatePreservation";
 import AdminLayout from "@/components/admin/AdminLayout";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -364,7 +365,7 @@ const AdminStudents = () => {
                           {s.national_id && <span>ת.ז {s.national_id}</span>}
                           {s.grade && (<><span>·</span><span>כיתה {s.grade}</span></>)}
                           {s.city && (<><span>·</span><span>{s.city}</span></>)}
-                          {s.parent_phone && (<><span>·</span><span>{s.parent_phone}</span></>)}
+                          {s.parent_phone && (<><span>·</span><PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
                         </div>
                       </div>
                     </div>

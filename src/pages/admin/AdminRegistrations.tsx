@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Settings, AlertTriangle, Phone, Music } from "lucide-react";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
@@ -142,7 +143,7 @@ const AdminRegistrations = () => {
                         {r.parent_phone && (
                           <span className="flex items-center gap-1 shrink-0">
                             <Phone className="h-3 w-3" />
-                            {r.parent_phone}
+                            <PhoneDisplay phone={r.parent_phone} stopPropagation textClassName="text-xs text-muted-foreground" />
                           </span>
                         )}
                       </div>

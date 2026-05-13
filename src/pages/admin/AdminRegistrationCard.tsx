@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { UserCheck, AlertTriangle, UserPlus, Link2, Trash2, ArrowLeftRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -293,7 +294,7 @@ const AdminRegistrationCard = () => {
               { label: "בית ספר", value: r.student_school_text },
               { label: "כיתה", value: r.grade },
               { label: "ישוב", value: r.city },
-              { label: "טלפון תלמיד/ה", value: r.student_phone || "—" },
+              { label: "טלפון תלמיד/ה", value: r.student_phone ? <PhoneDisplay phone={r.student_phone} /> : "—" },
             ]} />
           </CardContent>
         </Card>
@@ -320,7 +321,7 @@ const AdminRegistrationCard = () => {
             <InfoGrid items={[
               { label: "שם הורה", value: r.parent_name },
               { label: "ת.ז. הורה", value: r.parent_national_id },
-              { label: "טלפון", value: r.parent_phone },
+              { label: "טלפון", value: r.parent_phone ? <PhoneDisplay phone={r.parent_phone} /> : "—" },
               { label: 'דוא"ל', value: r.parent_email },
             ]} />
           </CardContent>
@@ -352,12 +353,12 @@ const AdminRegistrationCard = () => {
   );
 };
 
-const InfoGrid = ({ items }: { items: { label: string; value: string }[] }) => (
+const InfoGrid = ({ items }: { items: { label: string; value: React.ReactNode }[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
     {items.map((item, i) => (
       <div key={i}>
         <p className="text-xs text-muted-foreground">{item.label}</p>
-        <p className="text-sm font-medium text-foreground">{item.value}</p>
+        <div className="text-sm font-medium text-foreground">{item.value}</div>
       </div>
     ))}
   </div>

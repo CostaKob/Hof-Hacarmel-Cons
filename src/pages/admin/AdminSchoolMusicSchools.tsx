@@ -15,6 +15,7 @@ import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Searc
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 const getDayName = (school: any) => {
@@ -30,6 +31,13 @@ const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: str
   <div className="flex gap-2 text-sm py-0.5">
     <span className="text-muted-foreground shrink-0">{label}:</span>
     <span className="text-foreground font-medium" dir={fieldDir}>{value || "—"}</span>
+  </div>
+);
+
+const PhoneDetailRow = ({ label, value }: { label: string; value?: string | null }) => (
+  <div className="flex gap-2 items-center text-sm py-0.5">
+    <span className="text-muted-foreground shrink-0">{label}:</span>
+    {value ? <PhoneDisplay phone={value} textClassName="text-sm font-medium" /> : <span className="text-foreground font-medium">—</span>}
   </div>
 );
 
@@ -608,7 +616,7 @@ const AdminSchoolMusicSchools = () => {
                                   <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">פרטי הורה</p>
                                   <DetailRow label="שם הורה" value={s.parent_name} />
                                   <DetailRow label="ת.ז הורה" value={s.parent_national_id} />
-                                  <DetailRow label="טלפון" value={s.parent_phone} dir="ltr" />
+                                  <PhoneDetailRow label="טלפון" value={s.parent_phone} />
                                   <DetailRow label='דוא"ל' value={s.parent_email} dir="ltr" />
                                 </div>
                               </div>

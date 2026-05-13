@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, Music, Copy, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -400,15 +401,9 @@ const AdminSchoolMusicSchoolCard = () => {
     ? (school as any).operating_days
     : (dayOfWeek != null ? [dayOfWeek] : []);
 
-  const PhoneLink = ({ phone }: { phone?: string | null }) => {
-    if (!phone) return null;
-    return (
-      <a href={`tel:${phone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline" dir="ltr">
-        <Phone className="h-3 w-3" />
-        {phone}
-      </a>
-    );
-  };
+  const PhoneLink = ({ phone }: { phone?: string | null }) => (
+    <PhoneDisplay phone={phone} showIcon textClassName="text-xs" />
+  );
 
   const getGroupsForClass = (classId: string) => classGroups.filter((g: any) => g.school_music_class_id === classId);
   const getStudentsForGroup = (groupId: string) => schoolStudents.filter((s: any) => s.school_music_class_group_id === groupId);

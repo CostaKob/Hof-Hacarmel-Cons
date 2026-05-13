@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { ArrowRight, StickyNote, Plus, User, Phone, Mail, MapPin, Music, School, Calendar } from "lucide-react";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
 
 const TeacherStudentCard = () => {
@@ -111,10 +112,10 @@ const TeacherStudentCard = () => {
           <div className="grid grid-cols-1 gap-3 text-sm">
             {student.parent_name && <InfoRow icon={User} label="הורה 1" value={student.parent_name} />}
             {student.parent_phone && (
-              <a href={`tel:${student.parent_phone}`} className="flex items-center gap-2 text-primary">
-                <Phone className="h-4 w-4" />
-                <span>{student.parent_phone}</span>
-              </a>
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <PhoneDisplay phone={student.parent_phone} />
+              </div>
             )}
             {student.parent_email && (
               <a href={`mailto:${student.parent_email}`} className="flex items-center gap-2 text-primary">
@@ -127,10 +128,10 @@ const TeacherStudentCard = () => {
                 <div className="border-t border-border pt-3" />
                 <InfoRow icon={User} label="הורה 2" value={student.parent_name_2} />
                 {student.parent_phone_2 && (
-                  <a href={`tel:${student.parent_phone_2}`} className="flex items-center gap-2 text-primary">
-                    <Phone className="h-4 w-4" />
-                    <span>{student.parent_phone_2}</span>
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <PhoneDisplay phone={student.parent_phone_2} />
+                  </div>
                 )}
                 {student.parent_email_2 && (
                   <a href={`mailto:${student.parent_email_2}`} className="flex items-center gap-2 text-primary">

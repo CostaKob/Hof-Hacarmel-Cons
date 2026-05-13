@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -535,7 +536,7 @@ const AdminRegistrationConvert = () => {
                 <div><span className="text-muted-foreground">ת.ז.: </span>{existingStudent.national_id || "—"}</div>
                 <div><span className="text-muted-foreground">כיתה: </span>{existingStudent.grade || "—"}</div>
                 <div><span className="text-muted-foreground">ישוב: </span>{existingStudent.city || "—"}</div>
-                <div><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone || "—"}</div>
+                <div className="flex items-center gap-1"><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone ? <PhoneDisplay phone={existingStudent.phone} /> : "—"}</div>
               </div>
 
               {/* Existing enrollments in active year */}

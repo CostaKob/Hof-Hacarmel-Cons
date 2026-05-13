@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -297,7 +298,12 @@ const AdminTeacherCard = () => {
           )}
           <DetailRow label="תעודת זהות" value={teacher.national_id} />
           <DetailRow label="תאריך לידה" value={teacher.birth_date} />
-          <DetailRow label="טלפון" value={teacher.phone} />
+          {teacher.phone ? (
+            <div className="flex justify-between items-center border-b border-border py-2.5">
+              <span className="text-muted-foreground text-sm">טלפון</span>
+              <PhoneDisplay phone={teacher.phone} textClassName="text-sm font-medium" />
+            </div>
+          ) : null}
           <DetailRow label="אימייל" value={teacher.email} />
           <DetailRow label="כתובת" value={teacher.address} />
           <DetailRow label="עיר" value={teacher.city} />

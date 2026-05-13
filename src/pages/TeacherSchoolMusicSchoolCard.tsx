@@ -7,36 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, MessageCircle, Phone, School, User, Users, Music } from "lucide-react";
+import { ChevronLeft, School, User, Users, Music } from "lucide-react";
 import { useMemo } from "react";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 /* ─── helpers ─── */
 
-const formatWhatsApp = (phone: string) => {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("0")) return "972" + digits.slice(1);
-  return digits;
-};
-
-const PhoneLink = ({ phone }: { phone?: string | null }) => {
-  if (!phone) return null;
-  return (
-    <span className="inline-flex items-center gap-2" dir="ltr">
-      <a href={`tel:${phone}`} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-        <Phone className="h-3 w-3" />
-        {phone}
-      </a>
-      <a
-        href={`https://wa.me/${formatWhatsApp(phone)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-green-600 hover:text-green-700"
-      >
-        <MessageCircle className="h-4 w-4" />
-      </a>
-    </span>
-  );
-};
+const PhoneLink = ({ phone }: { phone?: string | null }) => (
+  <PhoneDisplay phone={phone} showIcon textClassName="text-xs" />
+);
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
