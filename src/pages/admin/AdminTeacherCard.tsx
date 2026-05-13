@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
