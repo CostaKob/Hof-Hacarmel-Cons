@@ -29,6 +29,7 @@ const STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive" =>
 
 const AdminSchoolMusicAttendance = () => {
   const { activeYear } = useAcademicYear();
+  const navigate = useNavigate();
   const today = format(new Date(), "yyyy-MM-dd");
   const monthAgo = format(addDays(new Date(), -30), "yyyy-MM-dd");
 
@@ -37,6 +38,22 @@ const AdminSchoolMusicAttendance = () => {
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  // Manual report dialog state
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualSchool, setManualSchool] = useState<string>("");
+  const [manualDate, setManualDate] = useState<string>(today);
+
+  const goReport = (schoolId: string, date: string) => {
+    navigate(`/admin/school-music-schools/${schoolId}/attendance/new?date=${date}`);
+  };
+
+  const submitManual = () => {
+    if (!manualSchool) { toast.error("יש לבחור בית ספר"); return; }
+    if (!manualDate) { toast.error("יש לבחור תאריך"); return; }
+    setManualOpen(false);
+    goReport(manualSchool, manualDate);
+  };
 
   const { data: schools = [] } = useQuery({
     queryKey: ["admin-attendance-schools", activeYear?.id],
