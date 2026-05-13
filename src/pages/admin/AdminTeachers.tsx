@@ -99,7 +99,7 @@ const AdminTeachers = () => {
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
                   <div>
-                    <p className="font-semibold text-foreground">{t.first_name} {t.last_name}</p>
+                    <p className="font-semibold text-foreground">{t.last_name} {t.first_name}</p>
                     <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
                       {t.phone && <PhoneDisplay phone={t.phone} stopPropagation textClassName="text-sm text-muted-foreground" />}
                       {t.city && <><span>·</span><span>{t.city}</span></>}
