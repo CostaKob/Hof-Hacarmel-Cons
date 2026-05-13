@@ -739,7 +739,7 @@ const AdminSchoolMusicSchools = () => {
                                     </div>
                                   );
                                 })()}
-                                <EditField label="מספר סידורי" field="instrument_serial_number" />
+                                
                                 <div className="space-y-1">
                                   <Label className="text-xs text-muted-foreground">סטטוס</Label>
                                   <Select value={editForm.status} onValueChange={(v) => setEditForm((p: any) => ({ ...p, status: v }))}>
