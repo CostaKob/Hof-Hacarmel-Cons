@@ -567,6 +567,53 @@ const AdminStudentCard = () => {
           )}
         </div>
 
+        <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) setPendingInvoiceParams(null); }}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>אישור הפקת חשבונית</AlertDialogTitle>
+              <AlertDialogDescription>
+                ⚠️ הפקת חשבונית מס/קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+                החשבונית תישלח באופן מיידי. האם להמשיך?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogAction
+                onClick={() => {
+                  if (pendingInvoiceParams) createInvoiceMutation.mutate(pendingInvoiceParams);
+                  setPendingInvoiceParams(null);
+                }}
+              >
+                כן, הפק חשבונית
+              </AlertDialogAction>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>אישור הפקת זיכוי</AlertDialogTitle>
+              <AlertDialogDescription>
+                ⚠️ הפקת חשבונית זיכוי ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+                האם להמשיך?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={() => {
+                  if (pendingRefund) refundMutation.mutate(pendingRefund);
+                  setPendingRefund(null);
+                }}
+              >
+                כן, בצע זיכוי
+              </AlertDialogAction>
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
       </div>
     </AdminLayout>
   );
