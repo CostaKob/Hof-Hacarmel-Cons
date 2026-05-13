@@ -211,7 +211,7 @@ const AdminSchoolMusicSchools = () => {
       parent_email: "",
       school_music_school_id: "",
       instrument_id: "",
-      instrument_serial_number: "",
+      
       status: "new",
       academic_year_id: activeYear?.id || null,
     });
