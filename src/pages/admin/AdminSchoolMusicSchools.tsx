@@ -34,6 +34,13 @@ const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: str
   </div>
 );
 
+const PhoneDetailRow = ({ label, value }: { label: string; value?: string | null }) => (
+  <div className="flex gap-2 items-center text-sm py-0.5">
+    <span className="text-muted-foreground shrink-0">{label}:</span>
+    {value ? <PhoneDisplay phone={value} textClassName="text-sm font-medium" /> : <span className="text-foreground font-medium">—</span>}
+  </div>
+);
+
 const AdminSchoolMusicSchools = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
