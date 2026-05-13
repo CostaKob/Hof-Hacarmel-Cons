@@ -9,15 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Plus, Trash2, Send, FileDown, Undo2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Send } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
 import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+import { useQueryClient } from "@tanstack/react-query";
+import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 
 const AdminStudentPaymentCalc = () => {
   const { studentId } = useParams<{ studentId: string }>();
