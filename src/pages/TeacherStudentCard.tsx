@@ -128,10 +128,10 @@ const TeacherStudentCard = () => {
                 <div className="border-t border-border pt-3" />
                 <InfoRow icon={User} label="הורה 2" value={student.parent_name_2} />
                 {student.parent_phone_2 && (
-                  <a href={`tel:${student.parent_phone_2}`} className="flex items-center gap-2 text-primary">
-                    <Phone className="h-4 w-4" />
-                    <span>{student.parent_phone_2}</span>
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <PhoneDisplay phone={student.parent_phone_2} />
+                  </div>
                 )}
                 {student.parent_email_2 && (
                   <a href={`mailto:${student.parent_email_2}`} className="flex items-center gap-2 text-primary">
