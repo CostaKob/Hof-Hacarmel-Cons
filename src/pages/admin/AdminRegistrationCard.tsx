@@ -294,7 +294,7 @@ const AdminRegistrationCard = () => {
               { label: "בית ספר", value: r.student_school_text },
               { label: "כיתה", value: r.grade },
               { label: "ישוב", value: r.city },
-              { label: "טלפון תלמיד/ה", value: r.student_phone || "—" },
+              { label: "טלפון תלמיד/ה", value: r.student_phone ? <PhoneDisplay phone={r.student_phone} /> : "—" },
             ]} />
           </CardContent>
         </Card>
