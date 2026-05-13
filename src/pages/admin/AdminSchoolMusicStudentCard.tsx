@@ -36,22 +36,6 @@ const AdminSchoolMusicStudentCard = () => {
     },
   });
 
-  const { data: activeLoan } = useQuery({
-    queryKey: ["school-music-student-active-loan", studentId],
-    enabled: !!studentId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("instrument_loans")
-        .select("id, loan_date, inventory_instruments(serial_number, brand, model, size, instruments(name))")
-        .eq("school_music_student_id", studentId!)
-        .is("return_date", null)
-        .order("loan_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (error) throw error;
-      return data as any;
-    },
-  });
 
   if (isLoading) {
     return (
@@ -119,25 +103,6 @@ const AdminSchoolMusicStudentCard = () => {
           <Row label="עיר" value={student.city} />
         </div>
 
-        {/* Assigned instrument */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
-          <h2 className="font-semibold text-foreground text-base mb-2 flex items-center gap-2">
-            <Music className="h-4 w-4" /> כלי משויך
-          </h2>
-          {activeLoan?.inventory_instruments ? (
-            <>
-              <Row label="כלי" value={activeLoan.inventory_instruments.instruments?.name} />
-              <Row label="מס׳ סידורי" value={<span dir="ltr" className="font-mono">{activeLoan.inventory_instruments.serial_number}</span>} />
-              <Row label="יצרן/דגם" value={[activeLoan.inventory_instruments.brand, activeLoan.inventory_instruments.model].filter(Boolean).join(" / ") || "—"} />
-              {activeLoan.inventory_instruments.size && <Row label="גודל" value={activeLoan.inventory_instruments.size} />}
-              <Row label="תאריך השאלה" value={activeLoan.loan_date} />
-            </>
-          ) : (
-            <p className="text-sm text-muted-foreground">לא משויך כלי כרגע. ניתן לשייך דרך מודול ההשאלה למטה.</p>
-          )}
-        </div>
-
-        {/* Parent details */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <h2 className="font-semibold text-foreground text-base mb-2 flex items-center gap-2">
             <MapPin className="h-4 w-4" /> פרטי הורה

@@ -109,6 +109,23 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
+  const studentIds = useMemo(() => (students as any[]).map((s) => s.id), [students]);
+  const { data: activeLoansByStudent = {} } = useQuery({
+    queryKey: ["school-music-active-loans", studentIds],
+    enabled: studentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("instrument_loans")
+        .select("school_music_student_id, loan_date, inventory_instruments(serial_number, brand, model, size, instruments(name))")
+        .in("school_music_student_id", studentIds)
+        .is("return_date", null);
+      if (error) throw error;
+      const map: Record<string, any> = {};
+      (data || []).forEach((l: any) => { if (l.school_music_student_id) map[l.school_music_student_id] = l; });
+      return map;
+    },
+  });
+
   const { data: groups = [] } = useQuery({
     queryKey: ["school-music-groups-with-teachers"],
     queryFn: async () => {
@@ -634,6 +651,15 @@ const AdminSchoolMusicSchools = () => {
                                   <DetailRow label="כלי" value={s.instruments?.name} />
                                   <DetailRow label="מורה" value={getStudentTeacher(s)} />
                                   <DetailRow label="בית ספר" value={s.school_music_schools?.school_name} />
+                                  {(() => {
+                                    const loan = (activeLoansByStudent as any)[s.id];
+                                    const inv = loan?.inventory_instruments;
+                                    if (!inv) {
+                                      return <DetailRow label="כלי משויך" value="לא שויך עדיין כלי נגינה" />;
+                                    }
+                                    const desc = [inv.serial_number, [inv.brand, inv.model].filter(Boolean).join(" "), inv.size].filter(Boolean).join(" · ");
+                                    return <DetailRow label="כלי משויך" value={desc} />;
+                                  })()}
                                 </div>
                               </div>
                             </>
