@@ -109,6 +109,23 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
+  const studentIds = useMemo(() => (students as any[]).map((s) => s.id), [students]);
+  const { data: activeLoansByStudent = {} } = useQuery({
+    queryKey: ["school-music-active-loans", studentIds],
+    enabled: studentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("instrument_loans")
+        .select("school_music_student_id, loan_date, inventory_instruments(serial_number, brand, model, size, instruments(name))")
+        .in("school_music_student_id", studentIds)
+        .is("return_date", null);
+      if (error) throw error;
+      const map: Record<string, any> = {};
+      (data || []).forEach((l: any) => { if (l.school_music_student_id) map[l.school_music_student_id] = l; });
+      return map;
+    },
+  });
+
   const { data: groups = [] } = useQuery({
     queryKey: ["school-music-groups-with-teachers"],
     queryFn: async () => {
