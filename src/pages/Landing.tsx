@@ -286,27 +286,6 @@ const Landing = () => {
         </section>
 
 
-        <section id="programs" className="py-16 md:py-20 bg-muted/30 border-y border-border">
-          <div className="mx-auto max-w-6xl px-5">
-            <div className="text-center space-y-2 mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold">תוכניות הלימוד שלנו</h2>
-              <p className="text-muted-foreground">מסלולים מותאמים לכל גיל ולכל רמה</p>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {PROGRAMS.map((p) => (
-                <Card key={p.title} className="border-border hover:shadow-md transition-shadow">
-                  <CardContent className="p-6 text-right space-y-3">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <p.icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="font-bold text-lg">{p.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* Tuition & Regulations */}
         <section id="policies" className="py-16 md:py-20">
