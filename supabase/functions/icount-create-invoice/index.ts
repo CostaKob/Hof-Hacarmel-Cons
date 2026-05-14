@@ -183,10 +183,11 @@ Deno.serve(async (req: Request) => {
       quantity: 1,
     }));
 
-    // iCount doc/create payload (חשבונית מס קבלה = invrec)
+    // iCount doc/create payload — RECEIPT (קבלה) only.
+    // Malkar (Non-Profit) cannot issue Tax Invoices. No VAT calculation.
     const payload: any = {
       ...auth,
-      doctype: "invrec",
+      doctype: "receipt",
       client_name: clientName,
       client_address: student.address || student.city || undefined,
       client_city: student.city || undefined,
@@ -198,7 +199,7 @@ Deno.serve(async (req: Request) => {
       send_email: !!(student.parent_email || student.parent_email_2),
       lang: "he",
       currency_code: "ILS",
-      vat_included: 1, // amounts already include VAT
+      vat_free: 1, // Malkar — no VAT charged
       items,
     };
 
