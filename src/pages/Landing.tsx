@@ -10,7 +10,7 @@ import {
 import logoUrl from "@/assets/logo.png";
 import heroImage from "@/assets/hero-orchestra.jpg";
 import {
-  Baby,
+  
   School,
   Music2,
   Users,
@@ -60,33 +60,11 @@ const JOURNEY = [
 const NAV = [
   { id: "about", label: "אודות" },
   { id: "journey", label: "המסע המוזיקלי" },
-  { id: "programs", label: "תוכניות" },
+  
   { id: "policies", label: "תעריפים ונהלים" },
   { id: "contact", label: "צור קשר" },
 ];
 
-const PROGRAMS = [
-  {
-    icon: Baby,
-    title: "גני ילדים",
-    description: "חשיפה מוזיקלית מוקדמת — תוכניות ייעודיות לגיל הרך המעודדות סקרנות, הקשבה ויצירתיות.",
-  },
-  {
-    icon: School,
-    title: "בתי ספר מנגנים",
-    description: "לימודי כלי נגינה במסגרת בתי הספר היסודיים, בליווי מורים מקצועיים ובשיתוף הצוות החינוכי.",
-  },
-  {
-    icon: Music2,
-    title: "לימודים פרטניים",
-    description: "מגוון רחב של כלים: כינור, צ'לו, כלי נשיפה, פסנתר, גיטרות, תופים, פיתוח קול ועוד.",
-  },
-  {
-    icon: Users,
-    title: "הרכבים ותזמורות",
-    description: "פעילות קבוצתית קאמרית ותזמורתית, מוסיקה קלה ולימודי תיאוריה לקראת בגרות.",
-  },
-];
 
 const Landing = () => {
   return (
@@ -141,11 +119,6 @@ const Landing = () => {
                 מוסד חינוכי מקצועי המציע מגוון רחב של תוכניות לימוד מהגיל הרך ועד הבגרות,
                 בליווי צוות מורים מהשורה הראשונה.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <a href="#programs">
-                  <Button size="lg" variant="outline" className="h-12 rounded-xl px-6">לתוכניות הלימוד</Button>
-                </a>
-              </div>
             </div>
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border shadow-xl">
               <img
@@ -286,27 +259,6 @@ const Landing = () => {
         </section>
 
 
-        <section id="programs" className="py-16 md:py-20 bg-muted/30 border-y border-border">
-          <div className="mx-auto max-w-6xl px-5">
-            <div className="text-center space-y-2 mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold">תוכניות הלימוד שלנו</h2>
-              <p className="text-muted-foreground">מסלולים מותאמים לכל גיל ולכל רמה</p>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {PROGRAMS.map((p) => (
-                <Card key={p.title} className="border-border hover:shadow-md transition-shadow">
-                  <CardContent className="p-6 text-right space-y-3">
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <p.icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="font-bold text-lg">{p.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
 
         {/* Tuition & Regulations */}
         <section id="policies" className="py-16 md:py-20">
