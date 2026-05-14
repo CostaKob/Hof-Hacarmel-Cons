@@ -309,37 +309,43 @@ const Landing = () => {
       {/* Footer */}
       <footer id="contact" className="bg-muted/40 border-t border-border">
         <div className="mx-auto max-w-6xl px-5 py-12 grid gap-8 md:grid-cols-3 text-right">
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <h3 className="font-bold text-base mb-3">משרד האולפן</h3>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Phone className="h-4 w-4" /> 04-6299711
-              <a
-                href="https://wa.me/97246299711"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="פתח צ'אט בוואטסאפ"
-                className="text-green-600 hover:text-green-700"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </a>
-            </div>
-            <a href="mailto:music.hof@gmail.com" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-              <Mail className="h-4 w-4" /> music.hof@gmail.com
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Phone className="h-4 w-4 shrink-0" />
+              <span>04-6299711</span>
+            </p>
+            <a
+              href="https://wa.me/97246299711"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" />
+              <span>04-6299711 (וואטסאפ)</span>
+            </a>
+            <a
+              href="mailto:music.hof@gmail.com"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <Mail className="h-4 w-4 shrink-0" />
+              <span>music.hof@gmail.com</span>
             </a>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <h3 className="font-bold text-base mb-3">רישום ובירורים</h3>
             <p className="text-sm text-muted-foreground">קורין</p>
             <a
               href="https://wa.me/972547467498"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
-              <MessageCircle className="h-4 w-4" /> 054-7467498 (וואטסאפ 08:30–14:30)
+              <MessageCircle className="h-4 w-4 shrink-0" />
+              <span>054-7467498 (וואטסאפ 08:30–14:30)</span>
             </a>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2.5">
             <h3 className="font-bold text-base mb-3">מנהל האולפן</h3>
             <p className="text-sm text-muted-foreground">עמיר סטולר</p>
           </div>
