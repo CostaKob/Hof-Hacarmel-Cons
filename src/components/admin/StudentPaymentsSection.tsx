@@ -61,13 +61,13 @@ const StudentPaymentsSection = ({
     onSuccess: (data: any) => {
       invalidateAll();
       if (data?.url) {
-        toast.success(`חשבונית ${data.doc_number ?? ""} נוצרה`);
+        toast.success(`קבלה ${data.doc_number ?? ""} נוצרה`);
         window.open(data.url, "_blank");
       } else {
-        toast.success("חשבונית נוצרה");
+        toast.success("קבלה נוצרה");
       }
     },
-    onError: (e: any) => toast.error(`שגיאה ביצירת חשבונית: ${e?.message ?? ""}`),
+    onError: (e: any) => toast.error(`שגיאה ביצירת קבלה: ${e?.message ?? ""}`),
   });
 
   const refundMutation = useMutation({
@@ -146,39 +146,39 @@ const StudentPaymentsSection = ({
                     {p.payment_method && ` · ${p.payment_method}`}
                     {p.installments > 1 && ` · ${p.installments} תשלומים`}
                     {p.reference_number && ` · אסמכתא ${p.reference_number}`}
-                    {p.icount_doc_number && ` · חשבונית ${p.icount_doc_number}`}
+                    {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {!isCredit && hasInvoice && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד חשבונית"
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
                   {!readOnly && !isCredit && !hasDoc && (
                     <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                      title={isCombined ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים" : "הפק חשבונית מס/קבלה ב-iCount"}
+                      title={isCombined ? "הפק קבלה מאוחדת לכל השיוכים" : "הפק קבלה ב-iCount"}
                       disabled={createInvoiceMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
                         setPendingInvoiceParams(p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id });
                       }}>
                       <FileDown className="h-3.5 w-3.5" />
-                      {createInvoiceMutation.isPending ? "..." : (isCombined ? "הפק חשבונית מאוחדת" : "הפק חשבונית")}
+                      {createInvoiceMutation.isPending ? "..." : (isCombined ? "הפק קבלה מאוחדת" : "הפק קבלה")}
                     </Button>
                   )}
                   {isCredit && hasInvoice && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד חשבונית זיכוי"
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלת זיכוי"
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
                   {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      title={`בצע זיכוי ב-iCount (נותר ₪${remaining.toLocaleString()})`}
+                      title={`בצע זיכוי (קבלה במינוס) ב-iCount (נותר ₪${remaining.toLocaleString()})`}
                       disabled={refundMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -210,7 +210,7 @@ const StudentPaymentsSection = ({
       <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>זיכוי לחשבונית {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
+            <DialogTitle>זיכוי לקבלה {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
             <DialogDescription>
               סכום מקורי: ₪{Number(refundTarget?.amount || 0).toLocaleString()}
               {refundTarget && refundTarget._remaining !== Number(refundTarget.amount) && (
@@ -231,7 +231,7 @@ const StudentPaymentsSection = ({
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">הסכום יוחזר ב-iCount ויירשם כשורת זיכוי בתשלומים.</p>
+            <p className="text-xs text-muted-foreground">תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים.</p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
@@ -257,10 +257,10 @@ const StudentPaymentsSection = ({
       <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) setPendingInvoiceParams(null); }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>אישור הפקת חשבונית</AlertDialogTitle>
+            <AlertDialogTitle>אישור הפקת קבלה</AlertDialogTitle>
             <AlertDialogDescription>
-              ⚠️ הפקת חשבונית מס/קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
-              החשבונית תישלח באופן מיידי. האם להמשיך?
+              ⚠️ הפקת קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+              הקבלה תישלח באופן מיידי. האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
@@ -270,7 +270,7 @@ const StudentPaymentsSection = ({
                 setPendingInvoiceParams(null);
               }}
             >
-              כן, הפק חשבונית
+              כן, הפק קבלה
             </AlertDialogAction>
             <AlertDialogCancel>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
@@ -282,7 +282,7 @@ const StudentPaymentsSection = ({
           <AlertDialogHeader>
             <AlertDialogTitle>אישור הפקת זיכוי</AlertDialogTitle>
             <AlertDialogDescription>
-              ⚠️ הפקת חשבונית זיכוי ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+              ⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
               האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>

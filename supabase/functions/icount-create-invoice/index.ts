@@ -1,4 +1,6 @@
-// Creates an iCount tax invoice + receipt (חשבונית מס/קבלה) for an existing student_payments row.
+// Creates an iCount RECEIPT (קבלה) for an existing student_payments row.
+// The organization is a Non-Profit (מלכ"ר) under a Regional Council's Tax ID and is legally
+// prohibited from issuing Tax Invoices (חשבונית מס). Only Receipts are issued.
 // Updates the row with icount_doc_id, icount_doc_number, invoice_url, icount_doc_type.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -181,10 +183,11 @@ Deno.serve(async (req: Request) => {
       quantity: 1,
     }));
 
-    // iCount doc/create payload (חשבונית מס קבלה = invrec)
+    // iCount doc/create payload — RECEIPT (קבלה) only.
+    // Malkar (Non-Profit) cannot issue Tax Invoices. No VAT calculation.
     const payload: any = {
       ...auth,
-      doctype: "invrec",
+      doctype: "receipt",
       client_name: clientName,
       client_address: student.address || student.city || undefined,
       client_city: student.city || undefined,
@@ -196,7 +199,7 @@ Deno.serve(async (req: Request) => {
       send_email: !!(student.parent_email || student.parent_email_2),
       lang: "he",
       currency_code: "ILS",
-      vat_included: 1, // amounts already include VAT
+      vat_free: 1, // Malkar — no VAT charged
       items,
     };
 
@@ -237,7 +240,7 @@ Deno.serve(async (req: Request) => {
       icount_doc_id: docId,
       icount_doc_number: docNumber,
       invoice_url: docUrl,
-      icount_doc_type: "invrec",
+      icount_doc_type: "receipt",
     }).in("id", ids);
 
     return new Response(JSON.stringify({

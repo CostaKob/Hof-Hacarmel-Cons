@@ -181,12 +181,12 @@ const AdminStudentPaymentCalc = () => {
     return sum + v;
   }, 0);
 
-  // Prices already include VAT
+  // Malkar (Non-Profit) — no VAT charged. Kept fields zeroed for backward compatibility.
   const totalIncVat = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
   const totalDiscountAmount = proratedTotal - totalIncVat;
-  const vatRate = Number(settings?.vat_rate ?? 18);
-  const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
-  const vatAmount = totalIncVat - beforeVat;
+  const vatRate = 0;
+  const beforeVat = totalIncVat;
+  const vatAmount = 0;
 
   const effectivePaid = paymentsAggr?.net ?? 0;
   const balance = totalIncVat - effectivePaid;
@@ -292,7 +292,7 @@ const AdminStudentPaymentCalc = () => {
                     <TableHead className="text-right">סניף</TableHead>
                     <TableHead className="text-right">משך</TableHead>
                     <TableHead className="text-right">תאריך התחלה</TableHead>
-                    <TableHead className="text-right">בסיס שנתי (כולל מע"מ)</TableHead>
+                    <TableHead className="text-right">בסיס שנתי</TableHead>
                     
                     <TableHead className="text-right">שיעורים נותרים</TableHead>
                     <TableHead className="text-right">חישוב לפי שיעורים נותרים</TableHead>
@@ -402,7 +402,7 @@ const AdminStudentPaymentCalc = () => {
             const label = `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"}`;
             return <SummaryRow key={`base-${r.enrollmentId}`} label={label} value={r.annualBase} />;
           })}
-          <SummaryRow label="סה״כ בסיס שנתי מלא (כולל מע״מ)" value={annualTotal} bold />
+          <SummaryRow label="סה״כ בסיס שנתי מלא" value={annualTotal} bold />
           <div className="border-t border-primary/20 pt-2 mt-2" />
           {rows.map((r) => {
             const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
@@ -430,9 +430,8 @@ const AdminStudentPaymentCalc = () => {
           {totalDiscountAmount > 0 && (
             <SummaryRow label="סה״כ הנחות" value={-totalDiscountAmount} bold />
           )}
-          <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
-            <SummaryRow label='סה"כ לתשלום (כולל מע"מ)' value={totalIncVat} bold large />
+            <SummaryRow label='סה"כ לתשלום' value={totalIncVat} bold large />
           </div>
 
           <SummaryRow label="כבר שולם" value={paymentsAggr.paid} />

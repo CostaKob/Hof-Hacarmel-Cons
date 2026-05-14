@@ -65,7 +65,7 @@ const AdminPaymentSettings = () => {
         .from("payment_settings" as any)
         .update({
           lesson_prices: { "30": Number(price30) || 0, "45": Number(price45) || 0, "60": Number(price60) || 0 },
-          vat_rate: Number(vat) || 0,
+          vat_rate: 0, // Malkar — no VAT
         })
         .eq("id", settings.id);
       if (e1) throw e1;
@@ -122,9 +122,8 @@ const AdminPaymentSettings = () => {
               <Input type="number" min="0" value={price60} onChange={(e) => setPrice60(e.target.value)} className="h-12 rounded-xl" />
             </div>
           </div>
-          <div className="max-w-[200px]">
-            <Label>אחוז מע"מ</Label>
-            <Input type="number" min="0" max="100" step="0.01" value={vat} onChange={(e) => setVat(e.target.value)} className="h-12 rounded-xl" />
+          <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            הארגון מוגדר כמלכ"ר (זרוע של המועצה האזורית), ולכן <strong>לא נגבה מע"מ</strong> ולא מופקות חשבוניות מס. כל המסמכים שמופקים ב-iCount הם <strong>קבלות</strong>.
           </div>
         </div>
 

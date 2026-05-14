@@ -228,7 +228,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             <DialogDescription>
               {isEdit
                 ? "עדכון פרטי רישום קיים."
-                : "כל שיוך ייווצר כרישום נפרד עם הסכום שלו (וכפריט נפרד בחשבונית)."}
+                : "כל שיוך ייווצר כרישום נפרד עם הסכום שלו (וכפריט נפרד בקבלה)."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
@@ -335,27 +335,27 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                           סה״כ: ₪{totalSelected.toLocaleString()}
                         </p>
                         <div className="rounded-lg border border-border p-2 space-y-2 bg-muted/30">
-                          <Label className="text-xs">מצב חשבונית</Label>
+                          <Label className="text-xs">מצב קבלה</Label>
                           <div className="flex gap-2">
                             <button
                               type="button"
                               className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "combined" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
                               onClick={() => setInvoiceMode("combined")}
                             >
-                              חשבונית מאוחדת אחת
+                              קבלה מאוחדת אחת
                             </button>
                             <button
                               type="button"
                               className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "separate" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
                               onClick={() => setInvoiceMode("separate")}
                             >
-                              חשבונית נפרדת לכל שיוך
+                              קבלה נפרדת לכל שיוך
                             </button>
                           </div>
                           <p className="text-[11px] text-muted-foreground">
                             {invoiceMode === "combined"
-                              ? "ייווצר רישום תשלום אחד מאוחד וחשבונית אחת עם פירוט פר שיוך."
-                              : "ייווצר רישום נפרד לכל שיוך וחשבונית נפרדת לכל אחד."}
+                              ? "ייווצר רישום תשלום אחד מאוחד וקבלה אחת עם פירוט פר שיוך."
+                              : "ייווצר רישום נפרד לכל שיוך וקבלה נפרדת לכל אחד."}
                           </p>
                         </div>
                       </>
