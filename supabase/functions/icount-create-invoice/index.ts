@@ -1,4 +1,6 @@
-// Creates an iCount tax invoice + receipt (חשבונית מס/קבלה) for an existing student_payments row.
+// Creates an iCount RECEIPT (קבלה) for an existing student_payments row.
+// The organization is a Non-Profit (מלכ"ר) under a Regional Council's Tax ID and is legally
+// prohibited from issuing Tax Invoices (חשבונית מס). Only Receipts are issued.
 // Updates the row with icount_doc_id, icount_doc_number, invoice_url, icount_doc_type.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
