@@ -141,11 +141,6 @@ const Landing = () => {
                 מוסד חינוכי מקצועי המציע מגוון רחב של תוכניות לימוד מהגיל הרך ועד הבגרות,
                 בליווי צוות מורים מהשורה הראשונה.
               </p>
-              <div className="flex flex-wrap gap-3 pt-2">
-                <a href="#programs">
-                  <Button size="lg" variant="outline" className="h-12 rounded-xl px-6">לתוכניות הלימוד</Button>
-                </a>
-              </div>
             </div>
             <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-border shadow-xl">
               <img
