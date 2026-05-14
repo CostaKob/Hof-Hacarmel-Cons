@@ -210,7 +210,7 @@ const StudentPaymentsSection = ({
       <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>זיכוי לחשבונית {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
+            <DialogTitle>זיכוי לקבלה {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
             <DialogDescription>
               סכום מקורי: ₪{Number(refundTarget?.amount || 0).toLocaleString()}
               {refundTarget && refundTarget._remaining !== Number(refundTarget.amount) && (
