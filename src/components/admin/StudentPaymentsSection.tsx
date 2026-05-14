@@ -178,7 +178,7 @@ const StudentPaymentsSection = ({
                   )}
                   {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      title={`בצע זיכוי ב-iCount (נותר ₪${remaining.toLocaleString()})`}
+                      title={`בצע זיכוי (קבלה במינוס) ב-iCount (נותר ₪${remaining.toLocaleString()})`}
                       disabled={refundMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
