@@ -282,7 +282,7 @@ const StudentPaymentsSection = ({
           <AlertDialogHeader>
             <AlertDialogTitle>אישור הפקת זיכוי</AlertDialogTitle>
             <AlertDialogDescription>
-              ⚠️ הפקת חשבונית זיכוי ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+              ⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
               האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
