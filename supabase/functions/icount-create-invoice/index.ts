@@ -240,7 +240,7 @@ Deno.serve(async (req: Request) => {
       icount_doc_id: docId,
       icount_doc_number: docNumber,
       invoice_url: docUrl,
-      icount_doc_type: "invrec",
+      icount_doc_type: "receipt",
     }).in("id", ids);
 
     return new Response(JSON.stringify({
