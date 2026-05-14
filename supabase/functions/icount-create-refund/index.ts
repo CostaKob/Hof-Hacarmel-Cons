@@ -1,5 +1,6 @@
-// Creates a NEGATIVE iCount Tax Invoice/Receipt (חשבונית מס קבלה - invrec) for a refund,
-// linked to the original document via `based_on`. Inserts a matching credit row into student_payments.
+// Creates a NEGATIVE iCount RECEIPT (קבלה במינוס) for a refund, linked to the original
+// receipt via `based_on`. Malkar (Non-Profit) cannot issue Tax Invoices or Credit Invoices —
+// refunds are issued as a negative Receipt. Inserts a matching credit row into student_payments.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
