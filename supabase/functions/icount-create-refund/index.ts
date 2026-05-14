@@ -57,15 +57,16 @@ Deno.serve(async (req: Request) => {
     const originalAmount = Number(payment.amount ?? 0);
     const refundAmount = Number(amountOverride ?? originalAmount);
     const isPartial = Math.abs(refundAmount) < Math.abs(originalAmount);
-    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — חשבונית מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})`;
+    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})`;
     const phone = student.parent_phone || student.parent_phone_2 || undefined;
     const email = student.parent_email || student.parent_email_2 || undefined;
     const negSum = -Math.abs(refundAmount);
 
-    // Negative Tax Invoice/Receipt (invrec) linked to the original document.
+    // Negative Receipt (קבלה במינוס) linked to the original receipt.
+    // Malkar status — no Tax Invoice, no VAT.
     const payload: any = {
       ...auth,
-      doctype: "invrec",
+      doctype: "receipt",
       client_name: student.parent_name || studentFullName,
       client_address: student.address || student.city || undefined,
       client_city: student.city || undefined,
@@ -77,8 +78,9 @@ Deno.serve(async (req: Request) => {
       send_email: !!email,
       lang: "he",
       currency_code: "ILS",
-      vat_included: 1,
+      vat_free: 1,
       based_on: [payment.icount_doc_id],
+      origin_doc_id: payment.icount_doc_id,
       items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
 
