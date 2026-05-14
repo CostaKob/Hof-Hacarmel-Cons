@@ -257,10 +257,10 @@ const StudentPaymentsSection = ({
       <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) setPendingInvoiceParams(null); }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>אישור הפקת חשבונית</AlertDialogTitle>
+            <AlertDialogTitle>אישור הפקת קבלה</AlertDialogTitle>
             <AlertDialogDescription>
-              ⚠️ הפקת חשבונית מס/קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
-              החשבונית תישלח באופן מיידי. האם להמשיך?
+              ⚠️ הפקת קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
+              הקבלה תישלח באופן מיידי. האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
@@ -270,7 +270,7 @@ const StudentPaymentsSection = ({
                 setPendingInvoiceParams(null);
               }}
             >
-              כן, הפק חשבונית
+              כן, הפק קבלה
             </AlertDialogAction>
             <AlertDialogCancel>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
