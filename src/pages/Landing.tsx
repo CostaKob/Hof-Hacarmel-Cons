@@ -60,7 +60,7 @@ const JOURNEY = [
 const NAV = [
   { id: "about", label: "אודות" },
   { id: "journey", label: "המסע המוזיקלי" },
-  { id: "programs", label: "תוכניות" },
+  
   { id: "policies", label: "תעריפים ונהלים" },
   { id: "contact", label: "צור קשר" },
 ];
