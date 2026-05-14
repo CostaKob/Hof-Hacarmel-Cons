@@ -65,7 +65,7 @@ const AdminPaymentSettings = () => {
         .from("payment_settings" as any)
         .update({
           lesson_prices: { "30": Number(price30) || 0, "45": Number(price45) || 0, "60": Number(price60) || 0 },
-          vat_rate: Number(vat) || 0,
+          vat_rate: 0, // Malkar — no VAT
         })
         .eq("id", settings.id);
       if (e1) throw e1;
