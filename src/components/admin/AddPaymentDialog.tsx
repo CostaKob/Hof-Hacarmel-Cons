@@ -228,7 +228,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             <DialogDescription>
               {isEdit
                 ? "עדכון פרטי רישום קיים."
-                : "כל שיוך ייווצר כרישום נפרד עם הסכום שלו (וכפריט נפרד בחשבונית)."}
+                : "כל שיוך ייווצר כרישום נפרד עם הסכום שלו (וכפריט נפרד בקבלה)."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 mt-2">
