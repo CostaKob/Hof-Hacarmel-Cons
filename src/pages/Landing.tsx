@@ -10,7 +10,7 @@ import {
 import logoUrl from "@/assets/logo.png";
 import heroImage from "@/assets/hero-orchestra.jpg";
 import {
-  Baby,
+  
   School,
   Music2,
   Users,
