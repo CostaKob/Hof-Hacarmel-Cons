@@ -146,7 +146,7 @@ const StudentPaymentsSection = ({
                     {p.payment_method && ` · ${p.payment_method}`}
                     {p.installments > 1 && ` · ${p.installments} תשלומים`}
                     {p.reference_number && ` · אסמכתא ${p.reference_number}`}
-                    {p.icount_doc_number && ` · חשבונית ${p.icount_doc_number}`}
+                    {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
