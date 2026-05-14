@@ -109,7 +109,7 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    console.log("[icount negative invrec]", JSON.stringify(data));
+    console.log("[icount negative receipt]", JSON.stringify(data));
 
     if (!data.status) {
       return new Response(JSON.stringify({ error: "icount failed", details: data }), {
