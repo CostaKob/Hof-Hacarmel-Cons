@@ -181,12 +181,12 @@ const AdminStudentPaymentCalc = () => {
     return sum + v;
   }, 0);
 
-  // Prices already include VAT
+  // Malkar (Non-Profit) — no VAT charged. Kept fields zeroed for backward compatibility.
   const totalIncVat = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
   const totalDiscountAmount = proratedTotal - totalIncVat;
-  const vatRate = Number(settings?.vat_rate ?? 18);
-  const beforeVat = Math.round(totalIncVat / (1 + vatRate / 100));
-  const vatAmount = totalIncVat - beforeVat;
+  const vatRate = 0;
+  const beforeVat = totalIncVat;
+  const vatAmount = 0;
 
   const effectivePaid = paymentsAggr?.net ?? 0;
   const balance = totalIncVat - effectivePaid;
