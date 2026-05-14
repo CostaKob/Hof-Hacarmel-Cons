@@ -61,13 +61,13 @@ const StudentPaymentsSection = ({
     onSuccess: (data: any) => {
       invalidateAll();
       if (data?.url) {
-        toast.success(`חשבונית ${data.doc_number ?? ""} נוצרה`);
+        toast.success(`קבלה ${data.doc_number ?? ""} נוצרה`);
         window.open(data.url, "_blank");
       } else {
-        toast.success("חשבונית נוצרה");
+        toast.success("קבלה נוצרה");
       }
     },
-    onError: (e: any) => toast.error(`שגיאה ביצירת חשבונית: ${e?.message ?? ""}`),
+    onError: (e: any) => toast.error(`שגיאה ביצירת קבלה: ${e?.message ?? ""}`),
   });
 
   const refundMutation = useMutation({
