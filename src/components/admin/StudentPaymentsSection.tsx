@@ -153,25 +153,25 @@ const StudentPaymentsSection = ({
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {!isCredit && hasInvoice && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד חשבונית"
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
                   {!readOnly && !isCredit && !hasDoc && (
                     <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                      title={isCombined ? "הפק חשבונית מס/קבלה מאוחדת לכל השיוכים" : "הפק חשבונית מס/קבלה ב-iCount"}
+                      title={isCombined ? "הפק קבלה מאוחדת לכל השיוכים" : "הפק קבלה ב-iCount"}
                       disabled={createInvoiceMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
                         setPendingInvoiceParams(p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id });
                       }}>
                       <FileDown className="h-3.5 w-3.5" />
-                      {createInvoiceMutation.isPending ? "..." : (isCombined ? "הפק חשבונית מאוחדת" : "הפק חשבונית")}
+                      {createInvoiceMutation.isPending ? "..." : (isCombined ? "הפק קבלה מאוחדת" : "הפק קבלה")}
                     </Button>
                   )}
                   {isCredit && hasInvoice && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד חשבונית זיכוי"
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלת זיכוי"
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
                     </Button>
