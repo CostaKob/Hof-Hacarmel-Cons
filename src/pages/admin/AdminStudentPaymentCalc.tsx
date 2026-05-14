@@ -430,9 +430,8 @@ const AdminStudentPaymentCalc = () => {
           {totalDiscountAmount > 0 && (
             <SummaryRow label="סה״כ הנחות" value={-totalDiscountAmount} bold />
           )}
-          <SummaryRow label={`מתוכו מע"מ (${vatRate}%)`} value={vatAmount} />
           <div className="border-t border-primary/20 pt-2">
-            <SummaryRow label='סה"כ לתשלום (כולל מע"מ)' value={totalIncVat} bold large />
+            <SummaryRow label='סה"כ לתשלום' value={totalIncVat} bold large />
           </div>
 
           <SummaryRow label="כבר שולם" value={paymentsAggr.paid} />
