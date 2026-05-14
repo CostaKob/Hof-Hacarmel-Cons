@@ -325,17 +325,17 @@ const Landing = () => {
           </div>
           <div className="space-y-2.5">
             <h3 className="font-bold text-base mb-3">רישום ובירורים</h3>
-            <p className="text-sm text-muted-foreground">קורין</p>
+            <p className="text-sm text-muted-foreground">קורין פאר</p>
             <a
               href="https://wa.me/972547467498"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700"
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
-              <MessageCircle className="h-4 w-4 shrink-0" />
+              <MessageCircle className="h-4 w-4 shrink-0 text-green-600" />
               <span>054-7467498 (וואטסאפ)</span>
             </a>
-            <p className="text-xs text-muted-foreground">זמינות: 08:30–14:30</p>
+            <p className="text-xs text-muted-foreground">בין השעות: 08:30–14:30</p>
           </div>
           <div className="space-y-2.5">
             <h3 className="font-bold text-base mb-3">מנהל האולפן</h3>
