@@ -231,7 +231,7 @@ const StudentPaymentsSection = ({
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">הסכום יוחזר ב-iCount ויירשם כשורת זיכוי בתשלומים.</p>
+            <p className="text-xs text-muted-foreground">תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים.</p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
