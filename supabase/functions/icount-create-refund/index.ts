@@ -132,12 +132,12 @@ Deno.serve(async (req: Request) => {
         transaction_type: "credit",
         payment_method: payment.payment_method,
         payment_date: new Date().toISOString().slice(0, 10),
-        notes: reason || `החזר לחשבונית ${payment.icount_doc_number ?? ""}`.trim(),
+        notes: reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim(),
         refund_of_payment_id: payment.id,
         icount_doc_id: docId,
         icount_doc_number: docNumber,
         invoice_url: docUrl,
-        icount_doc_type: "invrec",
+        icount_doc_type: "receipt",
       })
       .select()
       .single();
