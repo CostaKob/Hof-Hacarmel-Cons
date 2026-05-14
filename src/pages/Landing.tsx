@@ -19,10 +19,47 @@ import {
   Mail,
   MessageCircle,
   GraduationCap,
+  Music,
+  Guitar,
+  Mic2,
+  Award,
+  Heart,
 } from "lucide-react";
+
+const JOURNEY = [
+  {
+    icon: Music,
+    stage: "שלב 1",
+    title: "גני חובה — \"ויוה בגנים\"",
+    description:
+      "תוכנית הדגל של האולפן בגני הילדים. חשיפה מוזיקלית חווייתית המניחה את היסודות לקצב, שמיעה ואהבת המוסיקה.",
+  },
+  {
+    icon: Guitar,
+    stage: "שלב 2",
+    title: "בתי ספר מנגנים",
+    description:
+      "לימודי כלי נגינה כחלק מובנה מיום הלימודים בבתי הספר היסודיים. הזדמנות לכל ילד וילדה לגלות את הכלי האישי שלהם.",
+  },
+  {
+    icon: Mic2,
+    stage: "שלב 3",
+    title: "חטיבת הנעורים — מסלול מצוינות",
+    description:
+      "התמקצעות מעמיקה בלימוד הפרטני, שירה במקהלה ונגינה בהרכבים מוזיקליים מגוונים.",
+  },
+  {
+    icon: Award,
+    stage: "שלב 4",
+    title: "תיכון — בגרות במוסיקה",
+    description:
+      "הכנה מקיפה לבחינות הבגרות במוסיקה (רסיטל ותיאוריה), תוך הגעה לרמה מקצועית גבוהה וגיבוש זהות מוזיקלית.",
+  },
+];
 
 const NAV = [
   { id: "about", label: "אודות" },
+  { id: "journey", label: "המסע המוזיקלי" },
   { id: "programs", label: "תוכניות" },
   { id: "policies", label: "תעריפים ונהלים" },
   { id: "contact", label: "צור קשר" },
@@ -163,7 +200,92 @@ const Landing = () => {
           </div>
         </section>
 
-        {/* Programs */}
+        {/* Musical Journey Timeline */}
+        <section id="journey" className="py-16 md:py-24 bg-muted/30 border-y border-border">
+          <div className="mx-auto max-w-4xl px-5">
+            <div className="text-center space-y-2 mb-12">
+              <h2 className="text-2xl md:text-3xl font-bold">המסע המוזיקלי באולפן</h2>
+              <p className="text-muted-foreground">מסלול לימודים רציף — מהגן ועד לבגרות</p>
+            </div>
+
+            <div className="relative">
+              {/* Vertical line (RTL: positioned on the right) */}
+              <div className="absolute right-6 md:right-1/2 top-2 bottom-2 w-px bg-border md:translate-x-[0.5px]" aria-hidden />
+
+              <ol className="space-y-10 md:space-y-14">
+                {JOURNEY.map((step, i) => {
+                  const Icon = step.icon;
+                  const isEven = i % 2 === 1;
+                  return (
+                    <li key={step.title} className="relative">
+                      {/* Dot/Icon */}
+                      <div className="absolute right-0 md:right-1/2 top-0 md:translate-x-1/2 z-10">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background">
+                          <Icon className="h-5 w-5" />
+                        </div>
+                      </div>
+
+                      {/* Card */}
+                      <div
+                        className={`pr-16 md:pr-0 ${
+                          isEven
+                            ? "md:pr-[calc(50%+3rem)] md:pl-0 md:text-right"
+                            : "md:pl-[calc(50%+3rem)] md:pr-0 md:text-left"
+                        }`}
+                      >
+                        <div className="rounded-2xl border border-border bg-card p-5 md:p-6 shadow-sm hover:shadow-md transition-shadow text-right">
+                          <span className="inline-block text-xs font-semibold text-primary mb-1.5">
+                            {step.stage}
+                          </span>
+                          <h3 className="text-lg md:text-xl font-bold mb-2">{step.title}</h3>
+                          <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        {/* Ensemble & Experience — The Envelope */}
+        <section id="ensemble" className="py-16 md:py-20">
+          <div className="mx-auto max-w-5xl px-5">
+            <div className="text-center space-y-2 mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold">המעטפת — הרכבים, במה וקהילה</h2>
+              <p className="text-muted-foreground">מעבר לשיעור — חוויה מוזיקלית שלמה</p>
+            </div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <Card className="border-border">
+                <CardContent className="p-6 md:p-7 text-right space-y-3">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Users className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">תזמורות והרכבים</h3>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                    האולפן מפעיל מערך תזמורות — מהתזמורת הצעירה ועד לתזמורת הייצוגית, מקהלות והרכבים קאמריים, ג׳אז ומוסיקה קלה.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border">
+                <CardContent className="p-6 md:p-7 text-right space-y-3">
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <Heart className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold text-lg">במה, קהילה וערכים</h3>
+                  <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
+                    תלמידי האולפן נהנים מניסיון במה עשיר, הופעות בקונצרטים, השתתפות בטקסים רשמיים ותרומה פעילה לקהילה בחוף הכרמל.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+
         <section id="programs" className="py-16 md:py-20 bg-muted/30 border-y border-border">
           <div className="mx-auto max-w-6xl px-5">
             <div className="text-center space-y-2 mb-10">
