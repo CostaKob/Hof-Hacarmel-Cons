@@ -316,15 +316,6 @@ const Landing = () => {
               <span>04-6299711</span>
             </p>
             <a
-              href="https://wa.me/97246299711"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
-            >
-              <MessageCircle className="h-4 w-4 shrink-0" />
-              <span>04-6299711 (וואטסאפ)</span>
-            </a>
-            <a
               href="mailto:music.hof@gmail.com"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
@@ -339,11 +330,12 @@ const Landing = () => {
               href="https://wa.me/972547467498"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              className="inline-flex items-center gap-2 text-sm text-green-600 hover:text-green-700"
             >
               <MessageCircle className="h-4 w-4 shrink-0" />
-              <span>054-7467498 (וואטסאפ 08:30–14:30)</span>
+              <span>054-7467498 (וואטסאפ)</span>
             </a>
+            <p className="text-xs text-muted-foreground">זמינות: 08:30–14:30</p>
           </div>
           <div className="space-y-2.5">
             <h3 className="font-bold text-base mb-3">מנהל האולפן</h3>
