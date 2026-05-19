@@ -214,14 +214,14 @@ const AdminSchoolMusicPayments = () => {
                       {p.payment_method && <p className="text-xs text-muted-foreground">{p.payment_method}</p>}
                     </div>
                   </div>
-                  <div className="flex gap-2 mt-3 flex-wrap">
+                  <div className="flex gap-2 mt-3 flex-wrap" onClick={(e) => e.stopPropagation()}>
                     {p.payment_status === "pending" && (
                       <Button size="sm" variant="default" className="h-8 gap-1" onClick={() => setMarkPaidId(p.id)}>
                         <CheckCircle2 className="h-3.5 w-3.5" /> סמן כשולם
                       </Button>
                     )}
                     {p.invoice_url ? (
-                      <a href={p.invoice_url} target="_blank" rel="noreferrer">
+                      <a href={p.invoice_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                         <Button size="sm" variant="outline" className="h-8 gap-1">
                           <ExternalLink className="h-3.5 w-3.5" />
                           {p.icount_doc_number ? `מסמך ${p.icount_doc_number}` : "צפה במסמך"}
