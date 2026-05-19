@@ -129,6 +129,10 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
       queryClient.invalidateQueries({ queryKey: ["teacher-attendance", schoolId, date] });
       queryClient.invalidateQueries({ queryKey: ["teacher-attendance-list"] });
       toast.success("הנוכחות נשמרה");
+      const listPath = variant === "admin"
+        ? `/admin/school-music-schools/${schoolId}/attendance`
+        : `/teacher/school-music-schools/${schoolId}/attendance`;
+      navigate(listPath);
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בשמירה"),
   });
