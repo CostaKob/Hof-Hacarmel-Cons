@@ -462,14 +462,6 @@ const AdminSchoolMusicSchools = () => {
                     navigator.clipboard.writeText(registrationUrl);
                     toast.success("הקישור הועתק");
                   };
-                  const sendMail = (e: React.MouseEvent) => {
-                    e.stopPropagation();
-                    const subject = encodeURIComponent(`הרשמה לבית ספר מנגן — ${s.school_name}`);
-                    const body = encodeURIComponent(
-                      `שלום רב,\n\nלהלן הקישור לטופס ההרשמה והשאלת כלי הנגינה לבית ספר ${s.school_name}:\n\n${registrationUrl}\n\nדמי השתתפות שנתיים: ${s.annual_tuition_fee || 650} ש"ח.\n\nבברכה,\nאולפן המוסיקה`
-                    );
-                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-                  };
                   return (
                   <div
                     key={s.id}
