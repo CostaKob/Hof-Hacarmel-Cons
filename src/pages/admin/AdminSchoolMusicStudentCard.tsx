@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 import SchoolMusicStudentPaymentsSection from "@/components/admin/SchoolMusicStudentPaymentsSection";
+import SchoolMusicStudentEditDialog from "@/components/admin/SchoolMusicStudentEditDialog";
 import PhoneDisplay from "@/components/PhoneDisplay";
-import { User, GraduationCap, MapPin, Music } from "lucide-react";
+import { User, GraduationCap, MapPin, Music, Pencil } from "lucide-react";
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-start justify-between gap-3 py-1.5">
@@ -18,6 +21,7 @@ const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
 const AdminSchoolMusicStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: student, isLoading } = useQuery({
     queryKey: ["school-music-student", studentId],
@@ -90,7 +94,17 @@ const AdminSchoolMusicStudentCard = () => {
                 )}
               </div>
             </div>
-            <Badge>{({ new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" } as Record<string, string>)[student.status] ?? student.status}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge>{({ new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" } as Record<string, string>)[student.status] ?? student.status}</Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-lg"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" /> עריכה
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -125,6 +139,12 @@ const AdminSchoolMusicStudentCard = () => {
           defaultAmount={student.school_music_schools?.annual_tuition_fee}
         />
       </div>
+
+      <SchoolMusicStudentEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        student={student}
+      />
     </AdminLayout>
   );
 };
