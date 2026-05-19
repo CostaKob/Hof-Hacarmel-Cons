@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
+import SchoolMusicStudentPaymentsSection from "@/components/admin/SchoolMusicStudentPaymentsSection";
 import PhoneDisplay from "@/components/PhoneDisplay";
 import { User, GraduationCap, MapPin, Music } from "lucide-react";
 
@@ -26,7 +27,7 @@ const AdminSchoolMusicStudentCard = () => {
         .from("school_music_students")
         .select(`
           *,
-          school_music_schools(id, school_name),
+          school_music_schools(id, school_name, annual_tuition_fee),
           instruments(name)
         `)
         .eq("id", studentId!)
@@ -115,6 +116,14 @@ const AdminSchoolMusicStudentCard = () => {
 
         {/* Instrument loans */}
         <StudentInstrumentLoansSection studentType="school_music" studentId={studentId!} />
+
+        {/* Payments */}
+        <SchoolMusicStudentPaymentsSection
+          studentId={studentId!}
+          schoolMusicSchoolId={student.school_music_school_id}
+          academicYearId={student.academic_year_id}
+          defaultAmount={student.school_music_schools?.annual_tuition_fee}
+        />
       </div>
     </AdminLayout>
   );
