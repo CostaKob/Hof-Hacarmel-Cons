@@ -139,6 +139,12 @@ const AdminSchoolMusicStudentCard = () => {
           defaultAmount={student.school_music_schools?.annual_tuition_fee}
         />
       </div>
+
+      <SchoolMusicStudentEditDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        student={student}
+      />
     </AdminLayout>
   );
 };
