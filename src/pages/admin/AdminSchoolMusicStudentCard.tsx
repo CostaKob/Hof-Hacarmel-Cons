@@ -94,7 +94,17 @@ const AdminSchoolMusicStudentCard = () => {
                 )}
               </div>
             </div>
-            <Badge>{({ new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" } as Record<string, string>)[student.status] ?? student.status}</Badge>
+            <div className="flex items-center gap-2">
+              <Badge>{({ new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" } as Record<string, string>)[student.status] ?? student.status}</Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-lg"
+                onClick={() => setEditOpen(true)}
+              >
+                <Pencil className="h-3.5 w-3.5" /> עריכה
+              </Button>
+            </div>
           </div>
         </div>
 
