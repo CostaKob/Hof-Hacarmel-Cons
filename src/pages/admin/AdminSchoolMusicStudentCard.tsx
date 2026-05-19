@@ -31,8 +31,8 @@ const AdminSchoolMusicStudentCard = () => {
         .from("school_music_students")
         .select(`
           *,
-          school_music_schools(id, school_name, annual_tuition_fee),
-          instruments(name)
+          school_music_schools!school_music_students_school_music_school_id_fkey(id, school_name, annual_tuition_fee),
+          instruments!school_music_students_instrument_id_fkey(name)
         `)
         .eq("id", studentId!)
         .maybeSingle();
