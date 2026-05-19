@@ -182,7 +182,11 @@ const AdminSchoolMusicPayments = () => {
             {filtered.map((p) => {
               const s = p.school_music_students;
               return (
-                <div key={p.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div
+                  key={p.id}
+                  className="rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => navigate(`/admin/school-music-students/${p.school_music_student_id}`)}
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
