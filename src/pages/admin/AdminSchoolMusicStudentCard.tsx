@@ -21,6 +21,7 @@ const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
 const AdminSchoolMusicStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: student, isLoading } = useQuery({
     queryKey: ["school-music-student", studentId],
