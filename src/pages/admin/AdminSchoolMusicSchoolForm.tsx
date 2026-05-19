@@ -39,6 +39,7 @@ const AdminSchoolMusicSchoolForm = () => {
     defaultValues: {
       is_active: true, notes: "", school_name: "", academic_year_id: "", operating_days: [],
       principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
+      annual_tuition_fee: 650,
     },
   });
 
