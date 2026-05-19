@@ -113,6 +113,7 @@ const AdminSchoolMusicSchoolForm = () => {
         principal_phone: data.principal_phone || null,
         vice_principal_name: data.vice_principal_name || null,
         vice_principal_phone: data.vice_principal_phone || null,
+        annual_tuition_fee: Number(data.annual_tuition_fee) || 650,
       };
       if (isEdit) {
         const { error } = await supabase.from("school_music_schools").update(payload).eq("id", id!);
