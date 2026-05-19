@@ -45,7 +45,7 @@ const AdminSchoolMusicSchools = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   useListStatePreservation("/admin/school-music");
-  const [tab, setTab] = usePersistedState<string>("/admin/school-music", "tab", "schools");
+  const [tab, setTab] = usePersistedState<string>("/admin/school-music", "tab", "students");
 
   // ── Students tab state ──
   const [search, setSearch] = usePersistedState<string>("/admin/school-music", "search", "");
