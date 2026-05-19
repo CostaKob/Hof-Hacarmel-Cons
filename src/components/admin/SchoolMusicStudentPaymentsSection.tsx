@@ -93,7 +93,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
       invalidate();
       setAddOpen(false);
       setAmount(String(defaultAmount ?? ""));
-      setStatus("pending");
+      setStatus("paid");
       setMethod("cash");
       setReference("");
       setNotes("");
