@@ -230,22 +230,8 @@ const AdminAcademicYears = () => {
           />
         </div>
 
-        {/* Registration Links */}
+        {/* Registration Link — Private lessons only. School-music links live per-school. */}
         <div className="flex gap-2 flex-wrap">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="rounded-lg text-xs h-8 gap-1"
-            onClick={() => {
-              const origin = window.location.hostname.includes("lovable") ? "https://musichof.com" : window.location.origin;
-              const url = `${origin}/school-music-register?year=${encodeURIComponent(y.name)}`;
-              navigator.clipboard.writeText(url);
-              toast.success("קישור בית ספר מנגן הועתק");
-            }}
-          >
-            <Copy className="h-3 w-3" />
-            קישור בי״ס מנגן
-          </Button>
           <Button
             variant="ghost"
             size="sm"
