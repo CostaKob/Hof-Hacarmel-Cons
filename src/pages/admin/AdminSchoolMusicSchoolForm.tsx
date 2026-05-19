@@ -26,6 +26,7 @@ interface FormData {
   principal_phone: string;
   vice_principal_name: string;
   vice_principal_phone: string;
+  annual_tuition_fee: number;
 }
 
 const AdminSchoolMusicSchoolForm = () => {
