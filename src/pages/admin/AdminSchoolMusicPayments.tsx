@@ -46,7 +46,7 @@ const AdminSchoolMusicPayments = () => {
       let q = supabase
         .from("school_music_payments" as any)
         .select(
-          "*, school_music_students(student_first_name, student_last_name, parent_name, parent_phone, parent_email, class_name, instruments(name)), school_music_schools(school_name)"
+          "*, school_music_students!school_music_payments_student_fk(student_first_name, student_last_name, parent_name, parent_phone, parent_email, class_name, instruments!school_music_students_instrument_id_fkey(name)), school_music_schools!school_music_payments_school_fk(school_name)"
         )
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
