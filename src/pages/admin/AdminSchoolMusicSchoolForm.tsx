@@ -80,6 +80,7 @@ const AdminSchoolMusicSchoolForm = () => {
         principal_phone: (school as any).principal_phone || "",
         vice_principal_name: (school as any).vice_principal_name || "",
         vice_principal_phone: (school as any).vice_principal_phone || "",
+        annual_tuition_fee: Number((school as any).annual_tuition_fee ?? 650),
       });
     }
   }, [school, reset]);
