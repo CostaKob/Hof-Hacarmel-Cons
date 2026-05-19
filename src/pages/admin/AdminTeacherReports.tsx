@@ -41,7 +41,7 @@ const AdminTeacherReports = () => {
   const { teacherId } = useParams();
   const navigate = useNavigate();
   const now = new Date();
-  const [monthFilter, setMonthFilter] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  const [monthFilter, setMonthFilter] = useState("all");
 
   const { data: teacher } = useQuery({
     queryKey: ["admin-teacher-name", teacherId],
