@@ -116,6 +116,14 @@ const AdminSchoolMusicStudentCard = () => {
 
         {/* Instrument loans */}
         <StudentInstrumentLoansSection studentType="school_music" studentId={studentId!} />
+
+        {/* Payments */}
+        <SchoolMusicStudentPaymentsSection
+          studentId={studentId!}
+          schoolMusicSchoolId={student.school_music_school_id}
+          academicYearId={student.academic_year_id}
+          defaultAmount={student.school_music_schools?.annual_tuition_fee}
+        />
       </div>
     </AdminLayout>
   );
