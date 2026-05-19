@@ -737,7 +737,26 @@ const AdminSchoolMusicSchools = () => {
                                   })()}
                                 </div>
                               </div>
+                              {(() => {
+                                const ps = (paymentsByStudent as any)[s.id];
+                                return (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">תשלומים</p>
+                                    {!ps || ps.count === 0 ? (
+                                      <p className="text-sm text-amber-700">ממתין לתשלום — לא נרשם תשלום עדיין</p>
+                                    ) : (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+                                        <DetailRow label="שולם" value={`₪${ps.paid.toLocaleString()}`} />
+                                        {ps.pending > 0 && <DetailRow label="ממתין" value={`₪${ps.pending.toLocaleString()}`} />}
+                                        {ps.refunded > 0 && <DetailRow label="הוחזר" value={`₪${ps.refunded.toLocaleString()}`} />}
+                                        {ps.lastPaidAt && <DetailRow label="תשלום אחרון" value={`${new Date(ps.lastPaidAt).toLocaleDateString("he-IL")}${ps.lastMethod ? ` (${ps.lastMethod})` : ""}`} />}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </>
+
                           ) : (
                             <>
                               <div className="flex justify-between items-center mb-3">
