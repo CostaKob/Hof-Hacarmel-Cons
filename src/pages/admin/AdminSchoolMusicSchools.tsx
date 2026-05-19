@@ -422,39 +422,69 @@ const AdminSchoolMusicSchools = () => {
             <>
               <p className="text-sm text-muted-foreground mb-2">{schools.length} בתי ספר</p>
               <div className="space-y-2">
-                {schools.map((s: any, index: number) => (
+                {schools.map((s: any, index: number) => {
+                  const origin = window.location.hostname.includes("lovable") ? "https://musichof.com" : window.location.origin;
+                  const registrationUrl = `${origin}/school-music-register?school_id=${s.id}`;
+                  const copyLink = (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    navigator.clipboard.writeText(registrationUrl);
+                    toast.success("הקישור הועתק");
+                  };
+                  const sendMail = (e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    const subject = encodeURIComponent(`הרשמה לבית ספר מנגן — ${s.school_name}`);
+                    const body = encodeURIComponent(
+                      `שלום רב,\n\nלהלן הקישור לטופס ההרשמה והשאלת כלי הנגינה לבית ספר ${s.school_name}:\n\n${registrationUrl}\n\nדמי השתתפות שנתיים: ${s.annual_tuition_fee || 650} ש"ח.\n\nבברכה,\nאולפן המוסיקה`
+                    );
+                    window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                  };
+                  return (
                   <div
                     key={s.id}
-                    onClick={() => navigate(`/admin/school-music-schools/${s.id}`)}
-                    className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+                    className="rounded-xl border border-border bg-card shadow-sm overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-foreground truncate">{s.school_name}</p>
-                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
-                          <span>{(s as any).academic_years?.name || "—"}</span>
-                          <span>{classCounts[s.id] || 0} כיתות</span>
-                          {getDayName(s) && <span>{getDayName(s)}</span>}
-                        </div>
-                        <div className="flex gap-3 text-xs text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1">
-                            רכז: {s.coordinator_teacher_id ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/50" />}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            מנצח: {s.conductor_teacher_id ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/50" />}
-                          </span>
+                    <div
+                      onClick={() => navigate(`/admin/school-music-schools/${s.id}`)}
+                      className="flex items-center justify-between p-4 cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+                    >
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-foreground truncate">{s.school_name}</p>
+                          <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
+                            <span>{(s as any).academic_years?.name || "—"}</span>
+                            <span>{classCounts[s.id] || 0} כיתות</span>
+                            {getDayName(s) && <span>{getDayName(s)}</span>}
+                            <span className="flex items-center gap-1 text-primary"><Wallet className="h-3 w-3" />{Number(s.annual_tuition_fee ?? 650).toLocaleString()} ₪</span>
+                          </div>
+                          <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                            <span className="flex items-center gap-1">
+                              רכז: {s.coordinator_teacher_id ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              מנצח: {s.conductor_teacher_id ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground/50" />}
+                            </span>
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant={s.is_active ? "default" : "secondary"} className="rounded-lg">
+                          {s.is_active ? "פעיל" : "לא פעיל"}
+                        </Badge>
+                        <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Badge variant={s.is_active ? "default" : "secondary"} className="rounded-lg">
-                        {s.is_active ? "פעיל" : "לא פעיל"}
-                      </Badge>
-                      <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    <div className="border-t border-border grid grid-cols-2 divide-x divide-x-reverse divide-border">
+                      <Button variant="ghost" className="rounded-none h-10 text-xs gap-1" onClick={copyLink}>
+                        <Copy className="h-3.5 w-3.5" /> העתק קישור הרשמה
+                      </Button>
+                      <Button variant="ghost" className="rounded-none h-10 text-xs gap-1" onClick={sendMail}>
+                        <Mail className="h-3.5 w-3.5" /> שלח במייל
+                      </Button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </>
           )}
