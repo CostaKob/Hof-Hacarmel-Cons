@@ -652,17 +652,8 @@ const AdminSchoolMusicSchools = () => {
                                   >
                                     פתח כרטיס
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 gap-1.5 rounded-lg"
-                                    onClick={(e) => { e.stopPropagation(); startEditing(s); }}
-                                  >
-                                    <Pencil className="h-3.5 w-3.5" />
-                                    עריכה
-                                  </Button>
-                                </div>
-                              </div>
+                                 </div>
+                               </div>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1">
                                 <div>
                                   <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">פרטי תלמיד</p>
