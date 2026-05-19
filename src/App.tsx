@@ -62,6 +62,7 @@ import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
 import AdminSchoolMusicStudentCard from "./pages/admin/AdminSchoolMusicStudentCard";
 import AdminSchoolMusicAttendance from "./pages/admin/AdminSchoolMusicAttendance";
+import AdminSchoolMusicPayments from "./pages/admin/AdminSchoolMusicPayments";
 import SchoolMusicAttendanceForm from "./pages/SchoolMusicAttendanceForm";
 import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
 import PublicRegistration from "./pages/PublicRegistration";
