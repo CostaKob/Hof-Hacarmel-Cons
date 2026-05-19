@@ -76,6 +76,15 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
       };
     }
     setRows(next);
+    // Detect "day cancelled" pattern: all rows are vacation with same notes
+    const existingArr = existing as any[];
+    if (teachers.length > 0 && existingArr.length === teachers.length && existingArr.every((e) => e.status === "vacation")) {
+      setDayCancelled(true);
+      setCancelReason(existingArr[0]?.notes ?? "");
+    } else {
+      setDayCancelled(false);
+      setCancelReason("");
+    }
   }, [teachers, existing]);
 
   const allPresent = useMemo(
