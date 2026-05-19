@@ -46,15 +46,29 @@ Deno.serve(async (req: Request) => {
 
     const { data: payment, error } = await supabase
       .from("school_music_payments")
-      .select("*, school_music_students(student_first_name,student_last_name,parent_name,parent_phone,parent_email,city,class_name,instruments(name)), school_music_schools(school_name), academic_years(name)")
+      .select("*")
       .eq("id", paymentId)
       .maybeSingle();
 
     if (error || !payment) {
-      return new Response(JSON.stringify({ error: "payment not found" }), {
+      console.error("[icount-create-sm-receipt] payment not found", { paymentId, error });
+      return new Response(JSON.stringify({ error: "payment not found", details: error }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const [{ data: studentRow }, { data: schoolRow }, { data: yearRow }] = await Promise.all([
+      supabase.from("school_music_students").select("student_first_name,student_last_name,parent_name,parent_phone,parent_email,city,class_name,instrument_id").eq("id", payment.school_music_student_id).maybeSingle(),
+      payment.school_music_school_id
+        ? supabase.from("school_music_schools").select("school_name").eq("id", payment.school_music_school_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      payment.academic_year_id
+        ? supabase.from("academic_years").select("name").eq("id", payment.academic_year_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
+    const { data: instrumentRow } = (studentRow as any)?.instrument_id
+      ? await supabase.from("instruments").select("name").eq("id", (studentRow as any).instrument_id).maybeSingle()
+      : { data: null };
 
     if (payment.icount_doc_id) {
       return new Response(JSON.stringify({
@@ -64,9 +78,9 @@ Deno.serve(async (req: Request) => {
     }
 
     const auth = getAuth();
-    const student: any = payment.school_music_students || {};
-    const school: any = payment.school_music_schools || {};
-    const year: any = payment.academic_years || {};
+    const student: any = { ...(studentRow || {}), instruments: instrumentRow };
+    const school: any = schoolRow || {};
+    const year: any = yearRow || {};
     const studentFullName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
     const clientName = student.parent_name || studentFullName;
     const pm = mapPaymentMethod(payment.payment_method);

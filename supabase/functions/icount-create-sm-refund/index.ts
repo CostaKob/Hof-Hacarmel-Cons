@@ -35,12 +35,13 @@ Deno.serve(async (req: Request) => {
 
     const { data: payment, error } = await supabase
       .from("school_music_payments")
-      .select("*, school_music_students(student_first_name,student_last_name,parent_name,parent_phone,parent_email,city)")
+      .select("*")
       .eq("id", paymentId)
       .maybeSingle();
 
     if (error || !payment) {
-      return new Response(JSON.stringify({ error: "payment not found" }), {
+      console.error("[icount-create-sm-refund] payment not found", { paymentId, error });
+      return new Response(JSON.stringify({ error: "payment not found", details: error }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -50,8 +51,14 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    const { data: studentRow } = await supabase
+      .from("school_music_students")
+      .select("student_first_name,student_last_name,parent_name,parent_phone,parent_email,city")
+      .eq("id", payment.school_music_student_id)
+      .maybeSingle();
+
     const auth = getAuth();
-    const student: any = payment.school_music_students || {};
+    const student: any = studentRow || {};
     const studentFullName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
     const originalAmount = Number(payment.amount || 0);
     const refundAmount = Number(amountOverride ?? originalAmount);
