@@ -137,9 +137,9 @@ const SchoolMusicStudentEditDialog = ({ open, onOpenChange, student }: Props) =>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
           <div className="space-y-3">
             <p className="text-xs font-semibold text-muted-foreground">פרטי תלמיד</p>
-            <Field label="שם פרטי" field="student_first_name" />
-            <Field label="שם משפחה" field="student_last_name" />
-            <Field label="ת.ז תלמיד" field="student_national_id" />
+            {renderField("שם פרטי", "student_first_name")}
+            {renderField("שם משפחה", "student_last_name")}
+            {renderField("ת.ז תלמיד", "student_national_id")}
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">מגדר</Label>
               <Select
@@ -154,15 +154,15 @@ const SchoolMusicStudentEditDialog = ({ open, onOpenChange, student }: Props) =>
                 </SelectContent>
               </Select>
             </div>
-            <Field label="כיתה" field="class_name" />
-            <Field label="ישוב" field="city" />
+            {renderField("כיתה", "class_name")}
+            {renderField("ישוב", "city")}
           </div>
           <div className="space-y-3">
             <p className="text-xs font-semibold text-muted-foreground">פרטי הורה</p>
-            <Field label="שם הורה" field="parent_name" />
-            <Field label="ת.ז הורה" field="parent_national_id" />
-            <Field label="טלפון" field="parent_phone" type="tel" dir="ltr" />
-            <Field label='דוא"ל' field="parent_email" type="email" dir="ltr" />
+            {renderField("שם הורה", "parent_name")}
+            {renderField("ת.ז הורה", "parent_national_id")}
+            {renderField("טלפון", "parent_phone", "tel", "ltr")}
+            {renderField('דוא"ל', "parent_email", "email", "ltr")}
           </div>
         </div>
 
