@@ -426,7 +426,7 @@ const SchoolMusicRegister = () => {
       <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-3">
-          {logoUrl && <AppLogo size="lg" />}
+          {logoUrl && <div className="flex justify-center"><AppLogo size="lg" /></div>}
           <h1 className="text-xl font-bold">טופס השאלת כלי נגינה — {resolvedYear.name}</h1>
         </div>
 
