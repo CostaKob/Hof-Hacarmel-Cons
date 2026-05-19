@@ -45,7 +45,7 @@ const AdminSchoolMusicSchools = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   useListStatePreservation("/admin/school-music");
-  const [tab, setTab] = usePersistedState<string>("/admin/school-music", "tab", "schools");
+  const [tab, setTab] = usePersistedState<string>("/admin/school-music", "tab", "students");
 
   // ── Students tab state ──
   const [search, setSearch] = usePersistedState<string>("/admin/school-music", "search", "");
@@ -429,11 +429,11 @@ const AdminSchoolMusicSchools = () => {
     <AdminLayout title="בתי ספר מנגנים" backPath="/admin">
       <Tabs dir="rtl" value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full mb-4">
-            <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
             <TabsTrigger value="students" className="flex-1">
-            <Users className="h-4 w-4 ml-1.5" />
-            תלמידי בית ספר מנגן
-          </TabsTrigger>
+              <Users className="h-4 w-4 ml-1.5" />
+              תלמידי בית ספר מנגן
+            </TabsTrigger>
+            <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
         </TabsList>
 
         {/* ── Schools Tab ── */}
