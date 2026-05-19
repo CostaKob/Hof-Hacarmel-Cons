@@ -6,10 +6,13 @@ const MAIN_SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
-  { path: "/admin/school-music-schools", label: "בתי ספר מנגנים", description: "ניהול בתי ספר מנגנים, קבוצות ורכזים", icon: Music4 },
-  { path: "/admin/school-music-attendance", label: "נוכחות מורים — בתי ספר מנגנים", description: "דוח נוכחות מרוכז עם איתור דיווחים חסרים", icon: ClipboardList },
-  { path: "/admin/school-music-payments", label: "תשלומים — בית ספר מנגן", description: "מעקב, סימון ידני וזיכוי תשלומים", icon: Wallet },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
+];
+
+const SCHOOL_MUSIC_SECTIONS = [
+  { path: "/admin/school-music-schools", label: "בתי ספר מנגנים", description: "ניהול בתי ספר מנגנים, קבוצות ורכזים", icon: Music4 },
+  { path: "/admin/school-music-attendance", label: "נוכחות מורים", description: "דוח נוכחות מרוכז עם איתור דיווחים חסרים", icon: ClipboardList },
+  { path: "/admin/school-music-payments", label: "תשלומים", description: "מעקב, סימון ידני וזיכוי תשלומים", icon: Wallet },
 ];
 
 const DATA_SECTIONS = [
