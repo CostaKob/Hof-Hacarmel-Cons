@@ -106,10 +106,25 @@ const SchoolMusicRegister = () => {
 
   /* ── queries ── */
 
-  // Resolve academic year: URL param (year name or yearId) or active year (with registration_open)
+  // Resolve academic year: from selected school > URL param > active year (with registration_open)
   const { data: resolvedYear, isLoading: yearLoading } = useQuery({
-    queryKey: ["school-music-year", urlYearParam, urlYearId],
+    queryKey: ["school-music-year", urlYearParam, urlYearId, urlSchoolId],
     queryFn: async () => {
+      if (urlSchoolId) {
+        const { data: school } = await supabase
+          .from("school_music_schools")
+          .select("academic_year_id")
+          .eq("id", urlSchoolId)
+          .maybeSingle();
+        if (school?.academic_year_id) {
+          const { data } = await supabase
+            .from("academic_years")
+            .select("id, name, registration_open")
+            .eq("id", school.academic_year_id)
+            .maybeSingle();
+          if (data) return data;
+        }
+      }
       if (urlYearParam) {
         const { data } = await supabase
           .from("academic_years")
@@ -143,6 +158,7 @@ const SchoolMusicRegister = () => {
       return data;
     },
   });
+
 
   const { data: schools = [] } = useQuery({
     queryKey: ["school-music-schools-public", resolvedYear?.id],
