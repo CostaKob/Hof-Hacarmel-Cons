@@ -1223,12 +1223,14 @@ export type Database = {
           created_at: string
           icount_doc_id: string | null
           icount_doc_number: string | null
+          icount_doc_type: string | null
           id: string
           invoice_url: string | null
           notes: string | null
           paid_at: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["school_music_payment_status"]
+          refund_of_payment_id: string | null
           school_music_school_id: string
           school_music_student_id: string
           transaction_reference: string | null
@@ -1240,12 +1242,14 @@ export type Database = {
           created_at?: string
           icount_doc_id?: string | null
           icount_doc_number?: string | null
+          icount_doc_type?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["school_music_payment_status"]
+          refund_of_payment_id?: string | null
           school_music_school_id: string
           school_music_student_id: string
           transaction_reference?: string | null
@@ -1257,18 +1261,28 @@ export type Database = {
           created_at?: string
           icount_doc_id?: string | null
           icount_doc_number?: string | null
+          icount_doc_type?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["school_music_payment_status"]
+          refund_of_payment_id?: string | null
           school_music_school_id?: string
           school_music_student_id?: string
           transaction_reference?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "school_music_payments_refund_of_payment_id_fkey"
+            columns: ["refund_of_payment_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_payments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_music_schools: {
         Row: {
