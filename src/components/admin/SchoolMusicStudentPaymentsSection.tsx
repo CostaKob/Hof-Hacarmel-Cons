@@ -273,37 +273,23 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
               <Input type="number" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} className="h-12 rounded-xl" />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-sm">סטטוס</Label>
-              <Select value={status} onValueChange={setStatus}>
+              <Label className="text-sm">אמצעי תשלום</Label>
+              <Select value={method} onValueChange={setMethod}>
                 <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">ממתין</SelectItem>
-                  <SelectItem value="paid">שולם</SelectItem>
+                  <SelectItem value="cash">מזומן</SelectItem>
+                  <SelectItem value="credit_card">כרטיס אשראי</SelectItem>
+                  <SelectItem value="bank_transfer">העברה בנקאית</SelectItem>
+                  <SelectItem value="cheque">המחאה</SelectItem>
+                  <SelectItem value="bit">ביט</SelectItem>
+                  <SelectItem value="other">אחר</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            {status === "paid" && (
-              <>
-                <div className="space-y-1.5">
-                  <Label className="text-sm">אמצעי תשלום</Label>
-                  <Select value={method} onValueChange={setMethod}>
-                    <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">מזומן</SelectItem>
-                      <SelectItem value="credit_card">כרטיס אשראי</SelectItem>
-                      <SelectItem value="bank_transfer">העברה בנקאית</SelectItem>
-                      <SelectItem value="cheque">המחאה</SelectItem>
-                      <SelectItem value="bit">ביט</SelectItem>
-                      <SelectItem value="other">אחר</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm">אסמכתא (אופציונלי)</Label>
-                  <Input value={reference} onChange={(e) => setReference(e.target.value)} className="h-11 rounded-xl" />
-                </div>
-              </>
-            )}
+            <div className="space-y-1.5">
+              <Label className="text-sm">אסמכתא (אופציונלי)</Label>
+              <Input value={reference} onChange={(e) => setReference(e.target.value)} className="h-11 rounded-xl" />
+            </div>
             <div className="space-y-1.5">
               <Label className="text-sm">הערות</Label>
               <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-11 rounded-xl" />
