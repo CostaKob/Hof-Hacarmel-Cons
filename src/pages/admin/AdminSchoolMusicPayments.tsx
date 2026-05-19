@@ -33,6 +33,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
 
 const AdminSchoolMusicPayments = () => {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const { selectedYearId } = useAcademicYear();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
