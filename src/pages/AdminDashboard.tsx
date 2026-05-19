@@ -81,6 +81,19 @@ const AdminDashboard = () => {
           ))}
         </div>
 
+        {/* School Music */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Music4 className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-muted-foreground">בית ספר מנגן</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {SCHOOL_MUSIC_SECTIONS.map((s) => (
+              <SectionCard key={s.path} item={s} navigate={navigate} />
+            ))}
+          </div>
+        </div>
+
         {/* Data */}
         <div>
           <div className="flex items-center gap-2 mb-3">
