@@ -126,6 +126,38 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
+  const { data: paymentsByStudent = {} } = useQuery({
+    queryKey: ["school-music-payments-by-student", studentIds],
+    enabled: studentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_payments" as any)
+        .select("school_music_student_id, amount, payment_status, paid_at, payment_method")
+        .in("school_music_student_id", studentIds);
+      if (error) throw error;
+      const map: Record<string, { paid: number; pending: number; refunded: number; count: number; lastPaidAt: string | null; lastMethod: string | null }> = {};
+      (data as any[] || []).forEach((p) => {
+        const id = p.school_music_student_id;
+        if (!map[id]) map[id] = { paid: 0, pending: 0, refunded: 0, count: 0, lastPaidAt: null, lastMethod: null };
+        const amt = Number(p.amount) || 0;
+        map[id].count++;
+        if (p.payment_status === "paid") {
+          map[id].paid += amt;
+          if (p.paid_at && (!map[id].lastPaidAt || p.paid_at > map[id].lastPaidAt)) {
+            map[id].lastPaidAt = p.paid_at;
+            map[id].lastMethod = p.payment_method;
+          }
+        } else if (p.payment_status === "pending") {
+          map[id].pending += amt;
+        } else if (p.payment_status === "refunded") {
+          map[id].refunded += Math.abs(amt);
+        }
+      });
+      return map;
+    },
+  });
+
+
   const { data: groups = [] } = useQuery({
     queryKey: ["school-music-groups-with-teachers"],
     queryFn: async () => {
@@ -618,6 +650,22 @@ const AdminSchoolMusicSchools = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mr-3 shrink-0">
+                          {(() => {
+                            const ps = (paymentsByStudent as any)[s.id];
+                            if (!ps || ps.count === 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין לתשלום</Badge>;
+                            }
+                            if (ps.pending > 0 && ps.paid === 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}</Badge>;
+                            }
+                            if (ps.paid > 0 && ps.pending === 0) {
+                              return <Badge className="rounded-lg text-xs bg-green-600 hover:bg-green-600">שולם ₪{ps.paid.toLocaleString()}</Badge>;
+                            }
+                            if (ps.paid > 0 && ps.pending > 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-blue-500 text-blue-700">חלקי ₪{ps.paid.toLocaleString()}/₪{(ps.paid + ps.pending).toLocaleString()}</Badge>;
+                            }
+                            return null;
+                          })()}
                           <Badge
                             variant={s.status === "assigned" ? "default" : "outline"}
                             className={`rounded-lg text-xs ${s.status === "inactive" ? "text-destructive border-destructive" : ""}`}
@@ -689,7 +737,26 @@ const AdminSchoolMusicSchools = () => {
                                   })()}
                                 </div>
                               </div>
+                              {(() => {
+                                const ps = (paymentsByStudent as any)[s.id];
+                                return (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold text-muted-foreground mb-1 mt-1">תשלומים</p>
+                                    {!ps || ps.count === 0 ? (
+                                      <p className="text-sm text-amber-700">ממתין לתשלום — לא נרשם תשלום עדיין</p>
+                                    ) : (
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
+                                        <DetailRow label="שולם" value={`₪${ps.paid.toLocaleString()}`} />
+                                        {ps.pending > 0 && <DetailRow label="ממתין" value={`₪${ps.pending.toLocaleString()}`} />}
+                                        {ps.refunded > 0 && <DetailRow label="הוחזר" value={`₪${ps.refunded.toLocaleString()}`} />}
+                                        {ps.lastPaidAt && <DetailRow label="תשלום אחרון" value={`${new Date(ps.lastPaidAt).toLocaleDateString("he-IL")}${ps.lastMethod ? ` (${ps.lastMethod})` : ""}`} />}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })()}
                             </>
+
                           ) : (
                             <>
                               <div className="flex justify-between items-center mb-3">
