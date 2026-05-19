@@ -498,12 +498,9 @@ const AdminSchoolMusicSchools = () => {
                         <ChevronLeft className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
-                    <div className="border-t border-border grid grid-cols-2 divide-x divide-x-reverse divide-border">
-                      <Button variant="ghost" className="rounded-none h-10 text-xs gap-1" onClick={copyLink}>
+                    <div className="border-t border-border">
+                      <Button variant="ghost" className="w-full rounded-none h-10 text-xs gap-1" onClick={copyLink}>
                         <Copy className="h-3.5 w-3.5" /> העתק קישור הרשמה
-                      </Button>
-                      <Button variant="ghost" className="rounded-none h-10 text-xs gap-1" onClick={sendMail}>
-                        <Mail className="h-3.5 w-3.5" /> שלח במייל
                       </Button>
                     </div>
                   </div>
