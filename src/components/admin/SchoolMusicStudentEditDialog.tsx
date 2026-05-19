@@ -101,12 +101,12 @@ const SchoolMusicStudentEditDialog = ({ open, onOpenChange, student }: Props) =>
     onError: () => toast.error("שגיאה בעדכון הפרטים"),
   });
 
-  const Field = ({
-    label,
-    field,
-    type = "text",
-    dir,
-  }: { label: string; field: string; type?: string; dir?: string }) => (
+  const renderField = (
+    label: string,
+    field: string,
+    type: string = "text",
+    dir?: string
+  ) => (
     <div className="space-y-1">
       <Label className="text-xs text-muted-foreground">{label}</Label>
       <Input
