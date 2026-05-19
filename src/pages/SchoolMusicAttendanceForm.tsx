@@ -115,8 +115,8 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
         school_music_school_id: schoolId,
         teacher_id: t.id,
         attendance_date: date,
-        status: rows[t.id]?.status ?? "present",
-        notes: rows[t.id]?.notes || null,
+        status: dayCancelled ? "vacation" : (rows[t.id]?.status ?? "present"),
+        notes: dayCancelled ? (cancelReason || null) : (rows[t.id]?.notes || null),
         academic_year_id: academicYearId,
       }));
       if (payload.length === 0) throw new Error("אין מורים לדיווח");
