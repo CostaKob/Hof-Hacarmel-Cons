@@ -8,6 +8,7 @@ const MAIN_SECTIONS = [
   { path: "/admin/ensembles", label: "הרכבים", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
   { path: "/admin/school-music-schools", label: "בתי ספר מנגנים", description: "ניהול בתי ספר מנגנים, קבוצות ורכזים", icon: Music4 },
   { path: "/admin/school-music-attendance", label: "נוכחות מורים — בתי ספר מנגנים", description: "דוח נוכחות מרוכז עם איתור דיווחים חסרים", icon: ClipboardList },
+  { path: "/admin/school-music-payments", label: "תשלומים — בית ספר מנגן", description: "מעקב, סימון ידני וזיכוי תשלומים", icon: Wallet },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
 ];
 
