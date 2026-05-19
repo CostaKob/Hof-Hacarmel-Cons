@@ -73,7 +73,7 @@ const SchoolMusicRegister = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
-    school_music_school_id: "",
+    school_music_school_id: urlSchoolId || "",
     school_music_class_id: "",
     student_first_name: "",
     student_last_name: "",
