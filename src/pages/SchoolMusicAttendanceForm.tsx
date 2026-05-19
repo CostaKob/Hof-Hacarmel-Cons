@@ -235,6 +235,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
             </div>
           )}
         </div>
+        )}
 
         <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border p-4">
           <div className="mx-auto max-w-2xl flex gap-2">
