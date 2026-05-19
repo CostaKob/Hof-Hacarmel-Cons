@@ -650,6 +650,22 @@ const AdminSchoolMusicSchools = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 mr-3 shrink-0">
+                          {(() => {
+                            const ps = (paymentsByStudent as any)[s.id];
+                            if (!ps || ps.count === 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין לתשלום</Badge>;
+                            }
+                            if (ps.pending > 0 && ps.paid === 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}</Badge>;
+                            }
+                            if (ps.paid > 0 && ps.pending === 0) {
+                              return <Badge className="rounded-lg text-xs bg-green-600 hover:bg-green-600">שולם ₪{ps.paid.toLocaleString()}</Badge>;
+                            }
+                            if (ps.paid > 0 && ps.pending > 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-blue-500 text-blue-700">חלקי ₪{ps.paid.toLocaleString()}/₪{(ps.paid + ps.pending).toLocaleString()}</Badge>;
+                            }
+                            return null;
+                          })()}
                           <Badge
                             variant={s.status === "assigned" ? "default" : "outline"}
                             className={`rounded-lg text-xs ${s.status === "inactive" ? "text-destructive border-destructive" : ""}`}
