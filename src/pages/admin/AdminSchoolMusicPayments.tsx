@@ -116,7 +116,7 @@ const AdminSchoolMusicPayments = () => {
   });
 
   const totalPaid = filtered.filter((p) => p.payment_status === "paid").reduce((sum, p) => sum + Number(p.amount), 0);
-  const totalRefunded = filtered.filter((p) => p.payment_status === "refunded").reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalRefunded = filtered.filter((p) => p.payment_status === "refunded").reduce((sum, p) => sum + Math.abs(Number(p.amount)), 0);
   const netTotal = totalPaid - totalRefunded;
 
   return (
