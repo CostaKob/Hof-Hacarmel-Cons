@@ -13,7 +13,7 @@ import { ChevronLeft, Check, X, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Status = "present" | "absent";
+type Status = "present" | "absent" | "vacation";
 interface Row { status: Status; notes: string }
 
 interface Props {
