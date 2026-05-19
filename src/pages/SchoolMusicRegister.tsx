@@ -449,16 +449,23 @@ const SchoolMusicRegister = () => {
           <CardContent className="space-y-4">
             {/* School */}
             <Field id="school" label="בית ספר" required error={errors.school_music_school_id} fieldRef={fieldRefs.school_music_school_id}>
-              <Select value={form.school_music_school_id} onValueChange={(v) => updateField("school_music_school_id", v)} disabled={!!urlSchoolId}>
-                <SelectTrigger id="school"><SelectValue placeholder="בחרו בית ספר" /></SelectTrigger>
-                <SelectContent>
-                  {schools.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {urlSchoolId ? (
+                <div className="h-11 px-3 rounded-xl border border-input bg-muted/40 flex items-center font-medium text-foreground">
+                  {schools.find((s) => s.id === urlSchoolId)?.school_name ?? "טוען..."}
+                </div>
+              ) : (
+                <Select value={form.school_music_school_id} onValueChange={(v) => updateField("school_music_school_id", v)}>
+                  <SelectTrigger id="school"><SelectValue placeholder="בחרו בית ספר" /></SelectTrigger>
+                  <SelectContent>
+                    {schools.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>{s.school_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               {urlSchoolId && <p className="text-xs text-muted-foreground mt-1">בית הספר נבחר אוטומטית מתוך הקישור שקיבלת.</p>}
             </Field>
+
 
             {/* Class — filtered by school */}
             <Field id="class" label="כיתה" required error={errors.school_music_class_id} fieldRef={fieldRefs.school_music_class_id}>
