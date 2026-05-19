@@ -1216,9 +1216,64 @@ export type Database = {
           },
         ]
       }
+      school_music_payments: {
+        Row: {
+          academic_year_id: string
+          amount: number
+          created_at: string
+          icount_doc_id: string | null
+          icount_doc_number: string | null
+          id: string
+          invoice_url: string | null
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_status: Database["public"]["Enums"]["school_music_payment_status"]
+          school_music_school_id: string
+          school_music_student_id: string
+          transaction_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id: string
+          amount: number
+          created_at?: string
+          icount_doc_id?: string | null
+          icount_doc_number?: string | null
+          id?: string
+          invoice_url?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["school_music_payment_status"]
+          school_music_school_id: string
+          school_music_student_id: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string
+          amount?: number
+          created_at?: string
+          icount_doc_id?: string | null
+          icount_doc_number?: string | null
+          id?: string
+          invoice_url?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_status?: Database["public"]["Enums"]["school_music_payment_status"]
+          school_music_school_id?: string
+          school_music_student_id?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       school_music_schools: {
         Row: {
           academic_year_id: string
+          annual_tuition_fee: number
           class_schedules: Json
           classes_count: number
           conductor_hours: number | null
@@ -1240,6 +1295,7 @@ export type Database = {
         }
         Insert: {
           academic_year_id: string
+          annual_tuition_fee?: number
           class_schedules?: Json
           classes_count?: number
           conductor_hours?: number | null
@@ -1261,6 +1317,7 @@ export type Database = {
         }
         Update: {
           academic_year_id?: string
+          annual_tuition_fee?: number
           class_schedules?: Json
           classes_count?: number
           conductor_hours?: number | null
@@ -2031,6 +2088,12 @@ export type Database = {
         | "waiting_for_call"
         | "waiting_for_payment"
         | "ready_to_assign"
+      school_music_payment_status:
+        | "pending"
+        | "paid"
+        | "refunded"
+        | "failed"
+        | "cancelled"
       school_music_student_status: "new" | "in_review" | "assigned" | "inactive"
       transaction_type: "payment" | "credit"
     }
@@ -2202,6 +2265,13 @@ export const Constants = {
         "waiting_for_call",
         "waiting_for_payment",
         "ready_to_assign",
+      ],
+      school_music_payment_status: [
+        "pending",
+        "paid",
+        "refunded",
+        "failed",
+        "cancelled",
       ],
       school_music_student_status: ["new", "in_review", "assigned", "inactive"],
       transaction_type: ["payment", "credit"],
