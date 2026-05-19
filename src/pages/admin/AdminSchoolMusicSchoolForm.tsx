@@ -26,6 +26,7 @@ interface FormData {
   principal_phone: string;
   vice_principal_name: string;
   vice_principal_phone: string;
+  annual_tuition_fee: number;
 }
 
 const AdminSchoolMusicSchoolForm = () => {
@@ -38,6 +39,7 @@ const AdminSchoolMusicSchoolForm = () => {
     defaultValues: {
       is_active: true, notes: "", school_name: "", academic_year_id: "", operating_days: [],
       principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
+      annual_tuition_fee: 650,
     },
   });
 
@@ -78,6 +80,7 @@ const AdminSchoolMusicSchoolForm = () => {
         principal_phone: (school as any).principal_phone || "",
         vice_principal_name: (school as any).vice_principal_name || "",
         vice_principal_phone: (school as any).vice_principal_phone || "",
+        annual_tuition_fee: Number((school as any).annual_tuition_fee ?? 650),
       });
     }
   }, [school, reset]);
@@ -110,6 +113,7 @@ const AdminSchoolMusicSchoolForm = () => {
         principal_phone: data.principal_phone || null,
         vice_principal_name: data.vice_principal_name || null,
         vice_principal_phone: data.vice_principal_phone || null,
+        annual_tuition_fee: Number(data.annual_tuition_fee) || 650,
       };
       if (isEdit) {
         const { error } = await supabase.from("school_music_schools").update(payload).eq("id", id!);
@@ -189,6 +193,24 @@ const AdminSchoolMusicSchoolForm = () => {
             </div>
           </div>
         </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">תשלום</h2>
+          <div className="space-y-1.5">
+            <Label className="text-sm">דמי השתתפות שנתיים (₪)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="1"
+              {...register("annual_tuition_fee", { valueAsNumber: true })}
+              className="h-12 rounded-xl"
+              dir="ltr"
+            />
+            <p className="text-xs text-muted-foreground">הסכום שיוצג להורה בעמוד הסליקה (ברירת מחדל 650 ש"ח, קיסריה 1600).</p>
+          </div>
+        </div>
+
+
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="space-y-1.5">

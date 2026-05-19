@@ -66,13 +66,14 @@ const SchoolMusicRegister = () => {
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
   const urlYearId = searchParams.get("yearId");
+  const urlSchoolId = searchParams.get("school_id");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState({
-    school_music_school_id: "",
+    school_music_school_id: urlSchoolId || "",
     school_music_class_id: "",
     student_first_name: "",
     student_last_name: "",
@@ -448,7 +449,7 @@ const SchoolMusicRegister = () => {
           <CardContent className="space-y-4">
             {/* School */}
             <Field id="school" label="בית ספר" required error={errors.school_music_school_id} fieldRef={fieldRefs.school_music_school_id}>
-              <Select value={form.school_music_school_id} onValueChange={(v) => updateField("school_music_school_id", v)}>
+              <Select value={form.school_music_school_id} onValueChange={(v) => updateField("school_music_school_id", v)} disabled={!!urlSchoolId}>
                 <SelectTrigger id="school"><SelectValue placeholder="בחרו בית ספר" /></SelectTrigger>
                 <SelectContent>
                   {schools.map((s) => (
@@ -456,6 +457,7 @@ const SchoolMusicRegister = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {urlSchoolId && <p className="text-xs text-muted-foreground mt-1">בית הספר נבחר אוטומטית מתוך הקישור שקיבלת.</p>}
             </Field>
 
             {/* Class — filtered by school */}
