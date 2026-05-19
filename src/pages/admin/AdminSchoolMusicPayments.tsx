@@ -214,19 +214,15 @@ const AdminSchoolMusicPayments = () => {
                         <CheckCircle2 className="h-3.5 w-3.5" /> סמן כשולם
                       </Button>
                     )}
-                    {p.payment_status === "paid" && (
-                      <Button size="sm" variant="outline" className="h-8" onClick={() => {
-                        if (confirm("לסמן את התשלום כהוחזר?")) refundMutation.mutate(p.id);
-                      }}>
-                        זיכוי
-                      </Button>
-                    )}
-                    {p.invoice_url && (
+                    {p.invoice_url ? (
                       <a href={p.invoice_url} target="_blank" rel="noreferrer">
                         <Button size="sm" variant="outline" className="h-8 gap-1">
-                          <ExternalLink className="h-3.5 w-3.5" /> קבלה
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          {p.icount_doc_number ? `מסמך ${p.icount_doc_number}` : "צפה במסמך"}
                         </Button>
                       </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground self-center">לא הופק מסמך</span>
                     )}
                   </div>
                 </div>
