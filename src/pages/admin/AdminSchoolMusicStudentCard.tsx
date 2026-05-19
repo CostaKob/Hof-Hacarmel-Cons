@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 import SchoolMusicStudentPaymentsSection from "@/components/admin/SchoolMusicStudentPaymentsSection";
+import SchoolMusicStudentEditDialog from "@/components/admin/SchoolMusicStudentEditDialog";
 import PhoneDisplay from "@/components/PhoneDisplay";
-import { User, GraduationCap, MapPin, Music } from "lucide-react";
+import { User, GraduationCap, MapPin, Music, Pencil } from "lucide-react";
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-start justify-between gap-3 py-1.5">
