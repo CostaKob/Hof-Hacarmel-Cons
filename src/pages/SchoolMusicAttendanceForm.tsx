@@ -32,6 +32,8 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
 
   const [date, setDate] = useState(initialDate);
   const [rows, setRows] = useState<Record<string, Row>>({});
+  const [dayCancelled, setDayCancelled] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   const { data: school } = useQuery({
     queryKey: ["school-music-school-basic", schoolId],
