@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Search, Users, Pencil, Save, X, Trash2 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronDown, ChevronUp, CheckCircle2, XCircle, Search, Users, Pencil, Save, X, Trash2, Copy, Mail, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
