@@ -1276,13 +1276,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "school_music_payments_refund_fk"
-            columns: ["refund_of_payment_id"]
-            isOneToOne: false
-            referencedRelation: "school_music_payments"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "school_music_payments_refund_of_payment_id_fkey"
             columns: ["refund_of_payment_id"]
             isOneToOne: false
@@ -1570,38 +1563,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "school_music_students_class_fk"
-            columns: ["school_music_class_id"]
-            isOneToOne: false
-            referencedRelation: "school_music_classes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "school_music_students_group_fk"
-            columns: ["school_music_class_group_id"]
-            isOneToOne: false
-            referencedRelation: "school_music_class_groups"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "school_music_students_instrument_fk"
-            columns: ["instrument_id"]
-            isOneToOne: false
-            referencedRelation: "instruments"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "school_music_students_instrument_id_fkey"
             columns: ["instrument_id"]
             isOneToOne: false
             referencedRelation: "instruments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "school_music_students_school_fk"
-            columns: ["school_music_school_id"]
-            isOneToOne: false
-            referencedRelation: "school_music_schools"
             referencedColumns: ["id"]
           },
           {
@@ -1623,13 +1588,6 @@ export type Database = {
             columns: ["school_music_school_id"]
             isOneToOne: false
             referencedRelation: "school_music_schools"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "school_music_students_year_fk"
-            columns: ["academic_year_id"]
-            isOneToOne: false
-            referencedRelation: "academic_years"
             referencedColumns: ["id"]
           },
         ]
