@@ -13,7 +13,7 @@ import { ChevronLeft, Check, X, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-type Status = "present" | "absent";
+type Status = "present" | "absent" | "vacation";
 interface Row { status: Status; notes: string }
 
 interface Props {
@@ -32,6 +32,8 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
 
   const [date, setDate] = useState(initialDate);
   const [rows, setRows] = useState<Record<string, Row>>({});
+  const [dayCancelled, setDayCancelled] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
 
   const { data: school } = useQuery({
     queryKey: ["school-music-school-basic", schoolId],
@@ -74,6 +76,15 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
       };
     }
     setRows(next);
+    // Detect "day cancelled" pattern: all rows are vacation with same notes
+    const existingArr = existing as any[];
+    if (teachers.length > 0 && existingArr.length === teachers.length && existingArr.every((e) => e.status === "vacation")) {
+      setDayCancelled(true);
+      setCancelReason(existingArr[0]?.notes ?? "");
+    } else {
+      setDayCancelled(false);
+      setCancelReason("");
+    }
   }, [teachers, existing]);
 
   const allPresent = useMemo(
@@ -104,8 +115,8 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
         school_music_school_id: schoolId,
         teacher_id: t.id,
         attendance_date: date,
-        status: rows[t.id]?.status ?? "present",
-        notes: rows[t.id]?.notes || null,
+        status: dayCancelled ? "vacation" : (rows[t.id]?.status ?? "present"),
+        notes: dayCancelled ? (cancelReason || null) : (rows[t.id]?.notes || null),
         academic_year_id: academicYearId,
       }));
       if (payload.length === 0) throw new Error("אין מורים לדיווח");
@@ -146,12 +157,33 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
             <Label className="text-sm">תאריך הדיווח</Label>
             <Input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} className="h-12 rounded-xl" />
           </div>
-          <Button type="button" variant="outline" onClick={markAllPresent} disabled={loadingTeachers || teachers.length === 0} className="w-full h-11 rounded-xl">
+          <Button type="button" variant="outline" onClick={markAllPresent} disabled={loadingTeachers || teachers.length === 0 || dayCancelled} className="w-full h-11 rounded-xl">
             <CheckCheck className="h-4 w-4 ml-1" />
             כולם הגיעו
           </Button>
+          <div className="border-t border-border pt-3 space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={dayCancelled}
+                onChange={(e) => setDayCancelled(e.target.checked)}
+                className="h-4 w-4 rounded border-input"
+              />
+              <span className="text-sm font-medium">היום לא התקיים</span>
+            </label>
+            {dayCancelled && (
+              <Textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="סיבה (טיול שנתי, חופש, וכו')"
+                rows={2}
+                className="rounded-xl text-sm"
+              />
+            )}
+          </div>
         </div>
 
+        {!dayCancelled && (
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-base">צוות בית הספר ({teachers.length})</h2>
@@ -203,6 +235,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
             </div>
           )}
         </div>
+        )}
 
         <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border p-4">
           <div className="mx-auto max-w-2xl flex gap-2">
