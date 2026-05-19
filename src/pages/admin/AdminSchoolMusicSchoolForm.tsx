@@ -195,6 +195,24 @@ const AdminSchoolMusicSchoolForm = () => {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <h2 className="font-semibold text-foreground text-base">תשלום</h2>
+          <div className="space-y-1.5">
+            <Label className="text-sm">דמי השתתפות שנתיים (₪)</Label>
+            <Input
+              type="number"
+              min={0}
+              step="1"
+              {...register("annual_tuition_fee", { valueAsNumber: true })}
+              className="h-12 rounded-xl"
+              dir="ltr"
+            />
+            <p className="text-xs text-muted-foreground">הסכום שיוצג להורה בעמוד הסליקה (ברירת מחדל 650 ש"ח, קיסריה 1600).</p>
+          </div>
+        </div>
+
+
+
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="space-y-1.5">
             <Label className="text-sm">הערות</Label>
             <Textarea {...register("notes")} className="rounded-xl min-h-[80px]" />
