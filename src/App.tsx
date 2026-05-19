@@ -159,6 +159,7 @@ const App = () => (
               <Route path="/admin/school-music-schools/:id/edit" element={<AdminRoute><AdminSchoolMusicSchoolForm /></AdminRoute>} />
               <Route path="/admin/school-music-students/:studentId" element={<AdminRoute><AdminSchoolMusicStudentCard /></AdminRoute>} />
               <Route path="/admin/school-music-attendance" element={<AdminRoute><AdminSchoolMusicAttendance /></AdminRoute>} />
+              <Route path="/admin/school-music-payments" element={<AdminRoute><AdminSchoolMusicPayments /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/attendance" element={<AdminRoute><SchoolMusicAttendanceList variant="admin" /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/attendance/new" element={<AdminRoute><SchoolMusicAttendanceForm variant="admin" /></AdminRoute>} />
               {/* Public */}
