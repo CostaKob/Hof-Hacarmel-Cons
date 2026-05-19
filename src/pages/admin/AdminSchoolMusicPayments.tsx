@@ -116,7 +116,8 @@ const AdminSchoolMusicPayments = () => {
   });
 
   const totalPaid = filtered.filter((p) => p.payment_status === "paid").reduce((sum, p) => sum + Number(p.amount), 0);
-  const totalPending = filtered.filter((p) => p.payment_status === "pending").reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalRefunded = filtered.filter((p) => p.payment_status === "refunded").reduce((sum, p) => sum + Number(p.amount), 0);
+  const netTotal = totalPaid - totalRefunded;
 
   return (
     <AdminLayout title="תשלומים — בית ספר מנגן" backPath="/admin">
@@ -124,18 +125,19 @@ const AdminSchoolMusicPayments = () => {
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-xs text-muted-foreground">סה"כ רשומות</p>
-            <p className="text-2xl font-bold text-foreground">{filtered.length}</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-xs text-muted-foreground">שולם</p>
+            <p className="text-xs text-muted-foreground">סה"כ שולם</p>
             <p className="text-2xl font-bold text-green-600">{totalPaid.toLocaleString()} ₪</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-xs text-muted-foreground">ממתין</p>
-            <p className="text-2xl font-bold text-amber-600">{totalPending.toLocaleString()} ₪</p>
+            <p className="text-xs text-muted-foreground">סה"כ הוחזר</p>
+            <p className="text-2xl font-bold text-red-600">{totalRefunded.toLocaleString()} ₪</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <p className="text-xs text-muted-foreground">שורה תחתונה</p>
+            <p className="text-2xl font-bold text-foreground">{netTotal.toLocaleString()} ₪</p>
           </div>
         </div>
+
 
         {/* Filters */}
         <div className="flex flex-col gap-3 sm:flex-row">
