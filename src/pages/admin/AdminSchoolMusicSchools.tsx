@@ -126,6 +126,38 @@ const AdminSchoolMusicSchools = () => {
     },
   });
 
+  const { data: paymentsByStudent = {} } = useQuery({
+    queryKey: ["school-music-payments-by-student", studentIds],
+    enabled: studentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_payments" as any)
+        .select("school_music_student_id, amount, payment_status, paid_at, payment_method")
+        .in("school_music_student_id", studentIds);
+      if (error) throw error;
+      const map: Record<string, { paid: number; pending: number; refunded: number; count: number; lastPaidAt: string | null; lastMethod: string | null }> = {};
+      (data as any[] || []).forEach((p) => {
+        const id = p.school_music_student_id;
+        if (!map[id]) map[id] = { paid: 0, pending: 0, refunded: 0, count: 0, lastPaidAt: null, lastMethod: null };
+        const amt = Number(p.amount) || 0;
+        map[id].count++;
+        if (p.payment_status === "paid") {
+          map[id].paid += amt;
+          if (p.paid_at && (!map[id].lastPaidAt || p.paid_at > map[id].lastPaidAt)) {
+            map[id].lastPaidAt = p.paid_at;
+            map[id].lastMethod = p.payment_method;
+          }
+        } else if (p.payment_status === "pending") {
+          map[id].pending += amt;
+        } else if (p.payment_status === "refunded") {
+          map[id].refunded += Math.abs(amt);
+        }
+      });
+      return map;
+    },
+  });
+
+
   const { data: groups = [] } = useQuery({
     queryKey: ["school-music-groups-with-teachers"],
     queryFn: async () => {
