@@ -261,7 +261,7 @@ const AdminSchoolMusicSchools = () => {
       school_music_school_id: "",
       instrument_id: "",
       
-      status: "new",
+      status: "active",
       academic_year_id: activeYear?.id || null,
     });
     setAddDialogOpen(true);
