@@ -25,7 +25,7 @@ const getDayName = (school: any) => {
 const ALL = "__all__";
 
 const GENDER_LABELS: Record<string, string> = { male: "זכר", female: "נקבה", other: "אחר" };
-const STATUS_LABELS: Record<string, string> = { new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" };
+const STATUS_LABELS: Record<string, string> = { active: "פעיל", stopped: "הפסיק" };
 
 const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: string | null; dir?: string }) => (
   <div className="flex gap-2 text-sm py-0.5">
