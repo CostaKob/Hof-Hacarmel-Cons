@@ -1224,10 +1224,12 @@ export type Database = {
           icount_doc_id: string | null
           icount_doc_number: string | null
           icount_doc_type: string | null
+          icount_payment_page_id: string | null
           id: string
           invoice_url: string | null
           notes: string | null
           paid_at: string | null
+          payment_link_url: string | null
           payment_method: string | null
           payment_status: Database["public"]["Enums"]["school_music_payment_status"]
           refund_of_payment_id: string | null
@@ -1243,10 +1245,12 @@ export type Database = {
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
+          icount_payment_page_id?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_link_url?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["school_music_payment_status"]
           refund_of_payment_id?: string | null
@@ -1262,10 +1266,12 @@ export type Database = {
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
+          icount_payment_page_id?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
           paid_at?: string | null
+          payment_link_url?: string | null
           payment_method?: string | null
           payment_status?: Database["public"]["Enums"]["school_music_payment_status"]
           refund_of_payment_id?: string | null
@@ -2081,7 +2087,7 @@ export type Database = {
       }
       register_school_music_student_with_loan: {
         Args: { _inventory_instrument_id?: string; _payload: Json }
-        Returns: string
+        Returns: Json
       }
     }
     Enums: {
