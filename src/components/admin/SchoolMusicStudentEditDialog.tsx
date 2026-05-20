@@ -33,7 +33,7 @@ const SchoolMusicStudentEditDialog = ({ open, onOpenChange, student }: Props) =>
         parent_phone: student.parent_phone || "",
         parent_email: student.parent_email || "",
         instrument_id: student.instrument_id || "",
-        status: student.status || "new",
+        status: student.status || "active",
         school_music_class_id: student.school_music_class_id || "",
         school_music_school_id: student.school_music_school_id || "",
       });
