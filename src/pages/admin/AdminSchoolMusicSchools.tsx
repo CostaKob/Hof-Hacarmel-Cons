@@ -457,8 +457,8 @@ const AdminSchoolMusicSchools = () => {
                 {schools.map((s: any, index: number) => {
                   const origin = window.location.hostname.includes("lovable") ? "https://musichof.com" : window.location.origin;
                   const registrationUrl = s.slug
-                    ? `${origin}/school-music-register?school=${s.slug}`
-                    : `${origin}/school-music-register?school_id=${s.id}`;
+                    ? `${origin}/school-music-register?school=${s.slug}&yearId=${s.academic_year_id}`
+                    : `${origin}/school-music-register?school_id=${s.id}&yearId=${s.academic_year_id}`;
                   const copyLink = (e: React.MouseEvent) => {
                     e.stopPropagation();
                     navigator.clipboard.writeText(registrationUrl);

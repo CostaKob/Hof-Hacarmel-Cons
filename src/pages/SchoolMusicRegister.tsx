@@ -93,9 +93,10 @@ const SchoolMusicRegister = () => {
   const [redirecting, setRedirecting] = useState(false);
 
   // Resolve slug to school id (if a slug was provided in URL)
-  // Prefer the school in the currently active academic year — slugs can repeat across years (cloned schools)
+  // If a yearId is in the URL, prefer the school matching that year.
+  // Otherwise: prefer active year > registration_open > newest start_date.
   const { data: slugResolved } = useQuery({
-    queryKey: ["school-music-school-by-slug", slugCandidate],
+    queryKey: ["school-music-school-by-slug", slugCandidate, urlYearId],
     enabled: !!slugCandidate,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -105,7 +106,10 @@ const SchoolMusicRegister = () => {
         .eq("is_active", true);
       if (error) throw error;
       if (!data || data.length === 0) return null;
-      // Priority: active year > registration_open > newest start_date
+      if (urlYearId) {
+        const match = data.find((d: any) => d.academic_year_id === urlYearId);
+        if (match) return match;
+      }
       const sorted = [...data].sort((a: any, b: any) => {
         const aY = a.academic_years, bY = b.academic_years;
         if (aY.is_active !== bY.is_active) return aY.is_active ? -1 : 1;
