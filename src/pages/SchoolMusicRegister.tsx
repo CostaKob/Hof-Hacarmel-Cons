@@ -70,7 +70,12 @@ const SchoolMusicRegister = () => {
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
   const urlYearId = searchParams.get("yearId");
-  const urlSchoolId = searchParams.get("school_id");
+  const urlSchoolIdParam = searchParams.get("school_id");
+  const urlSchoolSlug = searchParams.get("school");
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // If "school" param is a UUID accept it as id; if "school_id" is non-UUID treat it as slug.
+  const initialSchoolIdGuess = urlSchoolIdParam && UUID_RE.test(urlSchoolIdParam) ? urlSchoolIdParam : "";
+  const slugCandidate = urlSchoolSlug || (urlSchoolIdParam && !UUID_RE.test(urlSchoolIdParam) ? urlSchoolIdParam : "");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [approvalChecked, setApprovalChecked] = useState(false);
