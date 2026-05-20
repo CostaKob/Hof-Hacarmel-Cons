@@ -1332,6 +1332,7 @@ export type Database = {
           principal_name: string | null
           principal_phone: string | null
           school_name: string
+          slug: string | null
           vice_principal_name: string | null
           vice_principal_phone: string | null
         }
@@ -1355,6 +1356,7 @@ export type Database = {
           principal_name?: string | null
           principal_phone?: string | null
           school_name: string
+          slug?: string | null
           vice_principal_name?: string | null
           vice_principal_phone?: string | null
         }
@@ -1378,6 +1380,7 @@ export type Database = {
           principal_name?: string | null
           principal_phone?: string | null
           school_name?: string
+          slug?: string | null
           vice_principal_name?: string | null
           vice_principal_phone?: string | null
         }
