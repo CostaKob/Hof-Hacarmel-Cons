@@ -39,7 +39,7 @@ const AdminSchoolMusicSchoolForm = () => {
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      is_active: true, notes: "", school_name: "", academic_year_id: "", operating_days: [],
+      is_active: true, notes: "", school_name: "", slug: "", academic_year_id: "", operating_days: [],
       principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
       annual_tuition_fee: 650,
       icount_payment_page_url: "",
