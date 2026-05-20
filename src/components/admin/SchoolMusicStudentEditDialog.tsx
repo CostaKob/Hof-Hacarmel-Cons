@@ -222,10 +222,8 @@ const SchoolMusicStudentEditDialog = ({ open, onOpenChange, student }: Props) =>
             <Select value={form.status} onValueChange={(v) => setForm((p) => ({ ...p, status: v }))}>
               <SelectTrigger className="h-10"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="new">חדש</SelectItem>
-                <SelectItem value="in_review">בטיפול</SelectItem>
-                <SelectItem value="assigned">שויך</SelectItem>
-                <SelectItem value="inactive">לא פעיל</SelectItem>
+                <SelectItem value="active">פעיל</SelectItem>
+                <SelectItem value="stopped">הפסיק</SelectItem>
               </SelectContent>
             </Select>
           </div>
