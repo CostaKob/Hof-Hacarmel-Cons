@@ -75,6 +75,7 @@ const AdminSchoolMusicSchoolForm = () => {
       const fallback = (school as any).day_of_week != null ? [(school as any).day_of_week] : [];
       reset({
         school_name: school.school_name,
+        slug: (school as any).slug || "",
         academic_year_id: school.academic_year_id || "",
         notes: school.notes || "",
         is_active: school.is_active,
