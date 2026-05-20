@@ -211,7 +211,7 @@ const SchoolMusicRegister = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_class_groups")
-        .select("id, instrument_id, teacher_id, instruments(id, name)")
+        .select("id, instrument_id, teacher_id, instruments(id, name), teachers(id, first_name, last_name)")
         .eq("school_music_class_id", form.school_music_class_id);
       if (error) throw error;
       return data ?? [];
