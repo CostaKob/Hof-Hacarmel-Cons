@@ -64,6 +64,35 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     },
   });
 
+  const { data: school } = useQuery({
+    queryKey: ["sm-school-payment-link", schoolMusicSchoolId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_schools" as any)
+        .select("icount_payment_page_url, school_name")
+        .eq("id", schoolMusicSchoolId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: student } = useQuery({
+    queryKey: ["sm-student-contact", studentId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_students" as any)
+        .select("parent_name, parent_phone, student_first_name, student_last_name")
+        .eq("id", studentId)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const paymentLink = school?.icount_payment_page_url as string | undefined;
+  const hasPending = payments.some((p) => p.payment_status === "pending");
+
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["sm-student-payments", studentId] });
     qc.invalidateQueries({ queryKey: ["school-music-payments"] });
