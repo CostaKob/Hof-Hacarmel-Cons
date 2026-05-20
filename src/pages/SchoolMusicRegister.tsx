@@ -76,6 +76,17 @@ const SchoolMusicRegister = () => {
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<{
+    payment_id: string;
+    amount: number;
+    student_name: string;
+    school_name: string;
+    class_name: string;
+    instrument_name: string;
+    teacher_name?: string;
+    inventory_label?: string;
+  } | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const [form, setForm] = useState({
     school_music_school_id: urlSchoolId || "",
