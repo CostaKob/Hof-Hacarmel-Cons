@@ -27,6 +27,7 @@ interface FormData {
   vice_principal_name: string;
   vice_principal_phone: string;
   annual_tuition_fee: number;
+  icount_payment_page_url: string;
 }
 
 const AdminSchoolMusicSchoolForm = () => {
@@ -40,6 +41,7 @@ const AdminSchoolMusicSchoolForm = () => {
       is_active: true, notes: "", school_name: "", academic_year_id: "", operating_days: [],
       principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
       annual_tuition_fee: 650,
+      icount_payment_page_url: "",
     },
   });
 
@@ -81,6 +83,7 @@ const AdminSchoolMusicSchoolForm = () => {
         vice_principal_name: (school as any).vice_principal_name || "",
         vice_principal_phone: (school as any).vice_principal_phone || "",
         annual_tuition_fee: Number((school as any).annual_tuition_fee ?? 650),
+        icount_payment_page_url: (school as any).icount_payment_page_url || "",
       });
     }
   }, [school, reset]);
@@ -114,6 +117,7 @@ const AdminSchoolMusicSchoolForm = () => {
         vice_principal_name: data.vice_principal_name || null,
         vice_principal_phone: data.vice_principal_phone || null,
         annual_tuition_fee: Number(data.annual_tuition_fee) || 650,
+        icount_payment_page_url: data.icount_payment_page_url?.trim() || null,
       };
       if (isEdit) {
         const { error } = await supabase.from("school_music_schools").update(payload).eq("id", id!);
@@ -207,6 +211,20 @@ const AdminSchoolMusicSchoolForm = () => {
               dir="ltr"
             />
             <p className="text-xs text-muted-foreground">הסכום שיוצג להורה בעמוד הסליקה (ברירת מחדל 650 ש"ח, קיסריה 1600).</p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-sm">קישור לעמוד סליקה ב-iCount</Label>
+            <Input
+              type="url"
+              placeholder="https://app.icount.co.il/m/xxxxx/..."
+              {...register("icount_payment_page_url")}
+              className="h-12 rounded-xl"
+              dir="ltr"
+            />
+            <p className="text-xs text-muted-foreground">
+              הדביקו את ה-URL הקבוע של עמוד התשלום שיצרתם ב-iCount עבור בית הספר. פרטי התלמיד (שם, ת"ז, סכום) ייוספו אוטומטית ל-URL בעת ההפניה, ויחזרו ב-webhook לזיהוי התשלום.
+            </p>
           </div>
         </div>
 
