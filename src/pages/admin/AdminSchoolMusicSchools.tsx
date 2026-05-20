@@ -456,7 +456,9 @@ const AdminSchoolMusicSchools = () => {
               <div className="space-y-2">
                 {schools.map((s: any, index: number) => {
                   const origin = window.location.hostname.includes("lovable") ? "https://musichof.com" : window.location.origin;
-                  const registrationUrl = `${origin}/school-music-register?school_id=${s.id}`;
+                  const registrationUrl = s.slug
+                    ? `${origin}/school-music-register?school=${s.slug}`
+                    : `${origin}/school-music-register?school_id=${s.id}`;
                   const copyLink = (e: React.MouseEvent) => {
                     e.stopPropagation();
                     navigator.clipboard.writeText(registrationUrl);

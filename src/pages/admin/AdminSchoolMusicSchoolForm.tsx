@@ -18,6 +18,7 @@ const OPERATING_DAYS = [0, 1, 2, 3, 4, 5]; // Sun-Fri
 
 interface FormData {
   school_name: string;
+  slug: string;
   academic_year_id: string;
   notes: string;
   is_active: boolean;
@@ -38,7 +39,7 @@ const AdminSchoolMusicSchoolForm = () => {
 
   const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
-      is_active: true, notes: "", school_name: "", academic_year_id: "", operating_days: [],
+      is_active: true, notes: "", school_name: "", slug: "", academic_year_id: "", operating_days: [],
       principal_name: "", principal_phone: "", vice_principal_name: "", vice_principal_phone: "",
       annual_tuition_fee: 650,
       icount_payment_page_url: "",
@@ -74,6 +75,7 @@ const AdminSchoolMusicSchoolForm = () => {
       const fallback = (school as any).day_of_week != null ? [(school as any).day_of_week] : [];
       reset({
         school_name: school.school_name,
+        slug: (school as any).slug || "",
         academic_year_id: school.academic_year_id || "",
         notes: school.notes || "",
         is_active: school.is_active,
@@ -106,6 +108,7 @@ const AdminSchoolMusicSchoolForm = () => {
       const days = (data.operating_days || []).map((d) => Number(d)).filter((d) => !Number.isNaN(d));
       const payload: any = {
         school_name: data.school_name,
+        slug: data.slug?.trim() || null,
         academic_year_id: data.academic_year_id || null,
         notes: data.notes || null,
         is_active: data.is_active,
@@ -146,6 +149,18 @@ const AdminSchoolMusicSchoolForm = () => {
               <Label className="text-sm">שם בית ספר *</Label>
               <Input {...register("school_name", { required: "שדה חובה" })} className="h-12 rounded-xl" />
               {errors.school_name && <p className="text-sm text-destructive">{errors.school_name.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">מזהה באנגלית (Slug)</Label>
+              <Input
+                {...register("slug")}
+                className="h-12 rounded-xl"
+                dir="ltr"
+                placeholder="HaOmer / CarmelVaYam / Maaganim / Sitrin / Caesarea"
+              />
+              <p className="text-xs text-muted-foreground">
+                מזהה קריא באנגלית לשימוש בקישורי הרשמה ותשלום (למשל ?school=HaOmer). ייחודי לכל שנה.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm">שנת לימודים</Label>

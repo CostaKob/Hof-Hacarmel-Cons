@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -70,7 +70,11 @@ const SchoolMusicRegister = () => {
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
   const urlYearId = searchParams.get("yearId");
-  const urlSchoolId = searchParams.get("school_id");
+  const urlSchoolIdParam = searchParams.get("school_id");
+  const urlSchoolSlug = searchParams.get("school");
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const initialSchoolIdGuess = urlSchoolIdParam && UUID_RE.test(urlSchoolIdParam) ? urlSchoolIdParam : "";
+  const slugCandidate = urlSchoolSlug || (urlSchoolIdParam && !UUID_RE.test(urlSchoolIdParam) ? urlSchoolIdParam : "");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [approvalChecked, setApprovalChecked] = useState(false);
@@ -88,8 +92,27 @@ const SchoolMusicRegister = () => {
   } | null>(null);
   const [redirecting, setRedirecting] = useState(false);
 
+  // Resolve slug to school id (if a slug was provided in URL)
+  const { data: slugResolved } = useQuery({
+    queryKey: ["school-music-school-by-slug", slugCandidate],
+    enabled: !!slugCandidate,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_schools")
+        .select("id, academic_year_id")
+        .eq("slug", slugCandidate)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const urlSchoolId = initialSchoolIdGuess || slugResolved?.id || "";
+
   const [form, setForm] = useState({
-    school_music_school_id: urlSchoolId || "",
+    school_music_school_id: "",
     school_music_class_id: "",
     student_first_name: "",
     student_last_name: "",
@@ -103,6 +126,13 @@ const SchoolMusicRegister = () => {
     instrument_id: "",
     inventory_instrument_id: "",
   });
+
+  // Sync school_music_school_id with URL-derived id (handles slug → id resolution after fetch)
+  useEffect(() => {
+    if (urlSchoolId && !form.school_music_school_id) {
+      setForm((f) => ({ ...f, school_music_school_id: urlSchoolId }));
+    }
+  }, [urlSchoolId]);
 
   // refs for scroll-to-error
   const fieldRefs: Record<string, React.RefObject<HTMLDivElement>> = {
