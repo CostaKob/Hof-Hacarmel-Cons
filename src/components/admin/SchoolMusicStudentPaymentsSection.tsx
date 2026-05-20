@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2 } from "lucide-react";
+import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2, Link2, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
