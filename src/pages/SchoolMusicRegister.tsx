@@ -75,6 +75,7 @@ const SchoolMusicRegister = () => {
   const [submitting, setSubmitting] = useState(false);
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [inventoryOpen, setInventoryOpen] = useState(false);
 
   const [form, setForm] = useState({
     school_music_school_id: urlSchoolId || "",
@@ -535,35 +536,43 @@ const SchoolMusicRegister = () => {
                   ? "אין כלים זמינים מסוג זה"
                   : "בחרו או הקלידו מספר כלי (אופציונלי)";
                 return (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="inventory"
-                        type="button"
-                        variant="outline"
-                        role="combobox"
-                        disabled={disabled}
-                        className="w-full justify-between font-normal h-10"
-                      >
-                        <span className={cn("truncate", !selected && "text-muted-foreground")}>
-                          {selected ? formatLabel(selected) : placeholder}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          {selected && (
-                            <X
-                              className="h-4 w-4 opacity-60 hover:opacity-100"
-                              onPointerDown={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                updateField("inventory_instrument_id", "");
-                              }}
-                            />
-
-                          )}
+                  <Popover open={inventoryOpen} onOpenChange={setInventoryOpen}>
+                    <div className="relative">
+                      <PopoverTrigger asChild>
+                        <Button
+                          id="inventory"
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          disabled={disabled}
+                          className="w-full justify-between font-normal h-10 pl-16"
+                        >
+                          <span className={cn("truncate", !selected && "text-muted-foreground")}>
+                            {selected ? formatLabel(selected) : placeholder}
+                          </span>
                           <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                        </div>
-                      </Button>
-                    </PopoverTrigger>
+                        </Button>
+                      </PopoverTrigger>
+                      {selected && !disabled && (
+                        <button
+                          type="button"
+                          aria-label="נקה בחירת כלי מהמלאי"
+                          className="absolute left-9 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            updateField("inventory_instrument_id", "");
+                            setInventoryOpen(false);
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                       <Command
                         filter={(value, search) => {
@@ -579,7 +588,10 @@ const SchoolMusicRegister = () => {
                               <CommandItem
                                 key={it.id}
                                 value={`${it.serial_number} ${it.brand || ""} ${it.model || ""} ${it.size || ""}`}
-                                onSelect={() => updateField("inventory_instrument_id", it.id)}
+                                onSelect={() => {
+                                  updateField("inventory_instrument_id", it.id);
+                                  setInventoryOpen(false);
+                                }}
                               >
                                 <Check className={cn("ml-2 h-4 w-4", form.inventory_instrument_id === it.id ? "opacity-100" : "opacity-0")} />
                                 {formatLabel(it)}
