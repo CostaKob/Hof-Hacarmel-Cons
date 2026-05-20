@@ -552,11 +552,13 @@ const SchoolMusicRegister = () => {
                           {selected && (
                             <X
                               className="h-4 w-4 opacity-60 hover:opacity-100"
-                              onClick={(e) => {
+                              onPointerDown={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 updateField("inventory_instrument_id", "");
                               }}
                             />
+
                           )}
                           <ChevronsUpDown className="h-4 w-4 opacity-50" />
                         </div>
