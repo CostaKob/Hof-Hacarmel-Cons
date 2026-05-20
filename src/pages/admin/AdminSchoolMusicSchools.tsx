@@ -25,7 +25,7 @@ const getDayName = (school: any) => {
 const ALL = "__all__";
 
 const GENDER_LABELS: Record<string, string> = { male: "זכר", female: "נקבה", other: "אחר" };
-const STATUS_LABELS: Record<string, string> = { new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" };
+const STATUS_LABELS: Record<string, string> = { active: "פעיל", stopped: "הפסיק" };
 
 const DetailRow = ({ label, value, dir: fieldDir }: { label: string; value?: string | null; dir?: string }) => (
   <div className="flex gap-2 text-sm py-0.5">
@@ -261,7 +261,7 @@ const AdminSchoolMusicSchools = () => {
       school_music_school_id: "",
       instrument_id: "",
       
-      status: "new",
+      status: "active",
       academic_year_id: activeYear?.id || null,
     });
     setAddDialogOpen(true);
@@ -662,8 +662,8 @@ const AdminSchoolMusicSchools = () => {
                             return null;
                           })()}
                           <Badge
-                            variant={s.status === "assigned" ? "default" : "outline"}
-                            className={`rounded-lg text-xs ${s.status === "inactive" ? "text-destructive border-destructive" : ""}`}
+                            variant={s.status === "active" ? "default" : "outline"}
+                            className={`rounded-lg text-xs ${s.status === "stopped" ? "text-destructive border-destructive" : ""}`}
                           >
                             {STATUS_LABELS[s.status] || s.status}
                           </Badge>
@@ -860,10 +860,8 @@ const AdminSchoolMusicSchools = () => {
                                   <Select value={editForm.status} onValueChange={(v) => setEditForm((p: any) => ({ ...p, status: v }))}>
                                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="new">חדש</SelectItem>
-                                      <SelectItem value="in_review">בטיפול</SelectItem>
-                                      <SelectItem value="assigned">שויך</SelectItem>
-                                      <SelectItem value="inactive">לא פעיל</SelectItem>
+                                      <SelectItem value="active">פעיל</SelectItem>
+                                      <SelectItem value="stopped">הפסיק</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
