@@ -2,3 +2,9 @@ project_id = "mtzzalrmtzfrkrpdjjoy"
 
 [functions.icount-webhook]
 verify_jwt = false
+
+[functions.icount-sm-payment-webhook]
+verify_jwt = false
+
+[functions.icount-create-sm-payment-link]
+verify_jwt = false

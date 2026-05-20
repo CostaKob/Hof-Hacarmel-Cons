@@ -1,78 +1,95 @@
-## תכנית פיתוח: מודול נוכחות מורים בבתי ספר מנגנים
 
-### 1. שינויי מסד נתונים
+## מטרה
+לאחר שההורה לוחץ "שלח טופס" בטופס ההרשמה לבית הספר המנגן, התלמיד יישובץ מיד לקבוצה, יוצג מסך אישור עם פרטי השיבוץ והכלי, ומשם ההורה יועבר ישירות לדף תשלום של iCount עבור דמי הלימוד השנתיים. עם אישור התשלום — שורת התשלום בכרטיס התלמיד תתעדכן אוטומטית ל"שולם" עם קישור לקבלה.
 
-**school_music_schools — שינוי שדה ימי פעילות**
-- הוספת עמודה חדשה `operating_days smallint[]` (מערך של ימי שבוע 0-6, ראשון עד שישי)
-- מיגרציה: העברת `day_of_week` הקיים למערך (אם קיים ערך → `[day_of_week]`, אחרת `[]`)
-- השארת `day_of_week` הישן לתאימות לאחור (לא נמחק כעת כדי לא לשבור קוד קיים)
+## זרימה מקצה לקצה
 
-**טבלה חדשה: `teacher_attendance`**
-- `id UUID PK`
-- `school_music_school_id UUID NOT NULL` — בית ספר מנגן
-- `teacher_id UUID NOT NULL` — מורה
-- `attendance_date DATE NOT NULL`
-- `status TEXT NOT NULL` — enum חדש `attendance_status`: `present` / `absent`
-- `notes TEXT` — סיבת היעדרות
-- `academic_year_id UUID NOT NULL`
-- `created_by_user_id UUID`, `created_at`, `updated_at`
-- UNIQUE על (school_music_school_id, teacher_id, attendance_date)
-- RLS:
-  - אדמין: ניהול מלא
-  - רכז (coordinator_teacher_id של בית הספר): ניהול נוכחות עבור בתי הספר שלו
-  - מורה: צפייה בנוכחות שלו
+```text
+[הורה ממלא טופס]
+       │
+       ▼
+[Submit] ─► RPC register_school_music_student_with_loan
+                │ יוצר תלמיד + שיבוץ + השאלת כלי (קיים)
+                │ + יוצר school_music_payments (status=pending, amount=annual_tuition_fee)
+                ▼
+[מסך אישור שיבוץ] — שם תלמיד, בית ספר, כיתה, מורה, כלי + סכום לתשלום
+                │ "המשך לתשלום" / "אשלם בהמשך"
+                ▼
+[Edge Function: icount-create-sm-payment-link]
+                │ יוצר ב-iCount "דף תשלום" עבור payment_id, מחזיר URL
+                ▼
+[Redirect ל-iCount Hosted Payment Page]
+                ▼
+[הורה משלם] ──► iCount Webhook ──► [Edge Function: icount-sm-payment-webhook]
+                                     │ מעדכן payment: status=paid, paid_at, doc_id, doc_number, invoice_url
+                                     │ מפיק קבלה אוטומטית (או iCount מפיק)
+                                     ▼
+[Redirect חזרה לאפליקציה: /school-music/register/success?payment=ok]
+                ▼
+[מסך תודה — קישור להורדת קבלה]
+```
 
-### 2. ממשק אדמין — טופס בית ספר מנגן
+## שינויי DB
 
-`AdminSchoolMusicSchoolForm.tsx`:
-- החלפת השדה הקיים "יום פעילות" ברכיב MultiSelect (Checkboxes לראשון–שישי)
-- הצגה בכרטיס בית הספר: "ימי פעילות: ראשון, שלישי, חמישי"
+מיגרציה חדשה:
+- הוספת עמודה `icount_payment_page_id text` ל-`school_music_payments` (מזהה דף התשלום שנוצר).
+- הוספת עמודה `payment_link_url text` ל-`school_music_payments` (ה-URL שאליו ההורה הופנה).
+- אינדקס על `school_music_student_id` ל-`school_music_payments` לביצועים.
+- שינוי ה-RPC הקיים `register_school_music_student_with_loan`: בסיומו תיווצר גם שורת `school_music_payments` עם `payment_status='pending'`, `amount = school.annual_tuition_fee`, וקישור ל-academic_year_id ו-school_id המתאימים. ה-RPC יחזיר את ה-payment_id בנוסף ל-student_id (יחזור אובייקט JSON במקום uuid).
 
-### 3. ממשק מורה רכז — "בתי הספר המנגנים שלי"
+## Edge Functions
 
-ב-`TeacherSchoolMusicSchools.tsx`, לכל בית ספר שהמורה הוא רכז שלו:
-- כפתור **"דיווח נוכחות"** → `/teacher/school-music/:schoolId/attendance/new`
-- כפתור **"דוח נוכחות"** → `/teacher/school-music/:schoolId/attendance`
+### 1. `icount-create-sm-payment-link` (חדש)
+- קלט: `{ paymentId }`.
+- שולף את ה-payment + פרטי התלמיד/הורה + בית הספר.
+- קורא ל-iCount API `payment_page/create` (או `doc/create` עם `doc_type=invrec` + `cc_charge=1` כדי לקבל לינק) עם:
+  - סכום = `payment.amount`
+  - פרטי לקוח: שם הורה, ת"ז הורה, אימייל, טלפון
+  - תיאור: "דמי לימוד בית הספר המנגן — {school_name} — {student_name} — {year_name}"
+  - `success_url` ו-`cancel_url` חזרה לאפליקציה
+  - `custom = payment_id` כדי לשייך בקבלה ב-webhook
+- שומר את `payment_link_url` ו-`icount_payment_page_id` ברשומה.
+- מחזיר `{ url }`.
 
-### 4. דף דיווח נוכחות (רכז)
+### 2. `icount-sm-payment-webhook` (חדש)
+- מקבל POST מ-iCount כשהתשלום מסתיים (success/fail).
+- מאתר את ה-payment לפי `custom` / `icount_payment_page_id`.
+- מעדכן: `payment_status='paid'`, `paid_at=now()`, `payment_method='credit_card'`, `transaction_reference`, `icount_doc_id`, `icount_doc_number`, `invoice_url`.
+- מחזיר 200 ל-iCount.
+- ה-URL של ה-webhook יוגדר בלוח הבקרה של iCount (פעולה ידנית של המשתמש פעם אחת — אפרט בהמשך).
 
-`TeacherSchoolMusicAttendanceReport.tsx`:
-- בורר תאריך (ברירת מחדל: היום, מותר עבר)
-- שליפת כל המורים המשויכים לבית הספר (קבוצות + מנצח + רכז)
-- כפתור "כולם הגיעו" — סימון כל המורים כנוכחים
-- לכל שורה: Toggle נוכח/נעדר. אם נעדר → תיבת טקסט לסיבה
-- כפתור "שמירה" — upsert לפי unique constraint
-- אם כבר קיימים נתונים לתאריך, טעינתם
+הפונקציה הקיימת `icount-create-sm-receipt` נשארת לשימוש האדמין הידני (תשלום במזומן/צ'ק וכו').
 
-### 5. דוח נוכחות רכז
+## שינויים בצד הלקוח
 
-`TeacherSchoolMusicAttendanceList.tsx`:
-- מסננים: טווח תאריכים, מורה (dropdown), סטטוס
-- טבלה: תאריך, שם מורה, סטטוס, הערות
-- מסונן רק לבתי הספר שהמורה רכז שלהם
+### `src/pages/SchoolMusicRegister.tsx`
+- אחרי קריאת ה-RPC המוצלחת, להחליף את הודעת ההצלחה הנוכחית במסך אישור (in-component step) המציג:
+  - "נרשמת בהצלחה! 🎉" + פרטי שיבוץ (בית ספר, כיתה, מורה, כלי)
+  - סכום לתשלום
+  - שני כפתורים: **"המשך לתשלום מאובטח"** (ראשי) ו-**"אשלם בהמשך"** (משני).
+- "המשך לתשלום": קריאה ל-`supabase.functions.invoke('icount-create-sm-payment-link', { body: { paymentId } })` → `window.location.href = url`.
+- "אשלם בהמשך": ניווט ל-`/school-music/register/pending` עם הודעה שניצור קשר עם קישור לתשלום.
 
-### 6. דוח נוכחות אדמין
+### דף חדש: `src/pages/SchoolMusicRegisterSuccess.tsx`
+- נטען כאשר iCount מחזיר את ההורה (success_url).
+- שואל את ה-payment לפי `paymentId` ב-query string, מציג סטטוס (אם עוד pending — polling קצר עד שה-webhook עדכן), קישור לקבלה, וכפתור "סיום".
 
-`AdminSchoolMusicAttendance.tsx` בדשבורד האדמין:
-- מסננים: בית ספר, מורה, טווח תאריכים, סטטוס
-- טבלה ראשית: תאריך, בית ספר, מורה, סטטוס, הערות
-- **לוגיקת "טרם דווח"**: לכל יום בטווח שבו `day_of_week ∈ operating_days` של בית הספר ולא קיימת רשומת נוכחות → שורה מסומנת "טרם דווח" (badge בולט)
+### `src/components/admin/SchoolMusicStudentPaymentsSection.tsx`
+- ללא שינויים מבניים — שורת התשלום ה"אוטומטית" תופיע כמו כל תשלום אחר. נוסיף רק תווית קטנה "נוצר בהרשמה" כשיש `payment_link_url` ועדיין `pending`, וכפתור "שלח שוב קישור תשלום" שמייצר מחדש לינק ושולח לאימייל/וואטסאפ של ההורה (אופציונלי — שלב שני).
 
-### 7. אזהרה במודול תשלומים
+## דרישות מקדימות מהמשתמש
+1. לאשר שב-iCount של העמותה מופעל מודול **סליקת אשראי + דף תשלום (Payment Page)**. בלי זה הלינקים לא ייווצרו.
+2. להגדיר ב-iCount את כתובת ה-Webhook לפונקציה החדשה (אתן את ה-URL המדויק אחרי הפריסה).
+3. אישור הסכום: כרגע ברירת המחדל היא `annual_tuition_fee=650` לבית ספר. רוצה שזה יישאר ניתן לשינוי פר בית ספר? (כן, כבר נשמר פר רשומה — נמשיך לשם).
 
-ב-`AddPaymentDialog` (וכל מקום נוסף שמפיק חשבונית/זיכוי iCount):
-- לפני קריאת ה-edge function `icount-create-invoice` / `icount-create-refund` — `AlertDialog` אישור:
-  - "הפקת חשבונית סופית — לא ניתנת לביטול. להמשיך?"
-  - "הפקת זיכוי — פעולה בלתי הפיכה. להמשיך?"
+## פרטים טכניים (לעיון מפתחים)
+- שדה `custom` של iCount הוא מחרוזת חופשית — נשתמש בו לאחסון `payment_id` ולא נסתמך רק על `doc_number`, כדי שמיפוי ה-webhook יהיה דטרמיניסטי.
+- ה-RPC ימשיך להיות `SECURITY DEFINER`; ההוספה של שורת התשלום תיעשה בתוך אותה טרנזקציה כדי שלא ייווצר תלמיד בלי שורת תשלום.
+- במסך האישור ב-React נשתמש ב-`react-query` עם `refetchInterval` של 2 שניות עד שה-status הופך ל-`paid` או חולפות 60 שניות.
+- אבטחת ה-webhook: נאמת לפי `icount_payment_page_id` קיים ב-DB + (אם iCount תומך) חתימה / סוד משותף. אם לא, נאמת לפי קומבינציה של `cid` + `doc_number` שמופיע ב-DB.
+- אין צורך בשינוי RLS — `school_music_payments` כבר מאפשר `INSERT` ל-anon וגם `SELECT` ל-anon.
 
-### 8. ניווט
-
-- הוספת ראוטים חדשים ב-`App.tsx`
-- הוספת קישור "נוכחות מורים" בדשבורד האדמין
-
-### פרטים טכניים
-
-- Enum: `CREATE TYPE attendance_status AS ENUM ('present', 'absent')`
-- אינדקסים: `(school_music_school_id, attendance_date)`, `(teacher_id, attendance_date)`
-- Helper לרשימת מורי בית ספר: רכז + מנצח + מורי `school_music_groups` (DISTINCT)
-- כל הטפסים RTL, h-12 inputs, rounded-xl, sticky footer במובייל
+## מחוץ לסקופ (לשלב הבא)
+- תשלום בתשלומים (credit card installments).
+- שליחה אוטומטית של קישור התשלום בוואטסאפ/אימייל להורים שלא שילמו תוך X ימים.
+- חיוב בנפרד עבור פיקדון/השאלת כלי.

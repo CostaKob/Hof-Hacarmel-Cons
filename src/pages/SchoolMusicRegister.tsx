@@ -76,6 +76,17 @@ const SchoolMusicRegister = () => {
   const [approvalChecked, setApprovalChecked] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [inventoryOpen, setInventoryOpen] = useState(false);
+  const [submissionResult, setSubmissionResult] = useState<{
+    payment_id: string;
+    amount: number;
+    student_name: string;
+    school_name: string;
+    class_name: string;
+    instrument_name: string;
+    teacher_name?: string;
+    inventory_label?: string;
+  } | null>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   const [form, setForm] = useState({
     school_music_school_id: urlSchoolId || "",
@@ -200,7 +211,7 @@ const SchoolMusicRegister = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_class_groups")
-        .select("id, instrument_id, teacher_id, instruments(id, name)")
+        .select("id, instrument_id, teacher_id, instruments(id, name), teachers(id, first_name, last_name)")
         .eq("school_music_class_id", form.school_music_class_id);
       if (error) throw error;
       return data ?? [];
@@ -356,11 +367,32 @@ const SchoolMusicRegister = () => {
         approval_checked: true,
       };
 
-      const { error } = await supabase.rpc("register_school_music_student_with_loan" as any, {
+      const { data, error } = await supabase.rpc("register_school_music_student_with_loan" as any, {
         _payload: payload,
         _inventory_instrument_id: form.inventory_instrument_id || null,
       });
       if (error) throw error;
+
+      const result = (data as any) || {};
+      const selectedInventory = availableInventory.find((i: any) => i.id === form.inventory_instrument_id);
+      const instrumentName = instruments.find((i: any) => i.id === form.instrument_id)?.name || "";
+      const teacher: any = matchingGroup ? (matchingGroup as any).teachers : null;
+      const teacherName = teacher
+        ? `${teacher.first_name ?? ""} ${teacher.last_name ?? ""}`.trim()
+        : "";
+
+      setSubmissionResult({
+        payment_id: result.payment_id,
+        amount: Number(result.amount || 0),
+        student_name: `${form.student_first_name} ${form.student_last_name}`.trim(),
+        school_name: schools.find((s) => s.id === form.school_music_school_id)?.school_name || "",
+        class_name: classes.find((c) => c.id === form.school_music_class_id)?.class_name || "",
+        instrument_name: instrumentName,
+        teacher_name: teacherName,
+        inventory_label: selectedInventory
+          ? `#${selectedInventory.serial_number}${selectedInventory.brand ? ` — ${selectedInventory.brand}` : ""}`
+          : undefined,
+      });
       setSubmitted(true);
     } catch (err) {
       console.error(err);
@@ -370,21 +402,76 @@ const SchoolMusicRegister = () => {
     }
   };
 
+  const handleProceedToPayment = async () => {
+    if (!submissionResult?.payment_id) return;
+    setRedirecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("icount-create-sm-payment-link", {
+        body: {
+          paymentId: submissionResult.payment_id,
+          returnOrigin: window.location.origin,
+        },
+      });
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("לא התקבל קישור תשלום");
+      window.location.href = url;
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "שגיאה ביצירת קישור התשלום");
+      setRedirecting(false);
+    }
+  };
+
   /* ── success state ── */
 
-  if (submitted) {
+  if (submitted && submissionResult) {
+    const r = submissionResult;
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-lg w-full text-center">
-          <CardContent className="py-12 space-y-4">
-            <div className="text-4xl">✅</div>
-            <h2 className="text-xl font-bold">הטופס נשלח בהצלחה!</h2>
-            <p className="text-muted-foreground">תודה על מילוי הטופס. נעדכן אתכם בהמשך.</p>
+        <Card className="max-w-xl w-full">
+          <CardContent className="py-10 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="text-5xl">🎉</div>
+              <h2 className="text-2xl font-bold">ההרשמה התקבלה בהצלחה!</h2>
+              <p className="text-muted-foreground">פרטי השיבוץ של {r.student_name}:</p>
+            </div>
+
+            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-2 text-sm">
+              {r.school_name && <div><span className="text-muted-foreground">בית ספר: </span><span className="font-medium">{r.school_name}</span></div>}
+              {r.class_name && <div><span className="text-muted-foreground">כיתה: </span><span className="font-medium">{r.class_name}</span></div>}
+              {r.instrument_name && <div><span className="text-muted-foreground">כלי נגינה: </span><span className="font-medium">{r.instrument_name}</span></div>}
+              {r.teacher_name && <div><span className="text-muted-foreground">מורה: </span><span className="font-medium">{r.teacher_name}</span></div>}
+              {r.inventory_label && <div><span className="text-muted-foreground">כלי מהמלאי: </span><span className="font-medium">{r.inventory_label}</span></div>}
+            </div>
+
+            {r.amount > 0 ? (
+              <>
+                <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-5 text-center space-y-1">
+                  <p className="text-sm text-muted-foreground">דמי לימוד שנתיים</p>
+                  <p className="text-3xl font-bold text-primary">₪{r.amount.toLocaleString()}</p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Button onClick={handleProceedToPayment} disabled={redirecting} className="h-12 text-base">
+                    {redirecting ? "מעביר לתשלום מאובטח..." : "המשך לתשלום מאובטח 🔒"}
+                  </Button>
+                  <Button variant="outline" onClick={() => { window.location.href = "/"; }} disabled={redirecting} className="h-11">
+                    אשלם בהמשך
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground mt-1">
+                    אם תבחרו "אשלם בהמשך" נשלח אליכם קישור תשלום בנפרד.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="text-center text-muted-foreground">לא נקבעו דמי לימוד לבית הספר הזה. ניצור קשר בהמשך.</p>
+            )}
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   /* ── year closed / loading guard ── */
 
