@@ -466,6 +466,36 @@ const SchoolMusicRegister = () => {
             ) : (
               <p className="text-center text-muted-foreground">לא נקבעו דמי לימוד לבית הספר הזה. ניצור קשר בהמשך.</p>
             )}
+
+            <div className="pt-4 border-t border-border">
+              <Button
+                variant="secondary"
+                className="w-full h-11"
+                disabled={redirecting}
+                onClick={() => {
+                  setForm((prev) => ({
+                    ...prev,
+                    school_music_class_id: "",
+                    student_first_name: "",
+                    student_last_name: "",
+                    student_national_id: "",
+                    gender: "",
+                    instrument_id: "",
+                    inventory_instrument_id: "",
+                  }));
+                  setErrors({});
+                  setApprovalChecked(false);
+                  setSubmissionResult(null);
+                  setSubmitted(false);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                ➕ הרשמת ילד/ה נוסף/ת
+              </Button>
+              <p className="text-xs text-center text-muted-foreground mt-2">
+                פרטי ההורה ובית הספר יישמרו, תצטרכו למלא רק את פרטי הילד/ה.
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
