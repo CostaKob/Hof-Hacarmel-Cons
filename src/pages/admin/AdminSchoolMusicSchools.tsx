@@ -662,8 +662,8 @@ const AdminSchoolMusicSchools = () => {
                             return null;
                           })()}
                           <Badge
-                            variant={s.status === "assigned" ? "default" : "outline"}
-                            className={`rounded-lg text-xs ${s.status === "inactive" ? "text-destructive border-destructive" : ""}`}
+                            variant={s.status === "active" ? "default" : "outline"}
+                            className={`rounded-lg text-xs ${s.status === "stopped" ? "text-destructive border-destructive" : ""}`}
                           >
                             {STATUS_LABELS[s.status] || s.status}
                           </Badge>
