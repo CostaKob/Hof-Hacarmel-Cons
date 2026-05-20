@@ -127,6 +127,13 @@ const SchoolMusicRegister = () => {
     inventory_instrument_id: "",
   });
 
+  // Sync school_music_school_id with URL-derived id (handles slug → id resolution after fetch)
+  useEffect(() => {
+    if (urlSchoolId && !form.school_music_school_id) {
+      setForm((f) => ({ ...f, school_music_school_id: urlSchoolId }));
+    }
+  }, [urlSchoolId]);
+
   // refs for scroll-to-error
   const fieldRefs: Record<string, React.RefObject<HTMLDivElement>> = {
     school_music_school_id: useRef<HTMLDivElement>(null!),
