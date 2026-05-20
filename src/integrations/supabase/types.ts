@@ -2141,7 +2141,7 @@ export type Database = {
         | "refunded"
         | "failed"
         | "cancelled"
-      school_music_student_status: "new" | "in_review" | "assigned" | "inactive"
+      school_music_student_status: "active" | "stopped"
       transaction_type: "payment" | "credit"
     }
     CompositeTypes: {
@@ -2320,7 +2320,7 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
-      school_music_student_status: ["new", "in_review", "assigned", "inactive"],
+      school_music_student_status: ["active", "stopped"],
       transaction_type: ["payment", "credit"],
     },
   },
