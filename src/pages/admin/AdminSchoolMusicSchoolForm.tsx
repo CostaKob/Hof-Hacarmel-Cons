@@ -151,6 +151,18 @@ const AdminSchoolMusicSchoolForm = () => {
               {errors.school_name && <p className="text-sm text-destructive">{errors.school_name.message}</p>}
             </div>
             <div className="space-y-1.5">
+              <Label className="text-sm">מזהה באנגלית (Slug)</Label>
+              <Input
+                {...register("slug")}
+                className="h-12 rounded-xl"
+                dir="ltr"
+                placeholder="HaOmer / CarmelVaYam / Maaganim / Sitrin / Caesarea"
+              />
+              <p className="text-xs text-muted-foreground">
+                מזהה קריא באנגלית לשימוש בקישורי הרשמה ותשלום (למשל ?school=HaOmer). ייחודי לכל שנה.
+              </p>
+            </div>
+            <div className="space-y-1.5">
               <Label className="text-sm">שנת לימודים</Label>
               <Select value={selectedYearId} onValueChange={(v) => setValue("academic_year_id", v)}>
                 <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר שנה" /></SelectTrigger>
