@@ -6,9 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Check, ChevronsUpDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import AppLogo from "@/components/AppLogo";
 import { CitySelect } from "@/components/CitySelect";
@@ -520,30 +524,75 @@ const SchoolMusicRegister = () => {
             </Field>
 
             <Field id="inventory" label="כלי מהמלאי" error={errors.inventory_instrument_id}>
-              <Select
-                value={form.inventory_instrument_id}
-                onValueChange={(v) => updateField("inventory_instrument_id", v)}
-                disabled={!form.instrument_id || availableInventory.length === 0}
-              >
-                <SelectTrigger id="inventory">
-                  <SelectValue placeholder={
-                    !form.instrument_id ? "בחרו קודם כלי נגינה" :
-                    availableInventory.length === 0 ? "אין כלים זמינים מסוג זה" :
-                    "בחרו כלי מהמלאי (אופציונלי)"
-                  } />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableInventory.map((it: any) => (
-                    <SelectItem key={it.id} value={it.id}>
-                      #{it.serial_number}
-                      {it.size && ` (${it.size})`}
-                      {(it.brand || it.model) && ` — ${[it.brand, it.model].filter(Boolean).join(" ")}`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {(() => {
+                const selected = availableInventory.find((it: any) => it.id === form.inventory_instrument_id);
+                const formatLabel = (it: any) =>
+                  `#${it.serial_number}${it.size ? ` (${it.size})` : ""}${(it.brand || it.model) ? ` — ${[it.brand, it.model].filter(Boolean).join(" ")}` : ""}`;
+                const disabled = !form.instrument_id || availableInventory.length === 0;
+                const placeholder = !form.instrument_id
+                  ? "בחרו קודם כלי נגינה"
+                  : availableInventory.length === 0
+                  ? "אין כלים זמינים מסוג זה"
+                  : "בחרו או הקלידו מספר כלי (אופציונלי)";
+                return (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="inventory"
+                        type="button"
+                        variant="outline"
+                        role="combobox"
+                        disabled={disabled}
+                        className="w-full justify-between font-normal h-10"
+                      >
+                        <span className={cn("truncate", !selected && "text-muted-foreground")}>
+                          {selected ? formatLabel(selected) : placeholder}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {selected && (
+                            <X
+                              className="h-4 w-4 opacity-60 hover:opacity-100"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateField("inventory_instrument_id", "");
+                              }}
+                            />
+                          )}
+                          <ChevronsUpDown className="h-4 w-4 opacity-50" />
+                        </div>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command
+                        filter={(value, search) => {
+                          if (!search) return 1;
+                          return value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+                        }}
+                      >
+                        <CommandInput placeholder="הקלידו מספר כלי..." />
+                        <CommandList>
+                          <CommandEmpty>לא נמצא כלי תואם</CommandEmpty>
+                          <CommandGroup>
+                            {availableInventory.map((it: any) => (
+                              <CommandItem
+                                key={it.id}
+                                value={`${it.serial_number} ${it.brand || ""} ${it.model || ""} ${it.size || ""}`}
+                                onSelect={() => updateField("inventory_instrument_id", it.id)}
+                              >
+                                <Check className={cn("ml-2 h-4 w-4", form.inventory_instrument_id === it.id ? "opacity-100" : "opacity-0")} />
+                                {formatLabel(it)}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                );
+              })()}
               <p className="text-xs text-muted-foreground mt-1">בחירת כלי מהמלאי תיצור השאלה אוטומטית לתלמיד.</p>
             </Field>
+
 
             <hr className="my-2" />
 
