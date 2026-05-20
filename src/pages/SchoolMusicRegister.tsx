@@ -92,8 +92,27 @@ const SchoolMusicRegister = () => {
   } | null>(null);
   const [redirecting, setRedirecting] = useState(false);
 
+  // Resolve slug to school id (if a slug was provided in URL)
+  const { data: slugResolved } = useQuery({
+    queryKey: ["school-music-school-by-slug", slugCandidate],
+    enabled: !!slugCandidate,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_music_schools")
+        .select("id, academic_year_id")
+        .eq("slug", slugCandidate)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const urlSchoolId = initialSchoolIdGuess || slugResolved?.id || "";
+
   const [form, setForm] = useState({
-    school_music_school_id: urlSchoolId || "",
+    school_music_school_id: "",
     school_music_class_id: "",
     student_first_name: "",
     student_last_name: "",
