@@ -108,6 +108,7 @@ const AdminSchoolMusicSchoolForm = () => {
       const days = (data.operating_days || []).map((d) => Number(d)).filter((d) => !Number.isNaN(d));
       const payload: any = {
         school_name: data.school_name,
+        slug: data.slug?.trim() || null,
         academic_year_id: data.academic_year_id || null,
         notes: data.notes || null,
         is_active: data.is_active,
