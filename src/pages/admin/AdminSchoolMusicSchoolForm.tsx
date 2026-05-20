@@ -18,6 +18,7 @@ const OPERATING_DAYS = [0, 1, 2, 3, 4, 5]; // Sun-Fri
 
 interface FormData {
   school_name: string;
+  slug: string;
   academic_year_id: string;
   notes: string;
   is_active: boolean;
