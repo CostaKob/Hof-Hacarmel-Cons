@@ -95,7 +95,7 @@ const AdminSchoolMusicStudentCard = () => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Badge>{({ new: "חדש", in_review: "בטיפול", assigned: "שויך", inactive: "לא פעיל" } as Record<string, string>)[student.status] ?? student.status}</Badge>
+              <Badge>{({ active: "פעיל", stopped: "הפסיק" } as Record<string, string>)[student.status] ?? student.status}</Badge>
               <Button
                 variant="outline"
                 size="sm"
