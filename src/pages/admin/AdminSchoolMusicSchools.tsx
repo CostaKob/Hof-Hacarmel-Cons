@@ -860,10 +860,8 @@ const AdminSchoolMusicSchools = () => {
                                   <Select value={editForm.status} onValueChange={(v) => setEditForm((p: any) => ({ ...p, status: v }))}>
                                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="new">חדש</SelectItem>
-                                      <SelectItem value="in_review">בטיפול</SelectItem>
-                                      <SelectItem value="assigned">שויך</SelectItem>
-                                      <SelectItem value="inactive">לא פעיל</SelectItem>
+                                      <SelectItem value="active">פעיל</SelectItem>
+                                      <SelectItem value="stopped">הפסיק</SelectItem>
                                     </SelectContent>
                                   </Select>
                                 </div>
