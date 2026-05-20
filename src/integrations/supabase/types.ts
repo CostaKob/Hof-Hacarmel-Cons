@@ -1324,6 +1324,7 @@ export type Database = {
           created_at: string
           day_of_week: number | null
           homeroom_teachers: Json
+          icount_payment_page_url: string | null
           id: string
           is_active: boolean
           notes: string | null
@@ -1346,6 +1347,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number | null
           homeroom_teachers?: Json
+          icount_payment_page_url?: string | null
           id?: string
           is_active?: boolean
           notes?: string | null
@@ -1368,6 +1370,7 @@ export type Database = {
           created_at?: string
           day_of_week?: number | null
           homeroom_teachers?: Json
+          icount_payment_page_url?: string | null
           id?: string
           is_active?: boolean
           notes?: string | null
