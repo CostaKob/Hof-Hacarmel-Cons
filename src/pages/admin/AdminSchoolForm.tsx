@@ -16,6 +16,7 @@ interface SchoolFormData {
   name: string;
   address: string;
   city: string;
+  icount_page_id: string;
   is_active: boolean;
 }
 
