@@ -387,6 +387,22 @@ const SchoolMusicRegister = () => {
       );
 
       const phone = form.parent_phone.replace(/[^\d]/g, "");
+      const studentNid = form.student_national_id.replace(/[^\d]/g, "");
+
+      // Block duplicate national_id within the same academic year
+      if (studentNid && resolvedYear?.id) {
+        const { data: dup } = await supabase
+          .from("school_music_students")
+          .select("id, student_first_name, student_last_name")
+          .eq("student_national_id", studentNid)
+          .eq("academic_year_id", resolvedYear.id)
+          .maybeSingle();
+        if (dup) {
+          toast.error(`כבר קיימת הרשמה לתלמיד עם ת"ז זו השנה (${dup.student_first_name} ${dup.student_last_name}). אם זו טעות, בדקו את הת"ז.`);
+          setSubmitting(false);
+          return;
+        }
+      }
 
       const payload = {
         school_music_school_id: form.school_music_school_id,
@@ -395,7 +411,7 @@ const SchoolMusicRegister = () => {
         academic_year_id: resolvedYear?.id || null,
         student_first_name: form.student_first_name.trim(),
         student_last_name: form.student_last_name.trim(),
-        student_national_id: form.student_national_id.replace(/[^\d]/g, ""),
+        student_national_id: studentNid,
         gender: form.gender || null,
         class_name: classes.find((c) => c.id === form.school_music_class_id)?.class_name || "",
         city: form.city.trim() || null,
@@ -412,6 +428,7 @@ const SchoolMusicRegister = () => {
         _inventory_instrument_id: form.inventory_instrument_id || null,
       });
       if (error) throw error;
+
 
       const result = (data as any) || {};
       const selectedInventory = availableInventory.find((i: any) => i.id === form.inventory_instrument_id);
