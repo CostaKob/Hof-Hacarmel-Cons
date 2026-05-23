@@ -67,7 +67,7 @@ const AdminSchoolForm = () => {
         const { error } = await supabase.from("schools").update(payload as any).eq("id", schoolId!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("schools").insert(payload);
+        const { error } = await supabase.from("schools").insert(payload as any);
         if (error) throw error;
       }
     },
