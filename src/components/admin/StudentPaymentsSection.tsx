@@ -35,6 +35,7 @@ const StudentPaymentsSection = ({
   extraInvalidateKeys = [],
   showYear = false,
   readOnly = false,
+  paymentLinkUrl = null,
 }: StudentPaymentsSectionProps) => {
   const queryClient = useQueryClient();
 
