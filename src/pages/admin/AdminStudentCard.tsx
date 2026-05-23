@@ -341,6 +341,10 @@ const AdminStudentCard = () => {
           enrollments={enrollments}
           showYear
           readOnly
+          paymentLinkUrl={buildIcountPaymentLink(
+            (enrollments[0] as any)?.schools ?? { name: "", icount_page_id: null },
+            student as any,
+          )}
           extraInvalidateKeys={[["admin-student-payments", studentId]]}
           extraHeaderActions={
             <Button
@@ -352,6 +356,7 @@ const AdminStudentCard = () => {
             </Button>
           }
         />
+
 
 
 
