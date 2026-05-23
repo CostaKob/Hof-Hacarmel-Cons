@@ -359,6 +359,78 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!ccRefundTarget} onOpenChange={(o) => { if (!o) { setCcRefundTarget(null); setCcRefundAmount(""); } }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">⚠️ זיכוי כרטיס אשראי</DialogTitle>
+            <DialogDescription className="text-foreground/90">
+              פעולה זו תזכה את כרטיס האשראי <strong>באופן מיידי וישיר</strong> דרך iCount ולא ניתן לבטלה.
+              <br />
+              עסקה מקורית: ₪{Number(ccRefundTarget?.amount || 0).toLocaleString()} · נותר להחזר: ₪{Number(ccRefundTarget?._remaining || 0).toLocaleString()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="cc-refund-amount">סכום ההחזר (₪)</Label>
+            <Input
+              id="cc-refund-amount"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max={ccRefundTarget?._remaining ?? undefined}
+              step="0.01"
+              className="h-12 rounded-xl"
+              value={ccRefundAmount}
+              onChange={(e) => setCcRefundAmount(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">תופק קבלת זיכוי וייווצר תנועה שלילית בכרטיס.</p>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setCcRefundTarget(null); setCcRefundAmount(""); }}>
+              ביטול
+            </Button>
+            <Button
+              variant="destructive"
+              className="h-11 rounded-xl"
+              disabled={ccRefundMutation.isPending}
+              onClick={() => {
+                const amt = Number(ccRefundAmount);
+                const max = Number(ccRefundTarget?._remaining || 0);
+                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר להחזר (₪${max.toLocaleString()})`); return; }
+                setPendingCcRefund({ paymentId: ccRefundTarget.id, amount: amt });
+              }}
+            >
+              {ccRefundMutation.isPending ? "מבצע..." : "אישור החזר"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!pendingCcRefund} onOpenChange={(o) => { if (!o) setPendingCcRefund(null); }}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">אישור החזר אשראי סופי</AlertDialogTitle>
+            <AlertDialogDescription>
+              ⚠️ האם לבצע החזר ישיר של <strong>₪{pendingCcRefund?.amount.toLocaleString()}</strong> לכרטיס האשראי?
+              פעולה זו תזכה את הלקוח באופן מיידי דרך iCount ולא ניתנת לביטול.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingCcRefund) ccRefundMutation.mutate(pendingCcRefund);
+                setPendingCcRefund(null);
+              }}
+            >
+              כן, בצע החזר אשראי
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 };
