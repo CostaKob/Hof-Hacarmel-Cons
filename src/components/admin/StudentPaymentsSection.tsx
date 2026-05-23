@@ -46,6 +46,9 @@ const StudentPaymentsSection = ({
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
+  const [ccRefundTarget, setCcRefundTarget] = useState<any>(null);
+  const [ccRefundAmount, setCcRefundAmount] = useState<string>("");
+  const [pendingCcRefund, setPendingCcRefund] = useState<{ paymentId: string; amount: number } | null>(null);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
