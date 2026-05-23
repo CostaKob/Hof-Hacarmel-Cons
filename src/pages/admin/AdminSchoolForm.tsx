@@ -16,6 +16,7 @@ interface SchoolFormData {
   name: string;
   address: string;
   city: string;
+  icount_page_id: string;
   is_active: boolean;
 }
 
@@ -47,6 +48,7 @@ const AdminSchoolForm = () => {
         name: school.name,
         address: school.address ?? "",
         city: school.city ?? "",
+        icount_page_id: (school as any).icount_page_id ?? "",
         is_active: school.is_active,
       });
     }
@@ -58,13 +60,14 @@ const AdminSchoolForm = () => {
         name: data.name,
         address: data.address || null,
         city: data.city || null,
+        icount_page_id: data.icount_page_id?.trim() || null,
         is_active: data.is_active,
       };
       if (isEdit) {
-        const { error } = await supabase.from("schools").update(payload).eq("id", schoolId!);
+        const { error } = await supabase.from("schools").update(payload as any).eq("id", schoolId!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("schools").insert(payload);
+        const { error } = await supabase.from("schools").insert(payload as any);
         if (error) throw error;
       }
     },
@@ -108,6 +111,7 @@ const AdminSchoolForm = () => {
     { name: "name", label: "שם שלוחה", required: true },
     { name: "address", label: "כתובת" },
     { name: "city", label: "עיר" },
+    { name: "icount_page_id", label: "iCount Page ID (לקישור תשלום)" },
   ];
 
   return (

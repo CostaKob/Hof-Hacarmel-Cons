@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Undo2 } from "lucide-react";
+import { Plus, FileDown, Undo2, CreditCard, Link as LinkIcon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
@@ -23,6 +23,8 @@ interface StudentPaymentsSectionProps {
   showYear?: boolean;
   /** Read-only mode: only show existing payments/credits + download receipt. No add/edit/refund/create-invoice. */
   readOnly?: boolean;
+  /** Optional iCount hosted payment page URL — adds a "Copy payment link" header action. */
+  paymentLinkUrl?: string | null;
 }
 
 const StudentPaymentsSection = ({
@@ -33,6 +35,7 @@ const StudentPaymentsSection = ({
   extraInvalidateKeys = [],
   showYear = false,
   readOnly = false,
+  paymentLinkUrl = null,
 }: StudentPaymentsSectionProps) => {
   const queryClient = useQueryClient();
 
@@ -43,6 +46,9 @@ const StudentPaymentsSection = ({
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
+  const [ccRefundTarget, setCcRefundTarget] = useState<any>(null);
+  const [ccRefundAmount, setCcRefundAmount] = useState<string>("");
+  const [pendingCcRefund, setPendingCcRefund] = useState<{ paymentId: string; amount: number } | null>(null);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
@@ -87,6 +93,35 @@ const StudentPaymentsSection = ({
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
 
+  const ccRefundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke("icount-refund-api", {
+        body: { paymentId, refundAmount: amount },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateAll();
+      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
+      setCcRefundTarget(null);
+      setCcRefundAmount("");
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
+  });
+
+  const copyPaymentLink = async () => {
+    if (!paymentLinkUrl) return;
+    try {
+      await navigator.clipboard.writeText(paymentLinkUrl);
+      toast.success("הקישור הועתק");
+    } catch {
+      toast.error("העתקה נכשלה");
+    }
+  };
+
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
     if (amount < 0) return s + amount;
@@ -101,6 +136,17 @@ const StudentPaymentsSection = ({
           <div className="text-sm text-muted-foreground">
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
           </div>
+          {paymentLinkUrl && (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 rounded-xl text-sm"
+              onClick={copyPaymentLink}
+              title={paymentLinkUrl}
+            >
+              <LinkIcon className="h-4 w-4" /> העתק קישור תשלום
+            </Button>
+          )}
           {extraHeaderActions}
           {!readOnly && (
             <Button
@@ -188,6 +234,18 @@ const StudentPaymentsSection = ({
                       <Undo2 className="h-4 w-4" />
                     </Button>
                   )}
+                  {!readOnly && canRefund && p.payment_method === "credit_card" && p.icount_transaction_id && (
+                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10 border-destructive/40"
+                      title={`החזר אשראי לעסקה ${p.icount_transaction_id} (נותר ₪${remaining.toLocaleString()})`}
+                      disabled={ccRefundMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCcRefundTarget({ ...p, _remaining: remaining });
+                        setCcRefundAmount(String(remaining));
+                      }}>
+                      <CreditCard className="h-3.5 w-3.5" /> זיכוי אשראי
+                    </Button>
+                  )}
                   <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
                     {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
                   </span>
@@ -197,6 +255,7 @@ const StudentPaymentsSection = ({
           })}
         </div>
       )}
+
 
       <AddPaymentDialog
         open={paymentDialogOpen}
@@ -300,6 +359,78 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!ccRefundTarget} onOpenChange={(o) => { if (!o) { setCcRefundTarget(null); setCcRefundAmount(""); } }}>
+        <DialogContent className="max-w-md" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-destructive">⚠️ זיכוי כרטיס אשראי</DialogTitle>
+            <DialogDescription className="text-foreground/90">
+              פעולה זו תזכה את כרטיס האשראי <strong>באופן מיידי וישיר</strong> דרך iCount ולא ניתן לבטלה.
+              <br />
+              עסקה מקורית: ₪{Number(ccRefundTarget?.amount || 0).toLocaleString()} · נותר להחזר: ₪{Number(ccRefundTarget?._remaining || 0).toLocaleString()}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="cc-refund-amount">סכום ההחזר (₪)</Label>
+            <Input
+              id="cc-refund-amount"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max={ccRefundTarget?._remaining ?? undefined}
+              step="0.01"
+              className="h-12 rounded-xl"
+              value={ccRefundAmount}
+              onChange={(e) => setCcRefundAmount(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">תופק קבלת זיכוי וייווצר תנועה שלילית בכרטיס.</p>
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setCcRefundTarget(null); setCcRefundAmount(""); }}>
+              ביטול
+            </Button>
+            <Button
+              variant="destructive"
+              className="h-11 rounded-xl"
+              disabled={ccRefundMutation.isPending}
+              onClick={() => {
+                const amt = Number(ccRefundAmount);
+                const max = Number(ccRefundTarget?._remaining || 0);
+                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר להחזר (₪${max.toLocaleString()})`); return; }
+                setPendingCcRefund({ paymentId: ccRefundTarget.id, amount: amt });
+              }}
+            >
+              {ccRefundMutation.isPending ? "מבצע..." : "אישור החזר"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!pendingCcRefund} onOpenChange={(o) => { if (!o) setPendingCcRefund(null); }}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">אישור החזר אשראי סופי</AlertDialogTitle>
+            <AlertDialogDescription>
+              ⚠️ האם לבצע החזר ישיר של <strong>₪{pendingCcRefund?.amount.toLocaleString()}</strong> לכרטיס האשראי?
+              פעולה זו תזכה את הלקוח באופן מיידי דרך iCount ולא ניתנת לביטול.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row-reverse gap-2">
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (pendingCcRefund) ccRefundMutation.mutate(pendingCcRefund);
+                setPendingCcRefund(null);
+              }}
+            >
+              כן, בצע החזר אשראי
+            </AlertDialogAction>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 };

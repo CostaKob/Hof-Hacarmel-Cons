@@ -1609,6 +1609,7 @@ export type Database = {
           address: string | null
           city: string | null
           created_at: string
+          icount_page_id: string | null
           id: string
           is_active: boolean
           name: string
@@ -1617,6 +1618,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
+          icount_page_id?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -1625,6 +1627,7 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
+          icount_page_id?: string | null
           id?: string
           is_active?: boolean
           name?: string
@@ -1690,10 +1693,11 @@ export type Database = {
           created_at: string
           created_by_user_id: string | null
           enrollment_breakdown: Json | null
-          enrollment_id: string
+          enrollment_id: string | null
           icount_doc_id: string | null
           icount_doc_number: string | null
           icount_doc_type: string | null
+          icount_transaction_id: string | null
           id: string
           installments: number
           invoice_url: string | null
@@ -1713,10 +1717,11 @@ export type Database = {
           created_at?: string
           created_by_user_id?: string | null
           enrollment_breakdown?: Json | null
-          enrollment_id: string
+          enrollment_id?: string | null
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
+          icount_transaction_id?: string | null
           id?: string
           installments?: number
           invoice_url?: string | null
@@ -1736,10 +1741,11 @@ export type Database = {
           created_at?: string
           created_by_user_id?: string | null
           enrollment_breakdown?: Json | null
-          enrollment_id?: string
+          enrollment_id?: string | null
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
+          icount_transaction_id?: string | null
           id?: string
           installments?: number
           invoice_url?: string | null
