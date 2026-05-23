@@ -23,6 +23,8 @@ interface StudentPaymentsSectionProps {
   showYear?: boolean;
   /** Read-only mode: only show existing payments/credits + download receipt. No add/edit/refund/create-invoice. */
   readOnly?: boolean;
+  /** Optional iCount hosted payment page URL — adds a "Copy payment link" header action. */
+  paymentLinkUrl?: string | null;
 }
 
 const StudentPaymentsSection = ({
