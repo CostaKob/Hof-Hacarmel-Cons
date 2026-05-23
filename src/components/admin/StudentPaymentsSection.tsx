@@ -136,6 +136,17 @@ const StudentPaymentsSection = ({
           <div className="text-sm text-muted-foreground">
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
           </div>
+          {paymentLinkUrl && (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 rounded-xl text-sm"
+              onClick={copyPaymentLink}
+              title={paymentLinkUrl}
+            >
+              <LinkIcon className="h-4 w-4" /> העתק קישור תשלום
+            </Button>
+          )}
           {extraHeaderActions}
           {!readOnly && (
             <Button
