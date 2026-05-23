@@ -205,6 +205,18 @@ const AdminSchoolMusicSchools = () => {
   // ── Update mutation ──
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Record<string, any> }) => {
+      const nid = (data.student_national_id || "").toString().trim();
+      const yearId = (data.academic_year_id || "").toString();
+      if (nid && yearId) {
+        const { data: dup } = await supabase
+          .from("school_music_students")
+          .select("id, student_first_name, student_last_name")
+          .eq("student_national_id", nid)
+          .eq("academic_year_id", yearId)
+          .neq("id", id)
+          .maybeSingle();
+        if (dup) throw new Error(`כבר קיים תלמיד עם ת"ז זו השנה (${dup.student_first_name} ${dup.student_last_name})`);
+      }
       const { error } = await supabase.from("school_music_students").update(data as any).eq("id", id);
       if (error) throw error;
     },
@@ -213,12 +225,23 @@ const AdminSchoolMusicSchools = () => {
       toast.success("הפרטים עודכנו בהצלחה");
       setEditingId(null);
     },
-    onError: () => toast.error("שגיאה בעדכון הפרטים"),
+    onError: (e: any) => toast.error(e?.message || "שגיאה בעדכון הפרטים"),
   });
 
   // ── Create mutation ──
   const createMutation = useMutation({
     mutationFn: async (data: Record<string, any>) => {
+      const nid = (data.student_national_id || "").toString().trim();
+      const yearId = (data.academic_year_id || "").toString();
+      if (nid && yearId) {
+        const { data: dup } = await supabase
+          .from("school_music_students")
+          .select("id, student_first_name, student_last_name")
+          .eq("student_national_id", nid)
+          .eq("academic_year_id", yearId)
+          .maybeSingle();
+        if (dup) throw new Error(`כבר קיים תלמיד עם ת"ז זו השנה (${dup.student_first_name} ${dup.student_last_name})`);
+      }
       const { error } = await supabase.from("school_music_students").insert(data as any);
       if (error) throw error;
     },
@@ -228,8 +251,9 @@ const AdminSchoolMusicSchools = () => {
       setAddDialogOpen(false);
       setAddForm({});
     },
-    onError: () => toast.error("שגיאה בהוספת התלמיד"),
+    onError: (e: any) => toast.error(e?.message || "שגיאה בהוספת התלמיד"),
   });
+
 
   // ── Delete mutation ──
   const deleteMutation = useMutation({
