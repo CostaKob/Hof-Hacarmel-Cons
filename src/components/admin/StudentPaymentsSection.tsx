@@ -93,7 +93,36 @@ const StudentPaymentsSection = ({
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
 
-  const totalPaid = payments.reduce((s: number, p: any) => {
+  const ccRefundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke("icount-refund-api", {
+        body: { paymentId, refundAmount: amount },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateAll();
+      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
+      setCcRefundTarget(null);
+      setCcRefundAmount("");
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
+  });
+
+  const copyPaymentLink = async () => {
+    if (!paymentLinkUrl) return;
+    try {
+      await navigator.clipboard.writeText(paymentLinkUrl);
+      toast.success("הקישור הועתק");
+    } catch {
+      toast.error("העתקה נכשלה");
+    }
+  };
+
+
     const amount = Number(p.amount || 0);
     if (amount < 0) return s + amount;
     return p.transaction_type === "payment" ? s + amount : s - amount;
