@@ -111,6 +111,7 @@ const AdminSchoolForm = () => {
     { name: "name", label: "שם שלוחה", required: true },
     { name: "address", label: "כתובת" },
     { name: "city", label: "עיר" },
+    { name: "icount_page_id", label: "iCount Page ID (לקישור תשלום)" },
   ];
 
   return (
