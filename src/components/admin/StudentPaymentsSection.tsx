@@ -122,7 +122,7 @@ const StudentPaymentsSection = ({
     }
   };
 
-
+  const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
     if (amount < 0) return s + amount;
     return p.transaction_type === "payment" ? s + amount : s - amount;
