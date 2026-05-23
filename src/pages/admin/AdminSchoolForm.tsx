@@ -48,6 +48,7 @@ const AdminSchoolForm = () => {
         name: school.name,
         address: school.address ?? "",
         city: school.city ?? "",
+        icount_page_id: (school as any).icount_page_id ?? "",
         is_active: school.is_active,
       });
     }
