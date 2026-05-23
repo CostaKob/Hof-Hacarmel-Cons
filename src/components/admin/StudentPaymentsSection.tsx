@@ -234,6 +234,18 @@ const StudentPaymentsSection = ({
                       <Undo2 className="h-4 w-4" />
                     </Button>
                   )}
+                  {!readOnly && canRefund && p.payment_method === "credit_card" && p.icount_transaction_id && (
+                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs text-destructive hover:bg-destructive/10 border-destructive/40"
+                      title={`החזר אשראי לעסקה ${p.icount_transaction_id} (נותר ₪${remaining.toLocaleString()})`}
+                      disabled={ccRefundMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCcRefundTarget({ ...p, _remaining: remaining });
+                        setCcRefundAmount(String(remaining));
+                      }}>
+                      <CreditCard className="h-3.5 w-3.5" /> זיכוי אשראי
+                    </Button>
+                  )}
                   <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
                     {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
                   </span>
@@ -243,6 +255,7 @@ const StudentPaymentsSection = ({
           })}
         </div>
       )}
+
 
       <AddPaymentDialog
         open={paymentDialogOpen}
