@@ -60,10 +60,11 @@ const AdminSchoolForm = () => {
         name: data.name,
         address: data.address || null,
         city: data.city || null,
+        icount_page_id: data.icount_page_id?.trim() || null,
         is_active: data.is_active,
       };
       if (isEdit) {
-        const { error } = await supabase.from("schools").update(payload).eq("id", schoolId!);
+        const { error } = await supabase.from("schools").update(payload as any).eq("id", schoolId!);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("schools").insert(payload);
