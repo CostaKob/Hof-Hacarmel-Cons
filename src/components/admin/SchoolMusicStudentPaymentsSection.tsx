@@ -90,7 +90,10 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     },
   });
 
-  const paymentLink = school?.icount_payment_page_url as string | undefined;
+  // Prefer the personalized prefilled link generated for this student (saved on the pending payment row).
+  // Fall back to the school's generic Paypage URL.
+  const pendingWithLink = payments.find((p) => p.payment_status === "pending" && p.payment_link_url);
+  const paymentLink = (pendingWithLink?.payment_link_url as string | undefined) || (school?.icount_payment_page_url as string | undefined);
   const hasPending = payments.some((p) => p.payment_status === "pending");
 
   const invalidate = () => {
