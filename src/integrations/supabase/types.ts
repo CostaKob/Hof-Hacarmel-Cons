@@ -420,6 +420,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "instrument_loans_inventory_instrument_id_fkey"
+            columns: ["inventory_instrument_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_instruments_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "instrument_loans_school_music_student_id_fkey"
             columns: ["school_music_student_id"]
             isOneToOne: false
@@ -475,6 +482,13 @@ export type Database = {
             columns: ["inventory_instrument_id"]
             isOneToOne: false
             referencedRelation: "inventory_instruments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instrument_repairs_inventory_instrument_id_fkey"
+            columns: ["inventory_instrument_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_instruments_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1112,6 +1126,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "school_music_class_groups_school_music_class_id_fkey"
+            columns: ["school_music_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_classes_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "school_music_class_groups_teacher_id_fkey"
             columns: ["teacher_id"]
             isOneToOne: false
@@ -1165,6 +1186,13 @@ export type Database = {
             referencedRelation: "school_music_schools"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "school_music_classes_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       school_music_groups: {
@@ -1205,6 +1233,13 @@ export type Database = {
             columns: ["school_music_school_id"]
             isOneToOne: false
             referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_groups_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools_public"
             referencedColumns: ["id"]
           },
           {
@@ -1296,6 +1331,13 @@ export type Database = {
             columns: ["school_music_school_id"]
             isOneToOne: false
             referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_payments_school_fk"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools_public"
             referencedColumns: ["id"]
           },
           {
@@ -1494,10 +1536,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "school_music_sessions_school_music_class_id_fkey"
+            columns: ["school_music_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_classes_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "school_music_sessions_school_music_school_id_fkey"
             columns: ["school_music_school_id"]
             isOneToOne: false
             referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_sessions_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1602,10 +1658,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "school_music_students_school_music_class_id_fkey"
+            columns: ["school_music_class_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_classes_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "school_music_students_school_music_school_id_fkey"
             columns: ["school_music_school_id"]
             isOneToOne: false
             referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_students_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools_public"
             referencedColumns: ["id"]
           },
         ]
@@ -2076,13 +2146,192 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      inventory_instruments_public: {
+        Row: {
+          brand: string | null
+          condition: Database["public"]["Enums"]["instrument_condition"] | null
+          id: string | null
+          instrument_id: string | null
+          model: string | null
+          serial_number: string | null
+          size: string | null
+        }
+        Insert: {
+          brand?: string | null
+          condition?: Database["public"]["Enums"]["instrument_condition"] | null
+          id?: string | null
+          instrument_id?: string | null
+          model?: string | null
+          serial_number?: string | null
+          size?: string | null
+        }
+        Update: {
+          brand?: string | null
+          condition?: Database["public"]["Enums"]["instrument_condition"] | null
+          id?: string | null
+          instrument_id?: string | null
+          model?: string | null
+          serial_number?: string | null
+          size?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_instruments_instrument_id_fkey"
+            columns: ["instrument_id"]
+            isOneToOne: false
+            referencedRelation: "instruments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_music_classes_public: {
+        Row: {
+          class_name: string | null
+          day_of_week: number | null
+          end_time: string | null
+          id: string | null
+          school_music_school_id: string | null
+          start_time: string | null
+        }
+        Insert: {
+          class_name?: string | null
+          day_of_week?: number | null
+          end_time?: string | null
+          id?: string | null
+          school_music_school_id?: string | null
+          start_time?: string | null
+        }
+        Update: {
+          class_name?: string | null
+          day_of_week?: number | null
+          end_time?: string | null
+          id?: string | null
+          school_music_school_id?: string | null
+          start_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_classes_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_classes_school_music_school_id_fkey"
+            columns: ["school_music_school_id"]
+            isOneToOne: false
+            referencedRelation: "school_music_schools_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      school_music_schools_public: {
+        Row: {
+          academic_year_id: string | null
+          annual_tuition_fee: number | null
+          class_schedules: Json | null
+          classes_count: number | null
+          day_of_week: number | null
+          icount_payment_page_url: string | null
+          id: string | null
+          is_active: boolean | null
+          operating_days: number[] | null
+          school_name: string | null
+          slug: string | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          annual_tuition_fee?: number | null
+          class_schedules?: Json | null
+          classes_count?: number | null
+          day_of_week?: number | null
+          icount_payment_page_url?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          operating_days?: number[] | null
+          school_name?: string | null
+          slug?: string | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          annual_tuition_fee?: number | null
+          class_schedules?: Json | null
+          classes_count?: number | null
+          day_of_week?: number | null
+          icount_payment_page_url?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          operating_days?: number[] | null
+          school_name?: string | null
+          slug?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_schools_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_registered_national_ids_for_year: {
         Args: { _year_id: string }
         Returns: {
           national_id: string
+        }[]
+      }
+      get_registration_by_token: {
+        Args: { _token: string }
+        Returns: {
+          academic_year_id: string | null
+          approval_checked: boolean
+          branch_school_name: string
+          city: string
+          created_at: string
+          custom_data: Json | null
+          educational_school: string | null
+          existing_student_id: string | null
+          gender: string | null
+          grade: string
+          id: string
+          match_type: string | null
+          notes: string | null
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          registration_page_id: string | null
+          registration_token: string | null
+          requested_instruments: Json
+          requested_lesson_duration: string
+          status: Database["public"]["Enums"]["registration_status"]
+          student_first_name: string
+          student_last_name: string
+          student_national_id: string
+          student_phone: string | null
+          student_school_text: string
+          student_status: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "registrations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_sm_payment_public_status: {
+        Args: { _payment_id: string }
+        Returns: {
+          amount: number
+          icount_doc_number: string
+          id: string
+          invoice_url: string
+          paid_at: string
+          payment_status: Database["public"]["Enums"]["school_music_payment_status"]
         }[]
       }
       get_teacher_id_for_user: { Args: { _user_id: string }; Returns: string }
