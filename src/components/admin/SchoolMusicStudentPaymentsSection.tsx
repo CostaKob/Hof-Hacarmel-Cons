@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2, Link2, Copy, ExternalLink } from "lucide-react";
+import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2, Link2, Copy, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -320,6 +320,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="פתח קישור תשלום"
                         onClick={() => window.open(p.payment_link_url, "_blank")}>
                         <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="צור קישור תשלום מחדש"
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
+                              body: { studentId, paymentId: p.id },
+                            });
+                            if (error) throw error;
+                            toast.success("הקישור נוצר מחדש");
+                            qc.invalidateQueries({ queryKey: ["school-music-student-payments", studentId] });
+                          } catch (e: any) {
+                            toast.error(e?.message || "שגיאה ביצירת הקישור");
+                          }
+                        }}>
+                        <RefreshCw className="h-4 w-4" />
                       </Button>
                     </>
                   )}
