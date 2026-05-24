@@ -113,7 +113,15 @@ Deno.serve(async (req: Request) => {
       params.set("id_no", payerId); // real field name on the paypage
       params.set("vat_id", payerId); // legacy alias
     }
-    params.set("description", `שכר לימוד - ${studentName} - ${schoolName}`);
+    const itemLabel = `שכר לימוד - ${studentName} - ${schoolName}`;
+    const studentNote = `תשלום עבור התלמיד/ה: ${studentName}${schoolName ? ` (${schoolName})` : ""}`;
+    params.set("description", itemLabel);
+    // Extra candidate field names that iCount paypages may render to the payer:
+    params.set("item_description", itemLabel);
+    params.set("subject", studentNote);
+    params.set("notes", studentNote);
+    params.set("cust_note", studentNote);
+    params.set("comment", studentNote);
     // custom1 = paymentId so the IPN can match. Fallback to studentId.
     params.set("custom1", paymentId ?? studentId);
     params.set("custom2", studentId);
