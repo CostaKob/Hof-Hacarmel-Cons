@@ -81,7 +81,8 @@ const SchoolMusicRegister = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<{
-    payment_id: string;
+    student_id: string;
+    payment_id?: string;
     amount: number;
     student_name: string;
     school_name: string;
@@ -90,7 +91,9 @@ const SchoolMusicRegister = () => {
     teacher_name?: string;
     inventory_label?: string;
   } | null>(null);
-  const [redirecting, setRedirecting] = useState(false);
+  const [payUrl, setPayUrl] = useState<string | null>(null);
+  const [payStatus, setPayStatus] = useState<"preparing" | "redirecting" | "manual">("preparing");
+  const [countdown, setCountdown] = useState(10);
 
   // Resolve slug to school id (if a slug was provided in URL)
   // If a yearId is in the URL, prefer the school matching that year.
