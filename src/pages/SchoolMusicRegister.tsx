@@ -238,12 +238,9 @@ const SchoolMusicRegister = () => {
     enabled: !!form.school_music_school_id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_classes")
-        .select("id, class_name, homeroom_teacher_name")
-        .eq("school_music_school_id", form.school_music_school_id)
-        .order("class_name");
+        .rpc("list_public_school_music_classes" as any, { _school_id: form.school_music_school_id });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
