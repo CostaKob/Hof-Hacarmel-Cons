@@ -263,13 +263,9 @@ const SchoolMusicRegister = () => {
     enabled: !!form.instrument_id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("inventory_instruments")
-        .select("id, serial_number, brand, model, size")
-        .eq("condition", "available")
-        .eq("instrument_id", form.instrument_id)
-        .order("serial_number");
+        .rpc("list_public_available_inventory" as any, { _instrument_id: form.instrument_id });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
