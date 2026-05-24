@@ -105,9 +105,15 @@ Deno.serve(async (req: Request) => {
     if (student.parent_email) params.set("email", student.parent_email);
     if (student.parent_phone) params.set("phone", student.parent_phone);
     if (payerId) {
+      // iCount paypage accepts several aliases depending on page version
       params.set("vat_id", payerId);
       params.set("client_id_number", payerId);
       params.set("id_num", payerId);
+      params.set("customer_id", payerId);
+      params.set("tax_id", payerId);
+      params.set("cidn", payerId);
+      params.set("idnum", payerId);
+      params.set("company_id", payerId);
     }
     params.set("description", `שכר לימוד - ${studentName} - ${schoolName}`);
     // custom1 = paymentId so the IPN can match. Fallback to studentId.
