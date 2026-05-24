@@ -176,16 +176,13 @@ const SchoolMusicRegister = () => {
     queryKey: ["school-music-year", urlYearParam, urlYearId, urlSchoolId],
     queryFn: async () => {
       if (urlSchoolId) {
-        const { data: school } = await supabase
-          .from("school_music_schools")
-          .select("academic_year_id")
-          .eq("id", urlSchoolId)
-          .maybeSingle();
-        if (school?.academic_year_id) {
+        const { data: schoolYearId } = await supabase
+          .rpc("get_school_music_school_year" as any, { _school_id: urlSchoolId });
+        if (schoolYearId) {
           const { data } = await supabase
             .from("academic_years")
             .select("id, name, registration_open")
-            .eq("id", school.academic_year_id)
+            .eq("id", schoolYearId as any)
             .maybeSingle();
           if (data) return data;
         }
