@@ -448,7 +448,7 @@ const SchoolMusicRegister = () => {
       });
       setSubmitted(true);
       // Kick off async paylink generation; success state's effect handles the redirect.
-      void generatePayLink(result.student_id);
+      void generatePayLink(result.student_id, result.payment_id);
     } catch (err) {
       console.error(err);
       toast.error("שגיאה בשליחת הטופס, נסו שנית");
@@ -457,12 +457,12 @@ const SchoolMusicRegister = () => {
     }
   };
 
-  const generatePayLink = async (studentId: string) => {
+  const generatePayLink = async (studentId: string, paymentId?: string) => {
     setPayStatus("preparing");
     setPayUrl(null);
     try {
       const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
-        body: { studentId },
+        body: { studentId, paymentId },
       });
       if (error) throw error;
       const url = (data as any)?.url;
