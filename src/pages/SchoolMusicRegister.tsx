@@ -442,6 +442,7 @@ const SchoolMusicRegister = () => {
         : "";
 
       setSubmissionResult({
+        student_id: result.student_id,
         payment_id: result.payment_id,
         amount: Number(result.amount || 0),
         student_name: `${form.student_first_name} ${form.student_last_name}`.trim(),
@@ -454,6 +455,8 @@ const SchoolMusicRegister = () => {
           : undefined,
       });
       setSubmitted(true);
+      // Kick off async paylink generation; success state's effect handles the redirect.
+      void generatePayLink(result.student_id);
     } catch (err) {
       console.error(err);
       toast.error("שגיאה בשליחת הטופס, נסו שנית");
@@ -462,26 +465,39 @@ const SchoolMusicRegister = () => {
     }
   };
 
-  const handleProceedToPayment = async () => {
-    if (!submissionResult?.payment_id) return;
-    setRedirecting(true);
+  const generatePayLink = async (studentId: string) => {
+    setPayStatus("preparing");
+    setPayUrl(null);
     try {
-      const { data, error } = await supabase.functions.invoke("icount-create-sm-payment-link", {
-        body: {
-          paymentId: submissionResult.payment_id,
-          returnOrigin: window.location.origin,
-        },
+      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
+        body: { studentId },
       });
       if (error) throw error;
       const url = (data as any)?.url;
       if (!url) throw new Error("לא התקבל קישור תשלום");
-      window.location.href = url;
+      setPayUrl(url);
+      setPayStatus("redirecting");
+      // Attempt auto-redirect; fallback button starts a 10s countdown.
+      setTimeout(() => { window.location.href = url; }, 600);
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || "שגיאה ביצירת קישור התשלום");
-      setRedirecting(false);
+      setPayStatus("manual");
     }
   };
+
+  // 10s countdown for the manual-fallback button, once a URL has been generated.
+  useEffect(() => {
+    if (!submitted || !payUrl) return;
+    setCountdown(10);
+    const t = setInterval(() => {
+      setCountdown((c) => {
+        if (c <= 1) { clearInterval(t); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [submitted, payUrl]);
 
   /* ── success state ── */
 
@@ -512,10 +528,23 @@ const SchoolMusicRegister = () => {
                   <p className="text-3xl font-bold text-primary">₪{r.amount.toLocaleString()}</p>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Button onClick={handleProceedToPayment} disabled={redirecting} className="h-12 text-base">
-                    {redirecting ? "מעביר לתשלום מאובטח..." : "המשך לתשלום מאובטח 🔒"}
+                  <div className="rounded-xl bg-muted/40 border border-border p-4 text-center text-sm font-medium">
+                    {payStatus === "preparing" && "מכין את עמוד התשלום המאובטח..."}
+                    {payStatus === "redirecting" && "הינך מועבר לעמוד התשלום..."}
+                    {payStatus === "manual" && "לא הצלחנו להעביר אותך אוטומטית — לחצו על הכפתור למטה."}
+                  </div>
+                  <Button
+                    onClick={() => { if (payUrl) window.location.href = payUrl; }}
+                    disabled={!payUrl || countdown > 0}
+                    className="h-12 text-base"
+                  >
+                    {!payUrl
+                      ? "ממתין לקישור..."
+                      : countdown > 0
+                        ? `למעבר ידני לעמוד התשלום (${countdown})`
+                        : "למעבר ידני לעמוד התשלום לחץ כאן"}
                   </Button>
-                  <Button variant="outline" onClick={() => { window.location.href = "/"; }} disabled={redirecting} className="h-11">
+                  <Button variant="outline" onClick={() => { window.location.href = "/"; }} className="h-11">
                     אשלם בהמשך
                   </Button>
                   <p className="text-xs text-center text-muted-foreground mt-1">
@@ -531,7 +560,6 @@ const SchoolMusicRegister = () => {
               <Button
                 variant="secondary"
                 className="w-full h-11"
-                disabled={redirecting}
                 onClick={() => {
                   setForm((prev) => ({
                     ...prev,
