@@ -86,7 +86,7 @@ Deno.serve(async (req: Request) => {
     const parentLastName = parentNameParts.slice(1).join(" ");
     const payerId = student.parent_national_id || student.student_national_id || "";
 
-    if (existingUrl && (!payerId || existingUrl.includes(encodeURIComponent(payerId)))) {
+    if (existingUrl && !payerId) {
       return new Response(JSON.stringify({ url: existingUrl, paymentId, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
