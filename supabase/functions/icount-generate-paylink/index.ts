@@ -72,12 +72,6 @@ Deno.serve(async (req: Request) => {
       if (p) { paymentId = p.id; existingUrl = p.payment_link_url ?? null; }
     }
 
-    if (existingUrl) {
-      return new Response(JSON.stringify({ url: existingUrl, paymentId, cached: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const schoolName: string = (student as any).school_music_schools?.school_name ?? "";
     const studentName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
     const isCaesarea = CAESAREA_NAMES.some((n) => schoolName.includes(n));
@@ -91,6 +85,12 @@ Deno.serve(async (req: Request) => {
     const parentFirstName = parentNameParts[0] ?? "";
     const parentLastName = parentNameParts.slice(1).join(" ");
     const payerId = student.parent_national_id || student.student_national_id || "";
+
+    if (existingUrl && !payerId) {
+      return new Response(JSON.stringify({ url: existingUrl, paymentId, cached: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const params = new URLSearchParams();
     if (parentName) params.set("full_name", parentName);
@@ -114,6 +114,17 @@ Deno.serve(async (req: Request) => {
       params.set("cidn", payerId);
       params.set("idnum", payerId);
       params.set("company_id", payerId);
+      params.set("companyID", payerId);
+      params.set("company_vat_id", payerId);
+      params.set("client_vat_id", payerId);
+      params.set("customer_vat_id", payerId);
+      params.set("contact_idnum", payerId);
+      params.set("vat_number", payerId);
+      params.set("id", payerId);
+      params.set("id_number", payerId);
+      params.set("identity_number", payerId);
+      params.set("personal_id", payerId);
+      params.set("tz", payerId);
     }
     params.set("description", `שכר לימוד - ${studentName} - ${schoolName}`);
     // custom1 = paymentId so the IPN can match. Fallback to studentId.
