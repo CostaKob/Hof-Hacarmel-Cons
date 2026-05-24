@@ -18,12 +18,10 @@ const SchoolMusicRegisterSuccess = () => {
     enabled: !!paymentId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_payments" as any)
-        .select("id, payment_status, amount, invoice_url, icount_doc_number, paid_at")
-        .eq("id", paymentId!)
-        .maybeSingle();
+        .rpc("get_sm_payment_public_status" as any, { _payment_id: paymentId! });
       if (error) throw error;
-      return data as any;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row as any;
     },
     refetchInterval: (q) => {
       const p: any = q.state.data;
