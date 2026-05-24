@@ -118,6 +118,7 @@ Deno.serve(async (req: Request) => {
       params.set("company_vat_id", payerId);
       params.set("client_vat_id", payerId);
       params.set("customer_vat_id", payerId);
+      params.set("contact_idnum", payerId);
       params.set("vat_number", payerId);
       params.set("id", payerId);
       params.set("id_number", payerId);
