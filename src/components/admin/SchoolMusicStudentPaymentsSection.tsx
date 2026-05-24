@@ -321,6 +321,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                         onClick={() => window.open(p.payment_link_url, "_blank")}>
                         <ExternalLink className="h-4 w-4" />
                       </Button>
+                      <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="צור קישור תשלום מחדש"
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
+                              body: { studentId, paymentId: p.id },
+                            });
+                            if (error) throw error;
+                            toast.success("הקישור נוצר מחדש");
+                            qc.invalidateQueries({ queryKey: ["school-music-student-payments", studentId] });
+                          } catch (e: any) {
+                            toast.error(e?.message || "שגיאה ביצירת הקישור");
+                          }
+                        }}>
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
                     </>
                   )}
                   {p.payment_status === "pending" && !isRefund && (
