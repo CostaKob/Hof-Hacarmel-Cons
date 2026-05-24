@@ -92,39 +92,26 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Actual iCount paypage field names (verified by inspecting the form):
+    //   name_on_invoice, fname, lname, id_no, email, phone
     const params = new URLSearchParams();
-    if (parentName) params.set("full_name", parentName);
+    if (parentName) {
+      params.set("name_on_invoice", parentName);
+      params.set("full_name", parentName); // legacy alias
+    }
     if (parentFirstName) {
-      params.set("first_name", parentFirstName);
-      params.set("contact_first_name", parentFirstName);
+      params.set("fname", parentFirstName);
+      params.set("first_name", parentFirstName); // legacy alias
     }
     if (parentLastName) {
-      params.set("last_name", parentLastName);
-      params.set("contact_last_name", parentLastName);
+      params.set("lname", parentLastName);
+      params.set("last_name", parentLastName); // legacy alias
     }
     if (student.parent_email) params.set("email", student.parent_email);
     if (student.parent_phone) params.set("phone", student.parent_phone);
     if (payerId) {
-      // iCount paypage accepts several aliases depending on page version
-      params.set("vat_id", payerId);
-      params.set("client_id_number", payerId);
-      params.set("id_num", payerId);
-      params.set("customer_id", payerId);
-      params.set("tax_id", payerId);
-      params.set("cidn", payerId);
-      params.set("idnum", payerId);
-      params.set("company_id", payerId);
-      params.set("companyID", payerId);
-      params.set("company_vat_id", payerId);
-      params.set("client_vat_id", payerId);
-      params.set("customer_vat_id", payerId);
-      params.set("contact_idnum", payerId);
-      params.set("vat_number", payerId);
-      params.set("id", payerId);
-      params.set("id_number", payerId);
-      params.set("identity_number", payerId);
-      params.set("personal_id", payerId);
-      params.set("tz", payerId);
+      params.set("id_no", payerId); // real field name on the paypage
+      params.set("vat_id", payerId); // legacy alias
     }
     params.set("description", `שכר לימוד - ${studentName} - ${schoolName}`);
     // custom1 = paymentId so the IPN can match. Fallback to studentId.
