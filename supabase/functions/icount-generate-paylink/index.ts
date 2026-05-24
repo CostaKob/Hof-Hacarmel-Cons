@@ -14,17 +14,16 @@ const corsHeaders = {
 
 const CAESAREA_NAMES = ["קיסריה", "קיסרייה"];
 
+// Two pre-configured iCount Paypages with fixed amounts (no dynamic cs param).
+const PAYPAGE_DEFAULT = "675e7"; // 650 ₪ — all schools except Caesarea
+const PAYPAGE_CAESAREA = "04dcb"; // 1600 ₪ — Caesarea schools
+
+
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const paypageId = Deno.env.get("ICOUNT_PAYPAGE_ID");
-    if (!paypageId) {
-      return new Response(JSON.stringify({ error: "ICOUNT_PAYPAGE_ID not configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const { studentId, paymentId: incomingPaymentId } = await req.json().catch(() => ({}));
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
@@ -81,13 +80,13 @@ Deno.serve(async (req: Request) => {
 
     const schoolName: string = (student as any).school_music_schools?.school_name ?? "";
     const studentName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
-    const amount = CAESAREA_NAMES.some((n) => schoolName.includes(n)) ? 1600 : 650;
+    const isCaesarea = CAESAREA_NAMES.some((n) => schoolName.includes(n));
+    const amount = isCaesarea ? 1600 : 650;
+    const paypageId = isCaesarea ? PAYPAGE_CAESAREA : PAYPAGE_DEFAULT;
 
-    // Build hosted Paypage URL.
-    // iCount Paypage format: https://app.icount.co.il/m/{PAYPAGE_ID}/?cs=AMOUNT&full_name=...&custom1=PAYMENT_ID
-    // custom1 is echoed back in the IPN under custom_info / custom1 — we use it to match the pending payment row.
+    // Amount is fixed on each Paypage — we DO NOT pass `cs`.
+    // custom1 is echoed back in the IPN — we use it to match the pending payment row.
     const params = new URLSearchParams();
-    params.set("cs", String(amount));
     params.set("full_name", student.parent_name || studentName);
     if (student.parent_email) params.set("email", student.parent_email);
     if (student.parent_phone) params.set("phone", student.parent_phone);
