@@ -48,7 +48,7 @@ Deno.serve(async (req: Request) => {
   console.log("[icount-ipn] payload", JSON.stringify(params));
 
   try {
-    const customInfo = pick(params, ["custom_info", "custom", "paymentId", "studentId"]);
+    const customInfo = pick(params, ["custom1", "custom_info", "custom", "paymentId", "studentId"]);
     const studentTz = pick(params, ["student_tz", "custom_student_tz", "client_id_number", "vat_id"]);
     const amountRaw = pick(params, ["sum", "amount", "total", "doc_total"]) ?? "0";
     const amount = Number(String(amountRaw).replace(/[^0-9.-]/g, "")) || 0;

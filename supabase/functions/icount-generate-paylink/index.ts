@@ -1,5 +1,6 @@
 // Generates a dynamic iCount hosted payment-page URL for a Playing Schools
-// (school_music) student via the iCount API. Stores the URL on the pending
+// (school_music) student. Uses a pre-configured iCount Paypage and appends
+// student/amount details as query params. Stores the URL on the pending
 // payment row for reuse and returns it (with paymentId) to the caller.
 //
 // Anonymous-callable: invoked from the public registration form.
@@ -11,21 +12,19 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 const CAESAREA_NAMES = ["קיסריה", "קיסרייה"];
-
-function auth() {
-  const cid = Deno.env.get("ICOUNT_COMPANY_ID");
-  const user = Deno.env.get("ICOUNT_USERNAME");
-  const pass = Deno.env.get("ICOUNT_PASSWORD");
-  if (!cid || !user || !pass) throw new Error("ICOUNT credentials missing");
-  return { cid, user, pass };
-}
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const paypageId = Deno.env.get("ICOUNT_PAYPAGE_ID");
+    if (!paypageId) {
+      return new Response(JSON.stringify({ error: "ICOUNT_PAYPAGE_ID not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { studentId, paymentId: incomingPaymentId } = await req.json().catch(() => ({}));
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
@@ -60,13 +59,13 @@ Deno.serve(async (req: Request) => {
     if (paymentId) {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url, payment_status")
+        .select("id, payment_link_url")
         .eq("id", paymentId).maybeSingle();
       if (p) existingUrl = p.payment_link_url ?? null;
     } else {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url, payment_status")
+        .select("id, payment_link_url")
         .eq("school_music_student_id", studentId)
         .eq("payment_status", "pending")
         .order("created_at", { ascending: false })
@@ -74,7 +73,6 @@ Deno.serve(async (req: Request) => {
       if (p) { paymentId = p.id; existingUrl = p.payment_link_url ?? null; }
     }
 
-    // Reuse existing URL if already generated.
     if (existingUrl) {
       return new Response(JSON.stringify({ url: existingUrl, paymentId, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -84,50 +82,22 @@ Deno.serve(async (req: Request) => {
     const schoolName: string = (student as any).school_music_schools?.school_name ?? "";
     const studentName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
     const amount = CAESAREA_NAMES.some((n) => schoolName.includes(n)) ? 1600 : 650;
-    const description = `שכר לימוד - תלמיד: ${studentName}, בית ספר: ${schoolName}`;
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const projectRef = supabaseUrl.replace("https://", "").split(".")[0];
-    const ipnUrl = `${supabaseUrl}/functions/v1/icount-ipn-handler`;
-    // Frontend success/cancel pages. Public app domain is preferred for end-users.
-    const appOrigin = "https://musichof.com";
-    const successUrl = `${appOrigin}/school-music/register/success?payment_id=${paymentId ?? ""}&status=ok`;
-    const failureUrl = `${appOrigin}/school-music/register/success?payment_id=${paymentId ?? ""}&status=cancel`;
+    // Build hosted Paypage URL.
+    // iCount Paypage format: https://app.icount.co.il/m/{PAYPAGE_ID}/?cs=AMOUNT&full_name=...&custom1=PAYMENT_ID
+    // custom1 is echoed back in the IPN under custom_info / custom1 — we use it to match the pending payment row.
+    const params = new URLSearchParams();
+    params.set("cs", String(amount));
+    params.set("full_name", student.parent_name || studentName);
+    if (student.parent_email) params.set("email", student.parent_email);
+    if (student.parent_phone) params.set("phone", student.parent_phone);
+    if (student.student_national_id) params.set("vat_id", student.student_national_id);
+    params.set("description", `שכר לימוד - ${studentName} - ${schoolName}`);
+    // custom1 = paymentId so the IPN can match. Fallback to studentId.
+    params.set("custom1", paymentId ?? studentId);
+    params.set("custom2", studentId);
 
-    const creds = auth();
-    const payload = {
-      ...creds,
-      doctype: "invrec",
-      lang: "he",
-      currency_code: "ILS",
-      client_name: student.parent_name || studentName,
-      email: student.parent_email || undefined,
-      send_email: student.parent_email ? "1" : "0",
-      vat_id: student.student_national_id || undefined,
-      items: [{ description, unitprice_incvat: amount, quantity: 1 }],
-      // Custom metadata returned in IPN: paymentId is primary key for matching.
-      custom_info: paymentId ?? studentId,
-      success_url: successUrl,
-      failure_url: failureUrl,
-      ipn_url: ipnUrl,
-    };
-
-    const res = await fetch(`${ICOUNT_BASE}/cc/page/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => ({}));
-    console.log("[icount-generate-paylink] response:", JSON.stringify(data));
-
-    const url: string | undefined =
-      data?.payment_url || data?.url || data?.page_url || data?.paypage_url;
-
-    if (!data?.status || !url) {
-      return new Response(JSON.stringify({ error: "iCount paypage create failed", details: data, projectRef }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const url = `https://app.icount.co.il/m/${paypageId}/?${params.toString()}`;
 
     // Persist URL on payment row + legacy student field for back-compat.
     if (paymentId) {
