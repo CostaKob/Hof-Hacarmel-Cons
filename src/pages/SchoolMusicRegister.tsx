@@ -227,13 +227,9 @@ const SchoolMusicRegister = () => {
     enabled: !!resolvedYear?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_schools")
-        .select("id, school_name")
-        .eq("is_active", true)
-        .eq("academic_year_id", resolvedYear!.id)
-        .order("school_name");
+        .rpc("list_public_school_music_schools" as any, { _year_id: resolvedYear!.id });
       if (error) throw error;
-      return data;
+      return (data ?? []) as any[];
     },
   });
 
