@@ -1,6 +1,6 @@
 // Generates a dynamic iCount hosted payment-page URL for a Playing Schools
-// (school_music) student via the iCount API. Stores the URL on the student row
-// for future reuse and returns it to the caller.
+// (school_music) student via the iCount API. Stores the URL on the pending
+// payment row for reuse and returns it (with paymentId) to the caller.
 //
 // Anonymous-callable: invoked from the public registration form.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -26,7 +26,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { studentId } = await req.json().catch(() => ({}));
+    const { studentId, paymentId: incomingPaymentId } = await req.json().catch(() => ({}));
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -42,7 +42,7 @@ Deno.serve(async (req: Request) => {
       .from("school_music_students")
       .select(`
         id, student_first_name, student_last_name, student_national_id,
-        parent_name, parent_email, parent_phone, icount_payment_url,
+        parent_name, parent_email, parent_phone,
         school_music_schools!school_music_students_school_music_school_id_fkey(school_name)
       `)
       .eq("id", studentId)
@@ -54,9 +54,29 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Resolve the pending payment row to attach the link to.
+    let paymentId: string | null = incomingPaymentId ?? null;
+    let existingUrl: string | null = null;
+    if (paymentId) {
+      const { data: p } = await supabase
+        .from("school_music_payments")
+        .select("id, payment_link_url, payment_status")
+        .eq("id", paymentId).maybeSingle();
+      if (p) existingUrl = p.payment_link_url ?? null;
+    } else {
+      const { data: p } = await supabase
+        .from("school_music_payments")
+        .select("id, payment_link_url, payment_status")
+        .eq("school_music_student_id", studentId)
+        .eq("payment_status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1).maybeSingle();
+      if (p) { paymentId = p.id; existingUrl = p.payment_link_url ?? null; }
+    }
+
     // Reuse existing URL if already generated.
-    if (student.icount_payment_url) {
-      return new Response(JSON.stringify({ url: student.icount_payment_url, cached: true }), {
+    if (existingUrl) {
+      return new Response(JSON.stringify({ url: existingUrl, paymentId, cached: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -66,25 +86,30 @@ Deno.serve(async (req: Request) => {
     const amount = CAESAREA_NAMES.some((n) => schoolName.includes(n)) ? 1600 : 650;
     const description = `שכר לימוד - תלמיד: ${studentName}, בית ספר: ${schoolName}`;
 
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const projectRef = supabaseUrl.replace("https://", "").split(".")[0];
+    const ipnUrl = `${supabaseUrl}/functions/v1/icount-ipn-handler`;
+    // Frontend success/cancel pages. Public app domain is preferred for end-users.
+    const appOrigin = "https://musichof.com";
+    const successUrl = `${appOrigin}/school-music/register/success?payment_id=${paymentId ?? ""}&status=ok`;
+    const failureUrl = `${appOrigin}/school-music/register/success?payment_id=${paymentId ?? ""}&status=cancel`;
+
     const creds = auth();
     const payload = {
       ...creds,
-      doctype: "invrec", // tax invoice + receipt
+      doctype: "invrec",
       lang: "he",
       currency_code: "ILS",
       client_name: student.parent_name || studentName,
       email: student.parent_email || undefined,
       send_email: student.parent_email ? "1" : "0",
       vat_id: student.student_national_id || undefined,
-      items: [
-        {
-          description,
-          unitprice_incvat: amount,
-          quantity: 1,
-        },
-      ],
-      // Custom metadata returned in IPN so we can match the payment back to the student.
-      custom_info: studentId,
+      items: [{ description, unitprice_incvat: amount, quantity: 1 }],
+      // Custom metadata returned in IPN: paymentId is primary key for matching.
+      custom_info: paymentId ?? studentId,
+      success_url: successUrl,
+      failure_url: failureUrl,
+      ipn_url: ipnUrl,
     };
 
     const res = await fetch(`${ICOUNT_BASE}/cc/page/create`, {
@@ -93,23 +118,26 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => ({}));
-    console.log("[icount-generate-paylink]", JSON.stringify(data));
+    console.log("[icount-generate-paylink] response:", JSON.stringify(data));
 
     const url: string | undefined =
       data?.payment_url || data?.url || data?.page_url || data?.paypage_url;
 
     if (!data?.status || !url) {
-      return new Response(JSON.stringify({ error: "iCount paypage create failed", details: data }), {
+      return new Response(JSON.stringify({ error: "iCount paypage create failed", details: data, projectRef }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    await supabase
-      .from("school_music_students")
-      .update({ icount_payment_url: url })
-      .eq("id", studentId);
+    // Persist URL on payment row + legacy student field for back-compat.
+    if (paymentId) {
+      await supabase.from("school_music_payments")
+        .update({ payment_link_url: url }).eq("id", paymentId);
+    }
+    await supabase.from("school_music_students")
+      .update({ icount_payment_url: url }).eq("id", studentId);
 
-    return new Response(JSON.stringify({ url, amount }), {
+    return new Response(JSON.stringify({ url, amount, paymentId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
