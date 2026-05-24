@@ -311,6 +311,18 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  {p.payment_status === "pending" && !isRefund && p.payment_link_url && (
+                    <>
+                      <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="העתק קישור תשלום"
+                        onClick={() => { navigator.clipboard.writeText(p.payment_link_url); toast.success("הקישור הועתק"); }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="פתח קישור תשלום"
+                        onClick={() => window.open(p.payment_link_url, "_blank")}>
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
                   {p.payment_status === "pending" && !isRefund && (
                     <Button size="sm" variant="default" className="h-8 gap-1 rounded-lg" onClick={() => setMarkPaidId(p.id)}>
                       <CheckCircle2 className="h-3.5 w-3.5" /> סמן כשולם
