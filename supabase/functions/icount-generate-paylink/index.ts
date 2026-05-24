@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
       .from("school_music_students")
       .select(`
         id, student_first_name, student_last_name, student_national_id,
-        parent_name, parent_email, parent_phone,
+        parent_name, parent_national_id, parent_email, parent_phone,
         school_music_schools!school_music_students_school_music_school_id_fkey(school_name)
       `)
       .eq("id", studentId)
@@ -86,11 +86,29 @@ Deno.serve(async (req: Request) => {
 
     // Amount is fixed on each Paypage — we DO NOT pass `cs`.
     // custom1 is echoed back in the IPN — we use it to match the pending payment row.
+    const parentName: string = (student.parent_name ?? "").trim();
+    const parentNameParts = parentName.split(/\s+/);
+    const parentFirstName = parentNameParts[0] ?? "";
+    const parentLastName = parentNameParts.slice(1).join(" ");
+    const payerId = student.parent_national_id || student.student_national_id || "";
+
     const params = new URLSearchParams();
-    params.set("full_name", student.parent_name || studentName);
+    if (parentName) params.set("full_name", parentName);
+    if (parentFirstName) {
+      params.set("first_name", parentFirstName);
+      params.set("contact_first_name", parentFirstName);
+    }
+    if (parentLastName) {
+      params.set("last_name", parentLastName);
+      params.set("contact_last_name", parentLastName);
+    }
     if (student.parent_email) params.set("email", student.parent_email);
     if (student.parent_phone) params.set("phone", student.parent_phone);
-    if (student.student_national_id) params.set("vat_id", student.student_national_id);
+    if (payerId) {
+      params.set("vat_id", payerId);
+      params.set("client_id_number", payerId);
+      params.set("id_num", payerId);
+    }
     params.set("description", `שכר לימוד - ${studentName} - ${schoolName}`);
     // custom1 = paymentId so the IPN can match. Fallback to studentId.
     params.set("custom1", paymentId ?? studentId);
