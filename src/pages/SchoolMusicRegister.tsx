@@ -103,17 +103,23 @@ const SchoolMusicRegister = () => {
     enabled: !!slugCandidate,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_schools")
-        .select("id, academic_year_id, academic_years!inner(is_active, registration_open, start_date)")
-        .eq("slug", slugCandidate)
-        .eq("is_active", true);
+        .rpc("get_public_school_music_school_by_slug" as any, { _slug: slugCandidate });
       if (error) throw error;
-      if (!data || data.length === 0) return null;
+      if (!data || (data as any[]).length === 0) return null;
+      const rows = (data as any[]).map((d) => ({
+        id: d.id,
+        academic_year_id: d.academic_year_id,
+        academic_years: {
+          is_active: d.is_active,
+          registration_open: d.registration_open,
+          start_date: d.start_date,
+        },
+      }));
       if (urlYearId) {
-        const match = data.find((d: any) => d.academic_year_id === urlYearId);
+        const match = rows.find((d: any) => d.academic_year_id === urlYearId);
         if (match) return match;
       }
-      const sorted = [...data].sort((a: any, b: any) => {
+      const sorted = [...rows].sort((a: any, b: any) => {
         const aY = a.academic_years, bY = b.academic_years;
         if (aY.is_active !== bY.is_active) return aY.is_active ? -1 : 1;
         if (aY.registration_open !== bY.registration_open) return aY.registration_open ? -1 : 1;
