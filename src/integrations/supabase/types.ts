@@ -2079,10 +2079,74 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_public_school_music_school_by_slug: {
+        Args: { _slug: string }
+        Returns: {
+          academic_year_id: string
+          id: string
+          is_active: boolean
+          registration_open: boolean
+          start_date: string
+        }[]
+      }
       get_registered_national_ids_for_year: {
         Args: { _year_id: string }
         Returns: {
           national_id: string
+        }[]
+      }
+      get_registration_by_token: {
+        Args: { _token: string }
+        Returns: {
+          academic_year_id: string | null
+          approval_checked: boolean
+          branch_school_name: string
+          city: string
+          created_at: string
+          custom_data: Json | null
+          educational_school: string | null
+          existing_student_id: string | null
+          gender: string | null
+          grade: string
+          id: string
+          match_type: string | null
+          notes: string | null
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          registration_page_id: string | null
+          registration_token: string | null
+          requested_instruments: Json
+          requested_lesson_duration: string
+          status: Database["public"]["Enums"]["registration_status"]
+          student_first_name: string
+          student_last_name: string
+          student_national_id: string
+          student_phone: string | null
+          student_school_text: string
+          student_status: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "registrations"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_school_music_school_year: {
+        Args: { _school_id: string }
+        Returns: string
+      }
+      get_sm_payment_public_status: {
+        Args: { _payment_id: string }
+        Returns: {
+          amount: number
+          icount_doc_number: string
+          id: string
+          invoice_url: string
+          paid_at: string
+          payment_status: Database["public"]["Enums"]["school_music_payment_status"]
         }[]
       }
       get_teacher_id_for_user: { Args: { _user_id: string }; Returns: string }
@@ -2092,6 +2156,43 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_public_available_inventory: {
+        Args: { _instrument_id: string }
+        Returns: {
+          brand: string
+          id: string
+          model: string
+          serial_number: string
+          size: string
+        }[]
+      }
+      list_public_school_music_classes: {
+        Args: { _school_id: string }
+        Returns: {
+          class_name: string
+          day_of_week: number
+          end_time: string
+          id: string
+          school_music_school_id: string
+          start_time: string
+        }[]
+      }
+      list_public_school_music_schools: {
+        Args: { _year_id?: string }
+        Returns: {
+          academic_year_id: string
+          annual_tuition_fee: number
+          class_schedules: Json
+          classes_count: number
+          day_of_week: number
+          icount_payment_page_url: string
+          id: string
+          is_active: boolean
+          operating_days: number[]
+          school_name: string
+          slug: string
+        }[]
       }
       lookup_student_by_national_id: {
         Args: { _national_id: string }

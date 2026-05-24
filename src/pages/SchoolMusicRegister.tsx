@@ -103,17 +103,23 @@ const SchoolMusicRegister = () => {
     enabled: !!slugCandidate,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_schools")
-        .select("id, academic_year_id, academic_years!inner(is_active, registration_open, start_date)")
-        .eq("slug", slugCandidate)
-        .eq("is_active", true);
+        .rpc("get_public_school_music_school_by_slug" as any, { _slug: slugCandidate });
       if (error) throw error;
-      if (!data || data.length === 0) return null;
+      if (!data || (data as any[]).length === 0) return null;
+      const rows = (data as any[]).map((d) => ({
+        id: d.id,
+        academic_year_id: d.academic_year_id,
+        academic_years: {
+          is_active: d.is_active,
+          registration_open: d.registration_open,
+          start_date: d.start_date,
+        },
+      }));
       if (urlYearId) {
-        const match = data.find((d: any) => d.academic_year_id === urlYearId);
+        const match = rows.find((d: any) => d.academic_year_id === urlYearId);
         if (match) return match;
       }
-      const sorted = [...data].sort((a: any, b: any) => {
+      const sorted = [...rows].sort((a: any, b: any) => {
         const aY = a.academic_years, bY = b.academic_years;
         if (aY.is_active !== bY.is_active) return aY.is_active ? -1 : 1;
         if (aY.registration_open !== bY.registration_open) return aY.registration_open ? -1 : 1;
@@ -170,16 +176,13 @@ const SchoolMusicRegister = () => {
     queryKey: ["school-music-year", urlYearParam, urlYearId, urlSchoolId],
     queryFn: async () => {
       if (urlSchoolId) {
-        const { data: school } = await supabase
-          .from("school_music_schools")
-          .select("academic_year_id")
-          .eq("id", urlSchoolId)
-          .maybeSingle();
-        if (school?.academic_year_id) {
+        const { data: schoolYearId } = await supabase
+          .rpc("get_school_music_school_year" as any, { _school_id: urlSchoolId });
+        if (schoolYearId) {
           const { data } = await supabase
             .from("academic_years")
             .select("id, name, registration_open")
-            .eq("id", school.academic_year_id)
+            .eq("id", schoolYearId as any)
             .maybeSingle();
           if (data) return data;
         }
@@ -224,13 +227,9 @@ const SchoolMusicRegister = () => {
     enabled: !!resolvedYear?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_schools")
-        .select("id, school_name")
-        .eq("is_active", true)
-        .eq("academic_year_id", resolvedYear!.id)
-        .order("school_name");
+        .rpc("list_public_school_music_schools" as any, { _year_id: resolvedYear!.id });
       if (error) throw error;
-      return data;
+      return (data ?? []) as any[];
     },
   });
 
@@ -239,12 +238,9 @@ const SchoolMusicRegister = () => {
     enabled: !!form.school_music_school_id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_classes")
-        .select("id, class_name, homeroom_teacher_name")
-        .eq("school_music_school_id", form.school_music_school_id)
-        .order("class_name");
+        .rpc("list_public_school_music_classes" as any, { _school_id: form.school_music_school_id });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
@@ -267,13 +263,9 @@ const SchoolMusicRegister = () => {
     enabled: !!form.instrument_id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("inventory_instruments")
-        .select("id, serial_number, brand, model, size")
-        .eq("condition", "available")
-        .eq("instrument_id", form.instrument_id)
-        .order("serial_number");
+        .rpc("list_public_available_inventory" as any, { _instrument_id: form.instrument_id });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as any[];
     },
   });
 
