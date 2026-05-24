@@ -26,7 +26,7 @@ import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
-import { buildIcountPaymentLink } from "@/lib/icountPaymentLink";
+
 
 const STATUS_MAP: Record<string, string> = {
   present: "נוכח/ת",
@@ -132,7 +132,7 @@ const AdminStudentCard = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("*, schools(name, icount_page_id), instruments(name), teachers(first_name, last_name), academic_years(name)")
+        .select("*, schools(name), instruments(name), teachers(first_name, last_name), academic_years(name)")
         .eq("student_id", studentId!);
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -341,10 +341,6 @@ const AdminStudentCard = () => {
           enrollments={enrollments}
           showYear
           readOnly
-          paymentLinkUrl={buildIcountPaymentLink(
-            (enrollments[0] as any)?.schools ?? { name: "", icount_page_id: null },
-            student as any,
-          )}
           extraInvalidateKeys={[["admin-student-payments", studentId]]}
           extraHeaderActions={
             <Button

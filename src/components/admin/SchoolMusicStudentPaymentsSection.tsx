@@ -195,6 +195,25 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
 
+  const ccRefundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke("icount-refund-api", {
+        body: { paymentId, refundAmount: amount },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidate();
+      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
+      setRefundTarget(null);
+      setRefundAmount("");
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
+  });
+
   const totalPaid = payments
     .filter((p) => p.payment_status === "paid" || p.payment_status === "refunded")
     .reduce((s, p) => s + Number(p.amount || 0), 0);
@@ -305,6 +324,14 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                     <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="הורד קבלה"
                       onClick={() => window.open(p.invoice_url, "_blank")}>
                       <FileDown className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {canRefund && p.payment_method === "credit_card" && p.icount_transaction_id && (
+                    <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10 border-destructive/40"
+                      title={`החזר אשראי לעסקה ${p.icount_transaction_id} (נותר ₪${remaining.toLocaleString()})`}
+                      disabled={ccRefundMutation.isPending}
+                      onClick={() => { setRefundTarget({ ...p, _remaining: remaining, _cc: true }); setRefundAmount(String(remaining)); }}>
+                      <CreditCard className="h-3.5 w-3.5" /> זיכוי אשראי
                     </Button>
                   )}
                   {canRefund && (
@@ -425,7 +452,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
               ביטול
             </Button>
-            <Button className="h-11 rounded-xl" disabled={refundMutation.isPending}
+            <Button className="h-11 rounded-xl" disabled={refundMutation.isPending || ccRefundMutation.isPending}
               onClick={() => {
                 const amt = Number(refundAmount);
                 const max = Number(refundTarget?._remaining || 0);
@@ -433,7 +460,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                 if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר (₪${max.toLocaleString()})`); return; }
                 setPendingRefund({ paymentId: refundTarget.id, amount: amt });
               }}>
-              {refundMutation.isPending ? "מבצע..." : "בצע זיכוי"}
+              {(refundMutation.isPending || ccRefundMutation.isPending) ? "מבצע..." : refundTarget?._cc ? "בצע החזר אשראי" : "בצע זיכוי"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -472,7 +499,10 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
-                if (pendingRefund) refundMutation.mutate(pendingRefund);
+                if (pendingRefund) {
+                  if (refundTarget?._cc) ccRefundMutation.mutate(pendingRefund);
+                  else refundMutation.mutate(pendingRefund);
+                }
                 setPendingRefund(null);
               }}>
               כן, בצע זיכוי
