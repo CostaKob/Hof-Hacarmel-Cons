@@ -225,12 +225,10 @@ const PublicRegistration = () => {
     queryFn: async () => {
       if (!token) return null;
       const { data, error } = await supabase
-        .from("registrations")
-        .select("*")
-        .eq("registration_token", token)
-        .maybeSingle();
+        .rpc("get_registration_by_token" as any, { _token: token });
       if (error) return null;
-      return data;
+      const row = Array.isArray(data) ? data[0] : data;
+      return row ?? null;
     },
     enabled: !!token,
   });
