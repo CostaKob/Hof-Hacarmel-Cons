@@ -1225,6 +1225,7 @@ export type Database = {
           icount_doc_number: string | null
           icount_doc_type: string | null
           icount_payment_page_id: string | null
+          icount_transaction_id: string | null
           id: string
           invoice_url: string | null
           notes: string | null
@@ -1246,6 +1247,7 @@ export type Database = {
           icount_doc_number?: string | null
           icount_doc_type?: string | null
           icount_payment_page_id?: string | null
+          icount_transaction_id?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
@@ -1267,6 +1269,7 @@ export type Database = {
           icount_doc_number?: string | null
           icount_doc_type?: string | null
           icount_payment_page_id?: string | null
+          icount_transaction_id?: string | null
           id?: string
           invoice_url?: string | null
           notes?: string | null
@@ -1507,6 +1510,7 @@ export type Database = {
           class_name: string
           created_at: string
           gender: string | null
+          icount_payment_url: string | null
           id: string
           instrument_id: string | null
           instrument_serial_number: string | null
@@ -1529,6 +1533,7 @@ export type Database = {
           class_name: string
           created_at?: string
           gender?: string | null
+          icount_payment_url?: string | null
           id?: string
           instrument_id?: string | null
           instrument_serial_number?: string | null
@@ -1551,6 +1556,7 @@ export type Database = {
           class_name?: string
           created_at?: string
           gender?: string | null
+          icount_payment_url?: string | null
           id?: string
           instrument_id?: string | null
           instrument_serial_number?: string | null
@@ -1609,7 +1615,6 @@ export type Database = {
           address: string | null
           city: string | null
           created_at: string
-          icount_page_id: string | null
           id: string
           is_active: boolean
           name: string
@@ -1618,7 +1623,6 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
-          icount_page_id?: string | null
           id?: string
           is_active?: boolean
           name: string
@@ -1627,7 +1631,6 @@ export type Database = {
           address?: string | null
           city?: string | null
           created_at?: string
-          icount_page_id?: string | null
           id?: string
           is_active?: boolean
           name?: string
@@ -1697,7 +1700,6 @@ export type Database = {
           icount_doc_id: string | null
           icount_doc_number: string | null
           icount_doc_type: string | null
-          icount_transaction_id: string | null
           id: string
           installments: number
           invoice_url: string | null
@@ -1721,7 +1723,6 @@ export type Database = {
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
-          icount_transaction_id?: string | null
           id?: string
           installments?: number
           invoice_url?: string | null
@@ -1745,7 +1746,6 @@ export type Database = {
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
-          icount_transaction_id?: string | null
           id?: string
           installments?: number
           invoice_url?: string | null
