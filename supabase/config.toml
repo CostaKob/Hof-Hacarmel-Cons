@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.icount-ipn-handler]
 verify_jwt = false
+
+[functions.icount-generate-paylink]
+verify_jwt = false

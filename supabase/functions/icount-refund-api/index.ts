@@ -1,5 +1,6 @@
-// Issues a credit-card refund through iCount's /cc/refund endpoint, then writes a
-// matching negative `student_payments` credit row referencing the original payment.
+// Issues a credit-card refund through iCount's /cc/refund endpoint against a
+// Playing Schools payment (school_music_payments), then writes a balancing
+// negative row back to school_music_payments with the new refund receipt URL.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -34,8 +35,8 @@ Deno.serve(async (req: Request) => {
     );
 
     const { data: payment, error: payErr } = await supabase
-      .from("student_payments")
-      .select("*, students(first_name,last_name)")
+      .from("school_music_payments")
+      .select(`*, school_music_students!school_music_payments_school_music_student_id_fkey(student_first_name,student_last_name)`)
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -50,9 +51,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    // Cap: original amount minus already-issued refunds against same txn id.
+    // Cap refund at remaining (original amount minus prior refunds of same payment).
     const { data: priorRefunds } = await supabase
-      .from("student_payments")
+      .from("school_music_payments")
       .select("amount")
       .eq("refund_of_payment_id", paymentId);
 
@@ -67,8 +68,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const stu: any = payment.students || {};
-    const fullName = `${stu.first_name ?? ""} ${stu.last_name ?? ""}`.trim();
+    const stu: any = (payment as any).school_music_students || {};
+    const fullName = `${stu.student_first_name ?? ""} ${stu.student_last_name ?? ""}`.trim();
     const description = `החזר אשראי — ${fullName}${reason ? ` (${reason})` : ""} — עסקה ${payment.icount_transaction_id}`;
 
     const creds = auth();
@@ -102,15 +103,15 @@ Deno.serve(async (req: Request) => {
     const refundTxnId = String(data.cc_deal_id ?? data.tid ?? data.transaction_id ?? "");
 
     const { data: credit, error: insErr } = await supabase
-      .from("student_payments")
+      .from("school_music_payments")
       .insert({
-        student_id: payment.student_id,
-        enrollment_id: payment.enrollment_id,
+        school_music_student_id: payment.school_music_student_id,
+        school_music_school_id: payment.school_music_school_id,
         academic_year_id: payment.academic_year_id,
         amount: -sum,
-        transaction_type: "credit",
+        payment_status: "refunded",
         payment_method: "credit_card",
-        payment_date: new Date().toISOString().slice(0, 10),
+        paid_at: new Date().toISOString(),
         notes: reason || `החזר אשראי לעסקה ${payment.icount_transaction_id}`,
         refund_of_payment_id: payment.id,
         icount_doc_id: refundDocId || null,
