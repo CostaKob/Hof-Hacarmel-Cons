@@ -2173,6 +2173,8 @@ export type Database = {
           class_name: string
           day_of_week: number
           end_time: string
+          homeroom_teacher_name: string
+          homeroom_teacher_phone: string
           id: string
           school_music_school_id: string
           start_time: string
