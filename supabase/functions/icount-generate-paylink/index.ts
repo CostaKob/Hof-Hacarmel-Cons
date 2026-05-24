@@ -40,7 +40,7 @@ Deno.serve(async (req: Request) => {
       .from("school_music_students")
       .select(`
         id, student_first_name, student_last_name, student_national_id,
-        parent_name, parent_email, parent_phone,
+        parent_name, parent_national_id, parent_email, parent_phone,
         school_music_schools!school_music_students_school_music_school_id_fkey(school_name)
       `)
       .eq("id", studentId)
