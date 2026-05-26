@@ -249,11 +249,16 @@ const SchoolMusicRegister = () => {
     enabled: !!form.school_music_class_id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_class_groups")
-        .select("id, instrument_id, teacher_id, instruments(id, name), teachers(id, first_name, last_name)")
-        .eq("school_music_class_id", form.school_music_class_id);
+        .rpc("list_public_class_groups" as any, { _class_id: form.school_music_class_id });
       if (error) throw error;
-      return data ?? [];
+      // Normalize to the shape the rest of the component expects.
+      return (data ?? []).map((g: any) => ({
+        id: g.id,
+        instrument_id: g.instrument_id,
+        teacher_id: g.teacher_id,
+        instruments: { id: g.instrument_id, name: g.instrument_name },
+        teachers: { id: g.teacher_id, first_name: g.teacher_first_name, last_name: g.teacher_last_name },
+      }));
     },
   });
 
