@@ -95,13 +95,13 @@ Deno.serve(async (req: Request) => {
     if (paymentId) {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url")
+        .select("id, payment_link_url, payment_status")
         .eq("id", paymentId).maybeSingle();
-      if (p) cachedBaseUrl = p.payment_link_url ?? null;
+      if (p && p.payment_status === "pending") cachedBaseUrl = p.payment_link_url ?? null;
     } else {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url")
+        .select("id, payment_link_url, payment_status")
         .eq("school_music_student_id", studentId)
         .eq("payment_status", "pending")
         .order("created_at", { ascending: false })
