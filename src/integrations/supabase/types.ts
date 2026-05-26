@@ -2167,6 +2167,17 @@ export type Database = {
           size: string
         }[]
       }
+      list_public_class_groups: {
+        Args: { _class_id: string }
+        Returns: {
+          id: string
+          instrument_id: string
+          instrument_name: string
+          teacher_first_name: string
+          teacher_id: string
+          teacher_last_name: string
+        }[]
+      }
       list_public_school_music_classes: {
         Args: { _school_id: string }
         Returns: {
