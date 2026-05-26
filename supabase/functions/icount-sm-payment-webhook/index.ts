@@ -107,6 +107,39 @@ Deno.serve(async (req: Request) => {
       });
     }
 
+    // Cleanup: delete the dynamic paypage from iCount so the list only
+    // contains unpaid students. Failures here are non-fatal.
+    try {
+      const linkUrl: string | null =
+        payment.payment_link_url || null;
+      const ppidFromUrl = linkUrl
+        ? (linkUrl.match(/\/m\/([^\/?#]+)/)?.[1] ?? null)
+        : null;
+      const ppid = paymentPageId || ppidFromUrl;
+      if (ppid) {
+        const delRes = await fetch("https://api.icount.co.il/api/v3.php/paypage/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cid: Deno.env.get("ICOUNT_COMPANY_ID"),
+            user: Deno.env.get("ICOUNT_USERNAME"),
+            pass: Deno.env.get("ICOUNT_PASSWORD"),
+            paypage_id: ppid,
+          }),
+        });
+        const delJson = await delRes.json().catch(() => ({}));
+        console.log("[icount-sm-payment-webhook] paypage/delete", ppid, delJson);
+        // Clear cached link so we don't try to reuse a dead URL.
+        await supabase.from("school_music_payments")
+          .update({ payment_link_url: null })
+          .eq("id", payment.id);
+      } else {
+        console.log("[icount-sm-payment-webhook] no paypage id to delete");
+      }
+    } catch (cleanupErr) {
+      console.warn("[icount-sm-payment-webhook] paypage cleanup failed", cleanupErr);
+    }
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
