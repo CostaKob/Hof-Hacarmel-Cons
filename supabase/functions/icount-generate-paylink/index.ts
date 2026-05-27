@@ -73,12 +73,14 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { studentId, paymentId: incomingPaymentId } = await req.json().catch(() => ({}));
+    const { studentId, paymentId: incomingPaymentId, amount: amountOverride } = await req.json().catch(() => ({}));
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const overrideAmt = Number(amountOverride);
+    const hasOverride = Number.isFinite(overrideAmt) && overrideAmt > 0;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
