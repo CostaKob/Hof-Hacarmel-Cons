@@ -310,26 +310,33 @@ const StudentPaymentsSection = ({
       <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>אישור הפקת זיכוי</AlertDialogTitle>
+            <AlertDialogTitle>{refundTarget?._cc ? "אישור החזר אשראי" : "אישור הפקת זיכוי"}</AlertDialogTitle>
             <AlertDialogDescription>
-              ⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
-              האם להמשיך?
+              {refundTarget?._cc ? (
+                <>⚠️ ביצוע החזר אשראי דרך iCount על סך ₪{pendingRefund?.amount.toLocaleString()} הוא פעולה <strong>סופית ובלתי הפיכה</strong>. הכסף יוחזר לכרטיס המקורי. האם להמשיך?</>
+              ) : (
+                <>⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>. האם להמשיך?</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
-                if (pendingRefund) refundMutation.mutate(pendingRefund);
+                if (pendingRefund) {
+                  if (refundTarget?._cc) ccRefundMutation.mutate(pendingRefund);
+                  else refundMutation.mutate(pendingRefund);
+                }
                 setPendingRefund(null);
               }}
             >
-              כן, בצע זיכוי
+              {refundTarget?._cc ? "כן, בצע החזר אשראי" : "כן, בצע זיכוי"}
             </AlertDialogAction>
             <AlertDialogCancel>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
     </div>
   );
