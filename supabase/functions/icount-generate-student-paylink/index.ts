@@ -87,6 +87,7 @@ Deno.serve(async (req: Request) => {
       amount,
       lines: linesInput,
       academicYearId,
+      discounts,
     } = await req.json().catch(() => ({}));
 
     if (!studentId) {
@@ -154,6 +155,8 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    const breakdown = { lines, discounts: discounts ?? null };
+
     // Create pending row if none exists
     if (!paymentId) {
       const { data: newRow, error: insErr } = await supabase
@@ -165,18 +168,18 @@ Deno.serve(async (req: Request) => {
           amount: totalAmount,
           payment_date: new Date().toISOString().slice(0, 10),
           payment_status: "pending",
-          enrollment_breakdown: lines,
+          enrollment_breakdown: breakdown,
           notes: "ממתין לתשלום בקישור iCount",
         })
         .select("id")
         .single();
       if (insErr || !newRow) throw new Error(`failed to create pending payment: ${insErr?.message}`);
       paymentId = newRow.id;
-    } else if (rowAmount != null && rowAmount !== totalAmount) {
-      // Update amount + breakdown on existing pending row
+    } else {
+      // Always refresh breakdown (discounts may have changed even when total didn't)
       await supabase
         .from("student_payments")
-        .update({ amount: totalAmount, enrollment_breakdown: lines })
+        .update({ amount: totalAmount, enrollment_breakdown: breakdown })
         .eq("id", paymentId);
     }
 
