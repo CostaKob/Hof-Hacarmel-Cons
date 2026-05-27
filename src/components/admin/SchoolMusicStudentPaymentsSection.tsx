@@ -332,11 +332,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="צור קישור תשלום מחדש"
-                        disabled={generateLinkMutation.isPending}
-                        onClick={() => generateLinkMutation.mutate(p.id)}>
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
                     </>
                   )}
                   {canIssueReceipt && (
