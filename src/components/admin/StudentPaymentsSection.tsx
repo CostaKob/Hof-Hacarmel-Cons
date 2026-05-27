@@ -255,7 +255,11 @@ const StudentPaymentsSection = ({
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים.</p>
+            <p className="text-xs text-muted-foreground">
+              {refundTarget?._cc
+                ? "יבוצע החזר אשראי אמיתי דרך iCount לעסקה המקורית, ותופק קבלת זיכוי חתומה."
+                : "תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים."}
+            </p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
@@ -263,7 +267,7 @@ const StudentPaymentsSection = ({
             </Button>
             <Button
               className="h-11 rounded-xl"
-              disabled={refundMutation.isPending}
+              disabled={refundMutation.isPending || ccRefundMutation.isPending}
               onClick={() => {
                 const amt = Number(refundAmount);
                 const max = Number(refundTarget?._remaining || 0);
@@ -272,7 +276,9 @@ const StudentPaymentsSection = ({
                 setPendingRefund({ paymentId: refundTarget.id, amount: amt });
               }}
             >
-              {refundMutation.isPending ? "מבצע..." : "בצע זיכוי"}
+              {(refundMutation.isPending || ccRefundMutation.isPending)
+                ? "מבצע..."
+                : refundTarget?._cc ? "בצע החזר אשראי" : "בצע זיכוי"}
             </Button>
           </DialogFooter>
         </DialogContent>
