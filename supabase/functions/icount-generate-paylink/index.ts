@@ -16,7 +16,7 @@ const corsHeaders = {
 const CAESAREA_NAMES = ["קיסריה", "קיסרייה"];
 const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-ipn-handler";
-const SUCCESS_URL_BASE = "https://musichof.com/school-music/register/success";
+const SUCCESS_URL_BASE = "https://musichof.com/school-music-register/success";
 
 async function resolvePaypageIdFromUrl(url: string): Promise<string | null> {
   try {
