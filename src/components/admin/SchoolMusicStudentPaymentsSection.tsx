@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2, Link2, Copy, ExternalLink, RefreshCw } from "lucide-react";
+import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, RefreshCw, Link2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -90,16 +90,36 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     },
   });
 
-  // Prefer the personalized prefilled link generated for this student (saved on the pending payment row).
-  // Fall back to the school's generic Paypage URL.
-  const pendingWithLink = payments.find((p) => p.payment_status === "pending" && p.payment_link_url);
-  const paymentLink = (pendingWithLink?.payment_link_url as string | undefined) || (school?.icount_payment_page_url as string | undefined);
   const hasPending = payments.some((p) => p.payment_status === "pending");
+
+  const studentName = student ? `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim() : "";
+  const waPhone = (student?.parent_phone || "").replace(/\D/g, "").replace(/^0/, "972");
+  const buildWaUrl = (link: string) => {
+    const msg = encodeURIComponent(
+      `שלום${student?.parent_name ? " " + student.parent_name : ""},\n` +
+      `קישור לתשלום שכר לימוד עבור ${studentName || "התלמיד"} – ${school?.school_name ?? ""}:\n${link}`
+    );
+    return `https://wa.me/${waPhone}?text=${msg}`;
+  };
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["sm-student-payments", studentId] });
     qc.invalidateQueries({ queryKey: ["school-music-payments"] });
   };
+
+  const generateLinkMutation = useMutation({
+    mutationFn: async (paymentId?: string) => {
+      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
+        body: paymentId ? { studentId, paymentId } : { studentId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: () => { invalidate(); toast.success("הקישור נוצר"); },
+    onError: (e: any) => toast.error(e?.message || "שגיאה ביצירת קישור"),
+  });
+
 
   const addMutation = useMutation({
     mutationFn: async () => {
@@ -234,47 +254,24 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             סה״כ: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
             {totalPending > 0 && <> · ממתין: <span className="font-semibold text-amber-600">₪{totalPending.toLocaleString()}</span></>}
           </div>
+          {!hasPending && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 rounded-xl gap-1"
+              disabled={generateLinkMutation.isPending}
+              onClick={() => generateLinkMutation.mutate(undefined)}
+            >
+              <Link2 className="h-4 w-4" />
+              {generateLinkMutation.isPending ? "יוצר..." : "צור קישור תשלום"}
+            </Button>
+          )}
           <Button size="sm" className="h-10 rounded-xl" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" /> הוסף תשלום
+            <Plus className="h-4 w-4" /> הוסף תשלום ידני
           </Button>
         </div>
       </div>
 
-      {paymentLink && hasPending && (() => {
-        const studentName = student ? `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim() : "";
-        const waPhone = (student?.parent_phone || "").replace(/\D/g, "").replace(/^0/, "972");
-        const msg = encodeURIComponent(
-          `שלום${student?.parent_name ? " " + student.parent_name : ""},\n` +
-          `קישור לתשלום שכר לימוד עבור ${studentName || "התלמיד"} – ${school?.school_name ?? ""}:\n${paymentLink}`
-        );
-        return (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Link2 className="h-4 w-4 text-primary" />
-              קישור תשלום של {school?.school_name ?? "בית הספר"}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <code className="flex-1 min-w-0 truncate text-xs bg-background border border-border rounded-lg px-2 py-1.5" dir="ltr">
-                {paymentLink}
-              </code>
-              <Button size="sm" variant="outline" className="h-9 rounded-lg gap-1"
-                onClick={() => { navigator.clipboard.writeText(paymentLink); toast.success("הקישור הועתק"); }}>
-                <Copy className="h-3.5 w-3.5" /> העתק
-              </Button>
-              <Button size="sm" variant="outline" className="h-9 rounded-lg gap-1"
-                onClick={() => window.open(paymentLink, "_blank")}>
-                <ExternalLink className="h-3.5 w-3.5" /> פתח
-              </Button>
-              {waPhone && (
-                <Button size="sm" variant="outline" className="h-9 rounded-lg gap-1"
-                  onClick={() => window.open(`https://wa.me/${waPhone}?text=${msg}`, "_blank")}>
-                  שלח בוואטסאפ
-                </Button>
-              )}
-            </div>
-          </div>
-        );
-      })()}
 
       {payments.length === 0 ? (
         <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
@@ -310,7 +307,15 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0 flex-wrap">
+                  {p.payment_status === "pending" && !isRefund && !p.payment_link_url && (
+                    <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
+                      title="צור קישור תשלום"
+                      disabled={generateLinkMutation.isPending}
+                      onClick={() => generateLinkMutation.mutate(p.id)}>
+                      <Link2 className="h-3.5 w-3.5" /> צור קישור
+                    </Button>
+                  )}
                   {p.payment_status === "pending" && !isRefund && p.payment_link_url && (
                     <>
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="העתק קישור תשלום"
@@ -321,19 +326,16 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                         onClick={() => window.open(p.payment_link_url, "_blank")}>
                         <ExternalLink className="h-4 w-4" />
                       </Button>
+                      {waPhone && (
+                        <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg text-green-600 hover:bg-green-50"
+                          title="שלח קישור בוואטסאפ"
+                          onClick={() => window.open(buildWaUrl(p.payment_link_url), "_blank")}>
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="צור קישור תשלום מחדש"
-                        onClick={async () => {
-                          try {
-                            const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
-                              body: { studentId, paymentId: p.id },
-                            });
-                            if (error) throw error;
-                            toast.success("הקישור נוצר מחדש");
-                            qc.invalidateQueries({ queryKey: ["school-music-student-payments", studentId] });
-                          } catch (e: any) {
-                            toast.error(e?.message || "שגיאה ביצירת הקישור");
-                          }
-                        }}>
+                        disabled={generateLinkMutation.isPending}
+                        onClick={() => generateLinkMutation.mutate(p.id)}>
                         <RefreshCw className="h-4 w-4" />
                       </Button>
                     </>

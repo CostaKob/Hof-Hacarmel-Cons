@@ -114,6 +114,27 @@ Deno.serve(async (req: Request) => {
     const isCaesarea = CAESAREA_NAMES.some((n) => schoolName.includes(n));
     const amount = isCaesarea ? 1600 : 650;
 
+    // If no pending payment row exists, create one so the link has somewhere to live.
+    if (!paymentId) {
+      const { data: schoolRow } = await supabase
+        .from("school_music_students")
+        .select("school_music_school_id, academic_year_id")
+        .eq("id", studentId).maybeSingle();
+      const { data: newRow, error: insErr } = await supabase
+        .from("school_music_payments")
+        .insert({
+          school_music_student_id: studentId,
+          school_music_school_id: schoolRow?.school_music_school_id,
+          academic_year_id: schoolRow?.academic_year_id,
+          amount,
+          payment_status: "pending",
+          notes: "נוצר ידנית מהאדמין",
+        })
+        .select("id").single();
+      if (insErr || !newRow) throw new Error(`failed to create pending payment: ${insErr?.message}`);
+      paymentId = newRow.id;
+    }
+
     // The base URL is the dynamic paypage. Re-use the cached one if present,
     // otherwise create a fresh paypage per student via the iCount API.
     // We strip any old query string from a cached base URL so we re-build
