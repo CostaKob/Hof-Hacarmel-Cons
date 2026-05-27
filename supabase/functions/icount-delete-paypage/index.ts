@@ -58,7 +58,7 @@ Deno.serve(async (req: Request) => {
         .maybeSingle()
       : { data: null };
 
-    if (!payment && !student) {
+    if (!payment && !student && !paypageId) {
       return new Response(JSON.stringify({ ok: true, skipped: "no payment" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
