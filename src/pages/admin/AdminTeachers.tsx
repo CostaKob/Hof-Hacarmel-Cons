@@ -10,9 +10,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft, FileSpreadsheet } from "lucide-react";
+import { Plus, Search, ChevronLeft, FileSpreadsheet, KeyRound } from "lucide-react";
 import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
 import { sortByPerson } from "@/lib/sortHebrew";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const AdminTeachers = () => {
   const navigate = useNavigate();
@@ -21,6 +26,26 @@ const AdminTeachers = () => {
   const [activeFilter, setActiveFilter] = usePersistedState<string>("/admin/teachers", "active", "active");
   const [typeFilter, setTypeFilter] = usePersistedState<string>("/admin/teachers", "type", "all");
   const [importOpen, setImportOpen] = useState(false);
+  const [resetAllOpen, setResetAllOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetAllPasswords = async () => {
+    setResetting(true);
+    const { data, error } = await supabase.functions.invoke("reset-all-teacher-passwords");
+    setResetting(false);
+    setResetAllOpen(false);
+    if (error) {
+      toast.error(`שגיאה: ${error.message}`);
+      return;
+    }
+    const updated = (data as any)?.updated ?? 0;
+    const failed = (data as any)?.failed ?? [];
+    if (failed.length > 0) {
+      toast.warning(`עודכנו ${updated} סיסמאות, ${failed.length} נכשלו`);
+    } else {
+      toast.success(`עודכנו ${updated} סיסמאות ל-123456`);
+    }
+  };
 
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
@@ -72,7 +97,10 @@ const AdminTeachers = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setResetAllOpen(true)}>
+            <KeyRound className="h-4 w-4" /> אפס סיסמאות לכולם
+          </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" /> ייבוא מאקסל
           </Button>
@@ -139,6 +167,23 @@ const AdminTeachers = () => {
       )}
 
       <TeacherImportDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      <AlertDialog open={resetAllOpen} onOpenChange={setResetAllOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>איפוס סיסמאות לכל המורים</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תאפס את הסיסמה של כל המורים בעלי חשבון התחברות לסיסמה <strong>123456</strong>. האם להמשיך?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resetting}>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetAllPasswords} disabled={resetting}>
+              {resetting ? "מאפס..." : "אפס לכולם"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
