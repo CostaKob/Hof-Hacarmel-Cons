@@ -267,6 +267,13 @@ const AdminStudentPaymentCalc = () => {
           amount: balance,
           academicYearId: yearId,
           lines,
+          discounts: {
+            sibling,
+            secondInstrument,
+            majorStudent,
+            customDiscounts,
+            startDateOverrides,
+          },
         },
       });
       if (error) throw error;
