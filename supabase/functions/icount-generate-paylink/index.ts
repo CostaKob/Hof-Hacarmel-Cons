@@ -34,12 +34,12 @@ async function createPaypage(opts: {
   amount: number;
   paymentId: string;
 }): Promise<{ url: string; paypageId: string | null }> {
-  const itemDesc = `שכר לימוד - ${opts.studentName} - ${opts.schoolName}`;
+  const itemDesc = `בי"ס מנגן - ${opts.studentName} - ${opts.schoolName}`;
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
     pass: Deno.env.get("ICOUNT_PASSWORD"),
-    page_name: `תשלום שכר לימוד - ${opts.studentName}`,
+    page_name: `תשלום בי"ס מנגן - ${opts.studentName}`,
     doctype: "receipt",
     currency_id: 5,
     language: "he",
