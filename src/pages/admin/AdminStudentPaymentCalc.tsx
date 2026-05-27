@@ -244,21 +244,63 @@ const AdminStudentPaymentCalc = () => {
         ].filter(Boolean).join(" ");
       });
 
-      let lines: { description: string; amount: number }[];
-      if (customDiscountAmount > 0 || rowsAfterStd.length === 0) {
-        const desc = enrollmentLabels.length > 0
-          ? `שכר לימוד - ${enrollmentLabels.join(" + ")} (כולל הנחות)`
-          : "שכר לימוד";
-        lines = [{ description: desc, amount: Math.round(balance) }];
-      } else {
-        lines = rowsAfterStd.map((r, i) => ({
-          description: `שכר לימוד - ${enrollmentLabels[i]}`,
-          amount: Math.round(r.afterStd),
-        }));
-        // Fix any rounding drift so sum matches balance exactly
-        const drift = Math.round(balance) - lines.reduce((s, l) => s + l.amount, 0);
-        if (drift !== 0 && lines.length > 0) lines[0].amount += drift;
-        lines = lines.filter((l) => l.amount > 0);
+      // Build a detailed line breakdown so parents see:
+      //   1) Full annual tuition per enrollment
+      //   2) Deduction for past lessons (proration) per enrollment
+      //   3) Each discount as its own negative line
+      let lines: { description: string; amount: number }[] = [];
+
+      rowsAfterStd.forEach((r, i) => {
+        lines.push({
+          description: `שכר לימוד שנתי - ${enrollmentLabels[i]}`,
+          amount: Math.round(r.annualBase),
+        });
+        const prorationDeduction = r.annualBase - r.prorated;
+        if (prorationDeduction > 0) {
+          lines.push({
+            description: `קיזוז שיעורים שעברו - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
+            amount: -Math.round(prorationDeduction),
+          });
+        }
+      });
+
+      if (sibling && discountRates.sibling > 0) {
+        lines.push({
+          description: `הנחת אחים (${discountRates.sibling}%)`,
+          amount: -Math.round(proratedTotal * discountRates.sibling / 100),
+        });
+      }
+      if (secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId) {
+        const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
+        if (secondRow) {
+          lines.push({
+            description: `הנחת כלי שני (${discountRates.secondInstrument}%)`,
+            amount: -Math.round(secondRow.prorated * discountRates.secondInstrument / 100),
+          });
+        }
+      }
+      if (majorStudent && discountRates.majorStudent > 0) {
+        lines.push({
+          description: `הנחת תלמיד מגמה (${discountRates.majorStudent}%)`,
+          amount: -Math.round(proratedTotal * discountRates.majorStudent / 100),
+        });
+      }
+      customDiscounts.forEach((c) => {
+        const v = Number(c.value) || 0;
+        if (!v) return;
+        const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v / 100) : v;
+        const name = c.label?.trim() || "הנחה מותאמת";
+        const suffix = c.mode === "pct" ? ` (${v}%)` : "";
+        lines.push({ description: `${name}${suffix}`, amount: -amt });
+      });
+
+      // Fix rounding drift so the lines sum to the exact balance
+      const drift = Math.round(balance) - lines.reduce((s, l) => s + l.amount, 0);
+      if (drift !== 0 && lines.length > 0) lines[0].amount += drift;
+      lines = lines.filter((l) => l.amount !== 0);
+
+      if (lines.length === 0) {
+        lines = [{ description: "שכר לימוד", amount: Math.round(balance) }];
       }
 
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
