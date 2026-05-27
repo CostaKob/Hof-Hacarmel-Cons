@@ -55,7 +55,7 @@ async function createPaypage(opts: {
     tax_exempt: true,
     require_id: 0,
     prevent_overrides: 0,
-    max_payments: 1,
+    max_payments: 10,
     ipn_url: IPN_URL,
     post_action_success: `${SUCCESS_URL}&payment_id=${opts.paymentId}`,
     items,
