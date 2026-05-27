@@ -68,6 +68,7 @@ import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
 import PublicRegistration from "./pages/PublicRegistration";
 import SchoolMusicRegister from "./pages/SchoolMusicRegister";
 import SchoolMusicRegisterSuccess from "./pages/SchoolMusicRegisterSuccess";
+import StudentPaymentSuccess from "./pages/StudentPaymentSuccess";
 
 import AdminEducationalSchools from "./pages/admin/AdminEducationalSchools";
 import AdminEducationalSchoolForm from "./pages/admin/AdminEducationalSchoolForm";
@@ -169,6 +170,7 @@ const App = () => (
               
               <Route path="/school-music-register" element={<SchoolMusicRegister />} />
               <Route path="/school-music-register/success" element={<SchoolMusicRegisterSuccess />} />
+              <Route path="/student-payment/success" element={<StudentPaymentSuccess />} />
               {/* Teacher routes */}
               <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
               <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
