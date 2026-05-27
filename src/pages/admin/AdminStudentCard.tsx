@@ -165,6 +165,7 @@ const AdminStudentCard = () => {
       const query = supabase
         .from("student_payments")
         .select("*, academic_years:academic_year_id(name)")
+        .or("payment_status.is.null,payment_status.neq.pending")
         .order("payment_date", { ascending: false });
 
       const { data, error } = ids.length > 0
