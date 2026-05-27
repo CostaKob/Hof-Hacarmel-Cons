@@ -90,16 +90,36 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     },
   });
 
-  // Prefer the personalized prefilled link generated for this student (saved on the pending payment row).
-  // Fall back to the school's generic Paypage URL.
-  const pendingWithLink = payments.find((p) => p.payment_status === "pending" && p.payment_link_url);
-  const paymentLink = (pendingWithLink?.payment_link_url as string | undefined) || (school?.icount_payment_page_url as string | undefined);
   const hasPending = payments.some((p) => p.payment_status === "pending");
+
+  const studentName = student ? `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim() : "";
+  const waPhone = (student?.parent_phone || "").replace(/\D/g, "").replace(/^0/, "972");
+  const buildWaUrl = (link: string) => {
+    const msg = encodeURIComponent(
+      `שלום${student?.parent_name ? " " + student.parent_name : ""},\n` +
+      `קישור לתשלום שכר לימוד עבור ${studentName || "התלמיד"} – ${school?.school_name ?? ""}:\n${link}`
+    );
+    return `https://wa.me/${waPhone}?text=${msg}`;
+  };
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ["sm-student-payments", studentId] });
     qc.invalidateQueries({ queryKey: ["school-music-payments"] });
   };
+
+  const generateLinkMutation = useMutation({
+    mutationFn: async (paymentId?: string) => {
+      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
+        body: paymentId ? { studentId, paymentId } : { studentId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: () => { invalidate(); toast.success("הקישור נוצר"); },
+    onError: (e: any) => toast.error(e?.message || "שגיאה ביצירת קישור"),
+  });
+
 
   const addMutation = useMutation({
     mutationFn: async () => {
