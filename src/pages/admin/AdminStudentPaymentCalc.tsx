@@ -69,7 +69,7 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
-  const { data: paymentsList = [] } = useQuery({
+  const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
     queryFn: async () => {
@@ -87,6 +87,15 @@ const AdminStudentPaymentCalc = () => {
       return data ?? [];
     },
   });
+
+  const paymentsList = useMemo(
+    () => (allStudentPayments as any[]).filter((p) => (p.payment_status ?? "paid") !== "pending"),
+    [allStudentPayments],
+  );
+  const pendingPayments = useMemo(
+    () => (allStudentPayments as any[]).filter((p) => p.payment_status === "pending"),
+    [allStudentPayments],
+  );
 
   const paymentsAggr = useMemo(() => {
     let paid = 0, credit = 0, net = 0;
