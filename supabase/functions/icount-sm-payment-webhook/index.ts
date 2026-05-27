@@ -10,6 +10,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+async function resolvePaypageIdFromUrl(url?: string | null): Promise<string | null> {
+  if (!url) return null;
+  try {
+    const res = await fetch(url.split("?")[0], { redirect: "follow" });
+    const campaign = new URL(res.url || url).searchParams.get("utm_campaign");
+    return campaign && /^\d+$/.test(campaign) ? campaign : null;
+  } catch {
+    return null;
+  }
+}
+
 async function parseBody(req: Request): Promise<Record<string, any>> {
   const ct = req.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
@@ -110,12 +121,7 @@ Deno.serve(async (req: Request) => {
     // Cleanup: delete the dynamic paypage from iCount so the list only
     // contains unpaid students. Failures here are non-fatal.
     try {
-      const linkUrl: string | null =
-        payment.payment_link_url || null;
-      const ppidFromUrl = linkUrl
-        ? (linkUrl.match(/\/m\/([^\/?#]+)/)?.[1] ?? null)
-        : null;
-      const ppid = paymentPageId || ppidFromUrl;
+      const ppid = paymentPageId || payment.icount_payment_page_id || await resolvePaypageIdFromUrl(payment.payment_link_url || null);
       if (ppid) {
         const delRes = await fetch("https://api.icount.co.il/api/v3.php/paypage/delete", {
           method: "POST",
