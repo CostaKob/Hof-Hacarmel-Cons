@@ -6,7 +6,10 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Pencil, KeyRound, UserCheck, UserX, Trash2, Shield, Plus, X, Check } from "lucide-react";
+import { Pencil, KeyRound, UserCheck, UserX, Trash2, Shield, Plus, X, Check, Mail } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
