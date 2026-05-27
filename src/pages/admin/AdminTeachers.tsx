@@ -26,6 +26,26 @@ const AdminTeachers = () => {
   const [activeFilter, setActiveFilter] = usePersistedState<string>("/admin/teachers", "active", "active");
   const [typeFilter, setTypeFilter] = usePersistedState<string>("/admin/teachers", "type", "all");
   const [importOpen, setImportOpen] = useState(false);
+  const [resetAllOpen, setResetAllOpen] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const handleResetAllPasswords = async () => {
+    setResetting(true);
+    const { data, error } = await supabase.functions.invoke("reset-all-teacher-passwords");
+    setResetting(false);
+    setResetAllOpen(false);
+    if (error) {
+      toast.error(`שגיאה: ${error.message}`);
+      return;
+    }
+    const updated = (data as any)?.updated ?? 0;
+    const failed = (data as any)?.failed ?? [];
+    if (failed.length > 0) {
+      toast.warning(`עודכנו ${updated} סיסמאות, ${failed.length} נכשלו`);
+    } else {
+      toast.success(`עודכנו ${updated} סיסמאות ל-123456`);
+    }
+  };
 
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["admin-teachers"],
