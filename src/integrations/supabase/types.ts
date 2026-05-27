@@ -2168,6 +2168,17 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["school_music_payment_status"]
         }[]
       }
+      get_student_payment_public_status: {
+        Args: { _payment_id: string }
+        Returns: {
+          amount: number
+          icount_doc_number: string
+          id: string
+          invoice_url: string
+          paid_at: string
+          payment_status: Database["public"]["Enums"]["student_payment_status"]
+        }[]
+      }
       get_teacher_id_for_user: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
