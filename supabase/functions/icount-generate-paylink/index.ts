@@ -156,9 +156,10 @@ Deno.serve(async (req: Request) => {
 
     // The base URL is the dynamic paypage. Re-use the cached one if present,
     // otherwise create a fresh paypage per student via the iCount API.
-    // We strip any old query string from a cached base URL so we re-build
-    // fresh prefill params from the latest student data.
-    let baseUrl = cachedBaseUrl ? cachedBaseUrl.split("?")[0] : "";
+    // If the amount differs from what the cached paypage was created with,
+    // we MUST recreate the paypage so iCount charges the new amount.
+    const amountChanged = rowAmount != null && amount !== rowAmount;
+    let baseUrl = cachedBaseUrl && !amountChanged ? cachedBaseUrl.split("?")[0] : "";
     let paypageId: string | null = null;
     if (!baseUrl) {
       const created = await createPaypage({
