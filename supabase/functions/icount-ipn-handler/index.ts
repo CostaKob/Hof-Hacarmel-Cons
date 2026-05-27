@@ -155,6 +155,37 @@ Deno.serve(async (req: Request) => {
         .from("school_music_payments").update(updateFields).eq("id", paymentId);
       if (updErr) console.error("[icount-ipn] update error", updErr);
       else console.log("[icount-ipn] updated payment", paymentId);
+
+      // Cleanup: delete the dynamic paypage from iCount so it disappears from
+      // the "עמודי סליקה" list. Non-fatal on failure.
+      try {
+        const { data: pmt } = await supabase
+          .from("school_music_payments")
+          .select("icount_payment_page_id")
+          .eq("id", paymentId).maybeSingle();
+        const ppid = String(paypageId || pmt?.icount_payment_page_id || "") || null;
+        if (ppid) {
+          const delRes = await fetch("https://api.icount.co.il/api/v3.php/paypage/delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              cid: Deno.env.get("ICOUNT_COMPANY_ID"),
+              user: Deno.env.get("ICOUNT_USERNAME"),
+              pass: Deno.env.get("ICOUNT_PASSWORD"),
+              paypage_id: ppid,
+            }),
+          });
+          const delJson = await delRes.json().catch(() => ({}));
+          console.log("[icount-ipn] paypage/delete", ppid, delJson);
+          await supabase.from("school_music_payments")
+            .update({ payment_link_url: null, icount_payment_page_id: null })
+            .eq("id", paymentId);
+        } else {
+          console.log("[icount-ipn] no paypage id to delete");
+        }
+      } catch (cleanupErr) {
+        console.warn("[icount-ipn] paypage cleanup failed", cleanupErr);
+      }
     } else {
       // Last resort: insert a flagged row so admins can reconcile manually.
       const { data: ay } = await supabase
