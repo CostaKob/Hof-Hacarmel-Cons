@@ -181,7 +181,7 @@ const AdminTeacherCard = () => {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => toast.success("הסיסמה אופסה ל-123456 בהצלחה"),
+    onSuccess: () => toast.success("הסיסמה אופסה ל-Music2026! בהצלחה"),
     onError: (err: Error) => toast.error(err.message || "שגיאה באיפוס הסיסמה"),
   });
 
@@ -200,7 +200,7 @@ const AdminTeacherCard = () => {
       if (data?.warning) {
         toast.warning(data.warning);
       } else {
-        toast.success("חשבון כניסה נוצר בהצלחה (סיסמה: 123456)");
+        toast.success("חשבון כניסה נוצר בהצלחה (סיסמה: Music2026!)");
       }
     },
     onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
@@ -340,7 +340,7 @@ const AdminTeacherCard = () => {
                 disabled={resetPasswordMutation.isPending}
               >
                 <KeyRound className="h-4 w-4" />
-                {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-123456"}
+                {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-Music2026!"}
               </Button>
             ) : teacher.email ? (
               <Button
