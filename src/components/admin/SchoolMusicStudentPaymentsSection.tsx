@@ -266,11 +266,14 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
               size="sm"
               variant="outline"
               className="h-10 rounded-xl gap-1"
-              disabled={generateLinkMutation.isPending}
-              onClick={() => generateLinkMutation.mutate(undefined)}
+              onClick={() => {
+                setLinkTargetPaymentId(undefined);
+                setLinkAmount(String(defaultAmount ?? ""));
+                setLinkDialogOpen(true);
+              }}
             >
               <Link2 className="h-4 w-4" />
-              {generateLinkMutation.isPending ? "יוצר..." : "צור קישור תשלום"}
+              צור קישור תשלום
             </Button>
           )}
           <Button size="sm" className="h-10 rounded-xl" onClick={() => setAddOpen(true)}>
