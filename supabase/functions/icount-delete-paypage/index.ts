@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { paymentId } = await req.json().catch(() => ({}));
+    const { paymentId, strict = false } = await req.json().catch(() => ({}));
     if (!paymentId) {
       return new Response(JSON.stringify({ error: "paymentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,8 +57,17 @@ Deno.serve(async (req: Request) => {
         });
         const json = await res.json().catch(() => ({}));
         console.log("[icount-delete-paypage]", ppid, json);
+        const alreadyDeleted = res.status === 404 || String(json?.reason ?? json?.error ?? "").toLowerCase().includes("not found");
+        if (!res.ok && !alreadyDeleted) {
+          throw new Error(`iCount paypage/delete failed: ${JSON.stringify(json)}`);
+        }
       } catch (e) {
         console.warn("[icount-delete-paypage] iCount call failed", e);
+        if (strict) {
+          return new Response(JSON.stringify({ error: String(e) }), {
+            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     }
 
