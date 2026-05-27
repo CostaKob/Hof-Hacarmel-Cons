@@ -91,11 +91,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create new auth user with password Music2026!
+    // Create new auth user with password 123456
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
-        password: "Music2026!",
+        password: "123456",
         email_confirm: true,
       });
 
