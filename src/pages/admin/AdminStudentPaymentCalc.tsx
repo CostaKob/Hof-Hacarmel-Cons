@@ -208,19 +208,25 @@ const AdminStudentPaymentCalc = () => {
     if (balance <= 0) return;
     setGeneratingLink(true);
     try {
-      const lines = rowsAfterStd.map((r) => {
+      // Distribute the custom discount proportionally across line items
+      // (iCount paypage items don't support negative amounts, so we fold the
+      // discount into the per-line amounts instead of adding a negative line)
+      const baseSum = rowsAfterStd.reduce((s, r) => s + Math.round(r.afterStd), 0);
+      const targetSum = Math.max(0, baseSum - Math.round(customDiscountAmount));
+      const factor = baseSum > 0 ? targetSum / baseSum : 1;
+      const rawLines = rowsAfterStd.map((r) => {
         const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
         const parts = [
           e?.instruments?.name ?? "—",
           e?.schools?.name ? `· ${e.schools.name}` : "",
           e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
         ].filter(Boolean).join(" ");
-        return { description: `שכר לימוד - ${parts}`, amount: Math.round(r.afterStd) };
+        return { description: `שכר לימוד - ${parts}`, amount: Math.round(Math.round(r.afterStd) * factor) };
       });
-      // If custom discounts exist, fold them into a single negative line
-      if (customDiscountAmount > 0) {
-        lines.push({ description: "הנחה נוספת", amount: -Math.round(customDiscountAmount) });
-      }
+      // Fix rounding drift so the sum of lines equals `balance` exactly
+      const drift = balance - rawLines.reduce((s, l) => s + l.amount, 0);
+      if (rawLines.length > 0 && drift !== 0) rawLines[0].amount += drift;
+      const lines = rawLines.filter((l) => l.amount > 0);
 
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
         body: {
