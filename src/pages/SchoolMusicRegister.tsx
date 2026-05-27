@@ -416,7 +416,7 @@ const SchoolMusicRegister = () => {
         class_name: classes.find((c) => c.id === form.school_music_class_id)?.class_name || "",
         city: form.city.trim() || null,
         parent_name: form.parent_name.trim(),
-        parent_national_id: form.parent_national_id.replace(/[^\d]/g, ""),
+        parent_national_id: "",
         parent_phone: phone,
         parent_email: form.parent_email.trim(),
         instrument_id: form.instrument_id,
