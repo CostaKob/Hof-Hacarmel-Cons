@@ -208,25 +208,37 @@ const AdminStudentPaymentCalc = () => {
     if (balance <= 0) return;
     setGeneratingLink(true);
     try {
-      // Distribute the custom discount proportionally across line items
-      // (iCount paypage items don't support negative amounts, so we fold the
-      // discount into the per-line amounts instead of adding a negative line)
-      const baseSum = rowsAfterStd.reduce((s, r) => s + Math.round(r.afterStd), 0);
-      const targetSum = Math.max(0, baseSum - Math.round(customDiscountAmount));
-      const factor = baseSum > 0 ? targetSum / baseSum : 1;
-      const rawLines = rowsAfterStd.map((r) => {
+      // Build the paypage line items. iCount paypage items don't support
+      // negative amounts, and very small rounded amounts get filtered.
+      // Strategy:
+      //  - If there's no custom discount → one line per enrollment at afterStd.
+      //  - If there's a custom discount → fold everything into a single consolidated
+      //    line so the discount is reflected accurately and no enrollments disappear.
+      const enrollmentLabels = rowsAfterStd.map((r) => {
         const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
-        const parts = [
+        return [
           e?.instruments?.name ?? "—",
           e?.schools?.name ? `· ${e.schools.name}` : "",
           e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
         ].filter(Boolean).join(" ");
-        return { description: `שכר לימוד - ${parts}`, amount: Math.round(Math.round(r.afterStd) * factor) };
       });
-      // Fix rounding drift so the sum of lines equals `balance` exactly
-      const drift = balance - rawLines.reduce((s, l) => s + l.amount, 0);
-      if (rawLines.length > 0 && drift !== 0) rawLines[0].amount += drift;
-      const lines = rawLines.filter((l) => l.amount > 0);
+
+      let lines: { description: string; amount: number }[];
+      if (customDiscountAmount > 0 || rowsAfterStd.length === 0) {
+        const desc = enrollmentLabels.length > 0
+          ? `שכר לימוד - ${enrollmentLabels.join(" + ")} (כולל הנחות)`
+          : "שכר לימוד";
+        lines = [{ description: desc, amount: Math.round(balance) }];
+      } else {
+        lines = rowsAfterStd.map((r, i) => ({
+          description: `שכר לימוד - ${enrollmentLabels[i]}`,
+          amount: Math.round(r.afterStd),
+        }));
+        // Fix any rounding drift so sum matches balance exactly
+        const drift = Math.round(balance) - lines.reduce((s, l) => s + l.amount, 0);
+        if (drift !== 0 && lines.length > 0) lines[0].amount += drift;
+        lines = lines.filter((l) => l.amount > 0);
+      }
 
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
         body: {
