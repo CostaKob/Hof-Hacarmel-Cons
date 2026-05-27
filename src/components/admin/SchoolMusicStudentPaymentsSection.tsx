@@ -422,38 +422,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         </DialogContent>
       </Dialog>
 
-      {/* Mark paid */}
-      <Dialog open={!!markPaidId} onOpenChange={(o) => !o && setMarkPaidId(null)}>
-        <DialogContent dir="rtl" className="max-w-md">
-          <DialogHeader><DialogTitle>סימון תשלום כשולם</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-sm">אמצעי תשלום</Label>
-              <Select value={mpMethod} onValueChange={setMpMethod}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">מזומן</SelectItem>
-                  <SelectItem value="credit_card">כרטיס אשראי</SelectItem>
-                  <SelectItem value="bank_transfer">העברה בנקאית</SelectItem>
-                  <SelectItem value="cheque">המחאה</SelectItem>
-                  <SelectItem value="bit">ביט</SelectItem>
-                  <SelectItem value="other">אחר</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">אסמכתא (אופציונלי)</Label>
-              <Input value={mpRef} onChange={(e) => setMpRef(e.target.value)} className="h-11 rounded-xl" />
-            </div>
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="h-11 rounded-xl" onClick={() => setMarkPaidId(null)}>ביטול</Button>
-            <Button className="h-11 rounded-xl" disabled={markPaidMutation.isPending} onClick={() => markPaidMutation.mutate()}>
-              אישור
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Refund dialog */}
       <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
