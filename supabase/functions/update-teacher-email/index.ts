@@ -100,6 +100,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Sync the email identity so the user can actually log in with the new email
+    // (auth.users.email alone isn't enough — login uses the identity record)
+    const { error: identityErr } = await supabaseAdmin.rpc("admin_sync_email_identity", {
+      _user_id: teacher.user_id,
+      _new_email: normalizedEmail,
+    });
+    if (identityErr) {
+      console.error("identity sync failed:", identityErr);
+    }
+
     // Sync teachers + profiles tables
     await supabaseAdmin.from("teachers").update({ email: normalizedEmail }).eq("id", teacher_id);
     await supabaseAdmin.from("profiles").update({ email: normalizedEmail }).eq("id", teacher.user_id);

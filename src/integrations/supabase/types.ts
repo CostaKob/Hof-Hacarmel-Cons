@@ -2079,6 +2079,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_sync_email_identity: {
+        Args: { _new_email: string; _user_id: string }
+        Returns: undefined
+      }
       get_public_school_music_school_by_slug: {
         Args: { _slug: string }
         Returns: {
