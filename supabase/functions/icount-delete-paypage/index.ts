@@ -14,7 +14,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { paymentId, studentId, strict = false } = await req.json().catch(() => ({}));
+    const { paymentId, studentId } = await req.json().catch(() => ({}));
     if (!paymentId && !studentId) {
       return new Response(JSON.stringify({ error: "paymentId or studentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
