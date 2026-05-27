@@ -194,7 +194,7 @@ Deno.serve(async (req: Request) => {
 
     if (paymentId) {
       await supabase.from("school_music_payments")
-        .update({ payment_link_url: url, ...(paypageId ? { icount_payment_page_id: paypageId } : {}) }).eq("id", paymentId);
+        .update({ payment_link_url: url, amount, ...(paypageId ? { icount_payment_page_id: paypageId } : {}) }).eq("id", paymentId);
     }
     await supabase.from("school_music_students")
       .update({ icount_payment_url: url }).eq("id", studentId);
