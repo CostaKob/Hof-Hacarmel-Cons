@@ -311,6 +311,7 @@ const AdminStudentPaymentCalc = () => {
           studentId,
           amount: balance,
           academicYearId: yearId,
+          academicYearName: year?.name ?? null,
           lines,
           discounts: {
             sibling,
