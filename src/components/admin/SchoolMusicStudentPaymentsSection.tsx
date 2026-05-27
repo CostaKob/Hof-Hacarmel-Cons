@@ -37,14 +37,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [amount, setAmount] = useState<string>(String(defaultAmount ?? ""));
-  const [status, setStatus] = useState<string>("paid");
   const [method, setMethod] = useState("cash");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
-
-  const [markPaidId, setMarkPaidId] = useState<string | null>(null);
-  const [mpMethod, setMpMethod] = useState("cash");
-  const [mpRef, setMpRef] = useState("");
 
   const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
@@ -121,61 +116,65 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   });
 
 
+  // Adds a manual payment. If a pending row exists for this student, it UPDATES
+  // that row (instead of creating a new one) and deletes the stale iCount Paypage
+  // so the parent's old link no longer works and the row count stays clean.
   const addMutation = useMutation({
     mutationFn: async () => {
       const amt = Number(amount);
       if (!amt || amt <= 0) throw new Error("נא להזין סכום חיובי");
-      const payload: any = {
-        school_music_student_id: studentId,
-        school_music_school_id: schoolMusicSchoolId,
-        academic_year_id: academicYearId,
-        amount: amt,
-        payment_status: status,
-        notes: notes || null,
-      };
-      if (status === "paid") {
-        payload.payment_method = method;
-        payload.transaction_reference = reference || null;
-        payload.paid_at = new Date().toISOString();
+
+      const pendingRow = payments.find((p) => p.payment_status === "pending" && !p.refund_of_payment_id);
+
+      if (pendingRow) {
+        const { error } = await supabase
+          .from("school_music_payments" as any)
+          .update({
+            amount: amt,
+            payment_status: "paid",
+            payment_method: method,
+            transaction_reference: reference || null,
+            paid_at: new Date().toISOString(),
+            notes: notes || pendingRow.notes || null,
+          })
+          .eq("id", pendingRow.id);
+        if (error) throw error;
+
+        // Best-effort cleanup of the stale Paypage in iCount.
+        if (pendingRow.payment_link_url) {
+          try {
+            await supabase.functions.invoke("icount-delete-paypage", { body: { paymentId: pendingRow.id } });
+          } catch (e) {
+            console.warn("paypage cleanup failed", e);
+          }
+        }
+      } else {
+        const { error } = await supabase.from("school_music_payments" as any).insert({
+          school_music_student_id: studentId,
+          school_music_school_id: schoolMusicSchoolId,
+          academic_year_id: academicYearId,
+          amount: amt,
+          payment_status: "paid",
+          payment_method: method,
+          transaction_reference: reference || null,
+          paid_at: new Date().toISOString(),
+          notes: notes || null,
+        });
+        if (error) throw error;
       }
-      const { error } = await supabase.from("school_music_payments" as any).insert(payload);
-      if (error) throw error;
     },
     onSuccess: () => {
       invalidate();
       setAddOpen(false);
       setAmount(String(defaultAmount ?? ""));
-      setStatus("paid");
       setMethod("cash");
       setReference("");
       setNotes("");
-      toast.success("התשלום נוסף");
+      toast.success("התשלום נרשם");
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בהוספת תשלום"),
   });
 
-  const markPaidMutation = useMutation({
-    mutationFn: async () => {
-      if (!markPaidId) return;
-      const { error } = await supabase
-        .from("school_music_payments" as any)
-        .update({
-          payment_status: "paid",
-          payment_method: mpMethod,
-          transaction_reference: mpRef || null,
-          paid_at: new Date().toISOString(),
-        })
-        .eq("id", markPaidId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      invalidate();
-      setMarkPaidId(null);
-      setMpRef("");
-      toast.success("התשלום סומן כשולם");
-    },
-    onError: () => toast.error("שגיאה בעדכון"),
-  });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -333,17 +332,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="צור קישור תשלום מחדש"
-                        disabled={generateLinkMutation.isPending}
-                        onClick={() => generateLinkMutation.mutate(p.id)}>
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
                     </>
-                  )}
-                  {p.payment_status === "pending" && !isRefund && (
-                    <Button size="sm" variant="default" className="h-8 gap-1 rounded-lg" onClick={() => setMarkPaidId(p.id)}>
-                      <CheckCircle2 className="h-3.5 w-3.5" /> סמן כשולם
-                    </Button>
                   )}
                   {canIssueReceipt && (
                     <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
@@ -428,38 +417,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         </DialogContent>
       </Dialog>
 
-      {/* Mark paid */}
-      <Dialog open={!!markPaidId} onOpenChange={(o) => !o && setMarkPaidId(null)}>
-        <DialogContent dir="rtl" className="max-w-md">
-          <DialogHeader><DialogTitle>סימון תשלום כשולם</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-sm">אמצעי תשלום</Label>
-              <Select value={mpMethod} onValueChange={setMpMethod}>
-                <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="cash">מזומן</SelectItem>
-                  <SelectItem value="credit_card">כרטיס אשראי</SelectItem>
-                  <SelectItem value="bank_transfer">העברה בנקאית</SelectItem>
-                  <SelectItem value="cheque">המחאה</SelectItem>
-                  <SelectItem value="bit">ביט</SelectItem>
-                  <SelectItem value="other">אחר</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">אסמכתא (אופציונלי)</Label>
-              <Input value={mpRef} onChange={(e) => setMpRef(e.target.value)} className="h-11 rounded-xl" />
-            </div>
-          </div>
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="h-11 rounded-xl" onClick={() => setMarkPaidId(null)}>ביטול</Button>
-            <Button className="h-11 rounded-xl" disabled={markPaidMutation.isPending} onClick={() => markPaidMutation.mutate()}>
-              אישור
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Refund dialog */}
       <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
