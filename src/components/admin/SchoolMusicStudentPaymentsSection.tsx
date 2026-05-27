@@ -37,14 +37,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
   const [amount, setAmount] = useState<string>(String(defaultAmount ?? ""));
-  const [status, setStatus] = useState<string>("paid");
   const [method, setMethod] = useState("cash");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
-
-  const [markPaidId, setMarkPaidId] = useState<string | null>(null);
-  const [mpMethod, setMpMethod] = useState("cash");
-  const [mpRef, setMpRef] = useState("");
 
   const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
