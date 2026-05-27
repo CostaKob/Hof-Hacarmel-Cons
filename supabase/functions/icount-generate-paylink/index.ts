@@ -18,6 +18,16 @@ const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-ipn-handler";
 const SUCCESS_URL = "https://musichof.com/school-music/register/success?status=ok";
 
+async function resolvePaypageIdFromUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { redirect: "follow" });
+    const campaign = new URL(res.url || url).searchParams.get("utm_campaign");
+    return campaign && /^\d+$/.test(campaign) ? campaign : null;
+  } catch {
+    return null;
+  }
+}
+
 async function createPaypage(opts: {
   studentName: string;
   schoolName: string;
@@ -54,8 +64,9 @@ async function createPaypage(opts: {
   if (!json?.status || !json?.paypage_url) {
     throw new Error(`iCount paypage/create failed: ${JSON.stringify(json)}`);
   }
-  const paypageId = String(json.paypage_id ?? json.page_id ?? json.paypage_info?.page_id ?? "") || null;
-  return { url: json.paypage_url as string, paypageId };
+  const url = json.paypage_url as string;
+  const paypageId = String(json.paypage_id ?? json.page_id ?? json.paypage_info?.page_id ?? "") || await resolvePaypageIdFromUrl(url);
+  return { url, paypageId };
 }
 
 Deno.serve(async (req: Request) => {
