@@ -18,6 +18,12 @@ interface Props {
   defaultAmount?: number;
 }
 
+type PaymentRow = {
+  id: string;
+  payment_link_url?: string | null;
+  icount_payment_page_id?: string | null;
+};
+
 const STATUS_LABELS: Record<string, string> = {
   pending: "ממתין",
   paid: "שולם",
@@ -77,7 +83,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_students" as any)
-        .select("parent_name, parent_phone, student_first_name, student_last_name")
+        .select("parent_name, parent_phone, student_first_name, student_last_name, icount_payment_url")
         .eq("id", studentId)
         .maybeSingle();
       if (error) throw error;
@@ -177,7 +183,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
 
   const deleteMutation = useMutation({
-    mutationFn: async (payment: any) => {
+    mutationFn: async (payment: PaymentRow) => {
       if (payment.payment_link_url || payment.icount_payment_page_id) {
         const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
           body: { paymentId: payment.id, strict: true },
@@ -191,6 +197,22 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     },
     onSuccess: () => { invalidate(); toast.success("התשלום נמחק"); },
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
+  });
+
+  const cleanupStaleLinkMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
+        body: { studentId, strict: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
+      invalidate();
+      toast.success("דף הסליקה הישן נמחק");
+    },
+    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
   });
 
   const createReceiptMutation = useMutation({
