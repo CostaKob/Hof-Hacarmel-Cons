@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     }
 
     // Reset password to a 6-char default (Supabase min length)
-    const DEFAULT_PASSWORD = "123456";
+    const DEFAULT_PASSWORD = "Music2026!";
     const { error: updateError } =
       await supabaseAdmin.auth.admin.updateUserById(teacher.user_id, {
         password: DEFAULT_PASSWORD,
