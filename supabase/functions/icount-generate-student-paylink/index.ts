@@ -13,7 +13,7 @@ const corsHeaders = {
 const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-student-payment-webhook";
 const SUCCESS_URL = "https://musichof.com/?paid=1";
-const PAYPAGE_CONFIG_VERSION = "student_v2_max10";
+const PAYPAGE_CONFIG_VERSION = "student_v3_year";
 
 interface LineInput {
   description: string;
@@ -34,6 +34,7 @@ async function createPaypage(opts: {
   studentName: string;
   paymentId: string;
   lines: LineInput[];
+  yearName?: string | null;
 }): Promise<{ url: string; paypageId: string | null }> {
   const items = opts.lines
     .filter((l) => Number(l.amount) !== 0)
@@ -43,11 +44,12 @@ async function createPaypage(opts: {
       quantity: 1,
       tax_exempt: 1,
     }));
+  const yearSuffix = opts.yearName ? ` ${opts.yearName}` : "";
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
     pass: Deno.env.get("ICOUNT_PASSWORD"),
-    page_name: `תשלום שכר לימוד - ${opts.studentName}`,
+    page_name: `תשלום שכר לימוד${yearSuffix} - ${opts.studentName}`,
     doctype: "receipt",
     currency_id: 5,
     language: "he",
@@ -87,8 +89,10 @@ Deno.serve(async (req: Request) => {
       amount,
       lines: linesInput,
       academicYearId,
+      academicYearName,
       discounts,
     } = await req.json().catch(() => ({}));
+
 
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
@@ -193,6 +197,7 @@ Deno.serve(async (req: Request) => {
         studentName: studentName || "תלמיד",
         paymentId: paymentId!,
         lines,
+        yearName: academicYearName ?? null,
       });
       baseUrl = created.url;
       paypageId = created.paypageId;
