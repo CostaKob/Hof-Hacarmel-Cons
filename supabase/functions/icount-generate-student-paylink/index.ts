@@ -36,7 +36,7 @@ async function createPaypage(opts: {
   lines: LineInput[];
 }): Promise<{ url: string; paypageId: string | null }> {
   const items = opts.lines
-    .filter((l) => Number(l.amount) > 0)
+    .filter((l) => Number(l.amount) !== 0)
     .map((l) => ({
       description: l.description,
       unitprice: Math.round(Number(l.amount)),
