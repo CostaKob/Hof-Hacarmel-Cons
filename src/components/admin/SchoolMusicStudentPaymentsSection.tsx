@@ -122,52 +122,25 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   });
 
 
-  // Adds a manual payment. If a pending row exists for this student, it UPDATES
-  // that row (instead of creating a new one) and deletes the stale iCount Paypage
-  // so the parent's old link no longer works and the row count stays clean.
+  // Adds a manual payment as a NEW row. Never touches existing pending rows
+  // (e.g. ones created by "צור קישור תשלום") so multiple rows can coexist.
   const addMutation = useMutation({
     mutationFn: async () => {
       const amt = Number(amount);
       if (!amt || amt <= 0) throw new Error("נא להזין סכום חיובי");
 
-      const pendingRow = payments.find((p) => p.payment_status === "pending" && !p.refund_of_payment_id);
-
-      if (pendingRow) {
-        const { error } = await supabase
-          .from("school_music_payments" as any)
-          .update({
-            amount: amt,
-            payment_status: "paid",
-            payment_method: method,
-            transaction_reference: reference || null,
-            paid_at: new Date().toISOString(),
-            notes: notes || pendingRow.notes || null,
-          })
-          .eq("id", pendingRow.id);
-        if (error) throw error;
-
-        // Best-effort cleanup of the stale Paypage in iCount.
-        if (pendingRow.payment_link_url) {
-          try {
-            await supabase.functions.invoke("icount-delete-paypage", { body: { paymentId: pendingRow.id } });
-          } catch (e) {
-            console.warn("paypage cleanup failed", e);
-          }
-        }
-      } else {
-        const { error } = await supabase.from("school_music_payments" as any).insert({
-          school_music_student_id: studentId,
-          school_music_school_id: schoolMusicSchoolId,
-          academic_year_id: academicYearId,
-          amount: amt,
-          payment_status: "paid",
-          payment_method: method,
-          transaction_reference: reference || null,
-          paid_at: new Date().toISOString(),
-          notes: notes || null,
-        });
-        if (error) throw error;
-      }
+      const { error } = await supabase.from("school_music_payments" as any).insert({
+        school_music_student_id: studentId,
+        school_music_school_id: schoolMusicSchoolId,
+        academic_year_id: academicYearId,
+        amount: amt,
+        payment_status: "paid",
+        payment_method: method,
+        transaction_reference: reference || null,
+        paid_at: new Date().toISOString(),
+        notes: notes || null,
+      });
+      if (error) throw error;
     },
     onSuccess: () => {
       invalidate();
@@ -180,6 +153,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בהוספת תשלום"),
   });
+
 
 
   const deleteMutation = useMutation({
