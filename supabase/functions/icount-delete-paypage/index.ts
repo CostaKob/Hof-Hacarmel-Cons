@@ -68,8 +68,9 @@ Deno.serve(async (req: Request) => {
         });
         const json = await res.json().catch(() => ({}));
         console.log("[icount-delete-paypage]", ppid, json);
+        const apiFailure = json?.status === false || json?.status === 0;
         const alreadyDeleted = res.status === 404 || String(json?.reason ?? json?.error ?? "").toLowerCase().includes("not found");
-        if (!res.ok && !alreadyDeleted) {
+        if ((!res.ok || apiFailure) && !alreadyDeleted) {
           throw new Error(`iCount paypage/delete failed: ${JSON.stringify(json)}`);
         }
       } catch (e) {
