@@ -192,47 +192,49 @@ const AdminStudentPaymentCalc = () => {
   const balance = totalIncVat - effectivePaid;
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
+  const [generatingLink, setGeneratingLink] = useState(false);
+
   const handleGenerateLink = async () => {
-    if (!student) return;
-    const payload = {
-      customer: {
-        name: student.parent_name,
-        email: student.parent_email,
-        phone: student.parent_phone,
-        national_id: student.parent_national_id,
-      },
-      student: {
-        name: `${student.first_name} ${student.last_name}`,
-        national_id: student.national_id,
-      },
-      lines: rows.map((r) => {
+    if (!student || !studentId) return;
+    if (balance <= 0) return;
+    setGeneratingLink(true);
+    try {
+      const lines = rowsAfterStd.map((r) => {
         const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
-        return {
-          description: `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"} (${e?.lesson_duration_minutes} דק׳)`,
-          lessons: r.lessonsRemaining,
-          price_per_lesson: r.pricePerLesson,
-          amount: r.prorated,
-        };
-      }),
-      discounts: {
-        sibling: sibling ? discountRates.sibling : 0,
-        second_instrument: secondInstrument ? discountRates.secondInstrument : 0,
-        major_student: majorStudent ? discountRates.majorStudent : 0,
-        custom: customDiscounts.map((c) => ({ label: c.label, mode: c.mode, value: Number(c.value) || 0 })),
-        std_total_pct: stdDiscountPct,
-        custom_total_amount: Math.round(customDiscountAmount),
-        total_discount_amount: totalDiscountAmount,
-      },
-      before_vat: beforeVat,
-      vat_rate: vatRate,
-      vat_amount: vatAmount,
-      total_inc_vat: totalIncVat,
-      already_paid: effectivePaid,
-      balance,
-    };
-    // eslint-disable-next-line no-console
-    console.log("[generateICountLink] Payload:", JSON.stringify(payload, null, 2));
-    toast.success("התשתית מוכנה — קישור התשלום ייווצר כאן לאחר חיבור iCount");
+        const parts = [
+          e?.instruments?.name ?? "—",
+          e?.schools?.name ? `· ${e.schools.name}` : "",
+          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+        ].filter(Boolean).join(" ");
+        return { description: `שכר לימוד - ${parts}`, amount: Math.round(r.afterStd) };
+      });
+      // If custom discounts exist, fold them into a single negative line
+      if (customDiscountAmount > 0) {
+        lines.push({ description: "הנחה נוספת", amount: -Math.round(customDiscountAmount) });
+      }
+
+      const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+        body: {
+          studentId,
+          amount: balance,
+          academicYearId: yearId,
+          lines,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      if (!data?.url) throw new Error("no url returned");
+
+      try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
+      window.open(data.url, "_blank");
+      toast.success("קישור התשלום נוצר והועתק ללוח");
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+    } catch (e: any) {
+      console.error("[generateICountLink]", e);
+      toast.error(`שגיאה ביצירת קישור: ${e?.message ?? e}`);
+    } finally {
+      setGeneratingLink(false);
+    }
   };
 
   if (loadingStudent || loadingEnrollments || !settings || !yearFull) {
