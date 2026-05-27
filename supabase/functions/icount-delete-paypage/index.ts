@@ -14,9 +14,9 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { paymentId } = await req.json().catch(() => ({}));
-    if (!paymentId) {
-      return new Response(JSON.stringify({ error: "paymentId required" }), {
+    const { paymentId, studentId, strict = false } = await req.json().catch(() => ({}));
+    if (!paymentId && !studentId) {
+      return new Response(JSON.stringify({ error: "paymentId or studentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -26,22 +26,33 @@ Deno.serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    const { data: payment } = await supabase
-      .from("school_music_payments")
-      .select("id, payment_link_url, icount_payment_page_id")
-      .eq("id", paymentId)
-      .maybeSingle();
+    const { data: payment } = paymentId
+      ? await supabase
+        .from("school_music_payments")
+        .select("id, school_music_student_id, payment_link_url, icount_payment_page_id")
+        .eq("id", paymentId)
+        .maybeSingle()
+      : { data: null };
 
-    if (!payment) {
+    const { data: student } = !payment && studentId
+      ? await supabase
+        .from("school_music_students")
+        .select("id, icount_payment_url")
+        .eq("id", studentId)
+        .maybeSingle()
+      : { data: null };
+
+    if (!payment && !student) {
       return new Response(JSON.stringify({ ok: true, skipped: "no payment" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const ppidFromUrl = payment.payment_link_url
-      ? (payment.payment_link_url.match(/\/m\/([^\/?#]+)/)?.[1] ?? null)
+    const linkUrl = payment?.payment_link_url || student?.icount_payment_url || null;
+    const ppidFromUrl = linkUrl
+      ? (linkUrl.match(/\/m\/([^/?#]+)/)?.[1] ?? null)
       : null;
-    const ppid = payment.icount_payment_page_id || ppidFromUrl;
+    const ppid = payment?.icount_payment_page_id || ppidFromUrl;
 
     if (ppid) {
       try {
@@ -57,14 +68,33 @@ Deno.serve(async (req: Request) => {
         });
         const json = await res.json().catch(() => ({}));
         console.log("[icount-delete-paypage]", ppid, json);
+        const apiFailure = json?.status === false || json?.status === 0;
+        const alreadyDeleted = res.status === 404 || String(json?.reason ?? json?.error ?? "").toLowerCase().includes("not found");
+        if ((!res.ok || apiFailure) && !alreadyDeleted) {
+          throw new Error(`iCount paypage/delete failed: ${JSON.stringify(json)}`);
+        }
       } catch (e) {
         console.warn("[icount-delete-paypage] iCount call failed", e);
+        if (strict) {
+          return new Response(JSON.stringify({ error: String(e) }), {
+            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     }
 
-    await supabase.from("school_music_payments")
-      .update({ payment_link_url: null })
-      .eq("id", paymentId);
+    if (paymentId) {
+      await supabase.from("school_music_payments")
+        .update({ payment_link_url: null })
+        .eq("id", paymentId);
+    }
+
+    const cleanupStudentId = payment?.school_music_student_id || studentId;
+    if (cleanupStudentId) {
+      await supabase.from("school_music_students")
+        .update({ icount_payment_url: null })
+        .eq("id", cleanupStudentId);
+    }
 
     return new Response(JSON.stringify({ ok: true, deleted: ppid }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

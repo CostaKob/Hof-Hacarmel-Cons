@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, CheckCircle2, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, RefreshCw, Link2, MessageCircle } from "lucide-react";
+import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -17,6 +17,12 @@ interface Props {
   academicYearId: string;
   defaultAmount?: number;
 }
+
+type PaymentRow = {
+  id: string;
+  payment_link_url?: string | null;
+  icount_payment_page_id?: string | null;
+};
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "ממתין",
@@ -77,7 +83,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_students" as any)
-        .select("parent_name, parent_phone, student_first_name, student_last_name")
+        .select("parent_name, parent_phone, student_first_name, student_last_name, icount_payment_url")
         .eq("id", studentId)
         .maybeSingle();
       if (error) throw error;
@@ -177,12 +183,36 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
 
   const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("school_music_payments" as any).delete().eq("id", id);
+    mutationFn: async (payment: PaymentRow) => {
+      if (payment.payment_link_url || payment.icount_payment_page_id) {
+        const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
+          body: { paymentId: payment.id, strict: true },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
+      }
+
+      const { error } = await supabase.from("school_music_payments" as any).delete().eq("id", payment.id);
       if (error) throw error;
     },
     onSuccess: () => { invalidate(); toast.success("התשלום נמחק"); },
-    onError: () => toast.error("שגיאה במחיקה"),
+    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
+  });
+
+  const cleanupStaleLinkMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
+        body: { studentId, strict: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
+      invalidate();
+      toast.success("דף הסליקה הישן נמחק");
+    },
+    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
   });
 
   const createReceiptMutation = useMutation({
@@ -273,7 +303,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
 
       {payments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border p-3 flex-wrap">
+          <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
+          {student?.icount_payment_url && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+              disabled={cleanupStaleLinkMutation.isPending}
+              onClick={() => cleanupStaleLinkMutation.mutate()}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {cleanupStaleLinkMutation.isPending ? "מוחק..." : "מחק דף סליקה ישן"}
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           {payments.map((p) => {
@@ -365,7 +409,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   )}
                   {!hasDoc && (
                     <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      onClick={() => { if (confirm("למחוק את התשלום?")) deleteMutation.mutate(p.id); }}>
+                      onClick={() => { if (confirm("למחוק את התשלום? דף הסליקה המשויך יימחק קודם מ-iCount.")) deleteMutation.mutate(p); }}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   )}
