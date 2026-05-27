@@ -17,6 +17,7 @@ const CAESAREA_NAMES = ["קיסריה", "קיסרייה"];
 const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-ipn-handler";
 const SUCCESS_URL_BASE = "https://musichof.com/school-music-register/success";
+const PAYPAGE_CONFIG_VERSION = "no_id_v1";
 
 async function resolvePaypageIdFromUrl(url: string): Promise<string | null> {
   try {
@@ -45,7 +46,7 @@ async function createPaypage(opts: {
     language: "he",
     hide_lang: 1,
     tax_exempt: true,
-    require_id: 1,
+    require_id: 0,
     prevent_overrides: 0,
     max_payments: 1,
     ipn_url: IPN_URL,
@@ -159,7 +160,8 @@ Deno.serve(async (req: Request) => {
     // If the amount differs from what the cached paypage was created with,
     // we MUST recreate the paypage so iCount charges the new amount.
     const amountChanged = rowAmount != null && amount !== rowAmount;
-    let baseUrl = cachedBaseUrl && !amountChanged ? cachedBaseUrl.split("?")[0] : "";
+    const cachedHasCurrentConfig = cachedBaseUrl?.includes(`paypage_config=${PAYPAGE_CONFIG_VERSION}`) ?? false;
+    let baseUrl = cachedBaseUrl && !amountChanged && cachedHasCurrentConfig ? cachedBaseUrl.split("?")[0] : "";
     let paypageId: string | null = null;
     if (!baseUrl) {
       const created = await createPaypage({
@@ -189,6 +191,7 @@ Deno.serve(async (req: Request) => {
     // custom1 = paymentId so the IPN can match. Fallback to studentId.
     params.set("custom1", paymentId ?? studentId);
     params.set("custom2", studentId);
+    params.set("paypage_config", PAYPAGE_CONFIG_VERSION);
 
     const url = `${baseUrl}?${params.toString()}`;
 
