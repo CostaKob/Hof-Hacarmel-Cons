@@ -1700,14 +1700,19 @@ export type Database = {
           icount_doc_id: string | null
           icount_doc_number: string | null
           icount_doc_type: string | null
+          icount_payment_page_id: string | null
+          icount_transaction_id: string | null
           id: string
           installments: number
           invoice_url: string | null
           month_reference: string | null
           notes: string | null
+          paid_at: string | null
           payment_date: string
           payment_group_id: string | null
+          payment_link_url: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_status: Database["public"]["Enums"]["student_payment_status"]
           reference_number: string | null
           refund_of_payment_id: string | null
           student_id: string | null
@@ -1723,14 +1728,19 @@ export type Database = {
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
+          icount_payment_page_id?: string | null
+          icount_transaction_id?: string | null
           id?: string
           installments?: number
           invoice_url?: string | null
           month_reference?: string | null
           notes?: string | null
+          paid_at?: string | null
           payment_date: string
           payment_group_id?: string | null
+          payment_link_url?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_status?: Database["public"]["Enums"]["student_payment_status"]
           reference_number?: string | null
           refund_of_payment_id?: string | null
           student_id?: string | null
@@ -1746,14 +1756,19 @@ export type Database = {
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
+          icount_payment_page_id?: string | null
+          icount_transaction_id?: string | null
           id?: string
           installments?: number
           invoice_url?: string | null
           month_reference?: string | null
           notes?: string | null
+          paid_at?: string | null
           payment_date?: string
           payment_group_id?: string | null
+          payment_link_url?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_status?: Database["public"]["Enums"]["student_payment_status"]
           reference_number?: string | null
           refund_of_payment_id?: string | null
           student_id?: string | null
@@ -2266,6 +2281,7 @@ export type Database = {
         | "failed"
         | "cancelled"
       school_music_student_status: "active" | "stopped"
+      student_payment_status: "pending" | "paid" | "failed"
       transaction_type: "payment" | "credit"
     }
     CompositeTypes: {
@@ -2445,6 +2461,7 @@ export const Constants = {
         "cancelled",
       ],
       school_music_student_status: ["active", "stopped"],
+      student_payment_status: ["pending", "paid", "failed"],
       transaction_type: ["payment", "credit"],
     },
   },

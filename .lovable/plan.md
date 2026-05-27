@@ -1,29 +1,64 @@
+## מה קורה היום
+ב-`AdminStudentPaymentCalc` יש כפתור **"צור קישור תשלום"** (`handleGenerateLink`) שמדפיס payload ל-console ומציג toast — אין חיבור אמיתי ל-iCount.
+
+טבלת `student_payments` היום שומרת רק תשלומים שכבר בוצעו — אין בה `payment_status`, `payment_link_url`, `icount_payment_page_id`, `paid_at`, `icount_transaction_id`.
+
 ## המטרה
-כל הרשמה יוצרת Paypage דינמי ב-iCount עם שם הילד בעגלה. ברגע שההורה משלם — ה-Paypage נמחק אוטומטית מהרשימה ב-iCount. רשימת ה-Paypages תכיל רק תלמידים שעדיין לא שילמו (= "מי שחייב"). קבלות, חשבוניות וזיכויים לא מושפעים — הם מסמכים נפרדים ונשארים שלמים.
+דף סליקה דינמי לכל תלמיד פרטני, באותו דפוס של בי״ס מנגן:
+- שם התלמיד ופירוט החיוב בעגלה
+- מילוי אוטומטי של פרטי ההורה (אין צורך בת״ז במסך הראשון)
+- אחרי תשלום: ה-paypage נמחק מ-iCount, ה-row מסומן כ"שולם" עם קבלה אוטומטית
+- הקישור נשמר על ה-row "הממתין" — לחיצה חוזרת מחזירה את אותו קישור (אלא אם הסכום השתנה)
 
-## שינויים בקוד
+## שלב 1 — מיגרציה
+הוספת עמודות ל-`student_payments`:
+- `payment_status` (enum: `pending` / `paid` / `failed`, default `paid` לתאימות לאחור)
+- `payment_link_url` (text)
+- `icount_payment_page_id` (text)
+- `paid_at` (timestamptz)
+- `icount_transaction_id` (text)
 
-### 1. `supabase/functions/icount-sm-payment-webhook/index.ts`
-אחרי שהתשלום מסומן כ-`paid` ב-DB:
-- לחלץ את ה-Paypage ID מתוך `payment.payment_link_url` (regex: `app.icount.co.il/m/([a-z0-9]+)/`).
-- לקרוא ל-iCount API: `POST /paypage/delete` עם `{ cid, user, pass, paypage_id }`.
-- אם המחיקה נכשלת — לא להפיל את ה-webhook (רק log warn). התשלום כבר נרשם, המחיקה היא ניקיון בלבד.
-- לאפס `payment_link_url` ב-DB אחרי מחיקה מוצלחת (כדי שלא ננסה להשתמש בקישור מת).
+כל הרשומות הקיימות יסומנו `paid` כברירת מחדל.
 
-### 2. `supabase/functions/icount-generate-paylink/index.ts`
-- כיום: אם יש `payment_link_url` ב-DB → מחזיר אותו (אחרי החלפת query params).
-- שינוי: לפני שמחזירים URL קיים, לוודא שה-`payment_status` עדיין `pending`. אם הוא `paid` או `failed` — להתעלם מה-URL הקיים וליצור חדש (מקרה קצה: בקשת קישור אחרי שכבר שולם).
-- אם אין `payment_link_url` → ליצור Paypage חדש (כמו היום).
+## שלב 2 — Edge Function חדשה: `icount-generate-student-paylink`
+מבוססת על `icount-generate-paylink` (בי״ס מנגן), אבל עובדת על `student_payments` ו-`students`:
 
-### 3. החזרים — ללא שינוי
-פלואו ההחזרים הקיים (`icount-create-sm-refund`) עובד על `icount_doc_id` של הקבלה. הקבלה היא ישות נפרדת ב-iCount ולא מושפעת ממחיקת ה-Paypage. החזרים מלאים/חלקיים ימשיכו לעבוד כרגיל.
+קלט: `{ studentId, amount, lines: [{description, amount}], paymentId? }`
+- אם אין `paymentId` או שאין pending row — יוצרת רשומה חדשה ב-`student_payments` עם `transaction_type='payment'`, `payment_status='pending'`, `amount=balance`, `enrollment_breakdown=lines`, `notes='נוצר ידנית - ממתין לתשלום'`
+- קוראת ל-`paypage/create` של iCount עם:
+  - `page_name`: `תשלום שכר לימוד - <שם התלמיד>`
+  - `items`: שורה אחת לכל שיוך (כלי + מורה + סניף)
+  - `ipn_url`: handler חדש (ראה שלב 3)
+  - `success_url`: דף תודה
+  - `require_id: 0` (לא צריך ת״ז במסך הראשון)
+- שומרת `payment_link_url`, `icount_payment_page_id` על ה-row
+- ממלאת אוטומטית `fname`, `lname`, `email`, `phone`, `id_no`, `name_on_invoice`, `custom1=paymentId` כ-URL params
 
-## טכני
-- iCount API למחיקת Paypage: `POST https://api.icount.co.il/api/v3.php/paypage/delete` עם body `{ cid, user, pass, paypage_id }`. הסודות `ICOUNT_COMPANY_ID`, `ICOUNT_USERNAME`, `ICOUNT_PASSWORD` כבר קיימים.
-- אם iCount מחזיר 404 על paypage שכבר נמחק — להתייחס כ-success (לא לזרוק שגיאה).
+## שלב 3 — Edge Function חדשה: `icount-student-payment-webhook`
+מבוססת על `icount-sm-payment-webhook`, אבל עובדת על `student_payments`:
+- מוצאת את ה-row לפי `custom1` (paymentId), או fallback לפי `icount_payment_page_id` / `docnum`
+- מעדכנת: `payment_status='paid'`, `paid_at=now()`, `icount_doc_id/number/url`, `payment_method='credit_card'`, `icount_transaction_id`
+- מוחקת את ה-paypage ב-iCount (`paypage/delete`)
+- מאפסת `payment_link_url`
 
-## תוצאה למשתמש
-- **רשימת Paypages ב-iCount:** רק תלמידים שעדיין לא שילמו → לראות במבט אחד מי חייב.
-- **רשימת מסמכים ב-iCount:** כל הקבלות והזיכויים נשמרים לנצח, ללא שינוי.
-- **החזרים:** עובדים כרגיל (מלא/חלקי) על בסיס הקבלה.
-- **חוויית ההורה:** ללא שינוי — שם הילד בעגלה, מילוי אוטומטי של פרטי הורה.
+## שלב 4 — Frontend
+ב-`AdminStudentPaymentCalc.handleGenerateLink`:
+- קוראת ל-`icount-generate-student-paylink` עם הסכום, השיוכים והפירוט
+- פותחת את הקישור ב-tab חדש + מעתיקה ל-clipboard + toast עם הקישור
+
+ב-`StudentPaymentsSection`:
+- הצגת badge "ממתין לתשלום" על rows עם `payment_status='pending'`
+- כפתור "פתח קישור" / "העתק קישור" ל-row ממתין
+- אם כבר יש pending עם אותו סכום — לא ליצור חדש, להחזיר את הקיים
+
+## נקודות טכניות
+- אותו דפוס של VAT exempt (מלכ״ר → `tax_exempt: true`)
+- `currency_id: 5` (ש״ח), `language: he`, `hide_lang: 1`, `max_payments: 1`
+- success_url: `https://musichof.com/payment-success?status=ok&payment_id=<id>` (דף חדש פשוט)
+- ה-IPN handler החדש צריך `verify_jwt = false` ב-`supabase/config.toml`
+- הקבלה האוטומטית מ-iCount מחליפה את "הפק קבלה" הידני הקיים — אם משלמים בלינק, יש כבר `icount_doc_id` ולא יוצג כפתור "הפק קבלה"
+
+## מה לא משתנה
+- חישובי תמחור/הנחות ב-`paymentCalc.ts` — נשארים
+- "הפק קבלה" ידני ו"זיכוי" קיימים — נשארים, עובדים על rows שכבר `paid` או שהוזנו ידנית
+- AddPaymentDialog להזנה ידנית — נשאר
