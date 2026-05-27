@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send } from "lucide-react";
+import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
-  const { data: paymentsList = [] } = useQuery({
+  const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
     queryFn: async () => {
@@ -87,6 +87,15 @@ const AdminStudentPaymentCalc = () => {
       return data ?? [];
     },
   });
+
+  const paymentsList = useMemo(
+    () => (allStudentPayments as any[]).filter((p) => (p.payment_status ?? "paid") !== "pending"),
+    [allStudentPayments],
+  );
+  const pendingPayments = useMemo(
+    () => (allStudentPayments as any[]).filter((p) => p.payment_status === "pending"),
+    [allStudentPayments],
+  );
 
   const paymentsAggr = useMemo(() => {
     let paid = 0, credit = 0, net = 0;
@@ -192,47 +201,49 @@ const AdminStudentPaymentCalc = () => {
   const balance = totalIncVat - effectivePaid;
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
+  const [generatingLink, setGeneratingLink] = useState(false);
+
   const handleGenerateLink = async () => {
-    if (!student) return;
-    const payload = {
-      customer: {
-        name: student.parent_name,
-        email: student.parent_email,
-        phone: student.parent_phone,
-        national_id: student.parent_national_id,
-      },
-      student: {
-        name: `${student.first_name} ${student.last_name}`,
-        national_id: student.national_id,
-      },
-      lines: rows.map((r) => {
+    if (!student || !studentId) return;
+    if (balance <= 0) return;
+    setGeneratingLink(true);
+    try {
+      const lines = rowsAfterStd.map((r) => {
         const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
-        return {
-          description: `${e?.instruments?.name ?? "—"} — ${e?.schools?.name ?? "—"} (${e?.lesson_duration_minutes} דק׳)`,
-          lessons: r.lessonsRemaining,
-          price_per_lesson: r.pricePerLesson,
-          amount: r.prorated,
-        };
-      }),
-      discounts: {
-        sibling: sibling ? discountRates.sibling : 0,
-        second_instrument: secondInstrument ? discountRates.secondInstrument : 0,
-        major_student: majorStudent ? discountRates.majorStudent : 0,
-        custom: customDiscounts.map((c) => ({ label: c.label, mode: c.mode, value: Number(c.value) || 0 })),
-        std_total_pct: stdDiscountPct,
-        custom_total_amount: Math.round(customDiscountAmount),
-        total_discount_amount: totalDiscountAmount,
-      },
-      before_vat: beforeVat,
-      vat_rate: vatRate,
-      vat_amount: vatAmount,
-      total_inc_vat: totalIncVat,
-      already_paid: effectivePaid,
-      balance,
-    };
-    // eslint-disable-next-line no-console
-    console.log("[generateICountLink] Payload:", JSON.stringify(payload, null, 2));
-    toast.success("התשתית מוכנה — קישור התשלום ייווצר כאן לאחר חיבור iCount");
+        const parts = [
+          e?.instruments?.name ?? "—",
+          e?.schools?.name ? `· ${e.schools.name}` : "",
+          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+        ].filter(Boolean).join(" ");
+        return { description: `שכר לימוד - ${parts}`, amount: Math.round(r.afterStd) };
+      });
+      // If custom discounts exist, fold them into a single negative line
+      if (customDiscountAmount > 0) {
+        lines.push({ description: "הנחה נוספת", amount: -Math.round(customDiscountAmount) });
+      }
+
+      const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+        body: {
+          studentId,
+          amount: balance,
+          academicYearId: yearId,
+          lines,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      if (!data?.url) throw new Error("no url returned");
+
+      try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
+      window.open(data.url, "_blank");
+      toast.success("קישור התשלום נוצר והועתק ללוח");
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+    } catch (e: any) {
+      console.error("[generateICountLink]", e);
+      toast.error(`שגיאה ביצירת קישור: ${e?.message ?? e}`);
+    } finally {
+      setGeneratingLink(false);
+    }
   };
 
   if (loadingStudent || loadingEnrollments || !settings || !yearFull) {
@@ -448,6 +459,46 @@ const AdminStudentPaymentCalc = () => {
           )}
         </div>
 
+        {pendingPayments.length > 0 && (
+          <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-5 shadow-sm space-y-2">
+            <h2 className="font-semibold text-foreground text-base">קישורי תשלום ממתינים ({pendingPayments.length})</h2>
+            {pendingPayments.map((p: any) => (
+              <div key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground text-sm">₪{Number(p.amount).toLocaleString()} · ממתין לתשלום</p>
+                  <p className="text-xs text-muted-foreground truncate" dir="ltr">{p.payment_link_url || "—"}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {p.payment_link_url && (
+                    <>
+                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
+                        onClick={() => window.open(p.payment_link_url, "_blank")}>
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
+                        onClick={async () => {
+                          try { await navigator.clipboard.writeText(p.payment_link_url); toast.success("הקישור הועתק"); }
+                          catch { toast.error("לא ניתן להעתיק"); }
+                        }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10" title="בטל קישור ממתין"
+                    onClick={async () => {
+                      if (!confirm("לבטל את קישור התשלום הממתין?")) return;
+                      const { error } = await supabase.from("student_payments").delete().eq("id", p.id);
+                      if (error) toast.error(`שגיאה: ${error.message}`);
+                      else { toast.success("הקישור בוטל"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); }
+                    }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <StudentPaymentsSection
           studentId={studentId!}
           payments={paymentsList as any[]}
@@ -456,8 +507,13 @@ const AdminStudentPaymentCalc = () => {
 
         {/* Generate iCount link */}
         <div className="flex justify-end">
-          <Button className="h-12 rounded-xl px-6" onClick={handleGenerateLink} disabled={rows.length === 0 || balance <= 0}>
-            <Send className="h-4 w-4 ml-2" /> צור קישור לתשלום
+          <Button
+            className="h-12 rounded-xl px-6"
+            onClick={handleGenerateLink}
+            disabled={rows.length === 0 || balance <= 0 || generatingLink}
+          >
+            {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
+            {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
           </Button>
         </div>
 
