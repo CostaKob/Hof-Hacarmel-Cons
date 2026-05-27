@@ -13,7 +13,7 @@ const corsHeaders = {
 const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-student-payment-webhook";
 const SUCCESS_URL = "https://musichof.com/?paid=1";
-const PAYPAGE_CONFIG_VERSION = "student_v3_year";
+const PAYPAGE_CONFIG_VERSION = "student_v4_hebrew_year";
 
 interface LineInput {
   description: string;

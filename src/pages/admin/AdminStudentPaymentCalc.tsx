@@ -245,7 +245,8 @@ const AdminStudentPaymentCalc = () => {
       });
 
       const yearName = year?.name ?? "";
-      const yearSuffix = yearName ? ` ${yearName}` : "";
+      const hebrewYear = yearName.split(" ").pop() ?? yearName;
+      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
       // Build a detailed line breakdown so parents see:
       //   1) Full annual tuition per enrollment
@@ -311,7 +312,7 @@ const AdminStudentPaymentCalc = () => {
           studentId,
           amount: balance,
           academicYearId: yearId,
-          academicYearName: year?.name ?? null,
+          academicYearName: hebrewYear ?? null,
           lines,
           discounts: {
             sibling,
