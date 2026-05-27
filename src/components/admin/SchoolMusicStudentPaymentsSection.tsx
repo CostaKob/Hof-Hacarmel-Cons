@@ -339,11 +339,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       </Button>
                     </>
                   )}
-                  {p.payment_status === "pending" && !isRefund && (
-                    <Button size="sm" variant="default" className="h-8 gap-1 rounded-lg" onClick={() => setMarkPaidId(p.id)}>
-                      <CheckCircle2 className="h-3.5 w-3.5" /> סמן כשולם
-                    </Button>
-                  )}
                   {canIssueReceipt && (
                     <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
                       disabled={createReceiptMutation.isPending}
