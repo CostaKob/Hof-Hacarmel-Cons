@@ -87,6 +87,25 @@ const StudentPaymentsSection = ({
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
 
+  const ccRefundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke("icount-student-refund-api", {
+        body: { paymentId, refundAmount: amount },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateAll();
+      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
+      setRefundTarget(null);
+      setRefundAmount("");
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
+  });
+
 
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
