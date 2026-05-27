@@ -303,7 +303,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         <div className="space-y-2">
           {payments.map((p) => {
             const isRefund = !!p.refund_of_payment_id || Number(p.amount) < 0;
-            const hasDoc = !!p.icount_doc_id;
+            const hasDoc = !!(p.icount_doc_id || p.icount_doc_number);
             const hasUrl = !!p.invoice_url;
             const refundedSoFar = payments
               .filter((x: any) => x.refund_of_payment_id === p.id)
