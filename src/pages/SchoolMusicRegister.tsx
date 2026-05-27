@@ -356,7 +356,7 @@ const SchoolMusicRegister = () => {
     const fieldsToValidate = [
       "school_music_school_id", "school_music_class_id",
       "student_first_name", "student_last_name", "student_national_id",
-      "parent_name", "parent_national_id", "parent_phone", "parent_email",
+      "parent_name", "parent_phone", "parent_email",
       "instrument_id",
     ];
     fieldsToValidate.forEach((key) => {
