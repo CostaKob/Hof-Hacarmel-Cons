@@ -486,10 +486,19 @@ const AdminStudentPaymentCalc = () => {
                   )}
                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10" title="בטל קישור ממתין"
                     onClick={async () => {
-                      if (!confirm("לבטל את קישור התשלום הממתין?")) return;
+                      if (!confirm("לבטל את קישור התשלום הממתין? דף הסליקה יימחק מ-iCount.")) return;
+                      if (p.payment_link_url || p.icount_payment_page_id) {
+                        const { data, error } = await supabase.functions.invoke("icount-delete-student-paypage", {
+                          body: { paymentId: p.id, strict: true },
+                        });
+                        if (error || data?.error) {
+                          toast.error(`שגיאה במחיקת דף הסליקה: ${error?.message || data?.error}`);
+                          return;
+                        }
+                      }
                       const { error } = await supabase.from("student_payments").delete().eq("id", p.id);
                       if (error) toast.error(`שגיאה: ${error.message}`);
-                      else { toast.success("הקישור בוטל"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); }
+                      else { toast.success("הקישור בוטל ודף הסליקה נמחק"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); }
                     }}>
                     <X className="h-4 w-4" />
                   </Button>
