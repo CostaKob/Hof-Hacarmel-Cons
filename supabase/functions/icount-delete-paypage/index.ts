@@ -1,0 +1,78 @@
+// Deletes the dynamic iCount Paypage attached to a school_music_payments row,
+// then clears payment_link_url. Used when the admin closes a pending payment
+// out-of-band (e.g. records a cash payment) and we don't want a stale paypage
+// lingering in iCount.
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+Deno.serve(async (req: Request) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  try {
+    const { paymentId } = await req.json().catch(() => ({}));
+    if (!paymentId) {
+      return new Response(JSON.stringify({ error: "paymentId required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+
+    const { data: payment } = await supabase
+      .from("school_music_payments")
+      .select("id, payment_link_url, icount_payment_page_id")
+      .eq("id", paymentId)
+      .maybeSingle();
+
+    if (!payment) {
+      return new Response(JSON.stringify({ ok: true, skipped: "no payment" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const ppidFromUrl = payment.payment_link_url
+      ? (payment.payment_link_url.match(/\/m\/([^\/?#]+)/)?.[1] ?? null)
+      : null;
+    const ppid = payment.icount_payment_page_id || ppidFromUrl;
+
+    if (ppid) {
+      try {
+        const res = await fetch("https://api.icount.co.il/api/v3.php/paypage/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cid: Deno.env.get("ICOUNT_COMPANY_ID"),
+            user: Deno.env.get("ICOUNT_USERNAME"),
+            pass: Deno.env.get("ICOUNT_PASSWORD"),
+            paypage_id: ppid,
+          }),
+        });
+        const json = await res.json().catch(() => ({}));
+        console.log("[icount-delete-paypage]", ppid, json);
+      } catch (e) {
+        console.warn("[icount-delete-paypage] iCount call failed", e);
+      }
+    }
+
+    await supabase.from("school_music_payments")
+      .update({ payment_link_url: null })
+      .eq("id", paymentId);
+
+    return new Response(JSON.stringify({ ok: true, deleted: ppid }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (e) {
+    console.error("[icount-delete-paypage]", e);
+    return new Response(JSON.stringify({ error: String(e) }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
