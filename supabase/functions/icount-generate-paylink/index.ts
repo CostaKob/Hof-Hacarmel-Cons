@@ -49,7 +49,7 @@ async function createPaypage(opts: {
     prevent_overrides: 0,
     max_payments: 1,
     ipn_url: IPN_URL,
-    post_action_success: SUCCESS_URL,
+    post_action_success: `${SUCCESS_URL_BASE}?status=ok&payment_id=${opts.paymentId}`,
     items: [
       { description: itemDesc, unitprice: opts.amount, quantity: 1, tax_exempt: 1 },
     ],
