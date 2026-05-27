@@ -254,47 +254,24 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             סה״כ: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
             {totalPending > 0 && <> · ממתין: <span className="font-semibold text-amber-600">₪{totalPending.toLocaleString()}</span></>}
           </div>
+          {!hasPending && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-10 rounded-xl gap-1"
+              disabled={generateLinkMutation.isPending}
+              onClick={() => generateLinkMutation.mutate(undefined)}
+            >
+              <Link2 className="h-4 w-4" />
+              {generateLinkMutation.isPending ? "יוצר..." : "צור קישור תשלום"}
+            </Button>
+          )}
           <Button size="sm" className="h-10 rounded-xl" onClick={() => setAddOpen(true)}>
-            <Plus className="h-4 w-4" /> הוסף תשלום
+            <Plus className="h-4 w-4" /> הוסף תשלום ידני
           </Button>
         </div>
       </div>
 
-      {paymentLink && hasPending && (() => {
-        const studentName = student ? `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim() : "";
-        const waPhone = (student?.parent_phone || "").replace(/\D/g, "").replace(/^0/, "972");
-        const msg = encodeURIComponent(
-          `שלום${student?.parent_name ? " " + student.parent_name : ""},\n` +
-          `קישור לתשלום שכר לימוד עבור ${studentName || "התלמיד"} – ${school?.school_name ?? ""}:\n${paymentLink}`
-        );
-        return (
-          <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-              <Link2 className="h-4 w-4 text-primary" />
-              קישור תשלום של {school?.school_name ?? "בית הספר"}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <code className="flex-1 min-w-0 truncate text-xs bg-background border border-border rounded-lg px-2 py-1.5" dir="ltr">
-                {paymentLink}
-              </code>
-              <Button size="sm" variant="outline" className="h-9 rounded-lg gap-1"
-                onClick={() => { navigator.clipboard.writeText(paymentLink); toast.success("הקישור הועתק"); }}>
-                <Copy className="h-3.5 w-3.5" /> העתק
-              </Button>
-              <Button size="sm" variant="outline" className="h-9 rounded-lg gap-1"
-                onClick={() => window.open(paymentLink, "_blank")}>
-                <ExternalLink className="h-3.5 w-3.5" /> פתח
-              </Button>
-              {waPhone && (
-                <Button size="sm" variant="outline" className="h-9 rounded-lg gap-1"
-                  onClick={() => window.open(`https://wa.me/${waPhone}?text=${msg}`, "_blank")}>
-                  שלח בוואטסאפ
-                </Button>
-              )}
-            </div>
-          </div>
-        );
-      })()}
 
       {payments.length === 0 ? (
         <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
