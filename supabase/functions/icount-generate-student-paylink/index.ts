@@ -13,7 +13,7 @@ const corsHeaders = {
 const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-student-payment-webhook";
 const SUCCESS_URL = "https://musichof.com/?paid=1";
-const PAYPAGE_CONFIG_VERSION = "student_v1";
+const PAYPAGE_CONFIG_VERSION = "student_v2_max10";
 
 interface LineInput {
   description: string;
@@ -55,7 +55,7 @@ async function createPaypage(opts: {
     tax_exempt: true,
     require_id: 0,
     prevent_overrides: 0,
-    max_payments: 1,
+    max_payments: 10,
     ipn_url: IPN_URL,
     post_action_success: `${SUCCESS_URL}&payment_id=${opts.paymentId}`,
     items,
