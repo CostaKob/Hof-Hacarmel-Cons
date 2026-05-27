@@ -6,7 +6,10 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Pencil, KeyRound, UserCheck, UserX, Trash2, Shield, Plus, X, Check } from "lucide-react";
+import { Pencil, KeyRound, UserCheck, UserX, Trash2, Shield, Plus, X, Check, Mail } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -206,6 +209,27 @@ const AdminTeacherCard = () => {
     onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
   });
 
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+
+  const updateEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { data, error } = await supabase.functions.invoke("update-teacher-email", {
+        body: { teacher_id: teacherId, new_email: email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher", teacherId] });
+      toast.success("כתובת המייל עודכנה בהצלחה");
+      setEmailDialogOpen(false);
+      setNewEmail("");
+    },
+    onError: (err: Error) => toast.error(err.message || "שגיאה בעדכון המייל"),
+  });
+
   const deleteTeacherMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("teachers").delete().eq("id", teacherId!);
@@ -331,17 +355,52 @@ const AdminTeacherCard = () => {
               <span className="font-medium text-foreground text-sm">{teacher.email}</span>
             </div>
           )}
-          <div className="flex gap-2 pt-1">
+          <div className="flex flex-wrap gap-2 pt-1">
             {hasLogin ? (
-              <Button
-                variant="outline"
-                className="h-11 rounded-xl"
-                onClick={() => resetPasswordMutation.mutate()}
-                disabled={resetPasswordMutation.isPending}
-              >
-                <KeyRound className="h-4 w-4" />
-                {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-123456"}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-xl"
+                  onClick={() => resetPasswordMutation.mutate()}
+                  disabled={resetPasswordMutation.isPending}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-123456"}
+                </Button>
+                <Dialog open={emailDialogOpen} onOpenChange={(o) => { setEmailDialogOpen(o); if (o) setNewEmail(teacher.email ?? ""); }}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="h-11 rounded-xl">
+                      <Mail className="h-4 w-4" /> החלף מייל (כאדמין)
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl">
+                    <DialogHeader>
+                      <DialogTitle>החלפת מייל מיידית</DialogTitle>
+                      <DialogDescription>
+                        המייל יוחלף ויאושר מיד, ללא צורך באישור בתיבת המייל. עדכן/י גם את שדה המייל בכרטיס המורה.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Input
+                      type="email"
+                      dir="ltr"
+                      placeholder="email@example.com"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      className="h-12 rounded-xl"
+                    />
+                    <DialogFooter className="flex-row-reverse gap-2">
+                      <Button
+                        onClick={() => updateEmailMutation.mutate(newEmail.trim())}
+                        disabled={!newEmail.trim() || updateEmailMutation.isPending}
+                        className="h-11 rounded-xl"
+                      >
+                        {updateEmailMutation.isPending ? "מעדכן..." : "עדכן מייל"}
+                      </Button>
+                      <Button variant="outline" onClick={() => setEmailDialogOpen(false)} className="h-11 rounded-xl">ביטול</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
             ) : teacher.email ? (
               <Button
                 variant="outline"
