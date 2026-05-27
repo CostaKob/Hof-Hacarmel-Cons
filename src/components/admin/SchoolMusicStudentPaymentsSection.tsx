@@ -112,15 +112,16 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   };
 
   const generateLinkMutation = useMutation({
-    mutationFn: async (paymentId?: string) => {
-      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
-        body: paymentId ? { studentId, paymentId } : { studentId },
-      });
+    mutationFn: async (args: { paymentId?: string; amount?: number }) => {
+      const body: any = { studentId };
+      if (args.paymentId) body.paymentId = args.paymentId;
+      if (args.amount && args.amount > 0) body.amount = args.amount;
+      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", { body });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
     },
-    onSuccess: () => { invalidate(); toast.success("הקישור נוצר"); },
+    onSuccess: () => { invalidate(); toast.success("הקישור נוצר"); setLinkDialogOpen(false); },
     onError: (e: any) => toast.error(e?.message || "שגיאה ביצירת קישור"),
   });
 
