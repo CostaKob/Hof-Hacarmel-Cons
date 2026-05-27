@@ -50,6 +50,17 @@ const SchoolMusicRegisterSuccess = () => {
       );
     }
 
+    // No payment_id in URL — generic success (older payment links don't include it).
+    if (!paymentId) {
+      return (
+        <>
+          <CheckCircle2 className="h-14 w-14 mx-auto text-emerald-600" />
+          <h2 className="text-2xl font-bold">התשלום התקבל בהצלחה!</h2>
+          <p className="text-muted-foreground">הקבלה תישלח אליכם במייל בדקות הקרובות.</p>
+        </>
+      );
+    }
+
     if (isLoading || !payment) {
       return (
         <>

@@ -16,7 +16,7 @@ const corsHeaders = {
 const CAESAREA_NAMES = ["קיסריה", "קיסרייה"];
 const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-ipn-handler";
-const SUCCESS_URL = "https://musichof.com/school-music/register/success?status=ok";
+const SUCCESS_URL_BASE = "https://musichof.com/school-music/register/success";
 
 async function resolvePaypageIdFromUrl(url: string): Promise<string | null> {
   try {
@@ -49,7 +49,7 @@ async function createPaypage(opts: {
     prevent_overrides: 0,
     max_payments: 1,
     ipn_url: IPN_URL,
-    post_action_success: SUCCESS_URL,
+    post_action_success: `${SUCCESS_URL_BASE}?status=ok&payment_id=${opts.paymentId}`,
     items: [
       { description: itemDesc, unitprice: opts.amount, quantity: 1, tax_exempt: 1 },
     ],
