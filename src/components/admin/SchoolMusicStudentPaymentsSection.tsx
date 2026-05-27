@@ -254,8 +254,8 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         </h2>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="text-sm text-muted-foreground">
-            סה״כ: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
-            {totalPending > 0 && <> · ממתין: <span className="font-semibold text-amber-600">₪{totalPending.toLocaleString()}</span></>}
+            סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
+            {totalPending > 0 && <> · ממתין לתשלום: <span className="font-semibold text-amber-600">₪{totalPending.toLocaleString()}</span></>}
           </div>
           {!hasPending && (
             <Button
