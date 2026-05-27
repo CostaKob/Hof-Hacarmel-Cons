@@ -451,6 +451,35 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         </DialogContent>
       </Dialog>
 
+      {/* Generate payment link with custom amount */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>יצירת קישור תשלום</DialogTitle>
+            <DialogDescription>
+              ניתן לשנות את הסכום לצורך בדיקה (למשל ₪1). ברירת המחדל היא שכר הלימוד של בית הספר.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label className="text-sm">סכום לחיוב (₪)</Label>
+            <Input type="number" inputMode="decimal" min="1" step="0.01"
+              value={linkAmount} onChange={(e) => setLinkAmount(e.target.value)}
+              className="h-12 rounded-xl" autoFocus />
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => setLinkDialogOpen(false)}>ביטול</Button>
+            <Button className="h-11 rounded-xl" disabled={generateLinkMutation.isPending}
+              onClick={() => {
+                const amt = Number(linkAmount);
+                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                generateLinkMutation.mutate({ paymentId: linkTargetPaymentId, amount: amt });
+              }}>
+              {generateLinkMutation.isPending ? "יוצר..." : "צור קישור"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       {/* Refund dialog */}
       <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
