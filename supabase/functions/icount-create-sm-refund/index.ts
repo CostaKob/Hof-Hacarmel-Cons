@@ -45,7 +45,7 @@ Deno.serve(async (req: Request) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!payment.icount_doc_id) {
+    if (!payment.icount_doc_id && !payment.icount_doc_number) {
       return new Response(JSON.stringify({ error: "no original receipt to refund" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
