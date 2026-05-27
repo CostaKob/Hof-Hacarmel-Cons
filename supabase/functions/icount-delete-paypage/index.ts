@@ -50,7 +50,7 @@ Deno.serve(async (req: Request) => {
 
     const linkUrl = payment?.payment_link_url || student?.icount_payment_url || null;
     const ppidFromUrl = linkUrl
-      ? (linkUrl.match(/\/m\/([^\/?#]+)/)?.[1] ?? null)
+      ? (linkUrl.match(/\/m\/([^/?#]+)/)?.[1] ?? null)
       : null;
     const ppid = payment?.icount_payment_page_id || ppidFromUrl;
 
