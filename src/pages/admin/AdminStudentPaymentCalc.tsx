@@ -505,6 +505,18 @@ const AdminStudentPaymentCalc = () => {
           )}
         </div>
 
+        {/* Generate iCount link */}
+        <div className="flex justify-end">
+          <Button
+            className="h-12 rounded-xl px-6"
+            onClick={handleGenerateLink}
+            disabled={rows.length === 0 || balance <= 0 || generatingLink}
+          >
+            {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
+            {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
+          </Button>
+        </div>
+
         {pendingPayments.length > 0 && (
           <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-5 shadow-sm space-y-2">
             <h2 className="font-semibold text-foreground text-base">קישורי תשלום ממתינים ({pendingPayments.length})</h2>
