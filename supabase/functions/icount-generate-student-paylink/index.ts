@@ -34,6 +34,7 @@ async function createPaypage(opts: {
   studentName: string;
   paymentId: string;
   lines: LineInput[];
+  yearName?: string | null;
 }): Promise<{ url: string; paypageId: string | null }> {
   const items = opts.lines
     .filter((l) => Number(l.amount) !== 0)
@@ -43,11 +44,12 @@ async function createPaypage(opts: {
       quantity: 1,
       tax_exempt: 1,
     }));
+  const yearSuffix = opts.yearName ? ` ${opts.yearName}` : "";
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
     pass: Deno.env.get("ICOUNT_PASSWORD"),
-    page_name: `תשלום שכר לימוד - ${opts.studentName}`,
+    page_name: `תשלום שכר לימוד${yearSuffix} - ${opts.studentName}`,
     doctype: "receipt",
     currency_id: 5,
     language: "he",
