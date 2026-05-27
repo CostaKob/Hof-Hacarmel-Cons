@@ -356,7 +356,7 @@ const SchoolMusicRegister = () => {
     const fieldsToValidate = [
       "school_music_school_id", "school_music_class_id",
       "student_first_name", "student_last_name", "student_national_id",
-      "parent_name", "parent_national_id", "parent_phone", "parent_email",
+      "parent_name", "parent_phone", "parent_email",
       "instrument_id",
     ];
     fieldsToValidate.forEach((key) => {
@@ -416,7 +416,7 @@ const SchoolMusicRegister = () => {
         class_name: classes.find((c) => c.id === form.school_music_class_id)?.class_name || "",
         city: form.city.trim() || null,
         parent_name: form.parent_name.trim(),
-        parent_national_id: form.parent_national_id.replace(/[^\d]/g, ""),
+        parent_national_id: "",
         parent_phone: phone,
         parent_email: form.parent_email.trim(),
         instrument_id: form.instrument_id,
@@ -848,9 +848,6 @@ const SchoolMusicRegister = () => {
               <Input id="parent_name" value={form.parent_name} onChange={(e) => updateField("parent_name", e.target.value)} onBlur={() => handleBlur("parent_name")} />
             </Field>
 
-            <Field id="parent_nid" label="מספר תעודת זהות הורה (9 ספרות)" required error={errors.parent_national_id} fieldRef={fieldRefs.parent_national_id}>
-              <Input id="parent_nid" dir="ltr" inputMode="numeric" maxLength={9} value={form.parent_national_id} onChange={(e) => updateField("parent_national_id", e.target.value)} onBlur={() => handleBlur("parent_national_id")} />
-            </Field>
 
             <Field id="parent_phone" label="טלפון הורה (10 ספרות)" required error={errors.parent_phone} fieldRef={fieldRefs.parent_phone}>
               <Input id="parent_phone" type="tel" dir="ltr" inputMode="numeric" maxLength={10} value={form.parent_phone} onChange={(e) => updateField("parent_phone", e.target.value)} onBlur={() => handleBlur("parent_phone")} />
