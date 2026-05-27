@@ -335,8 +335,11 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   {p.payment_status === "pending" && !isRefund && !p.payment_link_url && (
                     <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
                       title="צור קישור תשלום"
-                      disabled={generateLinkMutation.isPending}
-                      onClick={() => generateLinkMutation.mutate(p.id)}>
+                      onClick={() => {
+                        setLinkTargetPaymentId(p.id);
+                        setLinkAmount(String(Number(p.amount) || defaultAmount || ""));
+                        setLinkDialogOpen(true);
+                      }}>
                       <Link2 className="h-3.5 w-3.5" /> צור קישור
                     </Button>
                   )}
