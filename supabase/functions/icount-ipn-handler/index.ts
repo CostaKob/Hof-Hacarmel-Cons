@@ -49,22 +49,23 @@ Deno.serve(async (req: Request) => {
 
   try {
     const customInfo = pick(params, ["custom1", "custom_info", "custom", "paymentId", "studentId"]);
-    const studentTz = pick(params, ["student_tz", "custom_student_tz", "client_id_number", "vat_id"]);
-    const amountRaw = pick(params, ["sum", "amount", "total", "doc_total"]) ?? "0";
+    const studentTz = pick(params, ["student_tz", "custom_student_tz", "client_id_number"]);
+    const parentTz = pick(params, ["customer_vat_id", "vat_id"]);
+    const paypageId = pick(params, ["cp", "utm_campaign", "paypage_id", "page_id"]);
+    const amountRaw = pick(params, ["sum", "amount", "total", "doc_total", "totalwithnicui", "total_paid"]) ?? "0";
     const amount = Number(String(amountRaw).replace(/[^0-9.-]/g, "")) || 0;
-    const docUrl = pick(params, ["doc_url", "pdf_link", "url"]);
+    const docUrl = pick(params, ["doc_url", "doc_link", "pdf_link", "url"]);
     const docId = pick(params, ["doc_id"]);
-    const docNumber = pick(params, ["docnum", "doc_number"]);
+    const docNumber = pick(params, ["docnum", "doc_number", "receiptnumber"]);
     const txnId = pick(params, ["cc_deal_id", "tid", "transaction_id", "deal_id"]);
 
     // Try to find a paymentId (preferred) or studentId from custom_info.
     let paymentId: string | null = null;
     let studentIdFromCustom: string | null = null;
     if (isUuid(customInfo)) {
-      // Probe school_music_payments first.
       const { data: pmt } = await supabase
         .from("school_music_payments")
-        .select("id, school_music_student_id, school_music_school_id, academic_year_id")
+        .select("id")
         .eq("id", customInfo!).maybeSingle();
       if (pmt) {
         paymentId = pmt.id;
@@ -76,7 +77,32 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    // Fallback: locate pending payment for the student (custom or by TZ).
+    // Fallback A: match by iCount paypage_id (cp / utm_campaign).
+    // Our generate-paylink stores it on school_music_payments.icount_payment_page_id
+    // and creates a unique paypage per student → uniquely identifies the row.
+    if (!paymentId && paypageId) {
+      const { data: byPage } = await supabase
+        .from("school_music_payments")
+        .select("id, payment_status")
+        .eq("icount_payment_page_id", String(paypageId))
+        .order("created_at", { ascending: false })
+        .limit(1).maybeSingle();
+      if (byPage) paymentId = byPage.id;
+    }
+
+    // Fallback B: match by docnum — useful when iCount sends a 2nd IPN with
+    // less metadata; the 1st IPN already wrote docnum onto the row.
+    if (!paymentId && docNumber) {
+      const { data: byDoc } = await supabase
+        .from("school_music_payments")
+        .select("id")
+        .eq("icount_doc_number", String(docNumber))
+        .order("created_at", { ascending: false })
+        .limit(1).maybeSingle();
+      if (byDoc) paymentId = byDoc.id;
+    }
+
+    // Fallback C: locate pending payment for the student (custom UUID, student TZ, or parent TZ).
     if (!paymentId) {
       let studentId: string | null = studentIdFromCustom;
       if (!studentId && studentTz) {
@@ -84,6 +110,15 @@ Deno.serve(async (req: Request) => {
           .from("school_music_students")
           .select("id")
           .eq("student_national_id", studentTz)
+          .order("created_at", { ascending: false })
+          .limit(1).maybeSingle();
+        if (stu) studentId = stu.id;
+      }
+      if (!studentId && parentTz) {
+        const { data: stu } = await supabase
+          .from("school_music_students")
+          .select("id")
+          .eq("parent_national_id", parentTz)
           .order("created_at", { ascending: false })
           .limit(1).maybeSingle();
         if (stu) studentId = stu.id;
