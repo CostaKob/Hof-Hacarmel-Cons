@@ -848,9 +848,6 @@ const SchoolMusicRegister = () => {
               <Input id="parent_name" value={form.parent_name} onChange={(e) => updateField("parent_name", e.target.value)} onBlur={() => handleBlur("parent_name")} />
             </Field>
 
-            <Field id="parent_nid" label="מספר תעודת זהות הורה (9 ספרות)" required error={errors.parent_national_id} fieldRef={fieldRefs.parent_national_id}>
-              <Input id="parent_nid" dir="ltr" inputMode="numeric" maxLength={9} value={form.parent_national_id} onChange={(e) => updateField("parent_national_id", e.target.value)} onBlur={() => handleBlur("parent_national_id")} />
-            </Field>
 
             <Field id="parent_phone" label="טלפון הורה (10 ספרות)" required error={errors.parent_phone} fieldRef={fieldRefs.parent_phone}>
               <Input id="parent_phone" type="tel" dir="ltr" inputMode="numeric" maxLength={10} value={form.parent_phone} onChange={(e) => updateField("parent_phone", e.target.value)} onBlur={() => handleBlur("parent_phone")} />
