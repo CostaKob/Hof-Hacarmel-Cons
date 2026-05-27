@@ -167,6 +167,23 @@ const AdminTeachers = () => {
       )}
 
       <TeacherImportDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      <AlertDialog open={resetAllOpen} onOpenChange={setResetAllOpen}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>איפוס סיסמאות לכל המורים</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תאפס את הסיסמה של כל המורים בעלי חשבון התחברות לסיסמה <strong>123456</strong>. האם להמשיך?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={resetting}>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetAllPasswords} disabled={resetting}>
+              {resetting ? "מאפס..." : "אפס לכולם"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
