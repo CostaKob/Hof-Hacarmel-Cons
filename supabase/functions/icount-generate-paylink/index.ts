@@ -106,27 +106,32 @@ Deno.serve(async (req: Request) => {
     // Resolve the pending payment row to attach the link to.
     let paymentId: string | null = incomingPaymentId ?? null;
     let cachedBaseUrl: string | null = null;
+    let rowAmount: number | null = null;
     if (paymentId) {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url, payment_status")
+        .select("id, payment_link_url, payment_status, amount")
         .eq("id", paymentId).maybeSingle();
-      if (p && p.payment_status === "pending") cachedBaseUrl = p.payment_link_url ?? null;
+      if (p && p.payment_status === "pending") {
+        cachedBaseUrl = p.payment_link_url ?? null;
+        rowAmount = Number(p.amount) || null;
+      }
     } else {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url, payment_status")
+        .select("id, payment_link_url, payment_status, amount")
         .eq("school_music_student_id", studentId)
         .eq("payment_status", "pending")
         .order("created_at", { ascending: false })
         .limit(1).maybeSingle();
-      if (p) { paymentId = p.id; cachedBaseUrl = p.payment_link_url ?? null; }
+      if (p) { paymentId = p.id; cachedBaseUrl = p.payment_link_url ?? null; rowAmount = Number(p.amount) || null; }
     }
 
     const schoolName: string = (student as any).school_music_schools?.school_name ?? "";
     const studentName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
     const isCaesarea = CAESAREA_NAMES.some((n) => schoolName.includes(n));
-    const amount = isCaesarea ? 1600 : 650;
+    const defaultAmount = isCaesarea ? 1600 : 650;
+    const amount = hasOverride ? overrideAmt : (rowAmount ?? defaultAmount);
 
     // If no pending payment row exists, create one so the link has somewhere to live.
     if (!paymentId) {
