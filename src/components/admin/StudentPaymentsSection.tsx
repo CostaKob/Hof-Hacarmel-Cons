@@ -87,6 +87,25 @@ const StudentPaymentsSection = ({
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
 
+  const ccRefundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke("icount-student-refund-api", {
+        body: { paymentId, refundAmount: amount },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateAll();
+      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
+      setRefundTarget(null);
+      setRefundAmount("");
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
+  });
+
 
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
@@ -179,11 +198,14 @@ const StudentPaymentsSection = ({
                   )}
                   {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      title={`בצע זיכוי (קבלה במינוס) ב-iCount (נותר ₪${remaining.toLocaleString()})`}
-                      disabled={refundMutation.isPending}
+                      title={p.payment_method === "credit_card" && p.icount_transaction_id
+                        ? `החזר אשראי דרך iCount (נותר ₪${remaining.toLocaleString()})`
+                        : `בצע זיכוי (קבלה במינוס) ב-iCount (נותר ₪${remaining.toLocaleString()})`}
+                      disabled={refundMutation.isPending || ccRefundMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
-                        setRefundTarget({ ...p, _remaining: remaining });
+                        const isCc = p.payment_method === "credit_card" && !!p.icount_transaction_id;
+                        setRefundTarget({ ...p, _remaining: remaining, _cc: isCc });
                         setRefundAmount(String(remaining));
                       }}>
                       <Undo2 className="h-4 w-4" />
@@ -233,7 +255,11 @@ const StudentPaymentsSection = ({
               value={refundAmount}
               onChange={(e) => setRefundAmount(e.target.value)}
             />
-            <p className="text-xs text-muted-foreground">תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים.</p>
+            <p className="text-xs text-muted-foreground">
+              {refundTarget?._cc
+                ? "יבוצע החזר אשראי אמיתי דרך iCount לעסקה המקורית, ותופק קבלת זיכוי חתומה."
+                : "תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים."}
+            </p>
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
@@ -241,7 +267,7 @@ const StudentPaymentsSection = ({
             </Button>
             <Button
               className="h-11 rounded-xl"
-              disabled={refundMutation.isPending}
+              disabled={refundMutation.isPending || ccRefundMutation.isPending}
               onClick={() => {
                 const amt = Number(refundAmount);
                 const max = Number(refundTarget?._remaining || 0);
@@ -250,7 +276,9 @@ const StudentPaymentsSection = ({
                 setPendingRefund({ paymentId: refundTarget.id, amount: amt });
               }}
             >
-              {refundMutation.isPending ? "מבצע..." : "בצע זיכוי"}
+              {(refundMutation.isPending || ccRefundMutation.isPending)
+                ? "מבצע..."
+                : refundTarget?._cc ? "בצע החזר אשראי" : "בצע זיכוי"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -282,26 +310,33 @@ const StudentPaymentsSection = ({
       <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>אישור הפקת זיכוי</AlertDialogTitle>
+            <AlertDialogTitle>{refundTarget?._cc ? "אישור החזר אשראי" : "אישור הפקת זיכוי"}</AlertDialogTitle>
             <AlertDialogDescription>
-              ⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>.
-              האם להמשיך?
+              {refundTarget?._cc ? (
+                <>⚠️ ביצוע החזר אשראי דרך iCount על סך ₪{pendingRefund?.amount.toLocaleString()} הוא פעולה <strong>סופית ובלתי הפיכה</strong>. הכסף יוחזר לכרטיס המקורי. האם להמשיך?</>
+              ) : (
+                <>⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>. האם להמשיך?</>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
-                if (pendingRefund) refundMutation.mutate(pendingRefund);
+                if (pendingRefund) {
+                  if (refundTarget?._cc) ccRefundMutation.mutate(pendingRefund);
+                  else refundMutation.mutate(pendingRefund);
+                }
                 setPendingRefund(null);
               }}
             >
-              כן, בצע זיכוי
+              {refundTarget?._cc ? "כן, בצע החזר אשראי" : "כן, בצע זיכוי"}
             </AlertDialogAction>
             <AlertDialogCancel>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
     </div>
   );
