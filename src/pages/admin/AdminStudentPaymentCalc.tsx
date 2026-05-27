@@ -122,11 +122,32 @@ const AdminStudentPaymentCalc = () => {
   const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
 
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
+  const [hydratedFromPending, setHydratedFromPending] = useState(false);
 
 
   useEffect(() => {
     if (student?.is_major_student) setMajorStudent(true);
   }, [student]);
+
+  // Hydrate discount state from the most recent pending payment so reopening
+  // the card shows the same discounts that were used to generate the link.
+  useEffect(() => {
+    if (hydratedFromPending) return;
+    if (!pendingPayments || pendingPayments.length === 0) return;
+    const latest = pendingPayments[0] as any;
+    const br = latest?.enrollment_breakdown;
+    const d = br && !Array.isArray(br) ? br.discounts : null;
+    if (d && typeof d === "object") {
+      if (typeof d.sibling === "boolean") setSibling(d.sibling);
+      if (typeof d.secondInstrument === "boolean") setSecondInstrument(d.secondInstrument);
+      if (typeof d.majorStudent === "boolean") setMajorStudent(d.majorStudent);
+      if (Array.isArray(d.customDiscounts)) setCustomDiscounts(d.customDiscounts);
+      if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
+        setStartDateOverrides(d.startDateOverrides);
+      }
+    }
+    setHydratedFromPending(true);
+  }, [pendingPayments, hydratedFromPending]);
 
   const rows: CalcRow[] = useMemo(() => {
     if (!enrollments || !yearFull || !settings) return [];
