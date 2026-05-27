@@ -97,7 +97,10 @@ const AdminTeachers = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setResetAllOpen(true)}>
+            <KeyRound className="h-4 w-4" /> אפס סיסמאות לכולם
+          </Button>
           <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" /> ייבוא מאקסל
           </Button>
