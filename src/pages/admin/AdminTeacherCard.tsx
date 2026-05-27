@@ -355,17 +355,52 @@ const AdminTeacherCard = () => {
               <span className="font-medium text-foreground text-sm">{teacher.email}</span>
             </div>
           )}
-          <div className="flex gap-2 pt-1">
+          <div className="flex flex-wrap gap-2 pt-1">
             {hasLogin ? (
-              <Button
-                variant="outline"
-                className="h-11 rounded-xl"
-                onClick={() => resetPasswordMutation.mutate()}
-                disabled={resetPasswordMutation.isPending}
-              >
-                <KeyRound className="h-4 w-4" />
-                {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-123456"}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-xl"
+                  onClick={() => resetPasswordMutation.mutate()}
+                  disabled={resetPasswordMutation.isPending}
+                >
+                  <KeyRound className="h-4 w-4" />
+                  {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-123456"}
+                </Button>
+                <Dialog open={emailDialogOpen} onOpenChange={(o) => { setEmailDialogOpen(o); if (o) setNewEmail(teacher.email ?? ""); }}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="h-11 rounded-xl">
+                      <Mail className="h-4 w-4" /> החלף מייל (כאדמין)
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent dir="rtl">
+                    <DialogHeader>
+                      <DialogTitle>החלפת מייל מיידית</DialogTitle>
+                      <DialogDescription>
+                        המייל יוחלף ויאושר מיד, ללא צורך באישור בתיבת המייל. עדכן/י גם את שדה המייל בכרטיס המורה.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Input
+                      type="email"
+                      dir="ltr"
+                      placeholder="email@example.com"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      className="h-12 rounded-xl"
+                    />
+                    <DialogFooter className="flex-row-reverse gap-2">
+                      <Button
+                        onClick={() => updateEmailMutation.mutate(newEmail.trim())}
+                        disabled={!newEmail.trim() || updateEmailMutation.isPending}
+                        className="h-11 rounded-xl"
+                      >
+                        {updateEmailMutation.isPending ? "מעדכן..." : "עדכן מייל"}
+                      </Button>
+                      <Button variant="outline" onClick={() => setEmailDialogOpen(false)} className="h-11 rounded-xl">ביטול</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
             ) : teacher.email ? (
               <Button
                 variant="outline"
