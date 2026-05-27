@@ -73,12 +73,14 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { studentId, paymentId: incomingPaymentId } = await req.json().catch(() => ({}));
+    const { studentId, paymentId: incomingPaymentId, amount: amountOverride } = await req.json().catch(() => ({}));
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const overrideAmt = Number(amountOverride);
+    const hasOverride = Number.isFinite(overrideAmt) && overrideAmt > 0;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -104,27 +106,32 @@ Deno.serve(async (req: Request) => {
     // Resolve the pending payment row to attach the link to.
     let paymentId: string | null = incomingPaymentId ?? null;
     let cachedBaseUrl: string | null = null;
+    let rowAmount: number | null = null;
     if (paymentId) {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url, payment_status")
+        .select("id, payment_link_url, payment_status, amount")
         .eq("id", paymentId).maybeSingle();
-      if (p && p.payment_status === "pending") cachedBaseUrl = p.payment_link_url ?? null;
+      if (p && p.payment_status === "pending") {
+        cachedBaseUrl = p.payment_link_url ?? null;
+        rowAmount = Number(p.amount) || null;
+      }
     } else {
       const { data: p } = await supabase
         .from("school_music_payments")
-        .select("id, payment_link_url, payment_status")
+        .select("id, payment_link_url, payment_status, amount")
         .eq("school_music_student_id", studentId)
         .eq("payment_status", "pending")
         .order("created_at", { ascending: false })
         .limit(1).maybeSingle();
-      if (p) { paymentId = p.id; cachedBaseUrl = p.payment_link_url ?? null; }
+      if (p) { paymentId = p.id; cachedBaseUrl = p.payment_link_url ?? null; rowAmount = Number(p.amount) || null; }
     }
 
     const schoolName: string = (student as any).school_music_schools?.school_name ?? "";
     const studentName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
     const isCaesarea = CAESAREA_NAMES.some((n) => schoolName.includes(n));
-    const amount = isCaesarea ? 1600 : 650;
+    const defaultAmount = isCaesarea ? 1600 : 650;
+    const amount = hasOverride ? overrideAmt : (rowAmount ?? defaultAmount);
 
     // If no pending payment row exists, create one so the link has somewhere to live.
     if (!paymentId) {
@@ -149,9 +156,10 @@ Deno.serve(async (req: Request) => {
 
     // The base URL is the dynamic paypage. Re-use the cached one if present,
     // otherwise create a fresh paypage per student via the iCount API.
-    // We strip any old query string from a cached base URL so we re-build
-    // fresh prefill params from the latest student data.
-    let baseUrl = cachedBaseUrl ? cachedBaseUrl.split("?")[0] : "";
+    // If the amount differs from what the cached paypage was created with,
+    // we MUST recreate the paypage so iCount charges the new amount.
+    const amountChanged = rowAmount != null && amount !== rowAmount;
+    let baseUrl = cachedBaseUrl && !amountChanged ? cachedBaseUrl.split("?")[0] : "";
     let paypageId: string | null = null;
     if (!baseUrl) {
       const created = await createPaypage({
@@ -186,7 +194,7 @@ Deno.serve(async (req: Request) => {
 
     if (paymentId) {
       await supabase.from("school_music_payments")
-        .update({ payment_link_url: url, ...(paypageId ? { icount_payment_page_id: paypageId } : {}) }).eq("id", paymentId);
+        .update({ payment_link_url: url, amount, ...(paypageId ? { icount_payment_page_id: paypageId } : {}) }).eq("id", paymentId);
     }
     await supabase.from("school_music_students")
       .update({ icount_payment_url: url }).eq("id", studentId);

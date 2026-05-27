@@ -51,6 +51,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkAmount, setLinkAmount] = useState<string>(String(defaultAmount ?? ""));
+  const [linkTargetPaymentId, setLinkTargetPaymentId] = useState<string | undefined>(undefined);
 
   const { data: payments = [] } = useQuery({
     queryKey: ["sm-student-payments", studentId],
@@ -109,15 +112,16 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   };
 
   const generateLinkMutation = useMutation({
-    mutationFn: async (paymentId?: string) => {
-      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
-        body: paymentId ? { studentId, paymentId } : { studentId },
-      });
+    mutationFn: async (args: { paymentId?: string; amount?: number }) => {
+      const body: any = { studentId };
+      if (args.paymentId) body.paymentId = args.paymentId;
+      if (args.amount && args.amount > 0) body.amount = args.amount;
+      const { data, error } = await supabase.functions.invoke("icount-generate-paylink", { body });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
     },
-    onSuccess: () => { invalidate(); toast.success("הקישור נוצר"); },
+    onSuccess: () => { invalidate(); toast.success("הקישור נוצר"); setLinkDialogOpen(false); },
     onError: (e: any) => toast.error(e?.message || "שגיאה ביצירת קישור"),
   });
 
@@ -262,11 +266,14 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
               size="sm"
               variant="outline"
               className="h-10 rounded-xl gap-1"
-              disabled={generateLinkMutation.isPending}
-              onClick={() => generateLinkMutation.mutate(undefined)}
+              onClick={() => {
+                setLinkTargetPaymentId(undefined);
+                setLinkAmount(String(defaultAmount ?? ""));
+                setLinkDialogOpen(true);
+              }}
             >
               <Link2 className="h-4 w-4" />
-              {generateLinkMutation.isPending ? "יוצר..." : "צור קישור תשלום"}
+              צור קישור תשלום
             </Button>
           )}
           <Button size="sm" className="h-10 rounded-xl" onClick={() => setAddOpen(true)}>
@@ -328,8 +335,11 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   {p.payment_status === "pending" && !isRefund && !p.payment_link_url && (
                     <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
                       title="צור קישור תשלום"
-                      disabled={generateLinkMutation.isPending}
-                      onClick={() => generateLinkMutation.mutate(p.id)}>
+                      onClick={() => {
+                        setLinkTargetPaymentId(p.id);
+                        setLinkAmount(String(Number(p.amount) || defaultAmount || ""));
+                        setLinkDialogOpen(true);
+                      }}>
                       <Link2 className="h-3.5 w-3.5" /> צור קישור
                     </Button>
                   )}
@@ -436,6 +446,35 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => setAddOpen(false)}>ביטול</Button>
             <Button className="h-11 rounded-xl" disabled={addMutation.isPending} onClick={() => addMutation.mutate()}>
               {addMutation.isPending ? "שומר..." : "שמור"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Generate payment link with custom amount */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent dir="rtl" className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>יצירת קישור תשלום</DialogTitle>
+            <DialogDescription>
+              ניתן לשנות את הסכום לצורך בדיקה (למשל ₪1). ברירת המחדל היא שכר הלימוד של בית הספר.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label className="text-sm">סכום לחיוב (₪)</Label>
+            <Input type="number" inputMode="decimal" min="1" step="0.01"
+              value={linkAmount} onChange={(e) => setLinkAmount(e.target.value)}
+              className="h-12 rounded-xl" autoFocus />
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => setLinkDialogOpen(false)}>ביטול</Button>
+            <Button className="h-11 rounded-xl" disabled={generateLinkMutation.isPending}
+              onClick={() => {
+                const amt = Number(linkAmount);
+                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                generateLinkMutation.mutate({ paymentId: linkTargetPaymentId, amount: amt });
+              }}>
+              {generateLinkMutation.isPending ? "יוצר..." : "צור קישור"}
             </Button>
           </DialogFooter>
         </DialogContent>
