@@ -307,7 +307,15 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0 flex-wrap">
+                  {p.payment_status === "pending" && !isRefund && !p.payment_link_url && (
+                    <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
+                      title="צור קישור תשלום"
+                      disabled={generateLinkMutation.isPending}
+                      onClick={() => generateLinkMutation.mutate(p.id)}>
+                      <Link2 className="h-3.5 w-3.5" /> צור קישור
+                    </Button>
+                  )}
                   {p.payment_status === "pending" && !isRefund && p.payment_link_url && (
                     <>
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="העתק קישור תשלום"
@@ -318,19 +326,16 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                         onClick={() => window.open(p.payment_link_url, "_blank")}>
                         <ExternalLink className="h-4 w-4" />
                       </Button>
+                      {waPhone && (
+                        <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg text-green-600 hover:bg-green-50"
+                          title="שלח קישור בוואטסאפ"
+                          onClick={() => window.open(buildWaUrl(p.payment_link_url), "_blank")}>
+                          <MessageCircle className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="צור קישור תשלום מחדש"
-                        onClick={async () => {
-                          try {
-                            const { data, error } = await supabase.functions.invoke("icount-generate-paylink", {
-                              body: { studentId, paymentId: p.id },
-                            });
-                            if (error) throw error;
-                            toast.success("הקישור נוצר מחדש");
-                            qc.invalidateQueries({ queryKey: ["school-music-student-payments", studentId] });
-                          } catch (e: any) {
-                            toast.error(e?.message || "שגיאה ביצירת הקישור");
-                          }
-                        }}>
+                        disabled={generateLinkMutation.isPending}
+                        onClick={() => generateLinkMutation.mutate(p.id)}>
                         <RefreshCw className="h-4 w-4" />
                       </Button>
                     </>
