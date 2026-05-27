@@ -48,11 +48,9 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const linkUrl = payment?.payment_link_url || student?.icount_payment_url || null;
-    const ppidFromUrl = linkUrl
-      ? (linkUrl.match(/\/m\/([^/?#]+)/)?.[1] ?? null)
-      : null;
-    const ppid = payment?.icount_payment_page_id || ppidFromUrl;
+    // iCount short URLs (/m/<hash>) contain an opaque hash, not the numeric paypage_id.
+    // We can only call paypage/delete if we have the stored numeric id.
+    const ppid = payment?.icount_payment_page_id || null;
 
     if (ppid) {
       try {
@@ -69,18 +67,17 @@ Deno.serve(async (req: Request) => {
         const json = await res.json().catch(() => ({}));
         console.log("[icount-delete-paypage]", ppid, json);
         const apiFailure = json?.status === false || json?.status === 0;
-        const alreadyDeleted = res.status === 404 || String(json?.reason ?? json?.error ?? "").toLowerCase().includes("not found");
+        const reason = String(json?.reason ?? json?.error ?? "").toLowerCase();
+        const alreadyDeleted = res.status === 404 || reason.includes("not found") || reason.includes("missing_paypage");
         if ((!res.ok || apiFailure) && !alreadyDeleted) {
           throw new Error(`iCount paypage/delete failed: ${JSON.stringify(json)}`);
         }
       } catch (e) {
         console.warn("[icount-delete-paypage] iCount call failed", e);
-        if (strict) {
-          return new Response(JSON.stringify({ error: String(e) }), {
-            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+        // Non-fatal: we still clear the DB references below so the UI stops showing the stale link.
       }
+    } else {
+      console.log("[icount-delete-paypage] no numeric paypage_id available; clearing DB only");
     }
 
     if (paymentId) {
