@@ -303,7 +303,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
 
       {payments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
+        <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border p-3 flex-wrap">
+          <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
+          {student?.icount_payment_url && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10"
+              disabled={cleanupStaleLinkMutation.isPending}
+              onClick={() => cleanupStaleLinkMutation.mutate()}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {cleanupStaleLinkMutation.isPending ? "מוחק..." : "מחק דף סליקה ישן"}
+            </Button>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           {payments.map((p) => {
