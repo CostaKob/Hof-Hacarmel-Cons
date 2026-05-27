@@ -87,8 +87,10 @@ Deno.serve(async (req: Request) => {
       amount,
       lines: linesInput,
       academicYearId,
+      academicYearName,
       discounts,
     } = await req.json().catch(() => ({}));
+
 
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
