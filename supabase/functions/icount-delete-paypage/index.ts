@@ -10,13 +10,29 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
+
+async function resolvePaypageIdFromUrl(url?: string | null): Promise<string | null> {
+  if (!url) return null;
+  try {
+    const baseUrl = url.split("?")[0];
+    const res = await fetch(baseUrl, { redirect: "follow" });
+    const finalUrl = res.url || baseUrl;
+    const campaign = new URL(finalUrl).searchParams.get("utm_campaign");
+    return campaign && /^\d+$/.test(campaign) ? campaign : null;
+  } catch (e) {
+    console.warn("[icount-delete-paypage] failed to resolve paypage id from url", e);
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { paymentId, studentId } = await req.json().catch(() => ({}));
-    if (!paymentId && !studentId) {
-      return new Response(JSON.stringify({ error: "paymentId or studentId required" }), {
+    const { paymentId, studentId, paypageId, strict = false } = await req.json().catch(() => ({}));
+    if (!paymentId && !studentId && !paypageId) {
+      return new Response(JSON.stringify({ error: "paymentId, studentId or paypageId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -42,19 +58,19 @@ Deno.serve(async (req: Request) => {
         .maybeSingle()
       : { data: null };
 
-    if (!payment && !student) {
+    if (!payment && !student && !paypageId) {
       return new Response(JSON.stringify({ ok: true, skipped: "no payment" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // iCount short URLs (/m/<hash>) contain an opaque hash, not the numeric paypage_id.
-    // We can only call paypage/delete if we have the stored numeric id.
-    const ppid = payment?.icount_payment_page_id || null;
+    const linkUrl = payment?.payment_link_url || student?.icount_payment_url || null;
+    const ppid = String(paypageId || payment?.icount_payment_page_id || await resolvePaypageIdFromUrl(linkUrl) || "") || null;
+    let deletedPaypageId: string | null = null;
 
     if (ppid) {
       try {
-        const res = await fetch("https://api.icount.co.il/api/v3.php/paypage/delete", {
+        const res = await fetch(`${ICOUNT_API}/paypage/delete`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -68,21 +84,31 @@ Deno.serve(async (req: Request) => {
         console.log("[icount-delete-paypage]", ppid, json);
         const apiFailure = json?.status === false || json?.status === 0;
         const reason = String(json?.reason ?? json?.error ?? "").toLowerCase();
-        const alreadyDeleted = res.status === 404 || reason.includes("not found") || reason.includes("missing_paypage");
+        const alreadyDeleted = res.status === 404 || reason.includes("not found") || reason.includes("paypage_not_found");
         if ((!res.ok || apiFailure) && !alreadyDeleted) {
           throw new Error(`iCount paypage/delete failed: ${JSON.stringify(json)}`);
         }
+        deletedPaypageId = ppid;
       } catch (e) {
         console.warn("[icount-delete-paypage] iCount call failed", e);
-        // Non-fatal: we still clear the DB references below so the UI stops showing the stale link.
+        if (strict) {
+          return new Response(JSON.stringify({ error: String(e) }), {
+            status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
       }
     } else {
       console.log("[icount-delete-paypage] no numeric paypage_id available; clearing DB only");
+      if (strict) {
+        return new Response(JSON.stringify({ error: "לא נמצא מזהה דף סליקה למחיקה ב-iCount" }), {
+          status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (paymentId) {
       await supabase.from("school_music_payments")
-        .update({ payment_link_url: null })
+        .update({ payment_link_url: null, icount_payment_page_id: null })
         .eq("id", paymentId);
     }
 
@@ -93,7 +119,7 @@ Deno.serve(async (req: Request) => {
         .eq("id", cleanupStudentId);
     }
 
-    return new Response(JSON.stringify({ ok: true, deleted: ppid }), {
+    return new Response(JSON.stringify({ ok: true, deleted: deletedPaypageId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

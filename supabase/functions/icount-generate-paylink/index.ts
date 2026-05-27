@@ -18,12 +18,22 @@ const ICOUNT_API = "https://api.icount.co.il/api/v3.php";
 const IPN_URL = "https://mtzzalrmtzfrkrpdjjoy.supabase.co/functions/v1/icount-ipn-handler";
 const SUCCESS_URL = "https://musichof.com/school-music/register/success?status=ok";
 
+async function resolvePaypageIdFromUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { redirect: "follow" });
+    const campaign = new URL(res.url || url).searchParams.get("utm_campaign");
+    return campaign && /^\d+$/.test(campaign) ? campaign : null;
+  } catch {
+    return null;
+  }
+}
+
 async function createPaypage(opts: {
   studentName: string;
   schoolName: string;
   amount: number;
   paymentId: string;
-}): Promise<string> {
+}): Promise<{ url: string; paypageId: string | null }> {
   const itemDesc = `שכר לימוד - ${opts.studentName} - ${opts.schoolName}`;
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
@@ -54,7 +64,9 @@ async function createPaypage(opts: {
   if (!json?.status || !json?.paypage_url) {
     throw new Error(`iCount paypage/create failed: ${JSON.stringify(json)}`);
   }
-  return json.paypage_url as string;
+  const url = json.paypage_url as string;
+  const paypageId = String(json.paypage_id ?? json.page_id ?? json.paypage_info?.page_id ?? "") || await resolvePaypageIdFromUrl(url);
+  return { url, paypageId };
 }
 
 Deno.serve(async (req: Request) => {
@@ -140,13 +152,16 @@ Deno.serve(async (req: Request) => {
     // We strip any old query string from a cached base URL so we re-build
     // fresh prefill params from the latest student data.
     let baseUrl = cachedBaseUrl ? cachedBaseUrl.split("?")[0] : "";
+    let paypageId: string | null = null;
     if (!baseUrl) {
-      baseUrl = await createPaypage({
+      const created = await createPaypage({
         studentName: studentName || "תלמיד",
         schoolName: schoolName || "בית ספר",
         amount,
         paymentId: paymentId ?? studentId,
       });
+      baseUrl = created.url;
+      paypageId = created.paypageId;
     }
 
     // Prefill the standard iCount fields from URL params.
@@ -171,7 +186,7 @@ Deno.serve(async (req: Request) => {
 
     if (paymentId) {
       await supabase.from("school_music_payments")
-        .update({ payment_link_url: url }).eq("id", paymentId);
+        .update({ payment_link_url: url, ...(paypageId ? { icount_payment_page_id: paypageId } : {}) }).eq("id", paymentId);
     }
     await supabase.from("school_music_students")
       .update({ icount_payment_url: url }).eq("id", studentId);
