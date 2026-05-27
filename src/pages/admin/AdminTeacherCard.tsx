@@ -209,6 +209,27 @@ const AdminTeacherCard = () => {
     onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
   });
 
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+
+  const updateEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      const { data, error } = await supabase.functions.invoke("update-teacher-email", {
+        body: { teacher_id: teacherId, new_email: email },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-teacher", teacherId] });
+      toast.success("כתובת המייל עודכנה בהצלחה");
+      setEmailDialogOpen(false);
+      setNewEmail("");
+    },
+    onError: (err: Error) => toast.error(err.message || "שגיאה בעדכון המייל"),
+  });
+
   const deleteTeacherMutation = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("teachers").delete().eq("id", teacherId!);
