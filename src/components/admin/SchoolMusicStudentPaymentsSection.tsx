@@ -51,6 +51,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [linkAmount, setLinkAmount] = useState<string>(String(defaultAmount ?? ""));
+  const [linkTargetPaymentId, setLinkTargetPaymentId] = useState<string | undefined>(undefined);
 
   const { data: payments = [] } = useQuery({
     queryKey: ["sm-student-payments", studentId],
