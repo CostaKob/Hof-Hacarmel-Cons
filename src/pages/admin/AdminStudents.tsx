@@ -118,7 +118,7 @@ const AdminStudents = () => {
   const getSavedDiscountState = useCallback((sid: string) => {
     const fromPayment = (yearPayments as any[]).find((p) => {
       const br = p?.enrollment_breakdown;
-      return br && !Array.isArray(br) && br.discounts && p.payment_status === "pending";
+      return p.student_id === sid && br && !Array.isArray(br) && br.discounts && p.payment_status === "pending";
     }) ?? (yearPayments as any[]).find((p) => {
       const br = p?.enrollment_breakdown;
       return br && !Array.isArray(br) && br.discounts && p.student_id === sid;
