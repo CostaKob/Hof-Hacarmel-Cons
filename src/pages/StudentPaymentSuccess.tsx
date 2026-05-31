@@ -80,7 +80,19 @@ const StudentPaymentSuccess = () => {
             {payment.icount_doc_number && <> · קבלה #{payment.icount_doc_number}</>}
           </p>
           <p className="text-sm text-muted-foreground">הקבלה נשלחה אליכם גם במייל.</p>
+          {payment.recipient_email && (
+            <p className="text-sm text-muted-foreground">
+              לכתובת: <span className="font-medium text-foreground" dir="ltr">{payment.recipient_email}</span>
+            </p>
+          )}
           {payment.invoice_url && (
+            <Button variant="outline" className="h-11 rounded-xl" onClick={() => window.open(payment.invoice_url, "_blank")}>
+              <FileDown className="h-4 w-4 ml-2" /> הורדת קבלה
+            </Button>
+          )}
+        </>
+      );
+    }
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => window.open(payment.invoice_url, "_blank")}>
               <FileDown className="h-4 w-4 ml-2" /> הורדת קבלה
             </Button>
