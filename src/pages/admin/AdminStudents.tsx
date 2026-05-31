@@ -75,8 +75,9 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
-        .select("enrollment_id, amount, transaction_type, enrollment_breakdown")
-        .eq("academic_year_id", selectedYearId);
+        .select("student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown")
+        .eq("academic_year_id", selectedYearId)
+        .or("payment_status.is.null,payment_status.neq.pending");
       if (error) throw error;
       return data ?? [];
     },
@@ -90,13 +91,24 @@ const AdminStudents = () => {
     for (const p of yearPayments as any[]) {
       const sign = p.transaction_type === "credit" ? -1 : 1;
       const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
-      if (breakdown && breakdown.length > 0) {
+      if (breakdown && breakdown.length > 0 && breakdown.some((b: any) => b?.enrollment_id)) {
         for (const b of breakdown) {
           if (b?.enrollment_id) add(b.enrollment_id, sign * Number(b.amount || 0));
         }
       } else if (p.enrollment_id) {
         add(p.enrollment_id, sign * Number(p.amount || 0));
       }
+    }
+    return map;
+  }, [yearPayments]);
+
+  // Fallback: net paid summed at student level (covers payments spanning multiple enrollments)
+  const paidByStudent = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of yearPayments as any[]) {
+      if (!p.student_id) continue;
+      const sign = p.transaction_type === "credit" ? -1 : 1;
+      map.set(p.student_id, (map.get(p.student_id) ?? 0) + sign * Number(p.amount || 0));
     }
     return map;
   }, [yearPayments]);
@@ -108,14 +120,29 @@ const AdminStudents = () => {
     return Math.round(ppl * total);
   }, []);
 
+  // Expected per student across all their enrollments in the selected year
+  const expectedByStudent = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const r of rows as any[]) {
+      const sid = r?.students?.id;
+      if (!sid) continue;
+      map.set(sid, (map.get(sid) ?? 0) + getExpected(r));
+    }
+    return map;
+  }, [rows, getExpected]);
+
   // Returns "full" | "partial" | "unpaid"
   const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" => {
-    const paid = paidByEnrollment.get(r.id) ?? 0;
+    const enrPaid = paidByEnrollment.get(r.id) ?? 0;
     const expected = getExpected(r);
-    if (paid <= 0.5) return "unpaid";
-    if (expected > 0 && paid + 1 >= expected) return "full";
-    return "partial";
-  }, [paidByEnrollment, getExpected]);
+    if (expected > 0 && enrPaid + 1 >= expected) return "full";
+    const sid = r?.students?.id;
+    const stuPaid = sid ? (paidByStudent.get(sid) ?? 0) : 0;
+    const stuExpected = sid ? (expectedByStudent.get(sid) ?? 0) : 0;
+    if (stuExpected > 0 && stuPaid + 1 >= stuExpected) return "full";
+    if (enrPaid > 0.5 || stuPaid > 0.5) return "partial";
+    return "unpaid";
+  }, [paidByEnrollment, paidByStudent, expectedByStudent, getExpected]);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
