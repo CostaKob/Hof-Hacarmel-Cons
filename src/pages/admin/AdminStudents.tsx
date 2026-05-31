@@ -105,87 +105,118 @@ const AdminStudents = () => {
     },
   });
 
-  // Sum net paid per enrollment (payment − credit), attributing combined invoices via breakdown
-  const paidByEnrollment = useMemo(() => {
-    const map = new Map<string, number>();
-    const add = (eid: string, amt: number) => map.set(eid, (map.get(eid) ?? 0) + amt);
-    for (const p of yearPayments as any[]) {
-      const sign = p.transaction_type === "credit" ? -1 : 1;
-      const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
-      if (breakdown && breakdown.length > 0 && breakdown.some((b: any) => b?.enrollment_id)) {
-        for (const b of breakdown) {
-          if (b?.enrollment_id) add(b.enrollment_id, sign * Number(b.amount || 0));
-        }
-      } else if (p.enrollment_id) {
-        add(p.enrollment_id, sign * Number(p.amount || 0));
-      }
+  const enrollmentRowsByStudent = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const r of rows as any[]) {
+      const sid = r?.students?.id;
+      if (!sid || !r.is_active) continue;
+      map.set(sid, [...(map.get(sid) ?? []), r]);
     }
     return map;
-  }, [yearPayments]);
+  }, [rows]);
 
-  // Fallback: net paid summed at student level (covers payments spanning multiple enrollments)
+  const getSavedDiscountState = useCallback((sid: string) => {
+    const fromPayment = (yearPayments as any[]).find((p) => {
+      const br = p?.enrollment_breakdown;
+      return br && !Array.isArray(br) && br.discounts && p.payment_status === "pending";
+    }) ?? (yearPayments as any[]).find((p) => {
+      const br = p?.enrollment_breakdown;
+      return br && !Array.isArray(br) && br.discounts && p.student_id === sid;
+    });
+
+    let saved: any = null;
+    if (selectedYearId && typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem(`payment-calc-discounts:${sid}:${selectedYearId}`);
+        saved = raw ? JSON.parse(raw) : null;
+      } catch { /* ignore malformed local state */ }
+    }
+
+    const paymentDiscounts = fromPayment?.enrollment_breakdown?.discounts;
+    return saved ?? paymentDiscounts ?? null;
+  }, [selectedYearId, yearPayments]);
+
+  // Net paid summed at student level (paid/credit only; pending links do not reduce debt)
   const paidByStudent = useMemo(() => {
     const map = new Map<string, number>();
     for (const p of yearPayments as any[]) {
       if (!p.student_id) continue;
+      if (p.payment_status === "pending" || p.payment_status === "failed") continue;
       const sign = p.transaction_type === "credit" ? -1 : 1;
       map.set(p.student_id, (map.get(p.student_id) ?? 0) + sign * Number(p.amount || 0));
     }
     return map;
   }, [yearPayments]);
 
-  // Charged amount per student derived from payment breakdowns (sum of all lines).
-  // Used when enrollments don't have price_per_lesson populated.
-  const chargedByStudent = useMemo(() => {
+  const balanceByStudent = useMemo(() => {
     const map = new Map<string, number>();
-    for (const p of yearPayments as any[]) {
-      if (!p.student_id) continue;
-      if (p.transaction_type === "credit") continue;
-      if (p.payment_status === "failed") continue;
-      const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
-      let charged = 0;
-      if (breakdown && breakdown.length > 0) {
-        for (const b of breakdown) charged += Number(b?.amount || 0);
-      } else {
-        charged = Number(p.amount || 0);
+    if (!paymentSettings || !yearFull) return map;
+    const prices = paymentSettings.lesson_prices ?? {};
+    const rates = {
+      sibling: Number(yearFull.discount_sibling_pct ?? 0),
+      secondInstrument: Number(yearFull.discount_second_instrument_pct ?? 0),
+      majorStudent: Number(yearFull.discount_major_student_pct ?? 0),
+    };
+
+    for (const [sid, studentRows] of enrollmentRowsByStudent.entries()) {
+      const discounts = getSavedDiscountState(sid);
+      const startDateOverrides = discounts?.startDateOverrides && typeof discounts.startDateOverrides === "object" ? discounts.startDateOverrides : {};
+      const calcRows = studentRows.map((e: any) => calcEnrollment(
+        {
+          id: e.id,
+          duration: e.lesson_duration_minutes,
+          startDate: startDateOverrides[e.id] ?? e.start_date,
+          pricePerLessonOverride: e.price_per_lesson,
+          instrumentName: e.instruments?.name,
+          schoolName: e.schools?.name,
+          teacherName: e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : null,
+        },
+        prices,
+        yearFull.start_date,
+        yearFull.end_date,
+      ));
+
+      const proratedTotal = calcRows.reduce((sum, r) => sum + r.prorated, 0);
+      const sibling = !!discounts?.sibling;
+      const secondInstrument = !!discounts?.secondInstrument;
+      const majorStudent = discounts && typeof discounts.majorStudent === "boolean" ? discounts.majorStudent : !!studentRows[0]?.students?.is_major_student;
+      const secondInstrumentEnrollmentId = secondInstrument && calcRows.length >= 2
+        ? [...calcRows].sort((a, b) => a.prorated - b.prorated)[0].enrollmentId
+        : null;
+      const afterStdDiscount = calcRows.reduce((sum, r) => {
+        const pct = (sibling ? rates.sibling : 0)
+          + (majorStudent ? rates.majorStudent : 0)
+          + (r.enrollmentId === secondInstrumentEnrollmentId ? rates.secondInstrument : 0);
+        return sum + Math.round(r.prorated * (1 - pct / 100));
+      }, 0);
+      const customDiscountAmount = (Array.isArray(discounts?.customDiscounts) ? discounts.customDiscounts : []).reduce((sum: number, c: any) => {
+        const v = Number(c.value) || 0;
+        return sum + (c.mode === "pct" ? (afterStdDiscount * v) / 100 : v);
+      }, 0);
+      const totalDue = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
+      const paid = paidByStudent.get(sid) ?? 0;
+      map.set(sid, totalDue - paid);
+
+      if (proratedTotal <= 0 && paid <= 0) {
+        map.set(sid, 0);
       }
-      map.set(p.student_id, (map.get(p.student_id) ?? 0) + charged);
     }
     return map;
-  }, [yearPayments]);
-
-  // Expected amount per enrollment = price_per_lesson * total_lessons_allocated
-  const getExpected = useCallback((r: any) => {
-    const ppl = Number(r?.price_per_lesson || 0);
-    const total = Number(r?.total_lessons_allocated || 0);
-    return Math.round(ppl * total);
-  }, []);
-
-  // Expected per student across all their enrollments in the selected year
-  const expectedByStudent = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const r of rows as any[]) {
-      const sid = r?.students?.id;
-      if (!sid) continue;
-      map.set(sid, (map.get(sid) ?? 0) + getExpected(r));
-    }
-    return map;
-  }, [rows, getExpected]);
+  }, [paymentSettings, yearFull, enrollmentRowsByStudent, getSavedDiscountState, paidByStudent]);
 
   // Returns "full" | "partial" | "unpaid"
-  // Expected (after discounts) = sum of amounts on student's non-credit, non-failed payment rows
-  // when present (these reflect the actual bill including discounts/added charges).
-  // Falls back to price_per_lesson * total_lessons_allocated when no payment rows exist.
+  // Connected to the same calculated balance used in the payment summary screen.
   const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" => {
     const sid = r?.students?.id;
     const stuPaid = sid ? (paidByStudent.get(sid) ?? 0) : 0;
-    const stuCharged = sid ? (chargedByStudent.get(sid) ?? 0) : 0;
-    const stuExpected = sid ? (expectedByStudent.get(sid) ?? 0) : 0;
-    const expected = stuCharged > 0.5 ? stuCharged : stuExpected;
-    if (expected > 0.5 && stuPaid + 1 >= expected) return "full";
+    const balance = sid ? balanceByStudent.get(sid) : null;
+    if (typeof balance === "number") {
+      if (Math.round(balance) <= 0) return "full";
+      return stuPaid > 0.5 ? "partial" : "unpaid";
+    }
     if (stuPaid > 0.5) return "partial";
     return "unpaid";
-  }, [paidByStudent, chargedByStudent, expectedByStudent]);
+  }, [paidByStudent, balanceByStudent]);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
