@@ -218,6 +218,12 @@ const AdminStudents = () => {
     return "unpaid";
   }, [paidByStudent, balanceByStudent]);
 
+  const getPaymentBalance = useCallback((r: any) => {
+    const sid = r?.students?.id;
+    const balance = sid ? balanceByStudent.get(sid) : null;
+    return typeof balance === "number" ? Math.max(0, Math.round(balance)) : null;
+  }, [balanceByStudent]);
+
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
     queryKey: ["admin-all-students-raw"],
@@ -495,7 +501,12 @@ const AdminStudents = () => {
           <div className="space-y-2">
             {filtered.map((r: any, index: number) => {
               const payStatus = getPaymentStatus(r);
-              const payLabel = payStatus === "full" ? "שולם" : payStatus === "partial" ? "שולם חלקית" : "לא שולם";
+              const payBalance = getPaymentBalance(r);
+              const payLabel = payStatus === "full"
+                ? "שולם"
+                : payStatus === "partial"
+                ? `שולם חלקית${payBalance ? ` · יתרה ₪${payBalance.toLocaleString()}` : ""}`
+                : payBalance ? `לא שולם · יתרה ₪${payBalance.toLocaleString()}` : "לא שולם";
               const payClass = payStatus === "full"
                 ? "bg-green-500/10 text-green-700 border-green-500/30"
                 : payStatus === "partial"
