@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, FileSpreadsheet, Users, ListChecks } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
+import { calcEnrollment } from "@/lib/paymentCalc";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
@@ -56,7 +57,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone, is_major_student), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -75,13 +76,33 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
-        .select("student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown")
+        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown")
         .eq("academic_year_id", selectedYearId)
-        .or("payment_status.is.null,payment_status.neq.pending");
+        .order("payment_date", { ascending: false })
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
     enabled: !!selectedYearId,
+  });
+
+  const { data: paymentSettings } = useQuery({
+    queryKey: ["admin-students-payment-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_settings" as any).select("*").limit(1).maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: yearFull } = useQuery({
+    queryKey: ["admin-students-year-billing", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("academic_years").select("*").eq("id", selectedYearId!).single();
+      if (error) throw error;
+      return data as any;
+    },
   });
 
   // Sum net paid per enrollment (payment − credit), attributing combined invoices via breakdown
