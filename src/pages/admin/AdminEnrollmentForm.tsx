@@ -25,9 +25,21 @@ interface EnrollmentFormData {
   lesson_type: string;
   lesson_duration_minutes: string;
   instrument_start_date: string;
+  end_date: string;
   is_active: boolean;
   grade: string;
 }
+
+/** Default enrollment end date = Aug 31 of the academic year (year derived from year.end_date or start_date+1). */
+const computeDefaultEndDate = (year: { start_date?: string; end_date?: string } | undefined): string => {
+  if (!year) return "";
+  if (year.end_date) return year.end_date;
+  if (year.start_date) {
+    const d = new Date(year.start_date);
+    return `${d.getFullYear() + 1}-08-31`;
+  }
+  return "";
+};
 
 const DURATION_OPTIONS = [
   { value: "30", label: "30 דקות" },
