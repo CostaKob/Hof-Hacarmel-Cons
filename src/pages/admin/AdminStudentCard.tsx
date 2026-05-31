@@ -26,6 +26,8 @@ import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
+import EndEnrollmentDialog from "@/components/admin/EndEnrollmentDialog";
+import { CalendarX2 } from "lucide-react";
 
 
 const STATUS_MAP: Record<string, string> = {
@@ -43,6 +45,7 @@ const AdminStudentCard = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [endingEnrollment, setEndingEnrollment] = useState<any>(null);
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
@@ -301,6 +304,15 @@ const AdminStudentCard = () => {
                     >
                       {e.is_active ? "פעיל" : "הפסיק"}
                     </button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="rounded-xl text-destructive hover:bg-destructive/10"
+                      title="סיום לימודים — חישוב זיכוי"
+                      onClick={() => setEndingEnrollment(e)}
+                    >
+                      <CalendarX2 className="h-3.5 w-3.5" />
+                    </Button>
                     <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -361,7 +373,20 @@ const AdminStudentCard = () => {
 
         <StudentNotesSection studentId={studentId!} />
 
-
+        {endingEnrollment && (
+          <EndEnrollmentDialog
+            open={!!endingEnrollment}
+            onOpenChange={(o) => { if (!o) setEndingEnrollment(null); }}
+            enrollment={endingEnrollment}
+            paidSoFar={payments
+              .filter((p: any) => p.enrollment_id === endingEnrollment.id)
+              .reduce((s: number, p: any) => {
+                const amt = Number(p.amount || 0);
+                if (amt < 0) return s + amt;
+                return p.transaction_type === "payment" ? s + amt : s - amt;
+              }, 0)}
+          />
+        )}
 
       </div>
     </AdminLayout>
