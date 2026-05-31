@@ -655,6 +655,8 @@ const AdminStudentPaymentCalc = () => {
           studentId={studentId!}
           payments={paymentsList as any[]}
           enrollments={enrollments ?? []}
+          totalDue={totalIncVat}
+          balanceDue={balance}
         />
 
       </div>
