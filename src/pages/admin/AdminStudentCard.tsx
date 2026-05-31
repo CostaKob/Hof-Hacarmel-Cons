@@ -26,6 +26,8 @@ import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
+import EndEnrollmentDialog from "@/components/admin/EndEnrollmentDialog";
+import { CalendarX2 } from "lucide-react";
 
 
 const STATUS_MAP: Record<string, string> = {
