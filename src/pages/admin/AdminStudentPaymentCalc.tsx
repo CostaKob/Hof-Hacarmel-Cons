@@ -129,13 +129,18 @@ const AdminStudentPaymentCalc = () => {
     if (student?.is_major_student) setMajorStudent(true);
   }, [student]);
 
-  // Hydrate discount state from the most recent pending payment so reopening
-  // the card shows the same discounts that were used to generate the link.
+  // Hydrate discount state from the most recent payment (pending or paid) so
+  // reopening the card shows the same discounts that were used previously.
   useEffect(() => {
     if (hydratedFromPending) return;
-    if (!pendingPayments || pendingPayments.length === 0) return;
-    const latest = pendingPayments[0] as any;
-    const br = latest?.enrollment_breakdown;
+    const source =
+      (pendingPayments && pendingPayments[0]) ||
+      ((allStudentPayments as any[]).find((p) => {
+        const br = p?.enrollment_breakdown;
+        return br && !Array.isArray(br) && br.discounts;
+      }) as any);
+    if (!source) return;
+    const br = source?.enrollment_breakdown;
     const d = br && !Array.isArray(br) ? br.discounts : null;
     if (d && typeof d === "object") {
       if (typeof d.sibling === "boolean") setSibling(d.sibling);
@@ -147,7 +152,8 @@ const AdminStudentPaymentCalc = () => {
       }
     }
     setHydratedFromPending(true);
-  }, [pendingPayments, hydratedFromPending]);
+  }, [pendingPayments, allStudentPayments, hydratedFromPending]);
+
 
   const rows: CalcRow[] = useMemo(() => {
     if (!enrollments || !yearFull || !settings) return [];
