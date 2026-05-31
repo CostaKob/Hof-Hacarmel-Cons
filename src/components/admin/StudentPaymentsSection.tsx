@@ -148,6 +148,30 @@ const StudentPaymentsSection = ({
             const remaining = Math.max(0, Number(p.amount || 0) - refundedSoFar);
             const canRefund = !isCredit && hasDoc && remaining > 0;
             const isCombined = Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
+
+            // Status pill: derived from payment_status / refunds / transaction type
+            let statusLabel = "";
+            let statusClass = "";
+            if (isCredit) {
+              statusLabel = "זיכוי";
+              statusClass = "bg-destructive/10 text-destructive border-destructive/30";
+            } else if (p.payment_status === "failed") {
+              statusLabel = "נכשל";
+              statusClass = "bg-destructive/10 text-destructive border-destructive/30";
+            } else if (p.payment_status === "pending") {
+              statusLabel = "ממתין לתשלום";
+              statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
+            } else if (refundedSoFar >= Number(p.amount || 0) - 0.5 && refundedSoFar > 0) {
+              statusLabel = "זוכה במלואו";
+              statusClass = "bg-muted text-muted-foreground border-border";
+            } else if (refundedSoFar > 0) {
+              statusLabel = "זוכה חלקית";
+              statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
+            } else {
+              statusLabel = "שולם";
+              statusClass = "bg-green-500/10 text-green-700 border-green-500/30";
+            }
+
             return (
               <div
                 key={p.id}
@@ -155,12 +179,17 @@ const StudentPaymentsSection = ({
                 className={`flex items-center justify-between rounded-xl border border-border p-3 gap-2 transition-colors ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground text-sm">
-                    {format(new Date(p.payment_date), "dd/MM/yyyy")}
-                    {showYear && p.academic_years?.name && (
-                      <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
-                    )}
-                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium text-foreground text-sm">
+                      {format(new Date(p.payment_date), "dd/MM/yyyy")}
+                      {showYear && p.academic_years?.name && (
+                        <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
+                      )}
+                    </p>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${statusClass}`}>
+                      {statusLabel}
+                    </span>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {isCredit ? "זיכוי" : "תשלום"}
                     {p.payment_method && ` · ${p.payment_method}`}
