@@ -15,6 +15,10 @@ interface StudentPaymentsSectionProps {
   studentId: string;
   payments: any[];
   enrollments: any[];
+  /** Optional calculated tuition total for the selected year/screen. */
+  totalDue?: number;
+  /** Optional calculated balance. Positive = still owes, zero/negative = fully paid. */
+  balanceDue?: number;
   /** Optional extra buttons to render in the header (e.g. "חשב/צור תשלום") */
   extraHeaderActions?: ReactNode;
   /** Invalidation keys to refresh after mutations (in addition to defaults). */
@@ -29,6 +33,8 @@ const StudentPaymentsSection = ({
   studentId,
   payments,
   enrollments,
+  totalDue,
+  balanceDue,
   extraHeaderActions,
   extraInvalidateKeys = [],
   showYear = false,
@@ -113,6 +119,19 @@ const StudentPaymentsSection = ({
     return p.transaction_type === "payment" ? s + amount : s - amount;
   }, 0);
 
+  const hasCalculatedBalance = typeof balanceDue === "number" && Number.isFinite(balanceDue);
+  const calculatedTotal = typeof totalDue === "number" && Number.isFinite(totalDue) ? totalDue : null;
+  const roundedBalance = hasCalculatedBalance ? Math.round(balanceDue) : 0;
+  const overallStatus = !hasCalculatedBalance
+    ? null
+    : calculatedTotal !== null && calculatedTotal <= 0
+      ? { label: "לא נקבע חיוב", className: "bg-muted text-muted-foreground border-border" }
+      : roundedBalance <= 0
+        ? { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
+        : totalPaid > 0.5
+          ? { label: `שולם חלקית · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
+          : { label: `ממתין לתשלום · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
@@ -121,6 +140,11 @@ const StudentPaymentsSection = ({
           <div className="text-sm text-muted-foreground">
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
           </div>
+          {overallStatus && (
+            <span className={`text-xs px-2.5 py-1 rounded-lg border font-semibold ${overallStatus.className}`}>
+              {overallStatus.label}
+            </span>
+          )}
           {extraHeaderActions}
           {!readOnly && (
             <Button
@@ -168,7 +192,7 @@ const StudentPaymentsSection = ({
               statusLabel = "זוכה חלקית";
               statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
             } else {
-              statusLabel = "שולם";
+              statusLabel = hasCalculatedBalance ? "תשלום התקבל" : "שולם";
               statusClass = "bg-green-500/10 text-green-700 border-green-500/30";
             }
 
