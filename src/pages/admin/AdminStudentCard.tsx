@@ -45,6 +45,7 @@ const AdminStudentCard = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [endingEnrollment, setEndingEnrollment] = useState<any>(null);
   const { activeYear, selectedYearId } = useAcademicYear();
 
   const statusMutation = useMutation({
