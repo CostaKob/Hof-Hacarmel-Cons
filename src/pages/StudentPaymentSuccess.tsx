@@ -109,6 +109,9 @@ const StudentPaymentSuccess = () => {
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardContent className="py-12 text-center space-y-4">
+          <div className="flex justify-center pb-2">
+            <AppLogo size="lg" />
+          </div>
           {renderBody()}
           <div className="pt-4">
             <Button variant="ghost" onClick={() => navigate("/")} className="h-10">
