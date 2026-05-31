@@ -113,6 +113,26 @@ const AdminStudents = () => {
     return map;
   }, [yearPayments]);
 
+  // Charged amount per student derived from payment breakdowns (sum of all lines).
+  // Used when enrollments don't have price_per_lesson populated.
+  const chargedByStudent = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const p of yearPayments as any[]) {
+      if (!p.student_id) continue;
+      if (p.transaction_type === "credit") continue;
+      if (p.payment_status === "failed") continue;
+      const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
+      let charged = 0;
+      if (breakdown && breakdown.length > 0) {
+        for (const b of breakdown) charged += Number(b?.amount || 0);
+      } else {
+        charged = Number(p.amount || 0);
+      }
+      map.set(p.student_id, (map.get(p.student_id) ?? 0) + charged);
+    }
+    return map;
+  }, [yearPayments]);
+
   // Expected amount per enrollment = price_per_lesson * total_lessons_allocated
   const getExpected = useCallback((r: any) => {
     const ppl = Number(r?.price_per_lesson || 0);
@@ -140,9 +160,12 @@ const AdminStudents = () => {
     const stuPaid = sid ? (paidByStudent.get(sid) ?? 0) : 0;
     const stuExpected = sid ? (expectedByStudent.get(sid) ?? 0) : 0;
     if (stuExpected > 0 && stuPaid + 1 >= stuExpected) return "full";
+    // Final fallback: enrollments may have no price_per_lesson; use charged amount from breakdowns
+    const stuCharged = sid ? (chargedByStudent.get(sid) ?? 0) : 0;
+    if (stuCharged > 0 && stuPaid + 1 >= stuCharged) return "full";
     if (enrPaid > 0.5 || stuPaid > 0.5) return "partial";
     return "unpaid";
-  }, [paidByEnrollment, paidByStudent, expectedByStudent, getExpected]);
+  }, [paidByEnrollment, paidByStudent, expectedByStudent, chargedByStudent, getExpected]);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
