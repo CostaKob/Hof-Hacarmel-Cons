@@ -65,6 +65,7 @@ const AdminEnrollmentForm = () => {
       // enrollment_role kept as 'primary' silently — UI removed
       lesson_duration_minutes: "45",
       instrument_start_date: "",
+      end_date: "",
       grade: "",
     },
   });
@@ -72,6 +73,14 @@ const AdminEnrollmentForm = () => {
   const isActive = watch("is_active");
   const selectedTeacherId = watch("teacher_id");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Set default end_date for NEW enrollments based on the selected academic year (Aug 31).
+  useEffect(() => {
+    if (isEdit) return;
+    const yr = years.find((y) => y.id === selectedYearId);
+    const def = computeDefaultEndDate(yr);
+    if (def) setValue("end_date", def);
+  }, [isEdit, selectedYearId, years, setValue]);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
