@@ -610,7 +610,20 @@ const AdminStudentPaymentCalc = () => {
               <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
             </div>
           )}
+
+          {/* Generate iCount link — inside summary so context is clear */}
+          <div className="pt-3 border-t border-primary/20 flex justify-end">
+            <Button
+              className="h-12 rounded-xl px-6"
+              onClick={handleGenerateLink}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink}
+            >
+              {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
+              {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
+            </Button>
+          </div>
         </div>
+
 
 
 
