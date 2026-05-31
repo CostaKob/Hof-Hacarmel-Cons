@@ -343,6 +343,17 @@ const AdminEnrollmentForm = () => {
               {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
             </div>
             <div className="space-y-1.5">
+              <Label className="text-sm">תאריך סיום לימודים</Label>
+              <Controller
+                name="end_date"
+                control={control}
+                render={({ field }) => (
+                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך סיום (ברירת מחדל 31.8)" />
+                )}
+              />
+              <p className="text-xs text-muted-foreground">משמש לחישוב יחסי של שכר הלימוד. ברירת מחדל: 31.8 של שנת הלימודים.</p>
+            </div>
+            <div className="space-y-1.5">
               <Label className="text-sm">כיתה</Label>
               <Controller
                 name="grade"
