@@ -30,6 +30,7 @@ export interface EnrollmentForCalc {
   id: string;
   duration: number; // 30/45/60
   startDate: string; // ISO
+  endDate?: string | null; // ISO — optional enrollment end date (caps prorating)
   pricePerLessonOverride?: number | null; // annual total (incl VAT) override
   instrumentName?: string | null;
   schoolName?: string | null;
@@ -76,7 +77,9 @@ export const calcEnrollment = (
 
   const enrollStart = new Date(enrollment.startDate);
   const fromDate = enrollStart > ys ? enrollStart : ys;
-  const remainingDays = Math.max(0, Math.round((ye.getTime() - fromDate.getTime()) / dayMs));
+  const enrollEnd = enrollment.endDate ? new Date(enrollment.endDate) : null;
+  const toDate = enrollEnd && enrollEnd < ye ? enrollEnd : ye;
+  const remainingDays = Math.max(0, Math.round((toDate.getTime() - fromDate.getTime()) / dayMs));
   const lessonsRemaining = Math.min(
     LESSONS_PER_YEAR,
     Math.max(0, Math.round((remainingDays / totalDays) * LESSONS_PER_YEAR))

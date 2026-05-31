@@ -25,9 +25,21 @@ interface EnrollmentFormData {
   lesson_type: string;
   lesson_duration_minutes: string;
   instrument_start_date: string;
+  end_date: string;
   is_active: boolean;
   grade: string;
 }
+
+/** Default enrollment end date = Aug 31 of the academic year (year derived from year.end_date or start_date+1). */
+const computeDefaultEndDate = (year: { start_date?: string; end_date?: string } | undefined): string => {
+  if (!year) return "";
+  if (year.end_date) return year.end_date;
+  if (year.start_date) {
+    const d = new Date(year.start_date);
+    return `${d.getFullYear() + 1}-08-31`;
+  }
+  return "";
+};
 
 const DURATION_OPTIONS = [
   { value: "30", label: "30 דקות" },
@@ -53,6 +65,7 @@ const AdminEnrollmentForm = () => {
       // enrollment_role kept as 'primary' silently — UI removed
       lesson_duration_minutes: "45",
       instrument_start_date: "",
+      end_date: "",
       grade: "",
     },
   });
@@ -60,6 +73,14 @@ const AdminEnrollmentForm = () => {
   const isActive = watch("is_active");
   const selectedTeacherId = watch("teacher_id");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  // Set default end_date for NEW enrollments based on the selected academic year (Aug 31).
+  useEffect(() => {
+    if (isEdit) return;
+    const yr = years.find((y) => y.id === selectedYearId);
+    const def = computeDefaultEndDate(yr);
+    if (def) setValue("end_date", def);
+  }, [isEdit, selectedYearId, years, setValue]);
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -152,6 +173,7 @@ const AdminEnrollmentForm = () => {
 
   useEffect(() => {
     if (enrollment) {
+      const yr = years.find((y) => y.id === enrollment.academic_year_id);
       reset({
         student_id: enrollment.student_id,
         teacher_id: enrollment.teacher_id,
@@ -161,11 +183,12 @@ const AdminEnrollmentForm = () => {
         lesson_type: enrollment.lesson_type,
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
         instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
+        end_date: enrollment.end_date ?? computeDefaultEndDate(yr),
         is_active: enrollment.is_active,
         grade: (enrollment as any).grade ?? "",
       });
     }
-  }, [enrollment, reset]);
+  }, [enrollment, reset, years]);
 
   const mutation = useMutation({
     mutationFn: async (data: EnrollmentFormData) => {
@@ -180,6 +203,7 @@ const AdminEnrollmentForm = () => {
         lesson_duration_minutes: Number(data.lesson_duration_minutes),
         start_date: data.instrument_start_date,
         instrument_start_date: data.instrument_start_date || null,
+        end_date: data.end_date || null,
         is_active: data.is_active,
         grade: data.grade || null,
       };
@@ -317,6 +341,17 @@ const AdminEnrollmentForm = () => {
                 )}
               />
               {errors.instrument_start_date && <p className="text-sm text-destructive">{errors.instrument_start_date.message}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">תאריך סיום לימודים</Label>
+              <Controller
+                name="end_date"
+                control={control}
+                render={({ field }) => (
+                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך סיום (ברירת מחדל 31.8)" />
+                )}
+              />
+              <p className="text-xs text-muted-foreground">משמש לחישוב יחסי של שכר הלימוד. ברירת מחדל: 31.8 של שנת הלימודים.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm">כיתה</Label>
