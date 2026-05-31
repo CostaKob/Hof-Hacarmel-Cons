@@ -115,18 +115,29 @@ const AdminStudentPaymentCalc = () => {
     return { net, paid, credit };
   }, [paymentsList]);
 
-  // Discount state
-  const [sibling, setSibling] = useState(false);
-  const [secondInstrument, setSecondInstrument] = useState(false);
-  const [majorStudent, setMajorStudent] = useState(false);
-  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
+  // localStorage key for persisting discount selections per student+year
+  const lsKey = studentId && yearId ? `payment-calc-discounts:${studentId}:${yearId}` : null;
+  const lsInitial = (() => {
+    if (!lsKey) return null;
+    try { const raw = localStorage.getItem(lsKey); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  })();
 
-  const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
-  const [hydratedFromPending, setHydratedFromPending] = useState(false);
+  // Discount state
+  const [sibling, setSibling] = useState<boolean>(!!lsInitial?.sibling);
+  const [secondInstrument, setSecondInstrument] = useState<boolean>(!!lsInitial?.secondInstrument);
+  const [majorStudent, setMajorStudent] = useState<boolean>(!!lsInitial?.majorStudent);
+  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>(
+    Array.isArray(lsInitial?.customDiscounts) ? lsInitial.customDiscounts : []
+  );
+
+  const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>(
+    lsInitial?.startDateOverrides && typeof lsInitial.startDateOverrides === "object" ? lsInitial.startDateOverrides : {}
+  );
+  const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
 
 
   useEffect(() => {
-    if (student?.is_major_student) setMajorStudent(true);
+    if (student?.is_major_student && !lsInitial) setMajorStudent(true);
   }, [student]);
 
   // Hydrate discount state from the most recent payment (pending or paid) so
@@ -153,6 +164,18 @@ const AdminStudentPaymentCalc = () => {
     }
     setHydratedFromPending(true);
   }, [pendingPayments, allStudentPayments, hydratedFromPending]);
+
+  // Persist discounts whenever they change
+  useEffect(() => {
+    if (!lsKey) return;
+    try {
+      localStorage.setItem(lsKey, JSON.stringify({
+        sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides,
+      }));
+    } catch { /* ignore quota errors */ }
+  }, [lsKey, sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides]);
+
+
 
 
   const rows: CalcRow[] = useMemo(() => {
@@ -387,17 +410,8 @@ const AdminStudentPaymentCalc = () => {
           </div>
         </div>
 
-        {/* Generate iCount link — at top for quick access */}
-        <div className="flex justify-end">
-          <Button
-            className="h-12 rounded-xl px-6"
-            onClick={handleGenerateLink}
-            disabled={rows.length === 0 || balance <= 0 || generatingLink}
-          >
-            {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
-            {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
-          </Button>
-        </div>
+
+
 
         {pendingPayments.length > 0 && (
           <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-5 shadow-sm space-y-2">
@@ -619,7 +633,20 @@ const AdminStudentPaymentCalc = () => {
               <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
             </div>
           )}
+
+          {/* Generate iCount link — inside summary so context is clear */}
+          <div className="pt-3 border-t border-primary/20 flex justify-end">
+            <Button
+              className="h-12 rounded-xl px-6"
+              onClick={handleGenerateLink}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink}
+            >
+              {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
+              {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
+            </Button>
+          </div>
         </div>
+
 
 
 
