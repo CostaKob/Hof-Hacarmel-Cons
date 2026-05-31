@@ -171,6 +171,7 @@ const AdminStudents = () => {
           id: e.id,
           duration: e.lesson_duration_minutes,
           startDate: startDateOverrides[e.id] ?? e.start_date,
+          endDate: e.end_date,
           pricePerLessonOverride: e.price_per_lesson,
           instrumentName: e.instruments?.name,
           schoolName: e.schools?.name,
