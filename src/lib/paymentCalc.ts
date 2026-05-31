@@ -30,6 +30,7 @@ export interface EnrollmentForCalc {
   id: string;
   duration: number; // 30/45/60
   startDate: string; // ISO
+  endDate?: string | null; // ISO — optional enrollment end date (caps prorating)
   pricePerLessonOverride?: number | null; // annual total (incl VAT) override
   instrumentName?: string | null;
   schoolName?: string | null;
