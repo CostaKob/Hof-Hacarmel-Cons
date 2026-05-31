@@ -152,20 +152,19 @@ const AdminStudents = () => {
   }, [rows, getExpected]);
 
   // Returns "full" | "partial" | "unpaid"
+  // Expected (after discounts) = sum of amounts on student's non-credit, non-failed payment rows
+  // when present (these reflect the actual bill including discounts/added charges).
+  // Falls back to price_per_lesson * total_lessons_allocated when no payment rows exist.
   const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" => {
-    const enrPaid = paidByEnrollment.get(r.id) ?? 0;
-    const expected = getExpected(r);
-    if (expected > 0 && enrPaid + 1 >= expected) return "full";
     const sid = r?.students?.id;
     const stuPaid = sid ? (paidByStudent.get(sid) ?? 0) : 0;
-    const stuExpected = sid ? (expectedByStudent.get(sid) ?? 0) : 0;
-    if (stuExpected > 0 && stuPaid + 1 >= stuExpected) return "full";
-    // Final fallback: enrollments may have no price_per_lesson; use charged amount from breakdowns
     const stuCharged = sid ? (chargedByStudent.get(sid) ?? 0) : 0;
-    if (stuCharged > 0 && stuPaid + 1 >= stuCharged) return "full";
-    if (enrPaid > 0.5 || stuPaid > 0.5) return "partial";
+    const stuExpected = sid ? (expectedByStudent.get(sid) ?? 0) : 0;
+    const expected = stuCharged > 0.5 ? stuCharged : stuExpected;
+    if (expected > 0.5 && stuPaid + 1 >= expected) return "full";
+    if (stuPaid > 0.5) return "partial";
     return "unpaid";
-  }, [paidByEnrollment, paidByStudent, expectedByStudent, chargedByStudent, getExpected]);
+  }, [paidByStudent, chargedByStudent, expectedByStudent]);
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
