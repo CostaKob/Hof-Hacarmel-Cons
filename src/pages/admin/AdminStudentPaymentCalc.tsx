@@ -115,18 +115,29 @@ const AdminStudentPaymentCalc = () => {
     return { net, paid, credit };
   }, [paymentsList]);
 
-  // Discount state
-  const [sibling, setSibling] = useState(false);
-  const [secondInstrument, setSecondInstrument] = useState(false);
-  const [majorStudent, setMajorStudent] = useState(false);
-  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>([]);
+  // localStorage key for persisting discount selections per student+year
+  const lsKey = studentId && yearId ? `payment-calc-discounts:${studentId}:${yearId}` : null;
+  const lsInitial = (() => {
+    if (!lsKey) return null;
+    try { const raw = localStorage.getItem(lsKey); return raw ? JSON.parse(raw) : null; } catch { return null; }
+  })();
 
-  const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>({});
-  const [hydratedFromPending, setHydratedFromPending] = useState(false);
+  // Discount state
+  const [sibling, setSibling] = useState<boolean>(!!lsInitial?.sibling);
+  const [secondInstrument, setSecondInstrument] = useState<boolean>(!!lsInitial?.secondInstrument);
+  const [majorStudent, setMajorStudent] = useState<boolean>(!!lsInitial?.majorStudent);
+  const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>(
+    Array.isArray(lsInitial?.customDiscounts) ? lsInitial.customDiscounts : []
+  );
+
+  const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>(
+    lsInitial?.startDateOverrides && typeof lsInitial.startDateOverrides === "object" ? lsInitial.startDateOverrides : {}
+  );
+  const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
 
 
   useEffect(() => {
-    if (student?.is_major_student) setMajorStudent(true);
+    if (student?.is_major_student && !lsInitial) setMajorStudent(true);
   }, [student]);
 
   // Hydrate discount state from the most recent payment (pending or paid) so
@@ -153,6 +164,18 @@ const AdminStudentPaymentCalc = () => {
     }
     setHydratedFromPending(true);
   }, [pendingPayments, allStudentPayments, hydratedFromPending]);
+
+  // Persist discounts whenever they change
+  useEffect(() => {
+    if (!lsKey) return;
+    try {
+      localStorage.setItem(lsKey, JSON.stringify({
+        sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides,
+      }));
+    } catch { /* ignore quota errors */ }
+  }, [lsKey, sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides]);
+
+
 
 
   const rows: CalcRow[] = useMemo(() => {
