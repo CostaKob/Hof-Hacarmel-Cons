@@ -142,8 +142,13 @@ const AdminStudents = () => {
     for (const p of yearPayments as any[]) {
       if (!p.student_id) continue;
       if (p.payment_status === "pending" || p.payment_status === "failed") continue;
-      const sign = p.transaction_type === "credit" ? -1 : 1;
-      map.set(p.student_id, (map.get(p.student_id) ?? 0) + sign * Number(p.amount || 0));
+      const amount = Number(p.amount || 0);
+      const netAmount = amount < 0
+        ? amount
+        : p.transaction_type === "credit"
+          ? -Math.abs(amount)
+          : amount;
+      map.set(p.student_id, (map.get(p.student_id) ?? 0) + netAmount);
     }
     return map;
   }, [yearPayments]);
