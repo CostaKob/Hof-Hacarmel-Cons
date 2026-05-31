@@ -93,13 +93,6 @@ const StudentPaymentSuccess = () => {
         </>
       );
     }
-            <Button variant="outline" className="h-11 rounded-xl" onClick={() => window.open(payment.invoice_url, "_blank")}>
-              <FileDown className="h-4 w-4 ml-2" /> הורדת קבלה
-            </Button>
-          )}
-        </>
-      );
-    }
 
     return (
       <>
