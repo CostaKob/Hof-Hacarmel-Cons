@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, FileDown } from "lucide-react";
+import AppLogo from "@/components/AppLogo";
 
 const StudentPaymentSuccess = () => {
   const [params] = useSearchParams();
@@ -79,6 +80,11 @@ const StudentPaymentSuccess = () => {
             {payment.icount_doc_number && <> · קבלה #{payment.icount_doc_number}</>}
           </p>
           <p className="text-sm text-muted-foreground">הקבלה נשלחה אליכם גם במייל.</p>
+          {payment.recipient_email && (
+            <p className="text-sm text-muted-foreground">
+              לכתובת: <span className="font-medium text-foreground" dir="ltr">{payment.recipient_email}</span>
+            </p>
+          )}
           {payment.invoice_url && (
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => window.open(payment.invoice_url, "_blank")}>
               <FileDown className="h-4 w-4 ml-2" /> הורדת קבלה
@@ -103,6 +109,9 @@ const StudentPaymentSuccess = () => {
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="max-w-lg w-full">
         <CardContent className="py-12 text-center space-y-4">
+          <div className="flex justify-center pb-2">
+            <AppLogo size="lg" />
+          </div>
           {renderBody()}
           <div className="pt-4">
             <Button variant="ghost" onClick={() => navigate("/")} className="h-10">

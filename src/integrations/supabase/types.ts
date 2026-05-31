@@ -2177,6 +2177,7 @@ export type Database = {
           invoice_url: string
           paid_at: string
           payment_status: Database["public"]["Enums"]["student_payment_status"]
+          recipient_email: string
         }[]
       }
       get_teacher_id_for_user: { Args: { _user_id: string }; Returns: string }
