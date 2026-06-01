@@ -1,0 +1,28 @@
+name: בדיקות אוטומטיות
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: שליפת הקוד
+        uses: actions/checkout@v4
+
+      - name: התקנת Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: התקנת תלויות
+        run: npm ci
+
+      - name: הרצת בדיקות
+        run: npm run test -- --run
