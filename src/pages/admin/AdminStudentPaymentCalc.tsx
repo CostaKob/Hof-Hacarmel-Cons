@@ -266,7 +266,7 @@ const AdminStudentPaymentCalc = () => {
     const pct =
       globalDiscountPct +
       (r.enrollmentId === secondInstrumentEnrollmentId ? discountRates.secondInstrument : 0);
-    return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100)) };
+    return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
   });
 
   const afterStdDiscount = rowsAfterStd.reduce((s, r) => s + r.afterStd, 0);
@@ -281,14 +281,14 @@ const AdminStudentPaymentCalc = () => {
   }, 0);
 
   // Malkar (Non-Profit) — no VAT charged. Kept fields zeroed for backward compatibility.
-  const totalIncVat = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
-  const totalDiscountAmount = proratedTotal - totalIncVat;
+  const totalIncVat = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
+  const totalDiscountAmount = Math.round((proratedTotal - totalIncVat) * 100) / 100;
   const vatRate = 0;
   const beforeVat = totalIncVat;
   const vatAmount = 0;
 
   const effectivePaid = paymentsAggr?.net ?? 0;
-  const balance = totalIncVat - effectivePaid;
+  const balance = Math.round((totalIncVat - effectivePaid) * 100) / 100;
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
   const [generatingLink, setGeneratingLink] = useState(false);
