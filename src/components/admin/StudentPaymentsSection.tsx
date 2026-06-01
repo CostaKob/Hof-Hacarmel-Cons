@@ -122,12 +122,15 @@ const StudentPaymentsSection = ({
   const hasCalculatedBalance = typeof balanceDue === "number" && Number.isFinite(balanceDue);
   const calculatedTotal = typeof totalDue === "number" && Number.isFinite(totalDue) ? totalDue : null;
   const roundedBalance = hasCalculatedBalance ? Math.round(balanceDue) : 0;
+  const hasCredit = payments.some((p: any) => p.transaction_type !== "payment" || Number(p.amount || 0) < 0);
   const overallStatus = !hasCalculatedBalance
     ? null
     : calculatedTotal !== null && calculatedTotal <= 0
       ? { label: "לא נקבע חיוב", className: "bg-muted text-muted-foreground border-border" }
       : roundedBalance <= 0
-        ? { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
+        ? hasCredit
+          ? { label: "שולם במלואו · קיים זיכוי", className: "bg-primary/15 text-primary border-primary/40" }
+          : { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
         : totalPaid > 0.5
           ? { label: `שולם חלקית · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
           : { label: `ממתין לתשלום · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" };
