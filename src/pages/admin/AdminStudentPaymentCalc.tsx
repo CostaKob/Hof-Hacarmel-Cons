@@ -519,6 +519,7 @@ const AdminStudentPaymentCalc = () => {
                     <TableHead className="text-right">סניף</TableHead>
                     <TableHead className="text-right">משך</TableHead>
                     <TableHead className="text-right">תאריך התחלה</TableHead>
+                    <TableHead className="text-right">תאריך סיום</TableHead>
                     <TableHead className="text-right">בסיס שנתי</TableHead>
                     
                     <TableHead className="text-right">שיעורים נותרים</TableHead>
