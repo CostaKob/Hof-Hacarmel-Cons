@@ -362,20 +362,8 @@ const AdminStudentCard = () => {
 
         <StudentNotesSection studentId={studentId!} />
 
-        {endingEnrollment && (
-          <EndEnrollmentDialog
-            open={!!endingEnrollment}
-            onOpenChange={(o) => { if (!o) setEndingEnrollment(null); }}
-            enrollment={endingEnrollment}
-            paidSoFar={payments
-              .filter((p: any) => p.enrollment_id === endingEnrollment.id)
-              .reduce((s: number, p: any) => {
-                const amt = Number(p.amount || 0);
-                if (amt < 0) return s + amt;
-                return p.transaction_type === "payment" ? s + amt : s - amt;
-              }, 0)}
-          />
-        )}
+
+
 
       </div>
     </AdminLayout>
