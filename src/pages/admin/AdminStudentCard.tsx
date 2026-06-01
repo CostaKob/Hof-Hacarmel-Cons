@@ -362,23 +362,50 @@ const AdminStudentCard = () => {
           </div>
         )}
 
-        <StudentPaymentsSection
-          studentId={studentId!}
-          payments={payments}
-          enrollments={enrollments}
-          showYear
-          readOnly
-          extraInvalidateKeys={[["admin-student-payments", studentId]]}
-          extraHeaderActions={
-            <Button
-              variant="outline"
-              className="h-10 rounded-xl text-sm"
-              onClick={() => navigate(`/admin/students/${studentId}/payment`)}
-            >
-              <Calculator className="h-4 w-4" /> חשב/צור תשלום
-            </Button>
-          }
-        />
+        {(() => {
+          const effectiveYearFilter = paymentsYearFilter ?? selectedYearId ?? "all";
+          const filteredPayments =
+            effectiveYearFilter === "all"
+              ? payments
+              : payments.filter((p: any) => p.academic_year_id === effectiveYearFilter);
+          return (
+            <StudentPaymentsSection
+              studentId={studentId!}
+              payments={filteredPayments}
+              enrollments={enrollments}
+              showYear
+              readOnly
+              extraInvalidateKeys={[["admin-student-payments", studentId]]}
+              extraHeaderActions={
+                <div className="flex items-center gap-2">
+                  <Select
+                    value={effectiveYearFilter}
+                    onValueChange={(v) => setPaymentsYearFilter(v)}
+                  >
+                    <SelectTrigger className="h-10 rounded-xl text-sm w-[160px]">
+                      <SelectValue placeholder="סנן לפי שנה" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">כל השנים</SelectItem>
+                      {years.map((y) => (
+                        <SelectItem key={y.id} value={y.id}>
+                          {y.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    className="h-10 rounded-xl text-sm"
+                    onClick={() => navigate(`/admin/students/${studentId}/payment`)}
+                  >
+                    <Calculator className="h-4 w-4" /> חשב/צור תשלום
+                  </Button>
+                </div>
+              }
+            />
+          );
+        })()}
 
 
 
