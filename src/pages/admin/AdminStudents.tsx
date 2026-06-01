@@ -232,7 +232,7 @@ const AdminStudents = () => {
 
   // All-students view: raw students table (independent of enrollments)
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
-    queryKey: ["admin-all-students-raw"],
+    queryKey: ["admin-all-students-raw", selectedYearId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
