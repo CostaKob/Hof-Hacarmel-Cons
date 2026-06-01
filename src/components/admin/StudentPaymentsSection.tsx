@@ -251,6 +251,18 @@ const StudentPaymentsSection = ({
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
+                  {!readOnly && isCredit && !hasDoc && (
+                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
+                      title="הפק קבלת זיכוי (קבלה במינוס) ב-iCount"
+                      disabled={createInvoiceMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPendingInvoiceParams({ paymentId: p.id });
+                      }}>
+                      <FileDown className="h-3.5 w-3.5" />
+                      {createInvoiceMutation.isPending ? "..." : "הפק קבלת זיכוי"}
+                    </Button>
+                  )}
                   {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
                       title={p.payment_method === "credit_card" && p.icount_transaction_id
