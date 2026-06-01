@@ -88,12 +88,36 @@ const AdminStudentCard = () => {
       const enrollmentIds = (enrollments || []).map((e) => e.id);
 
       if (enrollmentIds.length > 0) {
-        // Delete report_lines via reports that reference these enrollments
-        await supabase.from("report_lines").delete().in("enrollment_id", enrollmentIds);
-        // Delete payments
-        await supabase.from("student_payments").delete().in("enrollment_id", enrollmentIds);
-        // Delete enrollments
-        await supabase.from("enrollments").delete().eq("student_id", studentId!);
+        // CRITICAL: Don't delete report_lines — they belong to teacher reports.
+        // Deleting them would corrupt other teachers' work-day reports and salary calculations.
+        const { count: reportLinesCount, error: rlErr } = await supabase
+          .from("report_lines")
+          .select("id", { count: "exact", head: true })
+          .in("enrollment_id", enrollmentIds);
+        if (rlErr) throw rlErr;
+        if ((reportLinesCount ?? 0) > 0) {
+          throw new Error(
+            `לא ניתן למחוק את התלמיד — קיימים ${reportLinesCount} דיווחי שיעור של מורים הקשורים לרישומים שלו. ` +
+            `מחיקה תפגע בדוחות ובחישוב המשכורת של המורים. סמן/י את התלמיד כלא פעיל במקום למחוק.`
+          );
+        }
+
+        // Don't delete payments either — financial records should be preserved.
+        const { count: paymentsCount, error: pErr } = await supabase
+          .from("student_payments")
+          .select("id", { count: "exact", head: true })
+          .or(`student_id.eq.${studentId},enrollment_id.in.(${enrollmentIds.join(",")})`);
+        if (pErr) throw pErr;
+        if ((paymentsCount ?? 0) > 0) {
+          throw new Error(
+            `לא ניתן למחוק את התלמיד — קיימים ${paymentsCount} רשומות תשלום. ` +
+            `סמן/י את התלמיד כלא פעיל במקום למחוק.`
+          );
+        }
+
+        // Safe to delete enrollments (no reports, no payments)
+        const { error: eErr } = await supabase.from("enrollments").delete().eq("student_id", studentId!);
+        if (eErr) throw eErr;
       }
 
       // Delete student notes
