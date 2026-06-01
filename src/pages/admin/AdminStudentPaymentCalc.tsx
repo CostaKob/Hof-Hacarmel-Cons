@@ -736,7 +736,7 @@ const SummaryRow = ({ label, value, bold, large, highlight }: { label: string; v
   <div className="flex items-center justify-between">
     <span className={`${bold ? "font-semibold" : ""} ${large ? "text-base" : "text-sm"} text-foreground`}>{label}</span>
     <span className={`${bold ? "font-bold" : ""} ${large ? "text-lg" : "text-sm"} ${highlight ? "text-primary" : "text-foreground"}`}>
-      ₪{value.toLocaleString()}
+      ₪{value.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </span>
   </div>
 );
