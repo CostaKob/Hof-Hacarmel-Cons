@@ -108,24 +108,27 @@ describe("getMonthlyRate — קצב שיעורים לחודש", () => {
   });
 
   it("קצב 3.2 ומעלה — good (ירוק)", () => {
-    // תלמיד שהתחיל לפני בדיוק חודש עם 4 שיעורים → 4/חודש
+    // הפונקציה מחשבת +1 לחודשים, אז חודש אחד אחורה = monthsPassed=2
+    // צריך >= 3.2×2 = 6.4 → 7 שיעורים → 7/2 = 3.5 → good
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const { status } = getMonthlyRate(4, oneMonthAgo.toISOString().slice(0, 10));
+    const { status } = getMonthlyRate(7, oneMonthAgo.toISOString().slice(0, 10));
     expect(status).toBe("good");
   });
 
   it("קצב בין 2.5 ל-3.2 — medium (צהוב)", () => {
+    // monthsPassed=2 → צריך בין 5 ל-6.4 שיעורים → 5 שיעורים → 5/2 = 2.5 → medium
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const { status } = getMonthlyRate(3, oneMonthAgo.toISOString().slice(0, 10));
+    const { status } = getMonthlyRate(5, oneMonthAgo.toISOString().slice(0, 10));
     expect(status).toBe("medium");
   });
 
   it("קצב מתחת ל-2.5 — bad (אדום)", () => {
+    // monthsPassed=2 → צריך < 5 שיעורים → 4 שיעורים → 4/2 = 2 → bad
     const oneMonthAgo = new Date();
     oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    const { status } = getMonthlyRate(2, oneMonthAgo.toISOString().slice(0, 10));
+    const { status } = getMonthlyRate(4, oneMonthAgo.toISOString().slice(0, 10));
     expect(status).toBe("bad");
   });
 
