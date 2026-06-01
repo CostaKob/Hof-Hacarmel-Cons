@@ -31,19 +31,24 @@ const AdminTeachers = () => {
 
   const handleResetAllPasswords = async () => {
     setResetting(true);
-    const { data, error } = await supabase.functions.invoke("reset-all-teacher-passwords");
-    setResetting(false);
-    setResetAllOpen(false);
-    if (error) {
-      toast.error(`שגיאה: ${error.message}`);
-      return;
-    }
-    const updated = (data as any)?.updated ?? 0;
-    const failed = (data as any)?.failed ?? [];
-    if (failed.length > 0) {
-      toast.warning(`עודכנו ${updated} סיסמאות, ${failed.length} נכשלו`);
-    } else {
-      toast.success(`עודכנו ${updated} סיסמאות ל-123456`);
+    try {
+      const { data, error } = await supabase.functions.invoke("reset-all-teacher-passwords");
+      if (error) {
+        toast.error(`שגיאה: ${error.message}`);
+        return;
+      }
+      const updated = (data as any)?.updated ?? 0;
+      const failed = (data as any)?.failed ?? [];
+      if (failed.length > 0) {
+        toast.warning(`עודכנו ${updated} סיסמאות, ${failed.length} נכשלו`);
+      } else {
+        toast.success(`עודכנו ${updated} סיסמאות ל-123456`);
+      }
+    } catch (err: any) {
+      toast.error(`שגיאה באיפוס סיסמאות: ${err?.message ?? "שגיאת רשת"}`);
+    } finally {
+      setResetting(false);
+      setResetAllOpen(false);
     }
   };
 
