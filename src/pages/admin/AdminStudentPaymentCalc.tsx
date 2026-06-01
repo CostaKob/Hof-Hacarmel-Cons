@@ -326,13 +326,13 @@ const AdminStudentPaymentCalc = () => {
       rowsAfterStd.forEach((r, i) => {
         lines.push({
           description: `שכר לימוד שנתי${yearSuffix} - ${enrollmentLabels[i]}`,
-          amount: Math.round(r.annualBase),
+          amount: Math.round(r.annualBase * 100) / 100,
         });
         const prorationDeduction = r.annualBase - r.prorated;
         if (prorationDeduction > 0) {
           lines.push({
             description: `קיזוז שיעורים שעברו${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
-            amount: -Math.round(prorationDeduction),
+            amount: -(Math.round(prorationDeduction * 100) / 100),
           });
         }
       });
@@ -340,7 +340,7 @@ const AdminStudentPaymentCalc = () => {
       if (sibling && discountRates.sibling > 0) {
         lines.push({
           description: `הנחת אחים${yearSuffix} (${discountRates.sibling}%)`,
-          amount: -Math.round(proratedTotal * discountRates.sibling / 100),
+          amount: -(Math.round(proratedTotal * discountRates.sibling) / 100),
         });
       }
       if (secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId) {
@@ -348,32 +348,33 @@ const AdminStudentPaymentCalc = () => {
         if (secondRow) {
           lines.push({
             description: `הנחת כלי שני${yearSuffix} (${discountRates.secondInstrument}%)`,
-            amount: -Math.round(secondRow.prorated * discountRates.secondInstrument / 100),
+            amount: -(Math.round(secondRow.prorated * discountRates.secondInstrument) / 100),
           });
         }
       }
       if (majorStudent && discountRates.majorStudent > 0) {
         lines.push({
           description: `הנחת תלמיד מגמה${yearSuffix} (${discountRates.majorStudent}%)`,
-          amount: -Math.round(proratedTotal * discountRates.majorStudent / 100),
+          amount: -(Math.round(proratedTotal * discountRates.majorStudent) / 100),
         });
       }
       customDiscounts.forEach((c) => {
         const v = Number(c.value) || 0;
         if (!v) return;
-        const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v / 100) : v;
+        const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v) / 100 : Math.round(v * 100) / 100;
         const name = c.label?.trim() || "הנחה מותאמת";
         const suffix = c.mode === "pct" ? ` (${v}%)` : "";
         lines.push({ description: `${name}${yearSuffix}${suffix}`, amount: -amt });
       });
 
       // Fix rounding drift so the lines sum to the exact balance
-      const drift = Math.round(balance) - lines.reduce((s, l) => s + l.amount, 0);
-      if (drift !== 0 && lines.length > 0) lines[0].amount += drift;
+      const linesSum = Math.round(lines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
+      const drift = Math.round((balance - linesSum) * 100) / 100;
+      if (drift !== 0 && lines.length > 0) lines[0].amount = Math.round((lines[0].amount + drift) * 100) / 100;
       lines = lines.filter((l) => l.amount !== 0);
 
       if (lines.length === 0) {
-        lines = [{ description: `שכר לימוד${yearSuffix}`, amount: Math.round(balance) }];
+        lines = [{ description: `שכר לימוד${yearSuffix}`, amount: Math.round(balance * 100) / 100 }];
       }
 
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
