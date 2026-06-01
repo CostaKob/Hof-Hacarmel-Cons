@@ -15,14 +15,11 @@ jobs:
       - name: שליפת הקוד
         uses: actions/checkout@v4
 
-      - name: התקנת Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
+      - name: התקנת bun
+        uses: oven-sh/setup-bun@v2
 
       - name: התקנת תלויות
-        run: npm ci
+        run: bun install
 
       - name: הרצת בדיקות
-        run: npm run test -- --run
+        run: bun run test --run
