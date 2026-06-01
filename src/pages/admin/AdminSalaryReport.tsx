@@ -304,7 +304,7 @@ const AdminSalaryReport = () => {
 
   // --- Save override ---
   const upsertOverride = useMutation({
-    mutationFn: async ({ teacherId, field, value }: { teacherId: string; field: FieldKey; value: number }) => {
+    mutationFn: async ({ teacherId, field, value, teacherName }: { teacherId: string; field: FieldKey; value: number; teacherName: string }) => {
       const existing = (manualEntries ?? []).find((e) => e.teacher_id === teacherId);
       if (existing) {
         const prev = (existing.overrides as Record<string, number>) ?? {};
@@ -318,15 +318,28 @@ const AdminSalaryReport = () => {
           .insert({ teacher_id: teacherId, month_key: monthKey, overrides: { [field]: value } });
         if (error) throw error;
       }
+      return { teacherName, value };
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["salary-manual", monthKey] }),
+    onSuccess: ({ teacherName, value }) => {
+      queryClient.invalidateQueries({ queryKey: ["salary-manual", monthKey] });
+      toast.success(`נשמר: ${teacherName} — ${value}`, { duration: 2000 });
+    },
     onError: (err: any) => toast.error(err.message),
   });
 
   const handleChange = useCallback((teacherId: string, field: FieldKey, raw: string) => {
     const value = parseFloat(raw) || 0;
-    upsertOverride.mutate({ teacherId, field, value });
-  }, [upsertOverride]);
+    const row = rows.find((r) => r.teacherId === teacherId);
+    if (!row) return;
+    // Skip no-op: compare with current stored value (override or default)
+    const currentStored = row.values[field] ?? 0;
+    if (Number(currentStored) === value) return;
+    const teacherName = `${row.firstName} ${row.lastName}`.trim();
+    if (!window.confirm(`לשמור שינוי עבור ${teacherName}?\n${field}: ${currentStored || 0} ← ${value}`)) {
+      return;
+    }
+    upsertOverride.mutate({ teacherId, field, value, teacherName });
+  }, [upsertOverride, rows]);
 
   // --- PDF export ---
   const handleExportPdf = async () => {
