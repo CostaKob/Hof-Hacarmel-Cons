@@ -684,11 +684,15 @@ const AdminStudentPaymentCalc = () => {
             <SummaryRow label="יתרה לתשלום" value={balance} bold large highlight={balance > 0} />
           </div>
           {isFullyPaid && (
-            <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
-              <span className="text-sm font-semibold text-primary">
-                {paymentsAggr.credit > 0 ? "✓ שולם במלואו · קיים זיכוי" : "✓ שולם במלואו"}
-              </span>
-            </div>
+            paymentsAggr.credit > 0 ? (
+              <div className="mt-2 rounded-xl bg-amber-100 border border-amber-300 px-3 py-2 text-center dark:bg-amber-900/30 dark:border-amber-700">
+                <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">✓ שולם במלואו · קיים זיכוי</span>
+              </div>
+            ) : (
+              <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
+                <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
+              </div>
+            )
           )}
 
           {/* Generate iCount link — inside summary so context is clear */}
