@@ -685,7 +685,9 @@ const AdminStudentPaymentCalc = () => {
           </div>
           {isFullyPaid && (
             <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
-              <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
+              <span className="text-sm font-semibold text-primary">
+                {paymentsAggr.credit > 0 ? "✓ שולם במלואו · קיים זיכוי" : "✓ שולם במלואו"}
+              </span>
             </div>
           )}
 
