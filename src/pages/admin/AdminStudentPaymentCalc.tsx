@@ -694,7 +694,7 @@ const AdminStudentPaymentCalc = () => {
           </div>
           {balance < -0.5 ? (
             <div className="mt-2 rounded-xl bg-amber-100 border border-amber-300 px-3 py-2 text-center dark:bg-amber-900/30 dark:border-amber-700">
-              <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">קיים זיכוי · ₪{Math.abs(Math.round(balance)).toLocaleString()}</span>
+              <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">קיים זיכוי · ₪{Math.abs(balance).toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           ) : isFullyPaid ? (
             <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
