@@ -176,6 +176,45 @@ const AdminStudentPaymentCalc = () => {
   }, [lsKey, sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides]);
 
 
+  // Update enrollment end_date directly from the table.
+  // If the new end_date is in the past → also deactivate enrollment, and if
+  // no other active enrollments remain for the student → mark student "הפסיק".
+  const endDateMutation = useMutation({
+    mutationFn: async ({ enrollmentId, endDate }: { enrollmentId: string; endDate: string | null }) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const isPast = !!endDate && endDate < today;
+
+      const { error } = await supabase
+        .from("enrollments")
+        .update({
+          end_date: endDate,
+          ...(isPast ? { is_active: false } : {}),
+        })
+        .eq("id", enrollmentId);
+      if (error) throw error;
+
+      if (isPast && studentId) {
+        // Check if any other active enrollment remains (any year).
+        const { data: remaining } = await supabase
+          .from("enrollments")
+          .select("id, end_date, is_active")
+          .eq("student_id", studentId)
+          .eq("is_active", true);
+        const stillActive = (remaining ?? []).some((r: any) => r.id !== enrollmentId && (!r.end_date || r.end_date >= today));
+        if (!stillActive) {
+          await supabase.from("students").update({ student_status: "הפסיק" } as any).eq("id", studentId);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calc-enrollments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["calc-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      toast.success("תאריך סיום עודכן");
+    },
+    onError: (e: any) => toast.error(`שגיאה בעדכון תאריך סיום: ${e?.message ?? ""}`),
+  });
 
 
   const rows: CalcRow[] = useMemo(() => {
