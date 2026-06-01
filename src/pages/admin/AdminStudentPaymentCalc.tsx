@@ -662,7 +662,7 @@ const AdminStudentPaymentCalc = () => {
           {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
             const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
             const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument) / 100 : 0;
-            return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי הזול)`} value={-amt} />;
+            return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי השני)`} value={-amt} />;
           })()}
           {majorStudent && discountRates.majorStudent > 0 && (
             <SummaryRow
