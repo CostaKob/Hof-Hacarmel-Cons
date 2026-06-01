@@ -559,13 +559,13 @@ const AdminStudentPaymentCalc = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          ₪{r.annualBase.toLocaleString()}
+                          ₪{r.annualBase.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           {r.source === "override" && <span className="text-[10px] text-muted-foreground mr-1">(override)</span>}
                           {r.source === "missing" && <span className="text-[10px] text-destructive mr-1">(חסר מחיר)</span>}
                         </TableCell>
                         
                         <TableCell>{r.lessonsRemaining} / {r.lessonsTotal}</TableCell>
-                        <TableCell className="font-medium">₪{r.prorated.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">₪{r.prorated.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       </TableRow>
                     );
                   })}
