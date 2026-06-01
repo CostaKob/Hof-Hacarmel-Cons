@@ -128,6 +128,10 @@ Deno.serve(async (req: Request) => {
       yearName = yr?.name || "";
     }
 
+    // Determine if this is a credit doc (all rows are non-payment transactions).
+    const isCreditDoc = payments.every((p) => p.transaction_type && p.transaction_type !== "payment");
+    const sign = isCreditDoc ? -1 : 1;
+
     // Build line items.
     // - Combined single-row payment with `enrollment_breakdown`: one item per breakdown entry.
     // - Group of payments (legacy): one item per payment row.
@@ -165,7 +169,8 @@ Deno.serve(async (req: Request) => {
 
     const buildItemDescription = (ref: LineRef) => {
       const e = ref.enrollment_id ? enrollMap[ref.enrollment_id] : null;
-      const headerLine = `שכר לימוד — ${studentFullName}${ref.month_reference ? ` (${ref.month_reference})` : ""}`;
+      const prefix = isCreditDoc ? "זיכוי" : "שכר לימוד";
+      const headerLine = `${prefix} — ${studentFullName}${ref.month_reference ? ` (${ref.month_reference})` : ""}`;
       if (!e) return headerLine;
       const parts = [
         (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
@@ -179,11 +184,11 @@ Deno.serve(async (req: Request) => {
 
     const items = lineRefs.map((ref) => ({
       description: buildItemDescription(ref),
-      unitprice_incvat: ref.amount,
+      unitprice_incvat: sign * Math.abs(ref.amount),
       quantity: 1,
     }));
 
-    // iCount doc/create payload — RECEIPT (קבלה) only.
+    // iCount doc/create payload — RECEIPT (קבלה) only. For credits — קבלה במינוס.
     // Malkar (Non-Profit) cannot issue Tax Invoices. No VAT calculation.
     const payload: any = {
       ...auth,
@@ -203,17 +208,18 @@ Deno.serve(async (req: Request) => {
       items,
     };
 
-    // Payment line(s) — total amount across all rows
+    // Payment line(s) — total amount across all rows (signed for credits).
+    const signedTotal = sign * Math.abs(totalAmount);
     if (pm.type === 1) {
-      payload.cash = { sum: totalAmount };
+      payload.cash = { sum: signedTotal };
     } else if (pm.type === 3) {
-      payload.cheques = [{ sum: totalAmount, bank: "", branch: "", account: "", num: head.reference_number || "" }];
+      payload.cheques = [{ sum: signedTotal, bank: "", branch: "", account: "", num: head.reference_number || "" }];
     } else if (pm.type === 4) {
-      payload.banktransfer = { sum: totalAmount, account: head.reference_number || "" };
+      payload.banktransfer = { sum: signedTotal, account: head.reference_number || "" };
     } else if (pm.type === 5) {
-      payload.cc = { sum: totalAmount, num: head.reference_number || "", payments_count: head.installments || 1 };
+      payload.cc = { sum: signedTotal, num: head.reference_number || "", payments_count: head.installments || 1 };
     } else {
-      payload.other = { sum: totalAmount, info: pm.label };
+      payload.other = { sum: signedTotal, info: pm.label };
     }
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {

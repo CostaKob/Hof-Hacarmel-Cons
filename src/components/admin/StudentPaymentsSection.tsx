@@ -122,18 +122,17 @@ const StudentPaymentsSection = ({
   const hasCalculatedBalance = typeof balanceDue === "number" && Number.isFinite(balanceDue);
   const calculatedTotal = typeof totalDue === "number" && Number.isFinite(totalDue) ? totalDue : null;
   const roundedBalance = hasCalculatedBalance ? Math.round(balanceDue) : 0;
-  const hasCredit = payments.some((p: any) => p.transaction_type !== "payment" || Number(p.amount || 0) < 0);
   const overallStatus = !hasCalculatedBalance
     ? null
     : calculatedTotal !== null && calculatedTotal <= 0
       ? { label: "לא נקבע חיוב", className: "bg-muted text-muted-foreground border-border" }
-      : roundedBalance <= 0
-        ? hasCredit
-          ? { label: "שולם במלואו · קיים זיכוי", className: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700" }
-          : { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
-        : totalPaid > 0.5
-          ? { label: `שולם חלקית · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
-          : { label: `ממתין לתשלום · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+      : roundedBalance < 0
+        ? { label: `קיים זיכוי · ₪${Math.abs(roundedBalance).toLocaleString()}`, className: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700" }
+        : roundedBalance === 0
+          ? { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
+          : totalPaid > 0.5
+            ? { label: `שולם חלקית · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
+            : { label: `ממתין לתשלום · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" };
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
@@ -250,6 +249,18 @@ const StudentPaymentsSection = ({
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלת זיכוי"
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
+                    </Button>
+                  )}
+                  {!readOnly && isCredit && !hasDoc && (
+                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
+                      title="הפק קבלת זיכוי (קבלה במינוס) ב-iCount"
+                      disabled={createInvoiceMutation.isPending}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPendingInvoiceParams({ paymentId: p.id });
+                      }}>
+                      <FileDown className="h-3.5 w-3.5" />
+                      {createInvoiceMutation.isPending ? "..." : "הפק קבלת זיכוי"}
                     </Button>
                   )}
                   {!readOnly && canRefund && (

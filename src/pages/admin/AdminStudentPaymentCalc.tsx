@@ -683,17 +683,15 @@ const AdminStudentPaymentCalc = () => {
           <div className="border-t border-primary/20 pt-2">
             <SummaryRow label="יתרה לתשלום" value={balance} bold large highlight={balance > 0} />
           </div>
-          {isFullyPaid && (
-            paymentsAggr.credit > 0 ? (
-              <div className="mt-2 rounded-xl bg-amber-100 border border-amber-300 px-3 py-2 text-center dark:bg-amber-900/30 dark:border-amber-700">
-                <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">✓ שולם במלואו · קיים זיכוי</span>
-              </div>
-            ) : (
-              <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
-                <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
-              </div>
-            )
-          )}
+          {balance < -0.5 ? (
+            <div className="mt-2 rounded-xl bg-amber-100 border border-amber-300 px-3 py-2 text-center dark:bg-amber-900/30 dark:border-amber-700">
+              <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">קיים זיכוי · ₪{Math.abs(Math.round(balance)).toLocaleString()}</span>
+            </div>
+          ) : isFullyPaid ? (
+            <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
+              <span className="text-sm font-semibold text-primary">✓ שולם במלואו</span>
+            </div>
+          ) : null}
 
           {/* Generate iCount link — inside summary so context is clear */}
           <div className="pt-3 border-t border-primary/20 flex justify-end">
