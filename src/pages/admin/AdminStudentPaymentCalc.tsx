@@ -656,24 +656,24 @@ const AdminStudentPaymentCalc = () => {
           {sibling && discountRates.sibling > 0 && (
             <SummaryRow
               label={`הנחת אחים (${discountRates.sibling}%)`}
-              value={-rows.reduce((s, r) => s + Math.round(r.prorated * discountRates.sibling / 100), 0)}
+              value={-(Math.round(proratedTotal * discountRates.sibling) / 100)}
             />
           )}
           {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
             const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
-            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument / 100) : 0;
+            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument) / 100 : 0;
             return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי הזול)`} value={-amt} />;
           })()}
           {majorStudent && discountRates.majorStudent > 0 && (
             <SummaryRow
               label={`הנחת מגמה (${discountRates.majorStudent}%)`}
-              value={-rows.reduce((s, r) => s + Math.round(r.prorated * discountRates.majorStudent / 100), 0)}
+              value={-(Math.round(proratedTotal * discountRates.majorStudent) / 100)}
             />
           )}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
             if (!v) return null;
-            const amount = c.mode === "pct" ? Math.round(afterStdDiscount * v / 100) : v;
+            const amount = c.mode === "pct" ? Math.round(afterStdDiscount * v) / 100 : Math.round(v * 100) / 100;
             const name = c.label?.trim() || "הנחה מותאמת";
             const suffix = c.mode === "pct" ? ` (${v}%)` : "";
             return <SummaryRow key={i} label={`${name}${suffix}`} value={-amount} />;
