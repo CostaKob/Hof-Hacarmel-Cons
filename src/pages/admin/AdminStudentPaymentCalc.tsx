@@ -14,7 +14,7 @@ import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 
 const AdminStudentPaymentCalc = () => {
@@ -176,6 +176,45 @@ const AdminStudentPaymentCalc = () => {
   }, [lsKey, sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides]);
 
 
+  // Update enrollment end_date directly from the table.
+  // If the new end_date is in the past → also deactivate enrollment, and if
+  // no other active enrollments remain for the student → mark student "הפסיק".
+  const endDateMutation = useMutation({
+    mutationFn: async ({ enrollmentId, endDate }: { enrollmentId: string; endDate: string | null }) => {
+      const today = new Date().toISOString().slice(0, 10);
+      const isPast = !!endDate && endDate < today;
+
+      const { error } = await supabase
+        .from("enrollments")
+        .update({
+          end_date: endDate,
+          ...(isPast ? { is_active: false } : {}),
+        })
+        .eq("id", enrollmentId);
+      if (error) throw error;
+
+      if (isPast && studentId) {
+        // Check if any other active enrollment remains (any year).
+        const { data: remaining } = await supabase
+          .from("enrollments")
+          .select("id, end_date, is_active")
+          .eq("student_id", studentId)
+          .eq("is_active", true);
+        const stillActive = (remaining ?? []).some((r: any) => r.id !== enrollmentId && (!r.end_date || r.end_date >= today));
+        if (!stillActive) {
+          await supabase.from("students").update({ student_status: "הפסיק" } as any).eq("id", studentId);
+        }
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calc-enrollments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["calc-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      toast.success("תאריך סיום עודכן");
+    },
+    onError: (e: any) => toast.error(`שגיאה בעדכון תאריך סיום: ${e?.message ?? ""}`),
+  });
 
 
   const rows: CalcRow[] = useMemo(() => {
@@ -480,6 +519,7 @@ const AdminStudentPaymentCalc = () => {
                     <TableHead className="text-right">סניף</TableHead>
                     <TableHead className="text-right">משך</TableHead>
                     <TableHead className="text-right">תאריך התחלה</TableHead>
+                    <TableHead className="text-right">תאריך סיום</TableHead>
                     <TableHead className="text-right">בסיס שנתי</TableHead>
                     
                     <TableHead className="text-right">שיעורים נותרים</TableHead>
@@ -500,6 +540,20 @@ const AdminStudentPaymentCalc = () => {
                             type="date"
                             value={startDateOverrides[r.enrollmentId] ?? e?.start_date ?? ""}
                             onChange={(ev) => setStartDateOverrides({ ...startDateOverrides, [r.enrollmentId]: ev.target.value })}
+                            className="h-9 rounded-lg w-36"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="date"
+                            value={e?.end_date ?? yearFull?.end_date ?? ""}
+                            min={e?.start_date ?? undefined}
+                            max={yearFull?.end_date ?? undefined}
+                            disabled={endDateMutation.isPending}
+                            onChange={(ev) => {
+                              const v = ev.target.value || null;
+                              endDateMutation.mutate({ enrollmentId: r.enrollmentId, endDate: v });
+                            }}
                             className="h-9 rounded-lg w-36"
                           />
                         </TableCell>
