@@ -14,7 +14,7 @@ import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 
 const AdminStudentPaymentCalc = () => {
