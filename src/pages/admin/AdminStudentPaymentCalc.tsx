@@ -544,6 +544,20 @@ const AdminStudentPaymentCalc = () => {
                           />
                         </TableCell>
                         <TableCell>
+                          <Input
+                            type="date"
+                            value={e?.end_date ?? yearFull?.end_date ?? ""}
+                            min={e?.start_date ?? undefined}
+                            max={yearFull?.end_date ?? undefined}
+                            disabled={endDateMutation.isPending}
+                            onChange={(ev) => {
+                              const v = ev.target.value || null;
+                              endDateMutation.mutate({ enrollmentId: r.enrollmentId, endDate: v });
+                            }}
+                            className="h-9 rounded-lg w-36"
+                          />
+                        </TableCell>
+                        <TableCell>
                           ₪{r.annualBase.toLocaleString()}
                           {r.source === "override" && <span className="text-[10px] text-muted-foreground mr-1">(override)</span>}
                           {r.source === "missing" && <span className="text-[10px] text-destructive mr-1">(חסר מחיר)</span>}
