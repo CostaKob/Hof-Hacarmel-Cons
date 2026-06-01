@@ -655,9 +655,11 @@ const AdminStudentPaymentCalc = () => {
           {sibling && discountRates.sibling > 0 && (
             <SummaryRow label={`הנחת אחים (${discountRates.sibling}%)`} value={-Math.round(proratedTotal * discountRates.sibling / 100)} />
           )}
-          {secondInstrument && discountRates.secondInstrument > 0 && (
-            <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}%)`} value={-Math.round(proratedTotal * discountRates.secondInstrument / 100)} />
-          )}
+          {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
+            const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
+            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument / 100) : 0;
+            return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי הזול)`} value={-amt} />;
+          })()}
           {majorStudent && discountRates.majorStudent > 0 && (
             <SummaryRow label={`הנחת מגמה (${discountRates.majorStudent}%)`} value={-Math.round(proratedTotal * discountRates.majorStudent / 100)} />
           )}
