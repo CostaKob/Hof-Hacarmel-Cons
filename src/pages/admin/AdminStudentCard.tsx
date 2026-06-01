@@ -302,15 +302,6 @@ const AdminStudentCard = () => {
                     >
                       {e.is_active ? "פעיל" : "הפסיק"}
                     </button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="rounded-xl text-destructive hover:bg-destructive/10"
-                      title="סיום לימודים — חישוב זיכוי"
-                      onClick={() => setEndingEnrollment(e)}
-                    >
-                      <CalendarX2 className="h-3.5 w-3.5" />
-                    </Button>
                     <Button variant="ghost" size="sm" className="rounded-xl" onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
