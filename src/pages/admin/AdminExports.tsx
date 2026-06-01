@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -123,10 +123,12 @@ const AdminExports = () => {
   };
 
   const exportYearly = async () => {
-    const { data: enrollments } = await supabase
+    const { data: enrollments, error: enrErr } = await supabase
       .from("enrollments")
       .select("id, is_active, lesson_duration_minutes, students(first_name, last_name), teachers(first_name, last_name), instruments(name), schools(name)");
-    const { data: lines } = await supabase.from("report_lines").select("enrollment_id, status");
+    if (enrErr) throw enrErr;
+    const { data: lines, error: linesErr } = await supabase.from("report_lines").select("enrollment_id, status");
+    if (linesErr) throw linesErr;
 
     const countsMap = new Map<string, Record<string, number>>();
     for (const l of lines ?? []) {
