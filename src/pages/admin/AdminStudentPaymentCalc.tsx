@@ -266,7 +266,7 @@ const AdminStudentPaymentCalc = () => {
     const pct =
       globalDiscountPct +
       (r.enrollmentId === secondInstrumentEnrollmentId ? discountRates.secondInstrument : 0);
-    return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100)) };
+    return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
   });
 
   const afterStdDiscount = rowsAfterStd.reduce((s, r) => s + r.afterStd, 0);
@@ -281,14 +281,14 @@ const AdminStudentPaymentCalc = () => {
   }, 0);
 
   // Malkar (Non-Profit) — no VAT charged. Kept fields zeroed for backward compatibility.
-  const totalIncVat = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
-  const totalDiscountAmount = proratedTotal - totalIncVat;
+  const totalIncVat = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
+  const totalDiscountAmount = Math.round((proratedTotal - totalIncVat) * 100) / 100;
   const vatRate = 0;
   const beforeVat = totalIncVat;
   const vatAmount = 0;
 
   const effectivePaid = paymentsAggr?.net ?? 0;
-  const balance = totalIncVat - effectivePaid;
+  const balance = Math.round((totalIncVat - effectivePaid) * 100) / 100;
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
   const [generatingLink, setGeneratingLink] = useState(false);
@@ -326,13 +326,13 @@ const AdminStudentPaymentCalc = () => {
       rowsAfterStd.forEach((r, i) => {
         lines.push({
           description: `שכר לימוד שנתי${yearSuffix} - ${enrollmentLabels[i]}`,
-          amount: Math.round(r.annualBase),
+          amount: Math.round(r.annualBase * 100) / 100,
         });
         const prorationDeduction = r.annualBase - r.prorated;
         if (prorationDeduction > 0) {
           lines.push({
             description: `קיזוז שיעורים שעברו${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
-            amount: -Math.round(prorationDeduction),
+            amount: -(Math.round(prorationDeduction * 100) / 100),
           });
         }
       });
@@ -340,7 +340,7 @@ const AdminStudentPaymentCalc = () => {
       if (sibling && discountRates.sibling > 0) {
         lines.push({
           description: `הנחת אחים${yearSuffix} (${discountRates.sibling}%)`,
-          amount: -Math.round(proratedTotal * discountRates.sibling / 100),
+          amount: -(Math.round(proratedTotal * discountRates.sibling) / 100),
         });
       }
       if (secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId) {
@@ -348,32 +348,33 @@ const AdminStudentPaymentCalc = () => {
         if (secondRow) {
           lines.push({
             description: `הנחת כלי שני${yearSuffix} (${discountRates.secondInstrument}%)`,
-            amount: -Math.round(secondRow.prorated * discountRates.secondInstrument / 100),
+            amount: -(Math.round(secondRow.prorated * discountRates.secondInstrument) / 100),
           });
         }
       }
       if (majorStudent && discountRates.majorStudent > 0) {
         lines.push({
           description: `הנחת תלמיד מגמה${yearSuffix} (${discountRates.majorStudent}%)`,
-          amount: -Math.round(proratedTotal * discountRates.majorStudent / 100),
+          amount: -(Math.round(proratedTotal * discountRates.majorStudent) / 100),
         });
       }
       customDiscounts.forEach((c) => {
         const v = Number(c.value) || 0;
         if (!v) return;
-        const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v / 100) : v;
+        const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v) / 100 : Math.round(v * 100) / 100;
         const name = c.label?.trim() || "הנחה מותאמת";
         const suffix = c.mode === "pct" ? ` (${v}%)` : "";
         lines.push({ description: `${name}${yearSuffix}${suffix}`, amount: -amt });
       });
 
       // Fix rounding drift so the lines sum to the exact balance
-      const drift = Math.round(balance) - lines.reduce((s, l) => s + l.amount, 0);
-      if (drift !== 0 && lines.length > 0) lines[0].amount += drift;
+      const linesSum = Math.round(lines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
+      const drift = Math.round((balance - linesSum) * 100) / 100;
+      if (drift !== 0 && lines.length > 0) lines[0].amount = Math.round((lines[0].amount + drift) * 100) / 100;
       lines = lines.filter((l) => l.amount !== 0);
 
       if (lines.length === 0) {
-        lines = [{ description: `שכר לימוד${yearSuffix}`, amount: Math.round(balance) }];
+        lines = [{ description: `שכר לימוד${yearSuffix}`, amount: Math.round(balance * 100) / 100 }];
       }
 
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
@@ -558,13 +559,13 @@ const AdminStudentPaymentCalc = () => {
                           />
                         </TableCell>
                         <TableCell>
-                          ₪{r.annualBase.toLocaleString()}
+                          ₪{r.annualBase.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           {r.source === "override" && <span className="text-[10px] text-muted-foreground mr-1">(override)</span>}
                           {r.source === "missing" && <span className="text-[10px] text-destructive mr-1">(חסר מחיר)</span>}
                         </TableCell>
                         
                         <TableCell>{r.lessonsRemaining} / {r.lessonsTotal}</TableCell>
-                        <TableCell className="font-medium">₪{r.prorated.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">₪{r.prorated.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -655,24 +656,24 @@ const AdminStudentPaymentCalc = () => {
           {sibling && discountRates.sibling > 0 && (
             <SummaryRow
               label={`הנחת אחים (${discountRates.sibling}%)`}
-              value={-rows.reduce((s, r) => s + Math.round(r.prorated * discountRates.sibling / 100), 0)}
+              value={-(Math.round(proratedTotal * discountRates.sibling) / 100)}
             />
           )}
           {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
             const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
-            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument / 100) : 0;
+            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument) / 100 : 0;
             return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי הזול)`} value={-amt} />;
           })()}
           {majorStudent && discountRates.majorStudent > 0 && (
             <SummaryRow
               label={`הנחת מגמה (${discountRates.majorStudent}%)`}
-              value={-rows.reduce((s, r) => s + Math.round(r.prorated * discountRates.majorStudent / 100), 0)}
+              value={-(Math.round(proratedTotal * discountRates.majorStudent) / 100)}
             />
           )}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
             if (!v) return null;
-            const amount = c.mode === "pct" ? Math.round(afterStdDiscount * v / 100) : v;
+            const amount = c.mode === "pct" ? Math.round(afterStdDiscount * v) / 100 : Math.round(v * 100) / 100;
             const name = c.label?.trim() || "הנחה מותאמת";
             const suffix = c.mode === "pct" ? ` (${v}%)` : "";
             return <SummaryRow key={i} label={`${name}${suffix}`} value={-amount} />;
@@ -693,7 +694,7 @@ const AdminStudentPaymentCalc = () => {
           </div>
           {balance < -0.5 ? (
             <div className="mt-2 rounded-xl bg-amber-100 border border-amber-300 px-3 py-2 text-center dark:bg-amber-900/30 dark:border-amber-700">
-              <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">קיים זיכוי · ₪{Math.abs(Math.round(balance)).toLocaleString()}</span>
+              <span className="text-sm font-semibold text-amber-800 dark:text-amber-200">קיים זיכוי · ₪{Math.abs(balance).toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           ) : isFullyPaid ? (
             <div className="mt-2 rounded-xl bg-primary/15 border border-primary/40 px-3 py-2 text-center">
@@ -735,7 +736,7 @@ const SummaryRow = ({ label, value, bold, large, highlight }: { label: string; v
   <div className="flex items-center justify-between">
     <span className={`${bold ? "font-semibold" : ""} ${large ? "text-base" : "text-sm"} text-foreground`}>{label}</span>
     <span className={`${bold ? "font-bold" : ""} ${large ? "text-lg" : "text-sm"} ${highlight ? "text-primary" : "text-foreground"}`}>
-      ₪{value.toLocaleString()}
+      ₪{value.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </span>
   </div>
 );

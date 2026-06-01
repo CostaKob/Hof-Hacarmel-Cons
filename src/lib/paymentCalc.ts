@@ -84,7 +84,7 @@ export const calcEnrollment = (
     LESSONS_PER_YEAR,
     Math.max(0, Math.round((remainingDays / totalDays) * LESSONS_PER_YEAR))
   );
-  const prorated = Math.round(pricePerLesson * lessonsRemaining);
+  const prorated = Math.round(pricePerLesson * lessonsRemaining * 100) / 100;
 
   return {
     enrollmentId: enrollment.id,
