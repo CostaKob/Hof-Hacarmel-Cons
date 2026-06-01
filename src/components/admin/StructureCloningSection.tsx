@@ -51,6 +51,9 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
     enabled: !!activeYear?.id,
   });
 
+  const schoolsAlreadyCloned = (nextYearCounts?.schools ?? 0) > 0;
+  const ensemblesAlreadyCloned = (nextYearCounts?.ensembles ?? 0) > 0;
+
   // Clone School Music mutation
   const cloneSchoolMusicMutation = useMutation({
     mutationFn: async () => {
@@ -83,7 +86,7 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
             vice_principal_phone: school.vice_principal_phone,
             notes: school.notes,
             classes_count: school.classes_count,
-            day_of_week: null, // reset schedule
+            day_of_week: null,
             class_schedules: [],
             homeroom_teachers: [],
           })
@@ -112,7 +115,7 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
           .insert({
             school_music_school_id: newSchoolId,
             class_name: cls.class_name,
-            day_of_week: null, // reset schedule
+            day_of_week: null,
             start_time: null,
             end_time: null,
             homeroom_teacher_name: null,
@@ -146,7 +149,7 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
         }
       }
 
-      // 6. Clone school_music_groups (school-level groups)
+      // 6. Clone school_music_groups
       const { data: sourceSmGroups, error: smgErr } = await supabase
         .from("school_music_groups")
         .select("*")
@@ -179,7 +182,6 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
     mutationFn: async () => {
       if (!activeYear || !nextYear) throw new Error("חסרה שנת מקור או יעד");
 
-      // 1. Fetch source ensembles
       const { data: sourceEnsembles, error: ensErr } = await supabase
         .from("ensembles")
         .select("*")
@@ -187,8 +189,7 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
       if (ensErr) throw ensErr;
       if (!sourceEnsembles?.length) throw new Error("אין הרכבים בשנה הנוכחית");
 
-      // 2. Create new ensembles
-      const ensembleIdMap = new Map<string, string>(); // old → new
+      const ensembleIdMap = new Map<string, string>();
       for (const ens of sourceEnsembles) {
         const { data: newEns, error } = await supabase
           .from("ensembles")
@@ -210,7 +211,6 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
         ensembleIdMap.set(ens.id, newEns.id);
       }
 
-      // 3. Fetch source staff and recreate
       const oldEnsembleIds = Array.from(ensembleIdMap.keys());
       const { data: sourceStaff, error: staffErr } = await supabase
         .from("ensemble_staff")
@@ -254,16 +254,16 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
 
       {/* Status badges */}
       <div className="flex flex-wrap gap-2">
-        {nextYearCounts && nextYearCounts.schools > 0 && (
+        {schoolsAlreadyCloned && (
           <Badge variant="outline" className="gap-1.5 text-green-700 border-green-300 dark:text-green-400 dark:border-green-700">
             <CheckCircle2 className="h-3 w-3" />
-            {nextYearCounts.schools} בתי ספר מנגנים ב-{nextYear.name}
+            {nextYearCounts!.schools} בתי ספר מנגנים ב-{nextYear.name}
           </Badge>
         )}
-        {nextYearCounts && nextYearCounts.ensembles > 0 && (
+        {ensemblesAlreadyCloned && (
           <Badge variant="outline" className="gap-1.5 text-green-700 border-green-300 dark:text-green-400 dark:border-green-700">
             <CheckCircle2 className="h-3 w-3" />
-            {nextYearCounts.ensembles} הרכבים ב-{nextYear.name}
+            {nextYearCounts!.ensembles} הרכבים ב-{nextYear.name}
           </Badge>
         )}
       </div>
@@ -278,45 +278,50 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
           <p className="text-xs text-muted-foreground">
             {sourceCounts?.schools ?? 0} בתי ספר ב-{activeYear.name}
           </p>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full rounded-xl gap-2"
-                disabled={isCloning || !sourceCounts?.schools}
-              >
-                {cloneSchoolMusicMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-                שכפל מבנה
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>שכפול מבנה בית ספר מנגן</AlertDialogTitle>
-                <AlertDialogDescription>
-                  פעולה זו תיצור מבנה חדש ל-{nextYear.name} על בסיס {activeYear.name}:
-                  <br />• {sourceCounts?.schools ?? 0} בתי ספר עם כיתות וקבוצות
-                  <br />• לוחות זמנים ומחנכות יאופסו
-                  <br />• תלמידים לא יועתקו
-                  {nextYearCounts && nextYearCounts.schools > 0 && (
-                    <>
-                      <br /><br />
-                      <strong className="text-destructive">שים לב: כבר קיימים {nextYearCounts.schools} בתי ספר ב-{nextYear.name}. השכפול יוסיף עליהם.</strong>
-                    </>
+
+          {schoolsAlreadyCloned ? (
+            <div className="rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 text-center space-y-1">
+              <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">כבר שוכפל</p>
+              <p className="text-xs text-green-600 dark:text-green-500">
+                {nextYearCounts!.schools} בתי ספר קיימים ב-{nextYear.name}
+              </p>
+            </div>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl gap-2"
+                  disabled={isCloning || !sourceCounts?.schools}
+                >
+                  {cloneSchoolMusicMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
                   )}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>ביטול</AlertDialogCancel>
-                <AlertDialogAction onClick={() => cloneSchoolMusicMutation.mutate()}>
-                  שכפל
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                  שכפל מבנה
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>שכפול מבנה בית ספר מנגן</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    פעולה זו תיצור מבנה חדש ל-{nextYear.name} על בסיס {activeYear.name}:
+                    <br />• {sourceCounts?.schools ?? 0} בתי ספר עם כיתות וקבוצות
+                    <br />• לוחות זמנים ומחנכות יאופסו
+                    <br />• תלמידים לא יועתקו
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => cloneSchoolMusicMutation.mutate()}>
+                    שכפל
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
 
         {/* Ensembles Clone */}
@@ -328,44 +333,49 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
           <p className="text-xs text-muted-foreground">
             {sourceCounts?.ensembles ?? 0} הרכבים ב-{activeYear.name}
           </p>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full rounded-xl gap-2"
-                disabled={isCloning || !sourceCounts?.ensembles}
-              >
-                {cloneEnsemblesMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Copy className="h-4 w-4" />
-                )}
-                שכפל מבנה
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>שכפול מבנה הרכבים</AlertDialogTitle>
-                <AlertDialogDescription>
-                  פעולה זו תיצור מבנה חדש ל-{nextYear.name} על בסיס {activeYear.name}:
-                  <br />• {sourceCounts?.ensembles ?? 0} הרכבים עם צוות מורים
-                  <br />• תלמידים לא יועתקו
-                  {nextYearCounts && nextYearCounts.ensembles > 0 && (
-                    <>
-                      <br /><br />
-                      <strong className="text-destructive">שים לב: כבר קיימים {nextYearCounts.ensembles} הרכבים ב-{nextYear.name}. השכפול יוסיף עליהם.</strong>
-                    </>
+
+          {ensemblesAlreadyCloned ? (
+            <div className="rounded-xl bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 p-3 text-center space-y-1">
+              <CheckCircle2 className="h-5 w-5 text-green-600 mx-auto" />
+              <p className="text-sm font-medium text-green-700 dark:text-green-400">כבר שוכפל</p>
+              <p className="text-xs text-green-600 dark:text-green-500">
+                {nextYearCounts!.ensembles} הרכבים קיימים ב-{nextYear.name}
+              </p>
+            </div>
+          ) : (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full rounded-xl gap-2"
+                  disabled={isCloning || !sourceCounts?.ensembles}
+                >
+                  {cloneEnsemblesMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
                   )}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>ביטול</AlertDialogCancel>
-                <AlertDialogAction onClick={() => cloneEnsemblesMutation.mutate()}>
-                  שכפל
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+                  שכפל מבנה
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>שכפול מבנה הרכבים</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    פעולה זו תיצור מבנה חדש ל-{nextYear.name} על בסיס {activeYear.name}:
+                    <br />• {sourceCounts?.ensembles ?? 0} הרכבים עם צוות מורים
+                    <br />• תלמידים לא יועתקו
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => cloneEnsemblesMutation.mutate()}>
+                    שכפל
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
         </div>
       </div>
     </div>
