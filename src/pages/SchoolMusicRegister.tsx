@@ -16,11 +16,7 @@ import { cn } from "@/lib/utils";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import AppLogo from "@/components/AppLogo";
 import { CitySelect } from "@/components/CitySelect";
-
-/* ── helpers ── */
-
-const isExactDigits = (val: string, count: number) => new RegExp(`^\\d{${count}}$`).test(val.replace(/[^\d]/g, ""));
-const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val.trim());
+import { isExactDigits, isValidEmail } from "@/lib/schoolMusicValidation";
 
 /* ── Field wrapper ── */
 
@@ -95,9 +91,6 @@ const SchoolMusicRegister = () => {
   const [payStatus, setPayStatus] = useState<"preparing" | "redirecting" | "manual">("preparing");
   const [countdown, setCountdown] = useState(10);
 
-  // Resolve slug to school id (if a slug was provided in URL)
-  // If a yearId is in the URL, prefer the school matching that year.
-  // Otherwise: prefer active year > registration_open > newest start_date.
   const { data: slugResolved } = useQuery({
     queryKey: ["school-music-school-by-slug", slugCandidate, urlYearId],
     enabled: !!slugCandidate,
@@ -146,14 +139,12 @@ const SchoolMusicRegister = () => {
     inventory_instrument_id: "",
   });
 
-  // Sync school_music_school_id with URL-derived id (handles slug → id resolution after fetch)
   useEffect(() => {
     if (urlSchoolId && !form.school_music_school_id) {
       setForm((f) => ({ ...f, school_music_school_id: urlSchoolId }));
     }
   }, [urlSchoolId]);
 
-  // refs for scroll-to-error
   const fieldRefs: Record<string, React.RefObject<HTMLDivElement>> = {
     school_music_school_id: useRef<HTMLDivElement>(null!),
     school_music_class_id: useRef<HTMLDivElement>(null!),
@@ -169,9 +160,6 @@ const SchoolMusicRegister = () => {
     approval: useRef<HTMLDivElement>(null!),
   };
 
-  /* ── queries ── */
-
-  // Resolve academic year: from selected school > URL param > active year (with registration_open)
   const { data: resolvedYear, isLoading: yearLoading } = useQuery({
     queryKey: ["school-music-year", urlYearParam, urlYearId, urlSchoolId],
     queryFn: async () => {
@@ -221,7 +209,6 @@ const SchoolMusicRegister = () => {
     },
   });
 
-
   const { data: schools = [] } = useQuery({
     queryKey: ["school-music-schools-public", resolvedYear?.id],
     enabled: !!resolvedYear?.id,
@@ -251,7 +238,6 @@ const SchoolMusicRegister = () => {
       const { data, error } = await supabase
         .rpc("list_public_class_groups" as any, { _class_id: form.school_music_class_id });
       if (error) throw error;
-      // Normalize to the shape the rest of the component expects.
       return (data ?? []).map((g: any) => ({
         id: g.id,
         instrument_id: g.instrument_id,
@@ -262,7 +248,6 @@ const SchoolMusicRegister = () => {
     },
   });
 
-  // Available inventory instruments matching the chosen instrument type
   const { data: availableInventory = [] } = useQuery({
     queryKey: ["school-music-available-inventory", form.instrument_id],
     enabled: !!form.instrument_id,
@@ -274,7 +259,6 @@ const SchoolMusicRegister = () => {
     },
   });
 
-  // Derive unique instruments from groups in selected class
   const instruments = (() => {
     const seen = new Set<string>();
     return classGroups
@@ -282,7 +266,6 @@ const SchoolMusicRegister = () => {
       .filter((i: any) => i && !seen.has(i.id) && seen.add(i.id))
       .sort((a: any, b: any) => a.name.localeCompare(b.name));
   })();
-
 
   const validateField = useCallback((key: string, value: string): string | null => {
     switch (key) {
@@ -311,8 +294,6 @@ const SchoolMusicRegister = () => {
     }
   }, []);
 
-  /* ── blur handler ── */
-
   const handleBlur = useCallback((key: string) => {
     const value = (form as any)[key] ?? "";
     const err = validateField(key, value);
@@ -322,8 +303,6 @@ const SchoolMusicRegister = () => {
       return next;
     });
   }, [form, validateField]);
-
-  /* ── cascading field update ── */
 
   const updateField = useCallback((key: string, value: string) => {
     setForm((prev) => {
@@ -342,14 +321,11 @@ const SchoolMusicRegister = () => {
       }
       return next;
     });
-    // Clear error on change if value now valid
     if (errors[key]) {
       const err = validateField(key, value);
       if (!err) setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
     }
   }, [errors, validateField]);
-
-  /* ── validation ── */
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
@@ -375,13 +351,10 @@ const SchoolMusicRegister = () => {
     return Object.keys(e).length === 0;
   };
 
-  /* ── submit ── */
-
   const handleSubmit = async () => {
     if (!validate()) return;
     setSubmitting(true);
     try {
-      // Find the matching group for selected class + instrument
       const matchingGroup = classGroups.find(
         (g: any) => g.instrument_id === form.instrument_id
       );
@@ -389,7 +362,6 @@ const SchoolMusicRegister = () => {
       const phone = form.parent_phone.replace(/[^\d]/g, "");
       const studentNid = form.student_national_id.replace(/[^\d]/g, "");
 
-      // Block duplicate national_id within the same academic year
       if (studentNid && resolvedYear?.id) {
         const { data: dup } = await supabase
           .from("school_music_students")
@@ -429,7 +401,6 @@ const SchoolMusicRegister = () => {
       });
       if (error) throw error;
 
-
       const result = (data as any) || {};
       const selectedInventory = availableInventory.find((i: any) => i.id === form.inventory_instrument_id);
       const instrumentName = instruments.find((i: any) => i.id === form.instrument_id)?.name || "";
@@ -452,7 +423,6 @@ const SchoolMusicRegister = () => {
           : undefined,
       });
       setSubmitted(true);
-      // Kick off async paylink generation; success state's effect handles the redirect.
       void generatePayLink(result.student_id, result.payment_id);
     } catch (err) {
       console.error(err);
@@ -474,7 +444,6 @@ const SchoolMusicRegister = () => {
       if (!url) throw new Error("לא התקבל קישור תשלום");
       setPayUrl(url);
       setPayStatus("redirecting");
-      // Attempt auto-redirect; fallback button starts a 10s countdown.
       setTimeout(() => { window.location.href = url; }, 600);
     } catch (e: any) {
       console.error(e);
@@ -483,7 +452,6 @@ const SchoolMusicRegister = () => {
     }
   };
 
-  // 10s countdown for the manual-fallback button, once a URL has been generated.
   useEffect(() => {
     if (!submitted || !payUrl) return;
     setCountdown(10);
@@ -495,8 +463,6 @@ const SchoolMusicRegister = () => {
     }, 1000);
     return () => clearInterval(t);
   }, [submitted, payUrl]);
-
-  /* ── success state ── */
 
   if (submitted && submissionResult) {
     const r = submissionResult;
@@ -587,9 +553,6 @@ const SchoolMusicRegister = () => {
     );
   }
 
-
-  /* ── year closed / loading guard ── */
-
   if (yearLoading) {
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -626,25 +589,20 @@ const SchoolMusicRegister = () => {
     );
   }
 
-  /* ── form ── */
-
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
-        {/* Header */}
         <div className="text-center space-y-3">
           {logoUrl && <div className="flex justify-center"><AppLogo size="lg" /></div>}
           <h1 className="text-xl font-bold">טופס השאלת כלי נגינה — {resolvedYear.name}</h1>
         </div>
 
-        {/* Info text */}
         <Card>
           <CardContent className="pt-6">
             <div className="whitespace-pre-line text-sm leading-relaxed">{INFO_TEXT}</div>
           </CardContent>
         </Card>
 
-        {/* Approval */}
         <Card>
           <CardContent className="pt-6">
             <div ref={fieldRefs.approval} className="flex items-start gap-3">
@@ -664,13 +622,11 @@ const SchoolMusicRegister = () => {
           </CardContent>
         </Card>
 
-        {/* Form fields */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">פרטי הרישום</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* School */}
             <Field id="school" label="בית ספר" required error={errors.school_music_school_id} fieldRef={fieldRefs.school_music_school_id}>
               {urlSchoolId ? (
                 <div className="h-11 px-3 rounded-xl border border-input bg-muted/40 flex items-center font-medium text-foreground">
@@ -689,8 +645,6 @@ const SchoolMusicRegister = () => {
               {urlSchoolId && <p className="text-xs text-muted-foreground mt-1">בית הספר נבחר אוטומטית מתוך הקישור שקיבלת.</p>}
             </Field>
 
-
-            {/* Class — filtered by school */}
             <Field id="class" label="כיתה" required error={errors.school_music_class_id} fieldRef={fieldRefs.school_music_class_id}>
               <Select
                 value={form.school_music_class_id}
@@ -708,7 +662,6 @@ const SchoolMusicRegister = () => {
               </Select>
             </Field>
 
-            {/* Instrument — filtered by class groups */}
             <Field id="instrument" label="כלי נגינה" required error={errors.instrument_id} fieldRef={fieldRefs.instrument_id}>
               <Select
                 value={form.instrument_id}
@@ -760,10 +713,7 @@ const SchoolMusicRegister = () => {
                           type="button"
                           aria-label="נקה בחירת כלי מהמלאי"
                           className="absolute left-9 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground transition-colors hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                          onPointerDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                          }}
+                          onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -809,10 +759,8 @@ const SchoolMusicRegister = () => {
               <p className="text-xs text-muted-foreground mt-1">בחירת כלי מהמלאי תיצור השאלה אוטומטית לתלמיד.</p>
             </Field>
 
-
             <hr className="my-2" />
 
-            {/* Student details */}
             <div className="grid grid-cols-2 gap-4">
               <Field id="first_name" label="שם פרטי תלמיד" required error={errors.student_first_name} fieldRef={fieldRefs.student_first_name}>
                 <Input id="first_name" value={form.student_first_name} onChange={(e) => updateField("student_first_name", e.target.value)} onBlur={() => handleBlur("student_first_name")} />
@@ -843,11 +791,9 @@ const SchoolMusicRegister = () => {
 
             <hr className="my-2" />
 
-            {/* Parent details */}
             <Field id="parent_name" label="שם מלא של הורה" required error={errors.parent_name} fieldRef={fieldRefs.parent_name}>
               <Input id="parent_name" value={form.parent_name} onChange={(e) => updateField("parent_name", e.target.value)} onBlur={() => handleBlur("parent_name")} />
             </Field>
-
 
             <Field id="parent_phone" label="טלפון הורה (10 ספרות)" required error={errors.parent_phone} fieldRef={fieldRefs.parent_phone}>
               <Input id="parent_phone" type="tel" dir="ltr" inputMode="numeric" maxLength={10} value={form.parent_phone} onChange={(e) => updateField("parent_phone", e.target.value)} onBlur={() => handleBlur("parent_phone")} />
@@ -856,8 +802,6 @@ const SchoolMusicRegister = () => {
             <Field id="parent_email" label='דוא"ל הורה' required error={errors.parent_email} fieldRef={fieldRefs.parent_email}>
               <Input id="parent_email" type="email" dir="ltr" value={form.parent_email} onChange={(e) => updateField("parent_email", e.target.value)} onBlur={() => handleBlur("parent_email")} />
             </Field>
-
-            
           </CardContent>
         </Card>
 
