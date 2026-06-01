@@ -129,7 +129,7 @@ const StudentPaymentsSection = ({
       ? { label: "לא נקבע חיוב", className: "bg-muted text-muted-foreground border-border" }
       : roundedBalance <= 0
         ? hasCredit
-          ? { label: "שולם במלואו · קיים זיכוי", className: "bg-primary/15 text-primary border-primary/40" }
+          ? { label: "שולם במלואו · קיים זיכוי", className: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700" }
           : { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
         : totalPaid > 0.5
           ? { label: `שולם חלקית · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
