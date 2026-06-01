@@ -653,7 +653,10 @@ const AdminStudentPaymentCalc = () => {
           )}
           <SummaryRow label={`סה״כ אחרי קיזוז (${lessonsRemainingTotal} שיעורים נותרים)`} value={proratedTotal} bold />
           {sibling && discountRates.sibling > 0 && (
-            <SummaryRow label={`הנחת אחים (${discountRates.sibling}%)`} value={-Math.round(proratedTotal * discountRates.sibling / 100)} />
+            <SummaryRow
+              label={`הנחת אחים (${discountRates.sibling}%)`}
+              value={-rows.reduce((s, r) => s + Math.round(r.prorated * discountRates.sibling / 100), 0)}
+            />
           )}
           {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
             const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
@@ -661,7 +664,10 @@ const AdminStudentPaymentCalc = () => {
             return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי הזול)`} value={-amt} />;
           })()}
           {majorStudent && discountRates.majorStudent > 0 && (
-            <SummaryRow label={`הנחת מגמה (${discountRates.majorStudent}%)`} value={-Math.round(proratedTotal * discountRates.majorStudent / 100)} />
+            <SummaryRow
+              label={`הנחת מגמה (${discountRates.majorStudent}%)`}
+              value={-rows.reduce((s, r) => s + Math.round(r.prorated * discountRates.majorStudent / 100), 0)}
+            />
           )}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
