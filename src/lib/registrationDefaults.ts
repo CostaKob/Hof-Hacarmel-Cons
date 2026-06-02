@@ -79,10 +79,10 @@ export const DEFAULT_SECTIONS = [
 ];
 
 export const DEFAULT_FIELDS = [
-  // Student details section
+  // Student details section — ID first so we can auto-detect returning students
+  { field_key: "student_national_id", label: "תעודת זהות התלמיד/ה", field_type: "text", is_required: true, section_title: "", placeholder: "מספר תעודת זהות", options: [], data_source: "", help_text: "" },
   { field_key: "student_full_name", label: "שם מלא של התלמיד/ה", field_type: "text", is_required: true, section_title: "פרטי התלמיד/ה", placeholder: "שם פרטי ושם משפחה", options: [], data_source: "", help_text: "" },
   { field_key: "gender", label: "לשון פנייה", field_type: "radio", is_required: false, section_title: "", placeholder: "", options: [{ value: "male", label: "זכר" }, { value: "female", label: "נקבה" }, { value: "prefer_not_to_say", label: "מעדיף/ה לא לציין" }], data_source: "", help_text: "" },
-  { field_key: "student_national_id", label: "תעודת זהות התלמיד/ה", field_type: "text", is_required: true, section_title: "", placeholder: "מספר תעודת זהות", options: [], data_source: "", help_text: "" },
   { field_key: "student_status", label: "תלמיד חדש/ה או ממשיך/ה", field_type: "radio", is_required: false, section_title: "", placeholder: "", options: [{ value: "new", label: "תלמיד/ה חדש/ה באולפן המוסיקה" }, { value: "continuing", label: "תלמיד/ה ממשיך/ה באולפן המוסיקה" }], data_source: "", help_text: "" },
   { field_key: "branch_school_name", label: "שלוחת לימודים", field_type: "select", is_required: true, section_title: "", placeholder: "בחרו שלוחה", options: [], data_source: "schools", help_text: "" },
   { field_key: "student_school_text", label: "בית הספר בו לומד/ת התלמיד/ה", field_type: "text", is_required: true, section_title: "", placeholder: "שם בית הספר", options: [], data_source: "", help_text: "" },
