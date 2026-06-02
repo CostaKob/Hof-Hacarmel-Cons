@@ -26,6 +26,7 @@ import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
+import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
 
 
 const STATUS_MAP: Record<string, string> = {
@@ -413,6 +414,8 @@ const AdminStudentCard = () => {
         <StudentInstrumentLoansSection studentType="private" studentId={studentId!} />
 
         <StudentNotesSection studentId={studentId!} />
+
+        <RegistrationApprovalSection studentId={studentId!} />
 
 
 
