@@ -43,8 +43,7 @@ const AdminStudentPaymentCalc = () => {
         .from("enrollments")
         .select("*, instruments(name), schools(name), teachers(first_name, last_name)")
         .eq("student_id", studentId!)
-        .eq("academic_year_id", yearId!)
-        .eq("is_active", true);
+        .eq("academic_year_id", yearId!);
       if (error) throw error;
       return data as any[];
     },
