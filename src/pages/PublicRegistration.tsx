@@ -600,13 +600,15 @@ const PublicRegistration = () => {
         custom_data: Object.keys(customData).length > 0 ? customData : {},
       };
 
-      const { data: inserted, error } = await supabase.from("registrations").insert(row).select("id").single();
+      const registrationId = crypto.randomUUID();
+      row.id = registrationId;
+      const { error } = await supabase.from("registrations").insert(row);
       if (error) throw error;
 
       // Fire-and-forget: send confirmation email to parent. Failure does not block the success flow.
-      if (inserted?.id && row.parent_email) {
+      if (row.parent_email) {
         supabase.functions
-          .invoke("send-registration-confirmation", { body: { registrationId: inserted.id } })
+          .invoke("send-registration-confirmation", { body: { registrationId } })
           .catch((e) => console.error("send-registration-confirmation invoke failed:", e));
       }
 
