@@ -330,7 +330,7 @@ const AdminStudentPaymentCalc = () => {
         const prorationDeduction = r.annualBase - r.prorated;
         if (prorationDeduction > 0) {
           lines.push({
-            description: `קיזוז שיעורים שעברו${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
+            description: `הפחתת שיעורים לפי תקופה${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
             amount: -(Math.round(prorationDeduction * 100) / 100),
           });
         }
