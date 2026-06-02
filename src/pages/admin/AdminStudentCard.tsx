@@ -415,6 +415,8 @@ const AdminStudentCard = () => {
 
         <StudentNotesSection studentId={studentId!} />
 
+        <RegistrationApprovalSection studentId={studentId!} />
+
 
 
 
