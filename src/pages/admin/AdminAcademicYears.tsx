@@ -145,7 +145,7 @@ const AdminAcademicYears = () => {
     const year = now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
     setName(`${year}-${year + 1}`);
     setStartDate(`${year}-09-01`);
-    setEndDate(`${year + 1}-08-31`);
+    setEndDate(`${year + 1}-06-30`);
   };
 
   const activeYears = years.filter((y: any) => y.is_active);

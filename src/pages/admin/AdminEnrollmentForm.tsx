@@ -30,13 +30,13 @@ interface EnrollmentFormData {
   grade: string;
 }
 
-/** Default enrollment end date = Aug 31 of the academic year (year derived from year.end_date or start_date+1). */
+/** Default enrollment end date = Jun 30 of the academic year (year derived from year.end_date or start_date+1). */
 const computeDefaultEndDate = (year: { start_date?: string; end_date?: string } | undefined): string => {
   if (!year) return "";
   if (year.end_date) return year.end_date;
   if (year.start_date) {
     const d = new Date(year.start_date);
-    return `${d.getFullYear() + 1}-08-31`;
+    return `${d.getFullYear() + 1}-06-30`;
   }
   return "";
 };
