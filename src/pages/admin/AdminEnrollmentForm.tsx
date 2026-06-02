@@ -348,10 +348,10 @@ const AdminEnrollmentForm = () => {
                 name="end_date"
                 control={control}
                 render={({ field }) => (
-                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך סיום (ברירת מחדל 31.8)" />
+                  <DateInput value={field.value} onChange={field.onChange} placeholder="תאריך סיום (ברירת מחדל 30.6)" />
                 )}
               />
-              <p className="text-xs text-muted-foreground">משמש לחישוב יחסי של שכר הלימוד. ברירת מחדל: 31.8 של שנת הלימודים.</p>
+              <p className="text-xs text-muted-foreground">משמש לחישוב יחסי של שכר הלימוד. ברירת מחדל: 30.6 של שנת הלימודים.</p>
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm">כיתה</Label>
