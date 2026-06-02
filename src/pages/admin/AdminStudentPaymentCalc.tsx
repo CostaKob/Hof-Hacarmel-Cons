@@ -647,7 +647,7 @@ const AdminStudentPaymentCalc = () => {
           <SummaryRow label="סה״כ בסיס שנתי מלא" value={annualTotal} bold />
           {annualTotal - proratedTotal > 0 && (
             <SummaryRow
-              label={`קיזוז שיעורים שעברו (${lessonsTotalAll - lessonsRemainingTotal} מתוך ${lessonsTotalAll})`}
+              label={`הפחתת שיעורים לפי תקופה (${lessonsTotalAll - lessonsRemainingTotal} מתוך ${lessonsTotalAll})`}
               value={-(annualTotal - proratedTotal)}
             />
           )}
