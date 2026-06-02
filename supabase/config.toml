@@ -14,3 +14,7 @@ verify_jwt = false
 
 [functions.icount-generate-paylink]
 verify_jwt = false
+
+[functions.send-registration-confirmation]
+verify_jwt = false
+
