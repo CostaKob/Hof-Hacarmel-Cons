@@ -330,7 +330,7 @@ const AdminStudentPaymentCalc = () => {
         const prorationDeduction = r.annualBase - r.prorated;
         if (prorationDeduction > 0) {
           lines.push({
-            description: `קיזוז שיעורים שעברו${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
+            description: `הפחתת שיעורים לפי תקופה${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
             amount: -(Math.round(prorationDeduction * 100) / 100),
           });
         }
@@ -647,7 +647,7 @@ const AdminStudentPaymentCalc = () => {
           <SummaryRow label="סה״כ בסיס שנתי מלא" value={annualTotal} bold />
           {annualTotal - proratedTotal > 0 && (
             <SummaryRow
-              label={`קיזוז שיעורים שעברו (${lessonsTotalAll - lessonsRemainingTotal} מתוך ${lessonsTotalAll})`}
+              label={`הפחתת שיעורים לפי תקופה (${lessonsTotalAll - lessonsRemainingTotal} מתוך ${lessonsTotalAll})`}
               value={-(annualTotal - proratedTotal)}
             />
           )}
