@@ -23,6 +23,7 @@ interface Props {
   submittedAt?: string
   approvalText?: string
   sectionsText?: string
+  registrationUrl?: string
 }
 
 const Email = ({
@@ -35,6 +36,7 @@ const Email = ({
   submittedAt = '',
   approvalText = 'קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים',
   sectionsText = '',
+  registrationUrl = 'https://musichof.com/register',
 }: Props) => {
   const instrumentsLabel = instruments.length > 1 ? 'כלים מבוקשים' : 'כלי מבוקש'
   return (
@@ -68,6 +70,11 @@ const Email = ({
           <Section style={approvalBox} dir="rtl">
             <Text style={approvalCaption}>אישור ההורה:</Text>
             <Text style={approvalBody}>{approvalText}</Text>
+            <Text style={{ ...approvalBody, marginTop: '8px' }}>
+              <Link href={registrationUrl} style={link}>
+                לצפייה בתקנון המלא לחץ כאן
+              </Link>
+            </Text>
           </Section>
 
           <Text style={p}>
