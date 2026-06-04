@@ -78,6 +78,7 @@ const PublicRegistration = () => {
   const urlYearId = searchParams.get("yearId"); // legacy UUID support
   const token = routeToken || searchParams.get("token") || undefined;
   const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
