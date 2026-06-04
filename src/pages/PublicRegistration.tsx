@@ -613,6 +613,7 @@ const PublicRegistration = () => {
           .catch((e) => console.error("send-registration-confirmation invoke failed:", e));
       }
 
+      setSubmittedEmail(row.parent_email || null);
       setSubmitted(true);
     } catch (err: any) {
       console.error("Registration error:", err);
