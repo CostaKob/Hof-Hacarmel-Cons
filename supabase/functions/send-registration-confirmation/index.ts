@@ -81,6 +81,9 @@ Deno.serve(async (req) => {
     const lessonDuration = (reg as any).requested_lesson_duration || "";
     const branch = (reg as any).branch_school_name || "";
     const yearName = (reg as any).academic_years?.name || "";
+    const registrationUrl = yearName
+      ? `https://musichof.com/register?year=${encodeURIComponent(yearName)}`
+      : "https://musichof.com/register";
     const approvalText =
       (reg as any).registration_pages?.approval_text ||
       "קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים";
@@ -114,6 +117,7 @@ Deno.serve(async (req) => {
           branch,
           instruments,
           lessonDuration,
+          registrationUrl,
           submittedAt,
           approvalText,
           sectionsText,
