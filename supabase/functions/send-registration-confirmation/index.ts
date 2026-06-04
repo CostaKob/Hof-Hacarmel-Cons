@@ -16,14 +16,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-    if (!RESEND_API_KEY) {
-      return new Response(JSON.stringify({ error: "RESEND_API_KEY not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const { registrationId } = (await req.json()) as Payload;
     if (!registrationId || typeof registrationId !== "string") {
       return new Response(JSON.stringify({ error: "Missing registrationId" }), {
@@ -32,14 +24,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    );
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(SUPABASE_URL, SERVICE_ROLE);
 
     const { data: reg, error } = await supabase
       .from("registrations")
-      .select("*, registration_pages:registration_page_id(approval_text), academic_years:academic_year_id(name)")
+      .select(
+        "*, registration_pages:registration_page_id(approval_text), academic_years:academic_year_id(name)",
+      )
       .eq("id", registrationId)
       .maybeSingle();
 
@@ -63,14 +56,13 @@ Deno.serve(async (req) => {
     const instruments: string[] = Array.isArray((reg as any).requested_instruments)
       ? (reg as any).requested_instruments
       : [];
-    const duration = (reg as any).requested_lesson_duration;
+    const lessonDuration = (reg as any).requested_lesson_duration || "";
     const branch = (reg as any).branch_school_name || "";
     const yearName = (reg as any).academic_years?.name || "";
     const approvalText =
       (reg as any).registration_pages?.approval_text ||
       "קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים";
-    const createdAt = new Date((reg as any).created_at);
-    const dateStr = createdAt.toLocaleString("he-IL", {
+    const submittedAt = new Date((reg as any).created_at).toLocaleString("he-IL", {
       timeZone: "Asia/Jerusalem",
       day: "2-digit",
       month: "2-digit",
@@ -79,69 +71,41 @@ Deno.serve(async (req) => {
       minute: "2-digit",
     });
 
-    const subject = `אישור הרשמה — אולפן המוסיקה חוף הכרמל ${yearName}`.trim();
-
-    const esc = (s: string) =>
-      String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    const html = `<!doctype html>
-<html lang="he" dir="rtl">
-  <body style="background:#ffffff;font-family:Arial,sans-serif;color:#1a1a1a;margin:0;padding:24px;">
-    <div style="max-width:600px;margin:0 auto;">
-      <h1 style="font-size:20px;margin:0 0 16px;">אישור הרשמה — אולפן המוסיקה חוף הכרמל</h1>
-      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">שלום ${esc(parentName)},</p>
-      <p style="font-size:15px;line-height:1.6;margin:0 0 16px;">
-        קיבלנו את טופס ההרשמה עבור <strong>${esc(studentName)}</strong>${yearName ? ` לשנת הלימודים <strong>${esc(yearName)}</strong>` : ""}.
-      </p>
-
-      <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">
-        <tr><td style="padding:8px 0;color:#666;width:40%;">תאריך מילוי</td><td style="padding:8px 0;">${esc(dateStr)}</td></tr>
-        <tr><td style="padding:8px 0;color:#666;">שלוחה</td><td style="padding:8px 0;">${esc(branch)}</td></tr>
-        <tr><td style="padding:8px 0;color:#666;">${instruments.length > 1 ? "כלים מבוקשים" : "כלי מבוקש"}</td><td style="padding:8px 0;">${esc(instruments.join(", "))}</td></tr>
-        <tr><td style="padding:8px 0;color:#666;">משך שיעור</td><td style="padding:8px 0;">${esc(duration || "")} דקות</td></tr>
-      </table>
-
-      <div style="background:#f5f5f5;border-radius:8px;padding:16px;margin:16px 0;">
-        <p style="font-size:13px;color:#666;margin:0 0 8px;">נוסח האישור:</p>
-        <p style="font-size:14px;line-height:1.6;margin:0;white-space:pre-line;">${esc(approvalText)}</p>
-      </div>
-
-      <p style="font-size:14px;line-height:1.6;margin:16px 0;">
-        אישרת את האמור לעיל בלחיצה על תיבת הסימון. אישור זה מהווה תיעוד של הסכמתך לתנאי ההרשמה והלימודים.
-      </p>
-
-      <p style="font-size:14px;line-height:1.6;margin:24px 0 0;color:#666;">
-        בברכה,<br/>
-        אולפן המוסיקה חוף הכרמל
-      </p>
-    </div>
-  </body>
-</html>`;
-
-    const resendRes = await fetch("https://api.resend.com/emails", {
+    // Invoke the shared transactional sender (uses Lovable Emails + verified domain)
+    const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${SERVICE_ROLE}`,
+        apikey: SERVICE_ROLE,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "אולפן המוסיקה חוף הכרמל <onboarding@resend.dev>",
-        to: [parentEmail],
-        subject,
-        html,
+        templateName: "registration-confirmation",
+        recipientEmail: parentEmail,
+        idempotencyKey: `registration-confirmation-${registrationId}`,
+        templateData: {
+          parentName,
+          studentName,
+          yearName,
+          branch,
+          instruments,
+          lessonDuration,
+          submittedAt,
+          approvalText,
+        },
       }),
     });
 
-    const resendBody = await resendRes.json();
-    if (!resendRes.ok) {
-      console.error("Resend error:", resendRes.status, resendBody);
-      return new Response(JSON.stringify({ error: "Resend send failed", details: resendBody }), {
+    const body = await sendRes.json().catch(() => ({}));
+    if (!sendRes.ok) {
+      console.error("send-transactional-email failed:", sendRes.status, body);
+      return new Response(JSON.stringify({ error: "Send failed", details: body }), {
         status: 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, id: resendBody.id }), {
+    return new Response(JSON.stringify({ ok: true, result: body }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
