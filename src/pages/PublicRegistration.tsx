@@ -643,6 +643,7 @@ const PublicRegistration = () => {
             <Button
               onClick={() => {
                 setSubmitted(false);
+                setSubmittedEmail(null);
                 setFormValues({});
                 setApprovalChecked(false);
                 setExistingStudent(null);
