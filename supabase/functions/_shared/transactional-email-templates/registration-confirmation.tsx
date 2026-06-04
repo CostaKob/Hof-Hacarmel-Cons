@@ -22,6 +22,7 @@ interface Props {
   lessonDuration?: string | number
   submittedAt?: string
   approvalText?: string
+  sectionsText?: string
 }
 
 const Email = ({
@@ -33,6 +34,7 @@ const Email = ({
   lessonDuration = '',
   submittedAt = '',
   approvalText = 'קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים',
+  sectionsText = '',
 }: Props) => {
   const instrumentsLabel = instruments.length > 1 ? 'כלים מבוקשים' : 'כלי מבוקש'
   return (
@@ -55,14 +57,22 @@ const Email = ({
             <Row label="משך שיעור" value={lessonDuration ? `${lessonDuration} דקות` : ''} />
           </Section>
 
+          {/* תקנון מלא אם קיים */}
+          {sectionsText ? (
+            <Section style={approvalBox} dir="rtl">
+              <Text style={approvalCaption}>תקנון ותנאי ההרשמה:</Text>
+              <Text style={approvalBody}>{sectionsText}</Text>
+            </Section>
+          ) : null}
+
           <Section style={approvalBox} dir="rtl">
-            <Text style={approvalCaption}>תקנון ותנאי ההרשמה (אישרת):</Text>
+            <Text style={approvalCaption}>אישור ההורה:</Text>
             <Text style={approvalBody}>{approvalText}</Text>
           </Section>
 
           <Text style={p}>
-            אישרת את האמור לעיל בלחיצה על תיבת הסימון. אישור זה מהווה תיעוד של
-            הסכמתך לתנאי ההרשמה והלימודים.
+            אישרת את האמור לעיל בלחיצה על תיבת הסימון בתאריך {submittedAt}.
+            אישור זה מהווה תיעוד של הסכמתך לתנאי ההרשמה והלימודים.
           </Text>
 
           <Hr style={hr} />
@@ -112,6 +122,7 @@ export const template = {
     lessonDuration: '45',
     submittedAt: '04/06/2026 11:30',
     approvalText: 'קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים',
+    sectionsText: '',
   },
 } satisfies TemplateEntry
 
