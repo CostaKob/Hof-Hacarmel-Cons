@@ -71,12 +71,14 @@ Deno.serve(async (req) => {
       minute: "2-digit",
     });
 
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+
     // Invoke the shared transactional sender (uses Lovable Emails + verified domain)
     const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${SERVICE_ROLE}`,
-        apikey: SERVICE_ROLE,
+        Authorization: `Bearer ${ANON_KEY}`,
+        apikey: ANON_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
