@@ -66,6 +66,7 @@ import AdminSchoolMusicPayments from "./pages/admin/AdminSchoolMusicPayments";
 import SchoolMusicAttendanceForm from "./pages/SchoolMusicAttendanceForm";
 import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
 import PublicRegistration from "./pages/PublicRegistration";
+import Unsubscribe from "./pages/Unsubscribe";
 import SchoolMusicRegister from "./pages/SchoolMusicRegister";
 import SchoolMusicRegisterSuccess from "./pages/SchoolMusicRegisterSuccess";
 import StudentPaymentSuccess from "./pages/StudentPaymentSuccess";
@@ -167,6 +168,7 @@ const App = () => (
               {/* Public */}
               <Route path="/register" element={<PublicRegistration />} />
               <Route path="/register/:token" element={<PublicRegistration />} />
+              <Route path="/unsubscribe" element={<Unsubscribe />} />
               
               <Route path="/school-music-register" element={<SchoolMusicRegister />} />
               <Route path="/school-music-register/success" element={<SchoolMusicRegisterSuccess />} />
