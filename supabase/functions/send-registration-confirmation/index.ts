@@ -51,6 +51,28 @@ Deno.serve(async (req) => {
       });
     }
 
+    // טען את הסקשנים המלאים של דף ההרשמה (התקנון המלא)
+    let sectionsText = "";
+    const pageId = (reg as any).registration_page_id;
+    if (pageId) {
+      const { data: sections } = await supabase
+        .from("registration_page_sections")
+        .select("title, content")
+        .eq("page_id", pageId)
+        .order("sort_order");
+
+      if (sections && sections.length > 0) {
+        sectionsText = sections
+          .map((s: any) => {
+            const lines = [];
+            if (s.title) lines.push(s.title);
+            if (s.content) lines.push(s.content);
+            return lines.join("\n");
+          })
+          .join("\n\n");
+      }
+    }
+
     const parentName = (reg as any).parent_name || "";
     const studentName = `${(reg as any).student_first_name || ""} ${(reg as any).student_last_name || ""}`.trim();
     const instruments: string[] = Array.isArray((reg as any).requested_instruments)
@@ -73,7 +95,6 @@ Deno.serve(async (req) => {
 
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Invoke the shared transactional sender (uses Lovable Emails + verified domain)
     const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
@@ -85,6 +106,7 @@ Deno.serve(async (req) => {
         templateName: "registration-confirmation",
         recipientEmail: parentEmail,
         idempotencyKey: `registration-confirmation-${registrationId}`,
+        replyTo: "musichof@gmail.com",
         templateData: {
           parentName,
           studentName,
@@ -94,6 +116,7 @@ Deno.serve(async (req) => {
           lessonDuration,
           submittedAt,
           approvalText,
+          sectionsText,
         },
       }),
     });
