@@ -195,8 +195,20 @@ Deno.serve(async (req: Request) => {
         docPayload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }]; break;
       case "bank_transfer":
         docPayload.banktransfer = { sum: negSum, account: payment.reference_number || "" }; break;
-      case "credit_card":
-        docPayload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 }; break;
+      case "credit_card": {
+        const ccLine: any = {
+          sum: negSum,
+          num: payment.reference_number || "",
+          payments_count: payment.installments || 1,
+        };
+        // Link the negative receipt to the actual refund clearing transaction in iCount
+        const refundConf = ccRefundResult?.confirmation_code || ccRefundResult?.auth_num;
+        const refundBillLog = ccRefundResult?.cc_bill_log_id || ccRefundResult?.bill_log_id || ccRefundResult?.deal_id;
+        if (refundConf) { ccLine.confirmation_code = refundConf; ccLine.auth_num = refundConf; }
+        if (refundBillLog) { ccLine.cc_bill_log_id = refundBillLog; ccLine.cc_deal_id = refundBillLog; ccLine.deal_id = refundBillLog; }
+        docPayload.cc = ccLine;
+        break;
+      }
       default: docPayload.other = { sum: negSum, info: "החזר" };
     }
 
