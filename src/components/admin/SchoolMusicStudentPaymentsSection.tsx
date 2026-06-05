@@ -301,7 +301,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         </div>
       ) : (
         <div className="space-y-2">
-          {payments.map((p) => {
+          {[...payments].sort((a: any, b: any) =>
+            new Date(b.created_at || b.paid_at || b.payment_date).getTime() - new Date(a.created_at || a.paid_at || a.payment_date).getTime()
+          ).map((p) => {
             const isRefund = !!p.refund_of_payment_id || Number(p.amount) < 0;
             const hasDoc = !!(p.icount_doc_id || p.icount_doc_number);
             const hasUrl = !!p.invoice_url;
