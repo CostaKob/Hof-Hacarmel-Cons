@@ -78,7 +78,8 @@ const AdminStudentPaymentCalc = () => {
         .from("student_payments")
         .select("*")
         .eq("academic_year_id", yearId!)
-        .order("payment_date", { ascending: false });
+        .order("payment_date", { ascending: true })
+        .order("created_at", { ascending: true });
       const { data, error } = ids.length > 0
         ? await query.or(`student_id.eq.${studentId},enrollment_id.in.(${ids.join(",")})`)
         : await query.eq("student_id", studentId!);

@@ -121,18 +121,26 @@ const StudentPaymentsSection = ({
 
   const hasCalculatedBalance = typeof balanceDue === "number" && Number.isFinite(balanceDue);
   const calculatedTotal = typeof totalDue === "number" && Number.isFinite(totalDue) ? totalDue : null;
-  const roundedBalance = hasCalculatedBalance ? Math.round(balanceDue) : 0;
+  const preciseBalance = hasCalculatedBalance ? Math.round(balanceDue * 100) / 100 : 0;
+  const formatMoney = (n: number) => {
+    const abs = Math.abs(n);
+    const hasDecimals = Math.round(abs * 100) % 100 !== 0;
+    return abs.toLocaleString(undefined, {
+      minimumFractionDigits: hasDecimals ? 2 : 0,
+      maximumFractionDigits: 2,
+    });
+  };
   const overallStatus = !hasCalculatedBalance
     ? null
     : calculatedTotal !== null && calculatedTotal <= 0
       ? { label: "לא נקבע חיוב", className: "bg-muted text-muted-foreground border-border" }
-      : roundedBalance < 0
-        ? { label: `קיים זיכוי · ₪${Math.abs(roundedBalance).toLocaleString()}`, className: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700" }
-        : roundedBalance === 0
+      : preciseBalance < -0.005
+        ? { label: `קיים זיכוי · ₪${formatMoney(preciseBalance)}`, className: "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700" }
+        : Math.abs(preciseBalance) < 0.005
           ? { label: "שולם במלואו", className: "bg-primary/15 text-primary border-primary/40" }
-          : totalPaid > 0.5
-            ? { label: `שולם חלקית · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
-            : { label: `ממתין לתשלום · יתרה ₪${roundedBalance.toLocaleString()}`, className: "bg-destructive/10 text-destructive border-destructive/30" };
+          : totalPaid > 0.005
+            ? { label: `שולם חלקית · יתרה ₪${formatMoney(preciseBalance)}`, className: "bg-destructive/10 text-destructive border-destructive/30" }
+            : { label: `ממתין לתשלום · יתרה ₪${formatMoney(preciseBalance)}`, className: "bg-destructive/10 text-destructive border-destructive/30" };
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">

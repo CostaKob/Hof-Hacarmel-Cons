@@ -193,7 +193,8 @@ const AdminStudentCard = () => {
         .from("student_payments")
         .select("*, academic_years:academic_year_id(name)")
         .or("payment_status.is.null,payment_status.neq.pending")
-        .order("payment_date", { ascending: false });
+        .order("payment_date", { ascending: true })
+        .order("created_at", { ascending: true });
 
       const { data, error } = ids.length > 0
         ? await query.or(`student_id.eq.${studentId},enrollment_id.in.(${ids.join(",")})`)
