@@ -496,11 +496,10 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             <Label htmlFor="sm-refund-amount">סכום הזיכוי (₪)</Label>
             <Input id="sm-refund-amount" type="number" inputMode="decimal" min="0"
               max={refundTarget?._remaining ?? undefined} step="0.01" className="h-12 rounded-xl"
-              value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)}
-              disabled={!!refundTarget?._cc} />
+              value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} />
             <p className="text-xs text-muted-foreground">
               {refundTarget?._cc
-                ? "⚡ יבוצע ביטול מלא של הקבלה ב-iCount + החזר אשראי אמיתי לכרטיס המקורי דרך הסולק. iCount תומך רק בביטול מלא — לא ניתן להחזר חלקי."
+                ? "⚡ יבוצע החזר אמיתי לכרטיס המקורי דרך iCount בסכום שתבחר, ותופק קבלה במינוס מקושרת לקבלה המקורית. ניתן להחזיר חלקי או מלא."
                 : "תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית."}
             </p>
           </div>
