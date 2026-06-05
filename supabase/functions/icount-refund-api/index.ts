@@ -95,8 +95,28 @@ Deno.serve(async (req: Request) => {
     let ccRefundResult: any = null;
 
     // Step 1: refund the credit card transaction if we have a deal id
-    const dealId = payment.icount_transaction_id;
-    const isCc = payment.payment_method === "credit_card" && !!dealId;
+    let dealId = payment.icount_transaction_id;
+    const isCcMethod = payment.payment_method === "credit_card";
+
+    if (isCcMethod && !dealId && (payment.icount_doc_id || payment.icount_doc_number)) {
+      const infoPayload: any = { ...auth, doctype: payment.icount_doc_type || "receipt" };
+      if (payment.icount_doc_id) infoPayload.doc_id = payment.icount_doc_id;
+      if (payment.icount_doc_number) infoPayload.docnum = payment.icount_doc_number;
+      const { data: infoData } = await icountJson("/doc/info", infoPayload);
+      console.log("[icount /doc/info sm]", JSON.stringify(infoData));
+      const ccPayments = infoData?.cc_payments || infoData?.doc_info?.cc_payments || [];
+      const arr = Array.isArray(ccPayments) ? ccPayments : Object.values(ccPayments || {});
+      const found = arr.find((p: any) => p?.cc_deal_id || p?.deal_id || p?.tid)
+        || (infoData?.cc_deal_id ? { cc_deal_id: infoData.cc_deal_id } : null);
+      dealId = found?.cc_deal_id || found?.deal_id || found?.tid || null;
+      if (dealId) {
+        await supabase.from("school_music_payments")
+          .update({ icount_transaction_id: dealId })
+          .eq("id", payment.id);
+      }
+    }
+
+    const isCc = isCcMethod && !!dealId;
     if (isCc) {
       const { data: ccData } = await icountJson("/cc/refund", {
         ...auth,
@@ -111,6 +131,8 @@ Deno.serve(async (req: Request) => {
           status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+    } else if (isCcMethod) {
+      console.warn("[icount-refund-api] no cc_deal_id available — creating negative receipt only");
     }
 
     // Step 2: create negative receipt for the books
