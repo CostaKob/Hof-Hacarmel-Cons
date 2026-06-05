@@ -1,64 +1,74 @@
-## מה קורה היום
-ב-`AdminStudentPaymentCalc` יש כפתור **"צור קישור תשלום"** (`handleGenerateLink`) שמדפיס payload ל-console ומציג toast — אין חיבור אמיתי ל-iCount.
+## הבעיה
 
-טבלת `student_payments` היום שומרת רק תשלומים שכבר בוצעו — אין בה `payment_status`, `payment_link_url`, `icount_payment_page_id`, `paid_at`, `icount_transaction_id`.
+הפונקציה הקיימת `icount-refund-api` יוצרת **קבלת זיכוי במינוס בלבד** — רישום חשבונאי שלא מחזיר כסף לכרטיס האשראי. גם הניסיון ב-`icount-bulk-cc-refund` (קריאה ל-`/cc/refund`) נכשל כי הוא דורש `cc_bill_log_id` פנימי שלא חשוף ב-API.
 
-## המטרה
-דף סליקה דינמי לכל תלמיד פרטני, באותו דפוס של בי״ס מנגן:
-- שם התלמיד ופירוט החיוב בעגלה
-- מילוי אוטומטי של פרטי ההורה (אין צורך בת״ז במסך הראשון)
-- אחרי תשלום: ה-paypage נמחק מ-iCount, ה-row מסומן כ"שולם" עם קבלה אוטומטית
-- הקישור נשמר על ה-row "הממתין" — לחיצה חוזרת מחזירה את אותו קישור (אלא אם הסכום השתנה)
+## הפתרון הנכון
 
-## שלב 1 — מיגרציה
-הוספת עמודות ל-`student_payments`:
-- `payment_status` (enum: `pending` / `paid` / `failed`, default `paid` לתאימות לאחור)
-- `payment_link_url` (text)
-- `icount_payment_page_id` (text)
-- `paid_at` (timestamptz)
-- `icount_transaction_id` (text)
+iCount חושפת endpoint רשמי שעושה את שני הדברים יחד:
 
-כל הרשומות הקיימות יסומנו `paid` כברירת מחדל.
+```
+POST https://api.icount.co.il/api/v3.php/doc/cancel
+Authorization: Bearer <ICOUNT_API_TOKEN>
+{
+  "doctype": "receipt",   // או invrec
+  "docnum": 1004,
+  "refund_cc": 1,         // ← מבצע החזר אשראי אמיתי
+  "reason": "ביטול לבקשת התלמיד"
+}
+```
 
-## שלב 2 — Edge Function חדשה: `icount-generate-student-paylink`
-מבוססת על `icount-generate-paylink` (בי״ס מנגן), אבל עובדת על `student_payments` ו-`students`:
+- מבטל את המסמך המקורי ב-iCount
+- מבצע אוטומטית reverse לעסקת האשראי בסולק
+- מחזיר שגיאה ברורה אם אין עסקת אשראי תקפה לביטול
 
-קלט: `{ studentId, amount, lines: [{description, amount}], paymentId? }`
-- אם אין `paymentId` או שאין pending row — יוצרת רשומה חדשה ב-`student_payments` עם `transaction_type='payment'`, `payment_status='pending'`, `amount=balance`, `enrollment_breakdown=lines`, `notes='נוצר ידנית - ממתין לתשלום'`
-- קוראת ל-`paypage/create` של iCount עם:
-  - `page_name`: `תשלום שכר לימוד - <שם התלמיד>`
-  - `items`: שורה אחת לכל שיוך (כלי + מורה + סניף)
-  - `ipn_url`: handler חדש (ראה שלב 3)
-  - `success_url`: דף תודה
-  - `require_id: 0` (לא צריך ת״ז במסך הראשון)
-- שומרת `payment_link_url`, `icount_payment_page_id` על ה-row
-- ממלאת אוטומטית `fname`, `lname`, `email`, `phone`, `id_no`, `name_on_invoice`, `custom1=paymentId` כ-URL params
+זה ה-flow שגם הפלאגין הרשמי של WooCommerce וגם n8n-nodes-icount משתמשים בו.
 
-## שלב 3 — Edge Function חדשה: `icount-student-payment-webhook`
-מבוססת על `icount-sm-payment-webhook`, אבל עובדת על `student_payments`:
-- מוצאת את ה-row לפי `custom1` (paymentId), או fallback לפי `icount_payment_page_id` / `docnum`
-- מעדכנת: `payment_status='paid'`, `paid_at=now()`, `icount_doc_id/number/url`, `payment_method='credit_card'`, `icount_transaction_id`
-- מוחקת את ה-paypage ב-iCount (`paypage/delete`)
-- מאפסת `payment_link_url`
+## תכנית מימוש
 
-## שלב 4 — Frontend
-ב-`AdminStudentPaymentCalc.handleGenerateLink`:
-- קוראת ל-`icount-generate-student-paylink` עם הסכום, השיוכים והפירוט
-- פותחת את הקישור ב-tab חדש + מעתיקה ל-clipboard + toast עם הקישור
+### שלב 1: Edge Function חדש `icount-cancel-with-refund`
+- מקבל `doctype`, `docnum`, `refund_cc` (ברירת מחדל true), `reason`
+- קורא ל-`doc/cancel` עם `refund_cc=1`
+- מחזיר את התגובה כולל `cc_refund_status`
+- אם הצליח — מעדכן את הרשומה ב-`payments` שלנו לסטטוס `refunded` עם `refunded_at`
 
-ב-`StudentPaymentsSection`:
-- הצגת badge "ממתין לתשלום" על rows עם `payment_status='pending'`
-- כפתור "פתח קישור" / "העתק קישור" ל-row ממתין
-- אם כבר יש pending עם אותו סכום — לא ליצור חדש, להחזיר את הקיים
+### שלב 2: הסרת המנגנון הישן
+- מוחק את `icount-bulk-cc-refund` (לא עבד)
+- שומר על `icount-refund-api` (יצירת קבלה במינוס) **רק** כ-fallback למקרים נדירים שבהם המסמך המקורי כבר בוטל
 
-## נקודות טכניות
-- אותו דפוס של VAT exempt (מלכ״ר → `tax_exempt: true`)
-- `currency_id: 5` (ש״ח), `language: he`, `hide_lang: 1`, `max_payments: 1`
-- success_url: `https://musichof.com/payment-success?status=ok&payment_id=<id>` (דף חדש פשוט)
-- ה-IPN handler החדש צריך `verify_jwt = false` ב-`supabase/config.toml`
-- הקבלה האוטומטית מ-iCount מחליפה את "הפק קבלה" הידני הקיים — אם משלמים בלינק, יש כבר `icount_doc_id` ולא יוצג כפתור "הפק קבלה"
+### שלב 3: שינוי כפתור הזיכוי ב-UI
+המקום היחיד שנשאר עם כפתור זיכוי (אחרי הניקיון הקודם) יעבוד כך:
+- דיאלוג אישור עם 2 אופציות:
+  - **"זיכוי + החזר כרטיס אשראי"** (ברירת מחדל) → קורא ל-`icount-cancel-with-refund`
+  - **"זיכוי חשבונאי בלבד (ללא החזר לכרטיס)"** → קורא לפונקציה הישנה
+- מציג ברור איזו פעולה תתבצע
+- אחרי הצלחה: מעדכן את הסטטוס בכרטיס התלמיד
 
-## מה לא משתנה
-- חישובי תמחור/הנחות ב-`paymentCalc.ts` — נשארים
-- "הפק קבלה" ידני ו"זיכוי" קיימים — נשארים, עובדים על rows שכבר `paid` או שהוזנו ידנית
-- AddPaymentDialog להזנה ידנית — נשאר
+### שלב 4: ניקוי הבלגן הקיים
+סקריפט חד-פעמי (Edge Function זמני) שעובר על הקבלות במינוס שכבר נוצרו ב-iCount בלי החזר אמיתי, ומבצע על הקבלה המקורית `doc/cancel` עם `refund_cc=1`:
+- 1004 (₪1) — בית ספר מנגן
+- 1006 (₪1) — בית ספר מנגן
+- 1008 (₪1) — בית ספר מנגן
+- 1010, 1012, 1014, 1016, 3006 (₪1 כל אחת) — תלמידים פרטניים
+- 1000, 3005 (₪2 כל אחת) — תלמידים פרטניים
+
+⚠️ שים לב: ייתכן ש-iCount לא יאפשר `cancel` על מסמך שכבר נוצר לו זיכוי תואם (1005, 1007 וכו'). אם זה קורה — נצטרך ידנית למחוק קודם את קבלות הזיכוי שלא היו בתוקף, או להשתמש בחלופה דרך הסולק (Tranzila/Cardcom).
+
+## פרטים טכניים
+
+**ENV נדרש:** `ICOUNT_API_TOKEN` (כבר קיים).
+
+**Validation לפני ביצוע:**
+- קריאת `doc/info` כדי לוודא שהמסמך לא בוטל כבר ושיש עליו עסקת אשראי תקפה
+- אם `cancel_id` כבר קיים → להחזיר שגיאה ידידותית
+
+**טיפול בשגיאות מ-iCount:**
+- `no_cc_transaction` → להציע למשתמש זיכוי חשבונאי בלבד
+- `already_cancelled` → לעדכן את הסטטוס שלנו ולא לקרוא שוב
+- כל שגיאה אחרת → להציג מהדיאלוג בעברית
+
+## שאלה לפני שאני מתחיל
+
+האם להמשיך עם כל 4 השלבים, או רק:
+- (א) להתחיל בשלב 1+2+3 (תיקון המנגנון קדימה), ולטפל בקבלות הישנות ידנית
+- (ב) רק שלב 4 — לנקות את 11 הקבלות הקיימות ולעצור
+- (ג) הכל
