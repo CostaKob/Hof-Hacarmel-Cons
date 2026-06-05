@@ -185,7 +185,14 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_free: 1,
-      ...(payment.icount_doc_id ? { based_on: [payment.icount_doc_id], origin_doc_id: payment.icount_doc_id } : {}),
+      ...((payment.icount_doc_id || payment.icount_doc_number) ? {
+        based_on: [{
+          doctype: payment.icount_doc_type || "receipt",
+          ...(payment.icount_doc_number ? { docnum: Number(payment.icount_doc_number) || payment.icount_doc_number } : {}),
+          ...(payment.icount_doc_id ? { doc_id: payment.icount_doc_id } : {}),
+        }],
+        ...(payment.icount_doc_id ? { origin_doc_id: payment.icount_doc_id } : {}),
+      } : {}),
       items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
 
