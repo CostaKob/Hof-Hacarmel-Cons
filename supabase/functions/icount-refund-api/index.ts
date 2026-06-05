@@ -94,7 +94,7 @@ Deno.serve(async (req: Request) => {
     const negSum = -Math.abs(requested);
     let ccRefundResult: any = null;
 
-    // Step 1: refund the credit card transaction if we have a deal id
+    // Step 1: refund the credit card transaction if we have cc_bill_log_id
     let dealId = payment.icount_transaction_id;
     const isCcMethod = payment.payment_method === "credit_card";
 
@@ -112,7 +112,7 @@ Deno.serve(async (req: Request) => {
         || (infoData?.cc_deal_id ? { cc_deal_id: infoData.cc_deal_id } : null);
       dealId = foundDirect?.cc_deal_id || foundDirect?.deal_id || foundDirect?.tid || null;
 
-      // (2) Fallback — look up the transaction via /cc/transactions
+      // (2) Fallback — look up the transaction via /cc/transactions and use cc_bill_log_id
       if (!dealId) {
         const ccArr = infoData?.doc_info?.cc || infoData?.cc || [];
         const ccList = Array.isArray(ccArr) ? ccArr : Object.values(ccArr || {});
@@ -165,7 +165,7 @@ Deno.serve(async (req: Request) => {
         });
       }
     } else if (isCcMethod) {
-      console.warn("[icount-refund-api] no cc_deal_id available — creating negative receipt only");
+      console.warn("[icount-refund-api] no cc_bill_log_id available — creating negative receipt only");
     }
 
     // Step 2: create negative receipt for the books
@@ -242,7 +242,7 @@ Deno.serve(async (req: Request) => {
         icount_doc_number: docNumber,
         invoice_url: docUrl,
         icount_doc_type: "receipt",
-        icount_transaction_id: payment.icount_transaction_id,
+        icount_transaction_id: dealId || payment.icount_transaction_id,
       })
       .select()
       .single();
