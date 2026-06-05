@@ -172,7 +172,9 @@ const StudentPaymentsSection = ({
         <p className="text-sm text-muted-foreground">לא בוצעו תשלומים עדיין</p>
       ) : (
         <div className="space-y-2">
-          {payments.map((p: any) => {
+          {[...payments].sort((a: any, b: any) =>
+            new Date(b.created_at || b.payment_date).getTime() - new Date(a.created_at || a.payment_date).getTime()
+          ).map((p: any) => {
             const isCredit = p.transaction_type !== "payment";
             const hasInvoice = !!p.invoice_url;
             const hasDoc = !!p.icount_doc_id;
