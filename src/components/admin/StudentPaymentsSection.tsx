@@ -351,6 +351,7 @@ const StudentPaymentsSection = ({
                 const max = Number(refundTarget?._remaining || 0);
                 if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
                 if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר לזיכוי (₪${max.toLocaleString()})`); return; }
+                if (refundTarget?._cc && amt < 1) { toast.error("iCount לא מאפשר החזר אשראי מתחת ל-₪1"); return; }
                 setPendingRefund({ paymentId: refundTarget.id, amount: amt });
               }}
             >
