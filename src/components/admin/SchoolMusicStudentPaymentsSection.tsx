@@ -376,12 +376,12 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                     </Button>
                   )}
                   {canRefund && (() => {
-                    const isCc = p.payment_method === "credit_card" && !!p.icount_transaction_id;
+                    const isCc = p.payment_method === "credit_card";
                     return (
                       <Button size="sm" variant="outline"
                         className={`h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10 ${isCc ? "border-destructive/40" : ""}`}
                         title={isCc
-                          ? `החזר אשראי לעסקה ${p.icount_transaction_id} (נותר ₪${remaining.toLocaleString()})`
+                          ? `החזר אשראי דרך iCount (נותר ₪${remaining.toLocaleString()})`
                           : `בצע זיכוי (קבלה במינוס) — נותר ₪${remaining.toLocaleString()}`}
                         disabled={refundMutation.isPending || ccRefundMutation.isPending}
                         onClick={() => { setRefundTarget({ ...p, _remaining: remaining, _cc: isCc }); setRefundAmount(String(remaining)); }}>
