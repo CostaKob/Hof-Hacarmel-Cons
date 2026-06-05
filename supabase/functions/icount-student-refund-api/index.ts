@@ -94,17 +94,50 @@ Deno.serve(async (req: Request) => {
     const isCcMethod = payment.payment_method === "credit_card";
 
     // If credit-card payment but no deal id stored, fetch it from iCount /doc/info
+    // and fall back to /cc/transactions lookup by confirmation_code + last4.
     if (isCcMethod && !dealId && (payment.icount_doc_id || payment.icount_doc_number)) {
       const infoPayload: any = { ...auth, doctype: payment.icount_doc_type || "receipt" };
       if (payment.icount_doc_id) infoPayload.doc_id = payment.icount_doc_id;
       if (payment.icount_doc_number) infoPayload.docnum = payment.icount_doc_number;
       const { data: infoData } = await icountJson("/doc/info", infoPayload);
       console.log("[icount /doc/info student]", JSON.stringify(infoData));
+
+      // (1) Try cc_payments — sometimes contains the deal id directly
       const ccPayments = infoData?.cc_payments || infoData?.doc_info?.cc_payments || [];
-      const arr = Array.isArray(ccPayments) ? ccPayments : Object.values(ccPayments || {});
-      const found = arr.find((p: any) => p?.cc_deal_id || p?.deal_id || p?.tid)
+      const ccPayArr = Array.isArray(ccPayments) ? ccPayments : Object.values(ccPayments || {});
+      const foundDirect = ccPayArr.find((p: any) => p?.cc_deal_id || p?.deal_id || p?.tid)
         || (infoData?.cc_deal_id ? { cc_deal_id: infoData.cc_deal_id } : null);
-      dealId = found?.cc_deal_id || found?.deal_id || found?.tid || null;
+      dealId = foundDirect?.cc_deal_id || foundDirect?.deal_id || foundDirect?.tid || null;
+
+      // (2) Fallback — look up the transaction via /cc/transactions
+      if (!dealId) {
+        const ccArr = infoData?.doc_info?.cc || infoData?.cc || [];
+        const ccList = Array.isArray(ccArr) ? ccArr : Object.values(ccArr || {});
+        const ccRow: any = ccList[0];
+        const dateissued = infoData?.doc_info?.dateissued || infoData?.dateissued;
+        if (ccRow && (ccRow.confirmation_code || ccRow.card_number)) {
+          const txPayload: any = {
+            ...auth,
+            confirmation_code: ccRow.confirmation_code,
+            cc_last4: ccRow.card_number,
+            last_4_digits: ccRow.card_number,
+            card_number: ccRow.card_number,
+            date_from: ccRow.date || dateissued,
+            date_to: ccRow.date || dateissued,
+          };
+          const { data: txData } = await icountJson("/cc/transactions", txPayload);
+          console.log("[icount /cc/transactions student]", JSON.stringify(txData));
+          const txList = txData?.transactions || txData?.deals || txData?.data || txData?.results || [];
+          const txArr = Array.isArray(txList) ? txList : Object.values(txList || {});
+          const match: any = txArr.find((t: any) =>
+            (ccRow.confirmation_code && String(t.confirmation_code ?? t.auth_num ?? "") === String(ccRow.confirmation_code))
+          ) || txArr.find((t: any) =>
+            ccRow.card_number && String(t.card_number ?? t.cc_last4 ?? t.last_4_digits ?? "").slice(-4) === String(ccRow.card_number).slice(-4)
+          ) || txArr[0];
+          dealId = match?.cc_deal_id || match?.deal_id || match?.tid || match?.id || null;
+        }
+      }
+
       if (dealId) {
         await supabase.from("student_payments")
           .update({ icount_transaction_id: dealId })
