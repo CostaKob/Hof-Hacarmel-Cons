@@ -375,22 +375,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       <FileDown className="h-4 w-4" />
                     </Button>
                   )}
-                  {canRefund && p.payment_method === "credit_card" && p.icount_transaction_id && (
-                    <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10 border-destructive/40"
-                      title={`החזר אשראי לעסקה ${p.icount_transaction_id} (נותר ₪${remaining.toLocaleString()})`}
-                      disabled={ccRefundMutation.isPending}
-                      onClick={() => { setRefundTarget({ ...p, _remaining: remaining, _cc: true }); setRefundAmount(String(remaining)); }}>
-                      <CreditCard className="h-3.5 w-3.5" /> זיכוי אשראי
-                    </Button>
-                  )}
-                  {canRefund && (
-                    <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      title={`בצע זיכוי (נותר ₪${remaining.toLocaleString()})`}
-                      disabled={refundMutation.isPending}
-                      onClick={() => { setRefundTarget({ ...p, _remaining: remaining }); setRefundAmount(String(remaining)); }}>
-                      <Undo2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                  {canRefund && (() => {
+                    const isCc = p.payment_method === "credit_card" && !!p.icount_transaction_id;
+                    return (
+                      <Button size="sm" variant="outline"
+                        className={`h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10 ${isCc ? "border-destructive/40" : ""}`}
+                        title={isCc
+                          ? `החזר אשראי לעסקה ${p.icount_transaction_id} (נותר ₪${remaining.toLocaleString()})`
+                          : `בצע זיכוי (קבלה במינוס) — נותר ₪${remaining.toLocaleString()}`}
+                        disabled={refundMutation.isPending || ccRefundMutation.isPending}
+                        onClick={() => { setRefundTarget({ ...p, _remaining: remaining, _cc: isCc }); setRefundAmount(String(remaining)); }}>
+                        {isCc ? <CreditCard className="h-3.5 w-3.5" /> : <Undo2 className="h-3.5 w-3.5" />}
+                        {isCc ? "זיכוי אשראי" : "זיכוי"}
+                      </Button>
+                    );
+                  })()}
                   {!hasDoc && (
                     <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
                       onClick={() => {
