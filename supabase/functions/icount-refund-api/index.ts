@@ -1,9 +1,12 @@
-// Cancels the original iCount document AND refunds the credit card transaction
-// in a single call via /doc/cancel with refund_cc=1. Then writes a balancing
-// negative row to school_music_payments for our accounting.
+// School Music refund. Supports partial + full refunds.
+// 1. If icount_transaction_id exists → call iCount /cc/refund with the cc_deal_id
+//    and the selected sum (real refund back to the original card).
+// 2. Always create a NEGATIVE iCount RECEIPT (קבלה במינוס) linked to the
+//    original document via based_on/origin_doc_id.
+// 3. Insert a balancing credit row in school_music_payments.
 //
-// NOTE: iCount's doc/cancel cancels the ENTIRE document — partial refunds are
-// not supported on this path. We enforce refundAmount == original amount.
+// If no icount_transaction_id (cash / cheque / bank transfer) → step 1 is
+// skipped and only the negative receipt is created.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -13,24 +16,19 @@ const corsHeaders = {
 
 const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 
-function getToken() {
-  const t = Deno.env.get("ICOUNT_API_TOKEN");
-  if (!t) throw new Error("ICOUNT_API_TOKEN missing");
-  return t;
+function getAuth() {
+  const cid = Deno.env.get("ICOUNT_COMPANY_ID");
+  const user = Deno.env.get("ICOUNT_USERNAME");
+  const pass = Deno.env.get("ICOUNT_PASSWORD");
+  if (!cid || !user || !pass) throw new Error("ICOUNT credentials missing");
+  return { cid, user, pass };
 }
 
-async function icountPost(path: string, body: Record<string, any>, token: string) {
-  const form = new URLSearchParams();
-  for (const [k, v] of Object.entries(body)) {
-    if (v !== undefined && v !== null) form.append(k, String(v));
-  }
+async function icountJson(path: string, payload: Record<string, any>) {
   const res = await fetch(`${ICOUNT_BASE}${path}`, {
     method: "POST",
-    headers: {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: form.toString(),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
   });
   const data = await res.json().catch(() => ({}));
   return { ok: res.ok, data };
@@ -63,63 +61,132 @@ Deno.serve(async (req: Request) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!payment.icount_doc_number || !payment.icount_doc_type) {
+    if (!payment.icount_doc_id && !payment.icount_doc_number) {
       return new Response(JSON.stringify({ error: "missing iCount document on this payment" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const original = Math.abs(Number(payment.amount ?? 0));
-    const sum = Math.abs(Number(refundAmount ?? original));
-    if (Math.abs(sum - original) > 0.01) {
+    const requested = Math.abs(Number(refundAmount ?? original));
+
+    // Check already-refunded amount and enforce remaining cap
+    const { data: priorRefunds } = await supabase
+      .from("school_music_payments")
+      .select("amount")
+      .eq("refund_of_payment_id", paymentId);
+    const alreadyRefunded = (priorRefunds ?? []).reduce(
+      (s, r: any) => s + Math.abs(Number(r.amount || 0)), 0,
+    );
+    const remaining = Math.max(0, original - alreadyRefunded);
+    if (requested <= 0) {
+      return new Response(JSON.stringify({ error: "סכום זיכוי חייב להיות חיובי" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (requested > remaining + 0.01) {
       return new Response(JSON.stringify({
-        error: `iCount תומך רק בביטול מלא של הקבלה. סכום הקבלה: ₪${original}, סכום שביקשת: ₪${sum}`,
+        error: `הסכום חורג מהנותר לזיכוי. נותר: ₪${remaining.toFixed(2)}, ביקשת: ₪${requested.toFixed(2)}`,
       }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Block if already refunded
-    const { data: priorRefunds } = await supabase
-      .from("school_music_payments")
-      .select("id")
-      .eq("refund_of_payment_id", paymentId);
-    if ((priorRefunds ?? []).length > 0) {
-      return new Response(JSON.stringify({ error: "כבר קיים זיכוי לקבלה זו" }), {
-        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const auth = getAuth();
+    const negSum = -Math.abs(requested);
+    let ccRefundResult: any = null;
+
+    // Step 1: refund the credit card transaction if we have a deal id
+    const dealId = payment.icount_transaction_id;
+    const isCc = payment.payment_method === "credit_card" && !!dealId;
+    if (isCc) {
+      const { data: ccData } = await icountJson("/cc/refund", {
+        ...auth,
+        cc_deal_id: dealId,
+        sum: Math.abs(requested),
       });
+      console.log("[icount /cc/refund sm]", JSON.stringify(ccData));
+      ccRefundResult = ccData;
+      if (!ccData?.status) {
+        const errMsg = ccData?.reason || ccData?.error_description || "iCount /cc/refund failed";
+        return new Response(JSON.stringify({ error: errMsg, details: ccData }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
-    const token = getToken();
-    const cancelBody = {
-      doctype: payment.icount_doc_type,
-      docnum: payment.icount_doc_number,
-      refund_cc: 1,
-      reason: reason || "החזר אשראי לבקשת התלמיד",
+    // Step 2: create negative receipt for the books
+    const { data: studentRow } = await supabase
+      .from("school_music_students")
+      .select("student_first_name,student_last_name,parent_name,parent_phone,parent_email,city")
+      .eq("id", payment.school_music_student_id)
+      .maybeSingle();
+    const student: any = studentRow || {};
+    const studentFullName = `${student.student_first_name ?? ""} ${student.student_last_name ?? ""}`.trim();
+    const isPartial = requested < original;
+    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${original.toLocaleString()}, החזר ₪${requested.toLocaleString()})`;
+
+    const phone = student.parent_phone || undefined;
+    const email = student.parent_email || undefined;
+
+    const docPayload: any = {
+      ...auth,
+      doctype: "receipt",
+      client_name: student.parent_name || studentFullName,
+      client_address: student.city || undefined,
+      client_city: student.city || undefined,
+      client_phone: phone,
+      client_mobile: phone,
+      phone, mobile: phone, email,
+      send_email: !!email,
+      lang: "he",
+      currency_code: "ILS",
+      vat_free: 1,
+      ...(payment.icount_doc_id ? { based_on: [payment.icount_doc_id], origin_doc_id: payment.icount_doc_id } : {}),
+      items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
 
-    const { data } = await icountPost("/doc/cancel", cancelBody, token);
-    console.log("[icount doc/cancel sm]", JSON.stringify(data));
-
-    if (!data?.status) {
-      const errMsg = data?.reason || data?.error_description || "iCount cancel failed";
-      return new Response(JSON.stringify({ error: errMsg, details: data }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    switch (payment.payment_method) {
+      case "cash": docPayload.cash = { sum: negSum }; break;
+      case "cheque": case "check":
+        docPayload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.transaction_reference || "" }]; break;
+      case "bank_transfer": case "transfer":
+        docPayload.banktransfer = { sum: negSum, account: payment.transaction_reference || "" }; break;
+      case "credit_card": case "credit":
+        docPayload.cc = { sum: negSum, num: payment.transaction_reference || "", payments_count: 1 }; break;
+      default: docPayload.other = { sum: negSum, info: "החזר" };
     }
 
-    // Write balancing credit row (negative) for our books
+    const { data: docData } = await icountJson("/doc/create", docPayload);
+    console.log("[icount sm negative receipt]", JSON.stringify(docData));
+
+    if (!docData?.status) {
+      return new Response(JSON.stringify({
+        error: "Negative receipt creation failed",
+        details: docData,
+        cc_refund: ccRefundResult,
+      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const docId = String(docData.doc_id ?? docData.docnum ?? "");
+    const docNumber = String(docData.docnum ?? docData.doc_number ?? "");
+    const docUrl = docData.doc_url || docData.pdf_link || docData.url || null;
+
+    // Step 3: insert balancing credit row
     const { data: credit, error: insErr } = await supabase
       .from("school_music_payments")
       .insert({
         school_music_student_id: payment.school_music_student_id,
         school_music_school_id: payment.school_music_school_id,
         academic_year_id: payment.academic_year_id,
-        amount: -sum,
+        amount: negSum,
         payment_status: "refunded",
-        payment_method: "credit_card",
+        payment_method: payment.payment_method,
         paid_at: new Date().toISOString(),
-        notes: reason || `ביטול קבלה ${payment.icount_doc_number} והחזר אשראי`,
+        notes: reason || `החזר ${isPartial ? "חלקי " : ""}לקבלה ${payment.icount_doc_number ?? ""}`.trim(),
         refund_of_payment_id: payment.id,
-        icount_doc_type: "refund",
+        icount_doc_id: docId,
+        icount_doc_number: docNumber,
+        invoice_url: docUrl,
+        icount_doc_type: "receipt",
         icount_transaction_id: payment.icount_transaction_id,
       })
       .select()
@@ -127,18 +194,22 @@ Deno.serve(async (req: Request) => {
 
     if (insErr) console.error("[icount-refund-api] insert credit row error", insErr);
 
-    // Mark original payment as refunded
-    await supabase
-      .from("school_music_payments")
-      .update({ payment_status: "refunded" })
-      .eq("id", payment.id);
+    // If full refund, mark original as refunded
+    if (Math.abs(requested - remaining) < 0.01 && alreadyRefunded === 0) {
+      await supabase.from("school_music_payments")
+        .update({ payment_status: "refunded" })
+        .eq("id", payment.id);
+    }
 
     return new Response(JSON.stringify({
       ok: true,
-      cancelled_doc: payment.icount_doc_number,
-      cc_refund: true,
+      partial: isPartial,
+      cc_refund: !!isCc,
+      doc_id: docId,
+      doc_number: docNumber,
+      url: docUrl,
       credit_payment_id: credit?.id,
-      details: data,
+      details: { cc: ccRefundResult, doc: docData },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[icount-refund-api]", e);
