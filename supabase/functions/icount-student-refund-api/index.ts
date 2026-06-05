@@ -127,14 +127,14 @@ Deno.serve(async (req: Request) => {
           };
           const { data: txData } = await icountJson("/cc/transactions", txPayload);
           console.log("[icount /cc/transactions student]", JSON.stringify(txData));
-          const txList = txData?.transactions || txData?.deals || txData?.data || txData?.results || [];
+          const txList = txData?.results_list || txData?.transactions || txData?.deals || txData?.data || txData?.results || [];
           const txArr = Array.isArray(txList) ? txList : Object.values(txList || {});
           const match: any = txArr.find((t: any) =>
             (ccRow.confirmation_code && String(t.confirmation_code ?? t.auth_num ?? "") === String(ccRow.confirmation_code))
           ) || txArr.find((t: any) =>
             ccRow.card_number && String(t.card_number ?? t.cc_last4 ?? t.last_4_digits ?? "").slice(-4) === String(ccRow.card_number).slice(-4)
           ) || txArr[0];
-          dealId = match?.cc_deal_id || match?.deal_id || match?.tid || match?.id || null;
+          dealId = match?.cc_bill_log_id || null;
         }
       }
 
@@ -150,6 +150,7 @@ Deno.serve(async (req: Request) => {
       const { data: ccData } = await icountJson("/cc/refund", {
         ...auth,
         cc_deal_id: dealId,
+        cc_bill_log_id: dealId,
         sum: Math.abs(requested),
       });
       console.log("[icount /cc/refund student]", JSON.stringify(ccData));
