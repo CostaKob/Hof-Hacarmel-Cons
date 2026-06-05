@@ -265,13 +265,13 @@ const StudentPaymentsSection = ({
                   )}
                   {!readOnly && canRefund && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      title={p.payment_method === "credit_card" && p.icount_transaction_id
+                      title={p.payment_method === "credit_card"
                         ? `החזר אשראי דרך iCount (נותר ₪${remaining.toLocaleString()})`
                         : `בצע זיכוי (קבלה במינוס) ב-iCount (נותר ₪${remaining.toLocaleString()})`}
                       disabled={refundMutation.isPending || ccRefundMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
-                        const isCc = p.payment_method === "credit_card" && !!p.icount_transaction_id;
+                        const isCc = p.payment_method === "credit_card";
                         setRefundTarget({ ...p, _remaining: remaining, _cc: isCc });
                         setRefundAmount(String(remaining));
                       }}>
