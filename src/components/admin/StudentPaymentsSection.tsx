@@ -195,7 +195,7 @@ const StudentPaymentsSection = ({
             } else if (p.payment_status === "pending") {
               statusLabel = "ממתין לתשלום";
               statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
-            } else if (refundedSoFar >= Number(p.amount || 0) - 0.5 && refundedSoFar > 0) {
+            } else if (refundedSoFar >= Number(p.amount || 0) - 0.005 && refundedSoFar > 0) {
               statusLabel = "זוכה במלואו";
               statusClass = "bg-muted text-muted-foreground border-border";
             } else if (refundedSoFar > 0) {
