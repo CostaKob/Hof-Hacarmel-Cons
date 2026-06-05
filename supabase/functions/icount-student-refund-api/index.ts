@@ -1,6 +1,9 @@
-// Issues a credit-card refund through iCount's /cc/refund endpoint against a
-// private-student payment (student_payments), then writes a balancing
-// negative row back to student_payments with the new refund receipt URL.
+// Cancels the original iCount document AND refunds the credit card transaction
+// in a single call via /doc/cancel with refund_cc=1. Writes a balancing credit
+// row to student_payments for our books.
+//
+// NOTE: iCount's doc/cancel cancels the ENTIRE document — partial refunds are
+// not supported. We enforce refundAmount == original amount.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -10,12 +13,27 @@ const corsHeaders = {
 
 const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 
-function auth() {
-  const cid = Deno.env.get("ICOUNT_COMPANY_ID");
-  const user = Deno.env.get("ICOUNT_USERNAME");
-  const pass = Deno.env.get("ICOUNT_PASSWORD");
-  if (!cid || !user || !pass) throw new Error("ICOUNT credentials missing");
-  return { cid, user, pass };
+function getToken() {
+  const t = Deno.env.get("ICOUNT_API_TOKEN");
+  if (!t) throw new Error("ICOUNT_API_TOKEN missing");
+  return t;
+}
+
+async function icountPost(path: string, body: Record<string, any>, token: string) {
+  const form = new URLSearchParams();
+  for (const [k, v] of Object.entries(body)) {
+    if (v !== undefined && v !== null) form.append(k, String(v));
+  }
+  const res = await fetch(`${ICOUNT_BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: form.toString(),
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, data };
 }
 
 Deno.serve(async (req: Request) => {
@@ -23,8 +41,8 @@ Deno.serve(async (req: Request) => {
 
   try {
     const { paymentId, refundAmount, reason } = await req.json();
-    if (!paymentId || !refundAmount || Number(refundAmount) <= 0) {
-      return new Response(JSON.stringify({ error: "paymentId and positive refundAmount required" }), {
+    if (!paymentId) {
+      return new Response(JSON.stringify({ error: "paymentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -36,7 +54,7 @@ Deno.serve(async (req: Request) => {
 
     const { data: payment, error: payErr } = await supabase
       .from("student_payments")
-      .select("*, students(first_name,last_name)")
+      .select("*")
       .eq("id", paymentId)
       .maybeSingle();
 
@@ -45,61 +63,47 @@ Deno.serve(async (req: Request) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!payment.icount_transaction_id) {
-      return new Response(JSON.stringify({ error: "no credit-card transaction id on this payment" }), {
+    if (!payment.icount_doc_number || !payment.icount_doc_type) {
+      return new Response(JSON.stringify({ error: "missing iCount document on this payment" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    const original = Math.abs(Number(payment.amount ?? 0));
+    const sum = Math.abs(Number(refundAmount ?? original));
+    if (Math.abs(sum - original) > 0.01) {
+      return new Response(JSON.stringify({
+        error: `iCount תומך רק בביטול מלא של הקבלה. סכום הקבלה: ₪${original}, סכום שביקשת: ₪${sum}`,
+      }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const { data: priorRefunds } = await supabase
       .from("student_payments")
-      .select("amount")
+      .select("id")
       .eq("refund_of_payment_id", paymentId);
-
-    const refundedSoFar = (priorRefunds ?? []).reduce(
-      (s: number, r: any) => s + Math.abs(Number(r.amount ?? 0)), 0,
-    );
-    const maxRefundable = Math.max(0, Math.abs(Number(payment.amount ?? 0)) - refundedSoFar);
-    const sum = Math.abs(Number(refundAmount));
-    if (sum > maxRefundable + 0.001) {
-      return new Response(JSON.stringify({ error: `refund exceeds remaining (₪${maxRefundable})` }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if ((priorRefunds ?? []).length > 0) {
+      return new Response(JSON.stringify({ error: "כבר קיים זיכוי לקבלה זו" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const stu: any = (payment as any).students || {};
-    const fullName = `${stu.first_name ?? ""} ${stu.last_name ?? ""}`.trim();
-    const description = `החזר אשראי — ${fullName}${reason ? ` (${reason})` : ""} — עסקה ${payment.icount_transaction_id}`;
-
-    const creds = auth();
-    const payload = {
-      ...creds,
-      cc_deal_id: payment.icount_transaction_id,
-      transaction_id: payment.icount_transaction_id,
-      sum,
-      reason: reason || "החזר",
-      description,
-      based_on: payment.icount_doc_id ? [payment.icount_doc_id] : undefined,
+    const token = getToken();
+    const cancelBody = {
+      doctype: payment.icount_doc_type,
+      docnum: payment.icount_doc_number,
+      refund_cc: 1,
+      reason: reason || "החזר אשראי לבקשת התלמיד",
     };
 
-    const res = await fetch(`${ICOUNT_BASE}/cc/refund`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json().catch(() => ({}));
-    console.log("[icount student cc refund]", JSON.stringify(data));
+    const { data } = await icountPost("/doc/cancel", cancelBody, token);
+    console.log("[icount doc/cancel student]", JSON.stringify(data));
 
     if (!data?.status) {
-      return new Response(JSON.stringify({ error: "iCount refund failed", details: data }), {
+      const errMsg = data?.reason || data?.error_description || "iCount cancel failed";
+      return new Response(JSON.stringify({ error: errMsg, details: data }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const refundDocId = String(data.doc_id ?? data.docnum ?? "");
-    const refundDocNumber = String(data.docnum ?? data.doc_number ?? "");
-    const refundUrl = data.doc_url ?? data.pdf_link ?? data.url ?? null;
-    const refundTxnId = String(data.cc_deal_id ?? data.tid ?? data.transaction_id ?? "");
 
     const { data: credit, error: insErr } = await supabase
       .from("student_payments")
@@ -111,13 +115,10 @@ Deno.serve(async (req: Request) => {
         transaction_type: "credit",
         payment_method: "credit_card",
         payment_date: new Date().toISOString().slice(0, 10),
-        notes: reason || `החזר אשראי לעסקה ${payment.icount_transaction_id}`,
+        notes: reason || `ביטול קבלה ${payment.icount_doc_number} והחזר אשראי`,
         refund_of_payment_id: payment.id,
-        icount_doc_id: refundDocId || null,
-        icount_doc_number: refundDocNumber || null,
-        invoice_url: refundUrl,
-        icount_doc_type: "receipt",
-        icount_transaction_id: refundTxnId || payment.icount_transaction_id,
+        icount_doc_type: "refund",
+        icount_transaction_id: payment.icount_transaction_id,
       })
       .select()
       .single();
@@ -126,10 +127,10 @@ Deno.serve(async (req: Request) => {
 
     return new Response(JSON.stringify({
       ok: true,
-      doc_id: refundDocId,
-      doc_number: refundDocNumber,
-      url: refundUrl,
+      cancelled_doc: payment.icount_doc_number,
+      cc_refund: true,
       credit_payment_id: credit?.id,
+      details: data,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[icount-student-refund-api]", e);
