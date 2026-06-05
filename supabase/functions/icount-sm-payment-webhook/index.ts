@@ -52,6 +52,8 @@ Deno.serve(async (req: Request) => {
     const docUrl = body.doc_url || body.pdf_link || body.url || body.invoice_url || null;
     const paymentPageId = String(body.payment_page_id ?? body.pay_page_id ?? "");
     const txRef = body.transaction_id || body.cc_token || body.confirmation_code || null;
+    // cc_deal_id is iCount's transaction id used by /cc/refund for partial refunds.
+    const ccDealId = body.cc_deal_id || body.deal_id || body.tid || body.cc_dealid || null;
     const status = String(body.status ?? "").toLowerCase();
 
     const supabase = createClient(
@@ -103,6 +105,7 @@ Deno.serve(async (req: Request) => {
     if (docNumber) updates.icount_doc_number = docNumber;
     if (docUrl) updates.invoice_url = docUrl;
     if (txRef) updates.transaction_reference = String(txRef);
+    if (ccDealId) updates.icount_transaction_id = String(ccDealId);
     if (paymentPageId && !payment.icount_payment_page_id) updates.icount_payment_page_id = paymentPageId;
     updates.icount_doc_type = "receipt";
 
