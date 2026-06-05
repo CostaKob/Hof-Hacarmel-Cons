@@ -62,7 +62,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         .from("school_music_payments" as any)
         .select("*")
         .eq("school_music_student_id", studentId)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
       if (error) throw error;
       return (data ?? []) as any[];
     },
