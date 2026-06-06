@@ -319,7 +319,7 @@ Deno.serve(async (req) => {
       label: templateName,
       idempotency_key: idempotencyKey,
       unsubscribe_token: unsubscribeToken,
-      reply_to: replyTo,
+      reply_to: replyTo || 'music.hof@gmail.com',
       queued_at: new Date().toISOString(),
     },
   })
