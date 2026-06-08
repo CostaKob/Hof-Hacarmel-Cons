@@ -27,6 +27,17 @@ function getAuth(): ICountAuth {
   return { cid, user, pass };
 }
 
+const HEBREW_YEAR_MAP: Record<string, string> = {
+  "2024-2025": "תשפ״ה",
+  "2025-2026": "תשפ״ו",
+  "2026-2027": "תשפ״ז",
+  "2027-2028": "תשפ״ח",
+  "2028-2029": "תשפ״ט",
+  "2029-2030": "תש״צ",
+  "2030-2031": "תשצ״א",
+};
+const toHebrewYear = (name: string): string => HEBREW_YEAR_MAP[name] ?? name;
+
 // Map our payment_method values to iCount payment type IDs.
 // iCount: 1=מזומן, 3=המחאה (cheque), 4=העברה בנקאית, 5=אשראי, 6=הוראת קבע, 7=אחר
 function mapPaymentMethod(method?: string | null): { type: number; label: string } {
@@ -175,7 +186,7 @@ Deno.serve(async (req: Request) => {
       const parts = [
         (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
         (e as any).instruments?.name && `כלי: ${(e as any).instruments.name}`,
-        yearName && `שנת לימוד: ${yearName}`,
+        yearName && `שנת לימוד: ${toHebrewYear(yearName)}`,
         (e as any).lesson_duration_minutes && `משך: ${(e as any).lesson_duration_minutes} דק'`,
         (e as any).lesson_type && `סוג: ${(e as any).lesson_type === "individual" ? "פרטני" : "קבוצתי"}`,
       ].filter(Boolean);

@@ -17,6 +17,17 @@ import { toast } from "sonner";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 
+const HEBREW_YEAR_MAP: Record<string, string> = {
+  "2024-2025": "תשפ״ה",
+  "2025-2026": "תשפ״ו",
+  "2026-2027": "תשפ״ז",
+  "2027-2028": "תשפ״ח",
+  "2028-2029": "תשפ״ט",
+  "2029-2030": "תש״צ",
+  "2030-2031": "תשצ״א",
+};
+const toHebrewYear = (name: string): string => HEBREW_YEAR_MAP[name] ?? name;
+
 const AdminStudentPaymentCalc = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -314,7 +325,7 @@ const AdminStudentPaymentCalc = () => {
       });
 
       const yearName = year?.name ?? "";
-      const hebrewYear = yearName.split(" ").pop() ?? yearName;
+      const hebrewYear = toHebrewYear(yearName);
       const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
       // Build a detailed line breakdown so parents see:
