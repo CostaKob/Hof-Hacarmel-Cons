@@ -21,6 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
   const queryClient = useQueryClient();
@@ -115,18 +116,21 @@ const AdminTeacherCard = () => {
     },
   });
 
+  const { selectedYearId } = useAcademicYear();
+
   const { data: enrollmentsCount = 0 } = useQuery({
-    queryKey: ["admin-teacher-enrollments-count", teacherId],
+    queryKey: ["admin-teacher-enrollments-count", teacherId, selectedYearId],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("enrollments")
         .select("*", { count: "exact", head: true })
         .eq("teacher_id", teacherId!)
-        .eq("is_active", true);
+        .eq("is_active", true)
+        .eq("academic_year_id", selectedYearId!);
       if (error) throw error;
       return count ?? 0;
     },
-    enabled: !!teacherId,
+    enabled: !!teacherId && !!selectedYearId,
   });
 
   const { data: lastReport } = useQuery({
