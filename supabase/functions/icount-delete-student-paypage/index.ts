@@ -2,6 +2,7 @@
 // then clears payment_link_url. Used when the admin cancels a pending student
 // payment link so we don't leave a stale paypage in iCount.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +28,10 @@ async function resolvePaypageIdFromUrl(url?: string | null): Promise<string | nu
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authFail = await requireAdminOrSecretary(req, corsHeaders);
+  if (authFail) return authFail;
+
+
 
   try {
     const { paymentId, paypageId, strict = false } = await req.json().catch(() => ({}));

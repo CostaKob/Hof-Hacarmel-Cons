@@ -25,9 +25,10 @@ function generateToken(): string {
     .join('')
 }
 
-// Auth note: this function uses verify_jwt = true in config.toml, so Supabase's
-// gateway validates the caller's JWT (anon or service_role) before the request
-// reaches this code. No in-function auth check is needed.
+// Auth: this function may only be invoked by trusted server callers — either with
+// the service-role key (used by other edge functions / the email queue dispatcher)
+// or by an authenticated admin / secretary user. Anonymous callers are rejected to
+// prevent abuse of the verified sender domain.
 
 Deno.serve(async (req) => {
   // Handle CORS preflight
@@ -48,6 +49,41 @@ Deno.serve(async (req) => {
       }
     )
   }
+
+  // ---- Caller authorization ----
+  const authHeader = req.headers.get('Authorization') || ''
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+  if (!bearer) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const authClient = createClient(supabaseUrl, supabaseServiceKey)
+  let authorized = false
+  if (bearer === supabaseServiceKey) {
+    authorized = true
+  } else {
+    const { data: claimsData } = await authClient.auth.getClaims(bearer)
+    const claims = claimsData?.claims as { role?: string; sub?: string } | undefined
+    if (claims?.role === 'service_role') {
+      authorized = true
+    } else if (claims?.sub) {
+      const [{ data: isAdmin }, { data: isSecretary }] = await Promise.all([
+        authClient.rpc('has_role', { _user_id: claims.sub, _role: 'admin' }),
+        authClient.rpc('has_role', { _user_id: claims.sub, _role: 'secretary' }),
+      ])
+      if (isAdmin || isSecretary) authorized = true
+    }
+  }
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
 
   // Parse request body
   let templateName: string

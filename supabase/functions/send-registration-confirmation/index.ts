@@ -43,6 +43,36 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Anti-abuse: only allow sending a confirmation right after the registration is
+    // submitted. Refuses replay attacks where an attacker spams confirmations for
+    // arbitrary known registration UUIDs.
+    const createdAt = new Date((reg as any).created_at).getTime();
+    if (!Number.isFinite(createdAt) || Date.now() - createdAt > 10 * 60 * 1000) {
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "registration not recent" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Idempotency: if we already logged a send (pending/sent/suppressed) for this
+    // registration's confirmation, do not re-enqueue.
+    const idempotencyKey = `registration-confirmation-${registrationId}`;
+    const { data: priorLog } = await supabase
+      .from("email_send_log")
+      .select("id")
+      .eq("template_name", "registration-confirmation")
+      .eq("recipient_email", String((reg as any).parent_email || "").toLowerCase())
+      .in("status", ["pending", "sent", "suppressed"])
+      .limit(1)
+      .maybeSingle();
+    if (priorLog) {
+      return new Response(
+        JSON.stringify({ ok: true, deduped: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+
     const parentEmail = (reg as any).parent_email;
     if (!parentEmail) {
       return new Response(JSON.stringify({ skipped: true, reason: "no parent_email" }), {
@@ -96,19 +126,17 @@ Deno.serve(async (req) => {
       minute: "2-digit",
     });
 
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-
     const sendRes = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${ANON_KEY}`,
-        apikey: ANON_KEY,
+        Authorization: `Bearer ${SERVICE_ROLE}`,
+        apikey: SERVICE_ROLE,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         templateName: "registration-confirmation",
         recipientEmail: parentEmail,
-        idempotencyKey: `registration-confirmation-${registrationId}`,
+        idempotencyKey,
         replyTo: "musichof@gmail.com",
         templateData: {
           parentName,

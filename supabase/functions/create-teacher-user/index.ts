@@ -91,11 +91,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Create new auth user with password 123456
+    // Generate a cryptographically random password and return it to the admin caller.
+    const randomBytes = new Uint8Array(12);
+    crypto.getRandomValues(randomBytes);
+    const generatedPassword = btoa(String.fromCharCode(...randomBytes))
+      .replace(/[+/=]/g, "")
+      .slice(0, 14);
+
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
-        password: "123456",
+        password: generatedPassword,
         email_confirm: true,
       });
 
@@ -120,7 +126,7 @@ Deno.serve(async (req) => {
       .eq("id", teacher_id);
 
     return new Response(
-      JSON.stringify({ success: true, user_id: userId }),
+      JSON.stringify({ success: true, user_id: userId, password: generatedPassword }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

@@ -39,10 +39,21 @@ const AdminTeachers = () => {
       }
       const updated = (data as any)?.updated ?? 0;
       const failed = (data as any)?.failed ?? [];
+      const passwords = (data as any)?.passwords ?? [];
+      if (passwords.length > 0) {
+        const csv = "מורה,סיסמה חדשה\n" + passwords.map((p: any) => `"${p.teacher}","${p.password}"`).join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `teacher-passwords-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
       if (failed.length > 0) {
-        toast.warning(`עודכנו ${updated} סיסמאות, ${failed.length} נכשלו`);
+        toast.warning(`עודכנו ${updated} סיסמאות, ${failed.length} נכשלו. הסיסמאות הורדו כקובץ CSV`);
       } else {
-        toast.success(`עודכנו ${updated} סיסמאות ל-123456`);
+        toast.success(`עודכנו ${updated} סיסמאות. הסיסמאות הורדו כקובץ CSV`);
       }
     } catch (err: any) {
       toast.error(`שגיאה באיפוס סיסמאות: ${err?.message ?? "שגיאת רשת"}`);
@@ -178,7 +189,7 @@ const AdminTeachers = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>איפוס סיסמאות לכל המורים</AlertDialogTitle>
             <AlertDialogDescription>
-              פעולה זו תאפס את הסיסמה של כל המורים בעלי חשבון התחברות לסיסמה <strong>123456</strong>. האם להמשיך?
+              פעולה זו תיצור סיסמה חדשה אקראית עבור כל מורה בעל חשבון התחברות. הסיסמאות יורדו כקובץ CSV להפצה. האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

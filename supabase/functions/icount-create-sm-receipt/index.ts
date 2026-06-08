@@ -1,6 +1,7 @@
 // Creates an iCount RECEIPT (קבלה) for a school_music_payments row.
 // Malkar (Non-Profit) — only receipts are issued, no VAT.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -30,6 +31,10 @@ function mapPaymentMethod(method?: string | null): { type: number; label: string
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authFail = await requireAdminOrSecretary(req, corsHeaders);
+  if (authFail) return authFail;
+
+
 
   try {
     const { paymentId } = await req.json();
