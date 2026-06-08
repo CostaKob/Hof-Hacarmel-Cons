@@ -189,7 +189,7 @@ const AdminTeachers = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>איפוס סיסמאות לכל המורים</AlertDialogTitle>
             <AlertDialogDescription>
-              פעולה זו תאפס את הסיסמה של כל המורים בעלי חשבון התחברות לסיסמה <strong>123456</strong>. האם להמשיך?
+              פעולה זו תיצור סיסמה חדשה אקראית עבור כל מורה בעל חשבון התחברות. הסיסמאות יורדו כקובץ CSV להפצה. האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -365,7 +365,7 @@ const AdminTeacherCard = () => {
                   disabled={resetPasswordMutation.isPending}
                 >
                   <KeyRound className="h-4 w-4" />
-                  {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה ל-123456"}
+                  {resetPasswordMutation.isPending ? "מאפס..." : "איפוס סיסמה (יצירת סיסמה חדשה)"}
                 </Button>
                 <Dialog open={emailDialogOpen} onOpenChange={(o) => { setEmailDialogOpen(o); if (o) setNewEmail(teacher.email ?? ""); }}>
                   <DialogTrigger asChild>
