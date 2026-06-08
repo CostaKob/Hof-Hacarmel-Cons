@@ -184,7 +184,7 @@ const AdminTeacherCard = () => {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => toast.success("הסיסמה אופסה ל-123456 בהצלחה"),
+    onSuccess: (data) => toast.success(`הסיסמה אופסה בהצלחה. סיסמה חדשה: ${data?.password ?? ""}`, { duration: 30000 }),
     onError: (err: Error) => toast.error(err.message || "שגיאה באיפוס הסיסמה"),
   });
 
@@ -203,7 +203,7 @@ const AdminTeacherCard = () => {
       if (data?.warning) {
         toast.warning(data.warning);
       } else {
-        toast.success("חשבון כניסה נוצר בהצלחה (סיסמה: 123456)");
+        toast.success(`חשבון כניסה נוצר בהצלחה. סיסמה: ${data?.password ?? ""}`, { duration: 30000 });
       }
     },
     onError: (err: Error) => toast.error(err.message || "שגיאה ביצירת חשבון כניסה"),
