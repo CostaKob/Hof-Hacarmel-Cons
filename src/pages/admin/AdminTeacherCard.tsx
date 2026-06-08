@@ -21,6 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
   const queryClient = useQueryClient();
