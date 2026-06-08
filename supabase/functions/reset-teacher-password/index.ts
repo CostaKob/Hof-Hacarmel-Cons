@@ -69,11 +69,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Reset password to default
-    const DEFAULT_PASSWORD = "123456";
+    // Generate a cryptographically random password and return it to the admin caller.
+    const randomBytes = new Uint8Array(12);
+    crypto.getRandomValues(randomBytes);
+    const generatedPassword = btoa(String.fromCharCode(...randomBytes))
+      .replace(/[+/=]/g, "")
+      .slice(0, 14);
+
     const { error: updateError } =
       await supabaseAdmin.auth.admin.updateUserById(teacher.user_id, {
-        password: DEFAULT_PASSWORD,
+        password: generatedPassword,
       });
 
     if (updateError) {
@@ -84,7 +89,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, password: generatedPassword }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
