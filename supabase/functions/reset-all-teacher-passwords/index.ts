@@ -57,26 +57,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    const DEFAULT_PASSWORD = "123456";
     let success = 0;
     const failed: { teacher: string; error: string }[] = [];
+    const updated: { teacher: string; email?: string; password: string }[] = [];
+
+    const generatePassword = () => {
+      const bytes = new Uint8Array(12);
+      crypto.getRandomValues(bytes);
+      return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 14);
+    };
 
     for (const t of teachers ?? []) {
+      const newPassword = generatePassword();
       const { error } = await supabaseAdmin.auth.admin.updateUserById(t.user_id!, {
-        password: DEFAULT_PASSWORD,
+        password: newPassword,
       });
+      const name = `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim();
       if (error) {
-        failed.push({
-          teacher: `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim(),
-          error: error.message,
-        });
+        failed.push({ teacher: name, error: error.message });
       } else {
         success += 1;
+        updated.push({ teacher: name, password: newPassword });
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, updated: success, failed }),
+      JSON.stringify({ success: true, updated: success, failed, passwords: updated }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {

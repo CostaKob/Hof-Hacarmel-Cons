@@ -114,7 +114,7 @@ const AdminTeacherForm = () => {
             } else if (result?.warning) {
               toast.warning(result.warning);
             } else {
-              toast.success("המורה נוצר וחשבון כניסה הוגדר (סיסמה: 1234)");
+              toast.success(`המורה נוצר וחשבון כניסה הוגדר. סיסמה: ${result?.password ?? ""}`, { duration: 30000 });
             }
           } else {
             toast.success("המורה נוצר בהצלחה");
