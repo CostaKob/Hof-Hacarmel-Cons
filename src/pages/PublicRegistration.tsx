@@ -635,9 +635,9 @@ const PublicRegistration = () => {
             <h2 className="text-2xl font-bold text-foreground">ההרשמה נקלטה בהצלחה!</h2>
             <p className="text-muted-foreground text-lg whitespace-pre-line">{msg}</p>
             {submittedEmail && (
-              <div className="rounded-xl bg-muted/50 border border-border p-4 text-sm text-foreground">
+              <div className="rounded-xl bg-muted/50 border border-border p-4 text-center text-sm text-foreground">
                 אישור הרשמה נשלח לכתובת המייל:
-                <div className="font-semibold mt-1 ltr:text-left" dir="ltr">{submittedEmail}</div>
+                <div className="font-bold text-lg mt-2 text-center" dir="ltr">{submittedEmail}</div>
               </div>
             )}
             <Button
