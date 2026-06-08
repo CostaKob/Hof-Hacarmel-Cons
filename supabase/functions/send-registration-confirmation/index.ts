@@ -43,6 +43,36 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Anti-abuse: only allow sending a confirmation right after the registration is
+    // submitted. Refuses replay attacks where an attacker spams confirmations for
+    // arbitrary known registration UUIDs.
+    const createdAt = new Date((reg as any).created_at).getTime();
+    if (!Number.isFinite(createdAt) || Date.now() - createdAt > 10 * 60 * 1000) {
+      return new Response(
+        JSON.stringify({ skipped: true, reason: "registration not recent" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Idempotency: if we already logged a send (pending/sent/suppressed) for this
+    // registration's confirmation, do not re-enqueue.
+    const idempotencyKey = `registration-confirmation-${registrationId}`;
+    const { data: priorLog } = await supabase
+      .from("email_send_log")
+      .select("id")
+      .eq("template_name", "registration-confirmation")
+      .eq("recipient_email", String((reg as any).parent_email || "").toLowerCase())
+      .in("status", ["pending", "sent", "suppressed"])
+      .limit(1)
+      .maybeSingle();
+    if (priorLog) {
+      return new Response(
+        JSON.stringify({ ok: true, deduped: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+
     const parentEmail = (reg as any).parent_email;
     if (!parentEmail) {
       return new Response(JSON.stringify({ skipped: true, reason: "no parent_email" }), {
