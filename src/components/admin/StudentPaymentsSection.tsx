@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Undo2 } from "lucide-react";
+import { Plus, FileDown, Undo2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
@@ -308,7 +308,12 @@ const StudentPaymentsSection = ({
         defaultType={paymentDialogType}
       />
 
-      <Dialog open={!!refundTarget} onOpenChange={(o) => { if (!o) { setRefundTarget(null); setRefundAmount(""); } }}>
+      <Dialog open={!!refundTarget} onOpenChange={(o) => {
+        if (!o && !refundMutation.isPending && !ccRefundMutation.isPending) {
+          setRefundTarget(null);
+          setRefundAmount("");
+        }
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>זיכוי לקבלה {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
@@ -319,28 +324,46 @@ const StudentPaymentsSection = ({
               )}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="refund-amount">סכום הזיכוי (₪)</Label>
-            <Input
-              id="refund-amount"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              max={refundTarget?._remaining ?? undefined}
-              step="0.01"
-              className="h-12 rounded-xl"
-              value={refundAmount}
-              onChange={(e) => setRefundAmount(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              {refundTarget?._cc
-                ? "⚡ יבוצע החזר אמיתי לכרטיס המקורי דרך iCount בסכום שתבחר, ותופק קבלה במינוס מקושרת לקבלה המקורית. ניתן להחזיר חלקי או מלא."
-                : "תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים."}
-            </p>
-          </div>
+
+          {(refundMutation.isPending || ccRefundMutation.isPending) ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-6">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium text-foreground">
+                {refundTarget?._cc ? "מבצע החזר לכרטיס אשראי..." : "מבצע זיכוי..."}
+              </p>
+              <p className="text-xs text-muted-foreground text-center">
+                אנא המתן, הפעולה עשויה לקחת מספר שניות
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="refund-amount">סכום הזיכוי (₪)</Label>
+              <Input
+                id="refund-amount"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max={refundTarget?._remaining ?? undefined}
+                step="0.01"
+                className="h-12 rounded-xl"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                {refundTarget?._cc
+                  ? "⚡ יבוצע החזר אמיתי לכרטיס המקורי דרך iCount בסכום שתבחר, ותופק קבלה במינוס מקושרת לקבלה המקורית. ניתן להחזיר חלקי או מלא."
+                  : "תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים."}
+              </p>
+            </div>
+          )}
 
           <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="h-11 rounded-xl" onClick={() => { setRefundTarget(null); setRefundAmount(""); }}>
+            <Button
+              variant="outline"
+              className="h-11 rounded-xl"
+              disabled={refundMutation.isPending || ccRefundMutation.isPending}
+              onClick={() => { setRefundTarget(null); setRefundAmount(""); }}
+            >
               ביטול
             </Button>
             <Button
@@ -356,7 +379,7 @@ const StudentPaymentsSection = ({
               }}
             >
               {(refundMutation.isPending || ccRefundMutation.isPending)
-                ? "מבצע..."
+                ? <><Loader2 className="h-4 w-4 animate-spin ml-2" />מבצע...</>
                 : refundTarget?._cc ? "בצע החזר אשראי" : "בצע זיכוי"}
             </Button>
           </DialogFooter>
