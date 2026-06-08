@@ -3,6 +3,7 @@
 // `student_payments` + `students`. Caches the URL on the pending payment row
 // and re-uses it as long as the amount is unchanged.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -81,6 +82,10 @@ async function createPaypage(opts: {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authFail = await requireAdminOrSecretary(req, corsHeaders);
+  if (authFail) return authFail;
+
+
 
   try {
     const {
