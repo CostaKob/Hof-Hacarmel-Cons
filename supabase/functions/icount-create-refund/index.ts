@@ -2,6 +2,7 @@
 // receipt via `based_on`. Malkar (Non-Profit) cannot issue Tax Invoices or Credit Invoices —
 // refunds are issued as a negative Receipt. Inserts a matching credit row into student_payments.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -20,6 +21,10 @@ function getAuth() {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authFail = await requireAdminOrSecretary(req, corsHeaders);
+  if (authFail) return authFail;
+
+
 
   try {
     const { paymentId, amount: amountOverride, reason } = await req.json();

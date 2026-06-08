@@ -1,6 +1,7 @@
 // Creates a NEGATIVE iCount RECEIPT (קבלה במינוס) for a refund of a school_music_payments row.
 // Inserts a matching credit row (negative amount) linked via refund_of_payment_id.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +20,10 @@ function getAuth() {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authFail = await requireAdminOrSecretary(req, corsHeaders);
+  if (authFail) return authFail;
+
+
 
   try {
     const { paymentId, amount: amountOverride, reason } = await req.json();

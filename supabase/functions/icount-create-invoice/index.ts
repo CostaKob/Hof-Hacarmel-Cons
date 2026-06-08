@@ -3,6 +3,7 @@
 // prohibited from issuing Tax Invoices (חשבונית מס). Only Receipts are issued.
 // Updates the row with icount_doc_id, icount_doc_number, invoice_url, icount_doc_type.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -68,6 +69,10 @@ function mapPaymentMethod(method?: string | null): { type: number; label: string
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const authFail = await requireAdminOrSecretary(req, corsHeaders);
+  if (authFail) return authFail;
+
+
 
   try {
     const { paymentId, groupId } = await req.json();
