@@ -41,15 +41,14 @@ export function useTeacherById(teacherId: string | undefined) {
 export function useTeacherEnrollments(teacherId: string | undefined, yearId?: string | null) {
   return useQuery({
     queryKey: ["teacher-enrollments", teacherId, yearId],
-    enabled: !!teacherId,
+    enabled: !!teacherId && !!yearId,
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("enrollments")
         .select(`*, students (*), instruments (name), schools (id, name)`)
         .eq("teacher_id", teacherId!)
-        .eq("is_active", true);
-      if (yearId) q = q.eq("academic_year_id", yearId);
-      const { data, error } = await q;
+        .eq("is_active", true)
+        .eq("academic_year_id", yearId!);
       if (error) throw error;
       // Filter out students who stopped studying
       return (data ?? []).filter((e: any) => e.students?.student_status !== "הפסיק");
@@ -61,14 +60,13 @@ export function useTeacherEnrollments(teacherId: string | undefined, yearId?: st
 export function useTeacherAllEnrollments(teacherId: string | undefined, yearId?: string | null) {
   return useQuery({
     queryKey: ["teacher-all-enrollments", teacherId, yearId],
-    enabled: !!teacherId,
+    enabled: !!teacherId && !!yearId,
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from("enrollments")
         .select(`*, students (*), instruments (name), schools (id, name)`)
-        .eq("teacher_id", teacherId!);
-      if (yearId) q = q.eq("academic_year_id", yearId);
-      const { data, error } = await q;
+        .eq("teacher_id", teacherId!)
+        .eq("academic_year_id", yearId!);
       if (error) throw error;
       return data ?? [];
     },
