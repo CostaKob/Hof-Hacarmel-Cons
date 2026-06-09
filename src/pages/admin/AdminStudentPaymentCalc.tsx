@@ -150,10 +150,10 @@ const AdminStudentPaymentCalc = () => {
     try { const raw = localStorage.getItem(lsKey); return raw ? JSON.parse(raw) : null; } catch { return null; }
   })();
 
-  // Discount state
-  const [sibling, setSibling] = useState<boolean>(!!lsInitial?.sibling);
-  const [secondInstrument, setSecondInstrument] = useState<boolean>(!!lsInitial?.secondInstrument);
-  const [majorStudent, setMajorStudent] = useState<boolean>(!!lsInitial?.majorStudent);
+  // Dynamic discount selection — set of selected discount_type ids
+  const [selectedDiscountIds, setSelectedDiscountIds] = useState<string[]>(
+    Array.isArray(lsInitial?.selectedDiscountIds) ? lsInitial.selectedDiscountIds : []
+  );
   const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>(
     Array.isArray(lsInitial?.customDiscounts) ? lsInitial.customDiscounts : []
   );
@@ -163,15 +163,44 @@ const AdminStudentPaymentCalc = () => {
   );
   const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
 
+  // After discountTypes load, map any legacy keys (sibling/secondInstrument/majorStudent)
+  // from localStorage or older payments into discount_type ids.
+  const mapLegacy = (raw: any): string[] => {
+    if (!raw || typeof raw !== "object") return [];
+    const ids = new Set<string>(Array.isArray(raw.selectedDiscountIds) ? raw.selectedDiscountIds : []);
+    const legacyMap: Record<string, string> = {
+      sibling: "sibling",
+      secondInstrument: "second_instrument",
+      majorStudent: "major_student",
+    };
+    for (const k of Object.keys(legacyMap)) {
+      if (raw[k] === true) {
+        const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
+        if (dt) ids.add(dt.id);
+      }
+    }
+    return Array.from(ids);
+  };
+
+  // Hydrate from legacy localStorage keys once discountTypes are loaded
+  useEffect(() => {
+    if (!lsInitial || !discountTypes.length) return;
+    if (Array.isArray(lsInitial.selectedDiscountIds)) return;
+    const mapped = mapLegacy(lsInitial);
+    if (mapped.length) setSelectedDiscountIds(mapped);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountTypes.length]);
 
   useEffect(() => {
-    if (student?.is_major_student && !lsInitial) setMajorStudent(true);
-  }, [student]);
+    if (!student?.is_major_student || lsInitial || !discountTypes.length) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "major_student");
+    if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
+  }, [student, discountTypes]);
 
   // Hydrate discount state from the most recent payment (pending or paid) so
   // reopening the card shows the same discounts that were used previously.
   useEffect(() => {
-    if (hydratedFromPending) return;
+    if (hydratedFromPending || !discountTypes.length) return;
     const source =
       (pendingPayments && pendingPayments[0]) ||
       ((allStudentPayments as any[]).find((p) => {
@@ -182,26 +211,31 @@ const AdminStudentPaymentCalc = () => {
     const br = source?.enrollment_breakdown;
     const d = br && !Array.isArray(br) ? br.discounts : null;
     if (d && typeof d === "object") {
-      if (typeof d.sibling === "boolean") setSibling(d.sibling);
-      if (typeof d.secondInstrument === "boolean") setSecondInstrument(d.secondInstrument);
-      if (typeof d.majorStudent === "boolean") setMajorStudent(d.majorStudent);
+      const mapped = mapLegacy(d);
+      if (mapped.length) setSelectedDiscountIds(mapped);
       if (Array.isArray(d.customDiscounts)) setCustomDiscounts(d.customDiscounts);
       if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
         setStartDateOverrides(d.startDateOverrides);
       }
     }
     setHydratedFromPending(true);
-  }, [pendingPayments, allStudentPayments, hydratedFromPending]);
+  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes]);
 
   // Persist discounts whenever they change
   useEffect(() => {
     if (!lsKey) return;
     try {
       localStorage.setItem(lsKey, JSON.stringify({
-        sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides,
+        selectedDiscountIds, customDiscounts, startDateOverrides,
       }));
     } catch { /* ignore quota errors */ }
-  }, [lsKey, sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides]);
+  }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
+
+  const toggleDiscount = (id: string) => {
+    setSelectedDiscountIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
 
   // Update enrollment end_date directly from the table.
