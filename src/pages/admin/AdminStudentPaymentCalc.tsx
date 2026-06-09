@@ -623,21 +623,42 @@ const AdminStudentPaymentCalc = () => {
 
         {/* Discounts */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-          <h2 className="font-semibold text-foreground text-base">הנחות</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
-              <Checkbox checked={sibling} onCheckedChange={(v) => setSibling(!!v)} />
-              <span className="text-sm">אח שני ({discountRates.sibling}%)</span>
-            </label>
-            <label className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
-              <Checkbox checked={secondInstrument} onCheckedChange={(v) => setSecondInstrument(!!v)} />
-              <span className="text-sm">כלי שני ({discountRates.secondInstrument}%)</span>
-            </label>
-            <label className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
-              <Checkbox checked={majorStudent} onCheckedChange={(v) => setMajorStudent(!!v)} />
-              <span className="text-sm">תלמיד מגמה ({discountRates.majorStudent}%)</span>
-            </label>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="font-semibold text-foreground text-base">הנחות</h2>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/payment-settings")}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              ניהול סוגי הנחות
+            </button>
           </div>
+          {discountTypes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              לא הוגדרו סוגי הנחות לשנה זו.{" "}
+              <button onClick={() => navigate("/admin/payment-settings")} className="underline">
+                הגדר בהגדרות תשלום
+              </button>
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {discountTypes.map((d) => {
+                const checked = selectedDiscountIds.includes(d.id);
+                const scopeNote = d.applies_to === "cheapest_enrollment" ? " · על הרישום הזול ביותר" : "";
+                return (
+                  <label
+                    key={d.id}
+                    className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30"
+                  >
+                    <Checkbox checked={checked} onCheckedChange={() => toggleDiscount(d.id)} />
+                    <span className="text-sm">
+                      {d.label} ({Number(d.percentage)}%{scopeNote})
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
