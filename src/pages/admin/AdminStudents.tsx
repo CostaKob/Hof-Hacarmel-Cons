@@ -173,10 +173,24 @@ const AdminStudents = () => {
     const map = new Map<string, number>();
     if (!paymentSettings || !yearFull) return map;
     const prices = paymentSettings.lesson_prices ?? {};
-    const rates = {
-      sibling: Number(yearFull.discount_sibling_pct ?? 0),
-      secondInstrument: Number(yearFull.discount_second_instrument_pct ?? 0),
-      majorStudent: Number(yearFull.discount_major_student_pct ?? 0),
+
+    // Resolve selected discount_types for a student from saved state
+    const resolveSelected = (saved: any): DiscountType[] => {
+      if (!saved || !discountTypes.length) return [];
+      const ids = new Set<string>(Array.isArray(saved.selectedDiscountIds) ? saved.selectedDiscountIds : []);
+      // Legacy fallbacks
+      const legacyMap: Record<string, string> = {
+        sibling: "sibling",
+        secondInstrument: "second_instrument",
+        majorStudent: "major_student",
+      };
+      for (const k of Object.keys(legacyMap)) {
+        if (saved[k] === true) {
+          const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
+          if (dt) ids.add(dt.id);
+        }
+      }
+      return discountTypes.filter((d) => ids.has(d.id));
     };
 
     for (const [sid, studentRows] of enrollmentRowsByStudent.entries()) {
@@ -199,18 +213,19 @@ const AdminStudents = () => {
       ));
 
       const proratedTotal = calcRows.reduce((sum, r) => sum + r.prorated, 0);
-      const sibling = !!discounts?.sibling;
-      const secondInstrument = !!discounts?.secondInstrument;
-      const majorStudent = discounts && typeof discounts.majorStudent === "boolean" ? discounts.majorStudent : !!studentRows[0]?.students?.is_major_student;
-      const secondInstrumentEnrollmentId = secondInstrument && calcRows.length >= 2
-        ? [...calcRows].sort((a, b) => a.prorated - b.prorated)[0].enrollmentId
-        : null;
-      const afterStdDiscount = calcRows.reduce((sum, r) => {
-        const pct = (sibling ? rates.sibling : 0)
-          + (majorStudent ? rates.majorStudent : 0)
-          + (r.enrollmentId === secondInstrumentEnrollmentId ? rates.secondInstrument : 0);
-        return sum + Math.round(r.prorated * (1 - pct / 100));
-      }, 0);
+
+      // Resolve selected; auto-apply "major_student" type for is_major_student when nothing saved
+      let selected = resolveSelected(discounts);
+      if (!discounts && studentRows[0]?.students?.is_major_student) {
+        const dt = discountTypes.find((d) => d.legacy_key === "major_student");
+        if (dt) selected = [dt];
+      }
+
+      const { afterStdDiscount } = computeStandardDiscounts(
+        calcRows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+        selected,
+      );
+
       const customDiscountAmount = (Array.isArray(discounts?.customDiscounts) ? discounts.customDiscounts : []).reduce((sum: number, c: any) => {
         const v = Number(c.value) || 0;
         return sum + (c.mode === "pct" ? (afterStdDiscount * v) / 100 : v);
@@ -224,7 +239,7 @@ const AdminStudents = () => {
       }
     }
     return map;
-  }, [paymentSettings, yearFull, enrollmentRowsByStudent, getSavedDiscountState, paidByStudent]);
+  }, [paymentSettings, yearFull, discountTypes, enrollmentRowsByStudent, getSavedDiscountState, paidByStudent]);
 
   // Returns "full" | "partial" | "unpaid"
   // Connected to the same calculated balance used in the payment summary screen.
