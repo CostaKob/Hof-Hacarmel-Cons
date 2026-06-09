@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Plus, Search, FileSpreadsheet, Users, ListChecks } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
+import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
