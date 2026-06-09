@@ -715,22 +715,14 @@ const AdminStudentPaymentCalc = () => {
             />
           )}
           <SummaryRow label={`סה״כ אחרי קיזוז (${lessonsRemainingTotal} שיעורים נותרים)`} value={proratedTotal} bold />
-          {sibling && discountRates.sibling > 0 && (
-            <SummaryRow
-              label={`הנחת אחים (${discountRates.sibling}%)`}
-              value={-(Math.round(proratedTotal * discountRates.sibling) / 100)}
-            />
-          )}
-          {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
-            const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
-            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument) / 100 : 0;
-            return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי השני)`} value={-amt} />;
-          })()}
-          {majorStudent && discountRates.majorStudent > 0 && (
-            <SummaryRow
-              label={`הנחת מגמה (${discountRates.majorStudent}%)`}
-              value={-(Math.round(proratedTotal * discountRates.majorStudent) / 100)}
-            />
+          {stdCompute.lines.map((dl) =>
+            dl.amount > 0 ? (
+              <SummaryRow
+                key={dl.discountTypeId}
+                label={`${dl.label} (${dl.percentage}%${dl.applies_to === "cheapest_enrollment" ? " על הרישום הזול ביותר" : ""})`}
+                value={-(Math.round(dl.amount * 100) / 100)}
+              />
+            ) : null
           )}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
