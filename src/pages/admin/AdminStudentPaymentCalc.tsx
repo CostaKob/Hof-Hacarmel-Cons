@@ -387,27 +387,13 @@ const AdminStudentPaymentCalc = () => {
         }
       });
 
-      if (sibling && discountRates.sibling > 0) {
+      stdCompute.lines.forEach((dl) => {
+        if (dl.amount <= 0) return;
         lines.push({
-          description: `הנחת אחים${yearSuffix} (${discountRates.sibling}%)`,
-          amount: -(Math.round(proratedTotal * discountRates.sibling) / 100),
+          description: `${dl.label}${yearSuffix} (${dl.percentage}%)`,
+          amount: -(Math.round(dl.amount * 100) / 100),
         });
-      }
-      if (secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId) {
-        const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
-        if (secondRow) {
-          lines.push({
-            description: `הנחת כלי שני${yearSuffix} (${discountRates.secondInstrument}%)`,
-            amount: -(Math.round(secondRow.prorated * discountRates.secondInstrument) / 100),
-          });
-        }
-      }
-      if (majorStudent && discountRates.majorStudent > 0) {
-        lines.push({
-          description: `הנחת תלמיד מגמה${yearSuffix} (${discountRates.majorStudent}%)`,
-          amount: -(Math.round(proratedTotal * discountRates.majorStudent) / 100),
-        });
-      }
+      });
       customDiscounts.forEach((c) => {
         const v = Number(c.value) || 0;
         if (!v) return;
