@@ -306,32 +306,20 @@ const AdminStudentPaymentCalc = () => {
   const lessonsRemainingTotal = rows.reduce((s, r) => s + (r.lessonsRemaining || 0), 0);
   const lessonsTotalAll = rows.reduce((s, r) => s + (r.lessonsTotal || 0), 0);
 
-  const discountRates = {
-    sibling: Number(yearFull?.discount_sibling_pct ?? 0),
-    secondInstrument: Number(yearFull?.discount_second_instrument_pct ?? 0),
-    majorStudent: Number(yearFull?.discount_major_student_pct ?? 0),
-  };
+  // Dynamic selected discount_types
+  const selectedDiscounts = discountTypes.filter((d) => selectedDiscountIds.includes(d.id));
 
-  // Discounts that apply on ALL enrollments
-  const globalDiscountPct =
-    (sibling ? discountRates.sibling : 0) +
-    (majorStudent ? discountRates.majorStudent : 0);
-
-  // "Second instrument" discount applies ONLY to one enrollment (the cheapest one),
-  // not to all. Active only when there are 2+ enrollments.
-  const secondInstrumentEnrollmentId =
-    secondInstrument && rows.length >= 2
-      ? [...rows].sort((a, b) => a.prorated - b.prorated)[0].enrollmentId
-      : null;
+  const stdCompute = computeStandardDiscounts(
+    rows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+    selectedDiscounts,
+  );
 
   const rowsAfterStd = rows.map((r) => {
-    const pct =
-      globalDiscountPct +
-      (r.enrollmentId === secondInstrumentEnrollmentId ? discountRates.secondInstrument : 0);
+    const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
     return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
   });
 
-  const afterStdDiscount = rowsAfterStd.reduce((s, r) => s + r.afterStd, 0);
+  const afterStdDiscount = stdCompute.afterStdDiscount;
   // For display/payload — effective overall discount %
   const stdDiscountPct = proratedTotal > 0 ? ((proratedTotal - afterStdDiscount) / proratedTotal) * 100 : 0;
 
