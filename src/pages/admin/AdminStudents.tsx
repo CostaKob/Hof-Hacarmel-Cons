@@ -106,6 +106,21 @@ const AdminStudents = () => {
     },
   });
 
+  const { data: discountTypes = [] } = useQuery({
+    queryKey: ["discount-types", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discount_types" as any)
+        .select("*")
+        .eq("academic_year_id", selectedYearId!)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data as any[]) as DiscountType[];
+    },
+  });
+
   const enrollmentRowsByStudent = useMemo(() => {
     const map = new Map<string, any[]>();
     for (const r of rows as any[]) {
