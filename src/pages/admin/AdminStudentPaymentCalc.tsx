@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
+import { calcEnrollment, type CalcRow } from "@/lib/paymentCalc";
+import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { toast } from "sonner";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
