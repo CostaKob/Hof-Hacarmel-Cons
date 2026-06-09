@@ -421,9 +421,14 @@ const AdminStudentPaymentCalc = () => {
           academicYearName: hebrewYear ?? null,
           lines,
           discounts: {
-            sibling,
-            secondInstrument,
-            majorStudent,
+            selectedDiscountIds,
+            discountTypesSnapshot: selectedDiscounts.map((d) => ({
+              id: d.id,
+              label: d.label,
+              percentage: d.percentage,
+              applies_to: d.applies_to,
+              legacy_key: d.legacy_key,
+            })),
             customDiscounts,
             startDateOverrides,
           },
