@@ -80,6 +80,22 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  const { data: discountTypes = [] } = useQuery({
+    queryKey: ["discount-types", yearId],
+    enabled: !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discount_types" as any)
+        .select("*")
+        .eq("academic_year_id", yearId!)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data as any[]) as DiscountType[];
+    },
+  });
+
   const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
