@@ -119,6 +119,53 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_types: {
+        Row: {
+          academic_year_id: string
+          applies_to: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          legacy_key: string | null
+          percentage: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id: string
+          applies_to?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          legacy_key?: string | null
+          percentage?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string
+          applies_to?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          legacy_key?: string | null
+          percentage?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_types_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       educational_schools: {
         Row: {
           city: string | null

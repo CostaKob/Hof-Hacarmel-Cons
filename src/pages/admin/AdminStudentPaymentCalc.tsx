@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { calcEnrollment, totalDiscountPct, type CalcRow } from "@/lib/paymentCalc";
+import { calcEnrollment, type CalcRow } from "@/lib/paymentCalc";
+import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { toast } from "sonner";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
@@ -79,6 +80,22 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  const { data: discountTypes = [] } = useQuery({
+    queryKey: ["discount-types", yearId],
+    enabled: !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discount_types" as any)
+        .select("*")
+        .eq("academic_year_id", yearId!)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data as any[]) as DiscountType[];
+    },
+  });
+
   const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
@@ -133,10 +150,10 @@ const AdminStudentPaymentCalc = () => {
     try { const raw = localStorage.getItem(lsKey); return raw ? JSON.parse(raw) : null; } catch { return null; }
   })();
 
-  // Discount state
-  const [sibling, setSibling] = useState<boolean>(!!lsInitial?.sibling);
-  const [secondInstrument, setSecondInstrument] = useState<boolean>(!!lsInitial?.secondInstrument);
-  const [majorStudent, setMajorStudent] = useState<boolean>(!!lsInitial?.majorStudent);
+  // Dynamic discount selection — set of selected discount_type ids
+  const [selectedDiscountIds, setSelectedDiscountIds] = useState<string[]>(
+    Array.isArray(lsInitial?.selectedDiscountIds) ? lsInitial.selectedDiscountIds : []
+  );
   const [customDiscounts, setCustomDiscounts] = useState<{ label: string; value: string; mode: "pct" | "amount" }[]>(
     Array.isArray(lsInitial?.customDiscounts) ? lsInitial.customDiscounts : []
   );
@@ -146,15 +163,44 @@ const AdminStudentPaymentCalc = () => {
   );
   const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
 
+  // After discountTypes load, map any legacy keys (sibling/secondInstrument/majorStudent)
+  // from localStorage or older payments into discount_type ids.
+  const mapLegacy = (raw: any): string[] => {
+    if (!raw || typeof raw !== "object") return [];
+    const ids = new Set<string>(Array.isArray(raw.selectedDiscountIds) ? raw.selectedDiscountIds : []);
+    const legacyMap: Record<string, string> = {
+      sibling: "sibling",
+      secondInstrument: "second_instrument",
+      majorStudent: "major_student",
+    };
+    for (const k of Object.keys(legacyMap)) {
+      if (raw[k] === true) {
+        const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
+        if (dt) ids.add(dt.id);
+      }
+    }
+    return Array.from(ids);
+  };
+
+  // Hydrate from legacy localStorage keys once discountTypes are loaded
+  useEffect(() => {
+    if (!lsInitial || !discountTypes.length) return;
+    if (Array.isArray(lsInitial.selectedDiscountIds)) return;
+    const mapped = mapLegacy(lsInitial);
+    if (mapped.length) setSelectedDiscountIds(mapped);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountTypes.length]);
 
   useEffect(() => {
-    if (student?.is_major_student && !lsInitial) setMajorStudent(true);
-  }, [student]);
+    if (!student?.is_major_student || lsInitial || !discountTypes.length) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "major_student");
+    if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
+  }, [student, discountTypes]);
 
   // Hydrate discount state from the most recent payment (pending or paid) so
   // reopening the card shows the same discounts that were used previously.
   useEffect(() => {
-    if (hydratedFromPending) return;
+    if (hydratedFromPending || !discountTypes.length) return;
     const source =
       (pendingPayments && pendingPayments[0]) ||
       ((allStudentPayments as any[]).find((p) => {
@@ -165,26 +211,31 @@ const AdminStudentPaymentCalc = () => {
     const br = source?.enrollment_breakdown;
     const d = br && !Array.isArray(br) ? br.discounts : null;
     if (d && typeof d === "object") {
-      if (typeof d.sibling === "boolean") setSibling(d.sibling);
-      if (typeof d.secondInstrument === "boolean") setSecondInstrument(d.secondInstrument);
-      if (typeof d.majorStudent === "boolean") setMajorStudent(d.majorStudent);
+      const mapped = mapLegacy(d);
+      if (mapped.length) setSelectedDiscountIds(mapped);
       if (Array.isArray(d.customDiscounts)) setCustomDiscounts(d.customDiscounts);
       if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
         setStartDateOverrides(d.startDateOverrides);
       }
     }
     setHydratedFromPending(true);
-  }, [pendingPayments, allStudentPayments, hydratedFromPending]);
+  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes]);
 
   // Persist discounts whenever they change
   useEffect(() => {
     if (!lsKey) return;
     try {
       localStorage.setItem(lsKey, JSON.stringify({
-        sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides,
+        selectedDiscountIds, customDiscounts, startDateOverrides,
       }));
     } catch { /* ignore quota errors */ }
-  }, [lsKey, sibling, secondInstrument, majorStudent, customDiscounts, startDateOverrides]);
+  }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
+
+  const toggleDiscount = (id: string) => {
+    setSelectedDiscountIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
 
   // Update enrollment end_date directly from the table.
@@ -255,32 +306,20 @@ const AdminStudentPaymentCalc = () => {
   const lessonsRemainingTotal = rows.reduce((s, r) => s + (r.lessonsRemaining || 0), 0);
   const lessonsTotalAll = rows.reduce((s, r) => s + (r.lessonsTotal || 0), 0);
 
-  const discountRates = {
-    sibling: Number(yearFull?.discount_sibling_pct ?? 0),
-    secondInstrument: Number(yearFull?.discount_second_instrument_pct ?? 0),
-    majorStudent: Number(yearFull?.discount_major_student_pct ?? 0),
-  };
+  // Dynamic selected discount_types
+  const selectedDiscounts = discountTypes.filter((d) => selectedDiscountIds.includes(d.id));
 
-  // Discounts that apply on ALL enrollments
-  const globalDiscountPct =
-    (sibling ? discountRates.sibling : 0) +
-    (majorStudent ? discountRates.majorStudent : 0);
-
-  // "Second instrument" discount applies ONLY to one enrollment (the cheapest one),
-  // not to all. Active only when there are 2+ enrollments.
-  const secondInstrumentEnrollmentId =
-    secondInstrument && rows.length >= 2
-      ? [...rows].sort((a, b) => a.prorated - b.prorated)[0].enrollmentId
-      : null;
+  const stdCompute = computeStandardDiscounts(
+    rows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+    selectedDiscounts,
+  );
 
   const rowsAfterStd = rows.map((r) => {
-    const pct =
-      globalDiscountPct +
-      (r.enrollmentId === secondInstrumentEnrollmentId ? discountRates.secondInstrument : 0);
+    const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
     return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
   });
 
-  const afterStdDiscount = rowsAfterStd.reduce((s, r) => s + r.afterStd, 0);
+  const afterStdDiscount = stdCompute.afterStdDiscount;
   // For display/payload — effective overall discount %
   const stdDiscountPct = proratedTotal > 0 ? ((proratedTotal - afterStdDiscount) / proratedTotal) * 100 : 0;
 
@@ -348,27 +387,13 @@ const AdminStudentPaymentCalc = () => {
         }
       });
 
-      if (sibling && discountRates.sibling > 0) {
+      stdCompute.lines.forEach((dl) => {
+        if (dl.amount <= 0) return;
         lines.push({
-          description: `הנחת אחים${yearSuffix} (${discountRates.sibling}%)`,
-          amount: -(Math.round(proratedTotal * discountRates.sibling) / 100),
+          description: `${dl.label}${yearSuffix} (${dl.percentage}%)`,
+          amount: -(Math.round(dl.amount * 100) / 100),
         });
-      }
-      if (secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId) {
-        const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
-        if (secondRow) {
-          lines.push({
-            description: `הנחת כלי שני${yearSuffix} (${discountRates.secondInstrument}%)`,
-            amount: -(Math.round(secondRow.prorated * discountRates.secondInstrument) / 100),
-          });
-        }
-      }
-      if (majorStudent && discountRates.majorStudent > 0) {
-        lines.push({
-          description: `הנחת תלמיד מגמה${yearSuffix} (${discountRates.majorStudent}%)`,
-          amount: -(Math.round(proratedTotal * discountRates.majorStudent) / 100),
-        });
-      }
+      });
       customDiscounts.forEach((c) => {
         const v = Number(c.value) || 0;
         if (!v) return;
@@ -396,9 +421,14 @@ const AdminStudentPaymentCalc = () => {
           academicYearName: hebrewYear ?? null,
           lines,
           discounts: {
-            sibling,
-            secondInstrument,
-            majorStudent,
+            selectedDiscountIds,
+            discountTypesSnapshot: selectedDiscounts.map((d) => ({
+              id: d.id,
+              label: d.label,
+              percentage: d.percentage,
+              applies_to: d.applies_to,
+              legacy_key: d.legacy_key,
+            })),
             customDiscounts,
             startDateOverrides,
           },
@@ -593,21 +623,42 @@ const AdminStudentPaymentCalc = () => {
 
         {/* Discounts */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-          <h2 className="font-semibold text-foreground text-base">הנחות</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <label className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
-              <Checkbox checked={sibling} onCheckedChange={(v) => setSibling(!!v)} />
-              <span className="text-sm">אח שני ({discountRates.sibling}%)</span>
-            </label>
-            <label className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
-              <Checkbox checked={secondInstrument} onCheckedChange={(v) => setSecondInstrument(!!v)} />
-              <span className="text-sm">כלי שני ({discountRates.secondInstrument}%)</span>
-            </label>
-            <label className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
-              <Checkbox checked={majorStudent} onCheckedChange={(v) => setMajorStudent(!!v)} />
-              <span className="text-sm">תלמיד מגמה ({discountRates.majorStudent}%)</span>
-            </label>
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="font-semibold text-foreground text-base">הנחות</h2>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/payment-settings")}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              ניהול סוגי הנחות
+            </button>
           </div>
+          {discountTypes.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              לא הוגדרו סוגי הנחות לשנה זו.{" "}
+              <button onClick={() => navigate("/admin/payment-settings")} className="underline">
+                הגדר בהגדרות תשלום
+              </button>
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {discountTypes.map((d) => {
+                const checked = selectedDiscountIds.includes(d.id);
+                const scopeNote = d.applies_to === "cheapest_enrollment" ? " · על הרישום הזול ביותר" : "";
+                return (
+                  <label
+                    key={d.id}
+                    className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30"
+                  >
+                    <Checkbox checked={checked} onCheckedChange={() => toggleDiscount(d.id)} />
+                    <span className="text-sm">
+                      {d.label} ({Number(d.percentage)}%{scopeNote})
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -664,22 +715,14 @@ const AdminStudentPaymentCalc = () => {
             />
           )}
           <SummaryRow label={`סה״כ אחרי קיזוז (${lessonsRemainingTotal} שיעורים נותרים)`} value={proratedTotal} bold />
-          {sibling && discountRates.sibling > 0 && (
-            <SummaryRow
-              label={`הנחת אחים (${discountRates.sibling}%)`}
-              value={-(Math.round(proratedTotal * discountRates.sibling) / 100)}
-            />
-          )}
-          {secondInstrument && discountRates.secondInstrument > 0 && secondInstrumentEnrollmentId && (() => {
-            const secondRow = rows.find((r) => r.enrollmentId === secondInstrumentEnrollmentId);
-            const amt = secondRow ? Math.round(secondRow.prorated * discountRates.secondInstrument) / 100 : 0;
-            return <SummaryRow label={`הנחת כלי שני (${discountRates.secondInstrument}% על הכלי השני)`} value={-amt} />;
-          })()}
-          {majorStudent && discountRates.majorStudent > 0 && (
-            <SummaryRow
-              label={`הנחת מגמה (${discountRates.majorStudent}%)`}
-              value={-(Math.round(proratedTotal * discountRates.majorStudent) / 100)}
-            />
+          {stdCompute.lines.map((dl) =>
+            dl.amount > 0 ? (
+              <SummaryRow
+                key={dl.discountTypeId}
+                label={`${dl.label} (${dl.percentage}%${dl.applies_to === "cheapest_enrollment" ? " על הרישום הזול ביותר" : ""})`}
+                value={-(Math.round(dl.amount * 100) / 100)}
+              />
+            ) : null
           )}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
