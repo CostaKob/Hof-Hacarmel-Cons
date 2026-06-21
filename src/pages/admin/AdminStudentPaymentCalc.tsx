@@ -758,15 +758,23 @@ const AdminStudentPaymentCalc = () => {
             />
           )}
           <SummaryRow label={`סה״כ אחרי קיזוז (${lessonsRemainingTotal} שיעורים נותרים)`} value={proratedTotal} bold />
-          {stdCompute.lines.map((dl) =>
-            dl.amount > 0 ? (
+          {specialCourses.map((c) => (
+            <SummaryRow key={`sc-${c.key}`} label={`קורס מיוחד · ${c.label}`} value={c.price} />
+          ))}
+          {specialBase > 0 && (
+            <SummaryRow label="סה״כ כולל קורסים מיוחדים" value={proratedPlusSpecial} bold />
+          )}
+          {stdCompute.lines.map((dl) => {
+            const extra = specialDiscountByType.get(dl.discountTypeId) ?? 0;
+            const total = (dl.amount || 0) + extra;
+            return total > 0 ? (
               <SummaryRow
                 key={dl.discountTypeId}
                 label={`${dl.label} (${dl.percentage}%${dl.applies_to === "cheapest_enrollment" ? " על הרישום הזול ביותר" : ""})`}
-                value={-(Math.round(dl.amount * 100) / 100)}
+                value={-(Math.round(total * 100) / 100)}
               />
-            ) : null
-          )}
+            ) : null;
+          })}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
             if (!v) return null;
