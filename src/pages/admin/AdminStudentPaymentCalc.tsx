@@ -792,11 +792,20 @@ const AdminStudentPaymentCalc = () => {
           ) : null}
 
           {/* Generate iCount link — inside summary so context is clear */}
-          <div className="pt-3 border-t border-primary/20 flex justify-end">
+          <div className="pt-3 border-t border-primary/20 flex flex-wrap justify-end gap-2">
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl px-5"
+              onClick={handleSendByEmail}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email}
+            >
+              {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
+              {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
+            </Button>
             <Button
               className="h-12 rounded-xl px-6"
               onClick={handleGenerateLink}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail}
             >
               {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
               {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
