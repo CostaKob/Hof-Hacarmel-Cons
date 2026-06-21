@@ -925,9 +925,6 @@ const PublicRegistration = () => {
               <span className="block text-lg sm:text-xl font-semibold mt-1">{yearDisplayLabel}</span>
             )}
           </h1>
-          {page.title && (
-            <p className="text-base text-muted-foreground whitespace-pre-line">{page.title}</p>
-          )}
         </div>
 
         <form onSubmit={onSubmit} className="space-y-6">
