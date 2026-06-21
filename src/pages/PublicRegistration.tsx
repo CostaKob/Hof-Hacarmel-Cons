@@ -799,6 +799,8 @@ const PublicRegistration = () => {
     }
   }
 
+  const studyDetailsIdx = fieldGroups.findIndex((g) => g.title === "פרטי לימודים מבוקשים");
+
   // Render educational school field
   const renderEducationalSchool = () => {
     if (eduSchoolOtherMode) {
