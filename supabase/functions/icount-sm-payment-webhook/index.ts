@@ -66,6 +66,17 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await parseBody(req);
+
+    if (!verifyWebhookSecret(req, body)) {
+      console.warn("[icount-sm-payment-webhook] rejected: invalid or missing webhook secret", {
+        ip: req.headers.get("x-forwarded-for"),
+        ua: req.headers.get("user-agent"),
+      });
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     console.log("[icount-sm-payment-webhook] payload:", JSON.stringify(body));
 
     const paymentId: string | undefined =
