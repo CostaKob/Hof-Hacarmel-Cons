@@ -455,8 +455,8 @@ const AdminStudentPaymentCalc = () => {
   const activePaymentLink = useMemo(() => {
     if (generatedPaymentData) return generatedPaymentData;
     const p = pendingPayments[0];
-    if (p?.link_url) {
-      return { url: p.link_url as string, amount: Number(p.amount || 0), paymentId: p.id as string };
+    if (p?.payment_link_url) {
+      return { url: p.payment_link_url as string, amount: Number(p.amount || 0), paymentId: p.id as string };
     }
     return null;
   }, [generatedPaymentData, pendingPayments]);
