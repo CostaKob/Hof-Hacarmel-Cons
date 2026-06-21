@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Teachers can view all teachers" ON public.teachers;
