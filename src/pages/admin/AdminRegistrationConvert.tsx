@@ -281,7 +281,9 @@ const AdminRegistrationConvert = () => {
             parent_phone: data.parent_phone || null,
             parent_email: data.parent_email || null,
             is_active: true,
-          })
+            has_music_production_course: !!(r as any).wants_music_production,
+            has_recital_track: !!(r as any).wants_recital_track,
+          } as any)
           .select("id")
           .single();
         if (studentErr) throw studentErr;
