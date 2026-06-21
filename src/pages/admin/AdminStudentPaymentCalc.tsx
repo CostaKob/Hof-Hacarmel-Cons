@@ -278,6 +278,19 @@ const AdminStudentPaymentCalc = () => {
     onError: (e: any) => toast.error(`שגיאה בעדכון תאריך סיום: ${e?.message ?? ""}`),
   });
 
+  const specialCourseMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: "has_music_production_course" | "has_recital_track"; value: boolean }) => {
+      const { error } = await supabase.from("students").update({ [field]: value } as any).eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calc-student", studentId] });
+    },
+    onError: (e: any) => toast.error(`שגיאה בעדכון: ${e?.message ?? ""}`),
+  });
+
+
+
 
   const rows: CalcRow[] = useMemo(() => {
     if (!enrollments || !yearFull || !settings) return [];
