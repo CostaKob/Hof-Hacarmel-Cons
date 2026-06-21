@@ -7,9 +7,33 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
+
+function verifyWebhookSecret(req: Request, params: Record<string, string>): boolean {
+  const expected = Deno.env.get("ICOUNT_WEBHOOK_SECRET");
+  if (!expected) {
+    console.error("[icount-ipn] ICOUNT_WEBHOOK_SECRET is not set - rejecting");
+    return false;
+  }
+  const url = new URL(req.url);
+  const provided =
+    req.headers.get("x-webhook-secret") ||
+    url.searchParams.get("secret") ||
+    params.webhook_secret ||
+    params.secret ||
+    null;
+  if (!provided) return false;
+  return timingSafeEqual(provided, expected);
+}
 
 function pick(obj: Record<string, string>, keys: string[]): string | undefined {
   for (const k of keys) {
@@ -43,6 +67,16 @@ Deno.serve(async (req: Request) => {
     }
   } catch (e) {
     console.error("[icount-ipn] body parse error", e);
+  }
+
+  if (!verifyWebhookSecret(req, params)) {
+    console.warn("[icount-ipn] rejected: invalid or missing webhook secret", {
+      ip: req.headers.get("x-forwarded-for"),
+      ua: req.headers.get("user-agent"),
+    });
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   console.log("[icount-ipn] payload", JSON.stringify(params));

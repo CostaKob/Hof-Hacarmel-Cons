@@ -7,8 +7,31 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
 };
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return result === 0;
+}
+
+function verifyWebhookSecret(req: Request, body: Record<string, any>): boolean {
+  const expected = Deno.env.get("ICOUNT_WEBHOOK_SECRET");
+  if (!expected) {
+    console.error("[icount-webhook] ICOUNT_WEBHOOK_SECRET is not set - rejecting");
+    return false;
+  }
+  const url = new URL(req.url);
+  const provided =
+    req.headers.get("x-webhook-secret") ||
+    url.searchParams.get("secret") ||
+    (typeof body?.webhook_secret === "string" ? body.webhook_secret : null) ||
+    (typeof body?.secret === "string" ? body.secret : null);
+  if (!provided) return false;
+  return timingSafeEqual(provided, expected);
+}
 
 async function resolvePaypageIdFromUrl(url?: string | null): Promise<string | null> {
   if (!url) return null;
@@ -43,6 +66,17 @@ Deno.serve(async (req: Request) => {
 
   try {
     const body = await parseBody(req);
+
+    if (!verifyWebhookSecret(req, body)) {
+      console.warn("[icount-sm-payment-webhook] rejected: invalid or missing webhook secret", {
+        ip: req.headers.get("x-forwarded-for"),
+        ua: req.headers.get("user-agent"),
+      });
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     console.log("[icount-sm-payment-webhook] payload:", JSON.stringify(body));
 
     const paymentId: string | undefined =
