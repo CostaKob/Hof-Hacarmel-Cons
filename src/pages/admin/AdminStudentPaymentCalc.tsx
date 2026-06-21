@@ -802,7 +802,7 @@ const AdminStudentPaymentCalc = () => {
               variant="outline"
               className="h-12 rounded-xl px-5"
               onClick={handleSendByEmail}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email || !generatedPaymentData}
             >
               {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
               {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
