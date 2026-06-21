@@ -343,6 +343,7 @@ const AdminStudentPaymentCalc = () => {
 
   const [generatingLink, setGeneratingLink] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [generatedPaymentData, setGeneratedPaymentData] = useState<{ url: string; amount: number; paymentId: string } | null>(null);
 
   const buildPaylinkPayload = () => {
     const enrollmentLabels = rowsAfterStd.map((r) => {
@@ -437,6 +438,7 @@ const AdminStudentPaymentCalc = () => {
     setGeneratingLink(true);
     try {
       const data = await callGeneratePaylink();
+      setGeneratedPaymentData(data);
       try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
       window.open(data.url, "_blank");
       toast.success("קישור התשלום נוצר והועתק ללוח");
@@ -457,9 +459,12 @@ const AdminStudentPaymentCalc = () => {
       toast.error("אין מייל הורה רשום לתלמיד זה");
       return;
     }
+    if (!generatedPaymentData) {
+      toast.error("יש ליצור קישור תשלום תחילה");
+      return;
+    }
     setSendingEmail(true);
     try {
-      const data = await callGeneratePaylink();
       const hebrewYear = toHebrewYear(year?.name ?? "");
       const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
         body: {
@@ -469,8 +474,8 @@ const AdminStudentPaymentCalc = () => {
             parentName: student.parent_name || "",
             studentName: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim(),
             yearName: hebrewYear || year?.name || "",
-            amount: data.amount,
-            paymentUrl: data.url,
+            amount: generatedPaymentData.amount,
+            paymentUrl: generatedPaymentData.url,
           },
         },
       });
@@ -797,7 +802,7 @@ const AdminStudentPaymentCalc = () => {
               variant="outline"
               className="h-12 rounded-xl px-5"
               onClick={handleSendByEmail}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email || !generatedPaymentData}
             >
               {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
               {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
