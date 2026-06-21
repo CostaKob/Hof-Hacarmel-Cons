@@ -69,6 +69,16 @@ Deno.serve(async (req: Request) => {
     console.error("[icount-ipn] body parse error", e);
   }
 
+  if (!verifyWebhookSecret(req, params)) {
+    console.warn("[icount-ipn] rejected: invalid or missing webhook secret", {
+      ip: req.headers.get("x-forwarded-for"),
+      ua: req.headers.get("user-agent"),
+    });
+    return new Response(JSON.stringify({ error: "unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   console.log("[icount-ipn] payload", JSON.stringify(params));
 
   try {
