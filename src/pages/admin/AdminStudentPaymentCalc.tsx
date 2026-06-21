@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X, Mail } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, type CalcRow } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
