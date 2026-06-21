@@ -627,8 +627,8 @@ const PublicRegistration = () => {
         status: "new",
         existing_student_id: tokenRegistration?.existing_student_id || null,
         educational_school: formValues["educational_school"] || null,
-        wants_music_production: !!formValues["wants_music_production"],
-        wants_recital_track: !!formValues["wants_recital_track"],
+        wants_music_production: !!formValues["wants_music_production"] && ["ז","ח","ט","י","יא","יב"].includes(normalizeGradeValue(formValues["grade"])),
+        wants_recital_track: !!formValues["wants_recital_track"] && normalizeGradeValue(formValues["grade"]) === "יב",
         custom_data: Object.keys(customData).length > 0 ? customData : {},
       };
 
