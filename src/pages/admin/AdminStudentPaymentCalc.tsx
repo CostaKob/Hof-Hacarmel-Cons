@@ -438,6 +438,7 @@ const AdminStudentPaymentCalc = () => {
     setGeneratingLink(true);
     try {
       const data = await callGeneratePaylink();
+      setGeneratedPaymentData(data);
       try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
       window.open(data.url, "_blank");
       toast.success("קישור התשלום נוצר והועתק ללוח");
