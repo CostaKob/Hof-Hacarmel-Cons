@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, Fragment } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -799,6 +799,8 @@ const PublicRegistration = () => {
     }
   }
 
+  const studyDetailsIdx = fieldGroups.findIndex((g) => g.title === "פרטי לימודים מבוקשים");
+
   // Render educational school field
   const renderEducationalSchool = () => {
     if (eduSchoolOtherMode) {
@@ -911,6 +913,52 @@ const PublicRegistration = () => {
     );
   };
 
+  const SpecialCoursesCard = () => {
+    const grade = normalizeGradeValue(formValues["grade"]);
+    const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב"].includes(grade);
+    const recitalAllowed = grade === "יב";
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">קורסים מיוחדים</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-xs text-muted-foreground">סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.</p>
+          <div className="space-y-3">
+            <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
+              <Checkbox
+                checked={!!formValues["wants_music_production"] && productionAllowed}
+                disabled={!productionAllowed}
+                onCheckedChange={(c) => setFieldValue("wants_music_production", c === true)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium">קורס הפקה מוסיקלית</div>
+                {!productionAllowed && (
+                  <div className="text-xs text-muted-foreground mt-0.5">מיועד לכיתות ז׳–י״ב בלבד</div>
+                )}
+              </div>
+            </label>
+            <label className={`flex items-start gap-3 rounded-xl border p-3 ${recitalAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
+              <Checkbox
+                checked={!!formValues["wants_recital_track"] && recitalAllowed}
+                disabled={!recitalAllowed}
+                onCheckedChange={(c) => setFieldValue("wants_recital_track", c === true)}
+                className="mt-0.5"
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium">מסלול לרסיטל</div>
+                {!recitalAllowed && (
+                  <div className="text-xs text-muted-foreground mt-0.5">מיועד לכיתה י״ב בלבד</div>
+                )}
+              </div>
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-muted/30 py-6 px-4" dir="rtl">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -983,85 +1031,43 @@ const PublicRegistration = () => {
 
           {/* Dynamic form fields grouped by section */}
           {fieldGroups.map((group, gi) => (
-            <Card key={gi}>
-              {group.title && (
-                <CardHeader>
-                  <CardTitle className="text-lg">{group.title}</CardTitle>
-                </CardHeader>
-              )}
-              <CardContent className="space-y-4">
-                {group.items.map((item, ii) => {
-                  if (item.type === "injected") {
-                    if (item.key === "educational_school") return <div key="edu_school">{renderEducationalSchool()}</div>;
-                    if (item.key === "branch_school_name") return <div key="branch">{renderBranchField()}</div>;
-                    return null;
-                  }
-
-                  const field = item.field;
-                  const typeOverride = getFieldTypeOverride(field);
-
-                    return (
-                      <DynamicField
-                        key={field.id}
-                        field={{ ...field, field_type: typeOverride }}
-                        value={formValues[field.field_key]}
-                        onChange={(val) => setFieldValue(field.field_key, val)}
-                        onBlur={() => validateField(field.field_key)}
-                        error={validationErrors[field.field_key]}
-                        options={getOptionsForField(field)}
-                      />
-                    );
-                })}
-              </CardContent>
-            </Card>
-          ))}
-
-          {/* Special courses (always visible, grade-gated) */}
-          {(() => {
-            const grade = normalizeGradeValue(formValues["grade"]);
-            const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב"].includes(grade);
-            const recitalAllowed = grade === "יב";
-            return (
+            <Fragment key={gi}>
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">קורסים מיוחדים</CardTitle>
-                </CardHeader>
+                {group.title && (
+                  <CardHeader>
+                    <CardTitle className="text-lg">{group.title}</CardTitle>
+                  </CardHeader>
+                )}
                 <CardContent className="space-y-4">
-                  <p className="text-xs text-muted-foreground">סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.</p>
-                  <div className="space-y-3">
-                    <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
-                      <Checkbox
-                        checked={!!formValues["wants_music_production"] && productionAllowed}
-                        disabled={!productionAllowed}
-                        onCheckedChange={(c) => setFieldValue("wants_music_production", c === true)}
-                        className="mt-0.5"
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">קורס הפקה מוסיקלית</div>
-                        {!productionAllowed && (
-                          <div className="text-xs text-muted-foreground mt-0.5">מיועד לכיתות ז׳–י״ב בלבד</div>
-                        )}
-                      </div>
-                    </label>
-                    <label className={`flex items-start gap-3 rounded-xl border p-3 ${recitalAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
-                      <Checkbox
-                        checked={!!formValues["wants_recital_track"] && recitalAllowed}
-                        disabled={!recitalAllowed}
-                        onCheckedChange={(c) => setFieldValue("wants_recital_track", c === true)}
-                        className="mt-0.5"
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">מסלול לרסיטל</div>
-                        {!recitalAllowed && (
-                          <div className="text-xs text-muted-foreground mt-0.5">מיועד לכיתה י״ב בלבד</div>
-                        )}
-                      </div>
-                    </label>
-                  </div>
+                  {group.items.map((item, ii) => {
+                    if (item.type === "injected") {
+                      if (item.key === "educational_school") return <div key="edu_school">{renderEducationalSchool()}</div>;
+                      if (item.key === "branch_school_name") return <div key="branch">{renderBranchField()}</div>;
+                      return null;
+                    }
+
+                    const field = item.field;
+                    const typeOverride = getFieldTypeOverride(field);
+
+                      return (
+                        <DynamicField
+                          key={field.id}
+                          field={{ ...field, field_type: typeOverride }}
+                          value={formValues[field.field_key]}
+                          onChange={(val) => setFieldValue(field.field_key, val)}
+                          onBlur={() => validateField(field.field_key)}
+                          error={validationErrors[field.field_key]}
+                          options={getOptionsForField(field)}
+                        />
+                      );
+                  })}
                 </CardContent>
               </Card>
-            );
-          })()}
+              {gi === studyDetailsIdx && <SpecialCoursesCard />}
+            </Fragment>
+          ))}
+
+          {studyDetailsIdx < 0 && <SpecialCoursesCard />}
 
 
           {/* Submit */}
