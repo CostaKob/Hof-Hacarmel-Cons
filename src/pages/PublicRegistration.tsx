@@ -1031,37 +1031,40 @@ const PublicRegistration = () => {
 
           {/* Dynamic form fields grouped by section */}
           {fieldGroups.map((group, gi) => (
-            <Card key={gi}>
-              {group.title && (
-                <CardHeader>
-                  <CardTitle className="text-lg">{group.title}</CardTitle>
-                </CardHeader>
-              )}
-              <CardContent className="space-y-4">
-                {group.items.map((item, ii) => {
-                  if (item.type === "injected") {
-                    if (item.key === "educational_school") return <div key="edu_school">{renderEducationalSchool()}</div>;
-                    if (item.key === "branch_school_name") return <div key="branch">{renderBranchField()}</div>;
-                    return null;
-                  }
+            <Fragment key={gi}>
+              <Card>
+                {group.title && (
+                  <CardHeader>
+                    <CardTitle className="text-lg">{group.title}</CardTitle>
+                  </CardHeader>
+                )}
+                <CardContent className="space-y-4">
+                  {group.items.map((item, ii) => {
+                    if (item.type === "injected") {
+                      if (item.key === "educational_school") return <div key="edu_school">{renderEducationalSchool()}</div>;
+                      if (item.key === "branch_school_name") return <div key="branch">{renderBranchField()}</div>;
+                      return null;
+                    }
 
-                  const field = item.field;
-                  const typeOverride = getFieldTypeOverride(field);
+                    const field = item.field;
+                    const typeOverride = getFieldTypeOverride(field);
 
-                    return (
-                      <DynamicField
-                        key={field.id}
-                        field={{ ...field, field_type: typeOverride }}
-                        value={formValues[field.field_key]}
-                        onChange={(val) => setFieldValue(field.field_key, val)}
-                        onBlur={() => validateField(field.field_key)}
-                        error={validationErrors[field.field_key]}
-                        options={getOptionsForField(field)}
-                      />
-                    );
-                })}
-              </CardContent>
-            </Card>
+                      return (
+                        <DynamicField
+                          key={field.id}
+                          field={{ ...field, field_type: typeOverride }}
+                          value={formValues[field.field_key]}
+                          onChange={(val) => setFieldValue(field.field_key, val)}
+                          onBlur={() => validateField(field.field_key)}
+                          error={validationErrors[field.field_key]}
+                          options={getOptionsForField(field)}
+                        />
+                      );
+                  })}
+                </CardContent>
+              </Card>
+              {gi === studyDetailsIdx && <SpecialCoursesCard />}
+            </Fragment>
           ))}
 
           {/* Special courses (always visible, grade-gated) */}
