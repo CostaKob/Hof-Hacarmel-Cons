@@ -558,15 +558,15 @@ const AdminStudents = () => {
                       state: { returnTo: `${location.pathname}${location.search}` },
                     });
                   }}
-                  className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
+                  className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
-                    <div className="min-w-0">
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <span className="text-xs text-muted-foreground w-6 shrink-0 text-center pt-0.5">{index + 1}</span>
+                    <div className="min-w-0 flex-1">
                       <p className="font-semibold text-foreground">
                         {r.students?.first_name} {r.students?.last_name}
                       </p>
-                      <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         <span>{r.instruments?.name}</span>
                         <span>·</span>
                         <span>{r.schools?.name}</span>
@@ -600,7 +600,7 @@ const AdminStudents = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 mr-3 shrink-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:mr-3 shrink-0 pr-9 sm:pr-0">
                     <Badge
                       variant="outline"
                       className={`rounded-lg text-xs ${payClass}`}
