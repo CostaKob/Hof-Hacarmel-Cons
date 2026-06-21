@@ -451,15 +451,24 @@ const AdminStudentPaymentCalc = () => {
     }
   };
 
+  // Active link = either just generated in this session, or an existing pending link
+  const activePaymentLink = useMemo(() => {
+    if (generatedPaymentData) return generatedPaymentData;
+    const p = pendingPayments[0];
+    if (p?.payment_link_url) {
+      return { url: p.payment_link_url as string, amount: Number(p.amount || 0), paymentId: p.id as string };
+    }
+    return null;
+  }, [generatedPaymentData, pendingPayments]);
+
   const handleSendByEmail = async () => {
     if (!student || !studentId) return;
-    if (balance <= 0) return;
     const parentEmail = student.parent_email;
     if (!parentEmail) {
       toast.error("אין מייל הורה רשום לתלמיד זה");
       return;
     }
-    if (!generatedPaymentData) {
+    if (!activePaymentLink) {
       toast.error("יש ליצור קישור תשלום תחילה");
       return;
     }
@@ -474,8 +483,8 @@ const AdminStudentPaymentCalc = () => {
             parentName: student.parent_name || "",
             studentName: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim(),
             yearName: hebrewYear || year?.name || "",
-            amount: generatedPaymentData.amount,
-            paymentUrl: generatedPaymentData.url,
+            amount: activePaymentLink.amount,
+            paymentUrl: activePaymentLink.url,
           },
         },
       });
@@ -754,7 +763,7 @@ const AdminStudentPaymentCalc = () => {
               variant="outline"
               className="h-12 rounded-xl px-5"
               onClick={handleSendByEmail}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email || !generatedPaymentData}
+              disabled={generatingLink || sendingEmail || !student?.parent_email || !activePaymentLink}
             >
               {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
               {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
