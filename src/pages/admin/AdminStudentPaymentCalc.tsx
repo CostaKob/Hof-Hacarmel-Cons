@@ -406,11 +406,22 @@ const AdminStudentPaymentCalc = () => {
       }
     });
 
+    // Special courses base lines
+    specialCourses.forEach((c) => {
+      if (c.price <= 0) return;
+      lines.push({
+        description: `${c.label}${yearSuffix}`,
+        amount: Math.round(c.price * 100) / 100,
+      });
+    });
+
     stdCompute.lines.forEach((dl) => {
-      if (dl.amount <= 0) return;
+      const extra = specialDiscountByType.get(dl.discountTypeId) ?? 0;
+      const totalAmt = (dl.amount || 0) + extra;
+      if (totalAmt <= 0) return;
       lines.push({
         description: `${dl.label}${yearSuffix} (${dl.percentage}%)`,
-        amount: -(Math.round(dl.amount * 100) / 100),
+        amount: -(Math.round(totalAmt * 100) / 100),
       });
     });
     customDiscounts.forEach((c) => {
