@@ -278,6 +278,19 @@ const AdminStudentPaymentCalc = () => {
     onError: (e: any) => toast.error(`שגיאה בעדכון תאריך סיום: ${e?.message ?? ""}`),
   });
 
+  const specialCourseMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: "has_music_production_course" | "has_recital_track"; value: boolean }) => {
+      const { error } = await supabase.from("students").update({ [field]: value } as any).eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["calc-student", studentId] });
+    },
+    onError: (e: any) => toast.error(`שגיאה בעדכון: ${e?.message ?? ""}`),
+  });
+
+
+
 
   const rows: CalcRow[] = useMemo(() => {
     if (!enrollments || !yearFull || !settings) return [];
@@ -319,9 +332,40 @@ const AdminStudentPaymentCalc = () => {
     return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
   });
 
-  const afterStdDiscount = stdCompute.afterStdDiscount;
-  // For display/payload — effective overall discount %
-  const stdDiscountPct = proratedTotal > 0 ? ((proratedTotal - afterStdDiscount) / proratedTotal) * 100 : 0;
+  // ---- Special courses (music production / recital track) ----
+  const specialCourses = useMemo(() => {
+    if (!student || !settings) return [] as { key: "music_production" | "recital_track"; label: string; price: number }[];
+    const list: { key: "music_production" | "recital_track"; label: string; price: number }[] = [];
+    if (student.has_music_production_course) {
+      list.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: Number(settings.music_production_price) || 0 });
+    }
+    if (student.has_recital_track) {
+      list.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
+    }
+    return list;
+  }, [student, settings]);
+
+  const specialBase = specialCourses.reduce((s, c) => s + c.price, 0);
+  const sumAllPct = selectedDiscounts
+    .filter((d) => d.applies_to === "all")
+    .reduce((s, d) => s + (Number(d.percentage) || 0), 0);
+  const specialAfterStd = Math.round(specialBase * (1 - sumAllPct / 100) * 100) / 100;
+  const specialStdDiscountAmount = Math.round((specialBase - specialAfterStd) * 100) / 100;
+
+  // Per-discount additional amount on specials (only for applies_to=all)
+  const specialDiscountByType = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const d of selectedDiscounts) {
+      if (d.applies_to !== "all") continue;
+      m.set(d.id, Math.round(specialBase * (Number(d.percentage) || 0)) / 100);
+    }
+    return m;
+  }, [selectedDiscounts, specialBase]);
+
+  const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
+  // For display/payload — effective overall discount % (over prorated + specials)
+  const proratedPlusSpecial = proratedTotal + specialBase;
+  const stdDiscountPct = proratedPlusSpecial > 0 ? ((proratedPlusSpecial - afterStdDiscount) / proratedPlusSpecial) * 100 : 0;
 
   // Custom discounts: each is either a percentage of afterStdDiscount, or a flat ILS amount
   const customDiscountAmount = customDiscounts.reduce((sum, c) => {
@@ -332,7 +376,7 @@ const AdminStudentPaymentCalc = () => {
 
   // Malkar (Non-Profit) — no VAT charged. Kept fields zeroed for backward compatibility.
   const totalIncVat = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
-  const totalDiscountAmount = Math.round((proratedTotal - totalIncVat) * 100) / 100;
+  const totalDiscountAmount = Math.round((proratedPlusSpecial - totalIncVat) * 100) / 100;
   const vatRate = 0;
   const beforeVat = totalIncVat;
   const vatAmount = 0;
@@ -375,11 +419,22 @@ const AdminStudentPaymentCalc = () => {
       }
     });
 
+    // Special courses base lines
+    specialCourses.forEach((c) => {
+      if (c.price <= 0) return;
+      lines.push({
+        description: `${c.label}${yearSuffix}`,
+        amount: Math.round(c.price * 100) / 100,
+      });
+    });
+
     stdCompute.lines.forEach((dl) => {
-      if (dl.amount <= 0) return;
+      const extra = specialDiscountByType.get(dl.discountTypeId) ?? 0;
+      const totalAmt = (dl.amount || 0) + extra;
+      if (totalAmt <= 0) return;
       lines.push({
         description: `${dl.label}${yearSuffix} (${dl.percentage}%)`,
-        amount: -(Math.round(dl.amount * 100) / 100),
+        amount: -(Math.round(totalAmt * 100) / 100),
       });
     });
     customDiscounts.forEach((c) => {
@@ -622,6 +677,52 @@ const AdminStudentPaymentCalc = () => {
           )}
         </div>
 
+        {/* Special courses */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="font-semibold text-foreground text-base">קורסים מיוחדים</h2>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/payment-settings")}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              עריכת מחירים
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="flex items-center gap-3 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
+              <Checkbox
+                checked={!!student?.has_music_production_course}
+                onCheckedChange={(c) => specialCourseMutation.mutate({ field: "has_music_production_course", value: c === true })}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium">קורס הפקה מוסיקלית</div>
+                <div className="text-xs text-muted-foreground">
+                  ₪{(Number(settings?.music_production_price) || 0).toLocaleString("he-IL")}
+                  {(!settings?.music_production_price || Number(settings.music_production_price) <= 0) && (
+                    <span className="text-destructive mr-1">· מחיר לא הוגדר</span>
+                  )}
+                </div>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
+              <Checkbox
+                checked={!!student?.has_recital_track}
+                onCheckedChange={(c) => specialCourseMutation.mutate({ field: "has_recital_track", value: c === true })}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium">מסלול לרסיטל</div>
+                <div className="text-xs text-muted-foreground">
+                  ₪{(Number(settings?.recital_track_price) || 0).toLocaleString("he-IL")}
+                  {(!settings?.recital_track_price || Number(settings.recital_track_price) <= 0) && (
+                    <span className="text-destructive mr-1">· מחיר לא הוגדר</span>
+                  )}
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         {/* Discounts */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
@@ -716,15 +817,23 @@ const AdminStudentPaymentCalc = () => {
             />
           )}
           <SummaryRow label={`סה״כ אחרי קיזוז (${lessonsRemainingTotal} שיעורים נותרים)`} value={proratedTotal} bold />
-          {stdCompute.lines.map((dl) =>
-            dl.amount > 0 ? (
+          {specialCourses.map((c) => (
+            <SummaryRow key={`sc-${c.key}`} label={`קורס מיוחד · ${c.label}`} value={c.price} />
+          ))}
+          {specialBase > 0 && (
+            <SummaryRow label="סה״כ כולל קורסים מיוחדים" value={proratedPlusSpecial} bold />
+          )}
+          {stdCompute.lines.map((dl) => {
+            const extra = specialDiscountByType.get(dl.discountTypeId) ?? 0;
+            const total = (dl.amount || 0) + extra;
+            return total > 0 ? (
               <SummaryRow
                 key={dl.discountTypeId}
                 label={`${dl.label} (${dl.percentage}%${dl.applies_to === "cheapest_enrollment" ? " על הרישום הזול ביותר" : ""})`}
-                value={-(Math.round(dl.amount * 100) / 100)}
+                value={-(Math.round(total * 100) / 100)}
               />
-            ) : null
-          )}
+            ) : null;
+          })}
           {customDiscounts.map((c, i) => {
             const v = Number(c.value) || 0;
             if (!v) return null;
@@ -771,7 +880,7 @@ const AdminStudentPaymentCalc = () => {
             <Button
               className="h-12 rounded-xl px-6"
               onClick={handleGenerateLink}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail}
+              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink || sendingEmail}
             >
               {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
               {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}

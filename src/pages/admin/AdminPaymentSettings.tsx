@@ -53,6 +53,8 @@ const AdminPaymentSettings = () => {
   const [price30, setPrice30] = useState("");
   const [price45, setPrice45] = useState("");
   const [price60, setPrice60] = useState("");
+  const [priceMusicProduction, setPriceMusicProduction] = useState("");
+  const [priceRecitalTrack, setPriceRecitalTrack] = useState("");
   const [drafts, setDrafts] = useState<DraftDiscount[]>([]);
 
   useEffect(() => {
@@ -61,6 +63,8 @@ const AdminPaymentSettings = () => {
       setPrice30(String(lp["30"] ?? 0));
       setPrice45(String(lp["45"] ?? 0));
       setPrice60(String(lp["60"] ?? 0));
+      setPriceMusicProduction(String(settings.music_production_price ?? 0));
+      setPriceRecitalTrack(String(settings.recital_track_price ?? 0));
     }
   }, [settings]);
 
@@ -86,7 +90,9 @@ const AdminPaymentSettings = () => {
         .update({
           lesson_prices: { "30": Number(price30) || 0, "45": Number(price45) || 0, "60": Number(price60) || 0 },
           vat_rate: 0,
-        })
+          music_production_price: Number(priceMusicProduction) || 0,
+          recital_track_price: Number(priceRecitalTrack) || 0,
+        } as any)
         .eq("id", settings.id);
       if (e1) throw e1;
 
@@ -165,6 +171,23 @@ const AdminPaymentSettings = () => {
           </div>
           <div className="rounded-xl border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
             הארגון מוגדר כמלכ"ר (זרוע של המועצה האזורית), ולכן <strong>לא נגבה מע"מ</strong> ולא מופקות חשבוניות מס. כל המסמכים שמופקים ב-iCount הם <strong>קבלות</strong>.
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+          <div>
+            <h2 className="font-semibold text-foreground text-base">קורסים מיוחדים</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">מחיר שנתי לקורסי הפקה ומסלול רסיטל. ייווסף לחישוב בכרטיס תלמיד כאשר ההורה בחר בקורס בטופס ההרשמה.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label>קורס הפקה מוסיקלית (₪ שנתי)</Label>
+              <Input type="number" min="0" value={priceMusicProduction} onChange={(e) => setPriceMusicProduction(e.target.value)} className="h-12 rounded-xl" />
+            </div>
+            <div>
+              <Label>מסלול לרסיטל (₪ שנתי)</Label>
+              <Input type="number" min="0" value={priceRecitalTrack} onChange={(e) => setPriceRecitalTrack(e.target.value)} className="h-12 rounded-xl" />
+            </div>
           </div>
         </div>
 
