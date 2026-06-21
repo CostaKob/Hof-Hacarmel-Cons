@@ -90,7 +90,9 @@ const AdminPaymentSettings = () => {
         .update({
           lesson_prices: { "30": Number(price30) || 0, "45": Number(price45) || 0, "60": Number(price60) || 0 },
           vat_rate: 0,
-        })
+          music_production_price: Number(priceMusicProduction) || 0,
+          recital_track_price: Number(priceRecitalTrack) || 0,
+        } as any)
         .eq("id", settings.id);
       if (e1) throw e1;
 
