@@ -100,7 +100,7 @@ const PublicRegistration = () => {
       if (urlYearParam) {
         const { data } = await supabase
           .from("academic_years")
-          .select("id, name, registration_open")
+          .select("id, name, registration_open, start_date, end_date")
           .eq("name", urlYearParam)
           .maybeSingle();
         if (data) return data;
@@ -109,7 +109,7 @@ const PublicRegistration = () => {
       if (urlYearId) {
         const { data } = await supabase
           .from("academic_years")
-          .select("id, name, registration_open")
+          .select("id, name, registration_open, start_date, end_date")
           .eq("id", urlYearId)
           .maybeSingle();
         if (data) return data;
@@ -117,7 +117,7 @@ const PublicRegistration = () => {
       // 3. Fallback: find any year with registration_open, or active year
       const { data: openYear } = await supabase
         .from("academic_years")
-        .select("id, name, registration_open")
+        .select("id, name, registration_open, start_date, end_date")
         .eq("registration_open", true)
         .order("start_date", { ascending: false })
         .limit(1)
@@ -125,7 +125,7 @@ const PublicRegistration = () => {
       if (openYear) return openYear;
       const { data, error } = await supabase
         .from("academic_years")
-        .select("id, name, registration_open")
+        .select("id, name, registration_open, start_date, end_date")
         .eq("is_active", true)
         .single();
       if (error) return null;
@@ -325,6 +325,35 @@ const PublicRegistration = () => {
       setFormValues((prev) => ({ ...prev, requested_lesson_duration: "" }));
     }
   }, [formValues, is30MinAllowed]);
+
+  // Build year display string: e.g. "תשפ״ז 2026-2027"
+  const yearDisplayLabel = (() => {
+    if (!activeYear) return "";
+    const name = activeYear.name || "";
+    // If name already contains digits, return as-is
+    if (/\d/.test(name)) return name;
+    // Otherwise append Gregorian range from start_date/end_date
+    const startYear = (activeYear as any).start_date
+      ? new Date((activeYear as any).start_date).getFullYear()
+      : null;
+    const endYear = (activeYear as any).end_date
+      ? new Date((activeYear as any).end_date).getFullYear()
+      : null;
+    if (startYear && endYear) return `${name} ${startYear}-${endYear}`;
+    return name;
+  })();
+
+  // Set browser tab title dynamically
+  useEffect(() => {
+    if (yearDisplayLabel) {
+      document.title = `אולפן המוסיקה חוף הכרמל — רישום ומידע ${yearDisplayLabel}`;
+    } else {
+      document.title = `אולפן המוסיקה חוף הכרמל — רישום ומידע`;
+    }
+    return () => {
+      document.title = "אולפן המוסיקה חוף הכרמל";
+    };
+  }, [yearDisplayLabel]);
 
   const getOptionsForField = (field: FieldDef) => {
     if (field.data_source === "instruments") return instruments.map((i) => ({ value: i.name, label: i.name }));
@@ -888,10 +917,14 @@ const PublicRegistration = () => {
           <div className="flex justify-center">
             <AppLogo size="lg" />
           </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-snug">
+            אולפן המוסיקה &ldquo;חוף הכרמל&rdquo; — רישום ומידע
+            {yearDisplayLabel && (
+              <span className="block text-lg sm:text-xl font-semibold mt-1">{yearDisplayLabel}</span>
+            )}
+          </h1>
           {page.title && (
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-snug whitespace-pre-line">
-              {page.title}
-            </h1>
+            <p className="text-base text-muted-foreground whitespace-pre-line">{page.title}</p>
           )}
         </div>
 
