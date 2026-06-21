@@ -7,7 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-webhook-secret, x-icount-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -26,6 +26,7 @@ function verifyWebhookSecret(req: Request, params: Record<string, string>): bool
   }
   const url = new URL(req.url);
   const provided =
+    req.headers.get("x-icount-secret") ||
     req.headers.get("x-webhook-secret") ||
     url.searchParams.get("secret") ||
     params.webhook_secret ||
