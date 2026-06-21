@@ -261,6 +261,8 @@ const AdminRegistrationConvert = () => {
         if (data.parent_phone && !existingStudent?.parent_phone) updates.parent_phone = data.parent_phone;
         if (data.parent_email && !existingStudent?.parent_email) updates.parent_email = data.parent_email;
         if (data.grade && data.grade !== "__none__") updates.grade = data.grade;
+        if ((r as any).wants_music_production) updates.has_music_production_course = true;
+        if ((r as any).wants_recital_track) updates.has_recital_track = true;
 
         if (Object.keys(updates).length > 0) {
           await supabase.from("students").update(updates as any).eq("id", studentId);
