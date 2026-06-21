@@ -343,6 +343,7 @@ const AdminStudentPaymentCalc = () => {
 
   const [generatingLink, setGeneratingLink] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [generatedPaymentData, setGeneratedPaymentData] = useState<{ url: string; amount: number; paymentId: string } | null>(null);
 
   const buildPaylinkPayload = () => {
     const enrollmentLabels = rowsAfterStd.map((r) => {
