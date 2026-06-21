@@ -821,7 +821,7 @@ const AdminStudentPaymentCalc = () => {
             <Button
               className="h-12 rounded-xl px-6"
               onClick={handleGenerateLink}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail}
+              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink || sendingEmail}
             >
               {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
               {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
