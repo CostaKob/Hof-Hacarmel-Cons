@@ -717,6 +717,8 @@ export type Database = {
           created_at: string
           id: string
           lesson_prices: Json
+          music_production_price: number
+          recital_track_price: number
           updated_at: string
           vat_rate: number
         }
@@ -724,6 +726,8 @@ export type Database = {
           created_at?: string
           id?: string
           lesson_prices?: Json
+          music_production_price?: number
+          recital_track_price?: number
           updated_at?: string
           vat_rate?: number
         }
@@ -731,6 +735,8 @@ export type Database = {
           created_at?: string
           id?: string
           lesson_prices?: Json
+          music_production_price?: number
+          recital_track_price?: number
           updated_at?: string
           vat_rate?: number
         }
@@ -966,6 +972,8 @@ export type Database = {
           student_phone: string | null
           student_school_text: string
           student_status: string | null
+          wants_music_production: boolean
+          wants_recital_track: boolean
         }
         Insert: {
           academic_year_id?: string | null
@@ -996,6 +1004,8 @@ export type Database = {
           student_phone?: string | null
           student_school_text: string
           student_status?: string | null
+          wants_music_production?: boolean
+          wants_recital_track?: boolean
         }
         Update: {
           academic_year_id?: string | null
@@ -1026,6 +1036,8 @@ export type Database = {
           student_phone?: string | null
           student_school_text?: string
           student_status?: string | null
+          wants_music_production?: boolean
+          wants_recital_track?: boolean
         }
         Relationships: [
           {
@@ -1955,6 +1967,8 @@ export type Database = {
           first_name: string
           gender: string | null
           grade: string | null
+          has_music_production_course: boolean
+          has_recital_track: boolean
           id: string
           is_active: boolean
           is_major_student: boolean
@@ -1981,6 +1995,8 @@ export type Database = {
           first_name: string
           gender?: string | null
           grade?: string | null
+          has_music_production_course?: boolean
+          has_recital_track?: boolean
           id?: string
           is_active?: boolean
           is_major_student?: boolean
@@ -2007,6 +2023,8 @@ export type Database = {
           first_name?: string
           gender?: string | null
           grade?: string | null
+          has_music_production_course?: boolean
+          has_recital_track?: boolean
           id?: string
           is_active?: boolean
           is_major_student?: boolean
@@ -2311,6 +2329,8 @@ export type Database = {
           student_phone: string | null
           student_school_text: string
           student_status: string | null
+          wants_music_production: boolean
+          wants_recital_track: boolean
         }[]
         SetofOptions: {
           from: "*"
