@@ -677,6 +677,52 @@ const AdminStudentPaymentCalc = () => {
           )}
         </div>
 
+        {/* Special courses */}
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="font-semibold text-foreground text-base">קורסים מיוחדים</h2>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/payment-settings")}
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+            >
+              עריכת מחירים
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="flex items-center gap-3 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
+              <Checkbox
+                checked={!!student?.has_music_production_course}
+                onCheckedChange={(c) => specialCourseMutation.mutate({ field: "has_music_production_course", value: c === true })}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium">קורס הפקה מוסיקלית</div>
+                <div className="text-xs text-muted-foreground">
+                  ₪{(Number(settings?.music_production_price) || 0).toLocaleString("he-IL")}
+                  {(!settings?.music_production_price || Number(settings.music_production_price) <= 0) && (
+                    <span className="text-destructive mr-1">· מחיר לא הוגדר</span>
+                  )}
+                </div>
+              </div>
+            </label>
+            <label className="flex items-center gap-3 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30">
+              <Checkbox
+                checked={!!student?.has_recital_track}
+                onCheckedChange={(c) => specialCourseMutation.mutate({ field: "has_recital_track", value: c === true })}
+              />
+              <div className="flex-1">
+                <div className="text-sm font-medium">מסלול לרסיטל</div>
+                <div className="text-xs text-muted-foreground">
+                  ₪{(Number(settings?.recital_track_price) || 0).toLocaleString("he-IL")}
+                  {(!settings?.recital_track_price || Number(settings.recital_track_price) <= 0) && (
+                    <span className="text-destructive mr-1">· מחיר לא הוגדר</span>
+                  )}
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
         {/* Discounts */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
