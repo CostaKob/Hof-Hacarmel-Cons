@@ -459,9 +459,12 @@ const AdminStudentPaymentCalc = () => {
       toast.error("אין מייל הורה רשום לתלמיד זה");
       return;
     }
+    if (!generatedPaymentData) {
+      toast.error("יש ליצור קישור תשלום תחילה");
+      return;
+    }
     setSendingEmail(true);
     try {
-      const data = await callGeneratePaylink();
       const hebrewYear = toHebrewYear(year?.name ?? "");
       const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
         body: {
@@ -471,8 +474,8 @@ const AdminStudentPaymentCalc = () => {
             parentName: student.parent_name || "",
             studentName: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim(),
             yearName: hebrewYear || year?.name || "",
-            amount: data.amount,
-            paymentUrl: data.url,
+            amount: generatedPaymentData.amount,
+            paymentUrl: generatedPaymentData.url,
           },
         },
       });
