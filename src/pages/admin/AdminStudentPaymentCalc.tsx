@@ -319,9 +319,40 @@ const AdminStudentPaymentCalc = () => {
     return { ...r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
   });
 
-  const afterStdDiscount = stdCompute.afterStdDiscount;
-  // For display/payload — effective overall discount %
-  const stdDiscountPct = proratedTotal > 0 ? ((proratedTotal - afterStdDiscount) / proratedTotal) * 100 : 0;
+  // ---- Special courses (music production / recital track) ----
+  const specialCourses = useMemo(() => {
+    if (!student || !settings) return [] as { key: "music_production" | "recital_track"; label: string; price: number }[];
+    const list: { key: "music_production" | "recital_track"; label: string; price: number }[] = [];
+    if (student.has_music_production_course) {
+      list.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: Number(settings.music_production_price) || 0 });
+    }
+    if (student.has_recital_track) {
+      list.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
+    }
+    return list;
+  }, [student, settings]);
+
+  const specialBase = specialCourses.reduce((s, c) => s + c.price, 0);
+  const sumAllPct = selectedDiscounts
+    .filter((d) => d.applies_to === "all")
+    .reduce((s, d) => s + (Number(d.percentage) || 0), 0);
+  const specialAfterStd = Math.round(specialBase * (1 - sumAllPct / 100) * 100) / 100;
+  const specialStdDiscountAmount = Math.round((specialBase - specialAfterStd) * 100) / 100;
+
+  // Per-discount additional amount on specials (only for applies_to=all)
+  const specialDiscountByType = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const d of selectedDiscounts) {
+      if (d.applies_to !== "all") continue;
+      m.set(d.id, Math.round(specialBase * (Number(d.percentage) || 0)) / 100);
+    }
+    return m;
+  }, [selectedDiscounts, specialBase]);
+
+  const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
+  // For display/payload — effective overall discount % (over prorated + specials)
+  const proratedPlusSpecial = proratedTotal + specialBase;
+  const stdDiscountPct = proratedPlusSpecial > 0 ? ((proratedPlusSpecial - afterStdDiscount) / proratedPlusSpecial) * 100 : 0;
 
   // Custom discounts: each is either a percentage of afterStdDiscount, or a flat ILS amount
   const customDiscountAmount = customDiscounts.reduce((sum, c) => {
@@ -332,7 +363,7 @@ const AdminStudentPaymentCalc = () => {
 
   // Malkar (Non-Profit) — no VAT charged. Kept fields zeroed for backward compatibility.
   const totalIncVat = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
-  const totalDiscountAmount = Math.round((proratedTotal - totalIncVat) * 100) / 100;
+  const totalDiscountAmount = Math.round((proratedPlusSpecial - totalIncVat) * 100) / 100;
   const vatRate = 0;
   const beforeVat = totalIncVat;
   const vatAmount = 0;
