@@ -53,6 +53,8 @@ const AdminPaymentSettings = () => {
   const [price30, setPrice30] = useState("");
   const [price45, setPrice45] = useState("");
   const [price60, setPrice60] = useState("");
+  const [priceMusicProduction, setPriceMusicProduction] = useState("");
+  const [priceRecitalTrack, setPriceRecitalTrack] = useState("");
   const [drafts, setDrafts] = useState<DraftDiscount[]>([]);
 
   useEffect(() => {
@@ -61,6 +63,8 @@ const AdminPaymentSettings = () => {
       setPrice30(String(lp["30"] ?? 0));
       setPrice45(String(lp["45"] ?? 0));
       setPrice60(String(lp["60"] ?? 0));
+      setPriceMusicProduction(String(settings.music_production_price ?? 0));
+      setPriceRecitalTrack(String(settings.recital_track_price ?? 0));
     }
   }, [settings]);
 
