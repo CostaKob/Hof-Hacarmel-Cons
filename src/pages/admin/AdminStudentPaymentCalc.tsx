@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
+import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X, Mail } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, type CalcRow } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -342,102 +342,101 @@ const AdminStudentPaymentCalc = () => {
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
   const [generatingLink, setGeneratingLink] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  const buildPaylinkPayload = () => {
+    const enrollmentLabels = rowsAfterStd.map((r) => {
+      const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
+      return [
+        e?.instruments?.name ?? "—",
+        e?.schools?.name ? `· ${e.schools.name}` : "",
+        e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+      ].filter(Boolean).join(" ");
+    });
+
+    const yearName = year?.name ?? "";
+    const hebrewYear = toHebrewYear(yearName);
+    const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
+
+    let lines: { description: string; amount: number }[] = [];
+
+    rowsAfterStd.forEach((r, i) => {
+      lines.push({
+        description: `שכר לימוד שנתי${yearSuffix} - ${enrollmentLabels[i]}`,
+        amount: Math.round(r.annualBase * 100) / 100,
+      });
+      const prorationDeduction = r.annualBase - r.prorated;
+      if (prorationDeduction > 0) {
+        lines.push({
+          description: `הפחתת שיעורים לפי תקופה${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
+          amount: -(Math.round(prorationDeduction * 100) / 100),
+        });
+      }
+    });
+
+    stdCompute.lines.forEach((dl) => {
+      if (dl.amount <= 0) return;
+      lines.push({
+        description: `${dl.label}${yearSuffix} (${dl.percentage}%)`,
+        amount: -(Math.round(dl.amount * 100) / 100),
+      });
+    });
+    customDiscounts.forEach((c) => {
+      const v = Number(c.value) || 0;
+      if (!v) return;
+      const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v) / 100 : Math.round(v * 100) / 100;
+      const name = c.label?.trim() || "הנחה מותאמת";
+      const suffix = c.mode === "pct" ? ` (${v}%)` : "";
+      lines.push({ description: `${name}${yearSuffix}${suffix}`, amount: -amt });
+    });
+
+    const linesSum = Math.round(lines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
+    const drift = Math.round((balance - linesSum) * 100) / 100;
+    if (drift !== 0 && lines.length > 0) lines[0].amount = Math.round((lines[0].amount + drift) * 100) / 100;
+    lines = lines.filter((l) => l.amount !== 0);
+
+    if (lines.length === 0) {
+      lines = [{ description: `שכר לימוד${yearSuffix}`, amount: Math.round(balance * 100) / 100 }];
+    }
+
+    return {
+      studentId,
+      amount: balance,
+      academicYearId: yearId,
+      academicYearName: hebrewYear ?? null,
+      lines,
+      discounts: {
+        selectedDiscountIds,
+        discountTypesSnapshot: selectedDiscounts.map((d) => ({
+          id: d.id,
+          label: d.label,
+          percentage: d.percentage,
+          applies_to: d.applies_to,
+          legacy_key: d.legacy_key,
+        })),
+        customDiscounts,
+        startDateOverrides,
+      },
+    };
+  };
+
+  const callGeneratePaylink = async () => {
+    const payload = buildPaylinkPayload();
+    const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+      body: payload,
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+    if (!data?.url) throw new Error("no url returned");
+    return data as { url: string; amount: number; paymentId: string };
+  };
 
   const handleGenerateLink = async () => {
     if (!student || !studentId) return;
     if (balance <= 0) return;
     setGeneratingLink(true);
     try {
-      // Build the paypage line items. iCount paypage items don't support
-      // negative amounts, and very small rounded amounts get filtered.
-      // Strategy:
-      //  - If there's no custom discount → one line per enrollment at afterStd.
-      //  - If there's a custom discount → fold everything into a single consolidated
-      //    line so the discount is reflected accurately and no enrollments disappear.
-      const enrollmentLabels = rowsAfterStd.map((r) => {
-        const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
-        return [
-          e?.instruments?.name ?? "—",
-          e?.schools?.name ? `· ${e.schools.name}` : "",
-          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
-        ].filter(Boolean).join(" ");
-      });
-
-      const yearName = year?.name ?? "";
-      const hebrewYear = toHebrewYear(yearName);
-      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
-
-      // Build a detailed line breakdown so parents see:
-      //   1) Full annual tuition per enrollment
-      //   2) Deduction for past lessons (proration) per enrollment
-      //   3) Each discount as its own negative line
-      let lines: { description: string; amount: number }[] = [];
-
-      rowsAfterStd.forEach((r, i) => {
-        lines.push({
-          description: `שכר לימוד שנתי${yearSuffix} - ${enrollmentLabels[i]}`,
-          amount: Math.round(r.annualBase * 100) / 100,
-        });
-        const prorationDeduction = r.annualBase - r.prorated;
-        if (prorationDeduction > 0) {
-          lines.push({
-            description: `הפחתת שיעורים לפי תקופה${yearSuffix} - ${enrollmentLabels[i]} (${r.lessonsRemaining}/${r.lessonsTotal} שיעורים נותרים)`,
-            amount: -(Math.round(prorationDeduction * 100) / 100),
-          });
-        }
-      });
-
-      stdCompute.lines.forEach((dl) => {
-        if (dl.amount <= 0) return;
-        lines.push({
-          description: `${dl.label}${yearSuffix} (${dl.percentage}%)`,
-          amount: -(Math.round(dl.amount * 100) / 100),
-        });
-      });
-      customDiscounts.forEach((c) => {
-        const v = Number(c.value) || 0;
-        if (!v) return;
-        const amt = c.mode === "pct" ? Math.round(afterStdDiscount * v) / 100 : Math.round(v * 100) / 100;
-        const name = c.label?.trim() || "הנחה מותאמת";
-        const suffix = c.mode === "pct" ? ` (${v}%)` : "";
-        lines.push({ description: `${name}${yearSuffix}${suffix}`, amount: -amt });
-      });
-
-      // Fix rounding drift so the lines sum to the exact balance
-      const linesSum = Math.round(lines.reduce((s, l) => s + l.amount, 0) * 100) / 100;
-      const drift = Math.round((balance - linesSum) * 100) / 100;
-      if (drift !== 0 && lines.length > 0) lines[0].amount = Math.round((lines[0].amount + drift) * 100) / 100;
-      lines = lines.filter((l) => l.amount !== 0);
-
-      if (lines.length === 0) {
-        lines = [{ description: `שכר לימוד${yearSuffix}`, amount: Math.round(balance * 100) / 100 }];
-      }
-
-      const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
-        body: {
-          studentId,
-          amount: balance,
-          academicYearId: yearId,
-          academicYearName: hebrewYear ?? null,
-          lines,
-          discounts: {
-            selectedDiscountIds,
-            discountTypesSnapshot: selectedDiscounts.map((d) => ({
-              id: d.id,
-              label: d.label,
-              percentage: d.percentage,
-              applies_to: d.applies_to,
-              legacy_key: d.legacy_key,
-            })),
-            customDiscounts,
-            startDateOverrides,
-          },
-        },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      if (!data?.url) throw new Error("no url returned");
-
+      const data = await callGeneratePaylink();
       try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
       window.open(data.url, "_blank");
       toast.success("קישור התשלום נוצר והועתק ללוח");
@@ -447,6 +446,42 @@ const AdminStudentPaymentCalc = () => {
       toast.error(`שגיאה ביצירת קישור: ${e?.message ?? e}`);
     } finally {
       setGeneratingLink(false);
+    }
+  };
+
+  const handleSendByEmail = async () => {
+    if (!student || !studentId) return;
+    if (balance <= 0) return;
+    const parentEmail = student.parent_email;
+    if (!parentEmail) {
+      toast.error("אין מייל הורה רשום לתלמיד זה");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const data = await callGeneratePaylink();
+      const hebrewYear = toHebrewYear(year?.name ?? "");
+      const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "payment-link",
+          recipientEmail: parentEmail,
+          templateData: {
+            parentName: student.parent_name || "",
+            studentName: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim(),
+            yearName: hebrewYear || year?.name || "",
+            amount: data.amount,
+            paymentUrl: data.url,
+          },
+        },
+      });
+      if (emailError) throw emailError;
+      toast.success(`קישור התשלום נשלח בהצלחה למייל ${parentEmail}`);
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+    } catch (e: any) {
+      console.error("[sendPaymentLinkByEmail]", e);
+      toast.error(`שגיאה בשליחת קישור למייל: ${e?.message ?? e}`);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -757,11 +792,20 @@ const AdminStudentPaymentCalc = () => {
           ) : null}
 
           {/* Generate iCount link — inside summary so context is clear */}
-          <div className="pt-3 border-t border-primary/20 flex justify-end">
+          <div className="pt-3 border-t border-primary/20 flex flex-wrap justify-end gap-2">
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl px-5"
+              onClick={handleSendByEmail}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail || !student?.parent_email}
+            >
+              {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
+              {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
+            </Button>
             <Button
               className="h-12 rounded-xl px-6"
               onClick={handleGenerateLink}
-              disabled={rows.length === 0 || balance <= 0 || generatingLink}
+              disabled={rows.length === 0 || balance <= 0 || generatingLink || sendingEmail}
             >
               {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
               {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
