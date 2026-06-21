@@ -770,9 +770,54 @@ const AdminStudentPaymentCalc = () => {
           </div>
         </div>
 
-
-
-
+        {pendingPayments.length > 0 && (
+          <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-5 shadow-sm space-y-2">
+            <h2 className="font-semibold text-foreground text-base">קישורי תשלום ממתינים ({pendingPayments.length})</h2>
+            {pendingPayments.map((p: any) => (
+              <div key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-foreground text-sm">₪{Number(p.amount).toLocaleString()} · ממתין לתשלום</p>
+                  <p className="text-xs text-muted-foreground truncate" dir="ltr">{p.payment_link_url || "—"}</p>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  {p.payment_link_url && (
+                    <>
+                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
+                        onClick={() => window.open(p.payment_link_url, "_blank")}>
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                      <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
+                        onClick={async () => {
+                          try { await navigator.clipboard.writeText(p.payment_link_url); toast.success("הקישור הועתק"); }
+                          catch { toast.error("לא ניתן להעתיק"); }
+                        }}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </>
+                  )}
+                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10" title="בטל קישור ממתין"
+                    onClick={async () => {
+                      if (!confirm("לבטל את קישור התשלום הממתין? דף הסליקה יימחק מ-iCount.")) return;
+                      if (p.payment_link_url || p.icount_payment_page_id) {
+                        const { data, error } = await supabase.functions.invoke("icount-delete-student-paypage", {
+                          body: { paymentId: p.id, strict: true },
+                        });
+                        if (error || data?.error) {
+                          toast.error(`שגיאה במחיקת דף הסליקה: ${error?.message || data?.error}`);
+                          return;
+                        }
+                      }
+                      const { error } = await supabase.from("student_payments").delete().eq("id", p.id);
+                      if (error) toast.error(`שגיאה: ${error.message}`);
+                      else { toast.success("הקישור בוטל ודף הסליקה נמחק"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); }
+                    }}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <StudentPaymentsSection
           studentId={studentId!}
