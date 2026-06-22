@@ -68,7 +68,31 @@ const NAV = [
 ];
 
 
+type PricingData = {
+  lesson_prices: Record<string, number>;
+  vat_rate: number;
+  music_production_price: number | null;
+  recital_track_price: number | null;
+  discounts: Array<{ label: string; percentage: number }>;
+};
+
+const formatPrice = (value: number) => new Intl.NumberFormat("he-IL").format(Math.round(value));
+
 const Landing = () => {
+  const { data: pricing } = useQuery({
+    queryKey: ["public-pricing"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_public_pricing");
+      if (error) throw error;
+      return data as unknown as PricingData;
+    },
+  });
+
+  const lp = pricing?.lesson_prices ?? {};
+  const price45 = Number(lp["45"]) || 0;
+  const price60 = Number(lp["60"]) || 0;
+  const price30 = Number(lp["30"]) || 0;
+
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground">
       {/* Header */}
