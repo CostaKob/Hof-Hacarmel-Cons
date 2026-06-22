@@ -81,6 +81,7 @@ type PublicTeacher = {
   id: string;
   first_name: string;
   last_name: string;
+  gender: string | null;
   instruments: string[];
 };
 
