@@ -236,7 +236,7 @@ const AdminRegistrationConvert = () => {
       school_id: matchedSchool?.id || "",
       lesson_duration_minutes: duration,
       lesson_type: "individual",
-      instrument_start_date: "",
+      instrument_start_date: computeDefaultInstrumentStartDate(targetYear),
     });
 
     // Auto-decide existing student usage
