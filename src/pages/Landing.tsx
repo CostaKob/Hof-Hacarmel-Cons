@@ -62,7 +62,7 @@ const JOURNEY = [
 const NAV = [
   { id: "about", label: "אודות" },
   { id: "journey", label: "המסע המוזיקלי" },
-  
+  { id: "teachers", label: "צוות המורים" },
   { id: "policies", label: "תעריפים ונהלים" },
   { id: "contact", label: "צור קשר" },
 ];
@@ -76,6 +76,13 @@ type PricingData = {
   discounts: Array<{ label: string; percentage: number }>;
 };
 
+type PublicTeacher = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  instruments: string[];
+};
+
 const formatPrice = (value: number) => new Intl.NumberFormat("he-IL").format(Math.round(value));
 
 const Landing = () => {
@@ -87,6 +94,17 @@ const Landing = () => {
       return data as unknown as PricingData;
     },
   });
+
+  const { data: teachers } = useQuery({
+    queryKey: ["public-teachers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_public_teachers");
+      if (error) throw error;
+      return (data ?? []) as PublicTeacher[];
+    },
+  });
+
+
 
   const lp = pricing?.lesson_prices ?? {};
   const price45 = Number(lp["45"]) || 0;
