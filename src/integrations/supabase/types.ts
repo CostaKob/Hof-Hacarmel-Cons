@@ -2282,6 +2282,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_public_pricing: { Args: never; Returns: Json }
       get_public_school_music_school_by_slug: {
         Args: { _slug: string }
         Returns: {
