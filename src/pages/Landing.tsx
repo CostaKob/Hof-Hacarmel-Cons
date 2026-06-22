@@ -21,6 +21,7 @@ import {
   Mail,
   MessageCircle,
   GraduationCap,
+  User,
   Music,
   Guitar,
   Mic2,
