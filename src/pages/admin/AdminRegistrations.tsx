@@ -148,8 +148,8 @@ const AdminRegistrations = () => {
                         )}
                       </div>
 
-                      {/* Row 3: Days ago + match indicator */}
-                      <div className="flex items-center gap-3 text-[11px]">
+                      {/* Row 3: Days ago + match indicator + special tracks */}
+                      <div className="flex items-center gap-2 flex-wrap text-[11px]">
                         <span className={isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}>
                           {daysAgoLabel(r.created_at)}
                         </span>
@@ -159,6 +159,16 @@ const AdminRegistrations = () => {
                         {r.existing_student_id && r.match_type === "name_match" && (
                           <span className="flex items-center gap-0.5 text-amber-600 font-medium">
                             <AlertTriangle className="h-3 w-3" /> התאמת שם
+                          </span>
+                        )}
+                        {(r as any).wants_music_production && (
+                          <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200 font-medium">
+                            🎚️ הפקה
+                          </span>
+                        )}
+                        {(r as any).wants_recital_track && (
+                          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-medium">
+                            🎼 רסיטל
                           </span>
                         )}
                       </div>

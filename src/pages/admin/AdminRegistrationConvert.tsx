@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { UserCheck, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
+import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
 
 interface ConvertFormData {
   // Student fields
@@ -87,14 +88,14 @@ const AdminRegistrationConvert = () => {
       if (registration?.academic_year_id) {
         const { data } = await supabase
           .from("academic_years")
-          .select("id, name")
+          .select("id, name, start_date")
           .eq("id", registration.academic_year_id)
           .single();
         if (data) return data;
       }
       const { data } = await supabase
         .from("academic_years")
-        .select("id, name")
+        .select("id, name, start_date")
         .eq("is_active", true)
         .single();
       return data;
@@ -235,7 +236,7 @@ const AdminRegistrationConvert = () => {
       school_id: matchedSchool?.id || "",
       lesson_duration_minutes: duration,
       lesson_type: "individual",
-      instrument_start_date: "",
+      instrument_start_date: computeDefaultInstrumentStartDate(targetYear),
     });
 
     // Auto-decide existing student usage
@@ -245,7 +246,7 @@ const AdminRegistrationConvert = () => {
       setUseExisting(false);
     }
     // name_match: leave null for admin to decide
-  }, [registration, schools, reset]);
+  }, [registration, schools, reset, targetYear]);
 
   const convertMutation = useMutation({
     mutationFn: async (data: ConvertFormData) => {

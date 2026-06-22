@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
+import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
 
 interface EnrollmentFormData {
   student_id: string;
@@ -74,12 +75,13 @@ const AdminEnrollmentForm = () => {
   const selectedTeacherId = watch("teacher_id");
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  // Set default end_date for NEW enrollments based on the selected academic year (Aug 31).
+  // Set default end_date + instrument_start_date for NEW enrollments based on the selected academic year.
   useEffect(() => {
     if (isEdit) return;
     const yr = years.find((y) => y.id === selectedYearId);
-    const def = computeDefaultEndDate(yr);
-    if (def) setValue("end_date", def);
+    const defEnd = computeDefaultEndDate(yr);
+    if (defEnd) setValue("end_date", defEnd);
+    setValue("instrument_start_date", computeDefaultInstrumentStartDate(yr));
   }, [isEdit, selectedYearId, years, setValue]);
 
   const deleteMutation = useMutation({
@@ -182,7 +184,7 @@ const AdminEnrollmentForm = () => {
         enrollment_role: enrollment.enrollment_role,
         lesson_type: enrollment.lesson_type,
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
-        instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
+        instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? computeDefaultInstrumentStartDate(yr),
         end_date: enrollment.end_date ?? computeDefaultEndDate(yr),
         is_active: enrollment.is_active,
         grade: (enrollment as any).grade ?? "",
