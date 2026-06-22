@@ -184,7 +184,7 @@ const AdminEnrollmentForm = () => {
         enrollment_role: enrollment.enrollment_role,
         lesson_type: enrollment.lesson_type,
         lesson_duration_minutes: enrollment.lesson_duration_minutes.toString(),
-        instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? "",
+        instrument_start_date: enrollment.instrument_start_date ?? enrollment.start_date ?? computeDefaultInstrumentStartDate(yr),
         end_date: enrollment.end_date ?? computeDefaultEndDate(yr),
         is_active: enrollment.is_active,
         grade: (enrollment as any).grade ?? "",
