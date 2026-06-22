@@ -246,7 +246,7 @@ const AdminRegistrationConvert = () => {
       setUseExisting(false);
     }
     // name_match: leave null for admin to decide
-  }, [registration, schools, reset]);
+  }, [registration, schools, reset, targetYear]);
 
   const convertMutation = useMutation({
     mutationFn: async (data: ConvertFormData) => {
