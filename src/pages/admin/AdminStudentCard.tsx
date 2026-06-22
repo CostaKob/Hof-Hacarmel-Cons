@@ -240,6 +240,16 @@ const AdminStudentCard = () => {
                 ))}
               </SelectContent>
             </Select>
+            {(student as any).has_music_production_course && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200">
+                🎚️ הפקה מוסיקלית
+              </span>
+            )}
+            {(student as any).has_recital_track && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
+                🎼 מסלול רסיטל
+              </span>
+            )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
