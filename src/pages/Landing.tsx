@@ -289,47 +289,19 @@ const Landing = () => {
         </section>
 
 
-        {/* Teachers */}
-        <section id="teachers" className="py-16 md:py-20 bg-muted/30">
-          <div className="mx-auto max-w-6xl px-5">
-            <div className="text-center space-y-2 mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold">צוות המורים</h2>
-              <p className="text-muted-foreground">המורים והמורות המלמדים באולפן</p>
-            </div>
-            {teachers && teachers.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {teachers.map((t) => (
-                  <Card key={t.id} className="border-border">
-                    <CardContent className="flex items-center gap-4 p-4 text-right">
-                      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary overflow-hidden">
-                        {/* תמונה תתווסף כאן בעתיד */}
-                        <User className="h-8 w-8" />
-                        {t.gender === 'male' && (
-                          <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] text-white leading-none border-2 border-background">
-                            ♂
-                          </span>
-                        )}
-                        {t.gender === 'female' && (
-                          <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-rose-400 text-[10px] text-white leading-none border-2 border-background">
-                            ♀
-                          </span>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-foreground truncate">
-                          {t.first_name} {t.last_name}
-                        </p>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {t.instruments.join(", ")}
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-sm text-muted-foreground">רשימת המורים תתעדכן בקרוב.</p>
-            )}
+        {/* Teachers CTA */}
+        <section className="py-12 md:py-16 bg-muted/30">
+          <div className="mx-auto max-w-4xl px-5 text-center space-y-4">
+            <h2 className="text-xl md:text-2xl font-bold">צוות המורים שלנו</h2>
+            <p className="text-muted-foreground text-sm md:text-base">
+              הכירו את המורים והמורות המלמדים באולפן במגוון כלי הנגינה.
+            </p>
+            <Link to="/teachers">
+              <Button size="lg" className="h-12 rounded-xl gap-2 mt-2">
+                <Users className="h-5 w-5" />
+                לצפייה בצוות המורים
+              </Button>
+            </Link>
           </div>
         </section>
 
