@@ -21,6 +21,7 @@ import {
   Mail,
   MessageCircle,
   GraduationCap,
+  User,
   Music,
   Guitar,
   Mic2,
@@ -62,7 +63,7 @@ const JOURNEY = [
 const NAV = [
   { id: "about", label: "אודות" },
   { id: "journey", label: "המסע המוזיקלי" },
-  
+  { id: "teachers", label: "צוות המורים" },
   { id: "policies", label: "תעריפים ונהלים" },
   { id: "contact", label: "צור קשר" },
 ];
@@ -76,6 +77,13 @@ type PricingData = {
   discounts: Array<{ label: string; percentage: number }>;
 };
 
+type PublicTeacher = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  instruments: string[];
+};
+
 const formatPrice = (value: number) => new Intl.NumberFormat("he-IL").format(Math.round(value));
 
 const Landing = () => {
@@ -87,6 +95,17 @@ const Landing = () => {
       return data as unknown as PricingData;
     },
   });
+
+  const { data: teachers } = useQuery({
+    queryKey: ["public-teachers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_public_teachers");
+      if (error) throw error;
+      return (data ?? []) as PublicTeacher[];
+    },
+  });
+
+
 
   const lp = pricing?.lesson_prices ?? {};
   const price45 = Number(lp["45"]) || 0;
@@ -285,6 +304,39 @@ const Landing = () => {
         </section>
 
 
+        {/* Teachers */}
+        <section id="teachers" className="py-16 md:py-20 bg-muted/30">
+          <div className="mx-auto max-w-6xl px-5">
+            <div className="text-center space-y-2 mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold">צוות המורים</h2>
+              <p className="text-muted-foreground">המורים והמורות המלמדים באולפן</p>
+            </div>
+            {teachers && teachers.length > 0 ? (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {teachers.map((t) => (
+                  <Card key={t.id} className="border-border">
+                    <CardContent className="flex items-center gap-4 p-4 text-right">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary overflow-hidden">
+                        {/* תמונה תתווסף כאן בעתיד */}
+                        <User className="h-8 w-8" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground truncate">
+                          {t.first_name} {t.last_name}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {t.instruments.join(", ")}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">רשימת המורים תתעדכן בקרוב.</p>
+            )}
+          </div>
+        </section>
 
         {/* Tuition & Regulations */}
         <section id="policies" className="py-16 md:py-20">
