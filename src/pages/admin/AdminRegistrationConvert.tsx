@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { UserCheck, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
+import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
 
 interface ConvertFormData {
   // Student fields
