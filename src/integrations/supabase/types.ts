@@ -2196,6 +2196,7 @@ export type Database = {
           created_at: string
           email: string | null
           first_name: string
+          gender: string | null
           id: string
           is_active: boolean
           is_freelance: boolean
@@ -2212,6 +2213,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name: string
+          gender?: string | null
           id?: string
           is_active?: boolean
           is_freelance?: boolean
@@ -2228,6 +2230,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string
+          gender?: string | null
           id?: string
           is_active?: boolean
           is_freelance?: boolean
@@ -2297,6 +2300,7 @@ export type Database = {
         Args: never
         Returns: {
           first_name: string
+          gender: string
           id: string
           instruments: string[]
           last_name: string
