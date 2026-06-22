@@ -80,6 +80,7 @@ import AdminCities from "./pages/admin/AdminCities";
 import AdminInventoryInstruments from "./pages/admin/AdminInventoryInstruments";
 import AdminInventoryInstrumentForm from "./pages/admin/AdminInventoryInstrumentForm";
 import AdminInstrumentStorageLocations from "./pages/admin/AdminInstrumentStorageLocations";
+import PublicTeachers from "./pages/PublicTeachers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
