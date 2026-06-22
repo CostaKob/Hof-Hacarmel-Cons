@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
+import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
 
 interface EnrollmentFormData {
   student_id: string;
