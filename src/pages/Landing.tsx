@@ -1,4 +1,6 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -66,7 +68,31 @@ const NAV = [
 ];
 
 
+type PricingData = {
+  lesson_prices: Record<string, number>;
+  vat_rate: number;
+  music_production_price: number | null;
+  recital_track_price: number | null;
+  discounts: Array<{ label: string; percentage: number }>;
+};
+
+const formatPrice = (value: number) => new Intl.NumberFormat("he-IL").format(Math.round(value));
+
 const Landing = () => {
+  const { data: pricing } = useQuery({
+    queryKey: ["public-pricing"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_public_pricing");
+      if (error) throw error;
+      return data as unknown as PricingData;
+    },
+  });
+
+  const lp = pricing?.lesson_prices ?? {};
+  const price45 = Number(lp["45"]) || 0;
+  const price60 = Number(lp["60"]) || 0;
+  const price30 = Number(lp["30"]) || 0;
+
   return (
     <div dir="rtl" className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -272,23 +298,44 @@ const Landing = () => {
                 <AccordionTrigger className="px-5 text-base font-semibold text-right">תעריפי לימודים</AccordionTrigger>
                 <AccordionContent className="px-5 text-sm leading-relaxed">
                   <ul className="space-y-1.5 text-muted-foreground">
-                    <li>שיעור 45 דקות — <span className="font-semibold text-foreground">480 ₪</span></li>
-                    <li>שיעור 60 דקות — <span className="font-semibold text-foreground">580 ₪</span></li>
-                    <li>שיעור 30 דקות (שנה א', כיתות א'–ד') — <span className="font-semibold text-foreground">350 ₪</span></li>
-                    <li>שיעור בקבוצה — <span className="font-semibold text-foreground">280 ₪</span></li>
+                    {price45 > 0 && (
+                      <li>שיעור פרטני 45 דקות — <span className="font-semibold text-foreground">{formatPrice(price45)} ₪ לשנה</span></li>
+                    )}
+                    {price60 > 0 && (
+                      <li>שיעור פרטני 60 דקות — <span className="font-semibold text-foreground">{formatPrice(price60)} ₪ לשנה</span></li>
+                    )}
+                    {price30 > 0 && (
+                      <li>שיעור פרטני 30 דקות (שנה א', כיתות א'–ד') — <span className="font-semibold text-foreground">{formatPrice(price30)} ₪ לשנה</span></li>
+                    )}
+                    {pricing?.music_production_price ? (
+                      <li>הפקה מוסיקלית — <span className="font-semibold text-foreground">{formatPrice(pricing.music_production_price)} ₪ לשנה</span></li>
+                    ) : null}
+                    {pricing?.recital_track_price ? (
+                      <li>מסלול רסיטל — <span className="font-semibold text-foreground">{formatPrice(pricing.recital_track_price)} ₪ לשנה</span></li>
+                    ) : null}
                   </ul>
+                  {pricing && Number(pricing.vat_rate) > 0 && (
+                    <p className="mt-3 text-xs text-muted-foreground">המחירים כוללים מע״מ {Number(pricing.vat_rate)}%.</p>
+                  )}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="discounts" className="border-0">
                 <AccordionTrigger className="px-5 text-base font-semibold text-right">הנחות</AccordionTrigger>
                 <AccordionContent className="px-5 text-sm leading-relaxed">
-                  <ul className="space-y-1.5 text-muted-foreground">
-                    <li>5% — הרשמה מוקדמת</li>
-                    <li>5% — שלוחות יישוביות</li>
-                    <li>10% — מגמת מוזיקה</li>
-                    <li>5% — אח / כלי שני</li>
-                  </ul>
-                  <p className="mt-3 text-xs text-foreground font-medium">* אין כפל הנחות.</p>
+                  {pricing?.discounts && pricing.discounts.length > 0 ? (
+                    <>
+                      <ul className="space-y-1.5 text-muted-foreground">
+                        {pricing.discounts.map((d, i) => (
+                          <li key={i}>
+                            <span className="font-semibold text-foreground">{Number(d.percentage)}%</span> — {d.label}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-3 text-xs text-foreground font-medium">* אין כפל הנחות.</p>
+                    </>
+                  ) : (
+                    <p className="text-muted-foreground">פרטי ההנחות יפורסמו בקרוב.</p>
+                  )}
                 </AccordionContent>
               </AccordionItem>
               <AccordionItem value="rules" className="border-0">
