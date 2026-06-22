@@ -81,6 +81,7 @@ type PublicTeacher = {
   id: string;
   first_name: string;
   last_name: string;
+  gender: string | null;
   instruments: string[];
 };
 
@@ -316,9 +317,19 @@ const Landing = () => {
                 {teachers.map((t) => (
                   <Card key={t.id} className="border-border">
                     <CardContent className="flex items-center gap-4 p-4 text-right">
-                      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary overflow-hidden">
+                      <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary overflow-hidden">
                         {/* תמונה תתווסף כאן בעתיד */}
                         <User className="h-8 w-8" />
+                        {t.gender === 'male' && (
+                          <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-sky-500 text-[10px] text-white leading-none border-2 border-background">
+                            ♂
+                          </span>
+                        )}
+                        {t.gender === 'female' && (
+                          <span className="absolute bottom-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-rose-400 text-[10px] text-white leading-none border-2 border-background">
+                            ♀
+                          </span>
+                        )}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-foreground truncate">
