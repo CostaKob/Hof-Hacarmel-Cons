@@ -87,14 +87,14 @@ const AdminRegistrationConvert = () => {
       if (registration?.academic_year_id) {
         const { data } = await supabase
           .from("academic_years")
-          .select("id, name")
+          .select("id, name, start_date")
           .eq("id", registration.academic_year_id)
           .single();
         if (data) return data;
       }
       const { data } = await supabase
         .from("academic_years")
-        .select("id, name")
+        .select("id, name, start_date")
         .eq("is_active", true)
         .single();
       return data;
