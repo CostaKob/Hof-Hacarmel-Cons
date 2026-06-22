@@ -2293,6 +2293,15 @@ export type Database = {
           start_date: string
         }[]
       }
+      get_public_teachers: {
+        Args: never
+        Returns: {
+          first_name: string
+          id: string
+          instruments: string[]
+          last_name: string
+        }[]
+      }
       get_registered_national_ids_for_year: {
         Args: { _year_id: string }
         Returns: {
