@@ -81,24 +81,24 @@ const PublicTeachers = () => {
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-background/60 backdrop-blur-sm">
-                          <User className="h-14 w-14 text-primary/60" />
+                        <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-background/60 backdrop-blur-sm">
+                          <User className="h-10 w-10 text-primary/60" />
                           {t.gender === "male" && (
-                            <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-sky-500 text-sm text-white border-2 border-background">♂</span>
+                            <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-sky-500 text-xs text-white border-2 border-background">♂</span>
                           )}
                           {t.gender === "female" && (
-                            <span className="absolute bottom-1 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-rose-400 text-sm text-white border-2 border-background">♀</span>
+                            <span className="absolute bottom-0 right-0 flex h-6 w-6 items-center justify-center rounded-full bg-rose-400 text-xs text-white border-2 border-background">♀</span>
                           )}
                         </div>
                       </div>
                     )}
                     {/* Gradient overlay with name */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-5 text-right">
-                      <h2 className="text-xl font-bold text-white drop-shadow-md">
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-3 text-right">
+                      <h2 className="text-sm font-bold text-white drop-shadow-md leading-tight">
                         {t.first_name} {t.last_name}
                       </h2>
                       {t.instruments.length > 0 && (
-                        <p className="text-sm text-white/90 mt-1 drop-shadow">
+                        <p className="text-[11px] text-white/90 mt-0.5 drop-shadow truncate">
                           {t.instruments.join(" · ")}
                         </p>
                       )}
@@ -106,27 +106,17 @@ const PublicTeachers = () => {
                   </div>
 
                   {/* Body */}
-                  <div className="flex flex-1 flex-col p-5 text-right">
-                    {t.instruments.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mb-3">
-                        {t.instruments.map((inst) => (
-                          <span
-                            key={inst}
-                            className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2.5 py-0.5 text-xs font-medium"
-                          >
-                            <Music className="h-3 w-3" />
-                            {inst}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                    <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-line">
-                      {t.bio?.trim() || "פרטים נוספים יתעדכנו בקרוב."}
-                    </p>
-                  </div>
+                  {t.bio?.trim() && (
+                    <div className="flex flex-1 flex-col p-3 text-right">
+                      <p className="text-xs leading-relaxed text-muted-foreground whitespace-pre-line">
+                        {t.bio}
+                      </p>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
+
           ) : (
             <p className="text-center text-sm text-muted-foreground">
               רשימת המורים תתעדכן בקרוב.
