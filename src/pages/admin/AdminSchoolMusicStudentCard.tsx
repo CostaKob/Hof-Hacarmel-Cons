@@ -183,6 +183,27 @@ const AdminSchoolMusicStudentCard = () => {
         onOpenChange={setEditOpen}
         student={student}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>למחוק את {fullName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תמחק את התלמיד וכל הנתונים המקושרים אליו (תשלומים, השאלות כלים, שיוכים לקבוצות). לא ניתן לשחזר.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "מוחק..." : "מחק"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
