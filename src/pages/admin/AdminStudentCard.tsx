@@ -323,6 +323,26 @@ const AdminStudentCard = () => {
           <DetailRow label="רמת נגינה" value={(student as any).playing_level} />
         </div>
 
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <h2 className="font-semibold text-foreground text-base">קורסים ומסלולים</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { field: "has_music_production_course", label: "🎚️ הפקה מוסיקלית" },
+              { field: "has_recital_track", label: "🎼 מסלול רסיטל י״ב" },
+              { field: "is_major_student", label: "🎓 מגמת המוסיקה" },
+              { field: "is_junior_track", label: "📘 מסלול חטיבה" },
+            ].map((opt) => (
+              <label key={opt.field} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors">
+                <Checkbox
+                  checked={!!(student as any)[opt.field]}
+                  onCheckedChange={(c) => flagMutation.mutate({ field: opt.field as any, value: c === true })}
+                />
+                <span className="text-sm font-medium text-foreground">{opt.label}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
           <h2 className="font-semibold text-foreground text-base mb-2">פרטי הורים</h2>
           <DetailRow label="שם הורה 1" value={student.parent_name} />
