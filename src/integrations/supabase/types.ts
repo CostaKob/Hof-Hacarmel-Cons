@@ -1971,6 +1971,7 @@ export type Database = {
           has_recital_track: boolean
           id: string
           is_active: boolean
+          is_junior_track: boolean
           is_major_student: boolean
           last_name: string
           last_promoted_year_id: string | null
@@ -1999,6 +2000,7 @@ export type Database = {
           has_recital_track?: boolean
           id?: string
           is_active?: boolean
+          is_junior_track?: boolean
           is_major_student?: boolean
           last_name: string
           last_promoted_year_id?: string | null
@@ -2027,6 +2029,7 @@ export type Database = {
           has_recital_track?: boolean
           id?: string
           is_active?: boolean
+          is_junior_track?: boolean
           is_major_student?: boolean
           last_name?: string
           last_promoted_year_id?: string | null
