@@ -181,19 +181,74 @@ const AdminTeacherForm = () => {
               </div>
             ))}
           </div>
-          <div className="flex items-center gap-3 pt-2">
-            <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
-            <Label>פעיל</Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <Switch checked={isFreelance} onCheckedChange={(v) => setValue("is_freelance", v)} />
-            <Label>עצמאי</Label>
-          </div>
-          <div className="flex items-center gap-3">
-            <Switch checked={isOffice} onCheckedChange={(v) => setValue("is_office", v)} />
-            <Label>משרד (לא מופיע בדוח שכר)</Label>
+
+          {/* Public profile (photo + bio) */}
+          <div className="pt-2 border-t border-border space-y-4">
+            <h3 className="font-semibold text-foreground text-sm">פרופיל פומבי (מופיע באתר)</h3>
+            <div className="space-y-2">
+              <Label className="text-sm">תמונה</Label>
+              <div className="flex items-center gap-4">
+                <div className="relative h-20 w-20 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="תמונת מורה" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const ext = file.name.split(".").pop() ?? "jpg";
+                        const path = `teacher-photos/${teacherId ?? crypto.randomUUID()}-${Date.now()}.${ext}`;
+                        const { error: upErr } = await supabase.storage
+                          .from("app-settings")
+                          .upload(path, file, { upsert: true, contentType: file.type });
+                        if (upErr) throw upErr;
+                        const { data } = supabase.storage.from("app-settings").getPublicUrl(path);
+                        setValue("photo_url", data.publicUrl, { shouldDirty: true });
+                        toast.success("התמונה הועלתה");
+                      } catch (err: any) {
+                        toast.error(err.message ?? "שגיאה בהעלאת התמונה");
+                      } finally {
+                        setUploading(false);
+                        if (fileRef.current) fileRef.current.value = "";
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" className="h-10 rounded-xl gap-2" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                    <Upload className="h-4 w-4" />
+                    {uploading ? "מעלה..." : "העלאת תמונה"}
+                  </Button>
+                  {photoUrl && (
+                    <Button type="button" variant="ghost" className="h-10 rounded-xl gap-2 text-destructive" onClick={() => setValue("photo_url", "", { shouldDirty: true })}>
+                      <X className="h-4 w-4" />
+                      הסרה
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">קצת על המורה</Label>
+              <Textarea
+                {...register("bio")}
+                rows={5}
+                placeholder="רקע מקצועי, ניסיון, גישה להוראה..."
+                className="rounded-xl resize-none"
+              />
+              <p className="text-xs text-muted-foreground">הטקסט הזה יוצג בדף המורים באתר הציבורי.</p>
+            </div>
           </div>
         </div>
+
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
