@@ -79,6 +79,20 @@ const AdminStudentCard = () => {
     onError: () => toast.error("שגיאה בעדכון סטטוס רישום"),
   });
 
+  const flagMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: "has_music_production_course" | "has_recital_track" | "is_junior_track" | "is_major_student"; value: boolean }) => {
+      const { error } = await supabase.from("students").update({ [field]: value } as any).eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-students-raw"] });
+      toast.success("עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
+  });
+
 
 
   const deleteMutation = useMutation({
