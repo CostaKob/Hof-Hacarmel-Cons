@@ -33,6 +33,25 @@ const AdminSchoolMusicStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!studentId) return;
+    setDeleting(true);
+    const { error } = await supabase.from("school_music_students").delete().eq("id", studentId);
+    setDeleting(false);
+    if (error) {
+      toast.error("מחיקה נכשלה: " + error.message);
+      return;
+    }
+    toast.success("התלמיד נמחק");
+    setDeleteOpen(false);
+    const backTo = student?.school_music_schools?.id
+      ? `/admin/school-music-schools/${student.school_music_schools.id}`
+      : "/admin/school-music-schools";
+    navigate(backTo);
+  };
 
   const { data: student, isLoading } = useQuery({
     queryKey: ["school-music-student", studentId],
