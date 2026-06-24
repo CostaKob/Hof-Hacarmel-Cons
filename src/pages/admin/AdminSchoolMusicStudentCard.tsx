@@ -189,7 +189,9 @@ const AdminSchoolMusicStudentCard = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>למחוק את {fullName}?</AlertDialogTitle>
             <AlertDialogDescription>
-              פעולה זו תמחק את התלמיד וכל הנתונים המקושרים אליו (תשלומים, השאלות כלים, שיוכים לקבוצות). לא ניתן לשחזר.
+              ברוב המקרים עדיף להעביר את סטטוס התלמיד ל"הפסיק" במקום למחוק, כדי לשמור על ההיסטוריה (תשלומים, השאלות, נוכחות).
+              <br />
+              מחיקה תסיר את התלמיד וכל הנתונים המקושרים אליו לצמיתות, ולא ניתן יהיה לשחזר.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
