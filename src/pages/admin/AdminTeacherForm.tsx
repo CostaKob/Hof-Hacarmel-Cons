@@ -23,6 +23,8 @@ interface TeacherFormData {
   email: string;
   address: string;
   city: string;
+  bio: string;
+  photo_url: string;
   is_active: boolean;
   is_freelance: boolean;
   is_office: boolean;
@@ -33,14 +35,18 @@ const AdminTeacherForm = () => {
   const isEdit = !!teacherId;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<TeacherFormData>({
-    defaultValues: { is_active: true, is_freelance: false, is_office: false },
+    defaultValues: { is_active: true, is_freelance: false, is_office: false, bio: "", photo_url: "" },
   });
 
   const isActive = watch("is_active");
   const isFreelance = watch("is_freelance");
   const isOffice = watch("is_office");
+  const photoUrl = watch("photo_url");
+
 
   const { data: teacher } = useQuery({
     queryKey: ["admin-teacher", teacherId],
