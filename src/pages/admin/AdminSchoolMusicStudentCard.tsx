@@ -134,6 +134,14 @@ const AdminSchoolMusicStudentCard = () => {
               >
                 <Pencil className="h-3.5 w-3.5" /> עריכה
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-lg text-destructive hover:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" /> מחיקה
+              </Button>
             </div>
           </div>
         </div>
