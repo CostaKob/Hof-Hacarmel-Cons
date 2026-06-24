@@ -2191,6 +2191,7 @@ export type Database = {
       teachers: {
         Row: {
           address: string | null
+          bio: string | null
           birth_date: string | null
           city: string | null
           created_at: string
@@ -2204,10 +2205,12 @@ export type Database = {
           last_name: string
           national_id: string | null
           phone: string | null
+          photo_url: string | null
           user_id: string | null
         }
         Insert: {
           address?: string | null
+          bio?: string | null
           birth_date?: string | null
           city?: string | null
           created_at?: string
@@ -2221,10 +2224,12 @@ export type Database = {
           last_name: string
           national_id?: string | null
           phone?: string | null
+          photo_url?: string | null
           user_id?: string | null
         }
         Update: {
           address?: string | null
+          bio?: string | null
           birth_date?: string | null
           city?: string | null
           created_at?: string
@@ -2238,6 +2243,7 @@ export type Database = {
           last_name?: string
           national_id?: string | null
           phone?: string | null
+          photo_url?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -2299,11 +2305,13 @@ export type Database = {
       get_public_teachers: {
         Args: never
         Returns: {
+          bio: string
           first_name: string
           gender: string
           id: string
           instruments: string[]
           last_name: string
+          photo_url: string
         }[]
       }
       get_registered_national_ids_for_year: {

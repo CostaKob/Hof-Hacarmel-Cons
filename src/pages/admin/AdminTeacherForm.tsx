@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -8,8 +8,11 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { Upload, X, User as UserIcon } from "lucide-react";
+
 
 interface TeacherFormData {
   first_name: string;
@@ -20,6 +23,8 @@ interface TeacherFormData {
   email: string;
   address: string;
   city: string;
+  bio: string;
+  photo_url: string;
   is_active: boolean;
   is_freelance: boolean;
   is_office: boolean;
@@ -30,14 +35,18 @@ const AdminTeacherForm = () => {
   const isEdit = !!teacherId;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<TeacherFormData>({
-    defaultValues: { is_active: true, is_freelance: false, is_office: false },
+    defaultValues: { is_active: true, is_freelance: false, is_office: false, bio: "", photo_url: "" },
   });
 
   const isActive = watch("is_active");
   const isFreelance = watch("is_freelance");
   const isOffice = watch("is_office");
+  const photoUrl = watch("photo_url");
+
 
   const { data: teacher } = useQuery({
     queryKey: ["admin-teacher", teacherId],
@@ -60,9 +69,12 @@ const AdminTeacherForm = () => {
         email: teacher.email ?? "",
         address: teacher.address ?? "",
         city: teacher.city ?? "",
+        bio: (teacher as any).bio ?? "",
+        photo_url: (teacher as any).photo_url ?? "",
         is_active: teacher.is_active,
         is_freelance: (teacher as any).is_freelance ?? false,
         is_office: (teacher as any).is_office ?? false,
+
       });
     }
   }, [teacher, reset]);
@@ -78,9 +90,12 @@ const AdminTeacherForm = () => {
         email: data.email || null,
         address: data.address || null,
         city: data.city || null,
+        bio: data.bio || null,
+        photo_url: data.photo_url || null,
         is_active: data.is_active,
         is_freelance: data.is_freelance,
         is_office: data.is_office,
+
       };
       if (isEdit) {
         const { error } = await supabase.from("teachers").update(payload).eq("id", teacherId!);
@@ -178,7 +193,76 @@ const AdminTeacherForm = () => {
             <Switch checked={isOffice} onCheckedChange={(v) => setValue("is_office", v)} />
             <Label>משרד (לא מופיע בדוח שכר)</Label>
           </div>
+
+
+
+          {/* Public profile (photo + bio) */}
+          <div className="pt-2 border-t border-border space-y-4">
+            <h3 className="font-semibold text-foreground text-sm">פרופיל פומבי (מופיע באתר)</h3>
+            <div className="space-y-2">
+              <Label className="text-sm">תמונה</Label>
+              <div className="flex items-center gap-4">
+                <div className="relative h-20 w-20 shrink-0 rounded-full overflow-hidden bg-muted flex items-center justify-center border border-border">
+                  {photoUrl ? (
+                    <img src={photoUrl} alt="תמונת מורה" className="h-full w-full object-cover" />
+                  ) : (
+                    <UserIcon className="h-8 w-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setUploading(true);
+                      try {
+                        const ext = file.name.split(".").pop() ?? "jpg";
+                        const path = `teacher-photos/${teacherId ?? crypto.randomUUID()}-${Date.now()}.${ext}`;
+                        const { error: upErr } = await supabase.storage
+                          .from("app-settings")
+                          .upload(path, file, { upsert: true, contentType: file.type });
+                        if (upErr) throw upErr;
+                        const { data } = supabase.storage.from("app-settings").getPublicUrl(path);
+                        setValue("photo_url", data.publicUrl, { shouldDirty: true });
+                        toast.success("התמונה הועלתה");
+                      } catch (err: any) {
+                        toast.error(err.message ?? "שגיאה בהעלאת התמונה");
+                      } finally {
+                        setUploading(false);
+                        if (fileRef.current) fileRef.current.value = "";
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="outline" className="h-10 rounded-xl gap-2" disabled={uploading} onClick={() => fileRef.current?.click()}>
+                    <Upload className="h-4 w-4" />
+                    {uploading ? "מעלה..." : "העלאת תמונה"}
+                  </Button>
+                  {photoUrl && (
+                    <Button type="button" variant="ghost" className="h-10 rounded-xl gap-2 text-destructive" onClick={() => setValue("photo_url", "", { shouldDirty: true })}>
+                      <X className="h-4 w-4" />
+                      הסרה
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">קצת על המורה</Label>
+              <Textarea
+                {...register("bio")}
+                rows={5}
+                placeholder="רקע מקצועי, ניסיון, גישה להוראה..."
+                className="rounded-xl resize-none"
+              />
+              <p className="text-xs text-muted-foreground">הטקסט הזה יוצג בדף המורים באתר הציבורי.</p>
+            </div>
+          </div>
         </div>
+
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
             {mutation.isPending ? "שומר..." : "שמירה"}
