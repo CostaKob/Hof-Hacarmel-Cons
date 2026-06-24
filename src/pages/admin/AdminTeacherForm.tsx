@@ -181,6 +181,20 @@ const AdminTeacherForm = () => {
               </div>
             ))}
           </div>
+          <div className="flex items-center gap-3 pt-2">
+            <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
+            <Label>פעיל</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isFreelance} onCheckedChange={(v) => setValue("is_freelance", v)} />
+            <Label>עצמאי</Label>
+          </div>
+          <div className="flex items-center gap-3">
+            <Switch checked={isOffice} onCheckedChange={(v) => setValue("is_office", v)} />
+            <Label>משרד (לא מופיע בדוח שכר)</Label>
+          </div>
+
+
 
           {/* Public profile (photo + bio) */}
           <div className="pt-2 border-t border-border space-y-4">
