@@ -1,0 +1,1 @@
+ALTER TABLE public.students ADD COLUMN IF NOT EXISTS is_junior_track boolean NOT NULL DEFAULT false;

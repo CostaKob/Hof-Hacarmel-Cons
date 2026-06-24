@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Pencil, Plus, Trash2, Calculator, FileDown, Undo2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcYearsOfPlaying, STUDENT_STATUSES } from "@/lib/constants";
@@ -76,6 +77,20 @@ const AdminStudentCard = () => {
       toast.success("סטטוס רישום עודכן");
     },
     onError: () => toast.error("שגיאה בעדכון סטטוס רישום"),
+  });
+
+  const flagMutation = useMutation({
+    mutationFn: async ({ field, value }: { field: "has_music_production_course" | "has_recital_track" | "is_junior_track" | "is_major_student"; value: boolean }) => {
+      const { error } = await supabase.from("students").update({ [field]: value } as any).eq("id", studentId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-all-students-raw"] });
+      toast.success("עודכן");
+    },
+    onError: () => toast.error("שגיאה בעדכון"),
   });
 
 
@@ -247,7 +262,17 @@ const AdminStudentCard = () => {
             )}
             {(student as any).has_recital_track && (
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
-                🎼 מסלול רסיטל
+                🎼 רסיטל י״ב
+              </span>
+            )}
+            {(student as any).is_major_student && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                🎓 מגמת המוסיקה
+              </span>
+            )}
+            {(student as any).is_junior_track && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-200">
+                📘 מסלול חטיבה
               </span>
             )}
           </div>
@@ -296,6 +321,26 @@ const AdminStudentCard = () => {
           <DetailRow label="עיר" value={student.city} />
           <DetailRow label="כיתה" value={(student as any).grade} />
           <DetailRow label="רמת נגינה" value={(student as any).playing_level} />
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+          <h2 className="font-semibold text-foreground text-base">קורסים ומסלולים</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { field: "has_music_production_course", label: "🎚️ הפקה מוסיקלית" },
+              { field: "has_recital_track", label: "🎼 מסלול רסיטל י״ב" },
+              { field: "is_major_student", label: "🎓 מגמת המוסיקה" },
+              { field: "is_junior_track", label: "📘 מסלול חטיבה" },
+            ].map((opt) => (
+              <label key={opt.field} className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2.5 cursor-pointer hover:bg-accent/40 transition-colors">
+                <Checkbox
+                  checked={!!(student as any)[opt.field]}
+                  onCheckedChange={(c) => flagMutation.mutate({ field: opt.field as any, value: c === true })}
+                />
+                <span className="text-sm font-medium text-foreground">{opt.label}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">

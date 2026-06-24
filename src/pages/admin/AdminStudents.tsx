@@ -40,6 +40,7 @@ const AdminStudents = () => {
   const gradeFilter = searchParams.get("grade") || "all";
   const levelFilter = searchParams.get("level") || "all";
   const paymentFilter = searchParams.get("payment") || "all";
+  const trackFilter = searchParams.get("track") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -58,7 +59,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone, is_major_student), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -267,7 +268,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, first_name, last_name, national_id, phone, parent_name, parent_phone, city, grade, student_status, is_active, created_at");
+        .select("id, first_name, last_name, national_id, phone, parent_name, parent_phone, city, grade, student_status, is_active, created_at, is_major_student, is_junior_track, has_music_production_course, has_recital_track");
       if (error) throw error;
       return (data ?? []).sort((a: any, b: any) =>
         `${a.last_name ?? ""} ${a.first_name ?? ""}`.localeCompare(`${b.last_name ?? ""} ${b.first_name ?? ""}`, "he")
@@ -291,6 +292,16 @@ const AdminStudents = () => {
     }
     if (statusFilter === "active" && (!s.is_active || s.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && s.is_active && s.student_status !== "הפסיק") return false;
+    if (trackFilter !== "all") {
+      const map: Record<string, string> = {
+        music_production: "has_music_production_course",
+        recital: "has_recital_track",
+        major: "is_major_student",
+        junior: "is_junior_track",
+      };
+      const f = map[trackFilter];
+      if (f && !s[f]) return false;
+    }
     return true;
   });
 
@@ -333,6 +344,16 @@ const AdminStudents = () => {
     if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
     if (paymentFilter !== "all" && getPaymentStatus(r) !== paymentFilter) return false;
+    if (trackFilter !== "all") {
+      const map: Record<string, string> = {
+        music_production: "has_music_production_course",
+        recital: "has_recital_track",
+        major: "is_major_student",
+        junior: "is_junior_track",
+      };
+      const f = map[trackFilter];
+      if (f && !r.students?.[f]) return false;
+    }
     return true;
   });
 
@@ -446,6 +467,17 @@ const AdminStudents = () => {
             {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
               <SelectItem key={g} value={g}>{g}</SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
+          <SelectTrigger className="w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">קורסים ומסלולים</SelectItem>
+            <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
+            <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
+            <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
+            <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
           </SelectContent>
         </Select>
 
