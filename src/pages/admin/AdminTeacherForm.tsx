@@ -69,9 +69,12 @@ const AdminTeacherForm = () => {
         email: teacher.email ?? "",
         address: teacher.address ?? "",
         city: teacher.city ?? "",
+        bio: (teacher as any).bio ?? "",
+        photo_url: (teacher as any).photo_url ?? "",
         is_active: teacher.is_active,
         is_freelance: (teacher as any).is_freelance ?? false,
         is_office: (teacher as any).is_office ?? false,
+
       });
     }
   }, [teacher, reset]);
