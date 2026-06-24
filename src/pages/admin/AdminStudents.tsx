@@ -470,6 +470,17 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
+        <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
+          <SelectTrigger className="w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">קורסים ומסלולים</SelectItem>
+            <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
+            <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
+            <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
+            <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
+          </SelectContent>
+        </Select>
+
         {view === "enrollments" && (
           <>
             <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
