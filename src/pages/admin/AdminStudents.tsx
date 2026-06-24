@@ -292,6 +292,16 @@ const AdminStudents = () => {
     }
     if (statusFilter === "active" && (!s.is_active || s.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && s.is_active && s.student_status !== "הפסיק") return false;
+    if (trackFilter !== "all") {
+      const map: Record<string, string> = {
+        music_production: "has_music_production_course",
+        recital: "has_recital_track",
+        major: "is_major_student",
+        junior: "is_junior_track",
+      };
+      const f = map[trackFilter];
+      if (f && !s[f]) return false;
+    }
     return true;
   });
 
