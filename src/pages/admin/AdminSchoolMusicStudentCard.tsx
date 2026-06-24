@@ -9,7 +9,18 @@ import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentL
 import SchoolMusicStudentPaymentsSection from "@/components/admin/SchoolMusicStudentPaymentsSection";
 import SchoolMusicStudentEditDialog from "@/components/admin/SchoolMusicStudentEditDialog";
 import PhoneDisplay from "@/components/PhoneDisplay";
-import { User, GraduationCap, MapPin, Music, Pencil } from "lucide-react";
+import { User, GraduationCap, MapPin, Music, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-start justify-between gap-3 py-1.5">
