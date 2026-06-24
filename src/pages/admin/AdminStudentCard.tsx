@@ -262,7 +262,17 @@ const AdminStudentCard = () => {
             )}
             {(student as any).has_recital_track && (
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200">
-                🎼 מסלול רסיטל
+                🎼 רסיטל י״ב
+              </span>
+            )}
+            {(student as any).is_major_student && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 border border-amber-200">
+                🎓 מגמת המוסיקה
+              </span>
+            )}
+            {(student as any).is_junior_track && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-200">
+                📘 מסלול חטיבה
               </span>
             )}
           </div>
