@@ -9,7 +9,18 @@ import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentL
 import SchoolMusicStudentPaymentsSection from "@/components/admin/SchoolMusicStudentPaymentsSection";
 import SchoolMusicStudentEditDialog from "@/components/admin/SchoolMusicStudentEditDialog";
 import PhoneDisplay from "@/components/PhoneDisplay";
-import { User, GraduationCap, MapPin, Music, Pencil } from "lucide-react";
+import { User, GraduationCap, MapPin, Music, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
   <div className="flex items-start justify-between gap-3 py-1.5">
@@ -22,6 +33,25 @@ const AdminSchoolMusicStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!studentId) return;
+    setDeleting(true);
+    const { error } = await supabase.from("school_music_students").delete().eq("id", studentId);
+    setDeleting(false);
+    if (error) {
+      toast.error("מחיקה נכשלה: " + error.message);
+      return;
+    }
+    toast.success("התלמיד נמחק");
+    setDeleteOpen(false);
+    const backTo = student?.school_music_schools?.id
+      ? `/admin/school-music-schools/${student.school_music_schools.id}`
+      : "/admin/school-music-schools";
+    navigate(backTo);
+  };
 
   const { data: student, isLoading } = useQuery({
     queryKey: ["school-music-student", studentId],
@@ -104,6 +134,14 @@ const AdminSchoolMusicStudentCard = () => {
               >
                 <Pencil className="h-3.5 w-3.5" /> עריכה
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 gap-1.5 rounded-lg text-destructive hover:text-destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" /> מחיקה
+              </Button>
             </div>
           </div>
         </div>
@@ -145,6 +183,27 @@ const AdminSchoolMusicStudentCard = () => {
         onOpenChange={setEditOpen}
         student={student}
       />
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>למחוק את {fullName}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              פעולה זו תמחק את התלמיד וכל הנתונים המקושרים אליו (תשלומים, השאלות כלים, שיוכים לקבוצות). לא ניתן לשחזר.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "מוחק..." : "מחק"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
