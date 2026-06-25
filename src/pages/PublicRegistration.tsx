@@ -922,17 +922,20 @@ const PublicRegistration = () => {
 
   const SpecialCoursesCard = () => {
     const grade = normalizeGradeValue(formValues["grade"]);
-    const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב"].includes(grade);
+    const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב", "בוגר"].includes(grade);
     const recitalAllowed = grade === "יב";
     const mpField = (fields as any[]).find((f) => f.field_key === "wants_music_production" && f.is_active);
     const rtField = (fields as any[]).find((f) => f.field_key === "wants_recital_track" && f.is_active);
-    if (!mpField && !rtField) return null;
+    // Always render (auto-include) — admin can still customize labels via form fields
     const sectionTitle = mpField?.section_title || rtField?.section_title || "קורסים מיוחדים";
     const sectionDesc = mpField?.placeholder || rtField?.placeholder || "סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.";
     const mpTitle = mpField?.label || "קורס הפקה מוסיקלית";
-    const mpSubtitle = mpField?.help_text || "מיועד לכיתות ז׳–י״ב בלבד";
+    const mpSubtitle = mpField?.help_text || "מיועד לכיתות ז׳ עד בוגר";
     const rtTitle = rtField?.label || "מסלול לרסיטל";
     const rtSubtitle = rtField?.help_text || "מיועד לכיתה י״ב בלבד";
+    const showMp = mpField ? true : true; // always show music production
+    const showRt = rtField ? true : true; // always show recital track
+
     return (
       <Card>
         <CardHeader>
