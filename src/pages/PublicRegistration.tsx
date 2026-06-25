@@ -382,6 +382,9 @@ const PublicRegistration = () => {
     if (field.field_key === "branch_school_name") return "__hidden__";
     // educational_school from DB is hidden — we inject it manually
     if (field.field_key === "educational_school") return "__hidden__";
+    // Special courses are rendered by SpecialCoursesCard
+    if (field.field_key === "wants_music_production" || field.field_key === "wants_recital_track") return "__hidden__";
+
     return field.field_type;
   };
 
@@ -508,6 +511,8 @@ const PublicRegistration = () => {
     for (const field of fields) {
       if (field.field_key === "student_status") continue;
       if (field.field_key === "student_school_text") continue; // replaced by branch_school_name
+      if (field.field_key === "wants_music_production" || field.field_key === "wants_recital_track") continue;
+
 
       const val = formValues[field.field_key];
 
@@ -580,6 +585,8 @@ const PublicRegistration = () => {
       for (const field of fields) {
         if (field.field_key === "student_status") continue;
         if (field.field_key === "student_school_text") continue;
+        if (field.field_key === "wants_music_production" || field.field_key === "wants_recital_track") continue;
+
 
         const val = formValues[field.field_key];
         if (val === undefined || val === null) continue;
@@ -917,13 +924,15 @@ const PublicRegistration = () => {
     const grade = normalizeGradeValue(formValues["grade"]);
     const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב"].includes(grade);
     const recitalAllowed = grade === "יב";
-    const p: any = page || {};
-    const sectionTitle = p.special_courses_section_title || "קורסים מיוחדים";
-    const sectionDesc = p.special_courses_section_description || "סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.";
-    const mpTitle = p.music_production_title || "קורס הפקה מוסיקלית";
-    const mpSubtitle = p.music_production_subtitle || "מיועד לכיתות ז׳–י״ב בלבד";
-    const rtTitle = p.recital_track_title || "מסלול לרסיטל";
-    const rtSubtitle = p.recital_track_subtitle || "מיועד לכיתה י״ב בלבד";
+    const mpField = (fields as any[]).find((f) => f.field_key === "wants_music_production" && f.is_active);
+    const rtField = (fields as any[]).find((f) => f.field_key === "wants_recital_track" && f.is_active);
+    if (!mpField && !rtField) return null;
+    const sectionTitle = mpField?.section_title || rtField?.section_title || "קורסים מיוחדים";
+    const sectionDesc = mpField?.placeholder || rtField?.placeholder || "סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.";
+    const mpTitle = mpField?.label || "קורס הפקה מוסיקלית";
+    const mpSubtitle = mpField?.help_text || "מיועד לכיתות ז׳–י״ב בלבד";
+    const rtTitle = rtField?.label || "מסלול לרסיטל";
+    const rtSubtitle = rtField?.help_text || "מיועד לכיתה י״ב בלבד";
     return (
       <Card>
         <CardHeader>
@@ -932,39 +941,44 @@ const PublicRegistration = () => {
         <CardContent className="space-y-4">
           {sectionDesc && <p className="text-xs text-muted-foreground">{sectionDesc}</p>}
           <div className="space-y-3">
-            <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
-              <Checkbox
-                checked={!!formValues["wants_music_production"] && productionAllowed}
-                disabled={!productionAllowed}
-                onCheckedChange={(c) => setFieldValue("wants_music_production", c === true)}
-                className="mt-0.5"
-              />
-              <div className="flex-1">
-                <div className="text-sm font-medium">{mpTitle}</div>
-                {mpSubtitle && (
-                  <div className="text-xs text-muted-foreground mt-0.5">{mpSubtitle}</div>
-                )}
-              </div>
-            </label>
-            <label className={`flex items-start gap-3 rounded-xl border p-3 ${recitalAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
-              <Checkbox
-                checked={!!formValues["wants_recital_track"] && recitalAllowed}
-                disabled={!recitalAllowed}
-                onCheckedChange={(c) => setFieldValue("wants_recital_track", c === true)}
-                className="mt-0.5"
-              />
-              <div className="flex-1">
-                <div className="text-sm font-medium">{rtTitle}</div>
-                {rtSubtitle && (
-                  <div className="text-xs text-muted-foreground mt-0.5">{rtSubtitle}</div>
-                )}
-              </div>
-            </label>
+            {mpField && (
+              <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
+                <Checkbox
+                  checked={!!formValues["wants_music_production"] && productionAllowed}
+                  disabled={!productionAllowed}
+                  onCheckedChange={(c) => setFieldValue("wants_music_production", c === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{mpTitle}</div>
+                  {mpSubtitle && (
+                    <div className="text-xs text-muted-foreground mt-0.5">{mpSubtitle}</div>
+                  )}
+                </div>
+              </label>
+            )}
+            {rtField && (
+              <label className={`flex items-start gap-3 rounded-xl border p-3 ${recitalAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
+                <Checkbox
+                  checked={!!formValues["wants_recital_track"] && recitalAllowed}
+                  disabled={!recitalAllowed}
+                  onCheckedChange={(c) => setFieldValue("wants_recital_track", c === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{rtTitle}</div>
+                  {rtSubtitle && (
+                    <div className="text-xs text-muted-foreground mt-0.5">{rtSubtitle}</div>
+                  )}
+                </div>
+              </label>
+            )}
           </div>
         </CardContent>
       </Card>
     );
   };
+
 
 
   return (

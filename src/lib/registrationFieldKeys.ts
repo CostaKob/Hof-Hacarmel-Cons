@@ -17,7 +17,10 @@ export const KNOWN_FIELD_KEYS = [
   { key: "parent_email", label: 'דוא"ל הורה' },
   { key: "notes", label: "הערות" },
   { key: "educational_school", label: "בית ספר ללימודי בוקר" },
+  { key: "wants_music_production", label: "קורס הפקה מוסיקלית" },
+  { key: "wants_recital_track", label: "מסלול לרסיטל" },
 ] as const;
+
 
 export const KNOWN_KEYS_SET = new Set<string>(KNOWN_FIELD_KEYS.map((f) => f.key));
 
