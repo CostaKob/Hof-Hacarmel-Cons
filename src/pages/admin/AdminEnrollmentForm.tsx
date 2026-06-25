@@ -107,13 +107,22 @@ const AdminEnrollmentForm = () => {
   const { data: students = [] } = useQuery({
     queryKey: ["admin-students-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("students").select("id, first_name, last_name");
+      const { data, error } = await supabase.from("students").select("id, first_name, last_name, grade");
       if (error) throw error;
       return (data || []).sort((a, b) =>
         `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
       );
     },
   });
+
+  // For NEW enrollments — prefill grade from the selected student's profile.
+  const selectedStudentId = watch("student_id");
+  const currentGrade = watch("grade");
+  useEffect(() => {
+    if (isEdit || !selectedStudentId || currentGrade) return;
+    const s = students.find((x) => x.id === selectedStudentId);
+    if (s && (s as any).grade) setValue("grade", (s as any).grade);
+  }, [isEdit, selectedStudentId, students, currentGrade, setValue]);
 
   const { data: teachers = [] } = useQuery({
     queryKey: ["admin-teachers-select"],
