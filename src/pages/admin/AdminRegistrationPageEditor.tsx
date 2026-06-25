@@ -23,12 +23,6 @@ const AdminRegistrationPageEditor = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [approvalText, setApprovalText] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [scSectionTitle, setScSectionTitle] = useState("");
-  const [scSectionDescription, setScSectionDescription] = useState("");
-  const [mpTitle, setMpTitle] = useState("");
-  const [mpSubtitle, setMpSubtitle] = useState("");
-  const [rtTitle, setRtTitle] = useState("");
-  const [rtSubtitle, setRtSubtitle] = useState("");
 
   const { data: page, isLoading } = useQuery({
     queryKey: ["registration-page", pageId],
@@ -50,12 +44,6 @@ const AdminRegistrationPageEditor = () => {
       setIsOpen(page.is_open || false);
       setApprovalText(page.approval_text || "");
       setSuccessMessage(page.success_message || "");
-      setScSectionTitle((page as any).special_courses_section_title || "");
-      setScSectionDescription((page as any).special_courses_section_description || "");
-      setMpTitle((page as any).music_production_title || "");
-      setMpSubtitle((page as any).music_production_subtitle || "");
-      setRtTitle((page as any).recital_track_title || "");
-      setRtSubtitle((page as any).recital_track_subtitle || "");
     }
   }, [page]);
 
@@ -63,18 +51,7 @@ const AdminRegistrationPageEditor = () => {
     mutationFn: async () => {
       const { error } = await supabase
         .from("registration_pages")
-        .update({
-          title,
-          is_open: isOpen,
-          approval_text: approvalText,
-          success_message: successMessage,
-          special_courses_section_title: scSectionTitle,
-          special_courses_section_description: scSectionDescription,
-          music_production_title: mpTitle,
-          music_production_subtitle: mpSubtitle,
-          recital_track_title: rtTitle,
-          recital_track_subtitle: rtSubtitle,
-        } as any)
+        .update({ title, is_open: isOpen, approval_text: approvalText, success_message: successMessage })
         .eq("id", pageId!);
       if (error) throw error;
     },
@@ -84,6 +61,7 @@ const AdminRegistrationPageEditor = () => {
     },
     onError: () => toast.error("שגיאה בשמירה"),
   });
+
 
 
   if (isLoading) {
