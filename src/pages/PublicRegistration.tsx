@@ -944,7 +944,7 @@ const PublicRegistration = () => {
         <CardContent className="space-y-4">
           {sectionDesc && <p className="text-xs text-muted-foreground">{sectionDesc}</p>}
           <div className="space-y-3">
-            {mpField && (
+            {showMp && (
               <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
                 <Checkbox
                   checked={!!formValues["wants_music_production"] && productionAllowed}
@@ -960,7 +960,7 @@ const PublicRegistration = () => {
                 </div>
               </label>
             )}
-            {rtField && (
+            {showRt && (
               <label className={`flex items-start gap-3 rounded-xl border p-3 ${recitalAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
                 <Checkbox
                   checked={!!formValues["wants_recital_track"] && recitalAllowed}
@@ -976,6 +976,7 @@ const PublicRegistration = () => {
                 </div>
               </label>
             )}
+
           </div>
         </CardContent>
       </Card>
