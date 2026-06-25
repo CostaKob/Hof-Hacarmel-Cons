@@ -686,7 +686,8 @@ const AdminSchoolMusicSchools = () => {
                             const net = ps.paid - ps.refunded;
                             const denom = tuition > 0 ? tuition : net + ps.pending;
                             if (ps.refunded > 0 && net <= 0 && ps.pending === 0) {
-                              return <Badge variant="outline" className="rounded-lg text-xs border-red-500 text-red-700">הוחזר ₪{ps.refunded.toLocaleString()}</Badge>;
+                              const shown = tuition > 0 ? Math.min(ps.refunded, tuition) : Math.min(ps.refunded, ps.paid);
+                              return <Badge variant="outline" className="rounded-lg text-xs border-red-500 text-red-700">הוחזר ₪{shown.toLocaleString()}</Badge>;
                             }
                             if (net <= 0 && ps.pending > 0) {
                               return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}{tuition > 0 ? `/₪${tuition.toLocaleString()}` : ""}</Badge>;
