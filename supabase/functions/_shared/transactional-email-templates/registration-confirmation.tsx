@@ -69,7 +69,7 @@ const Email = ({
 
           <Section style={approvalBox} dir="rtl">
             <Text style={approvalCaption}>אישור ההורה:</Text>
-            <Text style={approvalBody}>{approvalText}</Text>
+            <Text style={approvalBody}><bdi>{'\u200F' + approvalText + '\u200F'}</bdi></Text>
             <Text style={{ ...approvalBody, marginTop: '8px' }}>
               <Link href={registrationUrl} style={link}>
                 לצפייה בתקנון המלא לחץ כאן
