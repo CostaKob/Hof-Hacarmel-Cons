@@ -136,15 +136,25 @@ const AdminSchoolMusicSchools = () => {
         .in("school_music_student_id", studentIds);
       if (error) throw error;
       const map: Record<string, { paid: number; pending: number; refunded: number; count: number; lastPaidAt: string | null; lastMethod: string | null }> = {};
-      (data as any[] || []).forEach((p) => {
+      const rows = (data as any[]) || [];
+      // Track originals that already have an explicit refund row, to avoid double-counting
+      const refundedOriginals = new Set<string>(
+        rows.filter((r) => r.refund_of_payment_id).map((r) => r.refund_of_payment_id as string)
+      );
+      rows.forEach((p) => {
         const id = p.school_music_student_id;
         if (!map[id]) map[id] = { paid: 0, pending: 0, refunded: 0, count: 0, lastPaidAt: null, lastMethod: null };
         const rawAmt = Number(p.amount) || 0;
-        const isRefund = !!p.refund_of_payment_id || rawAmt < 0;
+        const isRefundRow = !!p.refund_of_payment_id || rawAmt < 0;
         const amt = Math.abs(rawAmt);
         map[id].count++;
-        if (isRefund) {
+        if (isRefundRow) {
           map[id].refunded += amt;
+        } else if (p.payment_status === "refunded") {
+          // Only count if there's no separate refund row for this original (otherwise double-counted)
+          if (!refundedOriginals.has(p.id)) {
+            map[id].refunded += amt;
+          }
         } else if (p.payment_status === "paid") {
           map[id].paid += amt;
           if (p.paid_at && (!map[id].lastPaidAt || p.paid_at > map[id].lastPaidAt)) {
@@ -153,8 +163,6 @@ const AdminSchoolMusicSchools = () => {
           }
         } else if (p.payment_status === "pending") {
           map[id].pending += amt;
-        } else if (p.payment_status === "refunded") {
-          map[id].refunded += amt;
         }
       });
       return map;
