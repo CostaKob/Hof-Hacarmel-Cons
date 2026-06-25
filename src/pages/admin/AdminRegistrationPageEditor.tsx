@@ -23,6 +23,12 @@ const AdminRegistrationPageEditor = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [approvalText, setApprovalText] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [scSectionTitle, setScSectionTitle] = useState("");
+  const [scSectionDescription, setScSectionDescription] = useState("");
+  const [mpTitle, setMpTitle] = useState("");
+  const [mpSubtitle, setMpSubtitle] = useState("");
+  const [rtTitle, setRtTitle] = useState("");
+  const [rtSubtitle, setRtSubtitle] = useState("");
 
   const { data: page, isLoading } = useQuery({
     queryKey: ["registration-page", pageId],
@@ -44,6 +50,12 @@ const AdminRegistrationPageEditor = () => {
       setIsOpen(page.is_open || false);
       setApprovalText(page.approval_text || "");
       setSuccessMessage(page.success_message || "");
+      setScSectionTitle((page as any).special_courses_section_title || "");
+      setScSectionDescription((page as any).special_courses_section_description || "");
+      setMpTitle((page as any).music_production_title || "");
+      setMpSubtitle((page as any).music_production_subtitle || "");
+      setRtTitle((page as any).recital_track_title || "");
+      setRtSubtitle((page as any).recital_track_subtitle || "");
     }
   }, [page]);
 
@@ -51,7 +63,18 @@ const AdminRegistrationPageEditor = () => {
     mutationFn: async () => {
       const { error } = await supabase
         .from("registration_pages")
-        .update({ title, is_open: isOpen, approval_text: approvalText, success_message: successMessage })
+        .update({
+          title,
+          is_open: isOpen,
+          approval_text: approvalText,
+          success_message: successMessage,
+          special_courses_section_title: scSectionTitle,
+          special_courses_section_description: scSectionDescription,
+          music_production_title: mpTitle,
+          music_production_subtitle: mpSubtitle,
+          recital_track_title: rtTitle,
+          recital_track_subtitle: rtSubtitle,
+        } as any)
         .eq("id", pageId!);
       if (error) throw error;
     },
@@ -61,6 +84,7 @@ const AdminRegistrationPageEditor = () => {
     },
     onError: () => toast.error("שגיאה בשמירה"),
   });
+
 
   if (isLoading) {
     return (
@@ -134,7 +158,50 @@ const AdminRegistrationPageEditor = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">קורסים מיוחדים</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>כותרת הסעיף</Label>
+                  <Input value={scSectionTitle} onChange={(e) => setScSectionTitle(e.target.value)} dir="rtl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>תיאור הסעיף</Label>
+                  <Input value={scSectionDescription} onChange={(e) => setScSectionDescription(e.target.value)} dir="rtl" />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t">
+                <div className="space-y-1.5">
+                  <Label>הפקה מוסיקלית — שם</Label>
+                  <Input value={mpTitle} onChange={(e) => setMpTitle(e.target.value)} dir="rtl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>הפקה מוסיקלית — תיאור משנה</Label>
+                  <Input value={mpSubtitle} onChange={(e) => setMpSubtitle(e.target.value)} dir="rtl" />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>מסלול לרסיטל — שם</Label>
+                  <Input value={rtTitle} onChange={(e) => setRtTitle(e.target.value)} dir="rtl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>מסלול לרסיטל — תיאור משנה</Label>
+                  <Input value={rtSubtitle} onChange={(e) => setRtSubtitle(e.target.value)} dir="rtl" />
+                </div>
+              </div>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                <Save className="h-4 w-4 ml-2" />
+                {saveMutation.isPending ? "שומר..." : "שמור"}
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
+
 
         {/* Sections tab */}
         <TabsContent value="sections">

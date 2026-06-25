@@ -917,13 +917,20 @@ const PublicRegistration = () => {
     const grade = normalizeGradeValue(formValues["grade"]);
     const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב"].includes(grade);
     const recitalAllowed = grade === "יב";
+    const p: any = page || {};
+    const sectionTitle = p.special_courses_section_title || "קורסים מיוחדים";
+    const sectionDesc = p.special_courses_section_description || "סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.";
+    const mpTitle = p.music_production_title || "קורס הפקה מוסיקלית";
+    const mpSubtitle = p.music_production_subtitle || "מיועד לכיתות ז׳–י״ב בלבד";
+    const rtTitle = p.recital_track_title || "מסלול לרסיטל";
+    const rtSubtitle = p.recital_track_subtitle || "מיועד לכיתה י״ב בלבד";
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">קורסים מיוחדים</CardTitle>
+          <CardTitle className="text-lg">{sectionTitle}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-xs text-muted-foreground">סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.</p>
+          {sectionDesc && <p className="text-xs text-muted-foreground">{sectionDesc}</p>}
           <div className="space-y-3">
             <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
               <Checkbox
@@ -933,9 +940,9 @@ const PublicRegistration = () => {
                 className="mt-0.5"
               />
               <div className="flex-1">
-                <div className="text-sm font-medium">קורס הפקה מוסיקלית</div>
-                {!productionAllowed && (
-                  <div className="text-xs text-muted-foreground mt-0.5">מיועד לכיתות ז׳–י״ב בלבד</div>
+                <div className="text-sm font-medium">{mpTitle}</div>
+                {mpSubtitle && (
+                  <div className="text-xs text-muted-foreground mt-0.5">{mpSubtitle}</div>
                 )}
               </div>
             </label>
@@ -947,9 +954,9 @@ const PublicRegistration = () => {
                 className="mt-0.5"
               />
               <div className="flex-1">
-                <div className="text-sm font-medium">מסלול לרסיטל</div>
-                {!recitalAllowed && (
-                  <div className="text-xs text-muted-foreground mt-0.5">מיועד לכיתה י״ב בלבד</div>
+                <div className="text-sm font-medium">{rtTitle}</div>
+                {rtSubtitle && (
+                  <div className="text-xs text-muted-foreground mt-0.5">{rtSubtitle}</div>
                 )}
               </div>
             </label>
@@ -958,6 +965,7 @@ const PublicRegistration = () => {
       </Card>
     );
   };
+
 
   return (
     <div className="min-h-screen bg-muted/30 py-6 px-4" dir="rtl">

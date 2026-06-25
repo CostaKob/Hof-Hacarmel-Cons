@@ -908,6 +908,12 @@ export type Database = {
           created_at: string
           id: string
           is_open: boolean
+          music_production_subtitle: string
+          music_production_title: string
+          recital_track_subtitle: string
+          recital_track_title: string
+          special_courses_section_description: string
+          special_courses_section_title: string
           success_message: string
           title: string
           updated_at: string
@@ -918,6 +924,12 @@ export type Database = {
           created_at?: string
           id?: string
           is_open?: boolean
+          music_production_subtitle?: string
+          music_production_title?: string
+          recital_track_subtitle?: string
+          recital_track_title?: string
+          special_courses_section_description?: string
+          special_courses_section_title?: string
           success_message?: string
           title?: string
           updated_at?: string
@@ -928,6 +940,12 @@ export type Database = {
           created_at?: string
           id?: string
           is_open?: boolean
+          music_production_subtitle?: string
+          music_production_title?: string
+          recital_track_subtitle?: string
+          recital_track_title?: string
+          special_courses_section_description?: string
+          special_courses_section_title?: string
           success_message?: string
           title?: string
           updated_at?: string
