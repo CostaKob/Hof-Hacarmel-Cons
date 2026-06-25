@@ -137,8 +137,8 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const docId = String(data.doc_id ?? data.docnum ?? "");
-    const docNumber = String(data.docnum ?? data.doc_number ?? "");
+    const docId = String(data.doc_info?.doc_id ?? data.doc_id ?? data.docnum ?? data.doc_info?.docnum ?? "");
+    const docNumber = String(data.doc_info?.docnum ?? data.docnum ?? data.doc_number ?? "");
     const docUrl = data.doc_url || data.pdf_link || data.url || null;
 
     await supabase.from("school_music_payments").update({
