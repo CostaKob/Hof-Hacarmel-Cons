@@ -174,8 +174,10 @@ const App = () => (
               <Route path="/register/:token" element={<PublicRegistration />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
               
+              <Route path="/school-music-select" element={<SchoolMusicSchoolSelect />} />
               <Route path="/school-music-register" element={<SchoolMusicRegister />} />
               <Route path="/school-music-register/success" element={<SchoolMusicRegisterSuccess />} />
+
               <Route path="/student-payment/success" element={<StudentPaymentSuccess />} />
               {/* Teacher routes */}
               <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
