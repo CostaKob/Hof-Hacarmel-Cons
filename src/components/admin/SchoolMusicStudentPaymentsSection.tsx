@@ -126,12 +126,35 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   });
 
 
-  // Adds a manual payment as a NEW row. Never touches existing pending rows
-  // (e.g. ones created by "צור קישור תשלום") so multiple rows can coexist.
+  // Computes current net paid (paid - refunds)
+  const computeNetPaid = (rows: any[]) =>
+    rows.reduce((s, p) => {
+      const isRefund = !!p.refund_of_payment_id || Number(p.amount) < 0;
+      const amt = Math.abs(Number(p.amount || 0));
+      if (isRefund) return s - amt;
+      if (p.payment_status === "paid" || p.payment_status === "refunded") return s + amt;
+      return s;
+    }, 0);
+
+  // Adds a manual payment as a NEW row. After insert, reconciles pending
+  // payment links: deletes them if tuition is fully covered, or updates the
+  // amount to the remaining balance otherwise. Caps the entry so total paid
+  // never exceeds the annual tuition.
   const addMutation = useMutation({
     mutationFn: async () => {
-      const amt = Number(amount);
+      let amt = Number(amount);
       if (!amt || amt <= 0) throw new Error("נא להזין סכום חיובי");
+
+      const tuition = Number(defaultAmount ?? 0);
+      const currentNet = computeNetPaid(payments);
+      if (tuition > 0) {
+        const room = Math.max(0, tuition - currentNet);
+        if (room <= 0) throw new Error("שכר הלימוד שולם במלואו, לא ניתן להוסיף תשלום נוסף");
+        if (amt > room + 0.001) {
+          amt = room;
+          toast.info(`הסכום הוגבל ל-₪${room.toLocaleString()} (השארית עד שכר הלימוד)`);
+        }
+      }
 
       const { error } = await supabase.from("school_music_payments" as any).insert({
         school_music_student_id: studentId,
@@ -145,6 +168,46 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         notes: notes || null,
       });
       if (error) throw error;
+
+      // Reconcile pending payment links with the new remaining balance
+      if (tuition > 0) {
+        const newNet = currentNet + amt;
+        const remaining = Math.max(0, tuition - newNet);
+        const pendingRows = payments.filter((p) => p.payment_status === "pending" && !p.refund_of_payment_id);
+
+        if (remaining <= 0.001 && pendingRows.length > 0) {
+          // Fully paid → delete all pending links
+          for (const pr of pendingRows) {
+            if (pr.payment_link_url || pr.icount_payment_page_id) {
+              await supabase.functions.invoke("icount-delete-paypage", {
+                body: { paymentId: pr.id, strict: false },
+              });
+            }
+            await supabase.from("school_music_payments" as any).delete().eq("id", pr.id);
+          }
+        } else if (remaining > 0 && pendingRows.length > 0) {
+          // Partial → keep first pending, regenerate link for remaining; delete extras
+          const [keep, ...extras] = pendingRows;
+          for (const pr of extras) {
+            if (pr.payment_link_url || pr.icount_payment_page_id) {
+              await supabase.functions.invoke("icount-delete-paypage", {
+                body: { paymentId: pr.id, strict: false },
+              });
+            }
+            await supabase.from("school_music_payments" as any).delete().eq("id", pr.id);
+          }
+          // Update amount on kept row and regenerate paylink to reflect new amount
+          await supabase
+            .from("school_music_payments" as any)
+            .update({ amount: remaining })
+            .eq("id", keep.id);
+          if (keep.payment_link_url || keep.icount_payment_page_id) {
+            await supabase.functions.invoke("icount-generate-paylink", {
+              body: { studentId, paymentId: keep.id, amount: remaining },
+            });
+          }
+        }
+      }
     },
     onSuccess: () => {
       invalidate();
@@ -244,9 +307,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
   });
 
-  const totalPaid = payments
-    .filter((p) => p.payment_status === "paid" || p.payment_status === "refunded")
-    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const totalPaid = computeNetPaid(payments);
   const totalPending = payments.filter((p) => p.payment_status === "pending").reduce((s, p) => s + Number(p.amount || 0), 0);
 
   return (
