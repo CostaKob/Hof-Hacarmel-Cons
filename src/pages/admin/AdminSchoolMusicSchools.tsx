@@ -150,14 +150,14 @@ const AdminSchoolMusicSchools = () => {
         map[id].count++;
         if (isRefundRow) {
           map[id].refunded += amt;
-        } else if (p.payment_status === "refunded") {
-          // Only count if there's no separate refund row for this original (otherwise double-counted)
-          if (!refundedOriginals.has(p.id)) {
+        } else if (p.payment_status === "paid" || p.payment_status === "refunded") {
+          // Money was actually paid. If status='refunded', a refund row will offset it in `refunded`.
+          map[id].paid += amt;
+          if (p.payment_status === "refunded" && !refundedOriginals.has(p.id)) {
+            // No explicit refund row exists — record the refund here so it offsets paid
             map[id].refunded += amt;
           }
-        } else if (p.payment_status === "paid") {
-          map[id].paid += amt;
-          if (p.paid_at && (!map[id].lastPaidAt || p.paid_at > map[id].lastPaidAt)) {
+          if (p.payment_status === "paid" && p.paid_at && (!map[id].lastPaidAt || p.paid_at > map[id].lastPaidAt)) {
             map[id].lastPaidAt = p.paid_at;
             map[id].lastMethod = p.payment_method;
           }
