@@ -69,7 +69,7 @@ const Email = ({
 
           <Section style={approvalBox} dir="rtl">
             <Text style={approvalCaption}>אישור ההורה:</Text>
-            <Text style={approvalBody}>{approvalText}</Text>
+            <Text style={approvalBody}><bdi>{'\u200F' + approvalText + '\u200F'}</bdi></Text>
             <Text style={{ ...approvalBody, marginTop: '8px' }}>
               <Link href={registrationUrl} style={link}>
                 לצפייה בתקנון המלא לחץ כאן
@@ -109,10 +109,14 @@ const Email = ({
 
 const Row = ({ label, value }: { label: string; value?: string }) =>
   value ? (
-    <div style={rowStyle}>
-      <span style={rowLabel}>{label}</span>
-      <span style={rowValue}>{value}</span>
-    </div>
+    <table width="100%" cellPadding={0} cellSpacing={0} style={rowTable} dir="rtl">
+      <tbody>
+        <tr>
+          <td style={rowLabelCell}>{label}:</td>
+          <td style={rowValueCell}>{value}</td>
+        </tr>
+      </tbody>
+    </table>
   ) : null
 
 export const template = {
@@ -146,9 +150,9 @@ const container = { maxWidth: '600px', margin: '0 auto', textAlign: 'right' as c
 const h1 = { fontSize: '20px', margin: '0 0 16px', textAlign: 'right' as const }
 const p = { fontSize: '15px', lineHeight: '1.6', margin: '0 0 16px', textAlign: 'right' as const }
 const card = { margin: '16px 0', fontSize: '14px', textAlign: 'right' as const }
-const rowStyle = { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #eee', direction: 'rtl' as const }
-const rowLabel = { color: '#666' }
-const rowValue = { fontWeight: 600 }
+const rowTable = { margin: '0', borderBottom: '1px solid #eee', direction: 'rtl' as const }
+const rowLabelCell = { color: '#666', padding: '8px 0', textAlign: 'right' as const, width: '40%', whiteSpace: 'nowrap' as const }
+const rowValueCell = { fontWeight: 600, padding: '8px 0', textAlign: 'left' as const, width: '60%' }
 const approvalBox = { background: '#f5f5f5', borderRadius: '8px', padding: '16px', margin: '16px 0', textAlign: 'right' as const }
 const approvalCaption = { fontSize: '13px', color: '#666', margin: '0 0 8px', textAlign: 'right' as const }
 const approvalBody = { fontSize: '14px', lineHeight: '1.6', margin: 0, whiteSpace: 'pre-line' as const, textAlign: 'right' as const }
