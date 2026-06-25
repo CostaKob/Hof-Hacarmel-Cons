@@ -264,6 +264,9 @@ const AdminRegistrationConvert = () => {
         if (data.grade && data.grade !== "__none__") updates.grade = data.grade;
         if ((r as any).wants_music_production) updates.has_music_production_course = true;
         if ((r as any).wants_recital_track) updates.has_recital_track = true;
+        // If student was previously stopped/inactive — reactivate on re-registration
+        if ((existingStudent as any)?.student_status === "הפסיק") updates.student_status = "פעיל";
+        if (existingStudent && (existingStudent as any).is_active === false) updates.is_active = true;
 
         if (Object.keys(updates).length > 0) {
           await supabase.from("students").update(updates as any).eq("id", studentId);
