@@ -100,7 +100,7 @@ const AdminSchoolMusicSchools = () => {
     queryFn: async () => {
       let q = supabase
         .from("school_music_students")
-        .select("*, school_music_schools!school_music_students_school_music_school_id_fkey(id, school_name), instruments!school_music_students_instrument_id_fkey(id, name)")
+        .select("*, school_music_schools!school_music_students_school_music_school_id_fkey(id, school_name, annual_tuition_fee), instruments!school_music_students_instrument_id_fkey(id, name)")
         .order("student_last_name");
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
