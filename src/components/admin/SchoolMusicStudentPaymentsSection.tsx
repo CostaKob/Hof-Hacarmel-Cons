@@ -307,9 +307,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
   });
 
-  const totalPaid = payments
-    .filter((p) => p.payment_status === "paid" || p.payment_status === "refunded")
-    .reduce((s, p) => s + Number(p.amount || 0), 0);
+  const totalPaid = computeNetPaid(payments);
   const totalPending = payments.filter((p) => p.payment_status === "pending").reduce((s, p) => s + Number(p.amount || 0), 0);
 
   return (
