@@ -82,8 +82,8 @@ Deno.serve(async (req: Request) => {
 
     const paymentId: string | undefined =
       body.custom || body.custom_field || body.metadata?.payment_id;
-    const docId = String(body.doc_id ?? body.docnum ?? body.doc_number ?? "");
-    const docNumber = String(body.docnum ?? body.doc_number ?? "");
+    const docId = String(body.doc_info?.doc_id ?? body.doc_id ?? body.docnum ?? body.doc_number ?? "");
+    const docNumber = String(body.doc_info?.docnum ?? body.docnum ?? body.doc_number ?? "");
     const docUrl = body.doc_url || body.pdf_link || body.url || body.invoice_url || null;
     const paymentPageId = String(body.payment_page_id ?? body.pay_page_id ?? "");
     const txRef = body.transaction_id || body.cc_token || body.confirmation_code || null;
