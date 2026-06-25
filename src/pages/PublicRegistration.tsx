@@ -382,6 +382,9 @@ const PublicRegistration = () => {
     if (field.field_key === "branch_school_name") return "__hidden__";
     // educational_school from DB is hidden — we inject it manually
     if (field.field_key === "educational_school") return "__hidden__";
+    // Special courses are rendered by SpecialCoursesCard
+    if (field.field_key === "wants_music_production" || field.field_key === "wants_recital_track") return "__hidden__";
+
     return field.field_type;
   };
 
