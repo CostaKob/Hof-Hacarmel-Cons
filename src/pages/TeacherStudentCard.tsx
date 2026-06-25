@@ -69,6 +69,12 @@ const TeacherStudentCard = () => {
             {((enrollment as any)?.grade || (student as any).grade) && <InfoRow icon={User} label="כיתה" value={(enrollment as any)?.grade || (student as any).grade} />}
             {(student as any).playing_level && <InfoRow icon={Music} label="רמת נגינה" value={(student as any).playing_level} />}
             {student.national_id && <InfoRow icon={User} label="ת.ז." value={student.national_id} />}
+            {(student as any).phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <PhoneDisplay phone={(student as any).phone} />
+              </div>
+            )}
           </div>
         </div>
 
