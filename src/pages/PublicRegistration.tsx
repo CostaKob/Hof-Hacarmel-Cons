@@ -634,7 +634,7 @@ const PublicRegistration = () => {
         status: "new",
         existing_student_id: tokenRegistration?.existing_student_id || null,
         educational_school: formValues["educational_school"] || null,
-        wants_music_production: !!formValues["wants_music_production"] && ["ז","ח","ט","י","יא","יב"].includes(normalizeGradeValue(formValues["grade"])),
+        wants_music_production: !!formValues["wants_music_production"] && ["ז","ח","ט","י","יא","יב","בוגר"].includes(normalizeGradeValue(formValues["grade"])),
         wants_recital_track: !!formValues["wants_recital_track"] && normalizeGradeValue(formValues["grade"]) === "יב",
         custom_data: Object.keys(customData).length > 0 ? customData : {},
       };
@@ -922,17 +922,20 @@ const PublicRegistration = () => {
 
   const SpecialCoursesCard = () => {
     const grade = normalizeGradeValue(formValues["grade"]);
-    const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב"].includes(grade);
+    const productionAllowed = ["ז", "ח", "ט", "י", "יא", "יב", "בוגר"].includes(grade);
     const recitalAllowed = grade === "יב";
     const mpField = (fields as any[]).find((f) => f.field_key === "wants_music_production" && f.is_active);
     const rtField = (fields as any[]).find((f) => f.field_key === "wants_recital_track" && f.is_active);
-    if (!mpField && !rtField) return null;
+    // Always render (auto-include) — admin can still customize labels via form fields
     const sectionTitle = mpField?.section_title || rtField?.section_title || "קורסים מיוחדים";
     const sectionDesc = mpField?.placeholder || rtField?.placeholder || "סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.";
     const mpTitle = mpField?.label || "קורס הפקה מוסיקלית";
-    const mpSubtitle = mpField?.help_text || "מיועד לכיתות ז׳–י״ב בלבד";
+    const mpSubtitle = mpField?.help_text || "מיועד לכיתות ז׳ עד בוגר";
     const rtTitle = rtField?.label || "מסלול לרסיטל";
     const rtSubtitle = rtField?.help_text || "מיועד לכיתה י״ב בלבד";
+    const showMp = mpField ? true : true; // always show music production
+    const showRt = rtField ? true : true; // always show recital track
+
     return (
       <Card>
         <CardHeader>
@@ -941,7 +944,7 @@ const PublicRegistration = () => {
         <CardContent className="space-y-4">
           {sectionDesc && <p className="text-xs text-muted-foreground">{sectionDesc}</p>}
           <div className="space-y-3">
-            {mpField && (
+            {showMp && (
               <label className={`flex items-start gap-3 rounded-xl border p-3 ${productionAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
                 <Checkbox
                   checked={!!formValues["wants_music_production"] && productionAllowed}
@@ -957,7 +960,7 @@ const PublicRegistration = () => {
                 </div>
               </label>
             )}
-            {rtField && (
+            {showRt && (
               <label className={`flex items-start gap-3 rounded-xl border p-3 ${recitalAllowed ? "cursor-pointer hover:bg-muted/30 border-border" : "opacity-60 cursor-not-allowed border-border bg-muted/20"}`}>
                 <Checkbox
                   checked={!!formValues["wants_recital_track"] && recitalAllowed}
@@ -973,6 +976,7 @@ const PublicRegistration = () => {
                 </div>
               </label>
             )}
+
           </div>
         </CardContent>
       </Card>
