@@ -176,7 +176,7 @@ const Landing = () => {
                   <p className="text-sm text-muted-foreground">כינור, פסנתר, גיטרה, כלי נשיפה, פיתוח קול ועוד</p>
                 </div>
               </Link>
-              <Link to="/school-music-register?year=2026-2027" className="group">
+              <Link to="/school-music-select?year=2026-2027" className="group">
                 <div className="rounded-2xl bg-card text-card-foreground p-7 shadow-xl hover:scale-[1.02] transition-transform text-right border border-border">
                   <School className="h-10 w-10 text-primary mb-3" />
                   <h3 className="text-xl font-bold mb-1">רישום לבתי ספר מנגנים</h3>
