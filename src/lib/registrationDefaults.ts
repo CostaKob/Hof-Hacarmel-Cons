@@ -92,6 +92,9 @@ export const DEFAULT_FIELDS = [
   // Learning details section
   { field_key: "requested_instruments", label: "הכלי המבוקש", field_type: "multiselect", is_required: true, section_title: "פרטי לימודים מבוקשים", placeholder: "", options: [], data_source: "instruments", help_text: "" },
   { field_key: "requested_lesson_duration", label: "משך שיעור מבוקש", field_type: "radio", is_required: true, section_title: "", placeholder: "", options: [{ value: "30", label: "30 דקות — תלמידי שנה ראשונה כיתות א-ד בלבד" }, { value: "45", label: "45 דקות" }, { value: "60", label: "60 דקות" }], data_source: "", help_text: "" },
+  // Special courses section — rendered as checkboxes in SpecialCoursesCard, gated by grade
+  { field_key: "wants_music_production", label: "קורס הפקה מוסיקלית", field_type: "checkbox", is_required: false, section_title: "קורסים מיוחדים", placeholder: "סמנו אם ברצונכם להירשם לקורסים מיוחדים בנוסף לשיעור הרגיל. המחיר יתווסף לחיוב השנתי.", options: [], data_source: "", help_text: "מיועד לכיתות ז׳ עד בוגר" },
+  { field_key: "wants_recital_track", label: "מסלול לרסיטל", field_type: "checkbox", is_required: false, section_title: "", placeholder: "", options: [], data_source: "", help_text: "מיועד לכיתה י״ב בלבד" },
   // Parent details section
   { field_key: "parent_name", label: "שם מלא הורה", field_type: "text", is_required: true, section_title: "פרטי הורה", placeholder: "שם מלא", options: [], data_source: "", help_text: "" },
   { field_key: "parent_national_id", label: "תעודת זהות הורה", field_type: "text", is_required: true, section_title: "", placeholder: "מספר תעודת זהות", options: [], data_source: "", help_text: "" },
