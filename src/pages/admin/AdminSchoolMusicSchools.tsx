@@ -100,7 +100,7 @@ const AdminSchoolMusicSchools = () => {
     queryFn: async () => {
       let q = supabase
         .from("school_music_students")
-        .select("*, school_music_schools!school_music_students_school_music_school_id_fkey(id, school_name), instruments!school_music_students_instrument_id_fkey(id, name)")
+        .select("*, school_music_schools!school_music_students_school_music_school_id_fkey(id, school_name, annual_tuition_fee), instruments!school_music_students_instrument_id_fkey(id, name)")
         .order("student_last_name");
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -132,16 +132,20 @@ const AdminSchoolMusicSchools = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_payments" as any)
-        .select("school_music_student_id, amount, payment_status, paid_at, payment_method")
+        .select("school_music_student_id, amount, payment_status, paid_at, payment_method, refund_of_payment_id")
         .in("school_music_student_id", studentIds);
       if (error) throw error;
       const map: Record<string, { paid: number; pending: number; refunded: number; count: number; lastPaidAt: string | null; lastMethod: string | null }> = {};
       (data as any[] || []).forEach((p) => {
         const id = p.school_music_student_id;
         if (!map[id]) map[id] = { paid: 0, pending: 0, refunded: 0, count: 0, lastPaidAt: null, lastMethod: null };
-        const amt = Number(p.amount) || 0;
+        const rawAmt = Number(p.amount) || 0;
+        const isRefund = !!p.refund_of_payment_id || rawAmt < 0;
+        const amt = Math.abs(rawAmt);
         map[id].count++;
-        if (p.payment_status === "paid") {
+        if (isRefund) {
+          map[id].refunded += amt;
+        } else if (p.payment_status === "paid") {
           map[id].paid += amt;
           if (p.paid_at && (!map[id].lastPaidAt || p.paid_at > map[id].lastPaidAt)) {
             map[id].lastPaidAt = p.paid_at;
@@ -150,7 +154,7 @@ const AdminSchoolMusicSchools = () => {
         } else if (p.payment_status === "pending") {
           map[id].pending += amt;
         } else if (p.payment_status === "refunded") {
-          map[id].refunded += Math.abs(amt);
+          map[id].refunded += amt;
         }
       });
       return map;
@@ -667,23 +671,22 @@ const AdminSchoolMusicSchools = () => {
                         <div className="flex items-center gap-2 mr-3 shrink-0">
                           {(() => {
                             const ps = (paymentsByStudent as any)[s.id];
+                            const tuition = Number((s as any).school_music_schools?.annual_tuition_fee ?? 0);
                             if (!ps || ps.count === 0) {
                               return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין לתשלום</Badge>;
                             }
                             const net = ps.paid - ps.refunded;
-                            if (ps.refunded > 0 && net <= 0) {
+                            const denom = tuition > 0 ? tuition : net + ps.pending;
+                            if (ps.refunded > 0 && net <= 0 && ps.pending === 0) {
                               return <Badge variant="outline" className="rounded-lg text-xs border-red-500 text-red-700">הוחזר ₪{ps.refunded.toLocaleString()}</Badge>;
                             }
-                            if (ps.pending > 0 && net === 0) {
-                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}</Badge>;
+                            if (net <= 0 && ps.pending > 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}{tuition > 0 ? `/₪${tuition.toLocaleString()}` : ""}</Badge>;
                             }
-                            if (net > 0 && ps.pending === 0) {
+                            if (net > 0 && ps.pending === 0 && (tuition === 0 || net >= tuition - 0.001)) {
                               return <Badge className="rounded-lg text-xs bg-green-600 hover:bg-green-600">שולם ₪{net.toLocaleString()}</Badge>;
                             }
-                            if (net > 0 && ps.pending > 0) {
-                              return <Badge variant="outline" className="rounded-lg text-xs border-blue-500 text-blue-700">חלקי ₪{net.toLocaleString()}/₪{(net + ps.pending).toLocaleString()}</Badge>;
-                            }
-                            return null;
+                            return <Badge variant="outline" className="rounded-lg text-xs border-blue-500 text-blue-700">חלקי ₪{net.toLocaleString()}/₪{denom.toLocaleString()}</Badge>;
                           })()}
                           <Badge
                             variant={s.status === "active" ? "default" : "outline"}
