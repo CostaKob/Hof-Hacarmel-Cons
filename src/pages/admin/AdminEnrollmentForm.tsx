@@ -121,7 +121,7 @@ const AdminEnrollmentForm = () => {
       const { data, error } = await supabase.from("teachers").select("id, first_name, last_name");
       if (error) throw error;
       return (data || []).sort((a, b) =>
-        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
+        `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`, "he")
       );
     },
   });
@@ -268,7 +268,7 @@ const AdminEnrollmentForm = () => {
     },
     {
       name: "school_id",
-      label: "בית ספר",
+      label: "שלוחה",
       required: true,
       options: schools.map((s) => ({ value: s.id, label: s.name })),
     },
