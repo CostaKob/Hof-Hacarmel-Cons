@@ -158,7 +158,50 @@ const AdminRegistrationPageEditor = () => {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">קורסים מיוחדים</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>כותרת הסעיף</Label>
+                  <Input value={scSectionTitle} onChange={(e) => setScSectionTitle(e.target.value)} dir="rtl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>תיאור הסעיף</Label>
+                  <Input value={scSectionDescription} onChange={(e) => setScSectionDescription(e.target.value)} dir="rtl" />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4 pt-2 border-t">
+                <div className="space-y-1.5">
+                  <Label>הפקה מוסיקלית — שם</Label>
+                  <Input value={mpTitle} onChange={(e) => setMpTitle(e.target.value)} dir="rtl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>הפקה מוסיקלית — תיאור משנה</Label>
+                  <Input value={mpSubtitle} onChange={(e) => setMpSubtitle(e.target.value)} dir="rtl" />
+                </div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>מסלול לרסיטל — שם</Label>
+                  <Input value={rtTitle} onChange={(e) => setRtTitle(e.target.value)} dir="rtl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>מסלול לרסיטל — תיאור משנה</Label>
+                  <Input value={rtSubtitle} onChange={(e) => setRtSubtitle(e.target.value)} dir="rtl" />
+                </div>
+              </div>
+              <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+                <Save className="h-4 w-4 ml-2" />
+                {saveMutation.isPending ? "שומר..." : "שמור"}
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
+
 
         {/* Sections tab */}
         <TabsContent value="sections">
