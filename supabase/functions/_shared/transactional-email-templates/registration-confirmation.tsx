@@ -109,10 +109,14 @@ const Email = ({
 
 const Row = ({ label, value }: { label: string; value?: string }) =>
   value ? (
-    <div style={rowStyle}>
-      <span style={rowLabel}>{label}</span>
-      <span style={rowValue}>{value}</span>
-    </div>
+    <table width="100%" cellPadding={0} cellSpacing={0} style={rowTable} dir="rtl">
+      <tbody>
+        <tr>
+          <td style={rowLabelCell}>{label}:</td>
+          <td style={rowValueCell}>{value}</td>
+        </tr>
+      </tbody>
+    </table>
   ) : null
 
 export const template = {
