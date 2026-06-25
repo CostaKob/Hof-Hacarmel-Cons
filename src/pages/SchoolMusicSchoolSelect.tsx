@@ -84,7 +84,7 @@ const SchoolMusicSchoolSelect = () => {
             <ArrowLeft className="h-4 w-4" />
             חזרה לדף הבית
           </Link>
-          <AppLogo className="h-10" />
+          <AppLogo />
         </div>
       </header>
 
