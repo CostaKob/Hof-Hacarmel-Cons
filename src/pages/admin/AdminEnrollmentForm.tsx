@@ -268,7 +268,7 @@ const AdminEnrollmentForm = () => {
     },
     {
       name: "school_id",
-      label: "בית ספר",
+      label: "שלוחה",
       required: true,
       options: schools.map((s) => ({ value: s.id, label: s.name })),
     },
