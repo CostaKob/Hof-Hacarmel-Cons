@@ -244,6 +244,62 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
       const { error } = await supabase.from("school_music_payments" as any).delete().eq("id", payment.id);
       if (error) throw error;
+
+      // After deletion, reconcile the pending paylink to reflect the new (larger) remaining balance.
+      const tuition = Number(defaultAmount ?? 0);
+      if (tuition > 0) {
+        const remainingRows = payments.filter((p) => p.id !== payment.id);
+        const newNet = computeNetPaid(remainingRows);
+        const remaining = Math.max(0, tuition - newNet);
+        if (remaining > 0.001) {
+          const pendingRows = remainingRows.filter(
+            (p) => p.payment_status === "pending" && !p.refund_of_payment_id,
+          );
+          if (pendingRows.length > 0) {
+            const [keep, ...extras] = pendingRows;
+            for (const pr of extras) {
+              if (pr.payment_link_url || pr.icount_payment_page_id) {
+                await supabase.functions.invoke("icount-delete-paypage", {
+                  body: { paymentId: pr.id, strict: false },
+                });
+              }
+              await supabase.from("school_music_payments" as any).delete().eq("id", pr.id);
+            }
+            // Delete old paypage (wrong amount) then regenerate with the new remaining
+            if (keep.payment_link_url || keep.icount_payment_page_id) {
+              await supabase.functions.invoke("icount-delete-paypage", {
+                body: { paymentId: keep.id, strict: false },
+              });
+            }
+            await supabase
+              .from("school_music_payments" as any)
+              .update({ amount: remaining })
+              .eq("id", keep.id);
+            await supabase.functions.invoke("icount-generate-paylink", {
+              body: { studentId, paymentId: keep.id, amount: remaining },
+            });
+          } else {
+            // No pending row exists — create one with a fresh paylink for the remaining
+            const { data: newRow } = await supabase
+              .from("school_music_payments" as any)
+              .insert({
+                school_music_student_id: studentId,
+                school_music_school_id: schoolMusicSchoolId,
+                academic_year_id: academicYearId,
+                amount: remaining,
+                payment_status: "pending",
+                notes: "נוצר אוטומטית לאחר מחיקת תשלום",
+              })
+              .select("id")
+              .single() as { data: { id: string } | null };
+            if (newRow?.id) {
+              await supabase.functions.invoke("icount-generate-paylink", {
+                body: { studentId, paymentId: newRow.id, amount: remaining },
+              });
+            }
+          }
+        }
+      }
     },
     onSuccess: () => { invalidate(); toast.success("התשלום נמחק"); },
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
