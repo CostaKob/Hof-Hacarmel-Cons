@@ -291,7 +291,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                 notes: "נוצר אוטומטית לאחר מחיקת תשלום",
               })
               .select("id")
-              .single();
+              .single() as { data: { id: string } | null };
             if (newRow?.id) {
               await supabase.functions.invoke("icount-generate-paylink", {
                 body: { studentId, paymentId: newRow.id, amount: remaining },
