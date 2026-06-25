@@ -132,7 +132,7 @@ const AdminSchoolMusicSchools = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_payments" as any)
-        .select("school_music_student_id, amount, payment_status, paid_at, payment_method, refund_of_payment_id")
+        .select("id, school_music_student_id, amount, payment_status, paid_at, payment_method, refund_of_payment_id")
         .in("school_music_student_id", studentIds);
       if (error) throw error;
       const map: Record<string, { paid: number; pending: number; refunded: number; count: number; lastPaidAt: string | null; lastMethod: string | null }> = {};
