@@ -671,23 +671,22 @@ const AdminSchoolMusicSchools = () => {
                         <div className="flex items-center gap-2 mr-3 shrink-0">
                           {(() => {
                             const ps = (paymentsByStudent as any)[s.id];
+                            const tuition = Number((s as any).school_music_schools?.annual_tuition_fee ?? 0);
                             if (!ps || ps.count === 0) {
                               return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין לתשלום</Badge>;
                             }
                             const net = ps.paid - ps.refunded;
-                            if (ps.refunded > 0 && net <= 0) {
+                            const denom = tuition > 0 ? tuition : net + ps.pending;
+                            if (ps.refunded > 0 && net <= 0 && ps.pending === 0) {
                               return <Badge variant="outline" className="rounded-lg text-xs border-red-500 text-red-700">הוחזר ₪{ps.refunded.toLocaleString()}</Badge>;
                             }
-                            if (ps.pending > 0 && net === 0) {
-                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}</Badge>;
+                            if (net <= 0 && ps.pending > 0) {
+                              return <Badge variant="outline" className="rounded-lg text-xs border-amber-500 text-amber-700">ממתין ₪{ps.pending.toLocaleString()}{tuition > 0 ? `/₪${tuition.toLocaleString()}` : ""}</Badge>;
                             }
-                            if (net > 0 && ps.pending === 0) {
+                            if (net > 0 && ps.pending === 0 && (tuition === 0 || net >= tuition - 0.001)) {
                               return <Badge className="rounded-lg text-xs bg-green-600 hover:bg-green-600">שולם ₪{net.toLocaleString()}</Badge>;
                             }
-                            if (net > 0 && ps.pending > 0) {
-                              return <Badge variant="outline" className="rounded-lg text-xs border-blue-500 text-blue-700">חלקי ₪{net.toLocaleString()}/₪{(net + ps.pending).toLocaleString()}</Badge>;
-                            }
-                            return null;
+                            return <Badge variant="outline" className="rounded-lg text-xs border-blue-500 text-blue-700">חלקי ₪{net.toLocaleString()}/₪{denom.toLocaleString()}</Badge>;
                           })()}
                           <Badge
                             variant={s.status === "active" ? "default" : "outline"}
