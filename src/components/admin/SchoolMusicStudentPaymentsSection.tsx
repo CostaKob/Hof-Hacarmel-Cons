@@ -196,12 +196,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             }
             await supabase.from("school_music_payments" as any).delete().eq("id", pr.id);
           }
-          // Update amount on kept row and regenerate paylink to reflect new amount
+          // If a paypage already exists, delete the OLD paypage in iCount first
+          // so it can't be used to charge the original (larger) amount.
+          const hadLink = !!(keep.payment_link_url || keep.icount_payment_page_id);
+          if (hadLink) {
+            await supabase.functions.invoke("icount-delete-paypage", {
+              body: { paymentId: keep.id, strict: false },
+            });
+          }
+          // Update amount on kept row
           await supabase
             .from("school_music_payments" as any)
             .update({ amount: remaining })
             .eq("id", keep.id);
-          if (keep.payment_link_url || keep.icount_payment_page_id) {
+          // Generate a fresh paypage with the new (remaining) amount
+          if (hadLink) {
             await supabase.functions.invoke("icount-generate-paylink", {
               body: { studentId, paymentId: keep.id, amount: remaining },
             });
