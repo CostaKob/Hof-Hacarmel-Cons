@@ -585,6 +585,8 @@ const PublicRegistration = () => {
       for (const field of fields) {
         if (field.field_key === "student_status") continue;
         if (field.field_key === "student_school_text") continue;
+        if (field.field_key === "wants_music_production" || field.field_key === "wants_recital_track") continue;
+
 
         const val = formValues[field.field_key];
         if (val === undefined || val === null) continue;
