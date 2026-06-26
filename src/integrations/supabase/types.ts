@@ -2533,6 +2533,10 @@ export type Database = {
         | "representative_pop_rock"
         | "young_large"
         | "young_pop_rock"
+        | "representative_jazz"
+        | "representative_vocal"
+        | "young_jazz"
+        | "young_vocal"
       instrument_condition:
         | "available"
         | "loaned"
@@ -2727,6 +2731,10 @@ export const Constants = {
         "representative_pop_rock",
         "young_large",
         "young_pop_rock",
+        "representative_jazz",
+        "representative_vocal",
+        "young_jazz",
+        "young_vocal",
       ],
       instrument_condition: [
         "available",

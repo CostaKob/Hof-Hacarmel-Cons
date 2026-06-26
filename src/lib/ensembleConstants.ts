@@ -1,9 +1,19 @@
 export const ENSEMBLE_TYPE_LABELS: Record<string, string> = {
-  representative_large: "הרכבים ייצוגיים",
-  representative_pop_rock: "הרכבי פופ-רוק ייצוגיים",
+  // הרכבים ייצוגיים
+  representative_orchestra: "תזמורת ייצוגית",
+  representative_big_band: "ביג-בנד ייצוגי",
+  representative_choir: "מקהלה ייצוגית",
+  representative_pop_rock: "הרכב פופ-רוק ייצוגי",
+  representative_jazz: "הרכב ג׳אז ייצוגי",
+  representative_vocal: "הרכב קולי ייצוגי",
   representative_chamber: "הרכב קאמרי ייצוגי",
-  young_large: "הרכבים צעירים",
-  young_pop_rock: "הרכבי פופ-רוק צעירים",
+  // הרכבים צעירים
+  young_orchestra: "תזמורת צעירה",
+  young_big_band: "ביג-בנד צעיר",
+  young_choir: "מקהלה צעירה",
+  young_pop_rock: "הרכב פופ-רוק צעיר",
+  young_jazz: "הרכב ג׳אז צעיר",
+  young_vocal: "הרכב קולי צעיר",
   young_chamber: "הרכב קאמרי צעיר",
   // ערכים ישנים (לתאימות לאחור)
   orchestra: "תזמורת",
@@ -16,13 +26,26 @@ export const ENSEMBLE_TYPE_LABELS: Record<string, string> = {
 
 export const ENSEMBLE_TYPE_GROUPS: { label: string; types: string[] }[] = [
   {
-    label: "סוגי הרכבים",
+    label: "הרכבים ייצוגיים",
     types: [
-      "representative_large",
+      "representative_orchestra",
+      "representative_big_band",
+      "representative_choir",
       "representative_pop_rock",
+      "representative_jazz",
+      "representative_vocal",
       "representative_chamber",
-      "young_large",
+    ],
+  },
+  {
+    label: "הרכבים צעירים",
+    types: [
+      "young_orchestra",
+      "young_big_band",
+      "young_choir",
       "young_pop_rock",
+      "young_jazz",
+      "young_vocal",
       "young_chamber",
     ],
   },
