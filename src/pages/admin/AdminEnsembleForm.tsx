@@ -5,12 +5,12 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { ENSEMBLE_TYPE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
+import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_TYPE_GROUPS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 
 interface FormValues {
@@ -127,8 +127,13 @@ const AdminEnsembleForm = () => {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger></FormControl>
                 <SelectContent>
-                  {Object.entries(ENSEMBLE_TYPE_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  {ENSEMBLE_TYPE_GROUPS.map((group) => (
+                    <SelectGroup key={group.label}>
+                      <SelectLabel>{group.label}</SelectLabel>
+                      {group.types.map((k) => (
+                        <SelectItem key={k} value={k}>{ENSEMBLE_TYPE_LABELS[k]}</SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
