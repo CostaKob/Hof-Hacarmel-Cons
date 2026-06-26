@@ -67,39 +67,68 @@ const AdminEnsembles = () => {
               : "לא נמצאו הרכבים"}
           </p>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {filtered.map((e: any) => (
-              <button
-                key={e.id}
-                onClick={() => navigate(`/admin/ensembles/${e.id}`)}
-                className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-sm text-right transition-all hover:shadow-md active:scale-[0.98] touch-manipulation"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-foreground">{e.name}</p>
-                  {!e.is_active && <Badge variant="secondary">לא פעיל</Badge>}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
-                  {e.schools?.name ? ` · ${e.schools.name}` : ""}
-                </p>
-                {(() => {
-                  const staff = (e as any).ensemble_staff || [];
-                  const lead = staff.find((s: any) => s.role === "conductor" || s.role === "instructor");
-                  if (!lead?.teachers) return null;
-                  return (
-                    <p className="text-xs text-muted-foreground">
-                      {lead.teachers.first_name} {lead.teachers.last_name}
-                    </p>
-                  );
-                })()}
-                <p className="text-xs text-muted-foreground">
-                  {((e as any).ensemble_students || []).length} משתתפים
-                  {e.day_of_week != null && ` · יום ${DAYS_OF_WEEK_LABELS[e.day_of_week] || e.day_of_week}`}
-                  {e.start_time && ` · ${String(e.start_time).slice(0, 5)}`}
-                  {e.room && ` · חדר ${e.room}`}
-                </p>
-              </button>
-            ))}
+          <div className="flex flex-col gap-6">
+            {(() => {
+              const renderCard = (e: any) => (
+                <button
+                  key={e.id}
+                  onClick={() => navigate(`/admin/ensembles/${e.id}`)}
+                  className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-sm text-right transition-all hover:shadow-md active:scale-[0.98] touch-manipulation"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-foreground">{e.name}</p>
+                    {!e.is_active && <Badge variant="secondary">לא פעיל</Badge>}
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
+                    {e.schools?.name ? ` · ${e.schools.name}` : ""}
+                  </p>
+                  {(() => {
+                    const staff = (e as any).ensemble_staff || [];
+                    const lead = staff.find((s: any) => s.role === "conductor" || s.role === "instructor");
+                    if (!lead?.teachers) return null;
+                    return (
+                      <p className="text-xs text-muted-foreground">
+                        {lead.teachers.first_name} {lead.teachers.last_name}
+                      </p>
+                    );
+                  })()}
+                  <p className="text-xs text-muted-foreground">
+                    {((e as any).ensemble_students || []).length} משתתפים
+                    {e.day_of_week != null && ` · יום ${DAYS_OF_WEEK_LABELS[e.day_of_week] || e.day_of_week}`}
+                    {e.start_time && ` · ${String(e.start_time).slice(0, 5)}`}
+                    {e.room && ` · חדר ${e.room}`}
+                  </p>
+                </button>
+              );
+
+              const sections = ENSEMBLE_TYPE_GROUPS.map((group) => ({
+                label: group.label,
+                items: filtered.filter((e: any) => group.types.includes(e.ensemble_type)),
+              }));
+              const other = filtered.filter(
+                (e: any) => !ENSEMBLE_TYPE_GROUPS.some((g) => g.types.includes(e.ensemble_type))
+              );
+
+              return (
+                <>
+                  {sections.map((s) =>
+                    s.items.length === 0 ? null : (
+                      <section key={s.label} className="flex flex-col gap-3">
+                        <h2 className="text-lg font-bold text-foreground">{s.label}</h2>
+                        <div className="grid gap-3 sm:grid-cols-2">{s.items.map(renderCard)}</div>
+                      </section>
+                    )
+                  )}
+                  {other.length > 0 && (
+                    <section className="flex flex-col gap-3">
+                      <h2 className="text-lg font-bold text-foreground">ללא קטגוריה</h2>
+                      <div className="grid gap-3 sm:grid-cols-2">{other.map(renderCard)}</div>
+                    </section>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </div>
