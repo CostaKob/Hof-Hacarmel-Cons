@@ -2515,6 +2515,20 @@ export type Database = {
         | "large_ensemble"
         | "small_ensemble"
         | "chamber_ensemble"
+        | "representative_orchestra"
+        | "representative_big_band"
+        | "representative_choir"
+        | "representative_chamber"
+        | "pop_rock_10"
+        | "pop_rock_11"
+        | "pop_rock_12"
+        | "young_orchestra"
+        | "young_big_band"
+        | "young_choir"
+        | "young_chamber"
+        | "pop_rock_7"
+        | "pop_rock_8"
+        | "pop_rock_9"
       instrument_condition:
         | "available"
         | "loaned"
@@ -2691,6 +2705,20 @@ export const Constants = {
         "large_ensemble",
         "small_ensemble",
         "chamber_ensemble",
+        "representative_orchestra",
+        "representative_big_band",
+        "representative_choir",
+        "representative_chamber",
+        "pop_rock_10",
+        "pop_rock_11",
+        "pop_rock_12",
+        "young_orchestra",
+        "young_big_band",
+        "young_choir",
+        "young_chamber",
+        "pop_rock_7",
+        "pop_rock_8",
+        "pop_rock_9",
       ],
       instrument_condition: [
         "available",
