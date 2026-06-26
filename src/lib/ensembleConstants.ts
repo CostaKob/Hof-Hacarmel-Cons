@@ -1,23 +1,9 @@
 export const ENSEMBLE_TYPE_LABELS: Record<string, string> = {
-  // הרכבים ייצוגיים גדולים
-  representative_orchestra: "תזמורת ייצוגית",
-  representative_big_band: "ביג-בנד ייצוגי",
-  representative_choir: "מקהלה ייצוגית",
-  // הרכבי פופ-רוק ייצוגיים
-  pop_rock_10: "הרכב י",
-  pop_rock_11: "הרכב י״א",
-  pop_rock_12: "הרכב י״ב",
-  // הרכב קאמרי ייצוגי
+  representative_large: "הרכבים ייצוגיים",
+  representative_pop_rock: "הרכבי פופ-רוק ייצוגיים",
   representative_chamber: "הרכב קאמרי ייצוגי",
-  // הרכבים צעירים
-  young_orchestra: "תזמורת צעירה",
-  young_big_band: "ביג-בנד צעיר",
-  young_choir: "מקהלה צעירה",
-  // הרכבי פופ-רוק צעירים
-  pop_rock_7: "הרכב ז",
-  pop_rock_8: "הרכב ח",
-  pop_rock_9: "הרכב ט",
-  // הרכב קאמרי צעיר
+  young_large: "הרכבים צעירים",
+  young_pop_rock: "הרכבי פופ-רוק צעירים",
   young_chamber: "הרכב קאמרי צעיר",
   // ערכים ישנים (לתאימות לאחור)
   orchestra: "תזמורת",
@@ -30,28 +16,15 @@ export const ENSEMBLE_TYPE_LABELS: Record<string, string> = {
 
 export const ENSEMBLE_TYPE_GROUPS: { label: string; types: string[] }[] = [
   {
-    label: "הרכבים ייצוגיים גדולים",
-    types: ["representative_orchestra", "representative_big_band", "representative_choir"],
-  },
-  {
-    label: "הרכבי פופ-רוק ייצוגיים",
-    types: ["pop_rock_10", "pop_rock_11", "pop_rock_12"],
-  },
-  {
-    label: "הרכב קאמרי ייצוגי",
-    types: ["representative_chamber"],
-  },
-  {
-    label: "הרכבים צעירים",
-    types: ["young_orchestra", "young_big_band", "young_choir"],
-  },
-  {
-    label: "הרכבי פופ-רוק צעירים",
-    types: ["pop_rock_7", "pop_rock_8", "pop_rock_9"],
-  },
-  {
-    label: "הרכב קאמרי צעיר",
-    types: ["young_chamber"],
+    label: "סוגי הרכבים",
+    types: [
+      "representative_large",
+      "representative_pop_rock",
+      "representative_chamber",
+      "young_large",
+      "young_pop_rock",
+      "young_chamber",
+    ],
   },
 ];
 
