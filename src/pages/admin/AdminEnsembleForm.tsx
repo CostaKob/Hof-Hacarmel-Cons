@@ -127,8 +127,13 @@ const AdminEnsembleForm = () => {
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl><SelectTrigger><SelectValue placeholder="בחר סוג" /></SelectTrigger></FormControl>
                 <SelectContent>
-                  {Object.entries(ENSEMBLE_TYPE_LABELS).map(([k, v]) => (
-                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  {ENSEMBLE_TYPE_GROUPS.map((group) => (
+                    <SelectGroup key={group.label}>
+                      <SelectLabel>{group.label}</SelectLabel>
+                      {group.types.map((k) => (
+                        <SelectItem key={k} value={k}>{ENSEMBLE_TYPE_LABELS[k]}</SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
