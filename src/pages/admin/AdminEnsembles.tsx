@@ -7,7 +7,7 @@ import { Plus, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { ENSEMBLE_TYPE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
+import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_TYPE_GROUPS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const AdminEnsembles = () => {
