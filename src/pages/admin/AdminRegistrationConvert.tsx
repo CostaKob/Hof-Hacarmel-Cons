@@ -45,12 +45,28 @@ const DURATION_OPTIONS = [
   { value: "60", label: "60 דקות" },
 ];
 
+type MergeDecision = "keep" | "replace" | "both";
+
+const COMPARE_FIELDS: { key: string; label: string; display?: (v: any) => string }[] = [
+  { key: "national_id", label: "ת.ז. תלמיד/ה" },
+  { key: "gender", label: "מגדר", display: (v) => (v === "male" ? "זכר" : v === "female" ? "נקבה" : v || "") },
+  { key: "grade", label: "כיתה" },
+  { key: "city", label: "ישוב" },
+  { key: "phone", label: "טלפון תלמיד/ה" },
+  { key: "parent_name", label: "שם הורה" },
+  { key: "parent_national_id", label: "ת.ז. הורה" },
+  { key: "parent_phone", label: "טלפון הורה" },
+  { key: "parent_email", label: "אימייל הורה" },
+];
+const SECONDARY_FIELDS = new Set(["parent_name", "parent_national_id", "parent_phone", "parent_email"]);
+
 const AdminRegistrationConvert = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [useExisting, setUseExisting] = useState<boolean | null>(null);
   const [showAllTeachers, setShowAllTeachers] = useState(false);
+  const [mergeDecisions, setMergeDecisions] = useState<Record<string, MergeDecision>>({});
 
   const { data: registration, isLoading: regLoading } = useQuery({
     queryKey: ["admin-registration", id],
@@ -254,14 +270,43 @@ const AdminRegistrationConvert = () => {
       let studentId: string;
 
       if (useExisting && r.existing_student_id) {
-        // Use existing student — optionally update missing fields
+        // Use existing student — per-field merge based on admin decisions
         studentId = r.existing_student_id;
         const updates: Record<string, any> = {};
-        if (data.national_id && !existingStudent?.national_id) updates.national_id = data.national_id;
-        if (data.phone && !existingStudent?.phone) updates.phone = data.phone;
-        if (data.parent_phone && !existingStudent?.parent_phone) updates.parent_phone = data.parent_phone;
-        if (data.parent_email && !existingStudent?.parent_email) updates.parent_email = data.parent_email;
-        if (data.grade && data.grade !== "__none__") updates.grade = data.grade;
+        const newVals: Record<string, any> = {
+          national_id: data.national_id,
+          gender: data.gender === "__none__" ? null : data.gender,
+          grade: data.grade === "__none__" ? null : data.grade,
+          city: data.city,
+          phone: data.phone,
+          parent_name: data.parent_name,
+          parent_national_id: data.parent_national_id,
+          parent_phone: data.parent_phone,
+          parent_email: data.parent_email,
+        };
+        for (const key of Object.keys(newVals)) {
+          const raw = newVals[key];
+          const newV = raw === null || raw === undefined ? "" : String(raw).trim();
+          if (!newV) continue;
+          const oldRaw = (existingStudent as any)?.[key];
+          const oldV = oldRaw === null || oldRaw === undefined ? "" : String(oldRaw).trim();
+          if (!oldV) {
+            // Fill missing field — safe, no data loss
+            updates[key] = newV;
+            continue;
+          }
+          if (newV === oldV) continue;
+          const dec = mergeDecisions[key] || "keep";
+          if (dec === "replace") {
+            updates[key] = newV;
+          } else if (dec === "both" && SECONDARY_FIELDS.has(key)) {
+            const sec = (existingStudent as any)?.[`${key}_2`];
+            if (!sec || String(sec).trim() === "") {
+              updates[`${key}_2`] = newV;
+            }
+          }
+          // 'keep' → do nothing
+        }
         if ((r as any).wants_music_production) updates.has_music_production_course = true;
         if ((r as any).wants_recital_track) updates.has_recital_track = true;
         // If student was previously stopped/inactive — reactivate on re-registration
@@ -588,6 +633,78 @@ const AdminRegistrationConvert = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Per-field merge UI — shown only when reusing existing student and there are conflicts */}
+        {useExisting === true && existingStudent && (() => {
+          const conflicts = COMPARE_FIELDS.filter((f) => {
+            let nv: any = (watch() as any)[f.key];
+            if (nv === "__none__") nv = "";
+            nv = nv === null || nv === undefined ? "" : String(nv).trim();
+            const ov = (existingStudent as any)[f.key];
+            const ovs = ov === null || ov === undefined ? "" : String(ov).trim();
+            return nv && ovs && nv !== ovs;
+          });
+          if (conflicts.length === 0) return null;
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">מיזוג נתונים — נתונים שונים בהרשמה החדשה</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  זוהו שדות עם ערכים שונים בין התלמיד הקיים לבין ההרשמה החדשה. ברירת המחדל היא לשמור את הקיים. ניתן להחליף, או — בשדות הורה — לשמור את שני הערכים.
+                </p>
+                {conflicts.map((f) => {
+                  const disp = f.display || ((v: any) => (v === null || v === undefined ? "" : String(v)));
+                  const oldV = disp((existingStudent as any)[f.key]);
+                  const rawNew = (watch() as any)[f.key];
+                  const newV = disp(rawNew === "__none__" ? "" : rawNew);
+                  const hasSecondary = SECONDARY_FIELDS.has(f.key);
+                  const secondaryVal = hasSecondary ? (existingStudent as any)?.[`${f.key}_2`] : null;
+                  const secondaryFilled = hasSecondary && secondaryVal && String(secondaryVal).trim() !== "";
+                  const decision = mergeDecisions[f.key] || "keep";
+                  return (
+                    <div key={f.key} className="rounded-lg border border-border p-3 space-y-2">
+                      <p className="text-sm font-medium">{f.label}</p>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="rounded bg-muted/40 p-2">
+                          <p className="text-xs text-muted-foreground">קיים</p>
+                          <p className="font-medium break-words">{oldV}</p>
+                          {hasSecondary && secondaryFilled && (
+                            <p className="text-xs text-muted-foreground mt-1">משני: {secondaryVal}</p>
+                          )}
+                        </div>
+                        <div className="rounded bg-muted/40 p-2">
+                          <p className="text-xs text-muted-foreground">חדש מההרשמה</p>
+                          <p className="font-medium break-words">{newV}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" size="sm" variant={decision === "keep" ? "default" : "outline"}
+                          onClick={() => setMergeDecisions((p) => ({ ...p, [f.key]: "keep" }))}>
+                          שמור קיים
+                        </Button>
+                        <Button type="button" size="sm" variant={decision === "replace" ? "default" : "outline"}
+                          onClick={() => setMergeDecisions((p) => ({ ...p, [f.key]: "replace" }))}>
+                          החלף בחדש
+                        </Button>
+                        {hasSecondary && (
+                          <Button type="button" size="sm" variant={decision === "both" ? "default" : "outline"}
+                            disabled={!!secondaryFilled}
+                            onClick={() => setMergeDecisions((p) => ({ ...p, [f.key]: "both" }))}>
+                            שמור את שניהם{secondaryFilled ? " (שדה משני תפוס)" : ""}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+
 
         {/* Parent details - prefilled */}
         {useExisting !== true && (
