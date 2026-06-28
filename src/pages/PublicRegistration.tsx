@@ -346,12 +346,12 @@ const PublicRegistration = () => {
   // Set browser tab title dynamically
   useEffect(() => {
     if (yearDisplayLabel) {
-      document.title = `אולפן המוסיקה חוף הכרמל — רישום ומידע ${yearDisplayLabel}`;
+      document.title = `רישום ומידע · ${yearDisplayLabel}`;
     } else {
-      document.title = `אולפן המוסיקה חוף הכרמל — רישום ומידע`;
+      document.title = "רישום ומידע";
     }
     return () => {
-      document.title = "אולפן המוסיקה חוף הכרמל";
+      document.title = "אולפן ומגמת המוסיקה חוף הכרמל";
     };
   }, [yearDisplayLabel]);
 
