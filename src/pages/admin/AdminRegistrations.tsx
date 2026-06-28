@@ -19,6 +19,7 @@ const AdminRegistrations = () => {
   const selectedYear = years.find((y) => y.id === selectedYearId);
   useListStatePreservation("/admin/registrations");
   const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string>("/admin/registrations", "school", "all");
   const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
