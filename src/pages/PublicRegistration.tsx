@@ -644,17 +644,32 @@ const PublicRegistration = () => {
       const { error } = await supabase.from("registrations").insert(row);
       if (error) throw error;
 
-      // Fire-and-forget: send confirmation email to parent. Failure does not block the success flow.
+      // Await the confirmation email send so the request is not cancelled by the
+      // navigation to the success screen. The server-side function also triggers
+      // the Google Sheets backup, so we don't need to call it from the client.
       if (row.parent_email) {
-        supabase.functions
-          .invoke("send-registration-confirmation", { body: { registrationId } })
-          .catch((e) => console.error("send-registration-confirmation invoke failed:", e));
+        try {
+          await supabase.functions.invoke("send-registration-confirmation", {
+            body: { registrationId },
+          });
+        } catch (e) {
+          console.error("send-registration-confirmation invoke failed:", e);
+          // Fallback: at least try the sheets backup directly.
+          supabase.functions
+            .invoke("sync-registration-to-sheets", { body: { registrationId } })
+            .catch((err) => console.error("sync-registration-to-sheets invoke failed:", err));
+        }
+      } else {
+        // No parent email — still back up to sheets.
+        try {
+          await supabase.functions.invoke("sync-registration-to-sheets", {
+            body: { registrationId },
+          });
+        } catch (e) {
+          console.error("sync-registration-to-sheets invoke failed:", e);
+        }
       }
 
-      // Fire-and-forget: backup registration to Google Sheets.
-      supabase.functions
-        .invoke("sync-registration-to-sheets", { body: { registrationId } })
-        .catch((e) => console.error("sync-registration-to-sheets invoke failed:", e));
 
       setSubmittedEmail(row.parent_email || null);
       setSubmitted(true);
