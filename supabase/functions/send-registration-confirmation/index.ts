@@ -10,6 +10,34 @@ interface Payload {
   registrationId: string;
 }
 
+async function syncRegistrationBackup(
+  supabaseUrl: string,
+  serviceRole: string,
+  registrationId: string,
+) {
+  try {
+    const res = await fetch(`${supabaseUrl}/functions/v1/sync-registration-to-sheets`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${serviceRole}`,
+        apikey: serviceRole,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ registrationId }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error("sync-registration-to-sheets failed:", res.status, body);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error("sync-registration-to-sheets invoke failed:", error);
+    return false;
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -54,20 +82,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Idempotency: if we already logged a send (pending/sent/suppressed) for this
-    // registration's confirmation, do not re-enqueue.
+    // Server-side backup to Google Sheets. This avoids relying on a browser
+    // fire-and-forget request that can be skipped or blocked.
+    const sheetsSynced = await syncRegistrationBackup(SUPABASE_URL, SERVICE_ROLE, registrationId);
+
     const idempotencyKey = `registration-confirmation-${registrationId}`;
+    // Idempotency: only dedupe this exact registration. Previously this checked
+    // by recipient email and accidentally blocked new registrations from the
+    // same parent email address.
     const { data: priorLog } = await supabase
       .from("email_send_log")
       .select("id")
-      .eq("template_name", "registration-confirmation")
-      .eq("recipient_email", String((reg as any).parent_email || "").toLowerCase())
+      .eq("message_id", idempotencyKey)
       .in("status", ["pending", "sent", "suppressed"])
       .limit(1)
       .maybeSingle();
     if (priorLog) {
       return new Response(
-        JSON.stringify({ ok: true, deduped: true }),
+        JSON.stringify({ ok: true, deduped: true, sheetsSynced }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -75,7 +107,7 @@ Deno.serve(async (req) => {
 
     const parentEmail = (reg as any).parent_email;
     if (!parentEmail) {
-      return new Response(JSON.stringify({ skipped: true, reason: "no parent_email" }), {
+      return new Response(JSON.stringify({ skipped: true, reason: "no parent_email", sheetsSynced }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -137,6 +169,7 @@ Deno.serve(async (req) => {
         templateName: "registration-confirmation",
         recipientEmail: parentEmail,
         idempotencyKey,
+        messageId: idempotencyKey,
         replyTo: "musichof@gmail.com",
         templateData: {
           parentName,
@@ -162,7 +195,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, result: body }), {
+    return new Response(JSON.stringify({ ok: true, sheetsSynced, result: body }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
