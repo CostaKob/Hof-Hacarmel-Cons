@@ -81,15 +81,6 @@ const AdminEnrollments = () => {
     return true;
   });
 
-  const schoolCounts = (() => {
-    const counts = new Map<string, number>();
-    for (const e of enrollments as any[]) {
-      const name = e.schools?.name ?? "ללא שלוחה";
-      counts.set(name, (counts.get(name) ?? 0) + 1);
-    }
-    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-  })();
-
   return (
     <AdminLayout title="שיוכים" backPath="/admin">
       <div className="mb-4 flex flex-col gap-3">
