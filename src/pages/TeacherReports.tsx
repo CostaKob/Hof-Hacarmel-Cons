@@ -44,14 +44,15 @@ const TeacherReports = () => {
   const [monthFilter, setMonthFilter] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
 
   const monthOptions = useMemo(() => {
-    if (!reports?.length) return [];
     const months = new Set<string>();
-    reports.forEach((r) => {
+    // Always include the current month so the default filter is selectable
+    months.add(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+    reports?.forEach((r) => {
       const d = parseISO(r.report_date);
       months.add(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`);
     });
     return Array.from(months).sort().reverse();
-  }, [reports]);
+  }, [reports, now]);
 
   const HEBREW_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
 
