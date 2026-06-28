@@ -57,14 +57,15 @@ async function gsFetch(path: string, init: RequestInit = {}) {
   return body ? JSON.parse(body) : {};
 }
 
-async function ensureHeaders() {
+async function ensureHeaders(sheetName: string) {
+  const sn = quoteSheet(sheetName);
   const data = await gsFetch(
-    `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:T1`,
+    `/spreadsheets/${SPREADSHEET_ID}/values/${sn}!A1:T1`,
   );
   const hasHeaders = Array.isArray(data.values) && data.values.length > 0 && (data.values[0] as string[]).length > 0;
   if (!hasHeaders) {
     await gsFetch(
-      `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1?valueInputOption=RAW`,
+      `/spreadsheets/${SPREADSHEET_ID}/values/${sn}!A1?valueInputOption=RAW`,
       { method: "PUT", body: JSON.stringify({ values: [HEADERS] }) },
     );
   }
