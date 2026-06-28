@@ -2,8 +2,19 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SPREADSHEET_ID = "1fL1-FEfZmn6WJFOwhTYusmyBaGG7X3k6QpjRd155E_0";
-const SHEET_NAME = "Sheet1";
 const GATEWAY = "https://connector-gateway.lovable.dev/google_sheets/v4";
+
+async function getFirstSheetName(): Promise<string> {
+  const meta = await gsFetch(`/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`);
+  const title = meta?.sheets?.[0]?.properties?.title;
+  if (!title) throw new Error("No sheets found in spreadsheet");
+  return title;
+}
+
+function quoteSheet(name: string): string {
+  // Quote sheet name for A1 notation (needed for non-ASCII / spaces)
+  return `'${name.replace(/'/g, "''")}'`;
+}
 
 const HEADERS = [
   "תאריך הרשמה",
@@ -46,14 +57,15 @@ async function gsFetch(path: string, init: RequestInit = {}) {
   return body ? JSON.parse(body) : {};
 }
 
-async function ensureHeaders() {
+async function ensureHeaders(sheetName: string) {
+  const sn = quoteSheet(sheetName);
   const data = await gsFetch(
-    `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:T1`,
+    `/spreadsheets/${SPREADSHEET_ID}/values/${sn}!A1:T1`,
   );
   const hasHeaders = Array.isArray(data.values) && data.values.length > 0 && (data.values[0] as string[]).length > 0;
   if (!hasHeaders) {
     await gsFetch(
-      `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1?valueInputOption=RAW`,
+      `/spreadsheets/${SPREADSHEET_ID}/values/${sn}!A1?valueInputOption=RAW`,
       { method: "PUT", body: JSON.stringify({ values: [HEADERS] }) },
     );
   }
@@ -77,7 +89,8 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!r) throw new Error("Registration not found");
 
-    await ensureHeaders();
+    const sheetName = await getFirstSheetName();
+    await ensureHeaders(sheetName);
 
     const row = [
       r.created_at ? new Date(r.created_at).toLocaleString("he-IL") : "",
@@ -103,7 +116,7 @@ Deno.serve(async (req) => {
     ];
 
     await gsFetch(
-      `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      `/spreadsheets/${SPREADSHEET_ID}/values/${quoteSheet(sheetName)}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       { method: "POST", body: JSON.stringify({ values: [row] }) },
     );
 
