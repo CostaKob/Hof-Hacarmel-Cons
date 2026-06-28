@@ -2,8 +2,19 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SPREADSHEET_ID = "1fL1-FEfZmn6WJFOwhTYusmyBaGG7X3k6QpjRd155E_0";
-const SHEET_NAME = "Sheet1";
 const GATEWAY = "https://connector-gateway.lovable.dev/google_sheets/v4";
+
+async function getFirstSheetName(): Promise<string> {
+  const meta = await gsFetch(`/spreadsheets/${SPREADSHEET_ID}?fields=sheets.properties.title`);
+  const title = meta?.sheets?.[0]?.properties?.title;
+  if (!title) throw new Error("No sheets found in spreadsheet");
+  return title;
+}
+
+function quoteSheet(name: string): string {
+  // Quote sheet name for A1 notation (needed for non-ASCII / spaces)
+  return `'${name.replace(/'/g, "''")}'`;
+}
 
 const HEADERS = [
   "תאריך הרשמה",
