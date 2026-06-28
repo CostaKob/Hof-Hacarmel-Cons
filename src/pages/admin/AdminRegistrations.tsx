@@ -85,7 +85,39 @@ const AdminRegistrations = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={schoolFilter} onValueChange={setSchoolFilter}>
+            <SelectTrigger className="w-44 h-11 rounded-xl">
+              <SelectValue placeholder="שלוחה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל השלוחות</SelectItem>
+              {schoolCounts.map(([name]) => (
+                <SelectItem key={name} value={name}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* School summary */}
+        {schoolCounts.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">סיכום לפי שלוחה:</span>
+              <Badge variant="secondary" className="rounded-lg">סה"כ {registrations.length}</Badge>
+              {schoolCounts.map(([name, count]) => (
+                <button
+                  key={name}
+                  onClick={() => setSchoolFilter(schoolFilter === name ? "all" : name)}
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    schoolFilter === name ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                  }`}
+                >
+                  {name}: {count}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Summary chips */}
         <div className="flex gap-2 flex-wrap">
