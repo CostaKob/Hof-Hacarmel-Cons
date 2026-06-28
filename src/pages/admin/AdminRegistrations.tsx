@@ -98,28 +98,25 @@ const AdminRegistrations = () => {
           </Select>
         </div>
 
-        {/* School summary */}
+        {/* Compact summary: total + per-school chips */}
         {schoolCounts.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">סיכום לפי שלוחה:</span>
-              <Badge variant="secondary" className="rounded-lg">סה"כ {registrations.length}</Badge>
-              {schoolCounts.map(([name, count]) => (
-                <button
-                  key={name}
-                  onClick={() => setSchoolFilter(schoolFilter === name ? "all" : name)}
-                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                    schoolFilter === name ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
-                  }`}
-                >
-                  {name}: {count}
-                </button>
-              ))}
-            </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge variant="secondary" className="rounded-full text-xs">סה"כ {registrations.length}</Badge>
+            {schoolCounts.map(([name, count]) => (
+              <button
+                key={name}
+                onClick={() => setSchoolFilter(schoolFilter === name ? "all" : name)}
+                className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
+                  schoolFilter === name ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                }`}
+              >
+                {name} · {count}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Summary chips */}
+        {/* Status chips */}
         <div className="flex gap-2 flex-wrap">
           {Object.entries(REGISTRATION_STATUSES).map(([key, { label }]) => {
             const count = registrations.filter((r) => r.status === key).length;
@@ -159,63 +156,72 @@ const AdminRegistrations = () => {
                 <button
                   key={r.id}
                   onClick={() => navigate(`/admin/registrations/${r.id}`)}
-                  className="w-full rounded-xl border border-border bg-card p-4 text-right transition-all hover:shadow-sm active:scale-[0.99]"
+                  className="w-full rounded-xl border border-border bg-card p-3.5 text-right transition-all hover:shadow-sm active:scale-[0.99]"
                 >
-                  <div className="flex items-start gap-3">
-                    <span className="text-xs text-muted-foreground w-5 shrink-0 pt-1">{idx + 1}</span>
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      {/* Row 1: Name + Status */}
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-foreground truncate text-sm">
-                          {r.student_first_name} {r.student_last_name}
-                          {r.grade ? <span className="text-muted-foreground font-normal"> · כיתה {r.grade}</span> : ""}
-                        </p>
-                        <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full shrink-0 ${statusCfg.color}`}>
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-xs text-muted-foreground shrink-0 pt-0.5 tabular-nums">{idx + 1}.</span>
+                    <div className="flex-1 min-w-0 space-y-2">
+                      {/* Row 1: Name + grade + status */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-foreground text-sm leading-tight break-words">
+                            {r.student_first_name} {r.student_last_name}
+                          </p>
+                          {r.grade && (
+                            <p className="text-[11px] text-muted-foreground mt-0.5">כיתה {r.grade}</p>
+                          )}
+                        </div>
+                        <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${statusCfg.color}`}>
                           {statusCfg.label}
                         </span>
                       </div>
 
-                      {/* Row 2: Instruments + Parent phone */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        {instruments && (
-                          <span className="flex items-center gap-1 truncate">
-                            <Music className="h-3 w-3 shrink-0" />
-                            {instruments}
-                          </span>
-                        )}
-                        {r.parent_phone && (
-                          <span className="flex items-center gap-1 shrink-0">
-                            <Phone className="h-3 w-3" />
-                            <PhoneDisplay phone={r.parent_phone} stopPropagation textClassName="text-xs text-muted-foreground" />
-                          </span>
-                        )}
-                        {r.branch_school_name && (
-                          <span className="flex items-center gap-1 truncate">
-                            🏫 {r.branch_school_name}
-                          </span>
-                        )}
-                      </div>
+                      {/* Row 2: Instruments */}
+                      {instruments && (
+                        <div className="flex items-center gap-1.5 text-xs text-foreground/80">
+                          <Music className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="break-words">{instruments}</span>
+                        </div>
+                      )}
 
-                      {/* Row 3: Days ago + match indicator + special tracks */}
-                      <div className="flex items-center gap-2 flex-wrap text-[11px]">
-                        <span className={isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}>
+                      {/* Row 3: Phone */}
+                      {r.parent_phone && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Phone className="h-3.5 w-3.5 shrink-0" />
+                          <PhoneDisplay phone={r.parent_phone} stopPropagation textClassName="text-xs text-muted-foreground" />
+                        </div>
+                      )}
+
+                      {/* Row 4: Branch (full width, no truncate) */}
+                      {r.branch_school_name && (
+                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                          <span className="shrink-0">🏫</span>
+                          <span className="break-words">{r.branch_school_name}</span>
+                        </div>
+                      )}
+
+                      {/* Row 5: Meta chips */}
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        <span className={`text-[11px] ${isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}`}>
                           {daysAgoLabel(r.created_at)}
                         </span>
                         {r.existing_student_id && r.match_type === "id_match" && (
-                          <span className="text-green-600 font-medium">תלמיד קיים</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 border border-green-200 font-medium">
+                            תלמיד קיים
+                          </span>
                         )}
                         {r.existing_student_id && r.match_type === "name_match" && (
-                          <span className="flex items-center gap-0.5 text-amber-600 font-medium">
+                          <span className="flex items-center gap-0.5 text-[11px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 font-medium">
                             <AlertTriangle className="h-3 w-3" /> התאמת שם
                           </span>
                         )}
                         {(r as any).wants_music_production && (
-                          <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200 font-medium">
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-violet-100 text-violet-700 border border-violet-200 font-medium">
                             🎚️ הפקה
                           </span>
                         )}
                         {(r as any).wants_recital_track && (
-                          <span className="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-medium">
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-medium">
                             🎼 רסיטל
                           </span>
                         )}
