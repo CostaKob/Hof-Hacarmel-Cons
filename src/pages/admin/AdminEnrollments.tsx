@@ -81,6 +81,15 @@ const AdminEnrollments = () => {
     return true;
   });
 
+  const schoolCounts = (() => {
+    const counts = new Map<string, number>();
+    for (const e of enrollments as any[]) {
+      const name = e.schools?.name ?? "ללא שלוחה";
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  })();
+
   return (
     <AdminLayout title="שיוכים" backPath="/admin">
       <div className="mb-4 flex flex-col gap-3">
@@ -136,7 +145,20 @@ const AdminEnrollments = () => {
             </SelectContent>
           </Select>
         </div>
-      </div>
+        </div>
+        {schoolCounts.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">סיכום לפי שלוחה:</span>
+              <Badge variant="secondary" className="rounded-lg">סה"כ {enrollments.length}</Badge>
+              {schoolCounts.map(([name, count]) => (
+                <Badge key={name} variant="outline" className="rounded-lg">
+                  {name}: {count}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
       {isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
