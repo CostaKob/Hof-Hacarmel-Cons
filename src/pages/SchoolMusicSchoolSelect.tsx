@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,10 @@ import { School, ArrowLeft, Loader2 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 
 const SchoolMusicSchoolSelect = () => {
+  useEffect(() => {
+    document.title = "רישום לבתי ספר מנגנים";
+  }, []);
+
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
   const urlYearId = searchParams.get("yearId");

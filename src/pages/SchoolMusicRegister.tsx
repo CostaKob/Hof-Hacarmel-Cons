@@ -62,6 +62,10 @@ const GENDER_OPTIONS = [
 /* ── Component ── */
 
 const SchoolMusicRegister = () => {
+  useEffect(() => {
+    document.title = "רישום לבתי ספר מנגנים";
+  }, []);
+
   const { logoUrl } = useAppLogo();
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
