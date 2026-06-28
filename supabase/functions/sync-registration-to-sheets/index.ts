@@ -2,6 +2,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SPREADSHEET_ID = "1fL1-FEfZmn6WJFOwhTYusmyBaGG7X3k6QpjRd155E_0";
+const DEFAULT_SHEET_NAME = "גיליון1";
 const GATEWAY = "https://connector-gateway.lovable.dev/google_sheets/v4";
 
 async function getFirstSheetName(): Promise<string> {
@@ -71,6 +72,29 @@ async function ensureHeaders(sheetName: string) {
   }
 }
 
+async function appendRow(values: unknown[]) {
+  const appendTo = async (sheetName: string) => {
+    await gsFetch(
+      `/spreadsheets/${SPREADSHEET_ID}/values/${quoteSheet(sheetName)}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      { method: "POST", body: JSON.stringify({ values: [values] }) },
+    );
+  };
+
+  try {
+    await appendTo(DEFAULT_SHEET_NAME);
+  } catch (error) {
+    const message = String((error as Error)?.message ?? error);
+    if (!message.includes("Unable to parse range") && !message.includes("400")) {
+      throw error;
+    }
+
+    // Fallback only when the tab was renamed. Avoid metadata/header reads on every registration
+    // because Google Sheets read quota can block live registration backups.
+    const sheetName = await getFirstSheetName();
+    await appendTo(sheetName);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -88,9 +112,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (error) throw error;
     if (!r) throw new Error("Registration not found");
-
-    const sheetName = await getFirstSheetName();
-    await ensureHeaders(sheetName);
 
     const row = [
       r.created_at ? new Date(r.created_at).toLocaleString("he-IL") : "",
@@ -115,10 +136,7 @@ Deno.serve(async (req) => {
       r.notes ?? "",
     ];
 
-    await gsFetch(
-      `/spreadsheets/${SPREADSHEET_ID}/values/${quoteSheet(sheetName)}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
-      { method: "POST", body: JSON.stringify({ values: [row] }) },
-    );
+    await appendRow(row);
 
     return new Response(JSON.stringify({ ok: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
