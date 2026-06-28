@@ -30,6 +30,9 @@ verify_jwt = false
 [functions.handle-email-unsubscribe]
 verify_jwt = false
 
+[functions.sync-registration-to-sheets]
+verify_jwt = false
+
 [functions.handle-email-suppression]
 verify_jwt = false
 
