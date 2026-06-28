@@ -128,6 +128,7 @@ const AdminRegistrationCard = () => {
   return (
     <AdminLayout
       title={`${r.student_first_name} ${r.student_last_name}`}
+      backPath="/admin/registrations"
       onBack={() => navigate(-1)}
     >
       <div className="space-y-4">
