@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
     ];
 
     await gsFetch(
-      `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+      `/spreadsheets/${SPREADSHEET_ID}/values/${quoteSheet(sheetName)}!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
       { method: "POST", body: JSON.stringify({ values: [row] }) },
     );
 
