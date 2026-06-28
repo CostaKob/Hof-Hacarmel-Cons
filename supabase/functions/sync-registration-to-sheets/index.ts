@@ -89,7 +89,8 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!r) throw new Error("Registration not found");
 
-    await ensureHeaders();
+    const sheetName = await getFirstSheetName();
+    await ensureHeaders(sheetName);
 
     const row = [
       r.created_at ? new Date(r.created_at).toLocaleString("he-IL") : "",
