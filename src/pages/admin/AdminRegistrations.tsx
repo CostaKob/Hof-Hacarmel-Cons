@@ -19,6 +19,7 @@ const AdminRegistrations = () => {
   const selectedYear = years.find((y) => y.id === selectedYearId);
   useListStatePreservation("/admin/registrations");
   const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string>("/admin/registrations", "school", "all");
   const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
@@ -37,6 +38,7 @@ const AdminRegistrations = () => {
 
   const filtered = registrations.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
+    if (schoolFilter !== "all" && (r.branch_school_name || "ללא שלוחה") !== schoolFilter) return false;
     if (search) {
       const q = search.toLowerCase();
       const searchStr = `${r.student_first_name ?? ""} ${r.student_last_name ?? ""} ${r.parent_name ?? ""} ${r.student_national_id ?? ""} ${r.parent_national_id ?? ""} ${r.parent_phone ?? ""} ${r.student_phone ?? ""} ${r.parent_email ?? ""} ${r.city ?? ""} ${r.grade ?? ""} ${r.branch_school_name ?? ""} ${r.student_school_text ?? ""} ${r.educational_school ?? ""}`.toLowerCase();
@@ -44,6 +46,15 @@ const AdminRegistrations = () => {
     }
     return true;
   });
+
+  const schoolCounts = (() => {
+    const counts = new Map<string, number>();
+    for (const r of registrations as any[]) {
+      const name = r.branch_school_name || "ללא שלוחה";
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  })();
 
   return (
     <AdminLayout title="הרשמות">
@@ -74,7 +85,39 @@ const AdminRegistrations = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={schoolFilter} onValueChange={setSchoolFilter}>
+            <SelectTrigger className="w-44 h-11 rounded-xl">
+              <SelectValue placeholder="שלוחה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל השלוחות</SelectItem>
+              {schoolCounts.map(([name]) => (
+                <SelectItem key={name} value={name}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* School summary */}
+        {schoolCounts.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">סיכום לפי שלוחה:</span>
+              <Badge variant="secondary" className="rounded-lg">סה"כ {registrations.length}</Badge>
+              {schoolCounts.map(([name, count]) => (
+                <button
+                  key={name}
+                  onClick={() => setSchoolFilter(schoolFilter === name ? "all" : name)}
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    schoolFilter === name ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                  }`}
+                >
+                  {name}: {count}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Summary chips */}
         <div className="flex gap-2 flex-wrap">
@@ -144,6 +187,11 @@ const AdminRegistrations = () => {
                           <span className="flex items-center gap-1 shrink-0">
                             <Phone className="h-3 w-3" />
                             <PhoneDisplay phone={r.parent_phone} stopPropagation textClassName="text-xs text-muted-foreground" />
+                          </span>
+                        )}
+                        {r.branch_school_name && (
+                          <span className="flex items-center gap-1 truncate">
+                            🏫 {r.branch_school_name}
                           </span>
                         )}
                       </div>
