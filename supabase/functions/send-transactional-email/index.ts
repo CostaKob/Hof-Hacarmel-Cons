@@ -96,8 +96,7 @@ Deno.serve(async (req) => {
     const body = await req.json()
     templateName = body.templateName || body.template_name
     recipientEmail = body.recipientEmail || body.recipient_email
-    idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
-    messageId = body.messageId || body.message_id || idempotencyKey || crypto.randomUUID()
+    messageId = body.messageId || body.message_id || body.idempotencyKey || body.idempotency_key || crypto.randomUUID()
     idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
     replyTo = body.replyTo || body.reply_to || null
     if (body.templateData && typeof body.templateData === 'object') {
