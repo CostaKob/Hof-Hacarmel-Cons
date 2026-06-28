@@ -365,15 +365,18 @@ const InfoGrid = ({ items }: { items: { label: string; value: React.ReactNode }[
 );
 
 // Diff comparison component for returning students
-const DIFF_FIELDS: { label: string; regKey: string; studentKey: string; format?: (v: any) => string }[] = [
-  { label: "טלפון הורה", regKey: "parent_phone", studentKey: "parent_phone" },
-  { label: "שם הורה", regKey: "parent_name", studentKey: "parent_name" },
-  { label: 'דוא"ל הורה', regKey: "parent_email", studentKey: "parent_email" },
-  { label: "ת.ז. הורה", regKey: "parent_national_id", studentKey: "parent_national_id" },
+// `secondary` = field has a `_2` column on students for "keep both"
+const DIFF_FIELDS: { label: string; regKey: string; studentKey: string; secondary?: boolean }[] = [
+  { label: "טלפון הורה", regKey: "parent_phone", studentKey: "parent_phone", secondary: true },
+  { label: "שם הורה", regKey: "parent_name", studentKey: "parent_name", secondary: true },
+  { label: 'דוא"ל הורה', regKey: "parent_email", studentKey: "parent_email", secondary: true },
+  { label: "ת.ז. הורה", regKey: "parent_national_id", studentKey: "parent_national_id", secondary: true },
   { label: "טלפון תלמיד/ה", regKey: "student_phone", studentKey: "phone" },
   { label: "ישוב", regKey: "city", studentKey: "city" },
   { label: "כיתה", regKey: "grade", studentKey: "grade" },
 ];
+
+type DiffDecision = "keep" | "replace" | "both";
 
 const DiffCard = ({ registration, student, onApplied }: { registration: any; student: any; onApplied?: () => void }) => {
   const diffs = useMemo(() => {
@@ -384,26 +387,35 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
     }).map((f) => ({
       label: f.label,
       studentKey: f.studentKey,
+      secondary: !!f.secondary,
+      secondaryValue: f.secondary ? (student[`${f.studentKey}_2`] || "") : "",
       oldValue: student[f.studentKey] || "—",
       newValue: registration[f.regKey] || "—",
     }));
   }, [registration, student]);
 
-  // By default — all selected for replacement
-  const [selected, setSelected] = useState<Record<string, boolean>>({});
+  // Default: keep existing (safer — no data lost without explicit choice)
+  const [decisions, setDecisions] = useState<Record<string, DiffDecision>>({});
   useEffect(() => {
-    const init: Record<string, boolean> = {};
-    diffs.forEach((d) => { init[d.studentKey] = true; });
-    setSelected(init);
+    const init: Record<string, DiffDecision> = {};
+    diffs.forEach((d) => { init[d.studentKey] = "keep"; });
+    setDecisions(init);
   }, [diffs.length]);
 
   const applyMutation = useMutation({
     mutationFn: async () => {
       const updates: Record<string, any> = {};
       diffs.forEach((d) => {
-        if (selected[d.studentKey]) {
+        const dec = decisions[d.studentKey] || "keep";
+        if (dec === "replace") {
           updates[d.studentKey] = d.newValue === "—" ? null : d.newValue;
+        } else if (dec === "both" && d.secondary) {
+          // Only fill _2 if empty — don't overwrite an existing secondary value
+          if (!d.secondaryValue || String(d.secondaryValue).trim() === "") {
+            updates[`${d.studentKey}_2`] = d.newValue === "—" ? null : d.newValue;
+          }
         }
+        // 'keep' → do nothing
       });
       if (Object.keys(updates).length === 0) return;
       const { error } = await supabase
@@ -420,7 +432,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
   });
 
   if (diffs.length === 0) return null;
-  const selectedCount = Object.values(selected).filter(Boolean).length;
+  const changesCount = Object.values(decisions).filter((d) => d === "replace" || d === "both").length;
 
   return (
     <Card className="border-amber-200 dark:border-amber-800">
@@ -430,27 +442,25 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           שינויים שזוהו ({diffs.length})
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          סמן אילו שדות להחליף בכרטיס התלמיד הקיים
+          לכל שדה: השאר את הקיים, החלף בחדש, או — בשדות הורה — שמור את שניהם
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
-        {diffs.map((d, i) => (
-          <label
-            key={i}
-            className="flex gap-3 items-start rounded-lg border border-border p-3 cursor-pointer hover:bg-muted/30"
-          >
-            <input
-              type="checkbox"
-              checked={!!selected[d.studentKey]}
-              onChange={(e) => setSelected((s) => ({ ...s, [d.studentKey]: e.target.checked }))}
-              className="mt-1 h-4 w-4 accent-primary shrink-0"
-            />
-            <div className="flex-1 space-y-1.5">
+        {diffs.map((d, i) => {
+          const dec = decisions[d.studentKey] || "keep";
+          const setDec = (v: DiffDecision) =>
+            setDecisions((s) => ({ ...s, [d.studentKey]: v }));
+          const bothDisabled = d.secondary && d.secondaryValue && String(d.secondaryValue).trim() !== "";
+          return (
+            <div key={i} className="rounded-lg border border-border p-3 space-y-2.5">
               <p className="text-xs font-medium text-muted-foreground">{d.label}</p>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <p className="text-[11px] text-muted-foreground">ערך קיים</p>
-                  <p className="text-sm line-through text-muted-foreground">{d.oldValue}</p>
+                  <p className={`text-sm ${dec === "replace" ? "line-through text-muted-foreground" : "text-foreground"}`}>{d.oldValue}</p>
+                  {d.secondary && d.secondaryValue && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">משני: {d.secondaryValue}</p>
+                  )}
                 </div>
                 <span className="text-muted-foreground">←</span>
                 <div className="flex-1">
@@ -460,17 +470,50 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
                   </Badge>
                 </div>
               </div>
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dec === "keep" ? "default" : "outline"}
+                  className="h-8 rounded-lg text-xs"
+                  onClick={() => setDec("keep")}
+                >
+                  השאר קיים
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={dec === "replace" ? "default" : "outline"}
+                  className="h-8 rounded-lg text-xs"
+                  onClick={() => setDec("replace")}
+                >
+                  החלף בחדש
+                </Button>
+                {d.secondary && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={dec === "both" ? "default" : "outline"}
+                    className="h-8 rounded-lg text-xs"
+                    onClick={() => setDec("both")}
+                    disabled={!!bothDisabled}
+                    title={bothDisabled ? "כבר קיים ערך משני בשדה זה" : undefined}
+                  >
+                    שמור את שניהם
+                  </Button>
+                )}
+              </div>
             </div>
-          </label>
-        ))}
+          );
+        })}
         <Button
           type="button"
           size="sm"
           onClick={() => applyMutation.mutate()}
-          disabled={selectedCount === 0 || applyMutation.isPending}
+          disabled={changesCount === 0 || applyMutation.isPending}
           className="w-full sm:w-auto h-11 rounded-xl"
         >
-          {applyMutation.isPending ? "מעדכן..." : `החל ${selectedCount} שינויים`}
+          {applyMutation.isPending ? "מעדכן..." : changesCount === 0 ? "לא נבחרו שינויים" : `החל ${changesCount} שינויים`}
         </Button>
       </CardContent>
     </Card>
