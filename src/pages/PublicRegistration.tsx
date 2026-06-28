@@ -651,6 +651,11 @@ const PublicRegistration = () => {
           .catch((e) => console.error("send-registration-confirmation invoke failed:", e));
       }
 
+      // Fire-and-forget: backup registration to Google Sheets.
+      supabase.functions
+        .invoke("sync-registration-to-sheets", { body: { registrationId } })
+        .catch((e) => console.error("sync-registration-to-sheets invoke failed:", e));
+
       setSubmittedEmail(row.parent_email || null);
       setSubmitted(true);
     } catch (err: any) {
