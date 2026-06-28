@@ -634,6 +634,78 @@ const AdminRegistrationConvert = () => {
           </Card>
         )}
 
+        {/* Per-field merge UI — shown only when reusing existing student and there are conflicts */}
+        {useExisting === true && existingStudent && (() => {
+          const conflicts = COMPARE_FIELDS.filter((f) => {
+            let nv: any = (watch() as any)[f.key];
+            if (nv === "__none__") nv = "";
+            nv = nv === null || nv === undefined ? "" : String(nv).trim();
+            const ov = (existingStudent as any)[f.key];
+            const ovs = ov === null || ov === undefined ? "" : String(ov).trim();
+            return nv && ovs && nv !== ovs;
+          });
+          if (conflicts.length === 0) return null;
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">מיזוג נתונים — נתונים שונים בהרשמה החדשה</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  זוהו שדות עם ערכים שונים בין התלמיד הקיים לבין ההרשמה החדשה. ברירת המחדל היא לשמור את הקיים. ניתן להחליף, או — בשדות הורה — לשמור את שני הערכים.
+                </p>
+                {conflicts.map((f) => {
+                  const disp = f.display || ((v: any) => (v === null || v === undefined ? "" : String(v)));
+                  const oldV = disp((existingStudent as any)[f.key]);
+                  const rawNew = (watch() as any)[f.key];
+                  const newV = disp(rawNew === "__none__" ? "" : rawNew);
+                  const hasSecondary = SECONDARY_FIELDS.has(f.key);
+                  const secondaryVal = hasSecondary ? (existingStudent as any)?.[`${f.key}_2`] : null;
+                  const secondaryFilled = hasSecondary && secondaryVal && String(secondaryVal).trim() !== "";
+                  const decision = mergeDecisions[f.key] || "keep";
+                  return (
+                    <div key={f.key} className="rounded-lg border border-border p-3 space-y-2">
+                      <p className="text-sm font-medium">{f.label}</p>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div className="rounded bg-muted/40 p-2">
+                          <p className="text-xs text-muted-foreground">קיים</p>
+                          <p className="font-medium break-words">{oldV}</p>
+                          {hasSecondary && secondaryFilled && (
+                            <p className="text-xs text-muted-foreground mt-1">משני: {secondaryVal}</p>
+                          )}
+                        </div>
+                        <div className="rounded bg-muted/40 p-2">
+                          <p className="text-xs text-muted-foreground">חדש מההרשמה</p>
+                          <p className="font-medium break-words">{newV}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" size="sm" variant={decision === "keep" ? "default" : "outline"}
+                          onClick={() => setMergeDecisions((p) => ({ ...p, [f.key]: "keep" }))}>
+                          שמור קיים
+                        </Button>
+                        <Button type="button" size="sm" variant={decision === "replace" ? "default" : "outline"}
+                          onClick={() => setMergeDecisions((p) => ({ ...p, [f.key]: "replace" }))}>
+                          החלף בחדש
+                        </Button>
+                        {hasSecondary && (
+                          <Button type="button" size="sm" variant={decision === "both" ? "default" : "outline"}
+                            disabled={!!secondaryFilled}
+                            onClick={() => setMergeDecisions((p) => ({ ...p, [f.key]: "both" }))}>
+                            שמור את שניהם{secondaryFilled ? " (שדה משני תפוס)" : ""}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+
+
         {/* Parent details - prefilled */}
         {useExisting !== true && (
           <Card>
