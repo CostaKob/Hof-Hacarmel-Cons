@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,6 +81,10 @@ type PricingData = {
 const formatPrice = (value: number) => new Intl.NumberFormat("he-IL").format(Math.round(value));
 
 const Landing = () => {
+  useEffect(() => {
+    document.title = "אולפן ומגמת המוסיקה חוף הכרמל";
+  }, []);
+
   const { data: pricing } = useQuery({
     queryKey: ["public-pricing"],
     queryFn: async () => {
