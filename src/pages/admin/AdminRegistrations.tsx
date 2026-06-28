@@ -117,7 +117,33 @@ const AdminRegistrations = () => {
         )}
 
         {/* Status chips */}
-...
+        <div className="flex gap-2 flex-wrap">
+          {Object.entries(REGISTRATION_STATUSES).map(([key, { label }]) => {
+            const count = registrations.filter((r) => r.status === key).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(statusFilter === key ? "all" : key)}
+                className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                  statusFilter === key ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                }`}
+              >
+                {label} ({count})
+              </button>
+            );
+          })}
+        </div>
+
+        {/* List */}
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">
+            {registrations.length === 0 && selectedYear
+              ? `אין הרשמות לשנת ${selectedYear.name}`
+              : "לא נמצאו הרשמות"}
+          </p>
         ) : (
           <div className="space-y-2">
             {filtered.map((r, idx) => {
