@@ -145,7 +145,20 @@ const AdminEnrollments = () => {
             </SelectContent>
           </Select>
         </div>
-      </div>
+        </div>
+        {schoolCounts.length > 0 && (
+          <div className="rounded-xl border border-border bg-card p-3 shadow-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-foreground">סיכום לפי שלוחה:</span>
+              <Badge variant="secondary" className="rounded-lg">סה"כ {enrollments.length}</Badge>
+              {schoolCounts.map(([name, count]) => (
+                <Badge key={name} variant="outline" className="rounded-lg">
+                  {name}: {count}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
       {isLoading ? (
         <p className="text-center text-muted-foreground py-8">טוען...</p>
