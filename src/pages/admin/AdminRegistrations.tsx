@@ -189,6 +189,11 @@ const AdminRegistrations = () => {
                             <PhoneDisplay phone={r.parent_phone} stopPropagation textClassName="text-xs text-muted-foreground" />
                           </span>
                         )}
+                        {r.branch_school_name && (
+                          <span className="flex items-center gap-1 truncate">
+                            🏫 {r.branch_school_name}
+                          </span>
+                        )}
                       </div>
 
                       {/* Row 3: Days ago + match indicator + special tracks */}
