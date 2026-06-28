@@ -45,12 +45,28 @@ const DURATION_OPTIONS = [
   { value: "60", label: "60 דקות" },
 ];
 
+type MergeDecision = "keep" | "replace" | "both";
+
+const COMPARE_FIELDS: { key: string; label: string; display?: (v: any) => string }[] = [
+  { key: "national_id", label: "ת.ז. תלמיד/ה" },
+  { key: "gender", label: "מגדר", display: (v) => (v === "male" ? "זכר" : v === "female" ? "נקבה" : v || "") },
+  { key: "grade", label: "כיתה" },
+  { key: "city", label: "ישוב" },
+  { key: "phone", label: "טלפון תלמיד/ה" },
+  { key: "parent_name", label: "שם הורה" },
+  { key: "parent_national_id", label: "ת.ז. הורה" },
+  { key: "parent_phone", label: "טלפון הורה" },
+  { key: "parent_email", label: "אימייל הורה" },
+];
+const SECONDARY_FIELDS = new Set(["parent_name", "parent_national_id", "parent_phone", "parent_email"]);
+
 const AdminRegistrationConvert = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [useExisting, setUseExisting] = useState<boolean | null>(null);
   const [showAllTeachers, setShowAllTeachers] = useState(false);
+  const [mergeDecisions, setMergeDecisions] = useState<Record<string, MergeDecision>>({});
 
   const { data: registration, isLoading: regLoading } = useQuery({
     queryKey: ["admin-registration", id],
