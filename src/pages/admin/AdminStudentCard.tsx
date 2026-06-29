@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Plus, Trash2, Calculator, FileDown, Undo2, Send } from "lucide-react";
+import { Pencil, Plus, Trash2, Calculator, FileDown, Undo2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,7 +28,7 @@ import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
-import SendTeacherAssignmentMessage from "@/components/admin/SendTeacherAssignmentMessage";
+
 
 
 const STATUS_MAP: Record<string, string> = {
@@ -47,7 +47,7 @@ const AdminStudentCard = () => {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [paymentsYearFilter, setPaymentsYearFilter] = useState<string | "all" | null>(null);
-  const [showSendMessageDialog, setShowSendMessageDialog] = useState(false);
+  
 
   const { activeYear, selectedYearId, years } = useAcademicYear();
 
