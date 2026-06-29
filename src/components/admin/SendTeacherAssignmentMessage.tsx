@@ -52,6 +52,7 @@ function buildMessage(student: any, enrollments: any[], pendingPayment: any | nu
       lines.push(`  ${l.description}: ${formatted}`);
     }
     lines.push(`סה״כ לתשלום: ${pendingPayment.amount} ₪`);
+    lines.push("ניתן לחלק עד 10 תשלומים ללא ריבית.");
     lines.push("");
     if (pendingPayment.payment_link_url) {
       lines.push("לתשלום שכר הלימוד לחצו כאן:");
