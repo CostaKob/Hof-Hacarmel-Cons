@@ -359,15 +359,6 @@ const AdminStudentCard = () => {
           <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-semibold text-foreground text-base">שיוכים ({enrollments.length})</h2>
             <div className="flex items-center gap-2">
-              {enrollments.length > 0 && (
-                <Button
-                  variant="outline"
-                  className="h-10 rounded-xl text-sm"
-                  onClick={() => setShowSendMessageDialog(true)}
-                >
-                  <Send className="h-4 w-4" /> שלח הודעה להורה
-                </Button>
-              )}
               <Button className="h-10 rounded-xl text-sm" onClick={() => navigate(`/admin/enrollments/new?student_id=${studentId}`)}>
                 <Plus className="h-4 w-4" /> שיוך חדש
               </Button>
@@ -486,13 +477,6 @@ const AdminStudentCard = () => {
 
         <RegistrationApprovalSection studentId={studentId!} />
 
-        <SendTeacherAssignmentMessage
-          open={showSendMessageDialog}
-          onOpenChange={setShowSendMessageDialog}
-          student={student}
-          enrollments={enrollments}
-          selectedYearId={selectedYearId}
-        />
 
 
 
