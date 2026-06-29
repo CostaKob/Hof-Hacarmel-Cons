@@ -92,6 +92,9 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
       return data;
     },
     enabled: open && !!student?.id && !!selectedYearId,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const defaultNote = useMemo(() => {
