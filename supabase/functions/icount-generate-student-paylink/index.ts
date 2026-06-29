@@ -41,7 +41,7 @@ async function createPaypage(opts: {
     .filter((l) => Number(l.amount) !== 0)
     .map((l) => ({
       description: l.description,
-      unitprice: Math.round(Number(l.amount)),
+      unitprice: Math.round(Number(l.amount) * 100) / 100,
       quantity: 1,
       tax_exempt: 1,
     }));
