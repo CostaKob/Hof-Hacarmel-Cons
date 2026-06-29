@@ -30,6 +30,6 @@ export const template = {
   previewData: { subject: 'הודעה', body: 'שלום,\nזוהי הודעת בדיקה.' },
 } satisfies TemplateEntry
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px', direction: 'rtl' as const, textAlign: 'right' as const }
-const lineStyle = { margin: '0', fontSize: '14px', lineHeight: '22px', color: '#1f2937', whiteSpace: 'pre-wrap' as const }
+const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', direction: 'rtl' as const, textAlign: 'right' as const }
+const container = { padding: '20px 25px', direction: 'rtl' as const, textAlign: 'right' as const, maxWidth: '600px', margin: '0 auto' }
+const lineStyle = { margin: '0', fontSize: '14px', lineHeight: '22px', color: '#1f2937', textAlign: 'right' as const, direction: 'rtl' as const, unicodeBidi: 'plaintext' as const }
