@@ -174,7 +174,7 @@ const AdminStudentCard = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("*, schools(name), instruments(name), teachers(first_name, last_name), academic_years(name)")
+        .select("*, schools(name), instruments(name), teachers(first_name, last_name, phone), academic_years(name)")
         .eq("student_id", studentId!);
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
