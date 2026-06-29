@@ -17,6 +17,7 @@ import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { toast } from "sonner";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
+import SendTeacherAssignmentMessage from "@/components/admin/SendTeacherAssignmentMessage";
 
 const HEBREW_YEAR_MAP: Record<string, string> = {
   "2024-2025": "תשפ״ה",
@@ -386,8 +387,8 @@ const AdminStudentPaymentCalc = () => {
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
   const [generatingLink, setGeneratingLink] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
   const [generatedPaymentData, setGeneratedPaymentData] = useState<{ url: string; amount: number; paymentId: string } | null>(null);
+  const [showSendMessageDialog, setShowSendMessageDialog] = useState(false);
 
   const buildPaylinkPayload = () => {
     const enrollmentLabels = rowsAfterStd.map((r) => {
@@ -871,16 +872,16 @@ const AdminStudentPaymentCalc = () => {
             <Button
               variant="outline"
               className="h-12 rounded-xl px-5"
-              onClick={handleSendByEmail}
-              disabled={generatingLink || sendingEmail || !student?.parent_email || !activePaymentLink}
+              onClick={() => setShowSendMessageDialog(true)}
+              disabled={generatingLink || !activePaymentLink}
             >
-              {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
-              {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
+              <Send className="h-4 w-4 ml-2" />
+              שלח הודעה להורה
             </Button>
             <Button
               className="h-12 rounded-xl px-6"
               onClick={handleGenerateLink}
-              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink || sendingEmail}
+              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink}
             >
               {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
               {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
