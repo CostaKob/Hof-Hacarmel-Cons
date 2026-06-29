@@ -12,10 +12,10 @@ const Email = ({ body = '' }: Props) => (
     <Head />
     <Preview>{(body || '').slice(0, 120)}</Preview>
     <Body style={main}>
-      <Container style={container}>
+      <Container style={container} dir="rtl">
         {body.split('\n').map((line, i) => (
-          <Text key={i} style={lineStyle}>
-            {line.length === 0 ? '\u00A0' : line}
+          <Text key={i} style={lineStyle} dir="rtl">
+            {line.length === 0 ? '\u00A0' : <bdi>{'\u200F' + line + '\u200F'}</bdi>}
           </Text>
         ))}
       </Container>
