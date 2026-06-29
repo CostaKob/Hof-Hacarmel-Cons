@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Pencil, Plus, Trash2, Calculator, FileDown, Undo2 } from "lucide-react";
+import { Pencil, Plus, Trash2, Calculator, FileDown, Undo2, Send } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,6 +28,7 @@ import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
+import SendTeacherAssignmentMessage from "@/components/admin/SendTeacherAssignmentMessage";
 
 
 const STATUS_MAP: Record<string, string> = {
@@ -46,6 +47,7 @@ const AdminStudentCard = () => {
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [paymentsYearFilter, setPaymentsYearFilter] = useState<string | "all" | null>(null);
+  const [showSendMessageDialog, setShowSendMessageDialog] = useState(false);
 
   const { activeYear, selectedYearId, years } = useAcademicYear();
 
@@ -174,7 +176,7 @@ const AdminStudentCard = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("*, schools(name), instruments(name), teachers(first_name, last_name), academic_years(name)")
+        .select("*, schools(name), instruments(name), teachers(first_name, last_name, phone), academic_years(name)")
         .eq("student_id", studentId!);
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -354,11 +356,22 @@ const AdminStudentCard = () => {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h2 className="font-semibold text-foreground text-base">שיוכים ({enrollments.length})</h2>
-            <Button className="h-10 rounded-xl text-sm" onClick={() => navigate(`/admin/enrollments/new?student_id=${studentId}`)}>
-              <Plus className="h-4 w-4" /> שיוך חדש
-            </Button>
+            <div className="flex items-center gap-2">
+              {enrollments.length > 0 && (
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl text-sm"
+                  onClick={() => setShowSendMessageDialog(true)}
+                >
+                  <Send className="h-4 w-4" /> שלח הודעה להורה
+                </Button>
+              )}
+              <Button className="h-10 rounded-xl text-sm" onClick={() => navigate(`/admin/enrollments/new?student_id=${studentId}`)}>
+                <Plus className="h-4 w-4" /> שיוך חדש
+              </Button>
+            </div>
           </div>
           {enrollments.length === 0 ? (
             <p className="text-sm text-muted-foreground">אין שיוכים</p>
@@ -472,6 +485,14 @@ const AdminStudentCard = () => {
         <StudentNotesSection studentId={studentId!} />
 
         <RegistrationApprovalSection studentId={studentId!} />
+
+        <SendTeacherAssignmentMessage
+          open={showSendMessageDialog}
+          onOpenChange={setShowSendMessageDialog}
+          student={student}
+          enrollments={enrollments}
+          selectedYearId={selectedYearId}
+        />
 
 
 
