@@ -10,13 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, type CalcRow } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { toast } from "sonner";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
+import SendTeacherAssignmentMessage from "@/components/admin/SendTeacherAssignmentMessage";
 
 const HEBREW_YEAR_MAP: Record<string, string> = {
   "2024-2025": "תשפ״ה",
@@ -386,8 +387,8 @@ const AdminStudentPaymentCalc = () => {
   const isFullyPaid = totalIncVat > 0 && balance <= 0;
 
   const [generatingLink, setGeneratingLink] = useState(false);
-  const [sendingEmail, setSendingEmail] = useState(false);
   const [generatedPaymentData, setGeneratedPaymentData] = useState<{ url: string; amount: number; paymentId: string } | null>(null);
+  const [showSendMessageDialog, setShowSendMessageDialog] = useState(false);
 
   const buildPaylinkPayload = () => {
     const enrollmentLabels = rowsAfterStd.map((r) => {
@@ -516,43 +517,6 @@ const AdminStudentPaymentCalc = () => {
     return null;
   }, [generatedPaymentData, pendingPayments]);
 
-  const handleSendByEmail = async () => {
-    if (!student || !studentId) return;
-    const parentEmail = student.parent_email;
-    if (!parentEmail) {
-      toast.error("אין מייל הורה רשום לתלמיד זה");
-      return;
-    }
-    if (!activePaymentLink) {
-      toast.error("יש ליצור קישור תשלום תחילה");
-      return;
-    }
-    setSendingEmail(true);
-    try {
-      const hebrewYear = toHebrewYear(year?.name ?? "");
-      const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "payment-link",
-          recipientEmail: parentEmail,
-          templateData: {
-            parentName: student.parent_name || "",
-            studentName: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim(),
-            yearName: hebrewYear || year?.name || "",
-            amount: activePaymentLink.amount,
-            paymentUrl: activePaymentLink.url,
-          },
-        },
-      });
-      if (emailError) throw emailError;
-      toast.success(`קישור התשלום נשלח בהצלחה למייל ${parentEmail}`);
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
-    } catch (e: any) {
-      console.error("[sendPaymentLinkByEmail]", e);
-      toast.error(`שגיאה בשליחת קישור למייל: ${e?.message ?? e}`);
-    } finally {
-      setSendingEmail(false);
-    }
-  };
 
   if (loadingStudent || loadingEnrollments || !settings || !yearFull) {
     return (
@@ -871,16 +835,16 @@ const AdminStudentPaymentCalc = () => {
             <Button
               variant="outline"
               className="h-12 rounded-xl px-5"
-              onClick={handleSendByEmail}
-              disabled={generatingLink || sendingEmail || !student?.parent_email || !activePaymentLink}
+              onClick={() => setShowSendMessageDialog(true)}
+              disabled={generatingLink || !activePaymentLink}
             >
-              {sendingEmail ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Mail className="h-4 w-4 ml-2" />}
-              {sendingEmail ? "שולח מייל..." : "שלח למייל ההורה"}
+              <Send className="h-4 w-4 ml-2" />
+              שלח הודעה להורה
             </Button>
             <Button
               className="h-12 rounded-xl px-6"
               onClick={handleGenerateLink}
-              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink || sendingEmail}
+              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink}
             >
               {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
               {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
@@ -943,6 +907,14 @@ const AdminStudentPaymentCalc = () => {
           enrollments={enrollments ?? []}
           totalDue={totalIncVat}
           balanceDue={balance}
+        />
+
+        <SendTeacherAssignmentMessage
+          open={showSendMessageDialog}
+          onOpenChange={setShowSendMessageDialog}
+          student={student}
+          enrollments={enrollments ?? []}
+          selectedYearId={yearId ?? null}
         />
 
       </div>
