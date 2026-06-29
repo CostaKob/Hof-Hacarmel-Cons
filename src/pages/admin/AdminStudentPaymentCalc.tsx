@@ -909,6 +909,14 @@ const AdminStudentPaymentCalc = () => {
           balanceDue={balance}
         />
 
+        <SendTeacherAssignmentMessage
+          open={showSendMessageDialog}
+          onOpenChange={setShowSendMessageDialog}
+          student={student}
+          enrollments={enrollments ?? []}
+          selectedYearId={yearId ?? null}
+        />
+
       </div>
     </AdminLayout>
   );
