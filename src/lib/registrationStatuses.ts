@@ -11,10 +11,24 @@ export const REGISTRATION_STATUSES: Record<string, { label: string; color: strin
 // Statuses the secretary can pick from the dropdown (excludes "converted" which is set automatically)
 export const SETTABLE_STATUSES = ["new", "in_review", "waiting_for_payment", "ready_to_assign", "rejected"];
 
+// Calendar-day diff in Asia/Jerusalem (Israel time), regardless of viewer timezone
+function jerusalemYMD(d: Date): { y: number; m: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Jerusalem",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(d);
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  return { y: get("year"), m: get("month"), day: get("day") };
+}
+
 export function daysAgo(dateStr: string): number {
-  const created = new Date(dateStr);
-  const now = new Date();
-  return Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+  const a = jerusalemYMD(new Date(dateStr));
+  const b = jerusalemYMD(new Date());
+  const ad = Date.UTC(a.y, a.m - 1, a.day);
+  const bd = Date.UTC(b.y, b.m - 1, b.day);
+  return Math.floor((bd - ad) / (1000 * 60 * 60 * 24));
 }
 
 export function daysAgoLabel(dateStr: string): string {
