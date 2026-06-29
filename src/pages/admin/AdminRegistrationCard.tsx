@@ -344,7 +344,7 @@ const AdminRegistrationCard = () => {
         <Card>
           <CardContent className="pt-5">
             <InfoGrid items={[
-              { label: "תאריך הגשה", value: new Date(r.created_at).toLocaleDateString("he-IL") },
+              { label: "תאריך הגשה", value: new Date(r.created_at).toLocaleDateString("he-IL", { timeZone: "Asia/Jerusalem" }) },
               { label: "הערות", value: r.notes || "—" },
             ]} />
           </CardContent>
