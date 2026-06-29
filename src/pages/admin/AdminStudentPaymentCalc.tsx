@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, Send, ExternalLink, Copy, X } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment, type CalcRow } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -517,43 +517,6 @@ const AdminStudentPaymentCalc = () => {
     return null;
   }, [generatedPaymentData, pendingPayments]);
 
-  const handleSendByEmail = async () => {
-    if (!student || !studentId) return;
-    const parentEmail = student.parent_email;
-    if (!parentEmail) {
-      toast.error("אין מייל הורה רשום לתלמיד זה");
-      return;
-    }
-    if (!activePaymentLink) {
-      toast.error("יש ליצור קישור תשלום תחילה");
-      return;
-    }
-    setSendingEmail(true);
-    try {
-      const hebrewYear = toHebrewYear(year?.name ?? "");
-      const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "payment-link",
-          recipientEmail: parentEmail,
-          templateData: {
-            parentName: student.parent_name || "",
-            studentName: `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim(),
-            yearName: hebrewYear || year?.name || "",
-            amount: activePaymentLink.amount,
-            paymentUrl: activePaymentLink.url,
-          },
-        },
-      });
-      if (emailError) throw emailError;
-      toast.success(`קישור התשלום נשלח בהצלחה למייל ${parentEmail}`);
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
-    } catch (e: any) {
-      console.error("[sendPaymentLinkByEmail]", e);
-      toast.error(`שגיאה בשליחת קישור למייל: ${e?.message ?? e}`);
-    } finally {
-      setSendingEmail(false);
-    }
-  };
 
   if (loadingStudent || loadingEnrollments || !settings || !yearFull) {
     return (
