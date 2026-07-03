@@ -424,11 +424,21 @@ const AdminStudents = () => {
             </Select>
 
             <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
-              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בתי ספר" /></SelectTrigger>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="שלוחה" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">בתי ספר</SelectItem>
+                <SelectItem value="all">שלוחה</SelectItem>
                 {(schools as any[]).map((s: any) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={eduSchoolFilter} onValueChange={(v) => setFilter("edu_school", v)}>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">בית ספר</SelectItem>
+                {(eduSchools as string[]).map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
