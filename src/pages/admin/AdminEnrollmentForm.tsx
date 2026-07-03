@@ -104,16 +104,49 @@ const AdminEnrollmentForm = () => {
     },
   });
 
-  const { data: students = [] } = useQuery({
+  const { data: studentsRaw = [] } = useQuery({
     queryKey: ["admin-students-select"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("students").select("id, first_name, last_name, grade");
+      // Explicit high limit — Supabase defaults to 1000 rows, which can hide
+      // the currently-edited enrollment's student and leave the Select blank.
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, first_name, last_name, grade")
+        .limit(10000);
       if (error) throw error;
-      return (data || []).sort((a, b) =>
-        `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
-      );
+      return data || [];
     },
   });
+
+  // Safety net: fetch the enrollment's student directly and merge in,
+  // in case it wasn't in the paged list for any reason.
+  const { data: fallbackStudent } = useQuery({
+    queryKey: ["admin-enrollment-student-fallback", id],
+    enabled: isEdit && !!id,
+    queryFn: async () => {
+      const { data: enr } = await supabase
+        .from("enrollments")
+        .select("student_id")
+        .eq("id", id!)
+        .maybeSingle();
+      if (!enr?.student_id) return null;
+      const { data } = await supabase
+        .from("students")
+        .select("id, first_name, last_name, grade")
+        .eq("id", enr.student_id)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const students = (() => {
+    const map = new Map<string, any>();
+    for (const s of studentsRaw) map.set(s.id, s);
+    if (fallbackStudent && !map.has(fallbackStudent.id)) map.set(fallbackStudent.id, fallbackStudent);
+    return Array.from(map.values()).sort((a, b) =>
+      `${a.last_name} ${a.first_name}`.localeCompare(`${b.last_name} ${b.first_name}`, "he")
+    );
+  })();
 
   // For NEW enrollments — prefill grade from the selected student's profile.
   const selectedStudentId = watch("student_id");
