@@ -577,6 +577,10 @@ const AdminRegistrationConvert = () => {
                   <Input {...register("city")} className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
+                  <Label className="text-sm">בית ספר (בוקר)</Label>
+                  <Input {...register("educational_school")} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
                   <Label className="text-sm">טלפון תלמיד/ה</Label>
                   <Input {...register("phone")} type="tel" className="h-12 rounded-xl" />
                 </div>
