@@ -281,6 +281,7 @@ const AdminRegistrationConvert = () => {
           gender: data.gender === "__none__" ? null : data.gender,
           grade: data.grade === "__none__" ? null : data.grade,
           city: data.city,
+          educational_school: data.educational_school,
           phone: data.phone,
           parent_name: data.parent_name,
           parent_national_id: data.parent_national_id,
