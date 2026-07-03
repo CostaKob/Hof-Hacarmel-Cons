@@ -71,6 +71,14 @@ const AdminStudentForm = () => {
     enabled: isEdit,
   });
 
+  const { data: educationalSchools = [] } = useQuery({
+    queryKey: ["educational-schools-active"],
+    queryFn: async () => {
+      const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true);
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
+    },
+  });
+
   useEffect(() => {
     if (student) {
       reset({
