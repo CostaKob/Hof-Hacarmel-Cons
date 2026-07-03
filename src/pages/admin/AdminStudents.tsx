@@ -34,6 +34,7 @@ const AdminStudents = () => {
   const view = searchParams.get("view") || "enrollments"; // enrollments | all
   const teacherFilter = searchParams.get("teacher") || "all";
   const schoolFilter = searchParams.get("school") || "all";
+  const eduSchoolFilter = searchParams.get("edu_school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
   const cityFilter = searchParams.get("city") || "all";
   const statusFilter = searchParams.get("status") || "active";
