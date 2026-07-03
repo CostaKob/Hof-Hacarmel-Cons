@@ -53,7 +53,7 @@ const COMPARE_FIELDS: { key: string; label: string; display?: (v: any) => string
   { key: "gender", label: "מגדר", display: (v) => (v === "male" ? "זכר" : v === "female" ? "נקבה" : v || "") },
   { key: "grade", label: "כיתה" },
   { key: "city", label: "ישוב" },
-  { key: "educational_school", label: "בית ספר (בוקר)" },
+  { key: "educational_school", label: "בית הספר" },
   { key: "phone", label: "טלפון תלמיד/ה" },
   { key: "parent_name", label: "שם הורה" },
   { key: "parent_national_id", label: "ת.ז. הורה" },
@@ -140,6 +140,14 @@ const AdminRegistrationConvert = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("instruments").select("id, name");
       if (error) throw error;
+      return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
+    },
+  });
+
+  const { data: educationalSchools = [] } = useQuery({
+    queryKey: ["educational-schools-active"],
+    queryFn: async () => {
+      const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true);
       return [...(data || [])].sort((a, b) => (a.name || "").localeCompare(b.name || "", "he"));
     },
   });
@@ -577,8 +585,22 @@ const AdminRegistrationConvert = () => {
                   <Input {...register("city")} className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-sm">בית ספר (בוקר)</Label>
-                  <Input {...register("educational_school")} className="h-12 rounded-xl" />
+                  <Label className="text-sm">בית הספר</Label>
+                  <Controller
+                    name="educational_school"
+                    control={control}
+                    render={({ field }) => (
+                      <Select value={field.value || "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}>
+                        <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">ללא</SelectItem>
+                          {educationalSchools.map((s) => (
+                            <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm">טלפון תלמיד/ה</Label>
