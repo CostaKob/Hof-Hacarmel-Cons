@@ -244,6 +244,7 @@ const AdminRegistrationConvert = () => {
       gender: r.gender || "__none__",
       grade: r.grade || "__none__",
       city: r.city || "",
+      educational_school: r.educational_school || "",
       phone: r.student_phone || "",
       parent_name: r.parent_name || "",
       parent_national_id: r.parent_national_id || "",
