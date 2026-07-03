@@ -28,6 +28,7 @@ interface StudentFormData {
   phone: string;
   address: string;
   city: string;
+  educational_school: string;
   grade: string;
   playing_level: string;
   student_status: string;
@@ -81,6 +82,7 @@ const AdminStudentForm = () => {
         phone: (student as any).phone ?? "",
         address: student.address ?? "",
         city: student.city ?? "",
+        educational_school: (student as any).educational_school ?? "",
         grade: student.grade ?? "__none__",
         playing_level: student.playing_level ?? "__none__",
         student_status: (student as any).student_status ?? "פעיל",
@@ -121,6 +123,7 @@ const AdminStudentForm = () => {
         date_of_birth: data.date_of_birth || null,
         address: data.address || null,
         city: data.city || null,
+        educational_school: data.educational_school || null,
         phone: data.phone || null,
         gender: data.gender === "__none__" ? null : data.gender || null,
         grade: data.grade === "__none__" ? null : data.grade || null,
@@ -218,6 +221,12 @@ const AdminStudentForm = () => {
                   <CitySelect value={field.value} onChange={field.onChange} />
                 )}
               />
+            </div>
+
+            {/* Educational school (morning) */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">בית ספר (בוקר)</Label>
+              <Input {...register("educational_school")} className="h-12 rounded-xl" placeholder="בית הספר בו התלמיד/ה לומד/ת בבוקר" />
             </div>
 
             {/* Gender dropdown */}

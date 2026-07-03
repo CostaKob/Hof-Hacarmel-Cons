@@ -1982,6 +1982,7 @@ export type Database = {
           city: string | null
           created_at: string
           date_of_birth: string | null
+          educational_school: string | null
           first_name: string
           gender: string | null
           grade: string | null
@@ -2011,6 +2012,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
+          educational_school?: string | null
           first_name: string
           gender?: string | null
           grade?: string | null
@@ -2040,6 +2042,7 @@ export type Database = {
           city?: string | null
           created_at?: string
           date_of_birth?: string | null
+          educational_school?: string | null
           first_name?: string
           gender?: string | null
           grade?: string | null
@@ -2308,6 +2311,7 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number

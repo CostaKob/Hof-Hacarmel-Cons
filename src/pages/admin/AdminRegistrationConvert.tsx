@@ -25,6 +25,7 @@ interface ConvertFormData {
   gender: string;
   grade: string;
   city: string;
+  educational_school: string;
   phone: string;
   parent_name: string;
   parent_national_id: string;
@@ -52,6 +53,7 @@ const COMPARE_FIELDS: { key: string; label: string; display?: (v: any) => string
   { key: "gender", label: "מגדר", display: (v) => (v === "male" ? "זכר" : v === "female" ? "נקבה" : v || "") },
   { key: "grade", label: "כיתה" },
   { key: "city", label: "ישוב" },
+  { key: "educational_school", label: "בית ספר (בוקר)" },
   { key: "phone", label: "טלפון תלמיד/ה" },
   { key: "parent_name", label: "שם הורה" },
   { key: "parent_national_id", label: "ת.ז. הורה" },
@@ -242,6 +244,7 @@ const AdminRegistrationConvert = () => {
       gender: r.gender || "__none__",
       grade: r.grade || "__none__",
       city: r.city || "",
+      educational_school: r.educational_school || "",
       phone: r.student_phone || "",
       parent_name: r.parent_name || "",
       parent_national_id: r.parent_national_id || "",
@@ -278,6 +281,7 @@ const AdminRegistrationConvert = () => {
           gender: data.gender === "__none__" ? null : data.gender,
           grade: data.grade === "__none__" ? null : data.grade,
           city: data.city,
+          educational_school: data.educational_school,
           phone: data.phone,
           parent_name: data.parent_name,
           parent_national_id: data.parent_national_id,
@@ -327,8 +331,10 @@ const AdminRegistrationConvert = () => {
             gender: data.gender === "__none__" ? null : data.gender || null,
             grade: data.grade === "__none__" ? null : data.grade || null,
             city: data.city || null,
+            educational_school: data.educational_school || null,
             phone: data.phone || null,
             parent_name: data.parent_name || null,
+            parent_national_id: data.parent_national_id || null,
             parent_phone: data.parent_phone || null,
             parent_email: data.parent_email || null,
             is_active: true,
@@ -569,6 +575,10 @@ const AdminRegistrationConvert = () => {
                 <div className="space-y-1.5">
                   <Label className="text-sm">ישוב</Label>
                   <Input {...register("city")} className="h-12 rounded-xl" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">בית ספר (בוקר)</Label>
+                  <Input {...register("educational_school")} className="h-12 rounded-xl" />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm">טלפון תלמיד/ה</Label>
