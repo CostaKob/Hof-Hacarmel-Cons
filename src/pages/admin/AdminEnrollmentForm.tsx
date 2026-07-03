@@ -216,7 +216,17 @@ const AdminEnrollmentForm = () => {
   });
 
   useEffect(() => {
-    if (enrollment) {
+    // Wait until the students / teachers / instruments / schools lists have
+    // arrived before calling reset. Radix Select captures the label at the
+    // moment the value is set, so if we reset before the matching SelectItem
+    // has rendered, the trigger keeps showing the placeholder even after the
+    // list loads. This was the root cause of the missing student name.
+    const listsReady =
+      students.length > 0 &&
+      teachers.length > 0 &&
+      instruments.length > 0 &&
+      schools.length > 0;
+    if (enrollment && listsReady) {
       const yr = years.find((y) => y.id === enrollment.academic_year_id);
       reset({
         student_id: enrollment.student_id,
@@ -232,7 +242,7 @@ const AdminEnrollmentForm = () => {
         grade: (enrollment as any).grade ?? "",
       });
     }
-  }, [enrollment, reset, years]);
+  }, [enrollment, reset, years, students.length, teachers.length, instruments.length, schools.length]);
 
   const mutation = useMutation({
     mutationFn: async (data: EnrollmentFormData) => {
