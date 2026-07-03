@@ -322,6 +322,8 @@ const AdminStudents = () => {
   );
   const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()]
     .sort((a: any, b: any) => (a.name ?? "").localeCompare(b.name ?? "", "he"));
+  const eduSchools = [...new Set(rows.map((r: any) => r.students?.educational_school).filter(Boolean))]
+    .sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const durations = [...new Set(rows.map((r: any) => r.lesson_duration_minutes))].sort((a, b) => a - b);
 
