@@ -53,7 +53,7 @@ const COMPARE_FIELDS: { key: string; label: string; display?: (v: any) => string
   { key: "gender", label: "מגדר", display: (v) => (v === "male" ? "זכר" : v === "female" ? "נקבה" : v || "") },
   { key: "grade", label: "כיתה" },
   { key: "city", label: "ישוב" },
-  { key: "educational_school", label: "בית ספר (בוקר)" },
+  { key: "educational_school", label: "בית הספר" },
   { key: "phone", label: "טלפון תלמיד/ה" },
   { key: "parent_name", label: "שם הורה" },
   { key: "parent_national_id", label: "ת.ז. הורה" },
