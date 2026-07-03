@@ -336,6 +336,7 @@ const AdminStudents = () => {
     }
     if (teacherFilter !== "all" && r.teachers?.id !== teacherFilter) return false;
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
+    if (eduSchoolFilter !== "all" && r.students?.educational_school !== eduSchoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
     if (gradeFilter !== "all") {
