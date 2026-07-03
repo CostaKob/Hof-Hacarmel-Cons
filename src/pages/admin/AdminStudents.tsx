@@ -34,6 +34,7 @@ const AdminStudents = () => {
   const view = searchParams.get("view") || "enrollments"; // enrollments | all
   const teacherFilter = searchParams.get("teacher") || "all";
   const schoolFilter = searchParams.get("school") || "all";
+  const eduSchoolFilter = searchParams.get("edu_school") || "all";
   const durationFilter = searchParams.get("duration") || "all";
   const cityFilter = searchParams.get("city") || "all";
   const statusFilter = searchParams.get("status") || "active";
@@ -59,7 +60,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track, educational_school), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -321,6 +322,8 @@ const AdminStudents = () => {
   );
   const schools = [...new Map(rows.map((r: any) => [r.schools?.id, r.schools] as [string, any]).filter(([id]) => id)).values()]
     .sort((a: any, b: any) => (a.name ?? "").localeCompare(b.name ?? "", "he"));
+  const eduSchools = [...new Set(rows.map((r: any) => r.students?.educational_school).filter(Boolean))]
+    .sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const durations = [...new Set(rows.map((r: any) => r.lesson_duration_minutes))].sort((a, b) => a - b);
 
@@ -333,6 +336,7 @@ const AdminStudents = () => {
     }
     if (teacherFilter !== "all" && r.teachers?.id !== teacherFilter) return false;
     if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
+    if (eduSchoolFilter !== "all" && r.students?.educational_school !== eduSchoolFilter) return false;
     if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
     if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
     if (gradeFilter !== "all") {
@@ -420,11 +424,21 @@ const AdminStudents = () => {
             </Select>
 
             <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
-              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בתי ספר" /></SelectTrigger>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="שלוחה" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">בתי ספר</SelectItem>
+                <SelectItem value="all">שלוחה</SelectItem>
                 {(schools as any[]).map((s: any) => (
                   <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={eduSchoolFilter} onValueChange={(v) => setFilter("edu_school", v)}>
+              <SelectTrigger className="w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">בית ספר</SelectItem>
+                {(eduSchools as string[]).map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
