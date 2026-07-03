@@ -231,10 +231,24 @@ const AdminStudentForm = () => {
               />
             </div>
 
-            {/* Educational school (morning) */}
+            {/* Educational school */}
             <div className="space-y-1.5">
-              <Label className="text-sm">בית ספר (בוקר)</Label>
-              <Input {...register("educational_school")} className="h-12 rounded-xl" placeholder="בית הספר בו התלמיד/ה לומד/ת בבוקר" />
+              <Label className="text-sm">בית הספר</Label>
+              <Controller
+                name="educational_school"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}>
+                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">ללא</SelectItem>
+                      {educationalSchools.map((s) => (
+                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             {/* Gender dropdown */}
