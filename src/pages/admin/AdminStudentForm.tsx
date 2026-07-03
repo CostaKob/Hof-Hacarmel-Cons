@@ -82,6 +82,7 @@ const AdminStudentForm = () => {
         phone: (student as any).phone ?? "",
         address: student.address ?? "",
         city: student.city ?? "",
+        educational_school: (student as any).educational_school ?? "",
         grade: student.grade ?? "__none__",
         playing_level: student.playing_level ?? "__none__",
         student_status: (student as any).student_status ?? "פעיל",
