@@ -223,6 +223,12 @@ const AdminStudentForm = () => {
               />
             </div>
 
+            {/* Educational school (morning) */}
+            <div className="space-y-1.5">
+              <Label className="text-sm">בית ספר (בוקר)</Label>
+              <Input {...register("educational_school")} className="h-12 rounded-xl" placeholder="בית הספר בו התלמיד/ה לומד/ת בבוקר" />
+            </div>
+
             {/* Gender dropdown */}
             <div className="space-y-1.5">
               <Label className="text-sm">מין</Label>
