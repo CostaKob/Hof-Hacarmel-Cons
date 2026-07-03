@@ -25,6 +25,7 @@ interface ConvertFormData {
   gender: string;
   grade: string;
   city: string;
+  educational_school: string;
   phone: string;
   parent_name: string;
   parent_national_id: string;
