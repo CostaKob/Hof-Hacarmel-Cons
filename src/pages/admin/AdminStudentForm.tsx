@@ -28,6 +28,7 @@ interface StudentFormData {
   phone: string;
   address: string;
   city: string;
+  educational_school: string;
   grade: string;
   playing_level: string;
   student_status: string;
