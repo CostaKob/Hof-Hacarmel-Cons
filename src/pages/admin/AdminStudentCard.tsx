@@ -28,6 +28,7 @@ import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
+import StudentEnsemblesSection from "@/components/admin/StudentEnsemblesSection";
 
 
 
@@ -424,6 +425,10 @@ const AdminStudentCard = () => {
             )}
           </div>
         )}
+
+        <StudentEnsemblesSection studentId={studentId!} />
+
+
 
         {(() => {
           const effectiveYearFilter = paymentsYearFilter ?? selectedYearId ?? "all";
