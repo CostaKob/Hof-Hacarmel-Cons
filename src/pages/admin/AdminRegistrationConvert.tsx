@@ -253,19 +253,25 @@ const AdminRegistrationConvert = () => {
       (s) => s.name === r.branch_school_name
     );
 
+    const es: any = existingStudent || {};
+    const pick = (esVal: any, rVal: any) => {
+      const e = esVal === null || esVal === undefined ? "" : String(esVal).trim();
+      return e ? esVal : (rVal || "");
+    };
+
     reset({
-      first_name: r.student_first_name || "",
-      last_name: r.student_last_name || "",
-      national_id: r.student_national_id || "",
-      gender: r.gender || "__none__",
-      grade: r.grade || "__none__",
-      city: r.city || "",
-      educational_school: r.educational_school || "",
-      phone: r.student_phone || "",
-      parent_name: r.parent_name || "",
-      parent_national_id: r.parent_national_id || "",
-      parent_phone: r.parent_phone || "",
-      parent_email: r.parent_email || "",
+      first_name: pick(es.first_name, r.student_first_name) || "",
+      last_name: pick(es.last_name, r.student_last_name) || "",
+      national_id: pick(es.national_id, r.student_national_id) || "",
+      gender: es.gender || r.gender || "__none__",
+      grade: es.grade || r.grade || "__none__",
+      city: pick(es.city, r.city) || "",
+      educational_school: pick(es.educational_school, r.educational_school) || "",
+      phone: pick(es.phone, r.student_phone) || "",
+      parent_name: pick(es.parent_name, r.parent_name) || "",
+      parent_national_id: pick(es.parent_national_id, r.parent_national_id) || "",
+      parent_phone: pick(es.parent_phone, r.parent_phone) || "",
+      parent_email: pick(es.parent_email, r.parent_email) || "",
       teacher_id: "",
       instrument_id: "",
       school_id: matchedSchool?.id || "",
@@ -281,7 +287,8 @@ const AdminRegistrationConvert = () => {
       setUseExisting(false);
     }
     // name_match: leave null for admin to decide
-  }, [registration, schools, reset, targetYear]);
+  }, [registration, schools, reset, targetYear, existingStudent]);
+
 
   const convertMutation = useMutation({
     mutationFn: async (data: ConvertFormData) => {
