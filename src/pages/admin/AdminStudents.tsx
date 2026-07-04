@@ -600,6 +600,7 @@ const AdminStudents = () => {
             <div className="space-y-2">
               {filteredAll.map((s: any, index: number) => {
                 const stopped = !s.is_active || s.student_status === "הפסיק";
+                const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
                 return (
                   <div
                     key={s.id}
