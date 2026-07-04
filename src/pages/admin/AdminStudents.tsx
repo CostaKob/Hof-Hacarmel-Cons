@@ -564,15 +564,6 @@ const AdminStudents = () => {
           </>
         )}
 
-        <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">עיר מגורים</SelectItem>
-            {cities.map((c) => (
-              <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
 
         {/* Status filter buttons */}
         <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto sm:flex-wrap sm:items-center">
