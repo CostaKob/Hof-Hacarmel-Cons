@@ -150,6 +150,7 @@ const App = () => (
               <Route path="/admin/instrument-storage-locations" element={<AdminRoute><AdminInstrumentStorageLocations /></AdminRoute>} />
               <Route path="/admin/registrations" element={<AdminRoute><AdminRegistrations /></AdminRoute>} />
               <Route path="/admin/registrations/:id" element={<AdminRoute><AdminRegistrationCard /></AdminRoute>} />
+              <Route path="/admin/registrations/:id/edit" element={<AdminRoute><AdminRegistrationEdit /></AdminRoute>} />
               <Route path="/admin/registrations/:id/convert" element={<AdminRoute><AdminRegistrationConvert /></AdminRoute>} />
               <Route path="/admin/registration-settings" element={<AdminRoute><AdminRegistrationSettings /></AdminRoute>} />
               <Route path="/admin/registration-pages" element={<AdminRoute><AdminRegistrationPages /></AdminRoute>} />
