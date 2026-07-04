@@ -675,13 +675,11 @@ const AdminRegistrationConvert = () => {
         {/* Per-field merge UI — shown only when reusing existing student and there are conflicts */}
         {useExisting === true && existingStudent && (() => {
           const conflicts = COMPARE_FIELDS.filter((f) => {
-            let nv: any = (watch() as any)[f.key];
-            if (nv === "__none__") nv = "";
-            nv = nv === null || nv === undefined ? "" : String(nv).trim();
-            const ov = (existingStudent as any)[f.key];
-            const ovs = ov === null || ov === undefined ? "" : String(ov).trim();
+            const nv = normalizeCompare((watch() as any)[f.key]);
+            const ovs = normalizeCompare((existingStudent as any)[f.key]);
             return nv && ovs && nv !== ovs;
           });
+
           if (conflicts.length === 0) return null;
           return (
             <Card>
