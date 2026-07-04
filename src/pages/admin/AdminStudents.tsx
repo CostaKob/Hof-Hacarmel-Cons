@@ -381,6 +381,9 @@ const AdminStudents = () => {
   };
 
   const activeStudentsCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "enrolled").length;
+  const registeredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "registered").length;
+  const notRegisteredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "not_registered").length;
+  const stoppedCount = allStudents.filter((s: any) => !s.is_active || s.student_status === "הפסיק").length;
 
   const filteredAll = allStudents.filter((s: any) => {
     if (search) {
@@ -412,6 +415,7 @@ const AdminStudents = () => {
     }
     return true;
   });
+
 
   const { data: allTeachers = [] } = useQuery({
     queryKey: ["admin-students-all-teachers"],
