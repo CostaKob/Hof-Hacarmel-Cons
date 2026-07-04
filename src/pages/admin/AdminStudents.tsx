@@ -635,26 +635,28 @@ const AdminStudents = () => {
 
 
 
-        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כיתה</SelectItem>
-            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="grid w-full grid-cols-2 gap-2 sm:contents">
+          <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
+            <SelectTrigger className="w-full sm:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כיתה</SelectItem>
+              {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-          <SelectTrigger className="w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">קורסים ומסלולים</SelectItem>
-            <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
-            <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
-            <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
-            <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
+            <SelectTrigger className="w-full sm:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">קורסים ומסלולים</SelectItem>
+              <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
+              <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
+              <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
+              <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {view === "enrollments" && (
           <>
