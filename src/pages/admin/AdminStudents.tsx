@@ -475,7 +475,7 @@ const AdminStudents = () => {
   return (
     <AdminLayout title="תלמידים" backPath="/admin">
       {/* Search + New */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -485,12 +485,12 @@ const AdminStudents = () => {
             className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
-          <Button variant="outline" className="h-12 rounded-xl text-base w-full sm:w-auto" onClick={() => setImportOpen(true)}>
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:w-auto">
+          <Button variant="outline" className="h-12 rounded-xl text-base w-full lg:w-auto" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" />
             ייבוא מאקסל
           </Button>
-          <Button className="h-12 rounded-xl text-base w-full sm:w-auto" onClick={() => navigate("/admin/students/new")}>
+          <Button className="h-12 rounded-xl text-base w-full lg:w-auto" onClick={() => navigate("/admin/students/new")}>
             <Plus className="h-4 w-4" />
             תלמיד חדש
           </Button>
@@ -498,7 +498,7 @@ const AdminStudents = () => {
       </div>
 
       {/* View toggle */}
-      <div className="mb-4 grid w-full grid-cols-2 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto">
+      <div className="mb-4 grid w-full grid-cols-2 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto">
         <button
           onClick={() => setFilter("view", "enrollments")}
           className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "enrollments" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
@@ -566,12 +566,12 @@ const AdminStudents = () => {
 
 
         {/* Status filter buttons */}
-        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto sm:flex-wrap sm:items-center">
+        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:flex-wrap lg:items-center">
           {view === "all" ? (
             <>
               <button
                 onClick={() => setFilter("status", "active")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 פעילים
                 <Badge variant={statusFilter === "active" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -580,7 +580,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "registered")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 נרשם - טרם שויך
                 <Badge variant={statusFilter === "registered" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -589,7 +589,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "not_registered")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "not_registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "not_registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 טרם נרשם
                 <Badge variant={statusFilter === "not_registered" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -598,7 +598,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "stopped")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 הפסיקו
                 <Badge variant={statusFilter === "stopped" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -610,13 +610,13 @@ const AdminStudents = () => {
             <>
               <button
                 onClick={() => setFilter("status", "active")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 פעילים
               </button>
               <button
                 onClick={() => setFilter("status", "stopped")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 הפסיקו
               </button>
@@ -626,9 +626,9 @@ const AdminStudents = () => {
 
 
 
-        <div className="grid w-full grid-cols-2 gap-2 sm:contents">
+        <div className="grid w-full grid-cols-2 gap-2 lg:contents">
           <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-            <SelectTrigger className="w-full sm:w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
+            <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">עיר מגורים</SelectItem>
               {cities.map((c) => (
@@ -638,7 +638,7 @@ const AdminStudents = () => {
           </Select>
 
           <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-            <SelectTrigger className="w-full sm:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+            <SelectTrigger className="w-full lg:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כיתה</SelectItem>
               {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
@@ -648,7 +648,7 @@ const AdminStudents = () => {
           </Select>
 
           <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-            <SelectTrigger className="w-full col-span-2 sm:col-span-1 sm:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+            <SelectTrigger className="w-full col-span-2 lg:col-span-1 lg:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">קורסים ומסלולים</SelectItem>
               <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
