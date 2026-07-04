@@ -315,20 +315,21 @@ const AdminStudents = () => {
           <Badge
             key={e.id}
             variant="secondary"
-            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent"
+            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent max-w-[180px] truncate"
             onClick={(ev) => {
               ev.stopPropagation();
               navigate(`/admin/ensembles/${e.ensemble_id}`);
             }}
-            title="הרכב"
+            title={e.name}
           >
-            <Music className="h-3 w-3" />
-            {e.name}
+            <Music className="h-3 w-3 shrink-0" />
+            <span className="truncate">{e.name}</span>
           </Badge>
         ))}
       </>
     );
   };
+
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
     queryKey: ["admin-all-students-raw", selectedYearId],
     queryFn: async () => {
@@ -608,7 +609,7 @@ const AdminStudents = () => {
                         state: { returnTo: `${location.pathname}${location.search}` },
                       });
                     }}
-                    className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${stopped ? "opacity-60" : ""}`}
+                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${stopped ? "opacity-60" : ""}`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
@@ -624,8 +625,8 @@ const AdminStudents = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1.5 mr-3 shrink-0">
-                      <div className="flex flex-wrap justify-end gap-1.5">
+                    <div className="flex flex-col items-start sm:items-end gap-1.5 sm:mr-3 shrink-0 w-full sm:w-auto">
+                      <div className="flex flex-wrap justify-start sm:justify-end gap-1.5">
                         {renderEnsembleBadges(ensemblesByStudent.get(s.id) || [])}
                         {s.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                         {s.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
@@ -718,7 +719,7 @@ const AdminStudents = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:mr-3 shrink-0 pr-9 sm:pr-0">
+                  <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 w-full sm:w-auto sm:mr-3 shrink-0 pr-9 sm:pr-0">
                     {renderEnsembleBadges(ensemblesByEnrollment.get(r.id) || [])}
                     {r.students?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                     {r.students?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
