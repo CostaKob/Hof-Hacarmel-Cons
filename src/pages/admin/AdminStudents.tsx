@@ -625,7 +625,7 @@ const AdminStudents = () => {
                       </div>
                     </div>
                     <div className="flex flex-col items-start sm:items-end gap-1.5 sm:mr-3 shrink-0 w-full sm:w-auto">
-                      <div className="flex flex-wrap justify-end gap-1.5">
+                      <div className="flex flex-wrap justify-start sm:justify-end gap-1.5">
                         {renderEnsembleBadges(ensemblesByStudent.get(s.id) || [])}
                         {s.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                         {s.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
