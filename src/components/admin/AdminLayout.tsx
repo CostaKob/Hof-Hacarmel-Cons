@@ -145,7 +145,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
                   key={item.path}
                   variant="ghost"
                   size="sm"
-                  className={`text-primary-foreground hover:bg-primary-foreground/10 ${
+                  className={`text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3 ${
                     (location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path)))
                       ? "bg-primary-foreground/15"
                       : ""
@@ -153,17 +153,17 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
                   onClick={() => navigate(item.path)}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <span className="hidden lg:inline mr-1">{item.label}</span>
                 </Button>
               ))}
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3"
                 onClick={signOut}
               >
                 <LogOut className="h-4 w-4" />
-                התנתק
+                <span className="hidden lg:inline mr-1">התנתק</span>
               </Button>
             </nav>
             <div className="flex items-center gap-1 md:hidden">
