@@ -576,6 +576,8 @@ const AdminStudents = () => {
           <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="סטטוס" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="active">פעילים</SelectItem>
+            <SelectItem value="registered">נרשם - טרם שויך</SelectItem>
+            <SelectItem value="not_registered">טרם נרשם</SelectItem>
             <SelectItem value="all">סטטוס</SelectItem>
             <SelectItem value="stopped">הפסיקו</SelectItem>
           </SelectContent>
