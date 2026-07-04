@@ -631,6 +631,7 @@ const AdminStudents = () => {
               {filteredAll.map((s: any, index: number) => {
                 const stopped = !s.is_active || s.student_status === "הפסיק";
                 const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
+                const isRegistered = hasActiveEnrollment || registeredStudentIds.has(s.id) || (s.national_id && registeredNationalIds.has(String(s.national_id).trim()));
                 return (
                   <div
                     key={s.id}
