@@ -476,13 +476,13 @@ const AdminStudents = () => {
     <AdminLayout title="תלמידים" backPath="/admin">
       {/* Search + New */}
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative flex-1 max-w-sm">
+        <div className="relative w-full lg:flex-1 lg:max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, עיר, כלי..."
             value={search}
             onChange={(e) => setFilter("q", e.target.value)}
-            className="pr-9 h-12 rounded-xl"
+            className="pr-9 h-12 rounded-xl w-full"
           />
         </div>
         <div className="grid grid-cols-2 gap-2 lg:flex lg:w-auto">
