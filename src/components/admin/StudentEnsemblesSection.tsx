@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,16 +14,31 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Search, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus, Search, X, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_TYPE_LABELS } from "@/lib/ensembleConstants";
 
-interface Props {
-  studentId: string;
+interface Enrollment {
+  id: string;
+  instrument_id: string;
+  instruments?: { name?: string } | null;
+  schools?: { name?: string } | null;
 }
 
-const StudentEnsemblesSection = ({ studentId }: Props) => {
+interface Props {
+  studentId: string;
+  enrollments: Enrollment[];
+}
+
+const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { activeYear, selectedYearId } = useAcademicYear();
@@ -34,22 +49,37 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
+  const [enrollmentId, setEnrollmentId] = useState<string>("");
+
+  const enrollmentIds = useMemo(() => enrollments.map((e) => e.id), [enrollments]);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["student-ensembles", studentId, yearId] });
     queryClient.invalidateQueries({ queryKey: ["ensemble-students"] });
   };
 
-  const { data: studentEnsembles = [] } = useQuery({
-    queryKey: ["student-ensembles", studentId, yearId],
+  const { data: memberships = [] } = useQuery({
+    queryKey: ["student-ensembles", studentId, yearId, enrollmentIds.join(",")],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Rows attached via enrollment (per-instrument)
+      let byEnr: any[] = [];
+      if (enrollmentIds.length > 0) {
+        const { data, error } = await supabase
+          .from("ensemble_students")
+          .select("id, ensemble_id, enrollment_id, ensembles(id, name, ensemble_type)")
+          .in("enrollment_id", enrollmentIds);
+        if (error) throw error;
+        byEnr = data || [];
+      }
+      // Legacy rows without enrollment_id (backfill couldn't match)
+      const { data: legacy, error: legErr } = await supabase
         .from("ensemble_students")
-        .select("id, ensemble_id, ensembles!inner(id, name, ensemble_type, academic_year_id, is_active)")
+        .select("id, ensemble_id, enrollment_id, ensembles!inner(id, name, ensemble_type, academic_year_id)")
         .eq("student_id", studentId)
+        .is("enrollment_id", null)
         .eq("ensembles.academic_year_id", yearId!);
-      if (error) throw error;
-      return data || [];
+      if (legErr) throw legErr;
+      return [...byEnr, ...(legacy || [])];
     },
     enabled: !!studentId && !!yearId,
   });
@@ -69,14 +99,18 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
     enabled: !!yearId && open,
   });
 
-  const existingIds = useMemo(
-    () => new Set(studentEnsembles.map((es: any) => es.ensemble_id)),
-    [studentEnsembles]
-  );
+  // ensembles already used by the currently-selected enrollment
+  const existingIdsForSelected = useMemo(() => {
+    const s = new Set<string>();
+    memberships.forEach((m: any) => {
+      if (m.enrollment_id === enrollmentId) s.add(m.ensemble_id);
+    });
+    return s;
+  }, [memberships, enrollmentId]);
 
   const available = useMemo(
-    () => yearEnsembles.filter((e: any) => !existingIds.has(e.id)),
-    [yearEnsembles, existingIds]
+    () => yearEnsembles.filter((e: any) => !existingIdsForSelected.has(e.id)),
+    [yearEnsembles, existingIdsForSelected]
   );
 
   const filtered = useMemo(() => {
@@ -84,6 +118,12 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
     const q = search.trim().toLowerCase();
     return available.filter((e: any) => e.name.toLowerCase().includes(q));
   }, [available, search]);
+
+  useEffect(() => {
+    if (open && !enrollmentId && enrollments.length === 1) {
+      setEnrollmentId(enrollments[0].id);
+    }
+  }, [open, enrollmentId, enrollments]);
 
   const removeMutation = useMutation({
     mutationFn: async (rowId: string) => {
@@ -111,16 +151,18 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
     if (!v) {
       setSelected(new Set());
       setSearch("");
+      setEnrollmentId("");
     }
   };
 
   const handleSave = async () => {
-    if (selected.size === 0) return;
+    if (selected.size === 0 || !enrollmentId) return;
     setSaving(true);
     try {
       const rows = Array.from(selected).map((ensemble_id) => ({
         ensemble_id,
         student_id: studentId,
+        enrollment_id: enrollmentId,
       }));
       const { error } = await supabase.from("ensemble_students").insert(rows);
       if (error) throw error;
@@ -136,16 +178,22 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
 
   if (!yearId) return null;
 
+  const enrollmentLabel = (eId: string | null) => {
+    if (!eId) return null;
+    const e = enrollments.find((x) => x.id === eId);
+    return e?.instruments?.name || null;
+  };
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <h2 className="font-semibold text-foreground text-base">
           הרכבים {yearName ? `· ${yearName}` : ""}
-          <span className="text-muted-foreground font-normal"> ({studentEnsembles.length})</span>
+          <span className="text-muted-foreground font-normal"> ({memberships.length})</span>
         </h2>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button size="sm">
+            <Button size="sm" disabled={enrollments.length === 0}>
               <Plus className="h-4 w-4 ml-1" /> הוסף להרכב
             </Button>
           </DialogTrigger>
@@ -153,6 +201,26 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
             <DialogHeader>
               <DialogTitle>הוספת התלמיד להרכבים{yearName ? ` · ${yearName}` : ""}</DialogTitle>
             </DialogHeader>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">שיוך (כלי נגינה)</label>
+              <Select value={enrollmentId} onValueChange={setEnrollmentId}>
+                <SelectTrigger className="h-11 rounded-xl">
+                  <SelectValue placeholder="בחר שיוך" />
+                </SelectTrigger>
+                <SelectContent>
+                  {enrollments.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.instruments?.name || "כלי"} {e.schools?.name ? `· ${e.schools.name}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                ההרכב יקושר לשיוך הספציפי — ניתן לצרף את אותו התלמיד להרכב אחר עם כלי אחר.
+              </p>
+            </div>
+
             <div className="relative">
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -160,12 +228,15 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pr-9"
+                disabled={!enrollmentId}
               />
             </div>
-            <ScrollArea className="h-72 border rounded-lg">
-              {filtered.length === 0 ? (
+            <ScrollArea className="h-60 border rounded-lg">
+              {!enrollmentId ? (
+                <p className="text-center text-muted-foreground py-8 text-sm">בחר שיוך כדי להציג הרכבים</p>
+              ) : filtered.length === 0 ? (
                 <p className="text-center text-muted-foreground py-8 text-sm">
-                  {available.length === 0 ? "התלמיד כבר משויך לכל ההרכבים בשנה זו" : "לא נמצאו הרכבים"}
+                  {available.length === 0 ? "השיוך כבר מקושר לכל ההרכבים בשנה זו" : "לא נמצאו הרכבים"}
                 </p>
               ) : (
                 <div className="divide-y">
@@ -194,7 +265,7 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
               <span className="text-sm text-muted-foreground">
                 {selected.size > 0 ? `${selected.size} נבחרו` : ""}
               </span>
-              <Button onClick={handleSave} disabled={selected.size === 0 || saving}>
+              <Button onClick={handleSave} disabled={selected.size === 0 || !enrollmentId || saving}>
                 {saving ? "שומר..." : `הוסף ${selected.size > 0 ? `(${selected.size})` : ""}`}
               </Button>
             </div>
@@ -202,30 +273,37 @@ const StudentEnsemblesSection = ({ studentId }: Props) => {
         </Dialog>
       </div>
 
-      {studentEnsembles.length === 0 ? (
+      {memberships.length === 0 ? (
         <p className="text-sm text-muted-foreground">התלמיד לא משויך להרכבים בשנה זו</p>
       ) : (
         <div className="flex flex-wrap gap-2">
-          {studentEnsembles.map((es: any) => (
-            <Badge
-              key={es.id}
-              variant="secondary"
-              className="text-sm gap-1.5 pl-3 pr-1.5 py-1.5 cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => navigate(`/admin/ensembles/${es.ensemble_id}`)}
-            >
-              {es.ensembles?.name}
-              <button
-                onClick={(ev) => {
-                  ev.stopPropagation();
-                  if (confirm("להסיר את התלמיד מההרכב?")) removeMutation.mutate(es.id);
-                }}
-                className="hover:text-destructive rounded-full p-0.5"
-                aria-label="הסר"
+          {memberships.map((es: any) => {
+            const instr = enrollmentLabel(es.enrollment_id);
+            const missing = !es.enrollment_id;
+            return (
+              <Badge
+                key={es.id}
+                variant="secondary"
+                className="text-sm gap-1.5 pl-3 pr-1.5 py-1.5 cursor-pointer hover:bg-accent transition-colors"
+                onClick={() => navigate(`/admin/ensembles/${es.ensemble_id}`)}
+                title={missing ? "השיוך לכלי לא הוגדר — יש להסיר ולהוסיף מחדש" : undefined}
               >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
+                {es.ensembles?.name}
+                {instr && <span className="text-muted-foreground">· {instr}</span>}
+                {missing && <AlertCircle className="h-3 w-3 text-amber-600" />}
+                <button
+                  onClick={(ev) => {
+                    ev.stopPropagation();
+                    if (confirm("להסיר את התלמיד מההרכב?")) removeMutation.mutate(es.id);
+                  }}
+                  className="hover:text-destructive rounded-full p-0.5"
+                  aria-label="הסר"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            );
+          })}
         </div>
       )}
     </div>
