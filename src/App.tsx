@@ -52,6 +52,7 @@ import AdminRegistrationSettings from "./pages/admin/AdminRegistrationSettings";
 import AdminRegistrationPages from "./pages/admin/AdminRegistrationPages";
 import AdminRegistrationPageEditor from "./pages/admin/AdminRegistrationPageEditor";
 import AdminRegistrationConvert from "./pages/admin/AdminRegistrationConvert";
+import AdminRegistrationEdit from "./pages/admin/AdminRegistrationEdit";
 import AdminExports from "./pages/admin/AdminExports";
 import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
