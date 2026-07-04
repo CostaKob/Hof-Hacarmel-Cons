@@ -627,6 +627,16 @@ const AdminStudents = () => {
 
 
         <div className="grid w-full grid-cols-2 gap-2 sm:contents">
+          <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
+            <SelectTrigger className="w-full sm:w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">עיר מגורים</SelectItem>
+              {cities.map((c) => (
+                <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
             <SelectTrigger className="w-full sm:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
             <SelectContent>
@@ -638,7 +648,7 @@ const AdminStudents = () => {
           </Select>
 
           <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-            <SelectTrigger className="w-full sm:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+            <SelectTrigger className="w-full col-span-2 sm:col-span-1 sm:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">קורסים ומסלולים</SelectItem>
               <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
