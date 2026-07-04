@@ -575,12 +575,12 @@ const AdminStudents = () => {
         </Select>
 
         {/* Status filter buttons */}
-        <div className="inline-flex flex-wrap items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-sm">
+        <div className="flex w-full flex-wrap items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto">
           {view === "all" ? (
             <>
               <button
                 onClick={() => setFilter("status", "active")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 פעילים
                 <Badge variant={statusFilter === "active" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -589,7 +589,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "registered")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${statusFilter === "registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 נרשם - טרם שויך
                 <Badge variant={statusFilter === "registered" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -598,7 +598,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "not_registered")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${statusFilter === "not_registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "not_registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 טרם נרשם
                 <Badge variant={statusFilter === "not_registered" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -607,7 +607,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "stopped")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 הפסיקו
                 <Badge variant={statusFilter === "stopped" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -619,19 +619,20 @@ const AdminStudents = () => {
             <>
               <button
                 onClick={() => setFilter("status", "active")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 פעילים
               </button>
               <button
                 onClick={() => setFilter("status", "stopped")}
-                className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition sm:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 הפסיקו
               </button>
             </>
           )}
         </div>
+
 
 
         <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
