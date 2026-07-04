@@ -108,6 +108,20 @@ const AdminStudents = () => {
     },
   });
 
+  const { data: ensembleMemberships = [] } = useQuery({
+    queryKey: ["admin-students-ensembles", selectedYearId],
+    queryFn: async () => {
+      if (!selectedYearId) return [];
+      const { data, error } = await supabase
+        .from("ensemble_students")
+        .select("id, student_id, enrollment_id, ensembles!inner(id, name, ensemble_type, academic_year_id)")
+        .eq("ensembles.academic_year_id", selectedYearId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!selectedYearId,
+  });
+
   const { data: discountTypes = [] } = useQuery({
     queryKey: ["discount-types", selectedYearId],
     enabled: !!selectedYearId,
