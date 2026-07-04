@@ -122,6 +122,36 @@ const AdminStudents = () => {
     enabled: !!selectedYearId,
   });
 
+  const { data: yearRegistrations = [] } = useQuery({
+    queryKey: ["admin-students-registrations", selectedYearId],
+    queryFn: async () => {
+      if (!selectedYearId) return [];
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("existing_student_id, student_national_id")
+        .eq("academic_year_id", selectedYearId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!selectedYearId,
+  });
+
+  const registeredStudentIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of yearRegistrations as any[]) {
+      if (r.existing_student_id) s.add(r.existing_student_id);
+    }
+    return s;
+  }, [yearRegistrations]);
+
+  const registeredNationalIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of yearRegistrations as any[]) {
+      if (r.student_national_id) s.add(String(r.student_national_id).trim());
+    }
+    return s;
+  }, [yearRegistrations]);
+
   const { data: discountTypes = [] } = useQuery({
     queryKey: ["discount-types", selectedYearId],
     enabled: !!selectedYearId,
@@ -601,6 +631,7 @@ const AdminStudents = () => {
               {filteredAll.map((s: any, index: number) => {
                 const stopped = !s.is_active || s.student_status === "הפסיק";
                 const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
+                const isRegistered = hasActiveEnrollment || registeredStudentIds.has(s.id) || (s.national_id && registeredNationalIds.has(String(s.national_id).trim()));
                 return (
                   <div
                     key={s.id}
@@ -641,7 +672,7 @@ const AdminStudents = () => {
                         if (!s.is_active) {
                           return <Badge variant="outline" className="rounded-lg">לא פעיל</Badge>;
                         }
-                        if (hasActiveEnrollment) {
+                        if (isRegistered) {
                           return <Badge variant="default" className="rounded-lg">פעיל</Badge>;
                         }
                         return <Badge variant="outline" className="rounded-lg text-amber-600 border-amber-400">טרם נרשם</Badge>;
