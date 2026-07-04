@@ -485,12 +485,12 @@ const AdminStudents = () => {
             className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Button variant="outline" className="h-12 rounded-xl text-base w-full sm:w-auto" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" />
             ייבוא מאקסל
           </Button>
-          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
+          <Button className="h-12 rounded-xl text-base w-full sm:w-auto" onClick={() => navigate("/admin/students/new")}>
             <Plus className="h-4 w-4" />
             תלמיד חדש
           </Button>
@@ -575,7 +575,7 @@ const AdminStudents = () => {
         </Select>
 
         {/* Status filter buttons */}
-        <div className="flex w-full flex-wrap items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto">
+        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto sm:flex-wrap sm:items-center">
           {view === "all" ? (
             <>
               <button
@@ -635,26 +635,28 @@ const AdminStudents = () => {
 
 
 
-        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-          <SelectTrigger className="w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כיתה</SelectItem>
-            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="grid w-full grid-cols-2 gap-2 sm:contents">
+          <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
+            <SelectTrigger className="w-full sm:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כיתה</SelectItem>
+              {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
+                <SelectItem key={g} value={g}>{g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-          <SelectTrigger className="w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">קורסים ומסלולים</SelectItem>
-            <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
-            <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
-            <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
-            <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
+            <SelectTrigger className="w-full sm:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">קורסים ומסלולים</SelectItem>
+              <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
+              <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
+              <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
+              <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         {view === "enrollments" && (
           <>
