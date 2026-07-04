@@ -62,6 +62,12 @@ const COMPARE_FIELDS: { key: string; label: string; display?: (v: any) => string
 ];
 const SECONDARY_FIELDS = new Set(["parent_name", "parent_national_id", "parent_phone", "parent_email"]);
 
+const normalizeCompare = (v: any) => {
+  if (v === null || v === undefined || v === "__none__") return "";
+  return String(v).trim().toLowerCase().replace(/[\u200E\u200F\uFEFF]/g, "");
+};
+
+
 const AdminRegistrationConvert = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
