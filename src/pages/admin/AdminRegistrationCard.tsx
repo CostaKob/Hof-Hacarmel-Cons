@@ -417,15 +417,19 @@ const DIFF_FIELDS: { label: string; regKey: string; studentKey: string; secondar
   { label: "כיתה", regKey: "grade", studentKey: "grade" },
 ];
 
-type DiffDecision = "keep" | "replace" | "both";
+const normalizeDiff = (v: any) => {
+  if (v === null || v === undefined) return "";
+  return String(v).trim().toLowerCase().replace(/[\u200E\u200F\uFEFF]/g, "");
+};
 
 const DiffCard = ({ registration, student, onApplied }: { registration: any; student: any; onApplied?: () => void }) => {
   const diffs = useMemo(() => {
     return DIFF_FIELDS.filter((f) => {
-      const regVal = (registration[f.regKey] || "").trim();
-      const studentVal = (student[f.studentKey] || "").trim();
+      const regVal = normalizeDiff(registration[f.regKey]);
+      const studentVal = normalizeDiff(student[f.studentKey]);
       return regVal && studentVal && regVal !== studentVal;
     }).map((f) => ({
+
       label: f.label,
       studentKey: f.studentKey,
       secondary: !!f.secondary,
