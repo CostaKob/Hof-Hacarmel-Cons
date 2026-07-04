@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,40 +7,64 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface Student {
-  id: string;
-  first_name: string;
-  last_name: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import { sortByPerson } from "@/lib/sortHebrew";
 
 interface Props {
   ensembleId: string;
-  allStudents: Student[];
-  existingStudentIds: Set<string>;
+  academicYearId: string;
+  existingEnrollmentIds: Set<string>;
   onDone: () => void;
 }
 
-const EnsembleStudentPicker = ({ ensembleId, allStudents, existingStudentIds, onDone }: Props) => {
+interface EnrollmentRow {
+  id: string;
+  student_id: string;
+  students: { first_name: string; last_name: string } | null;
+  instruments: { name: string } | null;
+}
+
+const EnsembleStudentPicker = ({ ensembleId, academicYearId, existingEnrollmentIds, onDone }: Props) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
 
-  const availableStudents = useMemo(() => {
-    return allStudents.filter((s) => !existingStudentIds.has(s.id));
-  }, [allStudents, existingStudentIds]);
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["ensemble-picker-enrollments", academicYearId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, student_id, students(first_name, last_name, is_active), instruments(name)")
+        .eq("academic_year_id", academicYearId)
+        .eq("is_active", true);
+      if (error) throw error;
+      const rows = (data || []).filter((r: any) => r.students?.is_active !== false) as any[];
+      return sortByPerson(
+        rows.map((r) => ({
+          ...r,
+          first_name: r.students?.first_name || "",
+          last_name: r.students?.last_name || "",
+        }))
+      ) as unknown as EnrollmentRow[];
+    },
+    enabled: open && !!academicYearId,
+  });
+
+  const available = useMemo(
+    () => enrollments.filter((e) => !existingEnrollmentIds.has(e.id)),
+    [enrollments, existingEnrollmentIds]
+  );
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return availableStudents;
+    if (!search.trim()) return available;
     const q = search.trim().toLowerCase();
-    return availableStudents.filter(
-      (s) =>
-        s.first_name.toLowerCase().includes(q) ||
-        s.last_name.toLowerCase().includes(q) ||
-        `${s.first_name} ${s.last_name}`.toLowerCase().includes(q)
-    );
-  }, [availableStudents, search]);
+    return available.filter((e) => {
+      const name = `${e.students?.first_name || ""} ${e.students?.last_name || ""}`.toLowerCase();
+      const instr = (e.instruments?.name || "").toLowerCase();
+      return name.includes(q) || instr.includes(q);
+    });
+  }, [available, search]);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -55,19 +79,23 @@ const EnsembleStudentPicker = ({ ensembleId, allStudents, existingStudentIds, on
     if (selected.size === 0) return;
     setSaving(true);
     try {
-      const rows = Array.from(selected).map((student_id) => ({
-        ensemble_id: ensembleId,
-        student_id,
-      }));
+      const rows = Array.from(selected).map((enrollmentId) => {
+        const en = enrollments.find((e) => e.id === enrollmentId);
+        return {
+          ensemble_id: ensembleId,
+          enrollment_id: enrollmentId,
+          student_id: en?.student_id as string,
+        };
+      });
       const { error } = await supabase.from("ensemble_students").insert(rows);
       if (error) throw error;
-      toast.success(`${selected.size} תלמידים נוספו להרכב`);
+      toast.success(`${selected.size} שיוכים נוספו להרכב`);
       setSelected(new Set());
       setSearch("");
       setOpen(false);
       onDone();
     } catch {
-      toast.error("שגיאה בהוספת תלמידים");
+      toast.error("שגיאה בהוספה");
     } finally {
       setSaving(false);
     }
@@ -80,6 +108,10 @@ const EnsembleStudentPicker = ({ ensembleId, allStudents, existingStudentIds, on
       setSearch("");
     }
   };
+
+  useEffect(() => {
+    if (!open) setSelected(new Set());
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -96,30 +128,37 @@ const EnsembleStudentPicker = ({ ensembleId, allStudents, existingStudentIds, on
         <div className="relative">
           <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="חיפוש תלמיד..."
+            placeholder="חיפוש לפי שם או כלי..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pr-9"
           />
         </div>
 
+        <p className="text-xs text-muted-foreground">
+          הרשימה מציגה שיוכים (תלמיד + כלי) של שנת הלימודים של ההרכב.
+        </p>
+
         <ScrollArea className="h-72 border rounded-lg">
           {filtered.length === 0 ? (
             <p className="text-center text-muted-foreground py-8 text-sm">
-              {availableStudents.length === 0 ? "כל התלמידים כבר בהרכב" : "לא נמצאו תלמידים"}
+              {available.length === 0 ? "כל השיוכים כבר בהרכב" : "לא נמצאו תוצאות"}
             </p>
           ) : (
             <div className="divide-y">
-              {filtered.map((s) => (
+              {filtered.map((e) => (
                 <label
-                  key={s.id}
+                  key={e.id}
                   className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 cursor-pointer transition-colors"
                 >
                   <Checkbox
-                    checked={selected.has(s.id)}
-                    onCheckedChange={() => toggle(s.id)}
+                    checked={selected.has(e.id)}
+                    onCheckedChange={() => toggle(e.id)}
                   />
-                  <span className="text-sm">{s.first_name} {s.last_name}</span>
+                  <span className="text-sm">
+                    {e.students?.first_name} {e.students?.last_name}
+                    <span className="text-muted-foreground"> · {e.instruments?.name || "כלי"}</span>
+                  </span>
                 </label>
               ))}
             </div>

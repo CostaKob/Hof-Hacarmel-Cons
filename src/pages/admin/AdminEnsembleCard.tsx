@@ -52,7 +52,7 @@ const AdminEnsembleCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ensemble_students")
-        .select("*, students(id, first_name, last_name)")
+        .select("*, students(id, first_name, last_name), enrollments(id, instruments(name))")
         .eq("ensemble_id", id!);
       if (error) throw error;
       return data;
@@ -162,8 +162,9 @@ const AdminEnsembleCard = () => {
     return <AdminLayout title="לא נמצא" backPath="/admin/ensembles"><p className="text-center text-muted-foreground py-8">ההרכב לא נמצא</p></AdminLayout>;
   }
 
-  const existingStudentIds = new Set(ensembleStudents.map((es: any) => es.student_id));
-  const availableStudents = allStudents.filter((s: any) => !existingStudentIds.has(s.id));
+  const existingEnrollmentIds = new Set(
+    ensembleStudents.map((es: any) => es.enrollment_id).filter(Boolean)
+  );
 
   return (
     <AdminLayout title={ensemble.name} backPath="/admin/ensembles">
@@ -319,6 +320,9 @@ const AdminEnsembleCard = () => {
                   onClick={() => navigate(`/admin/students/${es.student_id}`)}
                 >
                   {es.students?.first_name} {es.students?.last_name}
+                  {es.enrollments?.instruments?.name && (
+                    <span className="text-muted-foreground">· {es.enrollments.instruments.name}</span>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); removeStudent.mutate(es.id); }}
                     className="hover:text-destructive rounded-full p-0.5"
@@ -330,8 +334,8 @@ const AdminEnsembleCard = () => {
             </div>
             <EnsembleStudentPicker
               ensembleId={id!}
-              allStudents={allStudents}
-              existingStudentIds={existingStudentIds}
+              academicYearId={ensemble.academic_year_id}
+              existingEnrollmentIds={existingEnrollmentIds}
               onDone={invalidate}
             />
           </CardContent>

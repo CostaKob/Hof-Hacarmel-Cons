@@ -421,23 +421,33 @@ export type Database = {
       ensemble_students: {
         Row: {
           created_at: string
+          enrollment_id: string | null
           ensemble_id: string
           id: string
           student_id: string
         }
         Insert: {
           created_at?: string
+          enrollment_id?: string | null
           ensemble_id: string
           id?: string
           student_id: string
         }
         Update: {
           created_at?: string
+          enrollment_id?: string | null
           ensemble_id?: string
           id?: string
           student_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "ensemble_students_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "ensemble_students_ensemble_id_fkey"
             columns: ["ensemble_id"]

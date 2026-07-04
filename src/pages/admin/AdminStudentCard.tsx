@@ -426,7 +426,7 @@ const AdminStudentCard = () => {
           </div>
         )}
 
-        <StudentEnsemblesSection studentId={studentId!} />
+        <StudentEnsemblesSection studentId={studentId!} enrollments={enrollments as any} />
 
 
 
