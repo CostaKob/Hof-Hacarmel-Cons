@@ -559,7 +559,13 @@ const AdminStudents = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mr-3 shrink-0">
+                    <div className="flex flex-col items-end gap-1.5 mr-3 shrink-0">
+                      <div className="flex flex-wrap justify-end gap-1.5">
+                        {s.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
+                        {s.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
+                        {s.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
+                        {s.has_recital_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎼 רסיטל י״ב</Badge>}
+                      </div>
                       <Badge variant={stopped ? "outline" : "default"} className={`rounded-lg ${stopped ? "text-destructive border-destructive" : ""}`}>
                         {stopped ? (s.student_status === "הפסיק" ? "הפסיק" : "לא פעיל") : "פעיל"}
                       </Badge>
@@ -647,6 +653,10 @@ const AdminStudents = () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:mr-3 shrink-0 pr-9 sm:pr-0">
+                    {r.students?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
+                    {r.students?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
+                    {r.students?.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
+                    {r.students?.has_recital_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎼 רסיטל י״ב</Badge>}
                     <Badge
                       variant="outline"
                       className={`rounded-lg text-xs ${payClass}`}
