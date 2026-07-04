@@ -426,6 +426,10 @@ const AdminStudentCard = () => {
           </div>
         )}
 
+        <StudentEnsemblesSection studentId={studentId!} />
+
+
+
         {(() => {
           const effectiveYearFilter = paymentsYearFilter ?? selectedYearId ?? "all";
           const filteredPayments =
