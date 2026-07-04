@@ -25,9 +25,10 @@ const AdminRegistrationCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("registrations" as any)
-        .select("*")
+        .select("*, registration_pages:registration_page_id(approval_text, title)")
         .eq("id", id!)
         .single();
+
       if (error) throw error;
       return data as any;
     },
