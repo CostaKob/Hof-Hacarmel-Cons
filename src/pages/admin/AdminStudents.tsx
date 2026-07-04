@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -108,6 +108,20 @@ const AdminStudents = () => {
     },
   });
 
+  const { data: ensembleMemberships = [] } = useQuery({
+    queryKey: ["admin-students-ensembles", selectedYearId],
+    queryFn: async () => {
+      if (!selectedYearId) return [];
+      const { data, error } = await supabase
+        .from("ensemble_students")
+        .select("id, student_id, enrollment_id, ensembles!inner(id, name, ensemble_type, academic_year_id)")
+        .eq("ensembles.academic_year_id", selectedYearId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!selectedYearId,
+  });
+
   const { data: discountTypes = [] } = useQuery({
     queryKey: ["discount-types", selectedYearId],
     enabled: !!selectedYearId,
@@ -132,6 +146,36 @@ const AdminStudents = () => {
     }
     return map;
   }, [rows]);
+
+  const ensemblesByStudent = useMemo(() => {
+    const map = new Map<string, { id: string; ensemble_id: string; name: string }[]>();
+    for (const m of ensembleMemberships as any[]) {
+      const sid = m.student_id;
+      if (!sid) continue;
+      const ens = m.ensembles;
+      if (!ens) continue;
+      const existing = map.get(sid) || [];
+      if (existing.some((e) => e.ensemble_id === ens.id)) continue;
+      existing.push({ id: m.id, ensemble_id: ens.id, name: ens.name });
+      map.set(sid, existing);
+    }
+    return map;
+  }, [ensembleMemberships]);
+
+  const ensemblesByEnrollment = useMemo(() => {
+    const map = new Map<string, { id: string; ensemble_id: string; name: string }[]>();
+    for (const m of ensembleMemberships as any[]) {
+      const eid = m.enrollment_id;
+      if (!eid) continue;
+      const ens = m.ensembles;
+      if (!ens) continue;
+      const existing = map.get(eid) || [];
+      if (existing.some((e) => e.ensemble_id === ens.id)) continue;
+      existing.push({ id: m.id, ensemble_id: ens.id, name: ens.name });
+      map.set(eid, existing);
+    }
+    return map;
+  }, [ensembleMemberships]);
 
   const getSavedDiscountState = useCallback((sid: string) => {
     const fromPayment = (yearPayments as any[]).find((p) => {
@@ -263,7 +307,28 @@ const AdminStudents = () => {
     return typeof balance === "number" ? Math.max(0, Math.round(balance)) : null;
   }, [balanceByStudent]);
 
-  // All-students view: raw students table (independent of enrollments)
+  const renderEnsembleBadges = (items: { id: string; ensemble_id: string; name: string }[]) => {
+    if (!items.length) return null;
+    return (
+      <>
+        {items.map((e) => (
+          <Badge
+            key={e.id}
+            variant="secondary"
+            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              navigate(`/admin/ensembles/${e.ensemble_id}`);
+            }}
+            title="הרכב"
+          >
+            <Music className="h-3 w-3" />
+            {e.name}
+          </Badge>
+        ))}
+      </>
+    );
+  };
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
     queryKey: ["admin-all-students-raw", selectedYearId],
     queryFn: async () => {
@@ -561,6 +626,7 @@ const AdminStudents = () => {
                     </div>
                     <div className="flex flex-col items-end gap-1.5 mr-3 shrink-0">
                       <div className="flex flex-wrap justify-end gap-1.5">
+                        {renderEnsembleBadges(ensemblesByStudent.get(s.id) || [])}
                         {s.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                         {s.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
                         {s.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
@@ -653,6 +719,7 @@ const AdminStudents = () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:mr-3 shrink-0 pr-9 sm:pr-0">
+                    {renderEnsembleBadges(ensemblesByEnrollment.get(r.id) || [])}
                     {r.students?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                     {r.students?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
                     {r.students?.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
