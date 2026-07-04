@@ -373,7 +373,14 @@ const AdminStudents = () => {
     },
   });
 
-  const activeStudentsCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק").length;
+  const getRegStatus = (s: any): "enrolled" | "registered" | "not_registered" => {
+    if (selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0) return "enrolled";
+    if (registeredStudentIds.has(s.id)) return "registered";
+    if (s.national_id && registeredNationalIds.has(String(s.national_id).trim())) return "registered";
+    return "not_registered";
+  };
+
+  const activeStudentsCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "enrolled").length;
 
   const filteredAll = allStudents.filter((s: any) => {
     if (search) {
@@ -387,8 +394,12 @@ const AdminStudents = () => {
       const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
       if (stripMarks(s.grade ?? "") !== stripMarks(gradeFilter)) return false;
     }
-    if (statusFilter === "active" && (!s.is_active || s.student_status === "הפסיק")) return false;
-    if (statusFilter === "stopped" && s.is_active && s.student_status !== "הפסיק") return false;
+    const stopped = !s.is_active || s.student_status === "הפסיק";
+    const regStatus = getRegStatus(s);
+    if (statusFilter === "active" && (stopped || regStatus !== "enrolled")) return false;
+    if (statusFilter === "registered" && (stopped || regStatus !== "registered")) return false;
+    if (statusFilter === "not_registered" && (stopped || regStatus !== "not_registered")) return false;
+    if (statusFilter === "stopped" && !stopped) return false;
     if (trackFilter !== "all") {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
