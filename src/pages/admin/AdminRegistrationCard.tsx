@@ -13,6 +13,8 @@ import { UserCheck, AlertTriangle, UserPlus, Link2, Trash2, ArrowLeftRight, Penc
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { REGISTRATION_STATUSES, SETTABLE_STATUSES, daysAgoLabel } from "@/lib/registrationStatuses";
+import { format } from "date-fns";
+
 
 const AdminRegistrationCard = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,9 +27,10 @@ const AdminRegistrationCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("registrations" as any)
-        .select("*")
+        .select("*, registration_pages:registration_page_id(approval_text, title)")
         .eq("id", id!)
         .single();
+
       if (error) throw error;
       return data as any;
     },
@@ -348,7 +351,36 @@ const AdminRegistrationCard = () => {
           />
         )}
 
+        {/* Registration consent / approval */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">אישור הרשמה</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <InfoGrid items={[
+              {
+                label: "תאריך ושעת מילוי הטופס",
+                value: r.created_at
+                  ? format(new Date(r.created_at), "dd/MM/yyyy HH:mm")
+                  : "—",
+              },
+              { label: "שם ההורה שמילא", value: r.parent_name || "—" },
+            ]} />
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">נוסח האישור:</p>
+              <p className="text-sm text-foreground whitespace-pre-line bg-muted/40 rounded-lg p-3">
+                {r.registration_pages?.approval_text ||
+                  "קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ההורה אישר את האמור לעיל בלחיצה על תיבת הסימון במועד מילוי הטופס.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Meta */}
+
         <Card>
           <CardContent className="pt-5">
             <InfoGrid items={[
