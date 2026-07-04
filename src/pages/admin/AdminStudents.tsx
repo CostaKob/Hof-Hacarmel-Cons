@@ -610,13 +610,13 @@ const AdminStudents = () => {
             <>
               <button
                 onClick={() => setFilter("status", "active")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition md:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 פעילים
               </button>
               <button
                 onClick={() => setFilter("status", "stopped")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition md:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 הפסיקו
               </button>
