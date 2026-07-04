@@ -600,6 +600,7 @@ const AdminStudents = () => {
             <div className="space-y-2">
               {filteredAll.map((s: any, index: number) => {
                 const stopped = !s.is_active || s.student_status === "הפסיק";
+                const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
                 return (
                   <div
                     key={s.id}
@@ -633,9 +634,18 @@ const AdminStudents = () => {
                         {s.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
                         {s.has_recital_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎼 רסיטל י״ב</Badge>}
                       </div>
-                      <Badge variant={stopped ? "outline" : "default"} className={`rounded-lg ${stopped ? "text-destructive border-destructive" : ""}`}>
-                        {stopped ? (s.student_status === "הפסיק" ? "הפסיק" : "לא פעיל") : "פעיל"}
-                      </Badge>
+                      {(() => {
+                        if (s.student_status === "הפסיק") {
+                          return <Badge variant="outline" className="rounded-lg text-destructive border-destructive">הפסיק</Badge>;
+                        }
+                        if (!s.is_active) {
+                          return <Badge variant="outline" className="rounded-lg">לא פעיל</Badge>;
+                        }
+                        if (hasActiveEnrollment) {
+                          return <Badge variant="default" className="rounded-lg">פעיל</Badge>;
+                        }
+                        return <Badge variant="outline" className="rounded-lg text-amber-600 border-amber-400">טרם נרשם</Badge>;
+                      })()}
                     </div>
                   </div>
                 );
