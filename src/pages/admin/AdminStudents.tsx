@@ -498,17 +498,17 @@ const AdminStudents = () => {
       </div>
 
       {/* View toggle */}
-      <div className="mb-4 inline-flex rounded-xl border border-border bg-card p-1 shadow-sm">
+      <div className="mb-4 grid w-full grid-cols-2 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto">
         <button
           onClick={() => setFilter("view", "enrollments")}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "enrollments" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "enrollments" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
         >
           <ListChecks className="h-4 w-4" />
           לפי שיוכים
         </button>
         <button
           onClick={() => setFilter("view", "all")}
-          className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "all" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+          className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "all" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
         >
           <Users className="h-4 w-4" />
           כל התלמידים
