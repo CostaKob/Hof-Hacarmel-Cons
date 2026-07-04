@@ -575,7 +575,7 @@ const AdminStudents = () => {
         </Select>
 
         {/* Status filter buttons */}
-        <div className="flex w-full flex-wrap items-center gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto">
+        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm sm:inline-flex sm:w-auto sm:flex-wrap sm:items-center">
           {view === "all" ? (
             <>
               <button
