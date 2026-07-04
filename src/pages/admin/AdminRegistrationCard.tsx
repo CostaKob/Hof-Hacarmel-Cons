@@ -351,7 +351,36 @@ const AdminRegistrationCard = () => {
           />
         )}
 
+        {/* Registration consent / approval */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">אישור הרשמה</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <InfoGrid items={[
+              {
+                label: "תאריך ושעת מילוי הטופס",
+                value: r.created_at
+                  ? format(new Date(r.created_at), "dd/MM/yyyy HH:mm")
+                  : "—",
+              },
+              { label: "שם ההורה שמילא", value: r.parent_name || "—" },
+            ]} />
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">נוסח האישור:</p>
+              <p className="text-sm text-foreground whitespace-pre-line bg-muted/40 rounded-lg p-3">
+                {r.registration_pages?.approval_text ||
+                  "קראתי את המידע ואני מאשר/ת את תנאי ההרשמה והלימודים"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ההורה אישר את האמור לעיל בלחיצה על תיבת הסימון במועד מילוי הטופס.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Meta */}
+
         <Card>
           <CardContent className="pt-5">
             <InfoGrid items={[
