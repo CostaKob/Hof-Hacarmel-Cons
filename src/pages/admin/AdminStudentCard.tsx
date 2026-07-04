@@ -374,7 +374,7 @@ const AdminStudentCard = () => {
                   <div>
                     <p className="font-medium text-foreground text-sm">{e.schools?.name} — {e.instruments?.name} <span className="text-muted-foreground font-normal">({e.academic_years?.name ?? "—"})</span></p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳ · {e.lesson_type === "individual" ? "פרטני" : "קבוצתי"}
+                      {e.teachers?.first_name} {e.teachers?.last_name} · {e.lesson_duration_minutes} דק׳
                       {(student as any).grade ? ` · כיתה ${(student as any).grade}` : ""}
                     </p>
 
