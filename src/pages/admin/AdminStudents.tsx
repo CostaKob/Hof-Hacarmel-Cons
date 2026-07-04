@@ -626,9 +626,9 @@ const AdminStudents = () => {
 
 
 
-        <div className="grid w-full grid-cols-2 gap-2 md:contents">
+        <div className="grid w-full grid-cols-2 gap-2 lg:contents">
           <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-            <SelectTrigger className="w-full md:w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
+            <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">עיר מגורים</SelectItem>
               {cities.map((c) => (
@@ -638,7 +638,7 @@ const AdminStudents = () => {
           </Select>
 
           <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-            <SelectTrigger className="w-full md:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+            <SelectTrigger className="w-full lg:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כיתה</SelectItem>
               {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
@@ -648,7 +648,7 @@ const AdminStudents = () => {
           </Select>
 
           <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-            <SelectTrigger className="w-full col-span-2 md:col-span-1 md:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+            <SelectTrigger className="w-full col-span-2 lg:col-span-1 lg:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">קורסים ומסלולים</SelectItem>
               <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
