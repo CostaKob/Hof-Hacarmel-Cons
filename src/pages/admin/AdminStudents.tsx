@@ -608,7 +608,7 @@ const AdminStudents = () => {
                         state: { returnTo: `${location.pathname}${location.search}` },
                       });
                     }}
-                    className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${stopped ? "opacity-60" : ""}`}
+                    className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${stopped ? "opacity-60" : ""}`}
                   >
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
