@@ -52,7 +52,7 @@ const AdminEnsembleCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ensemble_students")
-        .select("*, students(id, first_name, last_name)")
+        .select("*, students(id, first_name, last_name), enrollments(id, instruments(name))")
         .eq("ensemble_id", id!);
       if (error) throw error;
       return data;
