@@ -672,7 +672,7 @@ const AdminStudents = () => {
                         if (!s.is_active) {
                           return <Badge variant="outline" className="rounded-lg">לא פעיל</Badge>;
                         }
-                        if (hasActiveEnrollment) {
+                        if (isRegistered) {
                           return <Badge variant="default" className="rounded-lg">פעיל</Badge>;
                         }
                         return <Badge variant="outline" className="rounded-lg text-amber-600 border-amber-400">טרם נרשם</Badge>;
