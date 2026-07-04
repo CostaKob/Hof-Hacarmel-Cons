@@ -91,17 +91,19 @@ const AdminRegistrationConvert = () => {
   });
 
   const { data: existingStudent } = useQuery({
-    queryKey: ["existing-student-detail", registration?.existing_student_id],
+    queryKey: ["admin-student", registration?.existing_student_id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
         .select("*")
         .eq("id", registration.existing_student_id)
         .single();
-      if (error) return null;
+      if (error) throw error;
       return data;
     },
     enabled: !!registration?.existing_student_id,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   // Target year = registration's year (fallback to active year)
@@ -394,6 +396,7 @@ const AdminRegistrationConvert = () => {
     onSuccess: (studentId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-registration", id] });
       queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student", studentId] });
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
       toast.success("ההרשמה הומרה בהצלחה — תלמיד ושיוך נוצרו");
