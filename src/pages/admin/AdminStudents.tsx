@@ -122,6 +122,36 @@ const AdminStudents = () => {
     enabled: !!selectedYearId,
   });
 
+  const { data: yearRegistrations = [] } = useQuery({
+    queryKey: ["admin-students-registrations", selectedYearId],
+    queryFn: async () => {
+      if (!selectedYearId) return [];
+      const { data, error } = await supabase
+        .from("registrations")
+        .select("existing_student_id, student_national_id")
+        .eq("academic_year_id", selectedYearId);
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!selectedYearId,
+  });
+
+  const registeredStudentIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of yearRegistrations as any[]) {
+      if (r.existing_student_id) s.add(r.existing_student_id);
+    }
+    return s;
+  }, [yearRegistrations]);
+
+  const registeredNationalIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const r of yearRegistrations as any[]) {
+      if (r.student_national_id) s.add(String(r.student_national_id).trim());
+    }
+    return s;
+  }, [yearRegistrations]);
+
   const { data: discountTypes = [] } = useQuery({
     queryKey: ["discount-types", selectedYearId],
     enabled: !!selectedYearId,
