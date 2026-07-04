@@ -162,8 +162,9 @@ const AdminEnsembleCard = () => {
     return <AdminLayout title="לא נמצא" backPath="/admin/ensembles"><p className="text-center text-muted-foreground py-8">ההרכב לא נמצא</p></AdminLayout>;
   }
 
-  const existingStudentIds = new Set(ensembleStudents.map((es: any) => es.student_id));
-  const availableStudents = allStudents.filter((s: any) => !existingStudentIds.has(s.id));
+  const existingEnrollmentIds = new Set(
+    ensembleStudents.map((es: any) => es.enrollment_id).filter(Boolean)
+  );
 
   return (
     <AdminLayout title={ensemble.name} backPath="/admin/ensembles">
