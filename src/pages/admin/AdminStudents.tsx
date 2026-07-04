@@ -512,10 +512,8 @@ const AdminStudents = () => {
         >
           <Users className="h-4 w-4" />
           כל התלמידים
-          <Badge variant="secondary" className="rounded-md text-[10px] px-1.5 py-0 ml-1">
-            {activeStudentsCount} פעילים
-          </Badge>
         </button>
+
       </div>
 
       <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
