@@ -422,6 +422,8 @@ const normalizeDiff = (v: any) => {
   return String(v).trim().toLowerCase().replace(/[\u200E\u200F\uFEFF]/g, "");
 };
 
+type DiffDecision = "keep" | "replace" | "both";
+
 const DiffCard = ({ registration, student, onApplied }: { registration: any; student: any; onApplied?: () => void }) => {
   const diffs = useMemo(() => {
     return DIFF_FIELDS.filter((f) => {
@@ -429,6 +431,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
       const studentVal = normalizeDiff(student[f.studentKey]);
       return regVal && studentVal && regVal !== studentVal;
     }).map((f) => ({
+
 
       label: f.label,
       studentKey: f.studentKey,
