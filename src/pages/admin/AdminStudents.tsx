@@ -485,12 +485,12 @@ const AdminStudents = () => {
             className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="h-12 rounded-xl text-base" onClick={() => setImportOpen(true)}>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Button variant="outline" className="h-12 rounded-xl text-base w-full sm:w-auto" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" />
             ייבוא מאקסל
           </Button>
-          <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/students/new")}>
+          <Button className="h-12 rounded-xl text-base w-full sm:w-auto" onClick={() => navigate("/admin/students/new")}>
             <Plus className="h-4 w-4" />
             תלמיד חדש
           </Button>
