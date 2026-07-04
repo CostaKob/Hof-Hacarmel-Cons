@@ -719,6 +719,7 @@ const AdminStudents = () => {
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2 sm:mr-3 shrink-0 pr-9 sm:pr-0">
+                    {renderEnsembleBadges(ensemblesByEnrollment.get(r.id) || [])}
                     {r.students?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                     {r.students?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
                     {r.students?.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
