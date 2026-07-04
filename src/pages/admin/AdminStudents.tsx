@@ -672,8 +672,11 @@ const AdminStudents = () => {
                         if (!s.is_active) {
                           return <Badge variant="outline" className="rounded-lg">לא פעיל</Badge>;
                         }
-                        if (isRegistered) {
+                        if (hasActiveEnrollment) {
                           return <Badge variant="default" className="rounded-lg">פעיל</Badge>;
+                        }
+                        if (isRegistered) {
+                          return <Badge variant="outline" className="rounded-lg text-sky-600 border-sky-400">נרשם - טרם שויך</Badge>;
                         }
                         return <Badge variant="outline" className="rounded-lg text-amber-600 border-amber-400">טרם נרשם</Badge>;
                       })()}
