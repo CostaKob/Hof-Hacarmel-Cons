@@ -307,7 +307,28 @@ const AdminStudents = () => {
     return typeof balance === "number" ? Math.max(0, Math.round(balance)) : null;
   }, [balanceByStudent]);
 
-  // All-students view: raw students table (independent of enrollments)
+  const renderEnsembleBadges = (items: { id: string; ensemble_id: string; name: string }[]) => {
+    if (!items.length) return null;
+    return (
+      <>
+        {items.map((e) => (
+          <Badge
+            key={e.id}
+            variant="secondary"
+            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent"
+            onClick={(ev) => {
+              ev.stopPropagation();
+              navigate(`/admin/ensembles/${e.ensemble_id}`);
+            }}
+            title="הרכב"
+          >
+            <Music className="h-3 w-3" />
+            {e.name}
+          </Badge>
+        ))}
+      </>
+    );
+  };
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
     queryKey: ["admin-all-students-raw", selectedYearId],
     queryFn: async () => {
