@@ -231,6 +231,14 @@ const AdminRegistrationCard = () => {
 
             {/* Single main action */}
             <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(`/admin/registrations/${r.id}/edit`)}
+              >
+                <Pencil className="h-4 w-4 ml-1" /> ערוך
+              </Button>
+
               {!isConverted && (
                 <Button
                   size="sm"
