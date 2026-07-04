@@ -320,6 +320,9 @@ const AdminEnsembleCard = () => {
                   onClick={() => navigate(`/admin/students/${es.student_id}`)}
                 >
                   {es.students?.first_name} {es.students?.last_name}
+                  {es.enrollments?.instruments?.name && (
+                    <span className="text-muted-foreground">· {es.enrollments.instruments.name}</span>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); removeStudent.mutate(es.id); }}
                     className="hover:text-destructive rounded-full p-0.5"
@@ -331,8 +334,8 @@ const AdminEnsembleCard = () => {
             </div>
             <EnsembleStudentPicker
               ensembleId={id!}
-              allStudents={allStudents}
-              existingStudentIds={existingStudentIds}
+              academicYearId={ensemble.academic_year_id}
+              existingEnrollmentIds={existingEnrollmentIds}
               onDone={invalidate}
             />
           </CardContent>
