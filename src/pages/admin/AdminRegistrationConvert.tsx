@@ -432,6 +432,8 @@ const AdminRegistrationConvert = () => {
   const isIdMatch = r.match_type === "id_match";
   const isNameMatch = r.match_type === "name_match";
   const requestedInstruments = (r.requested_instruments as string[]) || [];
+  const formValues = watch();
+  const visibleExistingStudentPhone = existingStudent?.phone || formValues.phone || r.student_phone;
 
   return (
     <AdminLayout
@@ -630,7 +632,13 @@ const AdminRegistrationConvert = () => {
                 <div><span className="text-muted-foreground">ת.ז.: </span>{existingStudent.national_id || "—"}</div>
                 <div><span className="text-muted-foreground">כיתה: </span>{existingStudent.grade || "—"}</div>
                 <div><span className="text-muted-foreground">ישוב: </span>{existingStudent.city || "—"}</div>
-                <div className="flex items-center gap-1"><span className="text-muted-foreground">טלפון: </span>{existingStudent.phone ? <PhoneDisplay phone={existingStudent.phone} /> : "—"}</div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">טלפון: </span>
+                  {visibleExistingStudentPhone ? <PhoneDisplay phone={visibleExistingStudentPhone} /> : "—"}
+                  {!existingStudent.phone && visibleExistingStudentPhone && (
+                    <span className="text-xs text-muted-foreground">מההרשמה</span>
+                  )}
+                </div>
               </div>
 
               {/* Existing enrollments in active year */}
