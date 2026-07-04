@@ -644,7 +644,7 @@ const AdminStudents = () => {
         </Select>
 
         <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-          <SelectTrigger className="w-full lg:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
+          <SelectTrigger className="w-full col-span-2 md:col-span-1 lg:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">קורסים ומסלולים</SelectItem>
             <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
