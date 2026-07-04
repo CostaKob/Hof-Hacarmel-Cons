@@ -485,12 +485,12 @@ const AdminStudents = () => {
             className="pr-9 h-12 rounded-xl"
           />
         </div>
-        <div className="grid grid-cols-2 gap-2 md:flex md:w-auto">
-          <Button variant="outline" className="h-12 rounded-xl text-base w-full md:w-auto" onClick={() => setImportOpen(true)}>
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:w-auto">
+          <Button variant="outline" className="h-12 rounded-xl text-base w-full lg:w-auto" onClick={() => setImportOpen(true)}>
             <FileSpreadsheet className="h-4 w-4" />
             ייבוא מאקסל
           </Button>
-          <Button className="h-12 rounded-xl text-base w-full md:w-auto" onClick={() => navigate("/admin/students/new")}>
+          <Button className="h-12 rounded-xl text-base w-full lg:w-auto" onClick={() => navigate("/admin/students/new")}>
             <Plus className="h-4 w-4" />
             תלמיד חדש
           </Button>
@@ -498,7 +498,7 @@ const AdminStudents = () => {
       </div>
 
       {/* View toggle */}
-      <div className="mb-4 grid w-full grid-cols-2 rounded-xl border border-border bg-card p-1 shadow-sm md:inline-flex md:w-auto">
+      <div className="mb-4 grid w-full grid-cols-2 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto">
         <button
           onClick={() => setFilter("view", "enrollments")}
           className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${view === "enrollments" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
@@ -566,12 +566,12 @@ const AdminStudents = () => {
 
 
         {/* Status filter buttons */}
-        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm md:inline-flex md:w-auto md:flex-wrap md:items-center">
+        <div className="grid w-full grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:flex-wrap lg:items-center">
           {view === "all" ? (
             <>
               <button
                 onClick={() => setFilter("status", "active")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition md:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "active" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 פעילים
                 <Badge variant={statusFilter === "active" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -580,7 +580,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "registered")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition md:flex-initial ${statusFilter === "registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 נרשם - טרם שויך
                 <Badge variant={statusFilter === "registered" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -589,7 +589,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "not_registered")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition md:flex-initial ${statusFilter === "not_registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "not_registered" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 טרם נרשם
                 <Badge variant={statusFilter === "not_registered" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
@@ -598,7 +598,7 @@ const AdminStudents = () => {
               </button>
               <button
                 onClick={() => setFilter("status", "stopped")}
-                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition md:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 הפסיקו
                 <Badge variant={statusFilter === "stopped" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
