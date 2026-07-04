@@ -13,6 +13,8 @@ import { UserCheck, AlertTriangle, UserPlus, Link2, Trash2, ArrowLeftRight, Penc
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { REGISTRATION_STATUSES, SETTABLE_STATUSES, daysAgoLabel } from "@/lib/registrationStatuses";
+import { format } from "date-fns";
+
 
 const AdminRegistrationCard = () => {
   const { id } = useParams<{ id: string }>();
