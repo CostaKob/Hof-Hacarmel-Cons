@@ -315,20 +315,21 @@ const AdminStudents = () => {
           <Badge
             key={e.id}
             variant="secondary"
-            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent"
+            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent max-w-[180px] truncate"
             onClick={(ev) => {
               ev.stopPropagation();
               navigate(`/admin/ensembles/${e.ensemble_id}`);
             }}
-            title="הרכב"
+            title={e.name}
           >
-            <Music className="h-3 w-3" />
-            {e.name}
+            <Music className="h-3 w-3 shrink-0" />
+            <span className="truncate">{e.name}</span>
           </Badge>
         ))}
       </>
     );
   };
+
   const { data: allStudents = [], isLoading: loadingAll } = useQuery({
     queryKey: ["admin-all-students-raw", selectedYearId],
     queryFn: async () => {
