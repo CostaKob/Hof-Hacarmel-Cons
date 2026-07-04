@@ -147,6 +147,36 @@ const AdminStudents = () => {
     return map;
   }, [rows]);
 
+  const ensemblesByStudent = useMemo(() => {
+    const map = new Map<string, { id: string; ensemble_id: string; name: string }[]>();
+    for (const m of ensembleMemberships as any[]) {
+      const sid = m.student_id;
+      if (!sid) continue;
+      const ens = m.ensembles;
+      if (!ens) continue;
+      const existing = map.get(sid) || [];
+      if (existing.some((e) => e.ensemble_id === ens.id)) continue;
+      existing.push({ id: m.id, ensemble_id: ens.id, name: ens.name });
+      map.set(sid, existing);
+    }
+    return map;
+  }, [ensembleMemberships]);
+
+  const ensemblesByEnrollment = useMemo(() => {
+    const map = new Map<string, { id: string; ensemble_id: string; name: string }[]>();
+    for (const m of ensembleMemberships as any[]) {
+      const eid = m.enrollment_id;
+      if (!eid) continue;
+      const ens = m.ensembles;
+      if (!ens) continue;
+      const existing = map.get(eid) || [];
+      if (existing.some((e) => e.ensemble_id === ens.id)) continue;
+      existing.push({ id: m.id, ensemble_id: ens.id, name: ens.name });
+      map.set(eid, existing);
+    }
+    return map;
+  }, [ensembleMemberships]);
+
   const getSavedDiscountState = useCallback((sid: string) => {
     const fromPayment = (yearPayments as any[]).find((p) => {
       const br = p?.enrollment_breakdown;
