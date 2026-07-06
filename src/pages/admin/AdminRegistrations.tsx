@@ -13,6 +13,27 @@ import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
+// Count potential enrollment slots from requested instruments.
+// All guitar variants (קלאסית / חשמלית / בס וכו') collapse to one slot.
+const countPotentialSlots = (instruments?: string[] | null): number => {
+  if (!instruments || instruments.length === 0) return 0;
+  let guitarSeen = false;
+  let count = 0;
+  for (const raw of instruments) {
+    const name = (raw ?? "").trim();
+    if (!name) continue;
+    if (name.includes("גיטרה")) {
+      if (!guitarSeen) {
+        count += 1;
+        guitarSeen = true;
+      }
+      continue;
+    }
+    count += 1;
+  }
+  return count;
+};
+
 const AdminRegistrations = () => {
   const navigate = useNavigate();
   const { selectedYearId, years } = useAcademicYear();
@@ -102,6 +123,9 @@ const AdminRegistrations = () => {
         {schoolCounts.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className="rounded-full text-xs">סה"כ {registrations.length}</Badge>
+            <Badge variant="secondary" className="rounded-full text-xs bg-sky-100 text-sky-700 border-sky-200">
+              שיוכים פוטנציאלים: {filtered.reduce((sum, r) => sum + countPotentialSlots(r.requested_instruments), 0)}
+            </Badge>
             {schoolCounts.map(([name, count]) => (
               <button
                 key={name}
@@ -181,6 +205,14 @@ const AdminRegistrations = () => {
                         <div className="flex items-center gap-1.5 text-xs text-foreground/80">
                           <Music className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <span className="break-words">{instruments}</span>
+                          {(() => {
+                            const slots = countPotentialSlots(r.requested_instruments);
+                            return slots > 1 ? (
+                              <span className="shrink-0 text-[11px] px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700 border border-sky-200 font-medium">
+                                {slots} שיוכים
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                       )}
 
