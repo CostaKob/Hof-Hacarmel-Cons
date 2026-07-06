@@ -14,14 +14,22 @@ import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registration
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 // Count potential enrollment slots from requested instruments.
-// All guitar variants (קלאסית / חשמלית / בס וכו') collapse to one slot.
+// Guitar and bass guitar are separate slots (2). Classical/electric guitar variants share one slot.
 const countPotentialSlots = (instruments?: string[] | null): number => {
   if (!instruments || instruments.length === 0) return 0;
   let guitarSeen = false;
+  let bassSeen = false;
   let count = 0;
   for (const raw of instruments) {
     const name = (raw ?? "").trim();
     if (!name) continue;
+    if (name.includes("בס")) {
+      if (!bassSeen) {
+        count += 1;
+        bassSeen = true;
+      }
+      continue;
+    }
     if (name.includes("גיטרה")) {
       if (!guitarSeen) {
         count += 1;
