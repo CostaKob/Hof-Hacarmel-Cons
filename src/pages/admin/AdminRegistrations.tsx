@@ -205,6 +205,14 @@ const AdminRegistrations = () => {
                         <div className="flex items-center gap-1.5 text-xs text-foreground/80">
                           <Music className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <span className="break-words">{instruments}</span>
+                          {(() => {
+                            const slots = countPotentialSlots(r.requested_instruments);
+                            return slots > 1 ? (
+                              <span className="shrink-0 text-[11px] px-1.5 py-0.5 rounded-full bg-sky-100 text-sky-700 border border-sky-200 font-medium">
+                                {slots} שיוכים
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                       )}
 
