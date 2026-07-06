@@ -123,6 +123,9 @@ const AdminRegistrations = () => {
         {schoolCounts.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
             <Badge variant="secondary" className="rounded-full text-xs">סה"כ {registrations.length}</Badge>
+            <Badge variant="secondary" className="rounded-full text-xs bg-sky-100 text-sky-700 border-sky-200">
+              שיוכים פוטנציאלים: {filtered.reduce((sum, r) => sum + countPotentialSlots(r.requested_instruments), 0)}
+            </Badge>
             {schoolCounts.map(([name, count]) => (
               <button
                 key={name}
