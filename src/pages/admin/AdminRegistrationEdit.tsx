@@ -161,7 +161,6 @@ const AdminRegistrationEdit = () => {
               </Select>
             </Field>
             <Field label="שלוחה"><Input value={form.branch_school_name} onChange={(e) => set("branch_school_name", e.target.value)} /></Field>
-            <Field label="בית ספר"><Input value={form.student_school_text} onChange={(e) => set("student_school_text", e.target.value)} /></Field>
             <Field label="בית ספר (חינוך)"><Input value={form.educational_school} onChange={(e) => set("educational_school", e.target.value)} /></Field>
             <Field label="כיתה"><Input value={form.grade} onChange={(e) => set("grade", e.target.value)} /></Field>
             <Field label="ישוב"><Input value={form.city} onChange={(e) => set("city", e.target.value)} /></Field>
