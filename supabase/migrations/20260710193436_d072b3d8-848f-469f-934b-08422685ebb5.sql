@@ -1,0 +1,1 @@
+UPDATE public.discount_types SET legacy_key = 'afterschool_branch' WHERE legacy_key IS NULL AND label ILIKE '%שלוחה אחה%';
