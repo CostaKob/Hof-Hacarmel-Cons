@@ -396,7 +396,7 @@ const AdminPrivatePayments = () => {
                 <div
                   key={r.studentId}
                   className="rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => navigate(`/admin/students/${r.studentId}/payment`)}
+                  onClick={() => navigate(`/admin/students/${r.studentId}`)}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
