@@ -200,6 +200,16 @@ const AdminStudentPaymentCalc = () => {
     if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
   }, [student, discountTypes]);
 
+  // Auto-select "כלי שני" discount when the student has more than one active
+  // enrollment in the year — only on first open (no localStorage state yet).
+  useEffect(() => {
+    if (lsInitial || !discountTypes.length || !enrollments) return;
+    const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
+    if (activeCount < 2) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
+    if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
+  }, [enrollments, discountTypes]);
+
   // Hydrate discount state from the most recent payment (pending or paid) so
   // reopening the card shows the same discounts that were used previously.
   useEffect(() => {
