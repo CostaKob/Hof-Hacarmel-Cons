@@ -149,6 +149,27 @@ const AdminEnsembles = () => {
             })()}
           </div>
         )}
+
+        <section className="flex flex-col gap-3 pt-4 border-t">
+          <h2 className="text-lg font-bold text-foreground">מסלולים מיוחדים</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(SPECIAL_TRACKS).map(([key, t]) => (
+              <button
+                key={key}
+                onClick={() => navigate(`/admin/special-tracks/${key}`)}
+                className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-sm text-right transition-all hover:shadow-md active:scale-[0.98] touch-manipulation"
+              >
+                <p className="font-semibold text-foreground">
+                  <span className="ml-1">{t.icon}</span>
+                  {t.label}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {trackCounts[key] ?? 0} תלמידים
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </AdminLayout>
   );
