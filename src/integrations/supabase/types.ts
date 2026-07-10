@@ -2547,6 +2547,10 @@ export type Database = {
         Args: { _school_id: string; _user_id: string }
         Returns: boolean
       }
+      teacher_is_in_ensemble: {
+        Args: { _ensemble_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "teacher" | "secretary"
