@@ -70,6 +70,11 @@ const AdminRegistrations = () => {
   const filtered = registrations.filter((r) => {
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     if (schoolFilter !== "all" && (r.branch_school_name || "ללא שלוחה") !== schoolFilter) return false;
+    if (gradeFilter !== "all" && (r.grade || "") !== gradeFilter) return false;
+    if (instrumentFilter !== "all") {
+      const insts = (r.requested_instruments as string[] | null) || [];
+      if (!insts.some((i) => (i || "").trim() === instrumentFilter)) return false;
+    }
     if (search) {
       const q = search.toLowerCase();
       const searchStr = `${r.student_first_name ?? ""} ${r.student_last_name ?? ""} ${r.parent_name ?? ""} ${r.student_national_id ?? ""} ${r.parent_national_id ?? ""} ${r.parent_phone ?? ""} ${r.student_phone ?? ""} ${r.parent_email ?? ""} ${r.city ?? ""} ${r.grade ?? ""} ${r.branch_school_name ?? ""} ${r.student_school_text ?? ""} ${r.educational_school ?? ""}`.toLowerCase();
@@ -85,6 +90,25 @@ const AdminRegistrations = () => {
       counts.set(name, (counts.get(name) ?? 0) + 1);
     }
     return Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  })();
+
+  const gradeOptions = (() => {
+    const set = new Set<string>();
+    for (const r of registrations as any[]) {
+      if (r.grade) set.add(r.grade);
+    }
+    return Array.from(set).sort();
+  })();
+
+  const instrumentOptions = (() => {
+    const set = new Set<string>();
+    for (const r of registrations as any[]) {
+      for (const i of (r.requested_instruments as string[] | null) || []) {
+        const name = (i || "").trim();
+        if (name) set.add(name);
+      }
+    }
+    return Array.from(set).sort();
   })();
 
   return (
