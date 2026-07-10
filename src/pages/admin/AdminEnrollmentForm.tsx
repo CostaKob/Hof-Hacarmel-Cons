@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
 import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
 import PageTitle from "@/components/PageTitle";
+import { syncRegistrationStatusForStudentYear } from "@/lib/registrationStatusSync";
 
 interface EnrollmentFormData {
   student_id: string;
@@ -87,12 +88,16 @@ const AdminEnrollmentForm = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      const sid = enrollment?.student_id;
+      const yid = (enrollment as any)?.academic_year_id;
       const { error } = await supabase.from("enrollments").delete().eq("id", id!);
       if (error) throw error;
+      await syncRegistrationStatusForStudentYear(sid, yid);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
       toast.success("השיוך נמחק בהצלחה");
       navigate(-1 as any);
     },
@@ -270,10 +275,12 @@ const AdminEnrollmentForm = () => {
         const { error } = await supabase.from("enrollments").insert(payload);
         if (error) throw error;
       }
+      await syncRegistrationStatusForStudentYear(data.student_id, selectedYearId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
       toast.success(isEdit ? "השיוך עודכן בהצלחה" : "השיוך נוצר בהצלחה");
       if (presetStudentId && !isEdit) {
         navigate(`/admin/students/${presetStudentId}`);
