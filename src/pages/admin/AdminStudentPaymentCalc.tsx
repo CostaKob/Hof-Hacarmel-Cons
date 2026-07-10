@@ -194,19 +194,48 @@ const AdminStudentPaymentCalc = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountTypes.length]);
 
+  // Mutually-exclusive percentage discounts on private lessons — only one
+  // of {major_student, second_instrument, sibling} can be selected at a time.
+  const EXCLUSIVE_KEYS = ["major_student", "second_instrument", "sibling"] as const;
+  const exclusiveIdsSet = new Set(
+    discountTypes.filter((d) => EXCLUSIVE_KEYS.includes(d.legacy_key as any)).map((d) => d.id),
+  );
+
   useEffect(() => {
     if (!student?.is_major_student || lsInitial || !discountTypes.length) return;
     const dt = discountTypes.find((d) => d.legacy_key === "major_student");
-    if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.includes(dt.id)) return prev;
+      // Major student wins over sibling/second_instrument.
+      const cleaned = prev.filter((id) => !exclusiveIdsSet.has(id));
+      return [...cleaned, dt.id];
+    });
   }, [student, discountTypes]);
 
   // Auto-select "כלי שני" discount when the student has more than one active
   // enrollment in the year — only on first open (no localStorage state yet).
+  // Skipped if another exclusive discount is already selected.
   useEffect(() => {
     if (lsInitial || !discountTypes.length || !enrollments) return;
     const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
     if (activeCount < 2) return;
     const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      return [...prev, dt.id];
+    });
+  }, [enrollments, discountTypes]);
+
+  // Auto-select "שלוחה אחה״צ" when any enrollment is at כרם מהר״ל.
+  useEffect(() => {
+    if (lsInitial || !discountTypes.length || !enrollments) return;
+    const hasKarmel = (enrollments as any[]).some(
+      (e) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
+    );
+    if (!hasKarmel) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
     if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
   }, [enrollments, discountTypes]);
 
@@ -245,10 +274,19 @@ const AdminStudentPaymentCalc = () => {
   }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
 
   const toggleDiscount = (id: string) => {
-    setSelectedDiscountIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setSelectedDiscountIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      // If this is an exclusive-group discount, drop any other exclusive one.
+      if (exclusiveIdsSet.has(id)) {
+        const cleaned = prev.filter((x) => !exclusiveIdsSet.has(x));
+        return [...cleaned, id];
+      }
+      return [...prev, id];
+    });
   };
+
+
+
 
 
   // Update enrollment end_date directly from the table.
@@ -719,6 +757,11 @@ const AdminStudentPaymentCalc = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {discountTypes.map((d) => {
                 const checked = selectedDiscountIds.includes(d.id);
+                const isExclusive = exclusiveIdsSet.has(d.id);
+                const blockedByExclusive =
+                  isExclusive &&
+                  !checked &&
+                  selectedDiscountIds.some((id) => id !== d.id && exclusiveIdsSet.has(id));
                 const scopeNote =
                   d.applies_to === "cheapest_enrollment"
                     ? " · על כלים נוספים"
@@ -726,15 +769,23 @@ const AdminStudentPaymentCalc = () => {
                 return (
                   <label
                     key={d.id}
-                    className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30"
+                    className={`flex items-center gap-2 rounded-xl border border-border p-3 ${
+                      blockedByExclusive ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/30"
+                    }`}
+                    title={blockedByExclusive ? "לא ניתן לשלב עם הנחת אחוזים אחרת" : undefined}
                   >
-                    <Checkbox checked={checked} onCheckedChange={() => toggleDiscount(d.id)} />
+                    <Checkbox
+                      checked={checked}
+                      disabled={blockedByExclusive}
+                      onCheckedChange={() => toggleDiscount(d.id)}
+                    />
                     <span className="text-sm">
                       {d.label} ({Number(d.percentage)}%{scopeNote})
                     </span>
                   </label>
                 );
               })}
+
             </div>
           )}
 
