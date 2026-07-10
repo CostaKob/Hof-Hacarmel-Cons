@@ -186,9 +186,15 @@ Deno.serve(async (req: Request) => {
       paymentId = newRow.id;
     } else {
       // Always refresh breakdown (discounts may have changed even when total didn't)
+      // and force the link to the currently active academic year supplied by the client.
+      // This fixes reused pending links that were created while an archived year was selected.
       await supabase
         .from("student_payments")
-        .update({ amount: totalAmount, enrollment_breakdown: breakdown })
+        .update({
+          amount: totalAmount,
+          enrollment_breakdown: breakdown,
+          ...(academicYearId ? { academic_year_id: academicYearId } : {}),
+        })
         .eq("id", paymentId);
     }
 
@@ -233,6 +239,7 @@ Deno.serve(async (req: Request) => {
       .update({
         payment_link_url: url,
         amount: totalAmount,
+        ...(academicYearId ? { academic_year_id: academicYearId } : {}),
         ...(paypageId ? { icount_payment_page_id: paypageId } : {}),
       })
       .eq("id", paymentId!);
