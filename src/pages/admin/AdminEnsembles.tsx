@@ -158,9 +158,9 @@ const AdminEnsembles = () => {
             })()}
           </div>
         )}
+        </TabsContent>
 
-        <section className="flex flex-col gap-3 pt-4 border-t">
-          <h2 className="text-lg font-bold text-foreground">מסלולים מיוחדים</h2>
+        <TabsContent value="tracks" className="flex flex-col gap-3 mt-0">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Object.entries(SPECIAL_TRACKS).map(([key, t]) => (
               <button
@@ -178,8 +178,8 @@ const AdminEnsembles = () => {
               </button>
             ))}
           </div>
-        </section>
-      </div>
+        </TabsContent>
+      </Tabs>
     </AdminLayout>
   );
 };
