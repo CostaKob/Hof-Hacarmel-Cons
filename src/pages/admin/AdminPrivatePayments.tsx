@@ -336,6 +336,7 @@ const AdminPrivatePayments = () => {
             <p className="text-xs text-muted-foreground">פוטנציאל הכנסות</p>
             <p className="text-2xl font-bold text-foreground">{fmt(totals.potential)} ₪</p>
             <p className="text-[10px] text-muted-foreground mt-1">מזה מסלולים מיוחדים: {fmt(totals.specialRevenue)} ₪</p>
+            <p className="text-[10px] text-muted-foreground">🎚️ הפקה: {fmt(totals.productionRevenue)} ₪ ({totals.productionCount}) · 🎼 רסיטל: {fmt(totals.recitalRevenue)} ₪ ({totals.recitalCount})</p>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4 text-center">
