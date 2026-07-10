@@ -194,21 +194,97 @@ const AdminStudentPaymentCalc = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [discountTypes.length]);
 
+  // Mutually-exclusive percentage discounts on private lessons — only one
+  // of {major_student, second_instrument, sibling} can be selected at a time.
+  const EXCLUSIVE_KEYS = ["major_student", "second_instrument", "sibling"] as const;
+  const exclusiveIdsSet = new Set(
+    discountTypes.filter((d) => EXCLUSIVE_KEYS.includes(d.legacy_key as any)).map((d) => d.id),
+  );
+
   useEffect(() => {
     if (!student?.is_major_student || lsInitial || !discountTypes.length) return;
     const dt = discountTypes.find((d) => d.legacy_key === "major_student");
-    if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.includes(dt.id)) return prev;
+      // Major student wins over sibling/second_instrument.
+      const cleaned = prev.filter((id) => !exclusiveIdsSet.has(id));
+      return [...cleaned, dt.id];
+    });
   }, [student, discountTypes]);
 
   // Auto-select "כלי שני" discount when the student has more than one active
   // enrollment in the year — only on first open (no localStorage state yet).
+  // Skipped if another exclusive discount is already selected.
   useEffect(() => {
     if (lsInitial || !discountTypes.length || !enrollments) return;
     const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
     if (activeCount < 2) return;
     const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      return [...prev, dt.id];
+    });
+  }, [enrollments, discountTypes]);
+
+  // Auto-select "שלוחה אחה״צ" when any enrollment is at כרם מהר״ל.
+  useEffect(() => {
+    if (lsInitial || !discountTypes.length || !enrollments) return;
+    const hasKarmel = (enrollments as any[]).some(
+      (e) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
+    );
+    if (!hasKarmel) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
     if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
   }, [enrollments, discountTypes]);
+
+  // Hydrate discount state from the most recent payment (pending or paid) so
+  // reopening the card shows the same discounts that were used previously.
+  useEffect(() => {
+    if (hydratedFromPending || !discountTypes.length) return;
+    const source =
+      (pendingPayments && pendingPayments[0]) ||
+      ((allStudentPayments as any[]).find((p) => {
+        const br = p?.enrollment_breakdown;
+        return br && !Array.isArray(br) && br.discounts;
+      }) as any);
+    if (!source) return;
+    const br = source?.enrollment_breakdown;
+    const d = br && !Array.isArray(br) ? br.discounts : null;
+    if (d && typeof d === "object") {
+      const mapped = mapLegacy(d);
+      if (mapped.length) setSelectedDiscountIds(mapped);
+      if (Array.isArray(d.customDiscounts)) setCustomDiscounts(d.customDiscounts);
+      if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
+        setStartDateOverrides(d.startDateOverrides);
+      }
+    }
+    setHydratedFromPending(true);
+  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes]);
+
+  // Persist discounts whenever they change
+  useEffect(() => {
+    if (!lsKey) return;
+    try {
+      localStorage.setItem(lsKey, JSON.stringify({
+        selectedDiscountIds, customDiscounts, startDateOverrides,
+      }));
+    } catch { /* ignore quota errors */ }
+  }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
+
+  const toggleDiscount = (id: string) => {
+    setSelectedDiscountIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      // If this is an exclusive-group discount, drop any other exclusive one.
+      if (exclusiveIdsSet.has(id)) {
+        const cleaned = prev.filter((x) => !exclusiveIdsSet.has(x));
+        return [...cleaned, id];
+      }
+      return [...prev, id];
+    });
+  };
+
 
   // Hydrate discount state from the most recent payment (pending or paid) so
   // reopening the card shows the same discounts that were used previously.
