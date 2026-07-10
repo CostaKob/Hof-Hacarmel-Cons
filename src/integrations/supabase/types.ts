@@ -2535,6 +2535,18 @@ export type Database = {
         Args: { _inventory_instrument_id?: string; _payload: Json }
         Returns: Json
       }
+      teacher_can_view_school_music_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
+      teacher_can_view_school_music_class_group: {
+        Args: { _class_group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      teacher_can_view_school_music_school: {
+        Args: { _school_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "teacher" | "secretary"
