@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_TYPE_GROUPS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
+import { SPECIAL_TRACKS } from "./AdminSpecialTrackCard";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const AdminEnsembles = () => {
@@ -27,6 +28,23 @@ const AdminEnsembles = () => {
       const { data, error } = await q;
       if (error) throw error;
       return data;
+    },
+  });
+
+  const { data: trackCounts = {} } = useQuery({
+    queryKey: ["special-track-counts"],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        Object.entries(SPECIAL_TRACKS).map(async ([key, t]) => {
+          const { count } = await supabase
+            .from("students")
+            .select("id", { count: "exact", head: true })
+            .eq(t.column, true)
+            .eq("is_active", true);
+          return [key, count ?? 0] as const;
+        })
+      );
+      return Object.fromEntries(entries) as Record<string, number>;
     },
   });
 
@@ -131,6 +149,27 @@ const AdminEnsembles = () => {
             })()}
           </div>
         )}
+
+        <section className="flex flex-col gap-3 pt-4 border-t">
+          <h2 className="text-lg font-bold text-foreground">מסלולים מיוחדים</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.entries(SPECIAL_TRACKS).map(([key, t]) => (
+              <button
+                key={key}
+                onClick={() => navigate(`/admin/special-tracks/${key}`)}
+                className="flex flex-col gap-1 rounded-2xl border border-border bg-card p-4 shadow-sm text-right transition-all hover:shadow-md active:scale-[0.98] touch-manipulation"
+              >
+                <p className="font-semibold text-foreground">
+                  <span className="ml-1">{t.icon}</span>
+                  {t.label}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {trackCounts[key] ?? 0} תלמידים
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </AdminLayout>
   );
