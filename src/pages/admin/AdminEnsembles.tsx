@@ -61,22 +61,29 @@ const AdminEnsembles = () => {
 
   return (
     <AdminLayout title="הרכבים" backPath="/admin">
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="חיפוש: שם, סוג, שלוחה, מורה, יום..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pr-9 h-12 rounded-xl"
-            />
+      <Tabs value={tab} onValueChange={setTab} className="flex flex-col gap-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="ensembles">הרכבים</TabsTrigger>
+          <TabsTrigger value="tracks">מסלולים מיוחדים</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ensembles" className="flex flex-col gap-4 mt-0">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="חיפוש: שם, סוג, שלוחה, מורה, יום..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pr-9 h-12 rounded-xl"
+              />
+            </div>
+            <Button onClick={() => navigate("/admin/ensembles/new")} className="h-12 rounded-xl text-base shrink-0">
+              <Plus className="h-4 w-4" />
+              הרכב חדש
+            </Button>
           </div>
-          <Button onClick={() => navigate("/admin/ensembles/new")} className="h-12 rounded-xl text-base shrink-0">
-            <Plus className="h-4 w-4" />
-            הרכב חדש
-          </Button>
-        </div>
+
 
         {isLoading ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
