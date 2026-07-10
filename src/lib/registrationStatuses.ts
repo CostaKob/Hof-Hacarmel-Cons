@@ -5,11 +5,12 @@ export const REGISTRATION_STATUSES: Record<string, { label: string; color: strin
   waiting_for_payment: { label: "ממתין לתשלום", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300" },
   ready_to_assign: { label: "מוכן לשיבוץ", color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" },
   rejected: { label: "נדחה", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300" },
+  partially_converted: { label: "שובץ חלקית", color: "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300" },
   converted: { label: "שובץ", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300" },
 };
 
-// Statuses the secretary can pick from the dropdown (excludes "converted" which is set automatically)
-export const SETTABLE_STATUSES = ["new", "in_review", "waiting_for_payment", "ready_to_assign", "rejected"];
+// Statuses the secretary can pick from the dropdown
+export const SETTABLE_STATUSES = ["new", "in_review", "waiting_for_payment", "ready_to_assign", "partially_converted", "converted", "rejected"];
 
 // Calendar-day diff in Asia/Jerusalem (Israel time), regardless of viewer timezone
 function jerusalemYMD(d: Date): { y: number; m: number; day: number } {
