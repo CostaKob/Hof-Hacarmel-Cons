@@ -204,7 +204,9 @@ const TeacherSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: teacher } = useTeacherProfile();
-  const { data: schools = [] } = useTeacherSchoolMusicSchools(teacher?.id);
+  const { selectedYearId } = useAcademicYear();
+  const { data: schools = [] } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
+
 
   const schoolMeta = useMemo(
     () => schools.find((s: any) => s.id === id),
