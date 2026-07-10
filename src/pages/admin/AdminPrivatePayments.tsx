@@ -138,16 +138,18 @@ const AdminPrivatePayments = () => {
 
       const stuPayments = paymentsForStudent(studentId);
       const pendingSrc = stuPayments.find((p) => p.payment_status === "pending");
-      // Source of truth: pending payment link if exists, else historical breakdown, else pure auto-calc.
-      const source =
-        pendingSrc ??
-        stuPayments.find((p) => {
-          const br = p?.enrollment_breakdown;
-          return br && !Array.isArray(br) && br.discounts;
-        });
-      const brDiscounts: any = source?.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
+      const paidWithBreakdown = stuPayments.find((p) => {
+        if (p.payment_status === "pending") return false;
+        const br = p?.enrollment_breakdown;
+        return br && !Array.isArray(br) && br.discounts;
+      });
+      // Show ONLY students with an actual payment link (pending or paid). No guessing.
+      const source = pendingSrc ?? paidWithBreakdown;
+      if (!source) continue;
+      const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
         ? source.enrollment_breakdown.discounts ?? {}
         : {};
+
 
       const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
         ? brDiscounts.selectedDiscountIds
@@ -239,37 +241,9 @@ const AdminPrivatePayments = () => {
       });
     }
 
-    // Include students with special tracks but no enrollments this year
-    for (const s of specialStudents) {
-      if (byStudent.has(s.id)) continue;
-      const specialBase =
-        (s.has_music_production_course ? musicProdPrice : 0) +
-        (s.has_recital_track ? recitalPrice : 0);
-      if (specialBase <= 0) continue;
-      const stuPayments = paymentsForStudent(s.id);
-      let net = 0;
-      for (const p of stuPayments) {
-        if (p.payment_status === "pending") continue;
-        const amount = Number(p.amount || 0);
-        if (amount < 0) net += amount;
-        else if (p.transaction_type === "payment") net += amount;
-        else net -= amount;
-      }
-      const balance = Math.round((specialBase - net) * 100) / 100;
-      const status: StatusFilter = specialBase > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
-      result.push({
-        studentId: s.id,
-        student: s,
-        enrollments: [],
-        totalDue: specialBase,
-        paid: net,
-        balance,
-        status,
-        hasSpecialCourse: true,
-        specialRevenue: specialBase,
-        proratedTotal: 0,
-      });
-    }
+    // Special-track-only students without a payment link are intentionally omitted —
+    // report shows exact numbers from payment links only.
+
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
   }, [enrollments, payments, year, settings, discountTypes, specialStudents]);
