@@ -441,6 +441,8 @@ const AdminRegistrationConvert = () => {
   const requestedInstruments = (r.requested_instruments as string[]) || [];
   const formValues = watch();
   const visibleExistingStudentPhone = existingStudent?.phone || formValues.phone || r.student_phone;
+  const visibleExistingStudentNationalId = existingStudent?.national_id || r.student_national_id;
+
 
   return (
     <AdminLayout
