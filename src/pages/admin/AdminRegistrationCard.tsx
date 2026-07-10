@@ -316,11 +316,25 @@ const AdminRegistrationCard = () => {
           <CardHeader>
             <CardTitle className="text-base">פרטי לימודים מבוקשים</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <InfoGrid items={[
               { label: "כלים מבוקשים", value: (r.requested_instruments as string[])?.join(", ") || "—" },
               { label: "משך שיעור", value: r.requested_lesson_duration ? `${r.requested_lesson_duration} דקות` : "—" },
             ]} />
+            {(r.wants_music_production || r.wants_recital_track) && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {r.wants_music_production && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 border border-violet-200 font-medium">
+                    🎚️ ביקש/ה הפקה מוסיקלית
+                  </span>
+                )}
+                {r.wants_recital_track && (
+                  <span className="text-xs px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 border border-rose-200 font-medium">
+                    🎼 ביקש/ה מסלול רסיטל בגרות
+                  </span>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
