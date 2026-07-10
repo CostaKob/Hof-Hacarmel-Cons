@@ -17,6 +17,7 @@ const AdminEnsembles = () => {
   const { selectedYearId, years } = useAcademicYear();
   useListStatePreservation("/admin/ensembles");
   const [search, setSearch] = usePersistedState<string>("/admin/ensembles", "search", "");
+  const [tab, setTab] = usePersistedState<string>("/admin/ensembles", "tab", "ensembles");
 
   const { data: ensembles = [], isLoading } = useQuery({
     queryKey: ["ensembles", selectedYearId],
