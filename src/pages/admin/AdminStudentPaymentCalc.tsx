@@ -757,6 +757,11 @@ const AdminStudentPaymentCalc = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {discountTypes.map((d) => {
                 const checked = selectedDiscountIds.includes(d.id);
+                const isExclusive = exclusiveIdsSet.has(d.id);
+                const blockedByExclusive =
+                  isExclusive &&
+                  !checked &&
+                  selectedDiscountIds.some((id) => id !== d.id && exclusiveIdsSet.has(id));
                 const scopeNote =
                   d.applies_to === "cheapest_enrollment"
                     ? " · על כלים נוספים"
@@ -764,15 +769,23 @@ const AdminStudentPaymentCalc = () => {
                 return (
                   <label
                     key={d.id}
-                    className="flex items-center gap-2 rounded-xl border border-border p-3 cursor-pointer hover:bg-muted/30"
+                    className={`flex items-center gap-2 rounded-xl border border-border p-3 ${
+                      blockedByExclusive ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/30"
+                    }`}
+                    title={blockedByExclusive ? "לא ניתן לשלב עם הנחת אחוזים אחרת" : undefined}
                   >
-                    <Checkbox checked={checked} onCheckedChange={() => toggleDiscount(d.id)} />
+                    <Checkbox
+                      checked={checked}
+                      disabled={blockedByExclusive}
+                      onCheckedChange={() => toggleDiscount(d.id)}
+                    />
                     <span className="text-sm">
                       {d.label} ({Number(d.percentage)}%{scopeNote})
                     </span>
                   </label>
                 );
               })}
+
             </div>
           )}
 
