@@ -331,7 +331,7 @@ const AdminPrivatePayments = () => {
 
 
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-border bg-card p-4 sm:col-span-2">
             <div className="grid grid-cols-2 divide-x divide-border rtl:divide-x-reverse">
               <div className="px-2 py-1 text-center">
@@ -342,7 +342,7 @@ const AdminPrivatePayments = () => {
                 <p className="text-xs text-muted-foreground">מסלולים מיוחדים</p>
                 <p className="text-xl font-bold text-foreground">{fmt(totals.specialRevenue)} ₪</p>
                 <p className="text-[10px] text-muted-foreground mt-1">
-                  🎚️ הפקה {fmt(totals.productionRevenue)} ₪ · 🎼 רסיטל {fmt(totals.recitalRevenue)} ₪
+                  🎚️ הפקה ({totals.productionCount}) {fmt(totals.productionRevenue)} ₪ · 🎼 רסיטל ({totals.recitalCount}) {fmt(totals.recitalRevenue)} ₪
                 </p>
               </div>
             </div>
