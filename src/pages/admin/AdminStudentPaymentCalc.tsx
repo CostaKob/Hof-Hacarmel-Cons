@@ -347,12 +347,10 @@ const AdminStudentPaymentCalc = () => {
   }, [student, settings]);
 
   const specialBase = specialCourses.reduce((s, c) => s + c.price, 0);
-  const sumAllPct = selectedDiscounts
-    .filter((d) => d.applies_to === "all")
-    .reduce((s, d) => s + (Number(d.percentage) || 0), 0);
   // Discounts DO NOT apply to special courses (music production / recital) — full price always.
   const specialAfterStd = specialBase;
   const specialStdDiscountAmount = 0;
+
 
   // Per-discount additional amount on specials — always zero (discounts don't apply to specials).
   const specialDiscountByType = useMemo(() => new Map<string, number>(), []);
