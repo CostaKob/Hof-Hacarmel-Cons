@@ -295,7 +295,7 @@ const AdminPrivatePayments = () => {
     }
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, drafts, year, settings, discountTypes, specialStudents]);
+  }, [enrollments, payments, year, settings, discountTypes, specialStudents]);
 
 
   const schoolOptions = useMemo(() => {
