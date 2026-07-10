@@ -387,11 +387,29 @@ const AdminRegistrationConvert = () => {
       });
       if (enrollErr) throw enrollErr;
 
-      // Update registration status to converted
+      // Determine if fully converted or only partially, based on requested slots vs existing enrollments
+      const requestedNames = (r.requested_instruments as string[] | null) || [];
+      let guitarSeen = false, bassSeen = false, slots = 0;
+      for (const raw of requestedNames) {
+        const name = (raw ?? "").trim();
+        if (!name) continue;
+        if (name.includes("בס")) { if (!bassSeen) { slots++; bassSeen = true; } continue; }
+        if (name.includes("גיטרה")) { if (!guitarSeen) { slots++; guitarSeen = true; } continue; }
+        slots++;
+      }
+      const yearId = activeYear?.id || r.academic_year_id || null;
+      const { count: enrollCount } = await supabase
+        .from("enrollments")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .eq("academic_year_id", yearId as string);
+      const newStatus = slots > 0 && (enrollCount ?? 0) < slots ? "partially_converted" : "converted";
+
+      // Update registration status
       const { error: regErr } = await supabase
         .from("registrations" as any)
         .update({
-          status: "converted",
+          status: newStatus,
           existing_student_id: studentId,
           match_type: "id_match",
         })
