@@ -516,7 +516,9 @@ const AdminStudentPaymentCalc = () => {
       ].filter(Boolean).join(" ");
     });
 
-    const yearName = year?.name ?? "";
+    // Payment links always attach to the ACTIVE academic year, never a viewed archive year.
+    const linkYear = activeYear ?? year;
+    const yearName = linkYear?.name ?? "";
     const hebrewYear = toHebrewYear(yearName);
     const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
