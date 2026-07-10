@@ -111,6 +111,7 @@ const TeacherReportView = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="צפייה בדוח" />
       {/* Header */}
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center justify-between">
@@ -120,12 +121,12 @@ const TeacherReportView = () => {
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10"
               onClick={() => navigate(backPath)}
-        <PageTitle title="צפייה בדוח" />
             >
               <ArrowRight className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-bold">צפייה ביום עבודה</h1>
           </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"
