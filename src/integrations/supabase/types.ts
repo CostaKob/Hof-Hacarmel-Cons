@@ -722,6 +722,24 @@ export type Database = {
           },
         ]
       }
+      national_id_lookup_attempts: {
+        Row: {
+          attempted_at: string
+          id: number
+          ip: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          id?: number
+          ip?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          id?: number
+          ip?: string | null
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           created_at: string
