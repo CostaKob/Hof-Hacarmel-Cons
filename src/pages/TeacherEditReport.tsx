@@ -304,6 +304,7 @@ const TeacherEditReport = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title={`עריכת דוח — ${format(editDate, "dd/MM/yyyy")}`} />
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button
@@ -311,13 +312,13 @@ const TeacherEditReport = () => {
             size="icon"
             className="text-primary-foreground hover:bg-primary-foreground/10"
             onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}` : `/teacher/reports/${reportId}`)}
-        <PageTitle title={`עריכת דוח — ${format(editDate, "dd/MM/yyyy")}`} />
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold">עריכת יום עבודה</h1>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-5">
         {/* Report details */}
