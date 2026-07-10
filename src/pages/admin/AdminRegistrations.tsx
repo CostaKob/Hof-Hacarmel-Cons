@@ -49,6 +49,8 @@ const AdminRegistrations = () => {
   useListStatePreservation("/admin/registrations");
   const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
   const [schoolFilter, setSchoolFilter] = usePersistedState<string>("/admin/registrations", "school", "all");
+  const [gradeFilter, setGradeFilter] = usePersistedState<string>("/admin/registrations", "grade", "all");
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string>("/admin/registrations", "instrument", "all");
   const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
