@@ -82,7 +82,7 @@ const AdminSpecialTrackCard = () => {
     mutationFn: async (studentId: string) => {
       const { error } = await supabase
         .from("students")
-        .update({ [track!.column]: false })
+        .update({ [track!.column]: false } as any)
         .eq("id", studentId);
       if (error) throw error;
     },
