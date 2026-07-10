@@ -297,15 +297,17 @@ const AdminPrivatePayments = () => {
   }, [rows, statusFilter, schoolFilter, teacherFilter, search]);
 
   const totals = useMemo(() => {
-    let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0;
+    let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0, specialRevenue = 0, specialCount = 0;
     for (const r of filtered) {
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
       enrollmentsCount += r.enrollments.length;
+      if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; specialCount += 1; }
     }
-    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount };
+    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount };
   }, [filtered]);
+
 
 
   const fmt = (n: number) => Math.round(n).toLocaleString("he-IL");
@@ -317,14 +319,18 @@ const AdminPrivatePayments = () => {
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
           <span><span className="font-semibold text-foreground">{totals.studentsCount}</span> תלמידים</span>
           <span><span className="font-semibold text-foreground">{totals.enrollmentsCount}</span> שיוכים</span>
+          <span><span className="font-semibold text-foreground">{totals.specialCount}</span> במסלולים מיוחדים</span>
         </div>
 
+
         {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground">פוטנציאל הכנסות</p>
             <p className="text-2xl font-bold text-foreground">{fmt(totals.potential)} ₪</p>
+            <p className="text-[10px] text-muted-foreground mt-1">מזה מסלולים מיוחדים: {fmt(totals.specialRevenue)} ₪</p>
           </div>
+
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground">סה"כ שולם</p>
             <p className="text-2xl font-bold text-green-600">{fmt(totals.paid)} ₪</p>
