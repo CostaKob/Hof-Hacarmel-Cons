@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
 import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
 import PageTitle from "@/components/PageTitle";
+import { syncRegistrationStatusForStudentYear } from "@/lib/registrationStatusSync";
 
 interface EnrollmentFormData {
   student_id: string;
