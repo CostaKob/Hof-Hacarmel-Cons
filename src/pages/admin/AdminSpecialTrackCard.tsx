@@ -178,16 +178,28 @@ const AdminSpecialTrackCard = () => {
           ) : students.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">אין תלמידים במסלול זה</p>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              {students.map((s: any) => (
-                <Badge
+            <div className="flex flex-col gap-2">
+              {students.map((s: any, index: number) => (
+                <div
                   key={s.id}
-                  variant="secondary"
-                  className="text-sm gap-1.5 pl-3 pr-1.5 py-1.5 cursor-pointer hover:bg-accent transition-colors"
                   onClick={() => navigate(`/admin/students/${s.id}`)}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
                 >
-                  {s.first_name} {s.last_name}
-                  {s.grade && <span className="text-muted-foreground">· {s.grade}</span>}
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground">
+                        {s.first_name} {s.last_name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                        {s.national_id && <span>ת.ז {s.national_id}</span>}
+                        {s.grade && (<><span>·</span><span>כיתה {s.grade}</span></>)}
+                        {s.city && (<><span>·</span><span>{s.city}</span></>)}
+                        {s.parent_phone && (<><span>·</span><PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
+                        {!s.parent_phone && s.phone && (<><span>·</span><PhoneDisplay phone={s.phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
+                      </div>
+                    </div>
+                  </div>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -195,11 +207,12 @@ const AdminSpecialTrackCard = () => {
                         removeStudent.mutate(s.id);
                       }
                     }}
-                    className="hover:text-destructive rounded-full p-0.5"
+                    className="text-muted-foreground hover:text-destructive rounded-full p-1 self-end sm:self-auto shrink-0"
+                    aria-label="הסר מהמסלול"
                   >
-                    <X className="h-3 w-3" />
+                    <X className="h-4 w-4" />
                   </button>
-                </Badge>
+                </div>
               ))}
             </div>
           )}
