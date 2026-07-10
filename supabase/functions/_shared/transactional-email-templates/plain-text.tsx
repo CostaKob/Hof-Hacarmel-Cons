@@ -15,7 +15,7 @@ const Email = ({ body = '' }: Props) => (
       <Container style={container} dir="rtl">
         {body.split('\n').map((line, i) => (
           <Text key={i} style={lineStyle} dir="rtl">
-            {line.length === 0 ? '\u00A0' : <bdi>{'\u200F' + line + '\u200F'}</bdi>}
+            {line.length === 0 ? '\u00A0' : <bdi>{line}</bdi>}
           </Text>
         ))}
       </Container>
