@@ -8,10 +8,11 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Plus, Trash2, Save } from "lucide-react";
 import {
-import PageTitle from "@/components/PageTitle";
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import PageTitle from "@/components/PageTitle";
+
 
 interface City {
   id: string;
