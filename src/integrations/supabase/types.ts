@@ -2568,6 +2568,7 @@ export type Database = {
         | "waiting_for_call"
         | "waiting_for_payment"
         | "ready_to_assign"
+        | "partially_converted"
       school_music_payment_status:
         | "pending"
         | "paid"
@@ -2768,6 +2769,7 @@ export const Constants = {
         "waiting_for_call",
         "waiting_for_payment",
         "ready_to_assign",
+        "partially_converted",
       ],
       school_music_payment_status: [
         "pending",
