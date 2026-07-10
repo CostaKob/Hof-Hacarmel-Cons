@@ -42,6 +42,13 @@ const empty: FormState = {
   parent_name: "", parent_national_id: "", parent_phone: "", parent_email: "", notes: "",
 };
 
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="space-y-1.5">
+    <Label className="text-sm">{label}</Label>
+    {children}
+  </div>
+);
+
 const AdminRegistrationEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
