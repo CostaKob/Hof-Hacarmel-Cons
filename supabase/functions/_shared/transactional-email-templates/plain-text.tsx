@@ -9,13 +9,15 @@ interface Props {
 
 const Email = ({ body = '' }: Props) => (
   <Html lang="he" dir="rtl">
-    <Head />
+    <Head>
+      <meta httpEquiv="Content-Type" content="text/html; charset=UTF-8" />
+    </Head>
     <Preview>{(body || '').slice(0, 120)}</Preview>
     <Body style={main}>
       <Container style={container} dir="rtl">
         {body.split('\n').map((line, i) => (
           <Text key={i} style={lineStyle} dir="rtl">
-            {line.length === 0 ? '\u00A0' : <bdi>{line}</bdi>}
+            {line.length === 0 ? '\u00A0' : line}
           </Text>
         ))}
       </Container>
