@@ -12,6 +12,7 @@ import { ArrowRight } from "lucide-react";
 import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySummaryTable";
 import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 import AppLogo from "@/components/AppLogo";
+import PageTitle from "@/components/PageTitle";
 
 function useTeacherEnrollmentsByYear(teacherId: string | undefined, yearId: string | null) {
   return useQuery({
@@ -109,6 +110,7 @@ const TeacherYearlySummary = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+        <PageTitle title="סיכום שנתי" />
         <div className="mx-auto flex max-w-5xl items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/teacher")}>
             <ArrowRight className="h-5 w-5" />

@@ -5,6 +5,7 @@ import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherReportsByMonth } from "@/hooks/useTeacherDashboardData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/PageTitle";
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const MONTHS_HE = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
@@ -50,6 +51,7 @@ const TeacherTravelSummary = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="סיכום נסיעות" />
       </div>
     );
   }
@@ -57,6 +59,7 @@ const TeacherTravelSummary = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
+        <PageTitle title="סיכום נסיעות" />
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <button onClick={() => navigate("/teacher")} className="shrink-0">
             <ChevronRight className="h-5 w-5" />

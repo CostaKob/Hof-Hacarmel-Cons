@@ -17,6 +17,7 @@ import { useAppLogo } from "@/hooks/useAppLogo";
 import AppLogo from "@/components/AppLogo";
 import { CitySelect } from "@/components/CitySelect";
 import { isExactDigits, isValidEmail } from "@/lib/schoolMusicValidation";
+import PageTitle from "@/components/PageTitle";
 
 /* ── Field wrapper ── */
 
@@ -62,10 +63,6 @@ const GENDER_OPTIONS = [
 /* ── Component ── */
 
 const SchoolMusicRegister = () => {
-  useEffect(() => {
-    document.title = "רישום לבתי ספר מנגנים";
-  }, []);
-
   const { logoUrl } = useAppLogo();
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
@@ -472,6 +469,7 @@ const SchoolMusicRegister = () => {
     const r = submissionResult;
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <PageTitle title="הרשמה לביס מנגן" />
         <Card className="max-w-xl w-full">
           <CardContent className="py-10 space-y-6">
             <div className="text-center space-y-2">
@@ -560,6 +558,7 @@ const SchoolMusicRegister = () => {
   if (yearLoading) {
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <PageTitle title="הרשמה לביס מנגן" />
         <p className="text-muted-foreground">טוען...</p>
       </div>
     );
@@ -568,6 +567,7 @@ const SchoolMusicRegister = () => {
   if (!resolvedYear) {
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <PageTitle title="הרשמה לביס מנגן" />
         <Card className="max-w-lg w-full text-center">
           <CardContent className="py-12 space-y-4">
             <div className="text-4xl">⚠️</div>
@@ -582,6 +582,7 @@ const SchoolMusicRegister = () => {
   if (!resolvedYear.registration_open) {
     return (
       <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+        <PageTitle title="הרשמה לביס מנגן" />
         <Card className="max-w-lg w-full text-center">
           <CardContent className="py-12 space-y-4">
             <div className="text-4xl">🔒</div>
@@ -595,6 +596,7 @@ const SchoolMusicRegister = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+        <PageTitle title="הרשמה לביס מנגן" />
       <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
         <div className="text-center space-y-3">
           {logoUrl && <div className="flex justify-center"><AppLogo size="lg" /></div>}

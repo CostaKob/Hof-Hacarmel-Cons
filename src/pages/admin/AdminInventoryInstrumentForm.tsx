@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
 import { User, ExternalLink, Pencil, Check, X } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
+import PageTitle from "@/components/PageTitle";
 
 interface FormData {
   instrument_id: string;
@@ -165,6 +166,7 @@ const AdminInventoryInstrumentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת כלי" : "כלי חדש"} backPath="/admin/inventory-instruments">
+      <PageTitle title="טופס כלי מלאי" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="max-w-2xl space-y-5">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <h2 className="font-semibold text-foreground text-base">פרטי הכלי</h2>

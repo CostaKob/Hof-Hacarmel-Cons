@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -259,8 +261,8 @@ const AdminTeacherCard = () => {
     onError: () => toast.error("שגיאה בעדכון הסטטוס"),
   });
 
-  if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
-  if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
+  if (isLoading) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><PageTitle title="כרטיס מורה" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+  if (!teacher) return <AdminLayout title="כרטיס מורה" backPath="/admin/teachers"><PageTitle title="כרטיס מורה" /><p className="text-center text-muted-foreground py-8">מורה לא נמצא</p></AdminLayout>;
 
   const hasLogin = !!teacher.user_id;
 
@@ -274,7 +276,9 @@ const AdminTeacherCard = () => {
 
   return (
     <AdminLayout title={`${teacher.first_name} ${teacher.last_name}`} backPath="/admin/teachers">
+      <PageTitle title={`כרטיס מורה — ${teacher.first_name} ${teacher.last_name}`} />
       <div className="space-y-5">
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Switch

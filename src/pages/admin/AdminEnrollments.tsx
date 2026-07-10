@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft } from "lucide-react";
 import { sortByName, sortByPerson } from "@/lib/sortHebrew";
+import PageTitle from "@/components/PageTitle";
 
 const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "קבוצתי" };
 
@@ -83,6 +84,7 @@ const AdminEnrollments = () => {
 
   return (
     <AdminLayout title="שיוכים" backPath="/admin">
+      <PageTitle title="ניהול שיוכים" />
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative flex-1 max-w-sm">

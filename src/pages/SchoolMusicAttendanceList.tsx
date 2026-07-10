@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChevronLeft, AlertCircle } from "lucide-react";
 import { format, addDays, parseISO } from "date-fns";
+import PageTitle from "@/components/PageTitle";
 
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
@@ -115,6 +116,7 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="רשימת נוכחות ביס מנגן" />
       <header className="bg-primary px-5 pb-5 pt-6 text-primary-foreground">
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground shrink-0" onClick={() => navigate(backPath)}>

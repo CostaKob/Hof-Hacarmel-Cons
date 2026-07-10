@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
+import PageTitle from "@/components/PageTitle";
 
 type ExportKey = "students" | "teachers" | "enrollments" | "reports" | "yearly" | "registrations" | "payments";
 
@@ -249,6 +250,7 @@ const AdminExports = () => {
 
   return (
     <AdminLayout title="דוחות וייצוא" backPath="/admin">
+      <PageTitle title="ייצוא נתונים" />
       <div className="space-y-6">
         {/* Export buttons */}
         <div className="grid gap-4 sm:grid-cols-2">

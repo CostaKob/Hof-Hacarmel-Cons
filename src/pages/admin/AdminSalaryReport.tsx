@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { getMonthRange } from "@/hooks/useTeacherDashboardData";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import PageTitle from "@/components/PageTitle";
 
 const MONTH_NAMES = [
   "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
@@ -483,6 +484,7 @@ const AdminSalaryReport = () => {
 
   return (
     <AdminLayout title="דוח משכורות" backPath="/admin/exports">
+      <PageTitle title="דוח משכורת" />
       <div className="space-y-6">
         {/* Controls */}
         <div className="flex flex-wrap items-end gap-3">

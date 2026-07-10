@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
@@ -206,6 +207,7 @@ const TeacherStudents = () => {
             size="icon"
             className="text-primary-foreground hover:bg-primary-foreground/10"
             onClick={() => navigate("/teacher")}
+        <PageTitle title="התלמידים שלי" />
           >
             <ArrowRight className="h-5 w-5" />
           </Button>

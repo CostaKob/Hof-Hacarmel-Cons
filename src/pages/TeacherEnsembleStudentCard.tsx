@@ -7,6 +7,7 @@ import { ArrowRight, CalendarDays, ChevronLeft, Clock, MapPin, Music, Phone, Sch
 import { Button } from "@/components/ui/button";
 import AppLogo from "@/components/AppLogo";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import PageTitle from "@/components/PageTitle";
 
 const TeacherEnsembleStudentCard = () => {
   const { id, studentId } = useParams<{ id: string; studentId: string }>();
@@ -26,6 +27,7 @@ const TeacherEnsembleStudentCard = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="כרטיס תלמיד בהרכב" />
       </div>
     );
   }
@@ -34,6 +36,7 @@ const TeacherEnsembleStudentCard = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">התלמיד לא נמצא</p>
+        <PageTitle title="כרטיס תלמיד בהרכב" />
         <Button variant="outline" onClick={() => navigate("/teacher/ensembles")}>חזרה</Button>
       </div>
     );
@@ -44,6 +47,7 @@ const TeacherEnsembleStudentCard = () => {
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate(`/teacher/ensembles/${id}`)}>
+        <PageTitle title={`כרטיס תלמיד בהרכב — ${student.first_name} ${student.last_name}`} />
             <ArrowRight className="h-5 w-5" />
           </Button>
           <div className="min-w-0">

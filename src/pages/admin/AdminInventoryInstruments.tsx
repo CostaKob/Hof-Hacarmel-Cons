@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { CONDITION_LABELS, CONDITION_COLORS, CONDITION_OPTIONS, InstrumentCondition } from "@/lib/instrumentInventory";
 import { useListStatePreservation, usePersistedState, saveListScrollPosition } from "@/hooks/useListStatePreservation";
+import PageTitle from "@/components/PageTitle";
 
 const ROUTE_KEY = "/admin/inventory-instruments";
 
@@ -165,6 +166,7 @@ const AdminInventoryInstruments = () => {
 
   return (
     <AdminLayout title="מאגר כלי נגינה" backPath="/admin">
+      <PageTitle title="מלאי כלים" />
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
         {CONDITION_OPTIONS.map((opt) => (

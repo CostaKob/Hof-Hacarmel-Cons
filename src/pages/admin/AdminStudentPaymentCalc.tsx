@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -514,6 +516,7 @@ const AdminStudentPaymentCalc = () => {
   if (loadingStudent || loadingEnrollments || !settings || !yearFull) {
     return (
       <AdminLayout title="חשב/צור תשלום" backPath={`/admin/students/${studentId}`}>
+        <PageTitle title="חישוב תשלום" />
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       </AdminLayout>
     );
@@ -522,6 +525,7 @@ const AdminStudentPaymentCalc = () => {
   if (!student) {
     return (
       <AdminLayout title="חשב/צור תשלום" backPath={`/admin/students/${studentId}`}>
+        <PageTitle title="חישוב תשלום" />
         <p className="text-center text-muted-foreground py-12">תלמיד לא נמצא</p>
       </AdminLayout>
     );
@@ -531,7 +535,9 @@ const AdminStudentPaymentCalc = () => {
 
   return (
     <AdminLayout title="חשב/צור תשלום" backPath={`/admin/students/${studentId}`}>
+      <PageTitle title={student ? `חישוב תשלום — ${student.first_name} ${student.last_name}` : "חישוב תשלום"} />
       <div className="space-y-5">
+
         {/* Student & Parent header */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

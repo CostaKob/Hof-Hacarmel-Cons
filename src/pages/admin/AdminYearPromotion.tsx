@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import StructureCloningSection from "@/components/admin/StructureCloningSection";
 import { Badge } from "@/components/ui/badge";
+import PageTitle from "@/components/PageTitle";
 
 const AdminYearPromotion = () => {
   // Load active academic year
@@ -37,6 +38,7 @@ const AdminYearPromotion = () => {
 
   return (
     <AdminLayout title="מרכז הבקרה למעבר שנה" backPath="/admin">
+      <PageTitle title="קידום שנה" />
       <div className="space-y-5 max-w-4xl">
         {/* Header info */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">

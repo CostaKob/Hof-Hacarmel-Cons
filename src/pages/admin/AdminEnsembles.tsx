@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -61,7 +63,9 @@ const AdminEnsembles = () => {
 
   return (
     <AdminLayout title="הרכבים ומסלולים מיוחדים" backPath="/admin">
+      <PageTitle title="הרכבים ומסלולים מיוחדים" />
       <Tabs dir="rtl" value={tab} onValueChange={setTab} className="flex flex-col gap-4">
+
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="ensembles">הרכבים</TabsTrigger>
           <TabsTrigger value="tracks">מסלולים מיוחדים</TabsTrigger>

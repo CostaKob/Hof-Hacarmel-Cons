@@ -28,6 +28,7 @@ import { ArrowRight, CalendarIcon, Save } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import PageTitle from "@/components/PageTitle";
 
 type AttendanceStatus = Database["public"]["Enums"]["attendance_status"];
 
@@ -175,6 +176,7 @@ const TeacherNewReport = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       {/* Header */}
+        <PageTitle title="דוח חדש" />
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button

@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { GRADES, PLAYING_LEVELS, STUDENT_STATUSES } from "@/lib/constants";
 import { CitySelect } from "@/components/CitySelect";
+import PageTitle from "@/components/PageTitle";
 
 const GENDERS = [
   { value: "male", label: "זכר" },
@@ -192,6 +193,7 @@ const AdminStudentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת תלמיד" : "תלמיד חדש"} backPath="/admin/students">
+      <PageTitle title="טופס תלמיד" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         {/* Student details */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">

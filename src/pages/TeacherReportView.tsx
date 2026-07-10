@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowRight, Pencil, Trash2, Calendar, MapPin, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
@@ -93,6 +94,7 @@ const TeacherReportView = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="צפייה בדוח" />
       </div>
     );
   }
@@ -101,6 +103,7 @@ const TeacherReportView = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
+        <PageTitle title="צפייה בדוח" />
         <Button variant="outline" onClick={() => navigate(backPath)}>חזרה</Button>
       </div>
     );
@@ -117,6 +120,7 @@ const TeacherReportView = () => {
               size="icon"
               className="text-primary-foreground hover:bg-primary-foreground/10"
               onClick={() => navigate(backPath)}
+        <PageTitle title="צפייה בדוח" />
             >
               <ArrowRight className="h-5 w-5" />
             </Button>

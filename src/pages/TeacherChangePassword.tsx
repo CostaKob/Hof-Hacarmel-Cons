@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ArrowRight, KeyRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PageTitle from "@/components/PageTitle";
 
 const TeacherChangePassword = () => {
   const { user } = useAuth();
@@ -43,6 +44,7 @@ const TeacherChangePassword = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="שינוי סיסמה" />
       {/* Header */}
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">

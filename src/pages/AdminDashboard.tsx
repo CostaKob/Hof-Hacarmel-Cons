@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
 import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet } from "lucide-react";
+
 
 const MAIN_SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
@@ -75,7 +77,9 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout title="פאנל ניהול">
+      <PageTitle title="פאנל ניהול" />
       <div className="space-y-8">
+
         {/* Main */}
         <div className="grid gap-4 sm:grid-cols-2">
           {MAIN_SECTIONS.map((s) => (

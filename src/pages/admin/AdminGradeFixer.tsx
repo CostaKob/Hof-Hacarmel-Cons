@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Search, GraduationCap, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { GRADES } from "@/lib/constants";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import PageTitle from "@/components/PageTitle";
 
 const NO_GRADE = "__none__";
 
@@ -131,6 +132,7 @@ const AdminGradeFixer = () => {
 
   return (
     <AdminLayout title="תיקון כיתות בשיוכים" backPath="/admin/academic-years">
+      <PageTitle title="תיקון כיתות מרוכז" />
       <div className="space-y-4 max-w-4xl">
         {/* Header */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">

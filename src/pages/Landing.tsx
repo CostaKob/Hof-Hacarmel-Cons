@@ -10,7 +10,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import PageTitle from "@/components/PageTitle";
 import logoUrl from "@/assets/logo.png";
+
 import heroImage from "@/assets/hero-orchestra.jpg";
 import {
   
@@ -81,10 +83,6 @@ type PricingData = {
 const formatPrice = (value: number) => new Intl.NumberFormat("he-IL").format(Math.round(value));
 
 const Landing = () => {
-  useEffect(() => {
-    document.title = "אולפן ומגמת המוסיקה חוף הכרמל";
-  }, []);
-
   const { data: pricing } = useQuery({
     queryKey: ["public-pricing"],
     queryFn: async () => {
@@ -97,13 +95,17 @@ const Landing = () => {
 
 
 
+
   const lp = pricing?.lesson_prices ?? {};
   const price45 = Number(lp["45"]) || 0;
   const price60 = Number(lp["60"]) || 0;
   const price30 = Number(lp["30"]) || 0;
 
   return (
-    <div dir="rtl" className="min-h-screen bg-background text-foreground">
+    <>
+      <PageTitle title="אולפן ומגמת המוסיקה חוף הכרמל" />
+      <div dir="rtl" className="min-h-screen bg-background text-foreground">
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">
@@ -418,7 +420,9 @@ const Landing = () => {
         </div>
       </footer>
     </div>
+    </>
   );
 };
+
 
 export default Landing;

@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 interface SchoolFormData {
   name: string;
@@ -112,6 +113,7 @@ const AdminSchoolForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת שלוחה" : "שלוחה חדשה"} backPath="/admin/schools">
+      <PageTitle title="טופס בית ספר" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">

@@ -14,6 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import PageTitle from "@/components/PageTitle";
 
 const AdminRegistrationPages = () => {
   const navigate = useNavigate();
@@ -207,6 +208,7 @@ const AdminRegistrationPages = () => {
 
   return (
     <AdminLayout title="דפי הרשמה" backPath="/admin/academic-years">
+      <PageTitle title="דפי הרשמה" />
       <div className="space-y-4">
         {/* Create new */}
         <div className="flex flex-wrap gap-2">

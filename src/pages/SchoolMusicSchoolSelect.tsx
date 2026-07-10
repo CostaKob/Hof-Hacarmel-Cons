@@ -6,12 +6,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { School, ArrowLeft, Loader2 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
+import PageTitle from "@/components/PageTitle";
 
 const SchoolMusicSchoolSelect = () => {
-  useEffect(() => {
-    document.title = "רישום לבתי ספר מנגנים";
-  }, []);
-
   const [searchParams] = useSearchParams();
   const urlYearParam = searchParams.get("year");
   const urlYearId = searchParams.get("yearId");
@@ -82,6 +79,7 @@ const SchoolMusicSchoolSelect = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="בחירת בית ספר מנגן" />
       <header className="border-b">
         <div className="mx-auto max-w-4xl px-5 py-4 flex items-center justify-between">
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">

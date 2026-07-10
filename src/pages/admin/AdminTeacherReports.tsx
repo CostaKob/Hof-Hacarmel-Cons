@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { CalendarDays, Navigation, Users } from "lucide-react";
 import { parseISO } from "date-fns";
+import PageTitle from "@/components/PageTitle";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const HEBREW_MONTHS = ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"];
@@ -93,6 +94,7 @@ const AdminTeacherReports = () => {
 
   return (
     <AdminLayout title={`ימי עבודה — ${teacherName}`} backPath={`/admin/teachers/${teacherId}`} onBack={() => navigate(-1)}>
+      <PageTitle title={`דוחות מורים — ${teacherName}`} />
       <div className="space-y-4">
         <div className="flex items-end justify-between gap-3">
           <div className="flex-1 max-w-[200px] space-y-1">

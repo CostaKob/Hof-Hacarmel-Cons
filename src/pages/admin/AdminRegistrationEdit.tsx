@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 type FormState = {
   student_first_name: string;
@@ -133,6 +134,7 @@ const AdminRegistrationEdit = () => {
       backPath={`/admin/registrations/${id}`}
       onBack={() => navigate(-1)}
     >
+      <PageTitle title={`שיוך הרשמה — ${registration.student_first_name} ${registration.student_last_name}`} />
       <div className="space-y-4 pb-24">
         <Card>
           <CardHeader><CardTitle className="text-base">פרטי תלמיד/ה</CardTitle></CardHeader>

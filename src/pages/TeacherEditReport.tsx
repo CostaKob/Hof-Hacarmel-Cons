@@ -32,6 +32,7 @@ import { ArrowRight, CalendarIcon, Save } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import PageTitle from "@/components/PageTitle";
 
 type AttendanceStatus = Database["public"]["Enums"]["attendance_status"];
 
@@ -260,6 +261,7 @@ const TeacherEditReport = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="עריכת דוח" />
       </div>
     );
   }
@@ -268,6 +270,7 @@ const TeacherEditReport = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
+        <PageTitle title="עריכת דוח" />
         <Button variant="outline" onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports` : "/teacher/reports")}>חזרה</Button>
       </div>
     );
@@ -308,6 +311,7 @@ const TeacherEditReport = () => {
             size="icon"
             className="text-primary-foreground hover:bg-primary-foreground/10"
             onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports/${reportId}` : `/teacher/reports/${reportId}`)}
+        <PageTitle title={`עריכת דוח — ${format(editDate, "dd/MM/yyyy")}`} />
           >
             <ArrowRight className="h-5 w-5" />
           </Button>

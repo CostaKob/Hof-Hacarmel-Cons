@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -312,7 +314,9 @@ const AdminPrivatePayments = () => {
 
   return (
     <AdminLayout title="תשלומים — שיעורים פרטניים" backPath="/admin">
+      <PageTitle title="דוח תשלומים פרטני" />
       <div className="space-y-4">
+
         {/* Counts */}
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
           <span><span className="font-semibold text-foreground">{totals.studentsCount}</span> תלמידים</span>
