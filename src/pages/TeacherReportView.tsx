@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowRight, Pencil, Trash2, Calendar, MapPin, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
@@ -93,6 +94,7 @@ const TeacherReportView = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="צפייה בדוח" />
       </div>
     );
   }
@@ -101,6 +103,7 @@ const TeacherReportView = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
+        <PageTitle title="צפייה בדוח" />
         <Button variant="outline" onClick={() => navigate(backPath)}>חזרה</Button>
       </div>
     );
@@ -108,6 +111,7 @@ const TeacherReportView = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="צפייה בדוח" />
       {/* Header */}
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center justify-between">
@@ -122,6 +126,7 @@ const TeacherReportView = () => {
             </Button>
             <h1 className="text-lg font-bold">צפייה ביום עבודה</h1>
           </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="secondary"

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_TYPE_GROUPS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 interface FormValues {
   name: string;
@@ -111,6 +112,7 @@ const AdminEnsembleForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת הרכב" : "הרכב חדש"} backPath="/admin/ensembles">
+      <PageTitle title="טופס הרכב" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit((v) => mutation.mutate(v))} className="space-y-4 max-w-lg">
           <FormField control={form.control} name="name" rules={{ required: "שדה חובה" }} render={({ field }) => (

@@ -5,6 +5,7 @@ import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS }
 import { ChevronLeft, ArrowRight, Music, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AppLogo from "@/components/AppLogo";
+import PageTitle from "@/components/PageTitle";
 
 const TeacherEnsembles = () => {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ const TeacherEnsembles = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="הרכבים שלי" />
       </div>
     );
   }
@@ -24,6 +26,7 @@ const TeacherEnsembles = () => {
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate("/teacher")}>
+        <PageTitle title="הרכבים שלי" />
             <ArrowRight className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold">ההרכבים שלי</h1>

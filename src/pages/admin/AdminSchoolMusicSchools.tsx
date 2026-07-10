@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import PageTitle from "@/components/PageTitle";
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 const getDayName = (school: any) => {
@@ -463,6 +464,7 @@ const AdminSchoolMusicSchools = () => {
 
   return (
     <AdminLayout title="בתי ספר מנגנים" backPath="/admin">
+      <PageTitle title="בתי ספר מנגן" />
       <Tabs dir="rtl" value={tab} onValueChange={setTab} className="w-full">
           <TabsList className="w-full mb-4">
             <TabsTrigger value="students" className="flex-1">

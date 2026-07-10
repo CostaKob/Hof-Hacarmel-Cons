@@ -12,8 +12,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2, AlertCircle, UserCheck } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { KNOWN_KEYS_SET } from "@/lib/registrationFieldKeys";
+import PageTitle from "@/components/PageTitle";
 import { CitySelect } from "@/components/CitySelect";
 import { normalizePhone } from "@/lib/phoneValidation";
+
 
 interface FieldDef {
   id: string;
@@ -672,6 +674,7 @@ const PublicRegistration = () => {
     const msg = page?.success_message || "ההרשמה נקלטה בהצלחה! ניצור קשר לאחר בדיקת הפרטים.";
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <PageTitle title="טופס הרשמה" />
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-10 pb-10 space-y-6">
             <AppLogo size="lg" />
@@ -710,6 +713,7 @@ const PublicRegistration = () => {
   if (yearLoading || pageLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <PageTitle title="טופס הרשמה" />
         <p className="text-muted-foreground">טוען...</p>
       </div>
     );
@@ -719,6 +723,7 @@ const PublicRegistration = () => {
   if (!activeYear) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <PageTitle title="טופס הרשמה" />
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
@@ -734,6 +739,7 @@ const PublicRegistration = () => {
   if (!activeYear.registration_open) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <PageTitle title="טופס הרשמה" />
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
@@ -749,6 +755,7 @@ const PublicRegistration = () => {
   if (!page) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+        <PageTitle title="טופס הרשמה" />
         <Card className="w-full max-w-lg text-center">
           <CardContent className="pt-10 pb-10 space-y-4">
             <AlertCircle className="h-16 w-16 text-muted-foreground mx-auto" />
@@ -993,7 +1000,9 @@ const PublicRegistration = () => {
 
   return (
     <div className="min-h-screen bg-muted/30 py-6 px-4" dir="rtl">
+      <PageTitle title={page?.title || "טופס הרשמה"} />
       <div className="max-w-2xl mx-auto space-y-6">
+
         {/* Header */}
         <div className="text-center space-y-3">
           <div className="flex justify-center">

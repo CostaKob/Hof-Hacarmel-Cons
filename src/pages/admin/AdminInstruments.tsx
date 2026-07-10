@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { sortByName } from "@/lib/sortHebrew";
+import PageTitle from "@/components/PageTitle";
 
 const AdminInstruments = () => {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ const AdminInstruments = () => {
 
   return (
     <AdminLayout title="כלי נגינה" backPath="/admin">
+      <PageTitle title="ניהול כלי נגינה" />
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

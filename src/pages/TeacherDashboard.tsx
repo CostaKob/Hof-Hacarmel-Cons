@@ -10,7 +10,9 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import PageTitle from "@/components/PageTitle";
 import AppLogo from "@/components/AppLogo";
+
 
 const WEEKDAYS_HE = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
@@ -68,6 +70,7 @@ const TeacherDashboard = () => {
   if (teacherLoading) {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
+        <PageTitle title="אזור מורה" />
         <p className="text-muted-foreground">טוען...</p>
       </div>
     );
@@ -75,6 +78,8 @@ const TeacherDashboard = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title={teacher ? `אזור מורה — ${teacher.first_name} ${teacher.last_name}` : "אזור מורה"} />
+
       {/* Blue gradient header */}
       <header className="bg-primary px-5 pb-8 pt-6 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center justify-between">

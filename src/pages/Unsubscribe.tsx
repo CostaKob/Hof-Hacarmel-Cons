@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import AppLogo from "@/components/AppLogo";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
 const SUPABASE_ANON = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
@@ -65,6 +66,7 @@ export default function Unsubscribe() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4" dir="rtl">
+      <PageTitle title="הסרת מנוי" />
       <Card className="w-full max-w-md text-center">
         <CardContent className="pt-10 pb-10 space-y-6">
           <AppLogo size="lg" />

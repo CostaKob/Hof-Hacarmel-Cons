@@ -2,7 +2,9 @@ import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import PageTitle from "@/components/PageTitle";
 import { ArrowRight, User, Music } from "lucide-react";
+
 
 type PublicTeacher = {
   id: string;
@@ -26,6 +28,8 @@ const PublicTeachers = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-gradient-to-b from-background via-background to-primary/5 text-foreground">
+      <PageTitle title="המורים שלנו" />
+
       {/* Header */}
       <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-5 py-3">

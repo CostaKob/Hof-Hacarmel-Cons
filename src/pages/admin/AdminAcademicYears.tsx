@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Plus, Users, CalendarDays, Archive, Eye, BookOpen, Star, ArrowUpCircle, Trash2, Link2, Copy, GraduationCap, FileSpreadsheet } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
+import PageTitle from "@/components/PageTitle";
 
 const AdminAcademicYears = () => {
   const navigate = useNavigate();
@@ -253,6 +254,7 @@ const AdminAcademicYears = () => {
 
   return (
     <AdminLayout title="ניהול שנות לימוד" backPath="/admin">
+      <PageTitle title="ניהול שנים לימודיות" />
       <div className="space-y-4 max-w-2xl">
         <div className="flex gap-2 flex-wrap">
           <Button className="h-12 rounded-xl text-base" onClick={() => { setShowForm(!showForm); if (!showForm) handleAutoFill(); }}>

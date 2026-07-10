@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Upload, X, User as UserIcon } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 
 interface TeacherFormData {
@@ -159,6 +160,7 @@ const AdminTeacherForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת מורה" : "מורה חדש"} backPath="/admin/teachers">
+      <PageTitle title="טופס מורה" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <h2 className="font-semibold text-foreground text-base">פרטי מורה</h2>

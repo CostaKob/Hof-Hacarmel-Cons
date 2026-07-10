@@ -3,6 +3,8 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -224,8 +226,9 @@ const AdminStudentCard = () => {
     enabled: !!studentId,
   });
 
-  if (isLoading) return <AdminLayout title="כרטיס תלמיד" backPath="/admin/students"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
-  if (!student) return <AdminLayout title="כרטיס תלמיד" backPath="/admin/students"><p className="text-center text-muted-foreground py-8">תלמיד לא נמצא</p></AdminLayout>;
+  if (isLoading) return <AdminLayout title="כרטיס תלמיד" backPath="/admin/students"><PageTitle title="כרטיס תלמיד" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+  if (!student) return <AdminLayout title="כרטיס תלמיד" backPath="/admin/students"><PageTitle title="כרטיס תלמיד" /><p className="text-center text-muted-foreground py-8">תלמיד לא נמצא</p></AdminLayout>;
+
 
   const DetailRow = ({ label, value }: { label: string; value?: string | null }) =>
     value ? (
@@ -245,7 +248,9 @@ const AdminStudentCard = () => {
 
   return (
     <AdminLayout title={`${(student as any).gender === "female" ? "👧" : (student as any).gender === "male" ? "👦" : ""} ${student.first_name} ${student.last_name}`} backPath="/admin/students" onBack={() => navigate(-1)}>
+      <PageTitle title={`כרטיס תלמיד — ${student.first_name} ${student.last_name}`} />
       <div className="space-y-5">
+
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={(student as any).student_status ?? "פעיל"} onValueChange={(v) => statusMutation.mutate(v)}>

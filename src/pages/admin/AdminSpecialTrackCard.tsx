@@ -2,6 +2,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -123,7 +125,9 @@ const AdminSpecialTrackCard = () => {
 
   return (
     <AdminLayout title={`${track.icon} ${track.label}`} backPath="/admin/ensembles">
+      <PageTitle title={`${track.label} — מסלול מיוחד`} />
       <Card>
+
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-lg">תלמידים ({students.length})</CardTitle>
           <Dialog open={pickerOpen} onOpenChange={(v) => { setPickerOpen(v); if (!v) { setSelected(new Set()); setSearch(""); } }}>

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, FileDown } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 const SchoolMusicRegisterSuccess = () => {
   const [params] = useSearchParams();
@@ -103,6 +104,7 @@ const SchoolMusicRegisterSuccess = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+      <PageTitle title="ההרשמה התקבלה" />
       <Card className="max-w-lg w-full">
         <CardContent className="py-12 text-center space-y-4">
           {renderBody()}

@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 const OPERATING_DAYS = [0, 1, 2, 3, 4, 5]; // Sun-Fri
@@ -141,6 +142,7 @@ const AdminSchoolMusicSchoolForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת בית ספר מנגן" : "בית ספר מנגן חדש"} backPath="/admin/school-music-schools">
+      <PageTitle title="טופס בית ספר מנגן" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <h2 className="font-semibold text-foreground text-base">פרטי בית ספר</h2>

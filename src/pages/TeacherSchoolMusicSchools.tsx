@@ -6,6 +6,7 @@ import { ChevronLeft, School, ClipboardCheck, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import PageTitle from "@/components/PageTitle";
 
 
 const TeacherSchoolMusicSchools = () => {
@@ -20,6 +21,7 @@ const TeacherSchoolMusicSchools = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       <header className="bg-primary px-5 pb-5 pt-6 text-primary-foreground">
+        <PageTitle title="בתי ספר מנגן" />
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground shrink-0" onClick={() => navigate("/teacher")}>
             <ChevronLeft className="h-5 w-5 rotate-180" />

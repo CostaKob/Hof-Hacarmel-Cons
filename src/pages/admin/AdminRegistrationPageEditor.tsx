@@ -14,6 +14,7 @@ import { Save, Eye } from "lucide-react";
 import { toast } from "sonner";
 import SectionsEditor from "@/components/admin/registration/SectionsEditor";
 import FieldsEditor from "@/components/admin/registration/FieldsEditor";
+import PageTitle from "@/components/PageTitle";
 
 const AdminRegistrationPageEditor = () => {
   const { pageId } = useParams<{ pageId: string }>();
@@ -67,6 +68,7 @@ const AdminRegistrationPageEditor = () => {
   if (isLoading) {
     return (
       <AdminLayout title="טוען..." backPath="/admin/registration-pages">
+        <PageTitle title="עורך דף הרשמה" />
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       </AdminLayout>
     );

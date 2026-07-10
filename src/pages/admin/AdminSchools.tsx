@@ -5,6 +5,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, ChevronLeft } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 const AdminSchools = () => {
   const navigate = useNavigate();
@@ -20,6 +21,7 @@ const AdminSchools = () => {
 
   return (
     <AdminLayout title="שלוחות" backPath="/admin">
+      <PageTitle title="ניהול בתי ספר" />
       <div className="mb-4 flex justify-end">
         <Button className="h-12 rounded-xl text-base" onClick={() => navigate("/admin/schools/new")}>
           <Plus className="h-4 w-4" /> שלוחה חדשה

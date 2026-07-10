@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, XCircle, FileDown } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
+import PageTitle from "@/components/PageTitle";
 
 const StudentPaymentSuccess = () => {
   const [params] = useSearchParams();
@@ -107,6 +108,7 @@ const StudentPaymentSuccess = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
+      <PageTitle title="התשלום התקבל" />
       <Card className="max-w-lg w-full">
         <CardContent className="py-12 text-center space-y-4">
           <div className="flex justify-center pb-2">

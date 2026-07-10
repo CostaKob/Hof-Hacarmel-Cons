@@ -12,6 +12,7 @@ import { Search, CheckCircle2, ExternalLink, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
+import PageTitle from "@/components/PageTitle";
 
 const ALL = "__all__";
 
@@ -123,6 +124,7 @@ const AdminSchoolMusicPayments = () => {
 
   return (
     <AdminLayout title="תשלומים — בית ספר מנגן" backPath="/admin">
+      <PageTitle title="תשלומי ביס מנגן" />
       <div className="space-y-4">
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3">

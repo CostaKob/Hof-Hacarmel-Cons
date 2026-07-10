@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Download, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { GRADES } from "@/lib/constants";
+import PageTitle from "@/components/PageTitle";
 
 const VALID_GRADES = GRADES as readonly string[];
 
@@ -206,6 +207,7 @@ const AdminGradeImport = () => {
 
   return (
     <AdminLayout title="ייבוא כיתות מאקסל" backPath="/admin/academic-years">
+      <PageTitle title="ייבוא כיתות" />
       <div className="max-w-3xl space-y-5">
         {done && result ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-center space-y-3">

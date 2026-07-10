@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -386,8 +388,9 @@ const AdminSchoolMusicSchoolCard = () => {
     onError: () => toast.error("שגיאה בשכפול"),
   });
 
-  if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
-  if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
+  if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><PageTitle title="בית ספר מנגן" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+  if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><PageTitle title="בית ספר מנגן" /><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
+
 
   const coordinator = (school as any).coordinator;
   const conductor = (school as any).conductor;
@@ -462,7 +465,9 @@ const AdminSchoolMusicSchoolCard = () => {
 
   return (
     <AdminLayout title={school.school_name} backPath="/admin/school-music-schools">
+      <PageTitle title={`בית ספר מנגן — ${school.school_name}`} />
       <div className="space-y-5">
+
         {/* School Details */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">

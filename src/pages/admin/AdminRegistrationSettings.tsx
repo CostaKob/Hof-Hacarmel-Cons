@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, GripVertical, Save, Eye, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 interface InfoSection {
   id: string;
@@ -154,6 +155,7 @@ const AdminRegistrationSettings = () => {
 
   return (
     <AdminLayout title="הגדרות טופס הרשמה" backPath="/admin/registrations">
+      <PageTitle title="הגדרות הרשמה" />
       <div className="space-y-6">
         {/* Year selector + toggle */}
         <Card>

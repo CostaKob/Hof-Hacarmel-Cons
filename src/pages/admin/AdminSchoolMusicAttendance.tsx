@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { ClipboardEdit, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
+import PageTitle from "@/components/PageTitle";
 
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
@@ -138,6 +139,7 @@ const AdminSchoolMusicAttendance = () => {
 
   return (
     <AdminLayout title="נוכחות מורים — בתי ספר מנגנים" backPath="/admin">
+      <PageTitle title="נוכחות ביס מנגן" />
       <div className="space-y-4">
         <div className="flex justify-end">
           <Dialog open={manualOpen} onOpenChange={setManualOpen}>

@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import PageTitle from "@/components/PageTitle";
 import AppLogo from "@/components/AppLogo";
 import { toast } from "sonner";
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -15,11 +17,8 @@ const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    document.title = "דף כניסה למורים וצוות";
-  }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
+
     e.preventDefault();
     setIsLoading(true);
     const { error } = await signIn(email, password);
@@ -35,7 +34,10 @@ const Login = () => {
   };
 
   return (
-    <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
+    <>
+      <PageTitle title="כניסה למערכת" />
+      <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
+
       <div className="mb-6">
         <AppLogo size="lg" />
       </div>
@@ -77,7 +79,9 @@ const Login = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
+
 };
 
 export default Login;

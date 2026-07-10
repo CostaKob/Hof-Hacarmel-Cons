@@ -11,6 +11,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import PageTitle from "@/components/PageTitle";
+
 
 interface City {
   id: string;
@@ -91,6 +93,7 @@ const AdminCities = () => {
 
   return (
     <AdminLayout title="ישובי מגורים" backPath="/admin">
+      <PageTitle title="ניהול יישובים" />
       <div className="space-y-5 max-w-3xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
           <h2 className="font-semibold text-foreground text-base">הוספת ישוב חדש</h2>

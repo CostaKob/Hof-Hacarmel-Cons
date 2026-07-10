@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySummaryTable";
 import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
+import PageTitle from "@/components/PageTitle";
 
 function useAllEnrollments(yearId: string | null) {
   return useQuery({
@@ -108,6 +109,7 @@ const AdminYearlySummary = () => {
 
   return (
     <AdminLayout title="סיכום שיעורים שנתי - כלל המערכת" backPath="/admin">
+      <PageTitle title="סיכום שנתי" />
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-3">

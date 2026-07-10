@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { GRADE_PROMOTION } from "@/lib/constants";
 import { Search, AlertTriangle, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 interface StudentWithMismatch {
   id: string;
@@ -165,6 +166,7 @@ const AdminGradeCorrection = () => {
 
   return (
     <AdminLayout title="תיקון כיתות" backPath="/admin">
+      <PageTitle title="תיקון כיתות" />
       <div className="space-y-5 max-w-4xl">
         {/* Explanation */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">

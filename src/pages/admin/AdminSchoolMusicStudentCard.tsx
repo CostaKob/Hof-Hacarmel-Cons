@@ -3,6 +3,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
@@ -75,6 +77,7 @@ const AdminSchoolMusicStudentCard = () => {
   if (isLoading) {
     return (
       <AdminLayout title="כרטיס תלמיד" backPath="/admin/school-music-schools">
+        <PageTitle title="כרטיס תלמיד ביס מנגן" />
         <p className="text-muted-foreground">טוען...</p>
       </AdminLayout>
     );
@@ -83,6 +86,7 @@ const AdminSchoolMusicStudentCard = () => {
   if (!student) {
     return (
       <AdminLayout title="כרטיס תלמיד" backPath="/admin/school-music-schools">
+        <PageTitle title="כרטיס תלמיד ביס מנגן" />
         <p className="text-muted-foreground">תלמיד לא נמצא</p>
       </AdminLayout>
     );
@@ -96,8 +100,11 @@ const AdminSchoolMusicStudentCard = () => {
       backPath={student.school_music_schools?.id
         ? `/admin/school-music-schools/${student.school_music_schools.id}`
         : "/admin/school-music-schools"}
+
     >
+      <PageTitle title={`כרטיס תלמיד ביס מנגן — ${fullName}`} />
       <div className="space-y-4 max-w-2xl">
+
         {/* Header card */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-2">
           <div className="flex items-start justify-between flex-wrap gap-2">

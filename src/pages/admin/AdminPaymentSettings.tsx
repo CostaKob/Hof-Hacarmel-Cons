@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -140,6 +142,7 @@ const AdminPaymentSettings = () => {
   if (isLoading || discountsLoading) {
     return (
       <AdminLayout title="הגדרות תשלום" backPath="/admin">
+        <PageTitle title="הגדרות תשלום" />
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       </AdminLayout>
     );
@@ -149,7 +152,9 @@ const AdminPaymentSettings = () => {
 
   return (
     <AdminLayout title="הגדרות תשלום" backPath="/admin">
+      <PageTitle title={`הגדרות תשלום — שנת ${yearName}`} />
       <div className="space-y-5">
+
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div>
             <h2 className="font-semibold text-foreground text-base">מחירון שיעורים (גלובלי)</h2>

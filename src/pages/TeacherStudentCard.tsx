@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, User, Phone, Mail, MapPin, Music, School, Calendar } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
+import PageTitle from "@/components/PageTitle";
 
 const TeacherStudentCard = () => {
   const { enrollmentId } = useParams<{ enrollmentId: string }>();
@@ -22,6 +23,7 @@ const TeacherStudentCard = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="כרטיס תלמיד" />
       </div>
     );
   }
@@ -30,6 +32,7 @@ const TeacherStudentCard = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">רישום לא נמצא</p>
+        <PageTitle title="כרטיס תלמיד" />
         <Button variant="outline" onClick={() => navigate("/teacher/students")}>חזרה</Button>
       </div>
     );
@@ -38,6 +41,7 @@ const TeacherStudentCard = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       {/* Header with student name */}
+        <PageTitle title={`כרטיס תלמיד — ${student.first_name} ${student.last_name}`} />
       <header className="bg-primary px-5 pb-8 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button

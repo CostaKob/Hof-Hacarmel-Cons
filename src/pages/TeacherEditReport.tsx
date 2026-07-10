@@ -32,6 +32,7 @@ import { ArrowRight, CalendarIcon, Save } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import PageTitle from "@/components/PageTitle";
 
 type AttendanceStatus = Database["public"]["Enums"]["attendance_status"];
 
@@ -260,6 +261,7 @@ const TeacherEditReport = () => {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
         <p className="text-muted-foreground">טוען...</p>
+        <PageTitle title="עריכת דוח" />
       </div>
     );
   }
@@ -268,6 +270,7 @@ const TeacherEditReport = () => {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
         <p className="text-muted-foreground">דיווח לא נמצא</p>
+        <PageTitle title="עריכת דוח" />
         <Button variant="outline" onClick={() => navigate(isAdminContext ? `/admin/teachers/${urlTeacherId}/reports` : "/teacher/reports")}>חזרה</Button>
       </div>
     );
@@ -301,6 +304,7 @@ const TeacherEditReport = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title={`עריכת דוח — ${format(editDate, "dd/MM/yyyy")}`} />
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button
@@ -314,6 +318,7 @@ const TeacherEditReport = () => {
           <h1 className="text-lg font-bold">עריכת יום עבודה</h1>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-5">
         {/* Report details */}

@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, GraduationCap, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PageTitle from "@/components/PageTitle";
+
 
 const ROLE_CONFIG: Record<AppRole, { label: string; path: string; icon: React.ReactNode; description: string }> = {
   admin: { label: "מנהל", path: "/admin", icon: <Shield className="h-6 w-6" />, description: "ניהול המערכת, משתמשים ונתונים" },
@@ -46,7 +48,9 @@ const Index = () => {
   // Multiple roles — show chooser
   return (
     <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
+      <PageTitle title="בחירת אזור" />
       <div className="w-full max-w-md space-y-6">
+
         <div className="text-center space-y-1">
           <h1 className="text-2xl font-bold text-foreground">בחר אזור</h1>
           <p className="text-sm text-muted-foreground">יש לך מספר תפקידים במערכת. לאן תרצה להיכנס?</p>

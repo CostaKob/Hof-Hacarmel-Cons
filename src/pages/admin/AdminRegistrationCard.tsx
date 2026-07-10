@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -114,11 +116,11 @@ const AdminRegistrationCard = () => {
   });
 
   if (isLoading) {
-    return <AdminLayout title="הרשמה"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+    return <AdminLayout title="הרשמה"><PageTitle title="כרטיס הרשמה" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   }
 
   if (!registration) {
-    return <AdminLayout title="הרשמה"><p className="text-center text-muted-foreground py-8">ההרשמה לא נמצאה</p></AdminLayout>;
+    return <AdminLayout title="הרשמה"><PageTitle title="כרטיס הרשמה" /><p className="text-center text-muted-foreground py-8">ההרשמה לא נמצאה</p></AdminLayout>;
   }
 
   const r = registration;
@@ -134,7 +136,9 @@ const AdminRegistrationCard = () => {
       backPath="/admin/registrations"
       onBack={() => navigate(-1)}
     >
+      <PageTitle title={`כרטיס הרשמה — ${r.student_first_name} ${r.student_last_name}`} />
       <div className="space-y-4">
+
         {/* Status & Actions */}
         <Card>
           <CardContent className="pt-5 space-y-4">

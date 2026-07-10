@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Check, X, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import PageTitle from "@/components/PageTitle";
 
 type Status = "present" | "absent" | "vacation";
 interface Row { status: Status; notes: string }
@@ -143,6 +144,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="דיווח נוכחות ביס מנגן" />
       <header className="bg-primary px-5 pb-5 pt-6 text-primary-foreground">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           <Button variant="ghost" size="icon" className="text-primary-foreground shrink-0" onClick={() => navigate(backPath)}>

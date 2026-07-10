@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Plus, CalendarDays, Navigation, Users, Pencil } from "lucide-react";
+import PageTitle from "@/components/PageTitle";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
@@ -76,6 +77,7 @@ const TeacherReports = () => {
   return (
     <div dir="rtl" className="min-h-screen bg-background">
       {/* Header */}
+        <PageTitle title="דוחות מורה" />
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center justify-between">
           <div className="flex items-center gap-3">

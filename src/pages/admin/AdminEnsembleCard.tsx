@@ -2,6 +2,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -155,11 +157,11 @@ const AdminEnsembleCard = () => {
   });
 
   if (isLoading) {
-    return <AdminLayout title="טוען..." backPath="/admin/ensembles"><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
+    return <AdminLayout title="טוען..." backPath="/admin/ensembles"><PageTitle title="כרטיס הרכב" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
   }
 
   if (!ensemble) {
-    return <AdminLayout title="לא נמצא" backPath="/admin/ensembles"><p className="text-center text-muted-foreground py-8">ההרכב לא נמצא</p></AdminLayout>;
+    return <AdminLayout title="לא נמצא" backPath="/admin/ensembles"><PageTitle title="כרטיס הרכב" /><p className="text-center text-muted-foreground py-8">ההרכב לא נמצא</p></AdminLayout>;
   }
 
   const existingEnrollmentIds = new Set(
@@ -168,7 +170,9 @@ const AdminEnsembleCard = () => {
 
   return (
     <AdminLayout title={ensemble.name} backPath="/admin/ensembles">
+      <PageTitle title={`כרטיס הרכב — ${ensemble.name}`} />
       <div className="space-y-5">
+
         {/* Details */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">

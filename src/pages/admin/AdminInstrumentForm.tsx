@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import PageTitle from "@/components/PageTitle";
 
 interface FormData {
   name: string;
@@ -55,6 +56,7 @@ const AdminInstrumentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת כלי נגינה" : "כלי נגינה חדש"} backPath="/admin/instruments">
+      <PageTitle title="טופס כלי נגינה" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="max-w-md space-y-5">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <h2 className="font-semibold text-foreground text-base">פרטים</h2>

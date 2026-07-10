@@ -5,6 +5,8 @@ import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import AdminLayout from "@/components/admin/AdminLayout";
+import PageTitle from "@/components/PageTitle";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -440,6 +442,7 @@ const AdminRegistrationConvert = () => {
   if (regLoading) {
     return (
       <AdminLayout title="טוען..." backPath={`/admin/registrations/${id}`}>
+        <PageTitle title="שיוך הרשמה" />
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       </AdminLayout>
     );
@@ -448,6 +451,7 @@ const AdminRegistrationConvert = () => {
   if (!registration) {
     return (
       <AdminLayout title="הרשמה" backPath="/admin/registrations">
+        <PageTitle title="שיוך הרשמה" />
         <p className="text-center text-muted-foreground py-8">ההרשמה לא נמצאה</p>
       </AdminLayout>
     );
@@ -466,8 +470,11 @@ const AdminRegistrationConvert = () => {
     <AdminLayout
       title={`טיפול בהרשמה — ${r.student_first_name} ${r.student_last_name}`}
       backPath={`/admin/registrations/${id}`}
+
     >
+      <PageTitle title={`שיוך הרשמה — ${r.student_first_name} ${r.student_last_name}`} />
       <form onSubmit={handleSubmit((d) => convertMutation.mutate(d))} className="space-y-5 max-w-2xl">
+
 
         {/* Existing student decision */}
         {r.existing_student_id && (

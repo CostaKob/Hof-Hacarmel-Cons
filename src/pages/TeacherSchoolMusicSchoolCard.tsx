@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, School, User, Users, Music } from "lucide-react";
 import { useMemo } from "react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import PageTitle from "@/components/PageTitle";
 
 /* ─── helpers ─── */
 
@@ -268,6 +269,7 @@ const TeacherSchoolMusicSchoolCard = () => {
     <div dir="rtl" className="min-h-screen bg-background">
       {/* Header */}
       <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
+        <PageTitle title={`בית ספר מנגן — ${school?.school_name ?? ""}`} />
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button
             variant="ghost"

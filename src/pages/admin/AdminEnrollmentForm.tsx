@@ -16,6 +16,7 @@ import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { GRADES } from "@/lib/constants";
 import { computeDefaultInstrumentStartDate } from "@/lib/enrollmentDefaults";
+import PageTitle from "@/components/PageTitle";
 
 interface EnrollmentFormData {
   student_id: string;
@@ -343,6 +344,7 @@ const AdminEnrollmentForm = () => {
 
   return (
     <AdminLayout title={isEdit ? "עריכת שיוך" : "שיוך חדש"} backPath={presetStudentId ? `/admin/students/${presetStudentId}` : "/admin/enrollments"}>
+      <PageTitle title="טופס שיוך" />
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
