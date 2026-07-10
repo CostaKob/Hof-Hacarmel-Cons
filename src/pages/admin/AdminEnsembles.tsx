@@ -61,7 +61,7 @@ const AdminEnsembles = () => {
 
   return (
     <AdminLayout title="הרכבים" backPath="/admin">
-      <Tabs value={tab} onValueChange={setTab} className="flex flex-col gap-4">
+      <Tabs dir="rtl" value={tab} onValueChange={setTab} className="flex flex-col gap-4">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="ensembles">הרכבים</TabsTrigger>
           <TabsTrigger value="tracks">מסלולים מיוחדים</TabsTrigger>
