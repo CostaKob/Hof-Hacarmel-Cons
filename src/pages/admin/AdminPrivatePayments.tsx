@@ -138,16 +138,18 @@ const AdminPrivatePayments = () => {
 
       const stuPayments = paymentsForStudent(studentId);
       const pendingSrc = stuPayments.find((p) => p.payment_status === "pending");
-      // Source of truth: pending payment link if exists, else historical breakdown, else pure auto-calc.
-      const source =
-        pendingSrc ??
-        stuPayments.find((p) => {
-          const br = p?.enrollment_breakdown;
-          return br && !Array.isArray(br) && br.discounts;
-        });
-      const brDiscounts: any = source?.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
+      const paidWithBreakdown = stuPayments.find((p) => {
+        if (p.payment_status === "pending") return false;
+        const br = p?.enrollment_breakdown;
+        return br && !Array.isArray(br) && br.discounts;
+      });
+      // Show ONLY students with an actual payment link (pending or paid). No guessing.
+      const source = pendingSrc ?? paidWithBreakdown;
+      if (!source) continue;
+      const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
         ? source.enrollment_breakdown.discounts ?? {}
         : {};
+
 
       const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
         ? brDiscounts.selectedDiscountIds
