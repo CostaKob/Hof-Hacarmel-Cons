@@ -151,6 +151,28 @@ const AdminRegistrations = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={gradeFilter} onValueChange={setGradeFilter}>
+            <SelectTrigger className="w-40 h-11 rounded-xl">
+              <SelectValue placeholder="כיתה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל הכיתות</SelectItem>
+              {gradeOptions.map((g) => (
+                <SelectItem key={g} value={g}>כיתה {g}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
+            <SelectTrigger className="w-48 h-11 rounded-xl">
+              <SelectValue placeholder="כלי נגינה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל הכלים</SelectItem>
+              {instrumentOptions.map((i) => (
+                <SelectItem key={i} value={i}>{i}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Compact summary: total + per-school chips */}
