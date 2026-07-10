@@ -286,45 +286,7 @@ const AdminStudentPaymentCalc = () => {
   };
 
 
-  // Hydrate discount state from the most recent payment (pending or paid) so
-  // reopening the card shows the same discounts that were used previously.
-  useEffect(() => {
-    if (hydratedFromPending || !discountTypes.length) return;
-    const source =
-      (pendingPayments && pendingPayments[0]) ||
-      ((allStudentPayments as any[]).find((p) => {
-        const br = p?.enrollment_breakdown;
-        return br && !Array.isArray(br) && br.discounts;
-      }) as any);
-    if (!source) return;
-    const br = source?.enrollment_breakdown;
-    const d = br && !Array.isArray(br) ? br.discounts : null;
-    if (d && typeof d === "object") {
-      const mapped = mapLegacy(d);
-      if (mapped.length) setSelectedDiscountIds(mapped);
-      if (Array.isArray(d.customDiscounts)) setCustomDiscounts(d.customDiscounts);
-      if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
-        setStartDateOverrides(d.startDateOverrides);
-      }
-    }
-    setHydratedFromPending(true);
-  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes]);
 
-  // Persist discounts whenever they change
-  useEffect(() => {
-    if (!lsKey) return;
-    try {
-      localStorage.setItem(lsKey, JSON.stringify({
-        selectedDiscountIds, customDiscounts, startDateOverrides,
-      }));
-    } catch { /* ignore quota errors */ }
-  }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
-
-  const toggleDiscount = (id: string) => {
-    setSelectedDiscountIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
 
 
   // Update enrollment end_date directly from the table.
