@@ -1881,6 +1881,57 @@ export type Database = {
           },
         ]
       }
+      student_payment_drafts: {
+        Row: {
+          academic_year_id: string
+          created_at: string
+          custom_discounts: Json
+          id: string
+          selected_discount_ids: string[]
+          start_date_overrides: Json
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_year_id: string
+          created_at?: string
+          custom_discounts?: Json
+          id?: string
+          selected_discount_ids?: string[]
+          start_date_overrides?: Json
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_year_id?: string
+          created_at?: string
+          custom_discounts?: Json
+          id?: string
+          selected_discount_ids?: string[]
+          start_date_overrides?: Json
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_payment_drafts_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payment_drafts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_payments: {
         Row: {
           academic_year_id: string | null
