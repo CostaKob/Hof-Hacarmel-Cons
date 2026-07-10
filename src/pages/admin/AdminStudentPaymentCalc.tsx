@@ -119,14 +119,32 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  // Pending payment links across ALL years — a link may have been created while a
+  // different year was selected; we still want to surface it here to avoid "ghost" links.
+  const { data: allPendingPayments = [] } = useQuery({
+    queryKey: ["calc-pending-payments-all-years", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const { data: enrs } = await supabase.from("enrollments").select("id").eq("student_id", studentId!);
+      const ids = (enrs ?? []).map((e) => e.id);
+      const query = supabase
+        .from("student_payments")
+        .select("*, academic_years(start_date, end_date)")
+        .eq("payment_status", "pending")
+        .order("created_at", { ascending: false });
+      const { data, error } = ids.length > 0
+        ? await query.or(`student_id.eq.${studentId},enrollment_id.in.(${ids.join(",")})`)
+        : await query.eq("student_id", studentId!);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const paymentsList = useMemo(
     () => (allStudentPayments as any[]).filter((p) => (p.payment_status ?? "paid") !== "pending"),
     [allStudentPayments],
   );
-  const pendingPayments = useMemo(
-    () => (allStudentPayments as any[]).filter((p) => p.payment_status === "pending"),
-    [allStudentPayments],
-  );
+  const pendingPayments = allPendingPayments as any[];
 
   const paymentsAggr = useMemo(() => {
     let paid = 0, credit = 0, net = 0;
