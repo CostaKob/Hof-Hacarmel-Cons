@@ -58,6 +58,7 @@ import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
 import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
+import AdminSpecialTrackCard from "./pages/admin/AdminSpecialTrackCard";
 import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
 import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
 import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard";
