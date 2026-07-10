@@ -552,6 +552,11 @@ const PublicRegistration = () => {
         const err = validateEmail(String(val));
         if (err) errors[field.field_key] = err;
       }
+
+      if (field.field_key === "student_full_name" || field.field_key === "parent_name") {
+        const err = validatePersonName(String(val));
+        if (err) errors[field.field_key] = err;
+      }
     }
 
     // Validate educational_school (injected field, not from DB fields)
