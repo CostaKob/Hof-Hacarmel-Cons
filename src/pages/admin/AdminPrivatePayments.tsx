@@ -189,12 +189,11 @@ const AdminPrivatePayments = () => {
 
 
       const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
-      const customDiscounts = useDraft
-        ? (Array.isArray(draft.custom_discounts) ? draft.custom_discounts : [])
-        : (Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : []);
-      const startDateOverrides = useDraft
-        ? (draft.start_date_overrides && typeof draft.start_date_overrides === "object" ? draft.start_date_overrides : {})
-        : (brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object" ? brDiscounts.startDateOverrides : {});
+      const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
+      const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
+        ? brDiscounts.startDateOverrides
+        : {};
+
 
       // Compute prorated per enrollment
       const calcRows = enrList.map((e) =>
