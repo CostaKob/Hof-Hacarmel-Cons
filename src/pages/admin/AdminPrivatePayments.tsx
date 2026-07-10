@@ -250,16 +250,28 @@ const AdminPrivatePayments = () => {
   }, [rows, statusFilter, schoolFilter, teacherFilter, search]);
 
   const totals = useMemo(() => {
-    let potential = 0, paid = 0, balance = 0;
-    for (const r of filtered) { potential += r.totalDue; paid += Math.max(0, r.paid); balance += Math.max(0, r.balance); }
-    return { potential, paid, balance };
+    let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0;
+    for (const r of filtered) {
+      potential += r.totalDue;
+      paid += Math.max(0, r.paid);
+      balance += Math.max(0, r.balance);
+      enrollmentsCount += r.enrollments.length;
+    }
+    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount };
   }, [filtered]);
+
 
   const fmt = (n: number) => Math.round(n).toLocaleString("he-IL");
 
   return (
     <AdminLayout title="תשלומים — שיעורים פרטניים" backPath="/admin">
       <div className="space-y-4">
+        {/* Counts */}
+        <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
+          <span><span className="font-semibold text-foreground">{totals.studentsCount}</span> תלמידים</span>
+          <span><span className="font-semibold text-foreground">{totals.enrollmentsCount}</span> שיוכים</span>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="rounded-xl border border-border bg-card p-4 text-center">
@@ -275,6 +287,7 @@ const AdminPrivatePayments = () => {
             <p className="text-2xl font-bold text-amber-600">{fmt(totals.balance)} ₪</p>
           </div>
         </div>
+
 
         {/* Filters */}
         <div className="flex flex-col gap-3 sm:flex-row">
@@ -319,7 +332,7 @@ const AdminPrivatePayments = () => {
           <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
         ) : (
           <div className="space-y-2">
-            {filtered.map((r) => {
+            {filtered.map((r, idx) => {
               const statusBadge =
                 r.status === "paid" ? { label: "שולם", variant: "default" as const } :
                 r.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
@@ -333,10 +346,12 @@ const AdminPrivatePayments = () => {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
                         <p className="font-semibold text-foreground">{r.student.first_name} {r.student.last_name}</p>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
                         {r.student.grade && <span className="text-xs text-muted-foreground">כיתה {r.student.grade}</span>}
                       </div>
+
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1">
                         {r.student.parent_name && <span>הורה: {r.student.parent_name}</span>}
                         {r.student.parent_phone && <PhoneDisplay phone={r.student.parent_phone} />}
