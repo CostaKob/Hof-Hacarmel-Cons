@@ -143,101 +143,103 @@ const AdminPrivatePayments = () => {
         const br = p?.enrollment_breakdown;
         return br && !Array.isArray(br) && br.discounts;
       });
-      // Show ONLY students with an actual payment link (pending or paid). No guessing.
       const source = pendingSrc ?? paidWithBreakdown;
-      if (!source) continue;
-      const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
-        ? source.enrollment_breakdown.discounts ?? {}
-        : {};
+      const hasSource = !!source;
 
+      let totalDue = 0;
+      let paid = 0;
+      let balance = 0;
+      let status: StatusFilter = "uncalculated";
+      let specialRevenue = 0;
+      let proratedTotal = 0;
 
-      const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
-        ? brDiscounts.selectedDiscountIds
-        : [];
-      const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
-      const idSet = new Set<string>(selectedDiscountIds);
-      for (const k of Object.keys(legacyMap)) {
-        if (brDiscounts[k] === true) {
-          const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
-          if (dt) idSet.add(dt.id);
+      if (hasSource) {
+        const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
+          ? source.enrollment_breakdown.discounts ?? {}
+          : {};
+
+        const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
+          ? brDiscounts.selectedDiscountIds
+          : [];
+        const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
+        const idSet = new Set<string>(selectedDiscountIds);
+        for (const k of Object.keys(legacyMap)) {
+          if (brDiscounts[k] === true) {
+            const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
+            if (dt) idSet.add(dt.id);
+          }
         }
+
+        const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
+        const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
+        const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
+          ? brDiscounts.startDateOverrides
+          : {};
+
+        const calcRows = enrList.map((e) =>
+          calcEnrollment(
+            {
+              id: e.id,
+              duration: e.lesson_duration_minutes,
+              startDate: startDateOverrides[e.id] ?? e.start_date,
+              endDate: e.end_date,
+              pricePerLessonOverride: e.price_per_lesson,
+            },
+            prices,
+            year.start_date,
+            year.end_date
+          )
+        );
+
+        proratedTotal = calcRows.reduce((s, r) => s + r.prorated, 0);
+        const stdCompute = computeStandardDiscounts(
+          calcRows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+          selectedDiscounts,
+        );
+
+        const specialBase =
+          (student.has_music_production_course ? musicProdPrice : 0) +
+          (student.has_recital_track ? recitalPrice : 0);
+        const specialAfterStd = specialBase;
+
+        const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
+        const customDiscountAmount = customDiscounts.reduce((sum: number, c: any) => {
+          const v = Number(c.value) || 0;
+          if (c.mode === "pct") return sum + (afterStdDiscount * v) / 100;
+          return sum + v;
+        }, 0);
+        totalDue = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
+
+        let netPaid = 0, credit = 0, net = 0;
+        for (const p of stuPayments) {
+          if (p.payment_status === "pending") continue;
+          const amount = Number(p.amount || 0);
+          if (amount < 0) { credit += Math.abs(amount); net += amount; }
+          else if (p.transaction_type === "payment") { paid += amount; net += amount; }
+          else { credit += amount; net -= amount; }
+        }
+        paid = net;
+        balance = Math.round((totalDue - net) * 100) / 100;
+
+        if (totalDue > 0 && balance <= 0.01) status = "paid";
+        else if (net > 0 && balance > 0.01) status = "partial";
+        else status = "unpaid";
+
+        specialRevenue = specialAfterStd;
       }
-
-      // No guessing — discounts come ONLY from an actual payment link.
-
-
-
-      const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
-      const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
-      const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
-        ? brDiscounts.startDateOverrides
-        : {};
-
-
-      // Compute prorated per enrollment
-      const calcRows = enrList.map((e) =>
-        calcEnrollment(
-          {
-            id: e.id,
-            duration: e.lesson_duration_minutes,
-            startDate: startDateOverrides[e.id] ?? e.start_date,
-            endDate: e.end_date,
-            pricePerLessonOverride: e.price_per_lesson,
-          },
-          prices,
-          year.start_date,
-          year.end_date
-        )
-      );
-
-      const proratedTotal = calcRows.reduce((s, r) => s + r.prorated, 0);
-      const stdCompute = computeStandardDiscounts(
-        calcRows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
-        selectedDiscounts,
-      );
-
-      // Special courses — discounts DO NOT apply to special courses (full price always).
-      const specialBase =
-        (student.has_music_production_course ? musicProdPrice : 0) +
-        (student.has_recital_track ? recitalPrice : 0);
-      const specialAfterStd = specialBase;
-
-
-      const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
-      const customDiscountAmount = customDiscounts.reduce((sum: number, c: any) => {
-        const v = Number(c.value) || 0;
-        if (c.mode === "pct") return sum + (afterStdDiscount * v) / 100;
-        return sum + v;
-      }, 0);
-      const totalDue = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
-
-      // Net paid (mirrors calc page)
-      let paid = 0, credit = 0, net = 0;
-      for (const p of stuPayments) {
-        if (p.payment_status === "pending") continue;
-        const amount = Number(p.amount || 0);
-        if (amount < 0) { credit += Math.abs(amount); net += amount; }
-        else if (p.transaction_type === "payment") { paid += amount; net += amount; }
-        else { credit += amount; net -= amount; }
-      }
-      const balance = Math.round((totalDue - net) * 100) / 100;
-
-      let status: StatusFilter = "unpaid";
-      if (totalDue > 0 && balance <= 0.01) status = "paid";
-      else if (net > 0 && balance > 0.01) status = "partial";
-      else status = "unpaid";
 
       result.push({
         studentId,
         student,
         enrollments: enrList,
         totalDue,
-        paid: net,
+        paid,
         balance,
         status,
-        hasSpecialCourse: specialBase > 0,
-        specialRevenue: specialAfterStd,
+        hasSpecialCourse: (student.has_music_production_course || student.has_recital_track),
+        specialRevenue,
         proratedTotal,
+        hasSource,
       });
     }
 
