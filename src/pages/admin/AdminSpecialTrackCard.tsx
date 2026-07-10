@@ -58,7 +58,7 @@ const AdminSpecialTrackCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, first_name, last_name, grade, is_junior_track, is_major_student, has_music_production_course")
+        .select("id, first_name, last_name, grade, is_junior_track, is_major_student, has_music_production_course, has_recital_track")
         .eq("is_active", true);
       if (error) throw error;
       return sortByPerson(data || []);
