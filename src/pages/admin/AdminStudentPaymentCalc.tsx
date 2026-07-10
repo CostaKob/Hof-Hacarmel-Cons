@@ -201,23 +201,26 @@ const AdminStudentPaymentCalc = () => {
     discountTypes.filter((d) => EXCLUSIVE_KEYS.includes(d.legacy_key as any)).map((d) => d.id),
   );
 
+  // Auto-selects run once per page load. They apply based on current student
+  // data (major status, active enrollment count, כרם מהר״ל branch) as long as
+  // no exclusive percentage discount is already selected. Deselecting during
+  // the session sticks because deps don't change — but reopening the page will
+  // re-evaluate, matching user expectation for "automatic" behavior.
   useEffect(() => {
-    if (!student?.is_major_student || lsInitial || !discountTypes.length) return;
+    if (!student?.is_major_student || !discountTypes.length) return;
     const dt = discountTypes.find((d) => d.legacy_key === "major_student");
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
       if (prev.includes(dt.id)) return prev;
-      // Major student wins over sibling/second_instrument.
-      const cleaned = prev.filter((id) => !exclusiveIdsSet.has(id));
-      return [...cleaned, dt.id];
+      if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      return [...prev, dt.id];
     });
   }, [student, discountTypes]);
 
-  // Auto-select "כלי שני" discount when the student has more than one active
-  // enrollment in the year — only on first open (no localStorage state yet).
-  // Skipped if another exclusive discount is already selected.
+  // Auto-select "כלי שני" when the student has 2+ active enrollments and no
+  // exclusive percentage discount is already selected.
   useEffect(() => {
-    if (lsInitial || !discountTypes.length || !enrollments) return;
+    if (!discountTypes.length || !enrollments) return;
     const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
     if (activeCount < 2) return;
     const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
@@ -230,7 +233,7 @@ const AdminStudentPaymentCalc = () => {
 
   // Auto-select "שלוחה אחה״צ" when any enrollment is at כרם מהר״ל.
   useEffect(() => {
-    if (lsInitial || !discountTypes.length || !enrollments) return;
+    if (!discountTypes.length || !enrollments) return;
     const hasKarmel = (enrollments as any[]).some(
       (e) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
     );
