@@ -121,12 +121,6 @@ const AdminRegistrationEdit = () => {
     return <AdminLayout title="עריכת הרשמה"><p className="text-center text-muted-foreground py-8">ההרשמה לא נמצאה</p></AdminLayout>;
   }
 
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div className="space-y-1.5">
-      <Label className="text-sm">{label}</Label>
-      {children}
-    </div>
-  );
 
   return (
     <AdminLayout
