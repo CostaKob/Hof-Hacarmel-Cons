@@ -298,15 +298,20 @@ const AdminPrivatePayments = () => {
 
   const totals = useMemo(() => {
     let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0, specialRevenue = 0, specialCount = 0;
+    let productionRevenue = 0, recitalRevenue = 0, productionCount = 0, recitalCount = 0;
+    const musicProdPrice = Number(settings?.music_production_price || 0);
+    const recitalPrice = Number(settings?.recital_track_price || 0);
     for (const r of filtered) {
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
       enrollmentsCount += r.enrollments.length;
       if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; specialCount += 1; }
+      if (r.student.has_music_production_course) { productionRevenue += musicProdPrice; productionCount += 1; }
+      if (r.student.has_recital_track) { recitalRevenue += recitalPrice; recitalCount += 1; }
     }
-    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount };
-  }, [filtered]);
+    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount, productionRevenue, recitalRevenue, productionCount, recitalCount };
+  }, [filtered, settings]);
 
 
 
@@ -331,6 +336,7 @@ const AdminPrivatePayments = () => {
             <p className="text-xs text-muted-foreground">פוטנציאל הכנסות</p>
             <p className="text-2xl font-bold text-foreground">{fmt(totals.potential)} ₪</p>
             <p className="text-[10px] text-muted-foreground mt-1">מזה מסלולים מיוחדים: {fmt(totals.specialRevenue)} ₪</p>
+            <p className="text-[10px] text-muted-foreground">🎚️ הפקה: {fmt(totals.productionRevenue)} ₪ ({totals.productionCount}) · 🎼 רסיטל: {fmt(totals.recitalRevenue)} ₪ ({totals.recitalCount})</p>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4 text-center">
