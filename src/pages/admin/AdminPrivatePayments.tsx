@@ -332,11 +332,24 @@ const AdminPrivatePayments = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <p className="text-xs text-muted-foreground">פוטנציאל הכנסות</p>
-            <p className="text-2xl font-bold text-foreground">{fmt(totals.potential)} ₪</p>
-            <p className="text-[10px] text-muted-foreground mt-1">מזה מסלולים מיוחדים: {fmt(totals.specialRevenue)} ₪</p>
-            <p className="text-[10px] text-muted-foreground">🎚️ הפקה: {fmt(totals.productionRevenue)} ₪ ({totals.productionCount}) · 🎼 רסיטל: {fmt(totals.recitalRevenue)} ₪ ({totals.recitalCount})</p>
+          <div className="rounded-xl border border-border bg-card p-4 sm:col-span-2">
+            <div className="grid grid-cols-2 divide-x divide-border rtl:divide-x-reverse">
+              <div className="px-2 py-1 text-center">
+                <p className="text-xs text-muted-foreground">פרטני</p>
+                <p className="text-xl font-bold text-foreground">{fmt(totals.potential - totals.specialRevenue)} ₪</p>
+              </div>
+              <div className="px-2 py-1 text-center">
+                <p className="text-xs text-muted-foreground">מסלולים מיוחדים</p>
+                <p className="text-xl font-bold text-foreground">{fmt(totals.specialRevenue)} ₪</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  🎚️ הפקה {fmt(totals.productionRevenue)} ₪ · 🎼 רסיטל {fmt(totals.recitalRevenue)} ₪
+                </p>
+              </div>
+            </div>
+            <div className="mt-3 border-t border-border pt-3 text-center">
+              <p className="text-xs text-muted-foreground">סה"כ פוטנציאל הכנסות</p>
+              <p className="text-2xl font-bold text-foreground">{fmt(totals.potential)} ₪</p>
+            </div>
           </div>
 
           <div className="rounded-xl border border-border bg-card p-4 text-center">
