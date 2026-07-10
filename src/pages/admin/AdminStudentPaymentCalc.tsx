@@ -614,7 +614,7 @@ const AdminStudentPaymentCalc = () => {
       try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
       window.open(data.url, "_blank");
       toast.success("קישור התשלום נוצר והועתק ללוח");
-      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] });
     } catch (e: any) {
       console.error("[generateICountLink]", e);
       toast.error(`שגיאה ביצירת קישור: ${e?.message ?? e}`);
@@ -1034,7 +1034,7 @@ const AdminStudentPaymentCalc = () => {
                       }
                       const { error } = await supabase.from("student_payments").delete().eq("id", p.id);
                       if (error) toast.error(`שגיאה: ${error.message}`);
-                      else { toast.success("הקישור בוטל ודף הסליקה נמחק"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); }
+                      else { toast.success("הקישור בוטל ודף הסליקה נמחק"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] }); }
                     }}>
                     <X className="h-4 w-4" />
                   </Button>
