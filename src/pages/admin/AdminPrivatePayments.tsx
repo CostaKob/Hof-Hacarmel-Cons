@@ -87,6 +87,19 @@ const AdminPrivatePayments = () => {
   });
 
 
+  const { data: drafts = [] } = useQuery({
+    queryKey: ["priv-payments-drafts", yearId],
+    enabled: !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("student_id, selected_discount_ids, custom_discounts, start_date_overrides")
+        .eq("academic_year_id", yearId!);
+      if (error) throw error;
+      return (data as any[]) ?? [];
+    },
+  });
+
   const { data: payments = [] } = useQuery({
     queryKey: ["priv-payments-rows", yearId],
     enabled: !!yearId,
