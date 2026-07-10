@@ -102,7 +102,9 @@ const AdminSchoolMusicStudentCard = () => {
         : "/admin/school-music-schools"}
 
     >
+      <PageTitle title={`כרטיס תלמיד ביס מנגן — ${fullName}`} />
       <div className="space-y-4 max-w-2xl">
+
         {/* Header card */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-2">
           <div className="flex items-start justify-between flex-wrap gap-2">
