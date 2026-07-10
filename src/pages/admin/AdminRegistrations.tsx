@@ -182,9 +182,22 @@ const AdminRegistrations = () => {
         {/* Compact summary: total + per-school chips */}
         {schoolCounts.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
-            <Badge variant="secondary" className="rounded-full text-xs">סה"כ {registrations.length}</Badge>
+            <button
+              type="button"
+              onClick={() => {
+                setStatusFilter("all");
+                setSchoolFilter("all");
+                setGradeFilter("all");
+                setInstrumentFilter("all");
+                setSearch("");
+              }}
+              className="text-[11px] px-2.5 py-1 rounded-full border bg-muted border-border hover:bg-muted/70 transition-colors"
+              title="נקה סינון"
+            >
+              סה"כ {registrations.length} · שיוכים פוטנציאלים: {registrations.reduce((sum, r) => sum + countPotentialSlots(r.requested_instruments), 0)}
+            </button>
             <Badge variant="secondary" className="rounded-full text-xs bg-sky-100 text-sky-700 border-sky-200">
-              שיוכים פוטנציאלים: {filtered.reduce((sum, r) => sum + countPotentialSlots(r.requested_instruments), 0)}
+              מסונן: {filtered.length} · פוטנציאל: {filtered.reduce((sum, r) => sum + countPotentialSlots(r.requested_instruments), 0)}
             </Badge>
             {schoolCounts.map(([name, count]) => (
               <button
