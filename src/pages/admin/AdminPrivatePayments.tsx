@@ -285,13 +285,17 @@ const AdminPrivatePayments = () => {
     const musicProdPrice = Number(settings?.music_production_price || 0);
     const recitalPrice = Number(settings?.recital_track_price || 0);
     for (const r of filtered) {
+      enrollmentsCount += r.enrollments.length;
+      if (r.hasSpecialCourse) { specialCount += 1; }
+      if (r.student.has_music_production_course) { productionCount += 1; }
+      if (r.student.has_recital_track) { recitalCount += 1; }
+      if (!r.hasSource) continue;
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
-      enrollmentsCount += r.enrollments.length;
-      if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; specialCount += 1; }
-      if (r.student.has_music_production_course) { productionRevenue += musicProdPrice; productionCount += 1; }
-      if (r.student.has_recital_track) { recitalRevenue += recitalPrice; recitalCount += 1; }
+      if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; }
+      if (r.student.has_music_production_course) { productionRevenue += musicProdPrice; }
+      if (r.student.has_recital_track) { recitalRevenue += recitalPrice; }
     }
     return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount, productionRevenue, recitalRevenue, productionCount, recitalCount };
   }, [filtered, settings]);
