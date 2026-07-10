@@ -16,7 +16,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const ALL = "__all__";
 
-type StatusFilter = "all" | "unpaid" | "partial" | "paid";
+type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "uncalculated";
 
 const AdminPrivatePayments = () => {
   const navigate = useNavigate();
@@ -143,101 +143,103 @@ const AdminPrivatePayments = () => {
         const br = p?.enrollment_breakdown;
         return br && !Array.isArray(br) && br.discounts;
       });
-      // Show ONLY students with an actual payment link (pending or paid). No guessing.
       const source = pendingSrc ?? paidWithBreakdown;
-      if (!source) continue;
-      const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
-        ? source.enrollment_breakdown.discounts ?? {}
-        : {};
+      const hasSource = !!source;
 
+      let totalDue = 0;
+      let paid = 0;
+      let balance = 0;
+      let status: StatusFilter = "uncalculated";
+      let specialRevenue = 0;
+      let proratedTotal = 0;
 
-      const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
-        ? brDiscounts.selectedDiscountIds
-        : [];
-      const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
-      const idSet = new Set<string>(selectedDiscountIds);
-      for (const k of Object.keys(legacyMap)) {
-        if (brDiscounts[k] === true) {
-          const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
-          if (dt) idSet.add(dt.id);
+      if (hasSource) {
+        const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
+          ? source.enrollment_breakdown.discounts ?? {}
+          : {};
+
+        const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
+          ? brDiscounts.selectedDiscountIds
+          : [];
+        const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
+        const idSet = new Set<string>(selectedDiscountIds);
+        for (const k of Object.keys(legacyMap)) {
+          if (brDiscounts[k] === true) {
+            const dt = discountTypes.find((d) => d.legacy_key === legacyMap[k]);
+            if (dt) idSet.add(dt.id);
+          }
         }
+
+        const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
+        const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
+        const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
+          ? brDiscounts.startDateOverrides
+          : {};
+
+        const calcRows = enrList.map((e) =>
+          calcEnrollment(
+            {
+              id: e.id,
+              duration: e.lesson_duration_minutes,
+              startDate: startDateOverrides[e.id] ?? e.start_date,
+              endDate: e.end_date,
+              pricePerLessonOverride: e.price_per_lesson,
+            },
+            prices,
+            year.start_date,
+            year.end_date
+          )
+        );
+
+        proratedTotal = calcRows.reduce((s, r) => s + r.prorated, 0);
+        const stdCompute = computeStandardDiscounts(
+          calcRows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+          selectedDiscounts,
+        );
+
+        const specialBase =
+          (student.has_music_production_course ? musicProdPrice : 0) +
+          (student.has_recital_track ? recitalPrice : 0);
+        const specialAfterStd = specialBase;
+
+        const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
+        const customDiscountAmount = customDiscounts.reduce((sum: number, c: any) => {
+          const v = Number(c.value) || 0;
+          if (c.mode === "pct") return sum + (afterStdDiscount * v) / 100;
+          return sum + v;
+        }, 0);
+        totalDue = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
+
+        let credit = 0, net = 0;
+        for (const p of stuPayments) {
+          if (p.payment_status === "pending") continue;
+          const amount = Number(p.amount || 0);
+          if (amount < 0) { credit += Math.abs(amount); net += amount; }
+          else if (p.transaction_type === "payment") { net += amount; }
+          else { credit += amount; net -= amount; }
+        }
+        paid = net;
+        balance = Math.round((totalDue - net) * 100) / 100;
+
+        if (totalDue > 0 && balance <= 0.01) status = "paid";
+        else if (net > 0 && balance > 0.01) status = "partial";
+        else status = "unpaid";
+
+        specialRevenue = specialAfterStd;
       }
-
-      // No guessing — discounts come ONLY from an actual payment link.
-
-
-
-      const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
-      const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
-      const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
-        ? brDiscounts.startDateOverrides
-        : {};
-
-
-      // Compute prorated per enrollment
-      const calcRows = enrList.map((e) =>
-        calcEnrollment(
-          {
-            id: e.id,
-            duration: e.lesson_duration_minutes,
-            startDate: startDateOverrides[e.id] ?? e.start_date,
-            endDate: e.end_date,
-            pricePerLessonOverride: e.price_per_lesson,
-          },
-          prices,
-          year.start_date,
-          year.end_date
-        )
-      );
-
-      const proratedTotal = calcRows.reduce((s, r) => s + r.prorated, 0);
-      const stdCompute = computeStandardDiscounts(
-        calcRows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
-        selectedDiscounts,
-      );
-
-      // Special courses — discounts DO NOT apply to special courses (full price always).
-      const specialBase =
-        (student.has_music_production_course ? musicProdPrice : 0) +
-        (student.has_recital_track ? recitalPrice : 0);
-      const specialAfterStd = specialBase;
-
-
-      const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
-      const customDiscountAmount = customDiscounts.reduce((sum: number, c: any) => {
-        const v = Number(c.value) || 0;
-        if (c.mode === "pct") return sum + (afterStdDiscount * v) / 100;
-        return sum + v;
-      }, 0);
-      const totalDue = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
-
-      // Net paid (mirrors calc page)
-      let paid = 0, credit = 0, net = 0;
-      for (const p of stuPayments) {
-        if (p.payment_status === "pending") continue;
-        const amount = Number(p.amount || 0);
-        if (amount < 0) { credit += Math.abs(amount); net += amount; }
-        else if (p.transaction_type === "payment") { paid += amount; net += amount; }
-        else { credit += amount; net -= amount; }
-      }
-      const balance = Math.round((totalDue - net) * 100) / 100;
-
-      let status: StatusFilter = "unpaid";
-      if (totalDue > 0 && balance <= 0.01) status = "paid";
-      else if (net > 0 && balance > 0.01) status = "partial";
-      else status = "unpaid";
 
       result.push({
         studentId,
         student,
         enrollments: enrList,
         totalDue,
-        paid: net,
+        paid,
         balance,
         status,
-        hasSpecialCourse: specialBase > 0,
-        specialRevenue: specialAfterStd,
+        hasSpecialCourse: (student.has_music_production_course || student.has_recital_track),
+        specialRevenue,
         proratedTotal,
+        hasSource,
       });
     }
 
@@ -275,19 +277,25 @@ const AdminPrivatePayments = () => {
     });
   }, [rows, statusFilter, schoolFilter, teacherFilter, search]);
 
+  const calculatedRows = useMemo(() => filtered.filter((r) => r.hasSource), [filtered]);
+
   const totals = useMemo(() => {
     let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0, specialRevenue = 0, specialCount = 0;
     let productionRevenue = 0, recitalRevenue = 0, productionCount = 0, recitalCount = 0;
     const musicProdPrice = Number(settings?.music_production_price || 0);
     const recitalPrice = Number(settings?.recital_track_price || 0);
     for (const r of filtered) {
+      enrollmentsCount += r.enrollments.length;
+      if (r.hasSpecialCourse) { specialCount += 1; }
+      if (r.student.has_music_production_course) { productionCount += 1; }
+      if (r.student.has_recital_track) { recitalCount += 1; }
+      if (!r.hasSource) continue;
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
-      enrollmentsCount += r.enrollments.length;
-      if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; specialCount += 1; }
-      if (r.student.has_music_production_course) { productionRevenue += musicProdPrice; productionCount += 1; }
-      if (r.student.has_recital_track) { recitalRevenue += recitalPrice; recitalCount += 1; }
+      if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; }
+      if (r.student.has_music_production_course) { productionRevenue += musicProdPrice; }
+      if (r.student.has_recital_track) { recitalRevenue += recitalPrice; }
     }
     return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount, productionRevenue, recitalRevenue, productionCount, recitalCount };
   }, [filtered, settings]);
@@ -360,6 +368,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="unpaid">לא שולם</SelectItem>
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
+              <SelectItem value="uncalculated">טרם חושב שכר לימוד</SelectItem>
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
@@ -389,6 +398,7 @@ const AdminPrivatePayments = () => {
               const statusBadge =
                 r.status === "paid" ? { label: "שולם", variant: "default" as const } :
                 r.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
+                r.status === "uncalculated" ? { label: "טרם חושב שכר לימוד", variant: "outline" as const } :
                 { label: "לא שולם", variant: "outline" as const };
               return (
                 <div
@@ -430,18 +440,27 @@ const AdminPrivatePayments = () => {
                       </div>
                     </div>
                     <div className="text-left shrink-0 space-y-0.5">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">פוטנציאל</p>
-                        <p className="text-lg font-bold text-foreground leading-tight">{fmt(r.totalDue)} ₪</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">שולם</p>
-                        <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(Math.max(0, r.paid))} ₪</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">יתרה</p>
-                        <p className={`text-sm font-semibold leading-tight ${r.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, r.balance))} ₪</p>
-                      </div>
+                      {r.hasSource ? (
+                        <>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">פוטנציאל</p>
+                            <p className="text-lg font-bold text-foreground leading-tight">{fmt(r.totalDue)} ₪</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">שולם</p>
+                            <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(Math.max(0, r.paid))} ₪</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">יתרה</p>
+                            <p className={`text-sm font-semibold leading-tight ${r.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, r.balance))} ₪</p>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground leading-tight">טרם חושב</p>
+                          <p className="text-sm font-semibold text-muted-foreground leading-tight">שכר לימוד</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -451,7 +470,7 @@ const AdminPrivatePayments = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pt-2">
-          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והנחות שנשמרו בקישור התשלום האחרון של כל תלמיד
+          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והנחות שנשמרו בקישור התשלום האחרון של כל תלמיד · תלמידים ללא קישור תשלום מסומנים כ"טרם חושב שכר לימוד"
         </p>
       </div>
     </AdminLayout>
