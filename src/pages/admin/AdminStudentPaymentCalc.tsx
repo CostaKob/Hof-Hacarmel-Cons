@@ -350,18 +350,13 @@ const AdminStudentPaymentCalc = () => {
   const sumAllPct = selectedDiscounts
     .filter((d) => d.applies_to === "all")
     .reduce((s, d) => s + (Number(d.percentage) || 0), 0);
-  const specialAfterStd = Math.round(specialBase * (1 - sumAllPct / 100) * 100) / 100;
-  const specialStdDiscountAmount = Math.round((specialBase - specialAfterStd) * 100) / 100;
+  // Discounts DO NOT apply to special courses (music production / recital) — full price always.
+  const specialAfterStd = specialBase;
+  const specialStdDiscountAmount = 0;
 
-  // Per-discount additional amount on specials (only for applies_to=all)
-  const specialDiscountByType = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const d of selectedDiscounts) {
-      if (d.applies_to !== "all") continue;
-      m.set(d.id, Math.round(specialBase * (Number(d.percentage) || 0)) / 100);
-    }
-    return m;
-  }, [selectedDiscounts, specialBase]);
+  // Per-discount additional amount on specials — always zero (discounts don't apply to specials).
+  const specialDiscountByType = useMemo(() => new Map<string, number>(), []);
+
 
   const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
   // For display/payload — effective overall discount % (over prorated + specials)

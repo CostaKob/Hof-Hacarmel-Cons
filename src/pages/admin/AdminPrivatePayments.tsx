@@ -187,14 +187,12 @@ const AdminPrivatePayments = () => {
         selectedDiscounts,
       );
 
-      // Special courses
+      // Special courses — discounts DO NOT apply to special courses (full price always).
       const specialBase =
         (student.has_music_production_course ? musicProdPrice : 0) +
         (student.has_recital_track ? recitalPrice : 0);
-      const sumAllPct = selectedDiscounts
-        .filter((d) => d.applies_to === "all")
-        .reduce((s, d) => s + (Number(d.percentage) || 0), 0);
-      const specialAfterStd = Math.round(specialBase * (1 - sumAllPct / 100) * 100) / 100;
+      const specialAfterStd = specialBase;
+
 
       const afterStdDiscount = stdCompute.afterStdDiscount + specialAfterStd;
       const customDiscountAmount = customDiscounts.reduce((sum: number, c: any) => {
