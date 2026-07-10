@@ -210,12 +210,12 @@ const AdminPrivatePayments = () => {
         }, 0);
         totalDue = Math.max(0, Math.round((afterStdDiscount - customDiscountAmount) * 100) / 100);
 
-        let paidAmt = 0, credit = 0, net = 0;
+        let credit = 0, net = 0;
         for (const p of stuPayments) {
           if (p.payment_status === "pending") continue;
           const amount = Number(p.amount || 0);
           if (amount < 0) { credit += Math.abs(amount); net += amount; }
-          else if (p.transaction_type === "payment") { paidAmt += amount; net += amount; }
+          else if (p.transaction_type === "payment") { net += amount; }
           else { credit += amount; net -= amount; }
         }
         paid = net;
