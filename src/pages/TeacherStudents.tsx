@@ -199,6 +199,7 @@ const TeacherStudents = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
+      <PageTitle title="התלמידים שלי" />
       {/* Header */}
       <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
@@ -207,7 +208,6 @@ const TeacherStudents = () => {
             size="icon"
             className="text-primary-foreground hover:bg-primary-foreground/10"
             onClick={() => navigate("/teacher")}
-        <PageTitle title="התלמידים שלי" />
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
@@ -216,6 +216,7 @@ const TeacherStudents = () => {
           </h1>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-lg px-5 -mt-3 pb-8 space-y-4">
         {/* Tabs */}
