@@ -30,7 +30,9 @@ export interface DiscountLine {
   label: string;
   percentage: number;
   applies_to: DiscountAppliesTo;
-  appliedEnrollmentId: string | null; // for "cheapest_enrollment"
+  /** For "cheapest_enrollment" — all enrollments the discount applied to
+   *  (every row except the single most expensive). */
+  appliedEnrollmentIds: string[];
   amount: number; // total discount amount in ILS (positive number)
 }
 
