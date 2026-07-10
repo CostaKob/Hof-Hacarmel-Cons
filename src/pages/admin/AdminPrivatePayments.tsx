@@ -470,7 +470,7 @@ const AdminPrivatePayments = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pt-2">
-          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והנחות שנשמרו בקישור התשלום האחרון של כל תלמיד
+          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והנחות שנשמרו בקישור התשלום האחרון של כל תלמיד · תלמידים ללא קישור תשלום מסומנים כ"טרם חושב שכר לימוד"
         </p>
       </div>
     </AdminLayout>
