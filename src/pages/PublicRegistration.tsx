@@ -64,6 +64,14 @@ function validateEmail(val: string): string | null {
   return null;
 }
 
+function validatePersonName(val: string): string | null {
+  const trimmed = val.trim();
+  if (trimmed.length < 2) return "יש להזין שם מלא";
+  if (/\d/.test(trimmed)) return "שם לא יכול להכיל ספרות";
+  if (!/[A-Za-z\u0590-\u05FF]/.test(trimmed)) return "יש להזין שם באותיות";
+  return null;
+}
+
 function normalizeGradeValue(value: unknown): string {
   return String(value ?? "")
     .trim()
@@ -451,6 +459,9 @@ const PublicRegistration = () => {
       if (field.field_type === "email") {
         error = validateEmail(String(val));
       }
+      if (fieldKey === "student_full_name" || fieldKey === "parent_name") {
+        error = validatePersonName(String(val));
+      }
     }
 
     setValidationErrors((prev) => {
@@ -539,6 +550,11 @@ const PublicRegistration = () => {
 
       if (field.field_type === "email" && val) {
         const err = validateEmail(String(val));
+        if (err) errors[field.field_key] = err;
+      }
+
+      if (field.field_key === "student_full_name" || field.field_key === "parent_name") {
+        const err = validatePersonName(String(val));
         if (err) errors[field.field_key] = err;
       }
     }
