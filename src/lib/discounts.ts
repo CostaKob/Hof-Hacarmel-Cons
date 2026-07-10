@@ -1,8 +1,10 @@
 // Dynamic discount types managed per academic year.
 // Each discount has a percentage and an `applies_to` scope:
 //   - "all":                 reduces every enrollment by the percentage.
-//   - "cheapest_enrollment": reduces only the single cheapest enrollment
-//                            (mirrors the legacy "כלי שני" behavior).
+//   - "cheapest_enrollment": reduces every enrollment EXCEPT the single most
+//                            expensive one (extends the legacy "כלי שני"
+//                            behavior: 2 enrollments → discount on 1,
+//                            3 → on 2, 4 → on 3, etc.).
 //                            Only active when there are 2+ enrollments.
 
 export type DiscountAppliesTo = "all" | "cheapest_enrollment";
