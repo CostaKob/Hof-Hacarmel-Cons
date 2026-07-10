@@ -88,12 +88,16 @@ const AdminEnrollmentForm = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      const sid = enrollment?.student_id;
+      const yid = (enrollment as any)?.academic_year_id;
       const { error } = await supabase.from("enrollments").delete().eq("id", id!);
       if (error) throw error;
+      await syncRegistrationStatusForStudentYear(sid, yid);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
       toast.success("השיוך נמחק בהצלחה");
       navigate(-1 as any);
     },
