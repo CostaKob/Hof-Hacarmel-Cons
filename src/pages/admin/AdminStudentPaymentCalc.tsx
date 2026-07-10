@@ -994,7 +994,14 @@ const AdminStudentPaymentCalc = () => {
             {pendingPayments.map((p: any) => (
               <div key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground text-sm">₪{Number(p.amount).toLocaleString()} · ממתין לתשלום</p>
+                  <p className="font-medium text-foreground text-sm">
+                    ₪{Number(p.amount).toLocaleString()} · ממתין לתשלום
+                    {p.academic_year_id && yearId && p.academic_year_id !== yearId && (
+                      <span className="mr-2 inline-block rounded-md bg-amber-200/70 dark:bg-amber-900/40 px-2 py-0.5 text-[10px] font-semibold text-amber-900 dark:text-amber-200">
+                        משנה אחרת
+                      </span>
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground truncate" dir="ltr">{p.payment_link_url || "—"}</p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
