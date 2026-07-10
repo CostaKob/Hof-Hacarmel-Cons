@@ -141,28 +141,22 @@ const AdminRegistrationCard = () => {
             {/* Status dropdown */}
             <div className="flex items-center justify-between gap-4">
               <span className="text-sm text-muted-foreground shrink-0">סטטוס</span>
-              {isConverted ? (
-                <span className={`text-sm font-medium px-3 py-1 rounded-full ${statusCfg.color}`}>
-                  {statusCfg.label}
-                </span>
-              ) : (
-                <Select
-                  value={r.status}
-                  onValueChange={(val) => updateStatus.mutate(val)}
-                  disabled={updateStatus.isPending}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SETTABLE_STATUSES.map((key) => (
-                      <SelectItem key={key} value={key}>
-                        {REGISTRATION_STATUSES[key]?.label || key}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
+              <Select
+                value={r.status}
+                onValueChange={(val) => updateStatus.mutate(val)}
+                disabled={updateStatus.isPending}
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SETTABLE_STATUSES.map((key) => (
+                    <SelectItem key={key} value={key}>
+                      {REGISTRATION_STATUSES[key]?.label || key}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <span className="text-xs text-muted-foreground">{daysAgoLabel(r.created_at)}</span>
