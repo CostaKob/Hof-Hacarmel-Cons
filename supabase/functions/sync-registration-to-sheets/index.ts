@@ -98,6 +98,20 @@ async function appendRow(values: unknown[]) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    // Restrict to service-role callers only. This function is intended to be
+    // invoked server-side (e.g. from send-registration-confirmation with the
+    // service role key). Reject any other caller to prevent unauthenticated
+    // triggering of PII exports.
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    if (!serviceRoleKey || bearer !== serviceRoleKey) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { registrationId } = await req.json();
     if (!registrationId) throw new Error("Missing registrationId");
 

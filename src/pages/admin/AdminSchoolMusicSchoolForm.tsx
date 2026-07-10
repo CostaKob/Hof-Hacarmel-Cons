@@ -229,26 +229,10 @@ const AdminSchoolMusicSchoolForm = () => {
           </div>
 
           {/*
-            NOT IN USE — השדה הושאר כקומנט כדי לא לבלבל.
-            עמוד הסליקה ב-iCount נוצר דינמית לכל הורה דרך ה-edge function
-            `icount-generate-paylink` (paypage/create API). אין צורך בעמוד קבוע.
-            השדה `icount_payment_page_url` בטבלת school_music_schools נשאר במסד
-            כשריד היסטורי; הפונקציה `icount-create-sm-payment-link` שמשתמשת בו
-            אינה נקראת מה-frontend.
-
-          <div className="space-y-1.5">
-            <Label className="text-sm">קישור לעמוד סליקה ב-iCount</Label>
-            <Input
-              type="url"
-              placeholder="https://app.icount.co.il/m/xxxxx/..."
-              {...register("icount_payment_page_url")}
-              className="h-12 rounded-xl"
-              dir="ltr"
-            />
-            <p className="text-xs text-muted-foreground">
-              הדביקו את ה-URL הקבוע של עמוד התשלום שיצרתם ב-iCount עבור בית הספר. פרטי התלמיד (שם, ת"ז, סכום) ייוספו אוטומטית ל-URL בעת ההפניה, ויחזרו ב-webhook לזיהוי התשלום.
-            </p>
-          </div>
+            NOT IN USE — עמוד הסליקה ב-iCount נוצר דינמית לכל הורה דרך
+            ה-edge function `icount-generate-paylink` (paypage/create API).
+            השדה `icount_payment_page_url` בטבלת school_music_schools נשאר
+            במסד כשריד היסטורי בלבד.
           */}
         </div>
 
