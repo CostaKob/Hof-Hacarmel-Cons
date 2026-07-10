@@ -141,16 +141,21 @@ const AdminPrivatePayments = () => {
       paymentsByStudent.set(sid, arr);
     }
 
+    const draftsByStudent = new Map<string, any>();
+    for (const d of drafts) draftsByStudent.set(d.student_id, d);
+
     const result: any[] = [];
 
     for (const [studentId, enrList] of byStudent.entries()) {
       const student = enrList[0].students;
       if (!student) continue;
 
-      // Hydrate discounts from a payment (pending first, then any with breakdown.discounts)
       const stuPayments = paymentsForStudent(studentId);
+      const pendingSrc = stuPayments.find((p) => p.payment_status === "pending");
+      const draft = draftsByStudent.get(studentId);
+      // Priority: pending payment > server draft > historical payment breakdown
       const source =
-        stuPayments.find((p) => p.payment_status === "pending") ??
+        pendingSrc ??
         stuPayments.find((p) => {
           const br = p?.enrollment_breakdown;
           return br && !Array.isArray(br) && br.discounts;
@@ -159,9 +164,11 @@ const AdminPrivatePayments = () => {
         ? source.enrollment_breakdown.discounts ?? {}
         : {};
 
-      const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
-        ? brDiscounts.selectedDiscountIds
-        : [];
+      // If no pending payment but a draft exists → use draft's data
+      const useDraft = !pendingSrc && draft;
+      const selectedDiscountIds: string[] = useDraft
+        ? (Array.isArray(draft.selected_discount_ids) ? draft.selected_discount_ids : [])
+        : (Array.isArray(brDiscounts.selectedDiscountIds) ? brDiscounts.selectedDiscountIds : []);
       const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
       const idSet = new Set<string>(selectedDiscountIds);
       for (const k of Object.keys(legacyMap)) {
