@@ -116,7 +116,21 @@ const AdminPrivatePayments = () => {
     }
 
     // Group payments by student — resolve student_id via enrollment if missing
+    const enrollmentToStudent = new Map<string, string>();
+    for (const e of enrollments) enrollmentToStudent.set(e.id, e.student_id);
+
+    const paymentsByStudent = new Map<string, any[]>();
+    const paymentsForStudent = (sid: string) => paymentsByStudent.get(sid) ?? [];
+    for (const p of payments) {
+      const sid = p.student_id ?? (p.enrollment_id ? enrollmentToStudent.get(p.enrollment_id) : null);
+      if (!sid) continue;
+      const arr = paymentsByStudent.get(sid) ?? [];
+      arr.push(p);
+      paymentsByStudent.set(sid, arr);
+    }
+
     const result: any[] = [];
+
 
     for (const [studentId, enrList] of byStudent.entries()) {
       const student = enrList[0].students;
