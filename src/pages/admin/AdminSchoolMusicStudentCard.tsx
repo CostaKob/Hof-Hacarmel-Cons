@@ -77,6 +77,7 @@ const AdminSchoolMusicStudentCard = () => {
   if (isLoading) {
     return (
       <AdminLayout title="כרטיס תלמיד" backPath="/admin/school-music-schools">
+        <PageTitle title="כרטיס תלמיד ביס מנגן" />
         <p className="text-muted-foreground">טוען...</p>
       </AdminLayout>
     );
@@ -85,6 +86,7 @@ const AdminSchoolMusicStudentCard = () => {
   if (!student) {
     return (
       <AdminLayout title="כרטיס תלמיד" backPath="/admin/school-music-schools">
+        <PageTitle title="כרטיס תלמיד ביס מנגן" />
         <p className="text-muted-foreground">תלמיד לא נמצא</p>
       </AdminLayout>
     );
@@ -98,6 +100,7 @@ const AdminSchoolMusicStudentCard = () => {
       backPath={student.school_music_schools?.id
         ? `/admin/school-music-schools/${student.school_music_schools.id}`
         : "/admin/school-music-schools"}
+
     >
       <div className="space-y-4 max-w-2xl">
         {/* Header card */}
