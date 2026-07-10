@@ -44,7 +44,7 @@ const AdminSpecialTrackCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, first_name, last_name, grade, city")
+        .select("id, first_name, last_name, national_id, grade, city, phone, parent_phone")
         .eq(track!.column, true)
         .eq("is_active", true);
       if (error) throw error;
