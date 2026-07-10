@@ -459,6 +459,9 @@ const PublicRegistration = () => {
       if (field.field_type === "email") {
         error = validateEmail(String(val));
       }
+      if (fieldKey === "student_full_name" || fieldKey === "parent_name") {
+        error = validatePersonName(String(val));
+      }
     }
 
     setValidationErrors((prev) => {
