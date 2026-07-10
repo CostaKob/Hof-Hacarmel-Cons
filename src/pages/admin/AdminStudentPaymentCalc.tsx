@@ -793,7 +793,7 @@ const AdminStudentPaymentCalc = () => {
             return total > 0 ? (
               <SummaryRow
                 key={dl.discountTypeId}
-                label={`${dl.label} (${dl.percentage}%${dl.applies_to === "cheapest_enrollment" ? " על הרישום הזול ביותר" : ""})`}
+                label={`${dl.label} (${dl.percentage}%${dl.applies_to === "cheapest_enrollment" ? " על כל הרישומים פרט ליקר ביותר" : ""})`}
                 value={-(Math.round(total * 100) / 100)}
               />
             ) : null;
