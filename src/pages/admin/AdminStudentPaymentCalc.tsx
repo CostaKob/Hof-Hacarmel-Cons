@@ -703,7 +703,10 @@ const AdminStudentPaymentCalc = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {discountTypes.map((d) => {
                 const checked = selectedDiscountIds.includes(d.id);
-                const scopeNote = d.applies_to === "cheapest_enrollment" ? " · על כלים נוספים" : "";
+                const scopeNote =
+                  d.applies_to === "cheapest_enrollment"
+                    ? " · על כלים נוספים"
+                    : " · על שיעורים פרטניים";
                 return (
                   <label
                     key={d.id}
