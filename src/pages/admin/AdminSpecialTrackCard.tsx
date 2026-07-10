@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { sortByPerson } from "@/lib/sortHebrew";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
-import { sortByPerson } from "@/lib/sortHebrew";
 
 export const SPECIAL_TRACKS: Record<
   string,
