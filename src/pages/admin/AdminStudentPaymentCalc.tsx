@@ -577,7 +577,7 @@ const AdminStudentPaymentCalc = () => {
     return {
       studentId,
       amount: balance,
-      academicYearId: yearId,
+      academicYearId: linkYear?.id ?? yearId,
       academicYearName: hebrewYear ?? null,
       lines,
       discounts: {
