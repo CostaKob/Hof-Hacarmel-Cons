@@ -441,6 +441,8 @@ const AdminRegistrationConvert = () => {
   const requestedInstruments = (r.requested_instruments as string[]) || [];
   const formValues = watch();
   const visibleExistingStudentPhone = existingStudent?.phone || formValues.phone || r.student_phone;
+  const visibleExistingStudentNationalId = existingStudent?.national_id || r.student_national_id;
+
 
   return (
     <AdminLayout
@@ -636,7 +638,13 @@ const AdminRegistrationConvert = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-muted-foreground">ת.ז.: </span>{existingStudent.national_id || "—"}</div>
+                <div className="flex items-center gap-1">
+                  <span className="text-muted-foreground">ת.ז.: </span>
+                  <span>{visibleExistingStudentNationalId || "—"}</span>
+                  {!existingStudent.national_id && visibleExistingStudentNationalId && (
+                    <span className="text-xs text-muted-foreground">מההרשמה</span>
+                  )}
+                </div>
                 <div><span className="text-muted-foreground">כיתה: </span>{existingStudent.grade || "—"}</div>
                 <div><span className="text-muted-foreground">ישוב: </span>{existingStudent.city || "—"}</div>
                 <div className="flex items-center gap-1">
@@ -647,6 +655,7 @@ const AdminRegistrationConvert = () => {
                   )}
                 </div>
               </div>
+
 
               {/* Existing enrollments in active year */}
               {existingEnrollments.length > 0 && (
