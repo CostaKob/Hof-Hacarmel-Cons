@@ -52,10 +52,14 @@ export function computeStandardDiscounts(
   rows: EnrollmentProrated[],
   selected: DiscountType[],
 ): ComputeDiscountsResult {
-  const cheapest =
-    rows.length >= 2
-      ? [...rows].sort((a, b) => a.prorated - b.prorated)[0]?.enrollmentId ?? null
-      : null;
+  // For "cheapest_enrollment": apply to every enrollment EXCEPT the single
+  // most expensive one. Requires 2+ enrollments.
+  const discountedIds: string[] = (() => {
+    if (rows.length < 2) return [];
+    const sorted = [...rows].sort((a, b) => b.prorated - a.prorated); // desc
+    // Drop the most expensive; the rest all receive the discount.
+    return sorted.slice(1).map((r) => r.enrollmentId);
+  })();
 
   const perEnrollmentPct = new Map<string, number>();
   for (const r of rows) perEnrollmentPct.set(r.enrollmentId, 0);
@@ -70,33 +74,37 @@ export function computeStandardDiscounts(
         label: d.label,
         percentage: pct,
         applies_to: d.applies_to,
-        appliedEnrollmentId: d.applies_to === "cheapest_enrollment" ? cheapest : null,
+        appliedEnrollmentIds: d.applies_to === "cheapest_enrollment" ? discountedIds : [],
         amount: 0,
       });
       continue;
     }
     if (d.applies_to === "cheapest_enrollment") {
-      if (!cheapest) {
+      if (discountedIds.length === 0) {
         // Needs 2+ enrollments — skip
         lines.push({
           discountTypeId: d.id,
           label: d.label,
           percentage: pct,
           applies_to: d.applies_to,
-          appliedEnrollmentId: null,
+          appliedEnrollmentIds: [],
           amount: 0,
         });
         continue;
       }
-      perEnrollmentPct.set(cheapest, (perEnrollmentPct.get(cheapest) ?? 0) + pct);
-      const row = rows.find((r) => r.enrollmentId === cheapest)!;
+      let amount = 0;
+      for (const id of discountedIds) {
+        perEnrollmentPct.set(id, (perEnrollmentPct.get(id) ?? 0) + pct);
+        const row = rows.find((r) => r.enrollmentId === id)!;
+        amount += row.prorated * pct;
+      }
       lines.push({
         discountTypeId: d.id,
         label: d.label,
         percentage: pct,
         applies_to: d.applies_to,
-        appliedEnrollmentId: cheapest,
-        amount: Math.round(row.prorated * pct) / 100,
+        appliedEnrollmentIds: [...discountedIds],
+        amount: Math.round(amount) / 100,
       });
     } else {
       let amount = 0;
@@ -109,7 +117,7 @@ export function computeStandardDiscounts(
         label: d.label,
         percentage: pct,
         applies_to: d.applies_to,
-        appliedEnrollmentId: null,
+        appliedEnrollmentIds: [],
         amount: Math.round(amount) / 100,
       });
     }
