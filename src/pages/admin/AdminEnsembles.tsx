@@ -31,6 +31,23 @@ const AdminEnsembles = () => {
     },
   });
 
+  const { data: trackCounts = {} } = useQuery({
+    queryKey: ["special-track-counts"],
+    queryFn: async () => {
+      const entries = await Promise.all(
+        Object.entries(SPECIAL_TRACKS).map(async ([key, t]) => {
+          const { count } = await supabase
+            .from("students")
+            .select("id", { count: "exact", head: true })
+            .eq(t.column, true)
+            .eq("is_active", true);
+          return [key, count ?? 0] as const;
+        })
+      );
+      return Object.fromEntries(entries) as Record<string, number>;
+    },
+  });
+
   const filtered = ensembles.filter((e: any) => {
     if (!search) return true;
     const q = search.toLowerCase();
