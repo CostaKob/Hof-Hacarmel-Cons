@@ -16,11 +16,12 @@ import { sortByPerson } from "@/lib/sortHebrew";
 
 export const SPECIAL_TRACKS: Record<
   string,
-  { label: string; column: "is_junior_track" | "is_major_student" | "has_music_production_course"; icon: string }
+  { label: string; column: "is_junior_track" | "is_major_student" | "has_music_production_course" | "has_recital_track"; icon: string }
 > = {
   "junior-track": { label: "מסלול חטיבה", column: "is_junior_track", icon: "📘" },
   "music-major": { label: "מגמת המוסיקה", column: "is_major_student", icon: "🎓" },
   "music-production": { label: "הפקה מוסיקלית", column: "has_music_production_course", icon: "🎚️" },
+  "recital": { label: "מסלול רסיטל", column: "has_recital_track", icon: "🎼" },
 };
 
 const AdminSpecialTrackCard = () => {
