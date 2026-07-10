@@ -87,6 +87,19 @@ const AdminPrivatePayments = () => {
   });
 
 
+  const { data: drafts = [] } = useQuery({
+    queryKey: ["priv-payments-drafts", yearId],
+    enabled: !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("student_id, selected_discount_ids, custom_discounts, start_date_overrides")
+        .eq("academic_year_id", yearId!);
+      if (error) throw error;
+      return (data as any[]) ?? [];
+    },
+  });
+
   const { data: payments = [] } = useQuery({
     queryKey: ["priv-payments-rows", yearId],
     enabled: !!yearId,
@@ -128,16 +141,21 @@ const AdminPrivatePayments = () => {
       paymentsByStudent.set(sid, arr);
     }
 
+    const draftsByStudent = new Map<string, any>();
+    for (const d of drafts) draftsByStudent.set(d.student_id, d);
+
     const result: any[] = [];
 
     for (const [studentId, enrList] of byStudent.entries()) {
       const student = enrList[0].students;
       if (!student) continue;
 
-      // Hydrate discounts from a payment (pending first, then any with breakdown.discounts)
       const stuPayments = paymentsForStudent(studentId);
+      const pendingSrc = stuPayments.find((p) => p.payment_status === "pending");
+      const draft = draftsByStudent.get(studentId);
+      // Priority: pending payment > server draft > historical payment breakdown
       const source =
-        stuPayments.find((p) => p.payment_status === "pending") ??
+        pendingSrc ??
         stuPayments.find((p) => {
           const br = p?.enrollment_breakdown;
           return br && !Array.isArray(br) && br.discounts;
@@ -146,9 +164,11 @@ const AdminPrivatePayments = () => {
         ? source.enrollment_breakdown.discounts ?? {}
         : {};
 
-      const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
-        ? brDiscounts.selectedDiscountIds
-        : [];
+      // If no pending payment but a draft exists → use draft's data
+      const useDraft = !pendingSrc && draft;
+      const selectedDiscountIds: string[] = useDraft
+        ? (Array.isArray(draft.selected_discount_ids) ? draft.selected_discount_ids : [])
+        : (Array.isArray(brDiscounts.selectedDiscountIds) ? brDiscounts.selectedDiscountIds : []);
       const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
       const idSet = new Set<string>(selectedDiscountIds);
       for (const k of Object.keys(legacyMap)) {
@@ -187,9 +207,12 @@ const AdminPrivatePayments = () => {
       }
 
       const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
-      const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
-      const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
-        ? brDiscounts.startDateOverrides : {};
+      const customDiscounts = useDraft
+        ? (Array.isArray(draft.custom_discounts) ? draft.custom_discounts : [])
+        : (Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : []);
+      const startDateOverrides = useDraft
+        ? (draft.start_date_overrides && typeof draft.start_date_overrides === "object" ? draft.start_date_overrides : {})
+        : (brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object" ? brDiscounts.startDateOverrides : {});
 
       // Compute prorated per enrollment
       const calcRows = enrList.map((e) =>
@@ -291,7 +314,7 @@ const AdminPrivatePayments = () => {
     }
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, year, settings, discountTypes, specialStudents]);
+  }, [enrollments, payments, drafts, year, settings, discountTypes, specialStudents]);
 
 
   const schoolOptions = useMemo(() => {

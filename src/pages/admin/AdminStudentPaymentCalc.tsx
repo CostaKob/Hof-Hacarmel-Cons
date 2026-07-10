@@ -146,7 +146,24 @@ const AdminStudentPaymentCalc = () => {
     return { net, paid, credit };
   }, [paymentsList]);
 
-  // localStorage key for persisting discount selections per student+year
+  // Server-side draft (source of truth across devices). localStorage kept as
+  // a same-browser fallback for the first load if server draft doesn't exist yet.
+  const { data: draft } = useQuery({
+    queryKey: ["payment-draft", studentId, yearId],
+    enabled: !!studentId && !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("*")
+        .eq("student_id", studentId!)
+        .eq("academic_year_id", yearId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any) ?? null;
+    },
+  });
+
+  // localStorage key for persisting discount selections per student+year (legacy fallback)
   const lsKey = studentId && yearId ? `payment-calc-discounts:${studentId}:${yearId}` : null;
   const lsInitial = (() => {
     if (!lsKey) return null;
@@ -165,6 +182,7 @@ const AdminStudentPaymentCalc = () => {
     lsInitial?.startDateOverrides && typeof lsInitial.startDateOverrides === "object" ? lsInitial.startDateOverrides : {}
   );
   const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
+  const [hydratedFromDraft, setHydratedFromDraft] = useState<boolean>(false);
 
   // After discountTypes load, map any legacy keys (sibling/secondInstrument/majorStudent)
   // from localStorage or older payments into discount_type ids.
@@ -184,6 +202,18 @@ const AdminStudentPaymentCalc = () => {
     }
     return Array.from(ids);
   };
+
+  // Hydrate from server draft (highest priority besides pending payment)
+  useEffect(() => {
+    if (hydratedFromDraft || !draft) return;
+    if (Array.isArray(draft.selected_discount_ids)) setSelectedDiscountIds(draft.selected_discount_ids);
+    if (Array.isArray(draft.custom_discounts)) setCustomDiscounts(draft.custom_discounts as any);
+    if (draft.start_date_overrides && typeof draft.start_date_overrides === "object") {
+      setStartDateOverrides(draft.start_date_overrides as any);
+    }
+    setHydratedFromDraft(true);
+    setHydratedFromPending(true);
+  }, [draft, hydratedFromDraft]);
 
   // Hydrate from legacy localStorage keys once discountTypes are loaded
   useEffect(() => {
@@ -266,7 +296,7 @@ const AdminStudentPaymentCalc = () => {
     setHydratedFromPending(true);
   }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes]);
 
-  // Persist discounts whenever they change
+  // Persist discounts to localStorage (same-browser fallback)
   useEffect(() => {
     if (!lsKey) return;
     try {
@@ -275,6 +305,28 @@ const AdminStudentPaymentCalc = () => {
       }));
     } catch { /* ignore quota errors */ }
   }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
+
+  // Persist to server (student_payment_drafts) — debounced.
+  useEffect(() => {
+    if (!studentId || !yearId) return;
+    if (draft === undefined) return; // wait for initial fetch
+    const handle = setTimeout(async () => {
+      try {
+        await supabase.from("student_payment_drafts" as any).upsert(
+          {
+            student_id: studentId,
+            academic_year_id: yearId,
+            selected_discount_ids: selectedDiscountIds,
+            custom_discounts: customDiscounts as any,
+            start_date_overrides: startDateOverrides as any,
+          },
+          { onConflict: "student_id,academic_year_id" },
+        );
+        queryClient.invalidateQueries({ queryKey: ["priv-payments-drafts"] });
+      } catch { /* ignore transient errors */ }
+    }, 600);
+    return () => clearTimeout(handle);
+  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, draft, queryClient]);
 
   const toggleDiscount = (id: string) => {
     setSelectedDiscountIds((prev) => {
