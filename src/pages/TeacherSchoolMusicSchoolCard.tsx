@@ -1,5 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
+
 import { useTeacherSchoolMusicSchools, useTeacherSchoolMusicClasses, useTeacherSchoolMusicStudents } from "@/hooks/useTeacherSchoolMusic";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
