@@ -440,18 +440,27 @@ const AdminPrivatePayments = () => {
                       </div>
                     </div>
                     <div className="text-left shrink-0 space-y-0.5">
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">פוטנציאל</p>
-                        <p className="text-lg font-bold text-foreground leading-tight">{fmt(r.totalDue)} ₪</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">שולם</p>
-                        <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(Math.max(0, r.paid))} ₪</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground">יתרה</p>
-                        <p className={`text-sm font-semibold leading-tight ${r.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, r.balance))} ₪</p>
-                      </div>
+                      {r.hasSource ? (
+                        <>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">פוטנציאל</p>
+                            <p className="text-lg font-bold text-foreground leading-tight">{fmt(r.totalDue)} ₪</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">שולם</p>
+                            <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(Math.max(0, r.paid))} ₪</p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">יתרה</p>
+                            <p className={`text-sm font-semibold leading-tight ${r.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, r.balance))} ₪</p>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground leading-tight">טרם חושב</p>
+                          <p className="text-sm font-semibold text-muted-foreground leading-tight">שכר לימוד</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
