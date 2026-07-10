@@ -277,6 +277,8 @@ const AdminPrivatePayments = () => {
     });
   }, [rows, statusFilter, schoolFilter, teacherFilter, search]);
 
+  const calculatedRows = useMemo(() => filtered.filter((r) => r.hasSource), [filtered]);
+
   const totals = useMemo(() => {
     let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0, specialRevenue = 0, specialCount = 0;
     let productionRevenue = 0, recitalRevenue = 0, productionCount = 0, recitalCount = 0;
