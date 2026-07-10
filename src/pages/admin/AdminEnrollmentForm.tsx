@@ -275,10 +275,12 @@ const AdminEnrollmentForm = () => {
         const { error } = await supabase.from("enrollments").insert(payload);
         if (error) throw error;
       }
+      await syncRegistrationStatusForStudentYear(data.student_id, selectedYearId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-enrollments"] });
       queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-registrations"] });
       toast.success(isEdit ? "השיוך עודכן בהצלחה" : "השיוך נוצר בהצלחה");
       if (presetStudentId && !isEdit) {
         navigate(`/admin/students/${presetStudentId}`);
