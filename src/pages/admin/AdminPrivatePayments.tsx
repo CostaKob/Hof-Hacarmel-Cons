@@ -87,18 +87,6 @@ const AdminPrivatePayments = () => {
   });
 
 
-  const { data: drafts = [] } = useQuery({
-    queryKey: ["priv-payments-drafts", yearId],
-    enabled: !!yearId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("student_payment_drafts" as any)
-        .select("student_id, selected_discount_ids, custom_discounts, start_date_overrides")
-        .eq("academic_year_id", yearId!);
-      if (error) throw error;
-      return (data as any[]) ?? [];
-    },
-  });
 
   const { data: payments = [] } = useQuery({
     queryKey: ["priv-payments-rows", yearId],
@@ -141,10 +129,8 @@ const AdminPrivatePayments = () => {
       paymentsByStudent.set(sid, arr);
     }
 
-    const draftsByStudent = new Map<string, any>();
-    for (const d of drafts) draftsByStudent.set(d.student_id, d);
-
     const result: any[] = [];
+
 
     for (const [studentId, enrList] of byStudent.entries()) {
       const student = enrList[0].students;
@@ -152,8 +138,7 @@ const AdminPrivatePayments = () => {
 
       const stuPayments = paymentsForStudent(studentId);
       const pendingSrc = stuPayments.find((p) => p.payment_status === "pending");
-      const draft = draftsByStudent.get(studentId);
-      // Priority: pending payment > server draft > historical payment breakdown
+      // Source of truth: pending payment link if exists, else historical breakdown, else pure auto-calc.
       const source =
         pendingSrc ??
         stuPayments.find((p) => {
@@ -164,11 +149,9 @@ const AdminPrivatePayments = () => {
         ? source.enrollment_breakdown.discounts ?? {}
         : {};
 
-      // If no pending payment but a draft exists → use draft's data
-      const useDraft = !pendingSrc && draft;
-      const selectedDiscountIds: string[] = useDraft
-        ? (Array.isArray(draft.selected_discount_ids) ? draft.selected_discount_ids : [])
-        : (Array.isArray(brDiscounts.selectedDiscountIds) ? brDiscounts.selectedDiscountIds : []);
+      const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
+        ? brDiscounts.selectedDiscountIds
+        : [];
       const legacyMap: Record<string, string> = { sibling: "sibling", secondInstrument: "second_instrument", majorStudent: "major_student" };
       const idSet = new Set<string>(selectedDiscountIds);
       for (const k of Object.keys(legacyMap)) {
@@ -177,42 +160,40 @@ const AdminPrivatePayments = () => {
           if (dt) idSet.add(dt.id);
         }
       }
-      // Auto-selects (mirror AdminStudentPaymentCalc so the potential-income
-      // report reflects the same discounts a user would see when opening the
-      // student's calc page — even before any pending payment exists).
-      const EXCLUSIVE_KEYS = new Set(["major_student", "second_instrument", "sibling"]);
-      const exclusiveIds = new Set(
-        discountTypes.filter((d) => EXCLUSIVE_KEYS.has(d.legacy_key as any)).map((d) => d.id),
-      );
-      const hasExclusive = () => Array.from(idSet).some((id) => exclusiveIds.has(id));
 
-      // Major student
-      if ((student as any).is_major_student && !hasExclusive()) {
-        const dt = discountTypes.find((d) => d.legacy_key === "major_student");
-        if (dt) idSet.add(dt.id);
+      // Auto-selects — only when there's NO pending payment link (otherwise trust the link).
+      if (!source) {
+        const EXCLUSIVE_KEYS = new Set(["major_student", "second_instrument", "sibling"]);
+        const exclusiveIds = new Set(
+          discountTypes.filter((d) => EXCLUSIVE_KEYS.has(d.legacy_key as any)).map((d) => d.id),
+        );
+        const hasExclusive = () => Array.from(idSet).some((id) => exclusiveIds.has(id));
+
+        if ((student as any).is_major_student && !hasExclusive()) {
+          const dt = discountTypes.find((d) => d.legacy_key === "major_student");
+          if (dt) idSet.add(dt.id);
+        }
+        const activeEnrCount = enrList.filter((e: any) => e.is_active).length;
+        if (activeEnrCount >= 2 && !hasExclusive()) {
+          const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
+          if (dt) idSet.add(dt.id);
+        }
+        const hasKarmel = enrList.some(
+          (e: any) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
+        );
+        if (hasKarmel) {
+          const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
+          if (dt) idSet.add(dt.id);
+        }
       }
-      // Second instrument — 2+ active enrollments
-      const activeEnrCount = enrList.filter((e: any) => e.is_active).length;
-      if (activeEnrCount >= 2 && !hasExclusive()) {
-        const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
-        if (dt) idSet.add(dt.id);
-      }
-      // Afterschool branch — any active enrollment at כרם מהר״ל
-      const hasKarmel = enrList.some(
-        (e: any) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
-      );
-      if (hasKarmel) {
-        const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
-        if (dt) idSet.add(dt.id);
-      }
+
 
       const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
-      const customDiscounts = useDraft
-        ? (Array.isArray(draft.custom_discounts) ? draft.custom_discounts : [])
-        : (Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : []);
-      const startDateOverrides = useDraft
-        ? (draft.start_date_overrides && typeof draft.start_date_overrides === "object" ? draft.start_date_overrides : {})
-        : (brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object" ? brDiscounts.startDateOverrides : {});
+      const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
+      const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
+        ? brDiscounts.startDateOverrides
+        : {};
+
 
       // Compute prorated per enrollment
       const calcRows = enrList.map((e) =>
@@ -314,7 +295,7 @@ const AdminPrivatePayments = () => {
     }
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, drafts, year, settings, discountTypes, specialStudents]);
+  }, [enrollments, payments, year, settings, discountTypes, specialStudents]);
 
 
   const schoolOptions = useMemo(() => {
