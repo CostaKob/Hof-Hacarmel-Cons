@@ -472,7 +472,9 @@ const AdminRegistrationConvert = () => {
       backPath={`/admin/registrations/${id}`}
 
     >
+      <PageTitle title={`שיוך הרשמה — ${r.student_first_name} ${r.student_last_name}`} />
       <form onSubmit={handleSubmit((d) => convertMutation.mutate(d))} className="space-y-5 max-w-2xl">
+
 
         {/* Existing student decision */}
         {r.existing_student_id && (
