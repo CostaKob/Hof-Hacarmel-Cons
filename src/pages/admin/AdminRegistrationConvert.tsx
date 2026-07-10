@@ -442,6 +442,7 @@ const AdminRegistrationConvert = () => {
   if (regLoading) {
     return (
       <AdminLayout title="טוען..." backPath={`/admin/registrations/${id}`}>
+        <PageTitle title="שיוך הרשמה" />
         <p className="text-center text-muted-foreground py-8">טוען...</p>
       </AdminLayout>
     );
@@ -450,6 +451,7 @@ const AdminRegistrationConvert = () => {
   if (!registration) {
     return (
       <AdminLayout title="הרשמה" backPath="/admin/registrations">
+        <PageTitle title="שיוך הרשמה" />
         <p className="text-center text-muted-foreground py-8">ההרשמה לא נמצאה</p>
       </AdminLayout>
     );
@@ -468,6 +470,7 @@ const AdminRegistrationConvert = () => {
     <AdminLayout
       title={`טיפול בהרשמה — ${r.student_first_name} ${r.student_last_name}`}
       backPath={`/admin/registrations/${id}`}
+
     >
       <form onSubmit={handleSubmit((d) => convertMutation.mutate(d))} className="space-y-5 max-w-2xl">
 
