@@ -72,6 +72,19 @@ const AdminPrivatePayments = () => {
     },
   });
 
+  const { data: specialStudents = [] } = useQuery({
+    queryKey: ["priv-payments-special-students"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("id, first_name, last_name, grade, parent_name, parent_phone, has_music_production_course, has_recital_track, is_active")
+        .or("has_music_production_course.eq.true,has_recital_track.eq.true");
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
+
   const { data: payments = [] } = useQuery({
     queryKey: ["priv-payments-rows", yearId],
     enabled: !!yearId,
@@ -216,12 +229,46 @@ const AdminPrivatePayments = () => {
         balance,
         status,
         hasSpecialCourse: specialBase > 0,
+        specialRevenue: specialAfterStd,
         proratedTotal,
       });
     }
 
+    // Include students with special tracks but no enrollments this year
+    for (const s of specialStudents) {
+      if (byStudent.has(s.id)) continue;
+      const specialBase =
+        (s.has_music_production_course ? musicProdPrice : 0) +
+        (s.has_recital_track ? recitalPrice : 0);
+      if (specialBase <= 0) continue;
+      const stuPayments = paymentsForStudent(s.id);
+      let net = 0;
+      for (const p of stuPayments) {
+        if (p.payment_status === "pending") continue;
+        const amount = Number(p.amount || 0);
+        if (amount < 0) net += amount;
+        else if (p.transaction_type === "payment") net += amount;
+        else net -= amount;
+      }
+      const balance = Math.round((specialBase - net) * 100) / 100;
+      const status: StatusFilter = specialBase > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
+      result.push({
+        studentId: s.id,
+        student: s,
+        enrollments: [],
+        totalDue: specialBase,
+        paid: net,
+        balance,
+        status,
+        hasSpecialCourse: true,
+        specialRevenue: specialBase,
+        proratedTotal: 0,
+      });
+    }
+
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, year, settings, discountTypes]);
+  }, [enrollments, payments, year, settings, discountTypes, specialStudents]);
+
 
   const schoolOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -250,15 +297,17 @@ const AdminPrivatePayments = () => {
   }, [rows, statusFilter, schoolFilter, teacherFilter, search]);
 
   const totals = useMemo(() => {
-    let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0;
+    let potential = 0, paid = 0, balance = 0, enrollmentsCount = 0, specialRevenue = 0, specialCount = 0;
     for (const r of filtered) {
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
       enrollmentsCount += r.enrollments.length;
+      if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; specialCount += 1; }
     }
-    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount };
+    return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount };
   }, [filtered]);
+
 
 
   const fmt = (n: number) => Math.round(n).toLocaleString("he-IL");
@@ -270,14 +319,18 @@ const AdminPrivatePayments = () => {
         <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
           <span><span className="font-semibold text-foreground">{totals.studentsCount}</span> תלמידים</span>
           <span><span className="font-semibold text-foreground">{totals.enrollmentsCount}</span> שיוכים</span>
+          <span><span className="font-semibold text-foreground">{totals.specialCount}</span> במסלולים מיוחדים</span>
         </div>
+
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground">פוטנציאל הכנסות</p>
             <p className="text-2xl font-bold text-foreground">{fmt(totals.potential)} ₪</p>
+            <p className="text-[10px] text-muted-foreground mt-1">מזה מסלולים מיוחדים: {fmt(totals.specialRevenue)} ₪</p>
           </div>
+
           <div className="rounded-xl border border-border bg-card p-4 text-center">
             <p className="text-xs text-muted-foreground">סה"כ שולם</p>
             <p className="text-2xl font-bold text-green-600">{fmt(totals.paid)} ₪</p>
