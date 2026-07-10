@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ChevronLeft, School, ClipboardCheck, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,9 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 const TeacherSchoolMusicSchools = () => {
   const navigate = useNavigate();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
-  const { data: schools = [], isLoading } = useTeacherSchoolMusicSchools(teacher?.id);
+  const { selectedYearId } = useAcademicYear();
+  const { data: schools = [], isLoading } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
+
 
   const loading = teacherLoading || isLoading;
 

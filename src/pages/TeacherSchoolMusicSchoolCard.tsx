@@ -1,5 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
+
 import { useTeacherSchoolMusicSchools, useTeacherSchoolMusicClasses, useTeacherSchoolMusicStudents } from "@/hooks/useTeacherSchoolMusic";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,36 +140,26 @@ const ClassStudentsForTeacher = ({ classId, teacherId, groups }: { classId: stri
 
 const StaffSection = ({ schoolId }: { schoolId: string }) => {
   const { data: staff = [], isLoading } = useQuery({
-    queryKey: ["school-music-staff-list", schoolId],
+    queryKey: ["school-music-staff-rpc", schoolId],
     enabled: !!schoolId,
     queryFn: async () => {
-      // Get all class groups for this school
-      const { data: classes } = await supabase
-        .from("school_music_classes")
-        .select("id")
-        .eq("school_music_school_id", schoolId);
-      if (!classes || classes.length === 0) return [];
-
-      const classIds = classes.map(c => c.id);
-      const { data: groups } = await supabase
-        .from("school_music_class_groups")
-        .select("teacher_id, instrument_id, instruments(name), teachers(first_name, last_name, phone)")
-        .in("school_music_class_id", classIds);
-      if (!groups) return [];
-
-      // Deduplicate by teacher_id
-      const seen = new Map<string, any>();
-      for (const g of groups) {
-        if (!seen.has(g.teacher_id)) {
-          seen.set(g.teacher_id, {
-            id: g.teacher_id,
-            name: g.teachers ? `${g.teachers.first_name} ${g.teachers.last_name}` : "",
-            phone: g.teachers?.phone,
-            instrument: g.instruments?.name ?? "",
-          });
-        }
+      const { data, error } = await supabase.rpc("get_school_music_school_staff", { _school_id: schoolId });
+      if (error) throw error;
+      // Group by teacher: collect all roles/instruments
+      const map = new Map<string, { id: string; name: string; phone: string | null; roles: Set<string>; instruments: Set<string> }>();
+      for (const r of (data ?? []) as any[]) {
+        const existing = map.get(r.teacher_id) ?? {
+          id: r.teacher_id,
+          name: `${r.first_name ?? ""} ${r.last_name ?? ""}`.trim(),
+          phone: r.phone ?? null,
+          roles: new Set<string>(),
+          instruments: new Set<string>(),
+        };
+        if (r.role) existing.roles.add(r.role);
+        if (r.instrument) existing.instruments.add(r.instrument);
+        map.set(r.teacher_id, existing);
       }
-      return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name, "he"));
+      return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "he"));
     },
   });
 
@@ -184,13 +176,20 @@ const StaffSection = ({ schoolId }: { schoolId: string }) => {
       </CardHeader>
       <CardContent className="space-y-1.5">
         {staff.map((t: any) => (
-          <div key={t.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2.5 text-sm">
-            <div className="flex items-center gap-2">
-              <User className="h-3.5 w-3.5 text-muted-foreground" />
+          <div key={t.id} className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2.5 text-sm gap-2">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <User className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
               <span className="font-medium">{t.name}</span>
-              {t.instrument && (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{t.instrument}</Badge>
-              )}
+              {Array.from(t.roles).map((role) => (
+                <Badge key={role as string} variant={role === "רכז" || role === "מנצח" ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                  {role as string}
+                </Badge>
+              ))}
+              {Array.from(t.instruments).map((inst) => (
+                <Badge key={inst as string} variant="outline" className="text-[10px] px-1.5 py-0">
+                  {inst as string}
+                </Badge>
+              ))}
             </div>
             <PhoneLink phone={t.phone} />
           </div>
@@ -200,13 +199,16 @@ const StaffSection = ({ schoolId }: { schoolId: string }) => {
   );
 };
 
+
 /* ─── Main Page ─── */
 
 const TeacherSchoolMusicSchoolCard = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: teacher } = useTeacherProfile();
-  const { data: schools = [] } = useTeacherSchoolMusicSchools(teacher?.id);
+  const { selectedYearId } = useAcademicYear();
+  const { data: schools = [] } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
+
 
   const schoolMeta = useMemo(
     () => schools.find((s: any) => s.id === id),

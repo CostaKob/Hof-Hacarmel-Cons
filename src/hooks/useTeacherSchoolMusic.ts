@@ -7,18 +7,22 @@ export type TeacherSchoolRole = "רכז" | "מנצח" | "מורה לקבוצה";
  * Fetch schools where the teacher is coordinator, conductor, or group teacher.
  * Returns school data with roles.
  */
-export function useTeacherSchoolMusicSchools(teacherId: string | undefined) {
+export function useTeacherSchoolMusicSchools(teacherId: string | undefined, yearIdParam?: string | null) {
   return useQuery({
-    queryKey: ["teacher-school-music-schools-v4", teacherId],
+    queryKey: ["teacher-school-music-schools-v5", teacherId, yearIdParam ?? null],
     enabled: !!teacherId,
     queryFn: async () => {
-      // 0. Get active academic year to filter
-      const { data: activeYear } = await supabase
-        .from("academic_years")
-        .select("id")
-        .eq("is_active", true)
-        .maybeSingle();
-      const yearId = activeYear?.id ?? null;
+      // 0. Determine year to filter: explicit param wins, else active year
+      let yearId: string | null = yearIdParam ?? null;
+      if (!yearId) {
+        const { data: activeYear } = await supabase
+          .from("academic_years")
+          .select("id")
+          .eq("is_active", true)
+          .maybeSingle();
+        yearId = activeYear?.id ?? null;
+      }
+
 
       // 1. Schools where teacher is coordinator or conductor (current year)
       let directQuery = supabase

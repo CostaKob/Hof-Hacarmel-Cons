@@ -2414,6 +2414,17 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_school_music_school_staff: {
+        Args: { _school_id: string }
+        Returns: {
+          first_name: string
+          instrument: string
+          last_name: string
+          phone: string
+          role: string
+          teacher_id: string
+        }[]
+      }
       get_school_music_school_year: {
         Args: { _school_id: string }
         Returns: string
