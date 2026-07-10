@@ -157,11 +157,35 @@ const AdminPrivatePayments = () => {
           if (dt) idSet.add(dt.id);
         }
       }
-      // Auto-major fallback
-      if (idSet.size === 0 && (student as any).is_major_student) {
+      // Auto-selects (mirror AdminStudentPaymentCalc so the potential-income
+      // report reflects the same discounts a user would see when opening the
+      // student's calc page — even before any pending payment exists).
+      const EXCLUSIVE_KEYS = new Set(["major_student", "second_instrument", "sibling"]);
+      const exclusiveIds = new Set(
+        discountTypes.filter((d) => EXCLUSIVE_KEYS.has(d.legacy_key as any)).map((d) => d.id),
+      );
+      const hasExclusive = () => Array.from(idSet).some((id) => exclusiveIds.has(id));
+
+      // Major student
+      if ((student as any).is_major_student && !hasExclusive()) {
         const dt = discountTypes.find((d) => d.legacy_key === "major_student");
         if (dt) idSet.add(dt.id);
       }
+      // Second instrument — 2+ active enrollments
+      const activeEnrCount = enrList.filter((e: any) => e.is_active).length;
+      if (activeEnrCount >= 2 && !hasExclusive()) {
+        const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
+        if (dt) idSet.add(dt.id);
+      }
+      // Afterschool branch — any active enrollment at כרם מהר״ל
+      const hasKarmel = enrList.some(
+        (e: any) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
+      );
+      if (hasKarmel) {
+        const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
+        if (dt) idSet.add(dt.id);
+      }
+
       const selectedDiscounts = discountTypes.filter((d) => idSet.has(d.id));
       const customDiscounts = Array.isArray(brDiscounts.customDiscounts) ? brDiscounts.customDiscounts : [];
       const startDateOverrides = brDiscounts.startDateOverrides && typeof brDiscounts.startDateOverrides === "object"
