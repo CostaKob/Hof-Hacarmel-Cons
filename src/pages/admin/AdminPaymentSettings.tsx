@@ -255,7 +255,7 @@ const AdminPaymentSettings = () => {
                       <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">כל הרישומים</SelectItem>
-                        <SelectItem value="cheapest_enrollment">כל הרישומים פרט ליקר ביותר</SelectItem>
+                        <SelectItem value="cheapest_enrollment">כלים נוספים</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
