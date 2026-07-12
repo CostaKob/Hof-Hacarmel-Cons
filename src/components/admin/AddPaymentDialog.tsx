@@ -496,6 +496,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 ))}
               </select>
             </div>
+            {paymentMethod === "check" && (
+              <div>
+                <Label htmlFor="check-number">מספר צ׳ק</Label>
+                <Input
+                  id="check-number"
+                  value={checkNumber}
+                  onChange={(e) => setCheckNumber(e.target.value)}
+                  placeholder="לדוגמה: 1234"
+                />
+              </div>
+            )}
             <div>
               <Label>הערות</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערות (אופציונלי)" rows={2} />
