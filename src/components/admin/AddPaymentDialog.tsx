@@ -64,6 +64,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   ]);
   const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string }>>([]);
 
+  // ---- Check spread state ----
+  const [checksOpen, setChecksOpen] = useState(false);
+  const [numChecks, setNumChecks] = useState("1");
+  const [firstCheckDate, setFirstCheckDate] = useState(today);
+  const [firstCheckNumber, setFirstCheckNumber] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankBranch, setBankBranch] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [checks, setChecks] = useState<Array<{ date: string; number: string; amount: string }>>([]);
+
   const isEdit = !!editPayment;
 
   const suggestedFor = (e: any) => {
