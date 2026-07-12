@@ -171,20 +171,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const activeEnrollments = useMemo(() => enrollments.filter((e: any) => e.is_active), [enrollments]);
 
-  // ---- Compute default (discounted) amounts, mirroring AdminStudentPaymentCalc ----
+  // ---- Compute default amounts, mirroring AdminStudentPaymentCalc ----
   type PaymentItem = {
-    id: string; // enrollment uuid OR `special:<key>`
+    id: string; // enrollment uuid OR `special:<key>` OR `discount:<key>`
     enrollmentId: string | null;
     label: string;
     subLabel?: string;
-    defaultAmount: number;
-    kind: "enrollment" | "special";
+    defaultAmount: number; // can be negative for discounts
+    kind: "enrollment" | "special" | "discount";
   };
 
   const paymentItems: PaymentItem[] = useMemo(() => {
     const items: PaymentItem[] = [];
     if (!yearFull || !settings) {
-      // Fallback: enrollments only with legacy suggestedFor
       for (const e of activeEnrollments) {
         const raw = Number(e?.price_per_lesson || 0) * Number(e?.total_lessons_allocated || 0);
         items.push({
@@ -227,12 +226,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       selectedDiscounts,
     );
 
-    const rowsAfterStd = rows.map((r) => {
-      const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
-      return { r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
-    });
-
-    // Specials — no percentage discounts apply
     const specials: { key: string; label: string; price: number }[] = [];
     if (student?.has_music_production_course) {
       specials.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: Number(settings.music_production_price) || 0 });
@@ -241,25 +234,15 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       specials.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
     }
 
-    const afterStdTotal = rowsAfterStd.reduce((s, x) => s + x.afterStd, 0) + specials.reduce((s, x) => s + x.price, 0);
-
-    // Custom discounts (proportional across all items)
-    const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
-    const customAmt = customDiscounts.reduce((sum, c) => {
-      const v = Number(c.value) || 0;
-      if (c.mode === "pct") return sum + (afterStdTotal * v) / 100;
-      return sum + v;
-    }, 0);
-    const customFactor = afterStdTotal > 0 ? Math.max(0, (afterStdTotal - customAmt) / afterStdTotal) : 1;
-
-    for (const { r, afterStd } of rowsAfterStd) {
+    // Enrollments at gross prorated (no discounts baked in)
+    for (const r of rows) {
       const e = activeEnrollments.find((x: any) => x.id === r.enrollmentId);
       items.push({
         id: r.enrollmentId,
         enrollmentId: r.enrollmentId,
         label: e ? getEnrollmentLabel(e) : "—",
         subLabel: `${r.lessonsRemaining}/${r.lessonsTotal} שיעורים`,
-        defaultAmount: Math.round(afterStd * customFactor * 100) / 100,
+        defaultAmount: Math.round(r.prorated * 100) / 100,
         kind: "enrollment",
       });
     }
@@ -269,8 +252,39 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         enrollmentId: null,
         label: s.label,
         subLabel: "קורס מיוחד",
-        defaultAmount: Math.round(s.price * customFactor * 100) / 100,
+        defaultAmount: Math.round(s.price * 100) / 100,
         kind: "special",
+      });
+    }
+    // Standard discounts — one negative line per applied discount
+    for (const line of stdCompute.lines) {
+      if (line.amount <= 0) continue;
+      items.push({
+        id: `discount:${line.discountTypeId}`,
+        enrollmentId: null,
+        label: `${line.label} (${line.percentage}%)`,
+        subLabel: "הנחה",
+        defaultAmount: -Math.round(line.amount * 100) / 100,
+        kind: "discount",
+      });
+    }
+    // Custom discounts (draft): each as its own negative line
+    const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
+    const afterStdTotal =
+      stdCompute.afterStdDiscount + specials.reduce((s, x) => s + x.price, 0);
+    for (let i = 0; i < customDiscounts.length; i++) {
+      const c = customDiscounts[i];
+      const v = Number(c?.value) || 0;
+      if (!v) continue;
+      const amt = c?.mode === "pct" ? (afterStdTotal * v) / 100 : v;
+      if (amt <= 0) continue;
+      items.push({
+        id: `discount:custom-${i}`,
+        enrollmentId: null,
+        label: c?.label ? `${c.label}${c.mode === "pct" ? ` (${v}%)` : ""}` : (c?.mode === "pct" ? `הנחה ${v}%` : "הנחה"),
+        subLabel: "הנחה מותאמת",
+        defaultAmount: -Math.round(amt * 100) / 100,
+        kind: "discount",
       });
     }
     return items;
