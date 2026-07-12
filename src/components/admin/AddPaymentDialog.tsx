@@ -619,6 +619,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   </div>
                 )}
               </div>
+              </div>
             )}
             <div className="flex gap-2">
               <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
