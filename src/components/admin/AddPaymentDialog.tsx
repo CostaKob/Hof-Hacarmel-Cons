@@ -607,19 +607,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 )}
               </div>
             )}
-              <Button
-                variant="outline"
-                className="w-full h-11 rounded-xl"
-                onClick={() => generateLinkMutation.mutate()}
-                disabled={totalSelected <= 0 || generateLinkMutation.isPending}
-              >
-                {generateLinkMutation.isPending ? (
-                  <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישור...</>
-                ) : (
-                  <><LinkIcon className="h-4 w-4 ml-2" /> צור קישור לתשלום באשראי {totalSelected > 0 ? `(₪${totalSelected.toLocaleString()})` : ""}</>
-                )}
-              </Button>
-            )}
             <div className="flex gap-2">
               <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
                 {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
