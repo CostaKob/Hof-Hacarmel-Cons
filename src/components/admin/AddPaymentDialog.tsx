@@ -64,6 +64,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   ]);
   const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string }>>([]);
 
+  // ---- Check spread state ----
+  const [checksOpen, setChecksOpen] = useState(false);
+  const [numChecks, setNumChecks] = useState("1");
+  const [firstCheckDate, setFirstCheckDate] = useState(today);
+  const [firstCheckNumber, setFirstCheckNumber] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankBranch, setBankBranch] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
+  const [checks, setChecks] = useState<Array<{ date: string; number: string; amount: string }>>([]);
+
   const isEdit = !!editPayment;
 
   const suggestedFor = (e: any) => {
@@ -148,19 +158,66 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         .filter((x) => x.eid && x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
 
+      const bankInfoStr = [
+        bankName && `בנק: ${bankName}`,
+        bankBranch && `סניף: ${bankBranch}`,
+        bankAccount && `ח-ן: ${bankAccount}`,
+      ].filter(Boolean).join(" · ");
+
+      const useCheckSpread =
+        paymentMethod === "check" &&
+        transactionType === "payment" &&
+        checks.length > 0;
+
       const baseFields = {
         payment_date: paymentDate,
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
         notes: notes || null,
-        reference_number: paymentMethod === "check" ? (checkNumber.trim() || null) : null,
+        reference_number: paymentMethod === "check" && !useCheckSpread ? (checkNumber.trim() || null) : null,
         transaction_type: transactionType,
         student_id: studentId,
         academic_year_id: academicYearId,
       };
 
       let rows: any[];
-      if (entries.length > 1 && invoiceMode === "combined") {
+      if (useCheckSpread) {
+        const total = entries.reduce((s, x) => s + x.amt, 0);
+        const sumChecks = checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
+        if (Math.abs(sumChecks - total) > 0.01) {
+          throw new Error(`סכום הצ׳קים (₪${sumChecks.toLocaleString()}) לא תואם לסה״כ (₪${total.toLocaleString()})`);
+        }
+        const groupId =
+          (typeof crypto !== "undefined" && "randomUUID" in crypto)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random()}`;
+        rows = checks.map((c, i) => {
+          const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
+          const ratio = total > 0 ? amt / total : 0;
+          const breakdown = entries.length > 1
+            ? entries.map(({ eid, amt: eAmt }) => ({
+                enrollment_id: eid,
+                amount: Math.round(eAmt * ratio * 100) / 100,
+              }))
+            : null;
+          const noteParts = [
+            `צ׳ק ${i + 1}/${checks.length}`,
+            bankInfoStr,
+            notes,
+          ].filter(Boolean);
+          return {
+            ...baseFields,
+            payment_date: c.date,
+            installments: 1,
+            amount: amt,
+            enrollment_id: entries[0].eid,
+            enrollment_breakdown: breakdown,
+            reference_number: c.number?.trim() || null,
+            payment_group_id: groupId,
+            notes: noteParts.join(" · "),
+          };
+        });
+      } else if (entries.length > 1 && invoiceMode === "combined") {
         // Single payment row covering multiple enrollments → single combined invoice
         const total = entries.reduce((s, x) => s + x.amt, 0);
         rows = [{
@@ -318,9 +375,54 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSplitOpen(false);
     setSplitParts([{ label: "חלק 1", amount: "" }, { label: "חלק 2", amount: "" }]);
     setSplitResults([]);
+    setChecksOpen(false);
+    setNumChecks("1");
+    setFirstCheckDate(today);
+    setFirstCheckNumber("");
+    setBankName("");
+    setBankBranch("");
+    setBankAccount("");
+    setChecks([]);
   };
 
-  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0;
+  const addMonthsIso = (iso: string, months: number) => {
+    const d = new Date(iso + "T00:00:00");
+    const day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, last));
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  };
+
+  const generateChecks = () => {
+    const n = Math.max(1, parseInt(numChecks) || 1);
+    const total = Math.round(totalSelected * 100) / 100;
+    if (total <= 0) { toast.error("סה״כ הסכום חייב להיות גדול מ-0"); return; }
+    const baseWhole = Math.floor(total / n);
+    const remainder = Math.round((total - baseWhole * n) * 100) / 100;
+    const firstAmt = Math.round((baseWhole + remainder) * 100) / 100;
+    const startNum = parseInt(firstCheckNumber);
+    const rows: Array<{ date: string; number: string; amount: string }> = [];
+    for (let i = 0; i < n; i++) {
+      rows.push({
+        date: addMonthsIso(firstCheckDate, i),
+        number: Number.isFinite(startNum) ? String(startNum + i) : "",
+        amount: String(i === 0 ? firstAmt : baseWhole),
+      });
+    }
+    setChecks(rows);
+  };
+
+  const checksTotal = useMemo(
+    () => checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0),
+    [checks],
+  );
+
+  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0 || checks.length > 0;
   const canSubmit = (isEdit
     ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
     : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate)
@@ -488,15 +590,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 ))}
               </select>
             </div>
-            <div>
-              <Label htmlFor="installments">מספר תשלומים</Label>
-              <select id="installments" value={installments} onChange={(e) => setInstallments(e.target.value)} className={selectClass}>
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                  <option key={n} value={String(n)}>{n}</option>
-                ))}
-              </select>
-            </div>
-            {paymentMethod === "check" && (
+            {paymentMethod !== "check" && (
+              <div>
+                <Label htmlFor="installments">מספר תשלומים</Label>
+                <select id="installments" value={installments} onChange={(e) => setInstallments(e.target.value)} className={selectClass}>
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={String(n)}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            {paymentMethod === "check" && (isEdit || !checksOpen || checks.length === 0) && (
               <div>
                 <Label htmlFor="check-number">מספר צ׳ק</Label>
                 <Input
@@ -505,6 +609,97 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   onChange={(e) => setCheckNumber(e.target.value)}
                   placeholder="לדוגמה: 1234"
                 />
+              </div>
+            )}
+            {paymentMethod === "check" && !isEdit && transactionType === "payment" && (
+              <div className="rounded-xl border border-border p-3 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => setChecksOpen((v) => !v)}
+                  className="w-full flex items-center justify-between text-sm font-medium"
+                >
+                  <span className="flex items-center gap-2">
+                    <Split className="h-4 w-4" />
+                    פריסת צ׳קים
+                  </span>
+                  <span className="text-xs text-muted-foreground">{checksOpen ? "הסתר" : "הצג"}</span>
+                </button>
+                {checksOpen && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground">
+                      פריסה אוטומטית: הצ׳ק הראשון סופג את השארית ושאר הצ׳קים בסכומים שלמים ושווים. ניתן לערוך כל שורה ידנית.
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">מספר צ׳קים</Label>
+                        <Input type="number" min="1" max="24" value={numChecks} onChange={(e) => setNumChecks(e.target.value)} className="h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">תאריך צ׳ק ראשון</Label>
+                        <Input type="date" value={firstCheckDate} onChange={(e) => setFirstCheckDate(e.target.value)} className="h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">מספר צ׳ק ראשון</Label>
+                        <Input value={firstCheckNumber} onChange={(e) => setFirstCheckNumber(e.target.value)} placeholder="לדוגמה: 1001" className="h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">סה״כ לפריסה</Label>
+                        <Input value={`₪${totalSelected.toLocaleString()}`} disabled className="h-9" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs">בנק</Label>
+                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">סניף</Label>
+                        <Input value={bankBranch} onChange={(e) => setBankBranch(e.target.value)} className="h-9" />
+                      </div>
+                      <div>
+                        <Label className="text-xs">מס׳ חשבון</Label>
+                        <Input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} className="h-9" />
+                      </div>
+                    </div>
+                    <Button type="button" variant="outline" className="w-full h-10 rounded-xl" onClick={generateChecks} disabled={totalSelected <= 0}>
+                      צור פריסה
+                    </Button>
+                    {checks.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-border">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-medium">רשימת צ׳קים ({checks.length})</p>
+                          <p className={`text-xs ${Math.abs(checksTotal - totalSelected) < 0.01 ? "text-muted-foreground" : "text-destructive"}`}>
+                            סה״כ צ׳קים: ₪{checksTotal.toLocaleString()}
+                            {Math.abs(checksTotal - totalSelected) >= 0.01 && ` (הפרש ₪${(totalSelected - checksTotal).toLocaleString()})`}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-[24px_1fr_90px_90px_24px] gap-2 items-center text-[11px] text-muted-foreground px-1">
+                          <span>#</span><span>תאריך</span><span>מס׳ צ׳ק</span><span>סכום</span><span></span>
+                        </div>
+                        {checks.map((c, i) => (
+                          <div key={i} className="grid grid-cols-[24px_1fr_90px_90px_24px] gap-2 items-center">
+                            <span className="text-xs text-muted-foreground text-center">{i + 1}</span>
+                            <Input type="date" value={c.date}
+                              onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, date: e.target.value } : x))} className="h-9" />
+                            <Input value={c.number}
+                              onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, number: e.target.value } : x))} placeholder="מס׳" className="h-9" />
+                            <Input type="number" step="0.01" value={c.amount}
+                              onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, amount: e.target.value } : x))} className="h-9" />
+                            <button type="button" className="text-destructive hover:opacity-70"
+                              onClick={() => setChecks((prev) => prev.filter((_, idx) => idx !== i))} aria-label="הסר">
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                        <button type="button"
+                          onClick={() => setChecks((prev) => [...prev, { date: prev.length ? addMonthsIso(prev[prev.length - 1].date, 1) : firstCheckDate, number: "", amount: "0" }])}
+                          className="text-xs text-primary hover:underline flex items-center gap-1">
+                          <Plus className="h-3 w-3" /> הוסף צ׳ק
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             <div>
