@@ -155,7 +155,7 @@ const AdminTeacherForm = () => {
     { name: "phone", label: "טלפון", type: "tel" },
     { name: "email", label: "אימייל", type: "email" },
     { name: "address", label: "כתובת" },
-    { name: "city", label: "עיר" },
+    { name: "city", label: "ישוב מגורים" },
   ];
 
   return (

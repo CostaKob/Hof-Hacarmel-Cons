@@ -90,7 +90,7 @@ const AdminEnrollments = () => {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, עיר, כלי..."
+              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, ישוב מגורים, כלי..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pr-9 h-12 rounded-xl"

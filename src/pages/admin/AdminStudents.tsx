@@ -483,7 +483,7 @@ const AdminStudents = () => {
         <div className="relative w-full lg:flex-1 lg:max-w-sm">
           <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, עיר, כלי..."
+            placeholder="חיפוש: שם, ת.ז, הורה, טלפון, מורה, שלוחה, ישוב מגורים, כלי..."
             value={search}
             onChange={(e) => setFilter("q", e.target.value)}
             className="pr-9 h-12 rounded-xl w-full"
@@ -589,9 +589,9 @@ const AdminStudents = () => {
         )}
 
         <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-          <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="עיר מגורים" /></SelectTrigger>
+          <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="ישוב מגורים" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">עיר מגורים</SelectItem>
+            <SelectItem value="all">ישוב מגורים</SelectItem>
             {cities.map((c) => (
               <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
             ))}

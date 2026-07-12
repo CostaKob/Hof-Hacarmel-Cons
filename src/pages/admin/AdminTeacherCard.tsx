@@ -338,7 +338,7 @@ const AdminTeacherCard = () => {
           ) : null}
           <DetailRow label="אימייל" value={teacher.email} />
           <DetailRow label="כתובת" value={teacher.address} />
-          <DetailRow label="עיר" value={teacher.city} />
+          <DetailRow label="ישוב מגורים" value={teacher.city} />
         </div>
 
         {/* Login Account Section */}

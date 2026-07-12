@@ -228,7 +228,7 @@ const AdminStudentForm = () => {
 
             {/* City picker */}
             <div className="space-y-1.5">
-              <Label className="text-sm">עיר</Label>
+              <Label className="text-sm">ישוב מגורים</Label>
               <Controller
                 name="city"
                 control={control}

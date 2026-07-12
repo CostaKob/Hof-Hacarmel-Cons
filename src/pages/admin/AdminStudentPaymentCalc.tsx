@@ -669,7 +669,7 @@ const AdminStudentPaymentCalc = () => {
               <p className="text-sm"><span className="text-muted-foreground">שם:</span> {student.first_name} {student.last_name}</p>
               <p className="text-sm"><span className="text-muted-foreground">ת.ז.:</span> {student.national_id ?? "—"}</p>
               <p className="text-sm"><span className="text-muted-foreground">כיתה:</span> {student.grade ?? "—"}</p>
-              <p className="text-sm"><span className="text-muted-foreground">עיר:</span> {student.city ?? "—"}</p>
+              <p className="text-sm"><span className="text-muted-foreground">ישוב מגורים:</span> {student.city ?? "—"}</p>
               <p className="text-sm"><span className="text-muted-foreground">כתובת:</span> {student.address ?? "—"}</p>
             </div>
             <div>

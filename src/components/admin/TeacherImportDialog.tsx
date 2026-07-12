@@ -55,7 +55,7 @@ const COLUMN_LABELS: Record<string, string> = {
   phone: "טלפון",
   email: "אימייל",
   address: "כתובת",
-  city: "עיר",
+  city: "ישוב מגורים",
 };
 
 function parseDateValue(val: unknown): string | null {

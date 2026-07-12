@@ -108,7 +108,7 @@ const AdminSchoolForm = () => {
   const FIELDS: { name: keyof SchoolFormData; label: string; required?: boolean }[] = [
     { name: "name", label: "שם שלוחה", required: true },
     { name: "address", label: "כתובת" },
-    { name: "city", label: "עיר" },
+    { name: "city", label: "ישוב מגורים" },
   ];
 
   return (

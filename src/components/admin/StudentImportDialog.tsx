@@ -77,7 +77,7 @@ const COLUMN_LABELS: Record<string, string> = {
   gender: "מין (male/female)",
   student_phone: "נייד תלמיד",
   address: "כתובת",
-  city: "עיר",
+  city: "ישוב מגורים",
   grade: "כיתה",
   playing_level: "רמת נגינה",
   parent_name: "שם הורה",
