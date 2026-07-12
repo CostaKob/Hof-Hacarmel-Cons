@@ -158,19 +158,66 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         .filter((x) => x.eid && x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
 
+      const bankInfoStr = [
+        bankName && `בנק: ${bankName}`,
+        bankBranch && `סניף: ${bankBranch}`,
+        bankAccount && `ח-ן: ${bankAccount}`,
+      ].filter(Boolean).join(" · ");
+
+      const useCheckSpread =
+        paymentMethod === "check" &&
+        transactionType === "payment" &&
+        checks.length > 0;
+
       const baseFields = {
         payment_date: paymentDate,
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
         notes: notes || null,
-        reference_number: paymentMethod === "check" ? (checkNumber.trim() || null) : null,
+        reference_number: paymentMethod === "check" && !useCheckSpread ? (checkNumber.trim() || null) : null,
         transaction_type: transactionType,
         student_id: studentId,
         academic_year_id: academicYearId,
       };
 
       let rows: any[];
-      if (entries.length > 1 && invoiceMode === "combined") {
+      if (useCheckSpread) {
+        const total = entries.reduce((s, x) => s + x.amt, 0);
+        const sumChecks = checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
+        if (Math.abs(sumChecks - total) > 0.01) {
+          throw new Error(`סכום הצ׳קים (₪${sumChecks.toLocaleString()}) לא תואם לסה״כ (₪${total.toLocaleString()})`);
+        }
+        const groupId =
+          (typeof crypto !== "undefined" && "randomUUID" in crypto)
+            ? crypto.randomUUID()
+            : `${Date.now()}-${Math.random()}`;
+        rows = checks.map((c, i) => {
+          const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
+          const ratio = total > 0 ? amt / total : 0;
+          const breakdown = entries.length > 1
+            ? entries.map(({ eid, amt: eAmt }) => ({
+                enrollment_id: eid,
+                amount: Math.round(eAmt * ratio * 100) / 100,
+              }))
+            : null;
+          const noteParts = [
+            `צ׳ק ${i + 1}/${checks.length}`,
+            bankInfoStr,
+            notes,
+          ].filter(Boolean);
+          return {
+            ...baseFields,
+            payment_date: c.date,
+            installments: 1,
+            amount: amt,
+            enrollment_id: entries[0].eid,
+            enrollment_breakdown: breakdown,
+            reference_number: c.number?.trim() || null,
+            payment_group_id: groupId,
+            notes: noteParts.join(" · "),
+          };
+        });
+      } else if (entries.length > 1 && invoiceMode === "combined") {
         // Single payment row covering multiple enrollments → single combined invoice
         const total = entries.reduce((s, x) => s + x.amt, 0);
         rows = [{
