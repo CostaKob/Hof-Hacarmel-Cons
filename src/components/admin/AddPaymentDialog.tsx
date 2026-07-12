@@ -200,6 +200,49 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     onError: (err: any) => toast.error(err.message || "שגיאה במחיקת תשלום"),
   });
 
+  const generateLinkMutation = useMutation({
+    mutationFn: async () => {
+      const entries = Object.entries(selectedAmounts)
+        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
+        .filter((x) => x.eid && x.amt > 0);
+      if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+      const total = Math.round(entries.reduce((s, x) => s + x.amt, 0) * 100) / 100;
+      if (total <= 0) throw new Error("סכום חייב להיות גדול מ-0");
+
+      const lines = entries.map(({ eid, amt }) => {
+        const e = enrollments.find((x: any) => x.id === eid);
+        const desc = e ? `${e.instruments?.name ?? "שכר לימוד"} — ${e.schools?.name ?? ""}`.trim() : "שכר לימוד";
+        return { description: desc.replace(/ — $/, ""), amount: Math.round(amt * 100) / 100 };
+      });
+
+      const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+        body: {
+          studentId,
+          amount: total,
+          academicYearId,
+          academicYearName: activeYear?.hebrew_year ?? null,
+          lines,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      if (!data?.url) throw new Error("לא התקבל קישור");
+      return data as { url: string };
+    },
+    onSuccess: async (data) => {
+      try { await navigator.clipboard.writeText(data.url); } catch { /* noop */ }
+      window.open(data.url, "_blank");
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] });
+      toast.success("קישור התשלום נוצר והועתק ללוח");
+      onOpenChange(false);
+      resetForm();
+    },
+    onError: (err: any) => toast.error(err.message || "שגיאה ביצירת קישור"),
+  });
+
   const resetForm = () => {
     setPaymentDate(today);
     setPaymentMethod("credit_card");
