@@ -340,10 +340,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         return;
       }
 
+      const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
       const entries = Object.entries(selectedAmounts)
-        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
-        .filter((x) => x.eid && x.amt > 0);
+        .map(([id, amt]) => {
+          const it = itemById.get(id);
+          return {
+            id,
+            enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") ? null : id),
+            label: it?.label ?? null,
+            amt: parseFloat(amt),
+          };
+        })
+        .filter((x) => x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+
+      const anchorEnrollmentId = entries.find((e) => e.enrollmentId)?.enrollmentId ?? null;
 
       const bankInfoStr = [
         bankName && `בנק: ${bankName}`,
@@ -367,6 +378,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         academic_year_id: academicYearId,
       };
 
+      const breakdownFor = (ratio: number) =>
+        entries.map((e) => ({
+          enrollment_id: e.enrollmentId,
+          label: e.label,
+          amount: Math.round(e.amt * ratio * 100) / 100,
+        }));
+
       let rows: any[];
       if (useCheckSpread) {
         const total = entries.reduce((s, x) => s + x.amt, 0);
@@ -381,12 +399,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         rows = checks.map((c, i) => {
           const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
           const ratio = total > 0 ? amt / total : 0;
-          const breakdown = entries.length > 1
-            ? entries.map(({ eid, amt: eAmt }) => ({
-                enrollment_id: eid,
-                amount: Math.round(eAmt * ratio * 100) / 100,
-              }))
-            : null;
+          const breakdown = entries.length > 1 ? breakdownFor(ratio) : null;
           const noteParts = [
             `צ׳ק ${i + 1}/${checks.length}`,
             bankInfoStr,
@@ -397,7 +410,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             payment_date: c.date,
             installments: 1,
             amount: amt,
-            enrollment_id: entries[0].eid,
+            enrollment_id: anchorEnrollmentId,
             enrollment_breakdown: breakdown,
             reference_number: c.number?.trim() || null,
             payment_group_id: groupId,
@@ -405,22 +418,27 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           };
         });
       } else if (entries.length > 1 && invoiceMode === "combined") {
-        // Single payment row covering multiple enrollments → single combined invoice
         const total = entries.reduce((s, x) => s + x.amt, 0);
         rows = [{
           ...baseFields,
           amount: total,
-          enrollment_id: entries[0].eid,
-          enrollment_breakdown: entries.map(({ eid, amt }) => ({ enrollment_id: eid, amount: amt })),
+          enrollment_id: anchorEnrollmentId,
+          enrollment_breakdown: breakdownFor(1),
         }];
       } else {
-        // Separate row per enrollment → separate invoice per row
-        rows = entries.map(({ eid, amt }) => ({
-          ...baseFields,
-          amount: amt,
-          enrollment_id: eid,
-        }));
+        // Separate row per item
+        rows = entries.map((e) => {
+          const isSpecial = e.enrollmentId === null;
+          const extraNote = isSpecial && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
+          return {
+            ...baseFields,
+            amount: e.amt,
+            enrollment_id: e.enrollmentId,
+            notes: extraNote,
+          };
+        });
       }
+
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
       if (error) throw error;
