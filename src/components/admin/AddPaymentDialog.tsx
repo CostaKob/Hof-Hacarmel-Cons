@@ -422,7 +422,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     [checks],
   );
 
-  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0 || checks.length > 0;
+  const checkRequirementMet = paymentMethod !== "check" || isEdit || checks.length > 0;
   const canSubmit = (isEdit
     ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
     : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate)
@@ -600,7 +600,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 </select>
               </div>
             )}
-            {paymentMethod === "check" && (isEdit || !checksOpen || checks.length === 0) && (
+            {paymentMethod === "check" && isEdit && (
               <div>
                 <Label htmlFor="check-number">מספר צ׳ק</Label>
                 <Input
@@ -613,17 +613,18 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             )}
             {paymentMethod === "check" && !isEdit && transactionType === "payment" && (
               <div className="rounded-xl border border-border p-3 space-y-3">
-                <button
+                <Button
                   type="button"
+                  variant="outline"
+                  className="w-full h-11 rounded-xl justify-between px-3"
                   onClick={() => setChecksOpen((v) => !v)}
-                  className="w-full flex items-center justify-between text-sm font-medium"
                 >
                   <span className="flex items-center gap-2">
                     <Split className="h-4 w-4" />
                     פריסת צ׳קים
                   </span>
                   <span className="text-xs text-muted-foreground">{checksOpen ? "הסתר" : "הצג"}</span>
-                </button>
+                </Button>
                 {checksOpen && (
                   <div className="space-y-3 pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground">
