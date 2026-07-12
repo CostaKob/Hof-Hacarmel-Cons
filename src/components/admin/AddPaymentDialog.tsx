@@ -310,6 +310,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setEditEnrollmentId("");
     setEditAmount("");
     setInvoiceMode("combined");
+    setSplitOpen(false);
+    setSplitParts([{ label: "חלק 1", amount: "" }, { label: "חלק 2", amount: "" }]);
+    setSplitResults([]);
   };
 
   const canSubmit = isEdit
