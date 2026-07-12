@@ -89,7 +89,9 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ensembles")
-        .select("id, name, ensemble_type")
+        .select(
+          "id, name, ensemble_type, ensemble_staff(role, teachers(first_name, last_name))"
+        )
         .eq("academic_year_id", yearId!)
         .eq("is_active", true)
         .order("name");
