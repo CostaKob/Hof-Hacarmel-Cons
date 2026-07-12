@@ -69,7 +69,7 @@ const TeacherStudentCard = () => {
           <div className="grid grid-cols-1 gap-3 text-sm">
             <InfoRow icon={User} label="שם מלא" value={`${student.first_name} ${student.last_name}`} />
             <InfoRow icon={Calendar} label="תאריך לידה" value={student.date_of_birth} />
-            <InfoRow icon={MapPin} label="עיר" value={student.city} />
+            <InfoRow icon={MapPin} label="ישוב מגורים" value={student.city} />
             {((enrollment as any)?.grade || (student as any).grade) && <InfoRow icon={User} label="כיתה" value={(enrollment as any)?.grade || (student as any).grade} />}
             {(student as any).playing_level && <InfoRow icon={Music} label="רמת נגינה" value={(student as any).playing_level} />}
             {student.national_id && <InfoRow icon={User} label="ת.ז." value={student.national_id} />}

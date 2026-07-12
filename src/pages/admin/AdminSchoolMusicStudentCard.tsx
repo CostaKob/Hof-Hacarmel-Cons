@@ -160,7 +160,7 @@ const AdminSchoolMusicStudentCard = () => {
           </h2>
           <Row label="ת.ז." value={<span dir="ltr" className="font-mono">{student.student_national_id}</span>} />
           <Row label="מין" value={student.gender === "male" ? "זכר" : student.gender === "female" ? "נקבה" : student.gender || "—"} />
-          <Row label="עיר" value={student.city} />
+          <Row label="ישוב מגורים" value={student.city} />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-1">
