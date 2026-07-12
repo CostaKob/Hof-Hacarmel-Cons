@@ -552,11 +552,11 @@ const AdminSchoolMusicSchoolCard = () => {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">משעה *</Label>
-                    <Input type="time" value={newClassStart} onChange={(e) => setNewClassStart(e.target.value)} className="h-9 text-xs rounded-lg" />
+                    <Input type="time" lang="en-GB" step={60} value={newClassStart} onChange={(e) => setNewClassStart(e.target.value)} className="h-9 text-xs rounded-lg" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">עד שעה *</Label>
-                    <Input type="time" value={newClassEnd} onChange={(e) => setNewClassEnd(e.target.value)} className="h-9 text-xs rounded-lg" />
+                    <Input type="time" lang="en-GB" step={60} value={newClassEnd} onChange={(e) => setNewClassEnd(e.target.value)} className="h-9 text-xs rounded-lg" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">שם מחנכת *</Label>
@@ -647,11 +647,11 @@ const AdminSchoolMusicSchoolCard = () => {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">משעה *</Label>
-                          <Input type="time" value={editClassForm.start_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, start_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
+                          <Input type="time" lang="en-GB" step={60} value={editClassForm.start_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, start_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">עד שעה *</Label>
-                          <Input type="time" value={editClassForm.end_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, end_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
+                          <Input type="time" lang="en-GB" step={60} value={editClassForm.end_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, end_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">שם מחנכת *</Label>
