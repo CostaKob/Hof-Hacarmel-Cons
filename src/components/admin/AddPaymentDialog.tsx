@@ -493,6 +493,120 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערות (אופציונלי)" rows={2} />
             </div>
             {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
+              <div className="rounded-xl border border-border p-3 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setSplitOpen((v) => !v)}
+                  className="w-full flex items-center justify-between text-sm font-medium"
+                >
+                  <span className="flex items-center gap-2">
+                    <Split className="h-4 w-4" />
+                    פיצול לכמה קישורי תשלום
+                  </span>
+                  <span className="text-xs text-muted-foreground">{splitOpen ? "הסתר" : "הצג"}</span>
+                </button>
+                {splitOpen && (
+                  <div className="space-y-2 pt-2 border-t border-border">
+                    <p className="text-xs text-muted-foreground">
+                      צור מספר קישורים במקביל לחלוקת התשלום בין משלמים שונים (למשל שני הורים).
+                    </p>
+                    {splitParts.map((part, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <Input
+                          value={part.label}
+                          onChange={(e) =>
+                            setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, label: e.target.value } : p)))
+                          }
+                          placeholder={`חלק ${idx + 1}`}
+                          className="flex-1 h-9"
+                        />
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={part.amount}
+                          onChange={(e) =>
+                            setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, amount: e.target.value } : p)))
+                          }
+                          placeholder="0.00"
+                          className="w-28 h-9"
+                        />
+                        {splitParts.length > 2 && (
+                          <button
+                            type="button"
+                            className="text-destructive hover:opacity-70"
+                            onClick={() => setSplitParts((prev) => prev.filter((_, i) => i !== idx))}
+                            aria-label="הסר"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSplitParts((prev) => [...prev, { label: `חלק ${prev.length + 1}`, amount: "" }])
+                        }
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        <Plus className="h-3 w-3" /> הוסף חלק
+                      </button>
+                      <span className="text-xs text-muted-foreground">
+                        סה״כ פיצול: ₪{splitParts.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0).toLocaleString()}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full h-10 rounded-xl"
+                      onClick={() => splitLinksMutation.mutate()}
+                      disabled={splitLinksMutation.isPending || splitParts.filter((p) => parseFloat(p.amount) > 0).length < 2}
+                    >
+                      {splitLinksMutation.isPending ? (
+                        <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישורים...</>
+                      ) : (
+                        <><LinkIcon className="h-4 w-4 ml-2" /> צור {splitParts.filter((p) => parseFloat(p.amount) > 0).length || ""} קישורים</>
+                      )}
+                    </Button>
+                    {splitResults.length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-border">
+                        <p className="text-xs font-medium">הקישורים שנוצרו:</p>
+                        {splitResults.map((r, i) => (
+                          <div key={i} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-muted/30">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{r.label}</p>
+                              <p className="text-[11px] text-muted-foreground truncate" dir="ltr">{r.url}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                try {
+                                  await navigator.clipboard.writeText(r.url);
+                                  toast.success(`הועתק: ${r.label}`);
+                                } catch { /* noop */ }
+                              }}
+                              className="p-1 hover:bg-background rounded"
+                              aria-label="העתק"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => window.open(r.url, "_blank")}
+                              className="p-1 hover:bg-background rounded"
+                              aria-label="פתח"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
               <Button
                 variant="outline"
                 className="w-full h-11 rounded-xl"
