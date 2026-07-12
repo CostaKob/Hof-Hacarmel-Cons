@@ -301,7 +301,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     if (!yearFull || !settings) return;
     const next: Record<string, string> = {};
     for (const it of paymentItems) {
-      if (it.defaultAmount > 0) next[it.id] = String(it.defaultAmount);
+      if (it.defaultAmount !== 0) next[it.id] = String(it.defaultAmount);
     }
     setSelectedAmounts(next);
     setDefaultsApplied(true);
@@ -315,7 +315,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSelectedAmounts((prev) => {
       const next = { ...prev };
       if (checked) {
-        next[it.id] = prev[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
+        next[it.id] = prev[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
       } else {
         delete next[it.id];
       }
@@ -325,7 +325,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const selectAll = () => {
     const next: Record<string, string> = {};
-    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
+    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
     setSelectedAmounts(next);
   };
   const clearAll = () => setSelectedAmounts({});
