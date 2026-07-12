@@ -171,20 +171,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const activeEnrollments = useMemo(() => enrollments.filter((e: any) => e.is_active), [enrollments]);
 
-  // ---- Compute default (discounted) amounts, mirroring AdminStudentPaymentCalc ----
+  // ---- Compute default amounts, mirroring AdminStudentPaymentCalc ----
   type PaymentItem = {
-    id: string; // enrollment uuid OR `special:<key>`
+    id: string; // enrollment uuid OR `special:<key>` OR `discount:<key>`
     enrollmentId: string | null;
     label: string;
     subLabel?: string;
-    defaultAmount: number;
-    kind: "enrollment" | "special";
+    defaultAmount: number; // can be negative for discounts
+    kind: "enrollment" | "special" | "discount";
   };
 
   const paymentItems: PaymentItem[] = useMemo(() => {
     const items: PaymentItem[] = [];
     if (!yearFull || !settings) {
-      // Fallback: enrollments only with legacy suggestedFor
       for (const e of activeEnrollments) {
         const raw = Number(e?.price_per_lesson || 0) * Number(e?.total_lessons_allocated || 0);
         items.push({
@@ -227,12 +226,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       selectedDiscounts,
     );
 
-    const rowsAfterStd = rows.map((r) => {
-      const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
-      return { r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
-    });
-
-    // Specials — no percentage discounts apply
     const specials: { key: string; label: string; price: number }[] = [];
     if (student?.has_music_production_course) {
       specials.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: Number(settings.music_production_price) || 0 });
@@ -241,25 +234,15 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       specials.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
     }
 
-    const afterStdTotal = rowsAfterStd.reduce((s, x) => s + x.afterStd, 0) + specials.reduce((s, x) => s + x.price, 0);
-
-    // Custom discounts (proportional across all items)
-    const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
-    const customAmt = customDiscounts.reduce((sum, c) => {
-      const v = Number(c.value) || 0;
-      if (c.mode === "pct") return sum + (afterStdTotal * v) / 100;
-      return sum + v;
-    }, 0);
-    const customFactor = afterStdTotal > 0 ? Math.max(0, (afterStdTotal - customAmt) / afterStdTotal) : 1;
-
-    for (const { r, afterStd } of rowsAfterStd) {
+    // Enrollments at gross prorated (no discounts baked in)
+    for (const r of rows) {
       const e = activeEnrollments.find((x: any) => x.id === r.enrollmentId);
       items.push({
         id: r.enrollmentId,
         enrollmentId: r.enrollmentId,
         label: e ? getEnrollmentLabel(e) : "—",
         subLabel: `${r.lessonsRemaining}/${r.lessonsTotal} שיעורים`,
-        defaultAmount: Math.round(afterStd * customFactor * 100) / 100,
+        defaultAmount: Math.round(r.prorated * 100) / 100,
         kind: "enrollment",
       });
     }
@@ -269,8 +252,39 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         enrollmentId: null,
         label: s.label,
         subLabel: "קורס מיוחד",
-        defaultAmount: Math.round(s.price * customFactor * 100) / 100,
+        defaultAmount: Math.round(s.price * 100) / 100,
         kind: "special",
+      });
+    }
+    // Standard discounts — one negative line per applied discount
+    for (const line of stdCompute.lines) {
+      if (line.amount <= 0) continue;
+      items.push({
+        id: `discount:${line.discountTypeId}`,
+        enrollmentId: null,
+        label: `${line.label} (${line.percentage}%)`,
+        subLabel: "הנחה",
+        defaultAmount: -Math.round(line.amount * 100) / 100,
+        kind: "discount",
+      });
+    }
+    // Custom discounts (draft): each as its own negative line
+    const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
+    const afterStdTotal =
+      stdCompute.afterStdDiscount + specials.reduce((s, x) => s + x.price, 0);
+    for (let i = 0; i < customDiscounts.length; i++) {
+      const c = customDiscounts[i];
+      const v = Number(c?.value) || 0;
+      if (!v) continue;
+      const amt = c?.mode === "pct" ? (afterStdTotal * v) / 100 : v;
+      if (amt <= 0) continue;
+      items.push({
+        id: `discount:custom-${i}`,
+        enrollmentId: null,
+        label: c?.label ? `${c.label}${c.mode === "pct" ? ` (${v}%)` : ""}` : (c?.mode === "pct" ? `הנחה ${v}%` : "הנחה"),
+        subLabel: "הנחה מותאמת",
+        defaultAmount: -Math.round(amt * 100) / 100,
+        kind: "discount",
       });
     }
     return items;
@@ -287,7 +301,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     if (!yearFull || !settings) return;
     const next: Record<string, string> = {};
     for (const it of paymentItems) {
-      if (it.defaultAmount > 0) next[it.id] = String(it.defaultAmount);
+      if (it.defaultAmount !== 0) next[it.id] = String(it.defaultAmount);
     }
     setSelectedAmounts(next);
     setDefaultsApplied(true);
@@ -301,7 +315,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSelectedAmounts((prev) => {
       const next = { ...prev };
       if (checked) {
-        next[it.id] = prev[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
+        next[it.id] = prev[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
       } else {
         delete next[it.id];
       }
@@ -311,7 +325,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const selectAll = () => {
     const next: Record<string, string> = {};
-    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
+    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
     setSelectedAmounts(next);
   };
   const clearAll = () => setSelectedAmounts({});
@@ -346,15 +360,20 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           const it = itemById.get(id);
           return {
             id,
-            enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") ? null : id),
+            kind: it?.kind ?? (id.startsWith("special:") ? "special" : id.startsWith("discount:") ? "discount" : "enrollment"),
+            enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") || id.startsWith("discount:") ? null : id),
             label: it?.label ?? null,
             amt: parseFloat(amt),
           };
         })
-        .filter((x) => x.amt > 0);
-      if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+        .filter((x) => !Number.isNaN(x.amt) && x.amt !== 0);
+      if (entries.length === 0) throw new Error("יש לבחור לפחות שורה עם סכום");
 
-      const anchorEnrollmentId = entries.find((e) => e.enrollmentId)?.enrollmentId ?? null;
+      const totalNet = entries.reduce((s, x) => s + x.amt, 0);
+      if (totalNet <= 0) throw new Error("הסה״כ נטו חייב להיות חיובי");
+
+      const hasDiscounts = entries.some((e) => e.kind === "discount");
+      const anchorEnrollmentId = entries.find((e) => e.kind === "enrollment" && e.enrollmentId)?.enrollmentId ?? null;
 
       const bankInfoStr = [
         bankName && `בנק: ${bankName}`,
@@ -385,12 +404,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           amount: Math.round(e.amt * ratio * 100) / 100,
         }));
 
+      // If there are discount lines, force combined behavior (single row + breakdown)
+      const effectiveMode = hasDiscounts ? "combined" : invoiceMode;
+
       let rows: any[];
       if (useCheckSpread) {
-        const total = entries.reduce((s, x) => s + x.amt, 0);
         const sumChecks = checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
-        if (Math.abs(sumChecks - total) > 0.01) {
-          throw new Error(`סכום הצ׳קים (₪${sumChecks.toLocaleString()}) לא תואם לסה״כ (₪${total.toLocaleString()})`);
+        if (Math.abs(sumChecks - totalNet) > 0.01) {
+          throw new Error(`סכום הצ׳קים (₪${sumChecks.toLocaleString()}) לא תואם לסה״כ (₪${totalNet.toLocaleString()})`);
         }
         const groupId =
           (typeof crypto !== "undefined" && "randomUUID" in crypto)
@@ -398,7 +419,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             : `${Date.now()}-${Math.random()}`;
         rows = checks.map((c, i) => {
           const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
-          const ratio = total > 0 ? amt / total : 0;
+          const ratio = totalNet > 0 ? amt / totalNet : 0;
           const breakdown = entries.length > 1 ? breakdownFor(ratio) : null;
           const noteParts = [
             `צ׳ק ${i + 1}/${checks.length}`,
@@ -417,19 +438,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             notes: noteParts.join(" · "),
           };
         });
-      } else if (entries.length > 1 && invoiceMode === "combined") {
-        const total = entries.reduce((s, x) => s + x.amt, 0);
+      } else if (entries.length > 1 && effectiveMode === "combined") {
         rows = [{
           ...baseFields,
-          amount: total,
+          amount: totalNet,
           enrollment_id: anchorEnrollmentId,
           enrollment_breakdown: breakdownFor(1),
         }];
       } else {
-        // Separate row per item
         rows = entries.map((e) => {
-          const isSpecial = e.enrollmentId === null;
-          const extraNote = isSpecial && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
+          const isNonEnrollment = e.kind !== "enrollment";
+          const extraNote = isNonEnrollment && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
           return {
             ...baseFields,
             amount: e.amt,
@@ -438,6 +457,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           };
         });
       }
+
 
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
@@ -722,8 +742,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   <div className="mt-2 space-y-2">
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
+                      const isDiscount = it.kind === "discount";
                       return (
-                        <div key={it.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                        <div
+                          key={it.id}
+                          className={`flex items-center gap-2 rounded-lg border p-2 ${
+                            isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
+                          }`}
+                        >
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) => toggleItem(it, !!v)}
@@ -732,21 +758,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             <p className="text-sm font-medium truncate">
                               {it.label}
                               {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
+                              {isDiscount && <span className="text-[10px] text-emerald-700 mr-1">−</span>}
                             </p>
                             {it.subLabel && (
-                              <p className="text-xs text-muted-foreground">{it.subLabel}</p>
+                              <p className={`text-xs ${isDiscount ? "text-emerald-700" : "text-muted-foreground"}`}>{it.subLabel}</p>
                             )}
                           </div>
                           <Input
                             type="number"
-                            min="0"
                             step="0.01"
                             disabled={!checked}
                             value={selectedAmounts[it.id] ?? ""}
                             onChange={(ev) =>
                               setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
-                            placeholder={it.defaultAmount > 0 ? String(it.defaultAmount) : "0.00"}
+                            placeholder={it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="w-28 h-9"
                           />
                         </div>
