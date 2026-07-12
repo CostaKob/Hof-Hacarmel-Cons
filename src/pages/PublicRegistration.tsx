@@ -559,8 +559,10 @@ const PublicRegistration = () => {
       }
     }
 
-    // Validate educational_school (injected field, not from DB fields)
-    // It's optional, no required validation needed
+    // Validate educational_school (injected field, not from DB fields) - required
+    if (!formValues["educational_school"]) {
+      errors["educational_school"] = "שדה חובה";
+    }
 
     // Validate branch_school_name is required
     if (!formValues["branch_school_name"]) {
