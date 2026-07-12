@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { calcEnrollment } from "@/lib/paymentCalc";
+import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 
 const PAYMENT_METHODS = [
   { value: "credit_card", label: "אשראי" },
