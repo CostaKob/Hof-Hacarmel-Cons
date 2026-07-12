@@ -78,6 +78,24 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const isEdit = !!editPayment;
 
+  // Pre-fill form when editing or reset for new
+  useEffect(() => {
+    if (editPayment) {
+      setEditAmount(String(editPayment.amount));
+      setPaymentDate(editPayment.payment_date);
+      setPaymentMethod(editPayment.payment_method || "credit_card");
+      setInstallments(String((editPayment as any).installments ?? 1));
+      setNotes(editPayment.notes || "");
+      setCheckNumber((editPayment as any).reference_number || "");
+      setEditEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
+      setTransactionType((editPayment as any).transaction_type || "payment");
+    } else {
+      resetForm();
+      if (defaultType) setTransactionType(defaultType);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editPayment, open, defaultType]);
+
   const suggestedFor = (e: any) => {
     const ppl = Number(e?.price_per_lesson || 0);
     const total = Number(e?.total_lessons_allocated || 0);
