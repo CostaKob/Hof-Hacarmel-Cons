@@ -366,6 +366,7 @@ const AdminStudentForm = () => {
           </Button>
         </div>
       </form>
+      )}
     </AdminLayout>
   );
 };
