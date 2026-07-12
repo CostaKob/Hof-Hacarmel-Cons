@@ -742,8 +742,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   <div className="mt-2 space-y-2">
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
+                      const isDiscount = it.kind === "discount";
                       return (
-                        <div key={it.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                        <div
+                          key={it.id}
+                          className={`flex items-center gap-2 rounded-lg border p-2 ${
+                            isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
+                          }`}
+                        >
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) => toggleItem(it, !!v)}
@@ -752,21 +758,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             <p className="text-sm font-medium truncate">
                               {it.label}
                               {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
+                              {isDiscount && <span className="text-[10px] text-emerald-700 mr-1">−</span>}
                             </p>
                             {it.subLabel && (
-                              <p className="text-xs text-muted-foreground">{it.subLabel}</p>
+                              <p className={`text-xs ${isDiscount ? "text-emerald-700" : "text-muted-foreground"}`}>{it.subLabel}</p>
                             )}
                           </div>
                           <Input
                             type="number"
-                            min="0"
                             step="0.01"
                             disabled={!checked}
                             value={selectedAmounts[it.id] ?? ""}
                             onChange={(ev) =>
                               setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
-                            placeholder={it.defaultAmount > 0 ? String(it.defaultAmount) : "0.00"}
+                            placeholder={it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="w-28 h-9"
                           />
                         </div>
