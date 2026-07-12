@@ -301,7 +301,7 @@ const AdminRegistrationCard = () => {
               { label: "מגדר", value: r.gender === "male" ? "זכר" : r.gender === "female" ? "נקבה" : r.gender || "—" },
               { label: "סטטוס", value: r.student_status === "new" ? "תלמיד/ה חדש/ה" : r.student_status === "continuing" ? "ממשיך/ה" : "—" },
               { label: "שלוחה", value: r.branch_school_name },
-              { label: "בית ספר", value: r.student_school_text },
+              { label: "בית ספר", value: r.educational_school || r.student_school_text },
               { label: "כיתה", value: r.grade },
               { label: "ישוב", value: r.city },
               { label: "טלפון תלמיד/ה", value: r.student_phone ? <PhoneDisplay phone={r.student_phone} /> : "—" },
