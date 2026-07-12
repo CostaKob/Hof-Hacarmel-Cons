@@ -81,7 +81,7 @@ const AdminExports = () => {
       "טלפון": t.phone ?? "",
       "אימייל": t.email ?? "",
       "כתובת": t.address ?? "",
-      "עיר": t.city ?? "",
+      "ישוב מגורים": t.city ?? "",
       "פעיל": t.is_active ? "כן" : "לא",
     }));
   };
@@ -197,7 +197,7 @@ const AdminExports = () => {
       "ת.ז. תלמיד": r.student_national_id,
       "מין": r.gender === "male" ? "זכר" : r.gender === "female" ? "נקבה" : r.gender ?? "",
       "טלפון תלמיד": r.student_phone ?? "",
-      "עיר": r.city,
+      "ישוב מגורים": r.city,
       "כיתה": r.grade,
       "בית ספר (סניף)": r.branch_school_name,
       "בית ספר (טקסט)": r.student_school_text,

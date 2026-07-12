@@ -125,7 +125,7 @@ const AdminRegistrations = () => {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, עיר, שלוחה..."
+              placeholder="חיפוש: שם, ת.ז, הורה, טלפון, ישוב מגורים, שלוחה..."
               className="pr-9 h-12 rounded-xl"
             />
           </div>
