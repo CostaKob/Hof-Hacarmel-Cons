@@ -422,7 +422,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     [checks],
   );
 
-  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0 || checks.length > 0;
+  const checkRequirementMet = paymentMethod !== "check" || isEdit || checks.length > 0;
   const canSubmit = (isEdit
     ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
     : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate)
