@@ -676,36 +676,37 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     <button type="button" className="text-muted-foreground hover:underline" onClick={clearAll}>נקה</button>
                   </div>
                 </div>
-                {activeEnrollments.length === 0 ? (
+                {paymentItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">אין שיוכים פעילים</p>
                 ) : (
                   <div className="mt-2 space-y-2">
-                    {activeEnrollments.map((e: any) => {
-                      const checked = selectedAmounts[e.id] !== undefined;
+                    {paymentItems.map((it) => {
+                      const checked = selectedAmounts[it.id] !== undefined;
                       return (
-                        <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                        <div key={it.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
                           <Checkbox
                             checked={checked}
-                            onCheckedChange={(v) => toggleEnrollment(e, !!v)}
+                            onCheckedChange={(v) => toggleItem(it, !!v)}
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{getEnrollmentLabel(e)}</p>
-                            {e.price_per_lesson ? (
-                              <p className="text-xs text-muted-foreground">
-                                ₪{Number(e.price_per_lesson).toLocaleString()} × {e.total_lessons_allocated || 0} שיעורים
-                              </p>
-                            ) : null}
+                            <p className="text-sm font-medium truncate">
+                              {it.label}
+                              {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
+                            </p>
+                            {it.subLabel && (
+                              <p className="text-xs text-muted-foreground">{it.subLabel}</p>
+                            )}
                           </div>
                           <Input
                             type="number"
                             min="0"
                             step="0.01"
                             disabled={!checked}
-                            value={selectedAmounts[e.id] ?? ""}
+                            value={selectedAmounts[it.id] ?? ""}
                             onChange={(ev) =>
-                              setSelectedAmounts((prev) => ({ ...prev, [e.id]: ev.target.value }))
+                              setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
-                            placeholder={suggestedFor(e) || "0.00"}
+                            placeholder={it.defaultAmount > 0 ? String(it.defaultAmount) : "0.00"}
                             className="w-28 h-9"
                           />
                         </div>
