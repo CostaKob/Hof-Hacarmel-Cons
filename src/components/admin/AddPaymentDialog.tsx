@@ -309,6 +309,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setPaymentMethod("credit_card");
     setInstallments("1");
     setNotes("");
+    setCheckNumber("");
     setTransactionType("payment");
     setSelectedAmounts({});
     setEditEnrollmentId("");
