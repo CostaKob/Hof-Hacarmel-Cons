@@ -13,6 +13,7 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_TYPE_GROUPS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 import PageTitle from "@/components/PageTitle";
+import { TimeInput24 } from "@/components/ui/time-input-24";
 
 interface FormValues {
   name: string;
