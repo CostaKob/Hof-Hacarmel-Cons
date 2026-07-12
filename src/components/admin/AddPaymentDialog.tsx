@@ -328,9 +328,54 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSplitOpen(false);
     setSplitParts([{ label: "חלק 1", amount: "" }, { label: "חלק 2", amount: "" }]);
     setSplitResults([]);
+    setChecksOpen(false);
+    setNumChecks("1");
+    setFirstCheckDate(today);
+    setFirstCheckNumber("");
+    setBankName("");
+    setBankBranch("");
+    setBankAccount("");
+    setChecks([]);
   };
 
-  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0;
+  const addMonthsIso = (iso: string, months: number) => {
+    const d = new Date(iso + "T00:00:00");
+    const day = d.getDate();
+    d.setDate(1);
+    d.setMonth(d.getMonth() + months);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, last));
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${dd}`;
+  };
+
+  const generateChecks = () => {
+    const n = Math.max(1, parseInt(numChecks) || 1);
+    const total = Math.round(totalSelected * 100) / 100;
+    if (total <= 0) { toast.error("סה״כ הסכום חייב להיות גדול מ-0"); return; }
+    const baseWhole = Math.floor(total / n);
+    const remainder = Math.round((total - baseWhole * n) * 100) / 100;
+    const firstAmt = Math.round((baseWhole + remainder) * 100) / 100;
+    const startNum = parseInt(firstCheckNumber);
+    const rows: Array<{ date: string; number: string; amount: string }> = [];
+    for (let i = 0; i < n; i++) {
+      rows.push({
+        date: addMonthsIso(firstCheckDate, i),
+        number: Number.isFinite(startNum) ? String(startNum + i) : "",
+        amount: String(i === 0 ? firstAmt : baseWhole),
+      });
+    }
+    setChecks(rows);
+  };
+
+  const checksTotal = useMemo(
+    () => checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0),
+    [checks],
+  );
+
+  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0 || checks.length > 0;
   const canSubmit = (isEdit
     ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
     : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate)
