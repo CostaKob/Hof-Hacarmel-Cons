@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { calcEnrollment } from "@/lib/paymentCalc";
+import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 
 const PAYMENT_METHODS = [
   { value: "credit_card", label: "אשראי" },
@@ -76,13 +78,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const isEdit = !!editPayment;
 
-  const suggestedFor = (e: any) => {
-    const ppl = Number(e?.price_per_lesson || 0);
-    const total = Number(e?.total_lessons_allocated || 0);
-    const v = Math.round(ppl * total);
-    return v > 0 ? String(v) : "";
-  };
-
   // Pre-fill form when editing or reset for new
   useEffect(() => {
     if (editPayment) {
@@ -98,26 +93,217 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       resetForm();
       if (defaultType) setTransactionType(defaultType);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editPayment, open, defaultType]);
 
+  const suggestedFor = (e: any) => {
+    const ppl = Number(e?.price_per_lesson || 0);
+    const total = Number(e?.total_lessons_allocated || 0);
+    const v = Math.round(ppl * total);
+    return v > 0 ? String(v) : "";
+  };
+
   const academicYearId = activeYear?.id ?? enrollments.find((e: any) => e.is_active)?.academic_year_id;
+
+  // ---- Data needed to derive "same defaults as summary in student card" ----
+  const { data: student } = useQuery({
+    queryKey: ["addpay-student", studentId],
+    enabled: !!studentId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("students").select("*").eq("id", studentId).single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["addpay-payment-settings"],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_settings" as any).select("*").limit(1).maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: yearFull } = useQuery({
+    queryKey: ["addpay-year", academicYearId],
+    enabled: !!academicYearId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("academic_years").select("*").eq("id", academicYearId!).single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: discountTypes = [] } = useQuery({
+    queryKey: ["addpay-discount-types", academicYearId],
+    enabled: !!academicYearId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discount_types" as any)
+        .select("*")
+        .eq("academic_year_id", academicYearId!)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data as any[]) as DiscountType[];
+    },
+  });
+
+  const { data: draft } = useQuery({
+    queryKey: ["addpay-draft", studentId, academicYearId],
+    enabled: !!studentId && !!academicYearId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("academic_year_id", academicYearId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any) ?? null;
+    },
+  });
 
   const getEnrollmentLabel = (e: any) =>
     `${e.instruments?.name ?? "—"} — ${e.schools?.name ?? "—"}`;
 
   const activeEnrollments = useMemo(() => enrollments.filter((e: any) => e.is_active), [enrollments]);
 
+  // ---- Compute default (discounted) amounts, mirroring AdminStudentPaymentCalc ----
+  type PaymentItem = {
+    id: string; // enrollment uuid OR `special:<key>`
+    enrollmentId: string | null;
+    label: string;
+    subLabel?: string;
+    defaultAmount: number;
+    kind: "enrollment" | "special";
+  };
+
+  const paymentItems: PaymentItem[] = useMemo(() => {
+    const items: PaymentItem[] = [];
+    if (!yearFull || !settings) {
+      // Fallback: enrollments only with legacy suggestedFor
+      for (const e of activeEnrollments) {
+        const raw = Number(e?.price_per_lesson || 0) * Number(e?.total_lessons_allocated || 0);
+        items.push({
+          id: e.id,
+          enrollmentId: e.id,
+          label: getEnrollmentLabel(e),
+          subLabel: e.price_per_lesson
+            ? `₪${Number(e.price_per_lesson).toLocaleString()} × ${e.total_lessons_allocated || 0} שיעורים`
+            : undefined,
+          defaultAmount: Math.round(raw * 100) / 100,
+          kind: "enrollment",
+        });
+      }
+      return items;
+    }
+
+    const prices = settings.lesson_prices ?? {};
+    const startOverrides = (draft?.start_date_overrides as Record<string, string>) ?? {};
+    const rows = activeEnrollments.map((e: any) =>
+      calcEnrollment(
+        {
+          id: e.id,
+          duration: e.lesson_duration_minutes,
+          startDate: startOverrides[e.id] ?? e.start_date,
+          endDate: e.end_date,
+          pricePerLessonOverride: e.price_per_lesson,
+        },
+        prices,
+        yearFull.start_date,
+        yearFull.end_date,
+      ),
+    );
+
+    const selectedDiscountIds: string[] = Array.isArray(draft?.selected_discount_ids)
+      ? draft!.selected_discount_ids
+      : [];
+    const selectedDiscounts = discountTypes.filter((d) => selectedDiscountIds.includes(d.id));
+    const stdCompute = computeStandardDiscounts(
+      rows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+      selectedDiscounts,
+    );
+
+    const rowsAfterStd = rows.map((r) => {
+      const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
+      return { r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
+    });
+
+    // Specials — no percentage discounts apply
+    const specials: { key: string; label: string; price: number }[] = [];
+    if (student?.has_music_production_course) {
+      specials.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: Number(settings.music_production_price) || 0 });
+    }
+    if (student?.has_recital_track) {
+      specials.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
+    }
+
+    const afterStdTotal = rowsAfterStd.reduce((s, x) => s + x.afterStd, 0) + specials.reduce((s, x) => s + x.price, 0);
+
+    // Custom discounts (proportional across all items)
+    const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
+    const customAmt = customDiscounts.reduce((sum, c) => {
+      const v = Number(c.value) || 0;
+      if (c.mode === "pct") return sum + (afterStdTotal * v) / 100;
+      return sum + v;
+    }, 0);
+    const customFactor = afterStdTotal > 0 ? Math.max(0, (afterStdTotal - customAmt) / afterStdTotal) : 1;
+
+    for (const { r, afterStd } of rowsAfterStd) {
+      const e = activeEnrollments.find((x: any) => x.id === r.enrollmentId);
+      items.push({
+        id: r.enrollmentId,
+        enrollmentId: r.enrollmentId,
+        label: e ? getEnrollmentLabel(e) : "—",
+        subLabel: `${r.lessonsRemaining}/${r.lessonsTotal} שיעורים`,
+        defaultAmount: Math.round(afterStd * customFactor * 100) / 100,
+        kind: "enrollment",
+      });
+    }
+    for (const s of specials) {
+      items.push({
+        id: `special:${s.key}`,
+        enrollmentId: null,
+        label: s.label,
+        subLabel: "קורס מיוחד",
+        defaultAmount: Math.round(s.price * customFactor * 100) / 100,
+        kind: "special",
+      });
+    }
+    return items;
+  }, [activeEnrollments, yearFull, settings, discountTypes, draft, student]);
+
+  // Auto-fill selectedAmounts with defaults on open (new mode only, and once per open).
+  const [defaultsApplied, setDefaultsApplied] = useState(false);
+  useEffect(() => {
+    if (!open) { setDefaultsApplied(false); return; }
+    if (isEdit) return;
+    if (defaultsApplied) return;
+    if (paymentItems.length === 0) return;
+    // Wait for calc-based defaults before applying (avoid overriding with fallback)
+    if (!yearFull || !settings) return;
+    const next: Record<string, string> = {};
+    for (const it of paymentItems) {
+      if (it.defaultAmount > 0) next[it.id] = String(it.defaultAmount);
+    }
+    setSelectedAmounts(next);
+    setDefaultsApplied(true);
+  }, [open, isEdit, paymentItems, yearFull, settings, defaultsApplied]);
+
   const totalSelected = useMemo(() => {
     return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
   }, [selectedAmounts]);
 
-  const toggleEnrollment = (e: any, checked: boolean) => {
+  const toggleItem = (it: PaymentItem, checked: boolean) => {
     setSelectedAmounts((prev) => {
       const next = { ...prev };
       if (checked) {
-        next[e.id] = prev[e.id] ?? suggestedFor(e);
+        next[it.id] = prev[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
       } else {
-        delete next[e.id];
+        delete next[it.id];
       }
       return next;
     });
@@ -125,10 +311,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const selectAll = () => {
     const next: Record<string, string> = {};
-    for (const e of activeEnrollments) next[e.id] = selectedAmounts[e.id] ?? suggestedFor(e);
+    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
     setSelectedAmounts(next);
   };
   const clearAll = () => setSelectedAmounts({});
+
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -153,10 +340,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         return;
       }
 
+      const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
       const entries = Object.entries(selectedAmounts)
-        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
-        .filter((x) => x.eid && x.amt > 0);
+        .map(([id, amt]) => {
+          const it = itemById.get(id);
+          return {
+            id,
+            enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") ? null : id),
+            label: it?.label ?? null,
+            amt: parseFloat(amt),
+          };
+        })
+        .filter((x) => x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+
+      const anchorEnrollmentId = entries.find((e) => e.enrollmentId)?.enrollmentId ?? null;
 
       const bankInfoStr = [
         bankName && `בנק: ${bankName}`,
@@ -180,6 +378,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         academic_year_id: academicYearId,
       };
 
+      const breakdownFor = (ratio: number) =>
+        entries.map((e) => ({
+          enrollment_id: e.enrollmentId,
+          label: e.label,
+          amount: Math.round(e.amt * ratio * 100) / 100,
+        }));
+
       let rows: any[];
       if (useCheckSpread) {
         const total = entries.reduce((s, x) => s + x.amt, 0);
@@ -194,12 +399,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         rows = checks.map((c, i) => {
           const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
           const ratio = total > 0 ? amt / total : 0;
-          const breakdown = entries.length > 1
-            ? entries.map(({ eid, amt: eAmt }) => ({
-                enrollment_id: eid,
-                amount: Math.round(eAmt * ratio * 100) / 100,
-              }))
-            : null;
+          const breakdown = entries.length > 1 ? breakdownFor(ratio) : null;
           const noteParts = [
             `צ׳ק ${i + 1}/${checks.length}`,
             bankInfoStr,
@@ -210,7 +410,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             payment_date: c.date,
             installments: 1,
             amount: amt,
-            enrollment_id: entries[0].eid,
+            enrollment_id: anchorEnrollmentId,
             enrollment_breakdown: breakdown,
             reference_number: c.number?.trim() || null,
             payment_group_id: groupId,
@@ -218,22 +418,27 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           };
         });
       } else if (entries.length > 1 && invoiceMode === "combined") {
-        // Single payment row covering multiple enrollments → single combined invoice
         const total = entries.reduce((s, x) => s + x.amt, 0);
         rows = [{
           ...baseFields,
           amount: total,
-          enrollment_id: entries[0].eid,
-          enrollment_breakdown: entries.map(({ eid, amt }) => ({ enrollment_id: eid, amount: amt })),
+          enrollment_id: anchorEnrollmentId,
+          enrollment_breakdown: breakdownFor(1),
         }];
       } else {
-        // Separate row per enrollment → separate invoice per row
-        rows = entries.map(({ eid, amt }) => ({
-          ...baseFields,
-          amount: amt,
-          enrollment_id: eid,
-        }));
+        // Separate row per item
+        rows = entries.map((e) => {
+          const isSpecial = e.enrollmentId === null;
+          const extraNote = isSpecial && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
+          return {
+            ...baseFields,
+            amount: e.amt,
+            enrollment_id: e.enrollmentId,
+            notes: extraNote,
+          };
+        });
       }
+
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
       if (error) throw error;
@@ -269,15 +474,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const generateLinkMutation = useMutation({
     mutationFn: async () => {
+      const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
       const entries = Object.entries(selectedAmounts)
-        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
-        .filter((x) => x.eid && x.amt > 0);
+        .map(([id, amt]) => ({ id, amt: parseFloat(amt), item: itemById.get(id) }))
+        .filter((x) => x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
       const total = Math.round(entries.reduce((s, x) => s + x.amt, 0) * 100) / 100;
       if (total <= 0) throw new Error("סכום חייב להיות גדול מ-0");
 
-      const lines = entries.map(({ eid, amt }) => {
-        const e = enrollments.find((x: any) => x.id === eid);
+      const lines = entries.map(({ id, amt, item }) => {
+        if (item?.kind === "special") {
+          return { description: item.label, amount: Math.round(amt * 100) / 100 };
+        }
+        const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
         const desc = e ? `${e.instruments?.name ?? "שכר לימוד"} — ${e.schools?.name ?? ""}`.trim() : "שכר לימוד";
         return { description: desc.replace(/ — $/, ""), amount: Math.round(amt * 100) / 100 };
       });
@@ -507,36 +716,37 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     <button type="button" className="text-muted-foreground hover:underline" onClick={clearAll}>נקה</button>
                   </div>
                 </div>
-                {activeEnrollments.length === 0 ? (
+                {paymentItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">אין שיוכים פעילים</p>
                 ) : (
                   <div className="mt-2 space-y-2">
-                    {activeEnrollments.map((e: any) => {
-                      const checked = selectedAmounts[e.id] !== undefined;
+                    {paymentItems.map((it) => {
+                      const checked = selectedAmounts[it.id] !== undefined;
                       return (
-                        <div key={e.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
+                        <div key={it.id} className="flex items-center gap-2 rounded-lg border border-border p-2">
                           <Checkbox
                             checked={checked}
-                            onCheckedChange={(v) => toggleEnrollment(e, !!v)}
+                            onCheckedChange={(v) => toggleItem(it, !!v)}
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{getEnrollmentLabel(e)}</p>
-                            {e.price_per_lesson ? (
-                              <p className="text-xs text-muted-foreground">
-                                ₪{Number(e.price_per_lesson).toLocaleString()} × {e.total_lessons_allocated || 0} שיעורים
-                              </p>
-                            ) : null}
+                            <p className="text-sm font-medium truncate">
+                              {it.label}
+                              {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
+                            </p>
+                            {it.subLabel && (
+                              <p className="text-xs text-muted-foreground">{it.subLabel}</p>
+                            )}
                           </div>
                           <Input
                             type="number"
                             min="0"
                             step="0.01"
                             disabled={!checked}
-                            value={selectedAmounts[e.id] ?? ""}
+                            value={selectedAmounts[it.id] ?? ""}
                             onChange={(ev) =>
-                              setSelectedAmounts((prev) => ({ ...prev, [e.id]: ev.target.value }))
+                              setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
-                            placeholder={suggestedFor(e) || "0.00"}
+                            placeholder={it.defaultAmount > 0 ? String(it.defaultAmount) : "0.00"}
                             className="w-28 h-9"
                           />
                         </div>
