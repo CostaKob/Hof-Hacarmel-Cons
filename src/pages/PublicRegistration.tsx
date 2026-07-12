@@ -841,10 +841,14 @@ const PublicRegistration = () => {
 
   // Render educational school field
   const renderEducationalSchool = () => {
+    const err = validationErrors["educational_school"];
     if (eduSchoolOtherMode) {
       return (
         <div className="space-y-1.5" data-field-key="educational_school">
-          <Label className="text-sm font-medium">בית ספר</Label>
+          <Label className="text-sm font-medium">
+            בית ספר
+            <span className="text-destructive mr-1">*</span>
+          </Label>
           <div className="flex gap-2">
             <Input
               value={formValues["educational_school"] || ""}
@@ -864,12 +868,16 @@ const PublicRegistration = () => {
               חזרה לרשימה
             </Button>
           </div>
+          {err && <p className="text-xs text-destructive">{err}</p>}
         </div>
       );
     }
     return (
       <div className="space-y-1.5" data-field-key="educational_school">
-        <Label className="text-sm font-medium">בית ספר</Label>
+        <Label className="text-sm font-medium">
+          בית ספר
+          <span className="text-destructive mr-1">*</span>
+        </Label>
         <Select
           dir="rtl"
           value={formValues["educational_school"] || ""}
@@ -885,6 +893,7 @@ const PublicRegistration = () => {
             <SelectItem value="__other__">אחר</SelectItem>
           </SelectContent>
         </Select>
+        {err && <p className="text-xs text-destructive">{err}</p>}
       </div>
     );
   };
