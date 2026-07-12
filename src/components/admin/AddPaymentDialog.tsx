@@ -474,15 +474,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const generateLinkMutation = useMutation({
     mutationFn: async () => {
+      const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
       const entries = Object.entries(selectedAmounts)
-        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
-        .filter((x) => x.eid && x.amt > 0);
+        .map(([id, amt]) => ({ id, amt: parseFloat(amt), item: itemById.get(id) }))
+        .filter((x) => x.amt > 0);
       if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
       const total = Math.round(entries.reduce((s, x) => s + x.amt, 0) * 100) / 100;
       if (total <= 0) throw new Error("סכום חייב להיות גדול מ-0");
 
-      const lines = entries.map(({ eid, amt }) => {
-        const e = enrollments.find((x: any) => x.id === eid);
+      const lines = entries.map(({ id, amt, item }) => {
+        if (item?.kind === "special") {
+          return { description: item.label, amount: Math.round(amt * 100) / 100 };
+        }
+        const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
         const desc = e ? `${e.instruments?.name ?? "שכר לימוד"} — ${e.schools?.name ?? ""}`.trim() : "שכר לימוד";
         return { description: desc.replace(/ — $/, ""), amount: Math.round(amt * 100) / 100 };
       });
