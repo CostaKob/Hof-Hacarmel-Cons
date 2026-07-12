@@ -320,9 +320,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSplitResults([]);
   };
 
-  const canSubmit = isEdit
+  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0;
+  const canSubmit = (isEdit
     ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
-    : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate;
+    : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate)
+    && checkRequirementMet;
+
 
   const selectClass =
     "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
