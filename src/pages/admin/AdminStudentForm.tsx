@@ -248,7 +248,6 @@ const AdminStudentForm = () => {
                   const val = field.value || "";
                   const inList = !val || educationalSchools.some((s) => s.name === val);
                   const isOther = !!val && !inList;
-                  const [otherMode, setOtherMode] = [isOther, (v: boolean) => { if (!v) field.onChange(""); }];
                   if (isOther) {
                     return (
                       <div className="flex gap-2">
@@ -269,14 +268,12 @@ const AdminStudentForm = () => {
                       value={val || "__none__"}
                       onValueChange={(v) => {
                         if (v === "__other__") {
-                          field.onChange(" ");
-                          setTimeout(() => field.onChange(""), 0);
-                          // switch to free text: set a sentinel then clear
                           field.onChange("אחר");
                           return;
                         }
                         field.onChange(v === "__none__" ? "" : v);
                       }}
+
                     >
                       <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
                       <SelectContent>
