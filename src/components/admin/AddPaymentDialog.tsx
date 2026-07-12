@@ -493,7 +493,20 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערות (אופציונלי)" rows={2} />
             </div>
             {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
-              <div className="rounded-xl border border-border p-3 space-y-2">
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => generateLinkMutation.mutate()}
+                  disabled={totalSelected <= 0 || generateLinkMutation.isPending}
+                >
+                  {generateLinkMutation.isPending ? (
+                    <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישור...</>
+                  ) : (
+                    <><LinkIcon className="h-4 w-4 ml-2" /> צור קישור לתשלום באשראי {totalSelected > 0 ? `(₪${totalSelected.toLocaleString()})` : ""}</>
+                  )}
+                </Button>
+                <div className="rounded-xl border border-border p-3 space-y-2">
                 <button
                   type="button"
                   onClick={() => setSplitOpen((v) => !v)}
