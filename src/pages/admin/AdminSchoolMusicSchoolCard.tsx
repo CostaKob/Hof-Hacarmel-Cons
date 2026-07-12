@@ -648,7 +648,7 @@ const AdminSchoolMusicSchoolCard = () => {
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">משעה *</Label>
-                          <Input type="time" lang="en-GB" step={60} value={editClassForm.start_time} onChange={(e) => setEditClassForm((p: any) => ({ ...p, start_time: e.target.value }))} className="h-9 text-xs rounded-lg" />
+                          <TimeInput24 value={editClassForm.start_time} onChange={(v) => setEditClassForm((p: any) => ({ ...p, start_time: v }))} className="h-9 text-xs" />
                         </div>
                         <div className="space-y-1">
                           <Label className="text-xs">עד שעה *</Label>
