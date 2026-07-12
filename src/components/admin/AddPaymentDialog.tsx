@@ -81,6 +81,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setPaymentMethod(editPayment.payment_method || "credit_card");
       setInstallments(String((editPayment as any).installments ?? 1));
       setNotes(editPayment.notes || "");
+      setCheckNumber((editPayment as any).reference_number || "");
       setEditEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
       setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
