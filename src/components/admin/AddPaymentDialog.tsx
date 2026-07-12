@@ -48,6 +48,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [installments, setInstallments] = useState("1");
   const [notes, setNotes] = useState("");
+  const [checkNumber, setCheckNumber] = useState("");
   // Multi-select map: enrollmentId -> amount string
   const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
   // Edit-mode single enrollment + amount
