@@ -249,6 +249,57 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת קישור"),
   });
 
+  const splitLinksMutation = useMutation({
+    mutationFn: async () => {
+      const parts = splitParts
+        .map((p) => ({ label: p.label.trim() || "חלק", amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100 }))
+        .filter((p) => p.amount > 0);
+      if (parts.length < 2) throw new Error("יש להזין לפחות שני חלקים עם סכום");
+
+      const results = await Promise.all(
+        parts.map(async (p) => {
+          const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+            body: {
+              studentId,
+              amount: p.amount,
+              academicYearId,
+              academicYearName: activeYear?.name ?? null,
+              lines: [{ description: `שכר לימוד — ${p.label}`, amount: p.amount }],
+            },
+          });
+          if (error) throw error;
+          if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+          if (!data?.url) throw new Error("לא התקבל קישור");
+          return { label: p.label, url: data.url as string };
+        }),
+      );
+      return results;
+    },
+    onSuccess: (results) => {
+      setSplitResults(results);
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] });
+      toast.success(`נוצרו ${results.length} קישורים`);
+    },
+    onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הקישורים"),
+  });
+
+  // Autofill split parts from total when opening the split panel
+  useEffect(() => {
+    if (!splitOpen) return;
+    if (splitParts.some((p) => parseFloat(p.amount) > 0)) return;
+    if (totalSelected <= 0) return;
+    const per = Math.round((totalSelected / splitParts.length) * 100) / 100;
+    const rounded = Array(splitParts.length).fill(per);
+    // fix rounding drift on last part
+    const diff = Math.round((totalSelected - rounded.reduce((s, v) => s + v, 0)) * 100) / 100;
+    rounded[rounded.length - 1] = Math.round((rounded[rounded.length - 1] + diff) * 100) / 100;
+    setSplitParts((prev) => prev.map((p, i) => ({ ...p, amount: String(rounded[i]) })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [splitOpen]);
+
   const resetForm = () => {
     setPaymentDate(today);
     setPaymentMethod("credit_card");
