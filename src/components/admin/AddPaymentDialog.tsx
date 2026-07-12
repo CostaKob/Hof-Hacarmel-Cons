@@ -360,15 +360,20 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           const it = itemById.get(id);
           return {
             id,
-            enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") ? null : id),
+            kind: it?.kind ?? (id.startsWith("special:") ? "special" : id.startsWith("discount:") ? "discount" : "enrollment"),
+            enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") || id.startsWith("discount:") ? null : id),
             label: it?.label ?? null,
             amt: parseFloat(amt),
           };
         })
-        .filter((x) => x.amt > 0);
-      if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+        .filter((x) => !Number.isNaN(x.amt) && x.amt !== 0);
+      if (entries.length === 0) throw new Error("יש לבחור לפחות שורה עם סכום");
 
-      const anchorEnrollmentId = entries.find((e) => e.enrollmentId)?.enrollmentId ?? null;
+      const totalNet = entries.reduce((s, x) => s + x.amt, 0);
+      if (totalNet <= 0) throw new Error("הסה״כ נטו חייב להיות חיובי");
+
+      const hasDiscounts = entries.some((e) => e.kind === "discount");
+      const anchorEnrollmentId = entries.find((e) => e.kind === "enrollment" && e.enrollmentId)?.enrollmentId ?? null;
 
       const bankInfoStr = [
         bankName && `בנק: ${bankName}`,
@@ -399,12 +404,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           amount: Math.round(e.amt * ratio * 100) / 100,
         }));
 
+      // If there are discount lines, force combined behavior (single row + breakdown)
+      const effectiveMode = hasDiscounts ? "combined" : invoiceMode;
+
       let rows: any[];
       if (useCheckSpread) {
-        const total = entries.reduce((s, x) => s + x.amt, 0);
         const sumChecks = checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0);
-        if (Math.abs(sumChecks - total) > 0.01) {
-          throw new Error(`סכום הצ׳קים (₪${sumChecks.toLocaleString()}) לא תואם לסה״כ (₪${total.toLocaleString()})`);
+        if (Math.abs(sumChecks - totalNet) > 0.01) {
+          throw new Error(`סכום הצ׳קים (₪${sumChecks.toLocaleString()}) לא תואם לסה״כ (₪${totalNet.toLocaleString()})`);
         }
         const groupId =
           (typeof crypto !== "undefined" && "randomUUID" in crypto)
@@ -412,7 +419,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             : `${Date.now()}-${Math.random()}`;
         rows = checks.map((c, i) => {
           const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
-          const ratio = total > 0 ? amt / total : 0;
+          const ratio = totalNet > 0 ? amt / totalNet : 0;
           const breakdown = entries.length > 1 ? breakdownFor(ratio) : null;
           const noteParts = [
             `צ׳ק ${i + 1}/${checks.length}`,
@@ -431,19 +438,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             notes: noteParts.join(" · "),
           };
         });
-      } else if (entries.length > 1 && invoiceMode === "combined") {
-        const total = entries.reduce((s, x) => s + x.amt, 0);
+      } else if (entries.length > 1 && effectiveMode === "combined") {
         rows = [{
           ...baseFields,
-          amount: total,
+          amount: totalNet,
           enrollment_id: anchorEnrollmentId,
           enrollment_breakdown: breakdownFor(1),
         }];
       } else {
-        // Separate row per item
         rows = entries.map((e) => {
-          const isSpecial = e.enrollmentId === null;
-          const extraNote = isSpecial && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
+          const isNonEnrollment = e.kind !== "enrollment";
+          const extraNote = isNonEnrollment && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
           return {
             ...baseFields,
             amount: e.amt,
@@ -452,6 +457,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           };
         });
       }
+
 
 
       const { error } = await supabase.from("student_payments").insert(rows as any);
