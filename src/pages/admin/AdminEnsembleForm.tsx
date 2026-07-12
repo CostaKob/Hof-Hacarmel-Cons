@@ -13,6 +13,7 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_TYPE_GROUPS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
 import PageTitle from "@/components/PageTitle";
+import { TimeInput24 } from "@/components/ui/time-input-24";
 
 interface FormValues {
   name: string;
@@ -178,7 +179,7 @@ const AdminEnsembleForm = () => {
             <FormField control={form.control} name="start_time" render={({ field }) => (
               <FormItem>
                 <FormLabel>שעה</FormLabel>
-                <FormControl><Input type="time" lang="en-GB" step={60} {...field} /></FormControl>
+                <FormControl><TimeInput24 value={field.value} onChange={field.onChange} /></FormControl>
               </FormItem>
             )} />
 
