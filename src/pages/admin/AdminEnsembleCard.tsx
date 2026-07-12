@@ -192,6 +192,10 @@ const AdminEnsembleCard = () => {
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             <div className="flex gap-2 items-center">
+              <span className="text-muted-foreground">שם:</span>
+              <span className="font-semibold">{ensemble.name}</span>
+            </div>
+            <div className="flex gap-2 items-center">
               <span className="text-muted-foreground">סוג:</span>
               <span>{ENSEMBLE_TYPE_LABELS[ensemble.ensemble_type] || ensemble.ensemble_type}</span>
             </div>
