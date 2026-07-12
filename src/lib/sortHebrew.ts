@@ -7,7 +7,7 @@ export const sortByName = <T extends Record<string, any>>(arr: T[] | null | unde
 export const sortByPerson = <T extends Record<string, any>>(arr: T[] | null | undefined): T[] =>
   [...(arr || [])].sort((a, b) =>
     cmpHe(
-      `${a?.last_name || ""} ${a?.first_name || ""}`,
-      `${b?.last_name || ""} ${b?.first_name || ""}`,
+      `${a?.first_name || ""} ${a?.last_name || ""}`,
+      `${b?.first_name || ""} ${b?.last_name || ""}`,
     ),
   );
