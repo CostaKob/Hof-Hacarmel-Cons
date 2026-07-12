@@ -85,41 +85,207 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return v > 0 ? String(v) : "";
   };
 
-  // Pre-fill form when editing or reset for new
-  useEffect(() => {
-    if (editPayment) {
-      setEditAmount(String(editPayment.amount));
-      setPaymentDate(editPayment.payment_date);
-      setPaymentMethod(editPayment.payment_method || "credit_card");
-      setInstallments(String((editPayment as any).installments ?? 1));
-      setNotes(editPayment.notes || "");
-      setCheckNumber((editPayment as any).reference_number || "");
-      setEditEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
-      setTransactionType((editPayment as any).transaction_type || "payment");
-    } else {
-      resetForm();
-      if (defaultType) setTransactionType(defaultType);
-    }
-  }, [editPayment, open, defaultType]);
-
   const academicYearId = activeYear?.id ?? enrollments.find((e: any) => e.is_active)?.academic_year_id;
+
+  // ---- Data needed to derive "same defaults as summary in student card" ----
+  const { data: student } = useQuery({
+    queryKey: ["addpay-student", studentId],
+    enabled: !!studentId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("students").select("*").eq("id", studentId).single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["addpay-payment-settings"],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("payment_settings" as any).select("*").limit(1).maybeSingle();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: yearFull } = useQuery({
+    queryKey: ["addpay-year", academicYearId],
+    enabled: !!academicYearId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("academic_years").select("*").eq("id", academicYearId!).single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
+  const { data: discountTypes = [] } = useQuery({
+    queryKey: ["addpay-discount-types", academicYearId],
+    enabled: !!academicYearId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("discount_types" as any)
+        .select("*")
+        .eq("academic_year_id", academicYearId!)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data as any[]) as DiscountType[];
+    },
+  });
+
+  const { data: draft } = useQuery({
+    queryKey: ["addpay-draft", studentId, academicYearId],
+    enabled: !!studentId && !!academicYearId && open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("*")
+        .eq("student_id", studentId)
+        .eq("academic_year_id", academicYearId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any) ?? null;
+    },
+  });
 
   const getEnrollmentLabel = (e: any) =>
     `${e.instruments?.name ?? "—"} — ${e.schools?.name ?? "—"}`;
 
   const activeEnrollments = useMemo(() => enrollments.filter((e: any) => e.is_active), [enrollments]);
 
+  // ---- Compute default (discounted) amounts, mirroring AdminStudentPaymentCalc ----
+  type PaymentItem = {
+    id: string; // enrollment uuid OR `special:<key>`
+    enrollmentId: string | null;
+    label: string;
+    subLabel?: string;
+    defaultAmount: number;
+    kind: "enrollment" | "special";
+  };
+
+  const paymentItems: PaymentItem[] = useMemo(() => {
+    const items: PaymentItem[] = [];
+    if (!yearFull || !settings) {
+      // Fallback: enrollments only with legacy suggestedFor
+      for (const e of activeEnrollments) {
+        const raw = Number(e?.price_per_lesson || 0) * Number(e?.total_lessons_allocated || 0);
+        items.push({
+          id: e.id,
+          enrollmentId: e.id,
+          label: getEnrollmentLabel(e),
+          subLabel: e.price_per_lesson
+            ? `₪${Number(e.price_per_lesson).toLocaleString()} × ${e.total_lessons_allocated || 0} שיעורים`
+            : undefined,
+          defaultAmount: Math.round(raw * 100) / 100,
+          kind: "enrollment",
+        });
+      }
+      return items;
+    }
+
+    const prices = settings.lesson_prices ?? {};
+    const startOverrides = (draft?.start_date_overrides as Record<string, string>) ?? {};
+    const rows = activeEnrollments.map((e: any) =>
+      calcEnrollment(
+        {
+          id: e.id,
+          duration: e.lesson_duration_minutes,
+          startDate: startOverrides[e.id] ?? e.start_date,
+          endDate: e.end_date,
+          pricePerLessonOverride: e.price_per_lesson,
+        },
+        prices,
+        yearFull.start_date,
+        yearFull.end_date,
+      ),
+    );
+
+    const selectedDiscountIds: string[] = Array.isArray(draft?.selected_discount_ids)
+      ? draft!.selected_discount_ids
+      : [];
+    const selectedDiscounts = discountTypes.filter((d) => selectedDiscountIds.includes(d.id));
+    const stdCompute = computeStandardDiscounts(
+      rows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
+      selectedDiscounts,
+    );
+
+    const rowsAfterStd = rows.map((r) => {
+      const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
+      return { r, afterStd: Math.round(r.prorated * (1 - pct / 100) * 100) / 100 };
+    });
+
+    // Specials — no percentage discounts apply
+    const specials: { key: string; label: string; price: number }[] = [];
+    if (student?.has_music_production_course) {
+      specials.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: Number(settings.music_production_price) || 0 });
+    }
+    if (student?.has_recital_track) {
+      specials.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
+    }
+
+    const afterStdTotal = rowsAfterStd.reduce((s, x) => s + x.afterStd, 0) + specials.reduce((s, x) => s + x.price, 0);
+
+    // Custom discounts (proportional across all items)
+    const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
+    const customAmt = customDiscounts.reduce((sum, c) => {
+      const v = Number(c.value) || 0;
+      if (c.mode === "pct") return sum + (afterStdTotal * v) / 100;
+      return sum + v;
+    }, 0);
+    const customFactor = afterStdTotal > 0 ? Math.max(0, (afterStdTotal - customAmt) / afterStdTotal) : 1;
+
+    for (const { r, afterStd } of rowsAfterStd) {
+      const e = activeEnrollments.find((x: any) => x.id === r.enrollmentId);
+      items.push({
+        id: r.enrollmentId,
+        enrollmentId: r.enrollmentId,
+        label: e ? getEnrollmentLabel(e) : "—",
+        subLabel: `${r.lessonsRemaining}/${r.lessonsTotal} שיעורים`,
+        defaultAmount: Math.round(afterStd * customFactor * 100) / 100,
+        kind: "enrollment",
+      });
+    }
+    for (const s of specials) {
+      items.push({
+        id: `special:${s.key}`,
+        enrollmentId: null,
+        label: s.label,
+        subLabel: "קורס מיוחד",
+        defaultAmount: Math.round(s.price * customFactor * 100) / 100,
+        kind: "special",
+      });
+    }
+    return items;
+  }, [activeEnrollments, yearFull, settings, discountTypes, draft, student]);
+
+  // Auto-fill selectedAmounts with defaults on open (new mode only, and once per open).
+  const [defaultsApplied, setDefaultsApplied] = useState(false);
+  useEffect(() => {
+    if (!open) { setDefaultsApplied(false); return; }
+    if (isEdit) return;
+    if (defaultsApplied) return;
+    if (paymentItems.length === 0) return;
+    // Wait for calc-based defaults before applying (avoid overriding with fallback)
+    if (!yearFull || !settings) return;
+    const next: Record<string, string> = {};
+    for (const it of paymentItems) {
+      if (it.defaultAmount > 0) next[it.id] = String(it.defaultAmount);
+    }
+    setSelectedAmounts(next);
+    setDefaultsApplied(true);
+  }, [open, isEdit, paymentItems, yearFull, settings, defaultsApplied]);
+
   const totalSelected = useMemo(() => {
     return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
   }, [selectedAmounts]);
 
-  const toggleEnrollment = (e: any, checked: boolean) => {
+  const toggleItem = (it: PaymentItem, checked: boolean) => {
     setSelectedAmounts((prev) => {
       const next = { ...prev };
       if (checked) {
-        next[e.id] = prev[e.id] ?? suggestedFor(e);
+        next[it.id] = prev[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
       } else {
-        delete next[e.id];
+        delete next[it.id];
       }
       return next;
     });
@@ -127,10 +293,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const selectAll = () => {
     const next: Record<string, string> = {};
-    for (const e of activeEnrollments) next[e.id] = selectedAmounts[e.id] ?? suggestedFor(e);
+    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount > 0 ? String(it.defaultAmount) : "");
     setSelectedAmounts(next);
   };
   const clearAll = () => setSelectedAmounts({});
+
 
   const mutation = useMutation({
     mutationFn: async () => {
