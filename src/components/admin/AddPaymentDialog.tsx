@@ -220,7 +220,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           studentId,
           amount: total,
           academicYearId,
-          academicYearName: activeYear?.hebrew_year ?? null,
+          academicYearName: activeYear?.name ?? null,
           lines,
         },
       });
