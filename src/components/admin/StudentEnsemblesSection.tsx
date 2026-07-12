@@ -118,7 +118,15 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
   const filtered = useMemo(() => {
     if (!search.trim()) return available;
     const q = search.trim().toLowerCase();
-    return available.filter((e: any) => e.name.toLowerCase().includes(q));
+    return available.filter((e: any) => {
+      const staffNames = (e.ensemble_staff || [])
+        .map(
+          (s: any) =>
+            `${s.teachers?.first_name || ""} ${s.teachers?.last_name || ""}`.toLowerCase()
+        )
+        .join(" ");
+      return e.name.toLowerCase().includes(q) || staffNames.includes(q);
+    });
   }, [available, search]);
 
   useEffect(() => {
