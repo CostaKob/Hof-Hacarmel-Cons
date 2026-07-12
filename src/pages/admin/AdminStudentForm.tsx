@@ -54,7 +54,7 @@ const AdminStudentForm = () => {
   const returnTo =
     (location.state as { returnTo?: string } | null)?.returnTo ||
     sessionStorage.getItem("admin-students-return-url") ||
-    "/admin/students";
+    (isEdit ? `/admin/students/${studentId}` : "/admin/students");
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
     defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל" },

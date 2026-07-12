@@ -291,7 +291,7 @@ const AdminStudentCard = () => {
             <Button
               variant="outline"
               className="h-11 rounded-xl"
-              onClick={() => navigate(`/admin/students/${studentId}/edit`, { state: location.state })}
+              onClick={() => navigate(`/admin/students/${studentId}/edit`, { state: { ...location.state, returnTo: `/admin/students/${studentId}` } })}
             >
               <Pencil className="h-4 w-4" /> עריכה
             </Button>
