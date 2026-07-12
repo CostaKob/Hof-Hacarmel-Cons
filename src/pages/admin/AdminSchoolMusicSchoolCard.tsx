@@ -15,6 +15,7 @@ import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, Music, C
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { TimeInput24 } from "@/components/ui/time-input-24";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
