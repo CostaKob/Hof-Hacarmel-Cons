@@ -244,19 +244,51 @@ const AdminStudentForm = () => {
               <Controller
                 name="educational_school"
                 control={control}
-                render={({ field }) => (
-                  <Select value={field.value || "__none__"} onValueChange={(v) => field.onChange(v === "__none__" ? "" : v)}>
-                    <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__none__">ללא</SelectItem>
-                      {educationalSchools.map((s) => (
-                        <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+                render={({ field }) => {
+                  const val = field.value || "";
+                  const inList = !val || educationalSchools.some((s) => s.name === val);
+                  const isOther = !!val && !inList;
+                  if (isOther) {
+                    return (
+                      <div className="flex gap-2">
+                        <Input
+                          value={val}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          placeholder="שם בית ספר"
+                          className="h-12 rounded-xl flex-1"
+                        />
+                        <Button type="button" variant="outline" className="h-12 rounded-xl" onClick={() => field.onChange("")}>
+                          בחר מהרשימה
+                        </Button>
+                      </div>
+                    );
+                  }
+                  return (
+                    <Select
+                      value={val || "__none__"}
+                      onValueChange={(v) => {
+                        if (v === "__other__") {
+                          field.onChange("אחר");
+                          return;
+                        }
+                        field.onChange(v === "__none__" ? "" : v);
+                      }}
+
+                    >
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="בחר בית ספר" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">ללא</SelectItem>
+                        {educationalSchools.map((s) => (
+                          <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                        ))}
+                        <SelectItem value="__other__">אחר (הקלד ידנית)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  );
+                }}
               />
             </div>
+
 
             {/* Gender dropdown */}
             <div className="space-y-1.5">
