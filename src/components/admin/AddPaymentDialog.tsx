@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2 } from "lucide-react";
+import { Trash2, Link as LinkIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -198,6 +198,49 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       resetForm();
     },
     onError: (err: any) => toast.error(err.message || "שגיאה במחיקת תשלום"),
+  });
+
+  const generateLinkMutation = useMutation({
+    mutationFn: async () => {
+      const entries = Object.entries(selectedAmounts)
+        .map(([eid, amt]) => ({ eid, amt: parseFloat(amt) }))
+        .filter((x) => x.eid && x.amt > 0);
+      if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+      const total = Math.round(entries.reduce((s, x) => s + x.amt, 0) * 100) / 100;
+      if (total <= 0) throw new Error("סכום חייב להיות גדול מ-0");
+
+      const lines = entries.map(({ eid, amt }) => {
+        const e = enrollments.find((x: any) => x.id === eid);
+        const desc = e ? `${e.instruments?.name ?? "שכר לימוד"} — ${e.schools?.name ?? ""}`.trim() : "שכר לימוד";
+        return { description: desc.replace(/ — $/, ""), amount: Math.round(amt * 100) / 100 };
+      });
+
+      const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+        body: {
+          studentId,
+          amount: total,
+          academicYearId,
+          academicYearName: activeYear?.name ?? null,
+          lines,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      if (!data?.url) throw new Error("לא התקבל קישור");
+      return data as { url: string };
+    },
+    onSuccess: async (data) => {
+      try { await navigator.clipboard.writeText(data.url); } catch { /* noop */ }
+      window.open(data.url, "_blank");
+      queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+      queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] });
+      toast.success("קישור התשלום נוצר והועתק ללוח");
+      onOpenChange(false);
+      resetForm();
+    },
+    onError: (err: any) => toast.error(err.message || "שגיאה ביצירת קישור"),
   });
 
   const resetForm = () => {
@@ -389,6 +432,20 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               <Label>הערות</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערות (אופציונלי)" rows={2} />
             </div>
+            {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
+              <Button
+                variant="outline"
+                className="w-full h-11 rounded-xl"
+                onClick={() => generateLinkMutation.mutate()}
+                disabled={totalSelected <= 0 || generateLinkMutation.isPending}
+              >
+                {generateLinkMutation.isPending ? (
+                  <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישור...</>
+                ) : (
+                  <><LinkIcon className="h-4 w-4 ml-2" /> צור קישור לתשלום באשראי {totalSelected > 0 ? `(₪${totalSelected.toLocaleString()})` : ""}</>
+                )}
+              </Button>
+            )}
             <div className="flex gap-2">
               <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
                 {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
