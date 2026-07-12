@@ -557,7 +557,7 @@ const AdminSchoolMusicSchoolCard = () => {
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">עד שעה *</Label>
-                    <Input type="time" lang="en-GB" step={60} value={newClassEnd} onChange={(e) => setNewClassEnd(e.target.value)} className="h-9 text-xs rounded-lg" />
+                    <TimeInput24 value={newClassEnd} onChange={setNewClassEnd} className="h-9 text-xs" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">שם מחנכת *</Label>
