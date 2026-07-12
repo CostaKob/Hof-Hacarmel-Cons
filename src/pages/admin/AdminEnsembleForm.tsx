@@ -178,7 +178,7 @@ const AdminEnsembleForm = () => {
             <FormField control={form.control} name="start_time" render={({ field }) => (
               <FormItem>
                 <FormLabel>שעה</FormLabel>
-                <FormControl><Input type="time" lang="en-GB" step={60} {...field} /></FormControl>
+                <FormControl><TimeInput24 value={field.value} onChange={field.onChange} /></FormControl>
               </FormItem>
             )} />
 
