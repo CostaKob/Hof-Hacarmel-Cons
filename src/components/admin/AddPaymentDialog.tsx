@@ -48,6 +48,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [paymentMethod, setPaymentMethod] = useState("credit_card");
   const [installments, setInstallments] = useState("1");
   const [notes, setNotes] = useState("");
+  const [checkNumber, setCheckNumber] = useState("");
   // Multi-select map: enrollmentId -> amount string
   const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
   // Edit-mode single enrollment + amount
@@ -80,6 +81,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setPaymentMethod(editPayment.payment_method || "credit_card");
       setInstallments(String((editPayment as any).installments ?? 1));
       setNotes(editPayment.notes || "");
+      setCheckNumber((editPayment as any).reference_number || "");
       setEditEnrollmentId(editPayment.enrollment_id || enrollments[0]?.id || "");
       setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
@@ -132,6 +134,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             payment_method: paymentMethod as any,
             installments: parseInt(installments),
             notes: notes || null,
+            reference_number: paymentMethod === "check" ? (checkNumber.trim() || null) : null,
             enrollment_id: editEnrollmentId,
             transaction_type: transactionType,
           })
@@ -150,6 +153,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
         notes: notes || null,
+        reference_number: paymentMethod === "check" ? (checkNumber.trim() || null) : null,
         transaction_type: transactionType,
         student_id: studentId,
         academic_year_id: academicYearId,
@@ -305,6 +309,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setPaymentMethod("credit_card");
     setInstallments("1");
     setNotes("");
+    setCheckNumber("");
     setTransactionType("payment");
     setSelectedAmounts({});
     setEditEnrollmentId("");
@@ -315,9 +320,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSplitResults([]);
   };
 
-  const canSubmit = isEdit
+  const checkRequirementMet = paymentMethod !== "check" || checkNumber.trim().length > 0;
+  const canSubmit = (isEdit
     ? !!editEnrollmentId && parseFloat(editAmount) > 0 && !!paymentDate
-    : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate;
+    : Object.entries(selectedAmounts).some(([, v]) => parseFloat(v) > 0) && !!paymentDate)
+    && checkRequirementMet;
+
 
   const selectClass =
     "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
@@ -488,6 +496,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 ))}
               </select>
             </div>
+            {paymentMethod === "check" && (
+              <div>
+                <Label htmlFor="check-number">מספר צ׳ק</Label>
+                <Input
+                  id="check-number"
+                  value={checkNumber}
+                  onChange={(e) => setCheckNumber(e.target.value)}
+                  placeholder="לדוגמה: 1234"
+                />
+              </div>
+            )}
             <div>
               <Label>הערות</Label>
               <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="הערות (אופציונלי)" rows={2} />
