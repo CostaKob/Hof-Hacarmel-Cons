@@ -262,24 +262,32 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
                 </p>
               ) : (
                 <div className="divide-y">
-                  {filtered.map((e: any) => (
-                    <label
-                      key={e.id}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 cursor-pointer transition-colors"
-                    >
-                      <Checkbox
-                        checked={selected.has(e.id)}
-                        onCheckedChange={() => toggle(e.id)}
-                      />
-                      <span className="text-sm">
-                        {e.name}
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
+                  {filtered.map((e: any) => {
+                    const staff = staffLabel(e.ensemble_staff);
+                    return (
+                      <label
+                        key={e.id}
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 cursor-pointer transition-colors"
+                      >
+                        <Checkbox
+                          checked={selected.has(e.id)}
+                          onCheckedChange={() => toggle(e.id)}
+                        />
+                        <span className="text-sm">
+                          {e.name}
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
+                            {staff && (
+                              <span className="block text-xs text-muted-foreground/80 mt-0.5">
+                                {staff}
+                              </span>
+                            )}
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
