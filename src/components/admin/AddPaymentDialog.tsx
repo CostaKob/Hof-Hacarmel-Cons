@@ -134,6 +134,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             payment_method: paymentMethod as any,
             installments: parseInt(installments),
             notes: notes || null,
+            reference_number: paymentMethod === "check" ? (checkNumber.trim() || null) : null,
             enrollment_id: editEnrollmentId,
             transaction_type: transactionType,
           })
