@@ -191,9 +191,14 @@ const AdminStudentForm = () => {
     { name: "parent_email_2", label: "אימייל הורה 2", type: "email" },
   ];
 
+  const isLoadingData = isEdit && (studentLoading || schoolsLoading);
+
   return (
     <AdminLayout title={isEdit ? "עריכת תלמיד" : "תלמיד חדש"} backPath="/admin/students">
       <PageTitle title="טופס תלמיד" />
+      {isLoadingData ? (
+        <p className="text-muted-foreground py-6">טוען...</p>
+      ) : (
       <form onSubmit={handleSubmit((d) => mutation.mutate(d))} className="space-y-5 max-w-2xl">
         {/* Student details */}
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
