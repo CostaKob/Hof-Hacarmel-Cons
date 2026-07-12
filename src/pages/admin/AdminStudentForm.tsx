@@ -62,7 +62,7 @@ const AdminStudentForm = () => {
 
   const isActive = watch("is_active");
 
-  const { data: student } = useQuery({
+  const { data: student, isLoading: studentLoading } = useQuery({
     queryKey: ["admin-student", studentId],
     queryFn: async () => {
       const { data, error } = await supabase.from("students").select("*").eq("id", studentId!).single();
@@ -72,7 +72,7 @@ const AdminStudentForm = () => {
     enabled: isEdit,
   });
 
-  const { data: educationalSchools = [] } = useQuery({
+  const { data: educationalSchools = [], isLoading: schoolsLoading } = useQuery({
     queryKey: ["educational-schools-active"],
     queryFn: async () => {
       const { data } = await supabase.from("educational_schools").select("id, name").eq("is_active", true);
