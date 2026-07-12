@@ -89,7 +89,9 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ensembles")
-        .select("id, name, ensemble_type")
+        .select(
+          "id, name, ensemble_type, ensemble_staff(role, teachers(first_name, last_name))"
+        )
         .eq("academic_year_id", yearId!)
         .eq("is_active", true)
         .order("name");
@@ -116,7 +118,15 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
   const filtered = useMemo(() => {
     if (!search.trim()) return available;
     const q = search.trim().toLowerCase();
-    return available.filter((e: any) => e.name.toLowerCase().includes(q));
+    return available.filter((e: any) => {
+      const staffNames = (e.ensemble_staff || [])
+        .map(
+          (s: any) =>
+            `${s.teachers?.first_name || ""} ${s.teachers?.last_name || ""}`.toLowerCase()
+        )
+        .join(" ");
+      return e.name.toLowerCase().includes(q) || staffNames.includes(q);
+    });
   }, [available, search]);
 
   useEffect(() => {
@@ -177,6 +187,18 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
   };
 
   if (!yearId) return null;
+
+  const staffLabel = (staff: any[]) => {
+    const items = (staff || [])
+      .filter((s: any) => ["conductor", "instructor"].includes(s.role))
+      .map((s: any) => {
+        const name = `${s.teachers?.first_name || ""} ${s.teachers?.last_name || ""}`.trim();
+        const roleLabel = s.role === "conductor" ? "מנצח" : "מנחה";
+        return `${roleLabel}: ${name}`;
+      });
+    if (items.length === 0) return null;
+    return items.join(" · ");
+  };
 
   const enrollmentLabel = (eId: string | null) => {
     if (!eId) return null;
@@ -240,24 +262,32 @@ const StudentEnsemblesSection = ({ studentId, enrollments }: Props) => {
                 </p>
               ) : (
                 <div className="divide-y">
-                  {filtered.map((e: any) => (
-                    <label
-                      key={e.id}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 cursor-pointer transition-colors"
-                    >
-                      <Checkbox
-                        checked={selected.has(e.id)}
-                        onCheckedChange={() => toggle(e.id)}
-                      />
-                      <span className="text-sm">
-                        {e.name}
-                        <span className="text-muted-foreground">
-                          {" "}
-                          · {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
+                  {filtered.map((e: any) => {
+                    const staff = staffLabel(e.ensemble_staff);
+                    return (
+                      <label
+                        key={e.id}
+                        className="flex items-center gap-3 px-3 py-2.5 hover:bg-accent/50 cursor-pointer transition-colors"
+                      >
+                        <Checkbox
+                          checked={selected.has(e.id)}
+                          onCheckedChange={() => toggle(e.id)}
+                        />
+                        <span className="text-sm">
+                          {e.name}
+                          <span className="text-muted-foreground">
+                            {" "}
+                            · {ENSEMBLE_TYPE_LABELS[e.ensemble_type] || e.ensemble_type}
+                            {staff && (
+                              <span className="block text-xs text-muted-foreground/80 mt-0.5">
+                                {staff}
+                              </span>
+                            )}
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                  ))}
+                      </label>
+                    );
+                  })}
                 </div>
               )}
             </ScrollArea>
