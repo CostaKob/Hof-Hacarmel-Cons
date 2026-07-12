@@ -326,7 +326,7 @@ const AdminStudentCard = () => {
           <PhoneRow label="נייד תלמיד/ה" value={(student as any).phone} />
           <DetailRow label="תאריך לידה" value={student.date_of_birth} />
           <DetailRow label="כתובת" value={student.address} />
-          <DetailRow label="עיר" value={student.city} />
+          <DetailRow label="ישוב מגורים" value={student.city} />
           <DetailRow label="בית הספר" value={(student as any).educational_school} />
           <DetailRow label="כיתה" value={(student as any).grade} />
           <DetailRow label="רמת נגינה" value={(student as any).playing_level} />
