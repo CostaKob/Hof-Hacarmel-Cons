@@ -622,6 +622,18 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
+        <Select value={instrumentFilter} onValueChange={(v) => setFilter("instrument", v)}>
+          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כלי נגינה</SelectItem>
+            {(instrumentOptions as string[]).map((i) => (
+              <SelectItem key={i} value={i}>{i}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+
+
         {/* Status filter buttons */}
         <div className={`col-span-2 md:col-span-5 grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:flex-wrap lg:items-center ${view === "all" ? "md:grid-cols-4" : "md:grid-cols-2"}`}>
           {view === "all" ? (
