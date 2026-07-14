@@ -19,4 +19,13 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        login: path.resolve(__dirname, "login.html"),
+        loginDirectory: path.resolve(__dirname, "login/index.html"),
+      },
+    },
+  },
 }));
