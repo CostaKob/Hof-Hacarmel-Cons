@@ -44,6 +44,7 @@ const AdminStudents = () => {
   const levelFilter = searchParams.get("level") || "all";
   const paymentFilter = searchParams.get("payment") || "all";
   const trackFilter = searchParams.get("track") || "all";
+  const instrumentFilter = searchParams.get("instrument") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -439,6 +440,7 @@ const AdminStudents = () => {
     .sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const durations = [...new Set(rows.map((r: any) => r.lesson_duration_minutes))].sort((a, b) => a - b);
+  const instrumentOptions = [...new Set(rows.map((r: any) => r.instruments?.name).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
 
   const filtered = rows.filter((r: any) => {
     if (search) {
@@ -471,6 +473,7 @@ const AdminStudents = () => {
       const f = map[trackFilter];
       if (f && !r.students?.[f]) return false;
     }
+    if (instrumentFilter !== "all" && r.instruments?.name !== instrumentFilter) return false;
     return true;
   });
 
@@ -618,6 +621,18 @@ const AdminStudents = () => {
             <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select value={instrumentFilter} onValueChange={(v) => setFilter("instrument", v)}>
+          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כלי נגינה</SelectItem>
+            {(instrumentOptions as string[]).map((i) => (
+              <SelectItem key={i} value={i}>{i}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+
 
         {/* Status filter buttons */}
         <div className={`col-span-2 md:col-span-5 grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:flex-wrap lg:items-center ${view === "all" ? "md:grid-cols-4" : "md:grid-cols-2"}`}>
