@@ -35,7 +35,7 @@ const Login = () => {
 
   return (
     <>
-      <PageTitle title="כניסה למערכת" />
+      <PageTitle title="אולפן ומגמת המוסיקה חוף הכרמל" suffix="" />
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center bg-muted/40 p-4">
 
       <div className="mb-6">

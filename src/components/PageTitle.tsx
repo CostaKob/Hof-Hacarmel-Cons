@@ -8,7 +8,7 @@ interface PageTitleProps {
 export const PageTitle = ({ title, suffix = "אולפן המוסיקה חוף הכרמל" }: PageTitleProps) => {
   return (
     <Helmet>
-      <title>{`${title} — ${suffix}`}</title>
+      <title>{suffix ? `${title} — ${suffix}` : title}</title>
     </Helmet>
   );
 };
