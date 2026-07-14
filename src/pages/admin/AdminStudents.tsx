@@ -440,6 +440,7 @@ const AdminStudents = () => {
     .sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const cities = [...new Set(rows.map((r: any) => r.students?.city).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
   const durations = [...new Set(rows.map((r: any) => r.lesson_duration_minutes))].sort((a, b) => a - b);
+  const instrumentOptions = [...new Set(rows.map((r: any) => r.instruments?.name).filter(Boolean))].sort((a, b) => (a as string).localeCompare(b as string, "he"));
 
   const filtered = rows.filter((r: any) => {
     if (search) {
