@@ -196,10 +196,34 @@ const AdminRegistrationEdit = () => {
                 </SelectContent>
               </Select>
             </Field>
-            <Field label="שלוחה"><Input value={form.branch_school_name} onChange={(e) => set("branch_school_name", e.target.value)} /></Field>
-            <Field label="בית ספר (חינוך)"><Input value={form.educational_school} onChange={(e) => set("educational_school", e.target.value)} /></Field>
-            <Field label="כיתה"><Input value={form.grade} onChange={(e) => set("grade", e.target.value)} /></Field>
-            <Field label="ישוב"><Input value={form.city} onChange={(e) => set("city", e.target.value)} /></Field>
+            <Field label="שלוחה">
+              <ManagedSelect
+                value={form.branch_school_name}
+                onChange={(v) => set("branch_school_name", v)}
+                options={schools.map((s: any) => s.name)}
+                placeholder="בחרו שלוחה"
+              />
+            </Field>
+            <Field label="בית ספר (חינוך)">
+              <ManagedSelect
+                value={form.educational_school}
+                onChange={(v) => set("educational_school", v)}
+                options={eduSchools.map((s: any) => s.name)}
+                placeholder="בחרו בית ספר"
+              />
+            </Field>
+            <Field label="כיתה">
+              <Select value={form.grade || "none"} onValueChange={(v) => set("grade", v === "none" ? "" : v)}>
+                <SelectTrigger><SelectValue placeholder="בחרו כיתה" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  {GRADES.map((g) => (<SelectItem key={g} value={g}>{g}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </Field>
+            <Field label="ישוב מגורים">
+              <CitySelect value={form.city} onChange={(v) => set("city", v)} />
+            </Field>
             <Field label="טלפון תלמיד/ה"><Input value={form.student_phone} onChange={(e) => set("student_phone", e.target.value)} /></Field>
           </CardContent>
         </Card>
@@ -207,11 +231,44 @@ const AdminRegistrationEdit = () => {
         <Card>
           <CardHeader><CardTitle className="text-base">פרטי לימודים מבוקשים</CardTitle></CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label="כלים מבוקשים (מופרד בפסיקים)">
-              <Input value={form.requested_instruments} onChange={(e) => set("requested_instruments", e.target.value)} />
+            <Field label="כלים מבוקשים">
+              <div className="rounded-md border border-input p-3 max-h-56 overflow-y-auto space-y-2">
+                {instruments.map((i: any) => {
+                  const list = form.requested_instruments
+                    ? form.requested_instruments.split(",").map((s) => s.trim()).filter(Boolean)
+                    : [];
+                  const checked = list.includes(i.name);
+                  return (
+                    <label key={i.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...list, i.name]
+                            : list.filter((x) => x !== i.name);
+                          set("requested_instruments", next.join(", "));
+                        }}
+                      />
+                      <span>{i.name}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </Field>
             <Field label="משך שיעור (דקות)">
-              <Input value={form.requested_lesson_duration} onChange={(e) => set("requested_lesson_duration", e.target.value)} />
+              <Select
+                value={form.requested_lesson_duration || "none"}
+                onValueChange={(v) => set("requested_lesson_duration", v === "none" ? "" : v)}
+              >
+                <SelectTrigger><SelectValue placeholder="בחרו משך" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">—</SelectItem>
+                  <SelectItem value="30">30</SelectItem>
+                  <SelectItem value="45">45</SelectItem>
+                  <SelectItem value="60">60</SelectItem>
+                </SelectContent>
+              </Select>
             </Field>
           </CardContent>
         </Card>
