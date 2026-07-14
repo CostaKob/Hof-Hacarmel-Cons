@@ -52,6 +52,46 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </div>
 );
 
+const OTHER_SENTINEL = "__other__";
+
+function ManagedSelect({
+  value, onChange, options, placeholder,
+}: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string }) {
+  const known = value ? options.includes(value) : true;
+  const [mode, setMode] = useState<"list" | "other">(value && !known ? "other" : "list");
+
+  useEffect(() => {
+    if (!value) { setMode("list"); return; }
+    if (options.length === 0) return;
+    setMode(options.includes(value) ? "list" : "other");
+  }, [value, options.join("|")]);
+
+  const selectValue = mode === "other" ? OTHER_SENTINEL : (known && value ? value : "none");
+
+  return (
+    <div className="space-y-2">
+      <Select
+        value={selectValue}
+        onValueChange={(v) => {
+          if (v === OTHER_SENTINEL) { setMode("other"); onChange(""); }
+          else if (v === "none") { setMode("list"); onChange(""); }
+          else { setMode("list"); onChange(v); }
+        }}
+      >
+        <SelectTrigger><SelectValue placeholder={placeholder || "בחרו"} /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="none">—</SelectItem>
+          {options.map((o) => (<SelectItem key={o} value={o}>{o}</SelectItem>))}
+          <SelectItem value={OTHER_SENTINEL}>אחר (הזינו טקסט)</SelectItem>
+        </SelectContent>
+      </Select>
+      {mode === "other" && (
+        <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder="הזינו ערך" />
+      )}
+    </div>
+  );
+}
+
 const AdminRegistrationEdit = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
