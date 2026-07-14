@@ -72,6 +72,36 @@ const AdminRegistrationEdit = () => {
     enabled: !!id,
   });
 
+  const { data: schools = [] } = useQuery({
+    queryKey: ["admin-schools-active-select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("schools").select("id, name").eq("is_active", true);
+      if (error) throw error;
+      return sortByName(data ?? []);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: eduSchools = [] } = useQuery({
+    queryKey: ["admin-edu-schools-active-select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("educational_schools").select("id, name").eq("is_active", true);
+      if (error) throw error;
+      return sortByName(data ?? []);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: instruments = [] } = useQuery({
+    queryKey: ["admin-instruments-select"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("instruments").select("id, name");
+      if (error) throw error;
+      return sortByName(data ?? []);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
   useEffect(() => {
     if (!registration) return;
     const r = registration;
