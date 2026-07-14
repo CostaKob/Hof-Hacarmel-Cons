@@ -473,6 +473,7 @@ const AdminStudents = () => {
       const f = map[trackFilter];
       if (f && !r.students?.[f]) return false;
     }
+    if (instrumentFilter !== "all" && r.instruments?.name !== instrumentFilter) return false;
     return true;
   });
 
