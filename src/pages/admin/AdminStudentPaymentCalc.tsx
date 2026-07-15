@@ -298,8 +298,12 @@ const AdminStudentPaymentCalc = () => {
 
   // Hydrate discount state from the most recent payment (pending or paid) so
   // reopening the card shows the same discounts that were used previously.
+  // Custom discounts are restored even when the draft is otherwise populated,
+  // as long as the draft's own customDiscounts list is empty — this protects
+  // against a stale autosave wiping out a manually-entered discount snapshot.
   useEffect(() => {
-    if (hydratedFromPending || !discountTypes.length) return;
+    if (!discountTypes.length) return;
+    if (hydratedFromPending && customDiscounts.length > 0) return;
     const source =
       (pendingPayments && pendingPayments[0]) ||
       ((allStudentPayments as any[]).find((p) => {
@@ -310,15 +314,19 @@ const AdminStudentPaymentCalc = () => {
     const br = source?.enrollment_breakdown;
     const d = br && !Array.isArray(br) ? br.discounts : null;
     if (d && typeof d === "object") {
-      const mapped = mapLegacy(d);
-      if (mapped.length) setSelectedDiscountIds(mapped);
-      if (Array.isArray(d.customDiscounts)) setCustomDiscounts(d.customDiscounts);
-      if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
-        setStartDateOverrides(d.startDateOverrides);
+      if (!hydratedFromPending) {
+        const mapped = mapLegacy(d);
+        if (mapped.length) setSelectedDiscountIds(mapped);
+        if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
+          setStartDateOverrides(d.startDateOverrides);
+        }
+      }
+      if (customDiscounts.length === 0 && Array.isArray(d.customDiscounts) && d.customDiscounts.length > 0) {
+        setCustomDiscounts(d.customDiscounts);
       }
     }
     setHydratedFromPending(true);
-  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes]);
+  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes, customDiscounts.length]);
 
   // Persist discounts to localStorage (same-browser fallback)
   useEffect(() => {
