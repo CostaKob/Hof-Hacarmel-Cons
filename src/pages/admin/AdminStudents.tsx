@@ -131,13 +131,20 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("registrations")
-        .select("existing_student_id, student_national_id")
+        .select("existing_student_id, student_national_id, student_status, created_at")
         .eq("academic_year_id", selectedYearId);
       if (error) throw error;
       return data ?? [];
     },
     enabled: !!selectedYearId,
   });
+
+  const normalizeRegType = (v: any): "new" | "continuing" | null => {
+    const s = String(v ?? "").trim().toLowerCase();
+    if (s === "new" || s === "חדש") return "new";
+    if (s === "continuing" || s === "ממשיך") return "continuing";
+    return null;
+  };
 
   const registeredStudentIds = useMemo(() => {
     const s = new Set<string>();
@@ -154,6 +161,42 @@ const AdminStudents = () => {
     }
     return s;
   }, [yearRegistrations]);
+
+  const regTypeByStudentId = useMemo(() => {
+    const m = new Map<string, "new" | "continuing">();
+    const sorted = [...(yearRegistrations as any[])].sort((a, b) =>
+      String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+    );
+    for (const r of sorted) {
+      const t = normalizeRegType(r.student_status);
+      if (!t) continue;
+      if (r.existing_student_id && !m.has(r.existing_student_id)) m.set(r.existing_student_id, t);
+    }
+    return m;
+  }, [yearRegistrations]);
+
+  const regTypeByNationalId = useMemo(() => {
+    const m = new Map<string, "new" | "continuing">();
+    const sorted = [...(yearRegistrations as any[])].sort((a, b) =>
+      String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+    );
+    for (const r of sorted) {
+      const t = normalizeRegType(r.student_status);
+      if (!t) continue;
+      const nid = r.student_national_id ? String(r.student_national_id).trim() : "";
+      if (nid && !m.has(nid)) m.set(nid, t);
+    }
+    return m;
+  }, [yearRegistrations]);
+
+  const getRegType = useCallback((s: any): "new" | "continuing" | null => {
+    if (!s) return null;
+    const byId = s.id ? regTypeByStudentId.get(s.id) : undefined;
+    if (byId) return byId;
+    const nid = s.national_id ? String(s.national_id).trim() : "";
+    if (nid) return regTypeByNationalId.get(nid) ?? null;
+    return null;
+  }, [regTypeByStudentId, regTypeByNationalId]);
 
   const { data: discountTypes = [] } = useQuery({
     queryKey: ["discount-types", selectedYearId],
