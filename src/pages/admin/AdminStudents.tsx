@@ -684,6 +684,18 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
+        <Select value={regTypeFilter} onValueChange={(v) => setFilter("reg_type", v)}>
+          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="סוג רישום" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">סוג רישום</SelectItem>
+            <SelectItem value="new">🆕 חדש</SelectItem>
+            <SelectItem value="continuing">🔄 ממשיך</SelectItem>
+            <SelectItem value="unknown">ללא סימון</SelectItem>
+          </SelectContent>
+        </Select>
+
+
+
 
 
         {/* Status filter buttons */}
