@@ -32,6 +32,34 @@ const HEBREW_YEAR_MAP: Record<string, string> = {
 };
 const toHebrewYear = (name: string): string => HEBREW_YEAR_MAP[name] ?? name;
 
+type PaymentDiscountSnapshot = {
+  selectedDiscountIds: string[];
+  customDiscounts: { label: string; value: string; mode: "pct" | "amount" }[];
+  startDateOverrides: Record<string, string>;
+};
+
+const extractPaymentDiscountSnapshot = (payment: any): PaymentDiscountSnapshot | null => {
+  const breakdown = payment?.enrollment_breakdown;
+  const discounts = breakdown && !Array.isArray(breakdown) ? breakdown.discounts : null;
+  if (!discounts || typeof discounts !== "object") return null;
+
+  const selectedDiscountIds = Array.isArray(discounts.selectedDiscountIds)
+    ? discounts.selectedDiscountIds.filter(Boolean)
+    : [];
+  const customDiscounts = Array.isArray(discounts.customDiscounts)
+    ? discounts.customDiscounts.filter((d: any) => d && typeof d === "object")
+    : [];
+  const startDateOverrides =
+    discounts.startDateOverrides && typeof discounts.startDateOverrides === "object"
+      ? discounts.startDateOverrides
+      : {};
+
+  if (selectedDiscountIds.length === 0 && customDiscounts.length === 0 && Object.keys(startDateOverrides).length === 0) {
+    return null;
+  }
+  return { selectedDiscountIds, customDiscounts, startDateOverrides };
+};
+
 const AdminStudentPaymentCalc = () => {
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -146,6 +174,18 @@ const AdminStudentPaymentCalc = () => {
   );
   const pendingPayments = allPendingPayments as any[];
 
+  const paymentDiscountSnapshot = useMemo(() => {
+    const candidates = [...pendingPayments, ...(allStudentPayments as any[])]
+      .map((payment) => ({
+        payment,
+        snapshot: extractPaymentDiscountSnapshot(payment),
+        ts: new Date(payment?.created_at || payment?.paid_at || payment?.payment_date || 0).getTime(),
+      }))
+      .filter((x) => x.snapshot)
+      .sort((a, b) => b.ts - a.ts);
+    return candidates[0]?.snapshot ?? null;
+  }, [pendingPayments, allStudentPayments]);
+
   const paymentsAggr = useMemo(() => {
     let paid = 0, credit = 0, net = 0;
     for (const r of paymentsList as any[]) {
@@ -201,6 +241,12 @@ const AdminStudentPaymentCalc = () => {
   );
   const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
   const [hydratedFromDraft, setHydratedFromDraft] = useState<boolean>(false);
+  const paymentDiscountSnapshotRef = useRef<PaymentDiscountSnapshot | null>(paymentDiscountSnapshot);
+  const customDiscountsTouchedRef = useRef(false);
+
+  useEffect(() => {
+    paymentDiscountSnapshotRef.current = paymentDiscountSnapshot;
+  }, [paymentDiscountSnapshot]);
 
   // After discountTypes load, map any legacy keys (sibling/secondInstrument/majorStudent)
   // from localStorage or older payments into discount_type ids.
@@ -224,20 +270,28 @@ const AdminStudentPaymentCalc = () => {
   // Hydrate from server draft (highest priority besides pending payment)
   useEffect(() => {
     if (hydratedFromDraft || !draft) return;
+    const draftCustomDiscounts = Array.isArray(draft.custom_discounts) ? (draft.custom_discounts as any[]) : [];
+    const snapshotCustomDiscounts = paymentDiscountSnapshot?.customDiscounts ?? [];
     const hasContent =
       (Array.isArray(draft.selected_discount_ids) && draft.selected_discount_ids.length > 0) ||
-      (Array.isArray(draft.custom_discounts) && draft.custom_discounts.length > 0) ||
+      draftCustomDiscounts.length > 0 ||
       (draft.start_date_overrides && typeof draft.start_date_overrides === "object" && Object.keys(draft.start_date_overrides).length > 0);
     if (Array.isArray(draft.selected_discount_ids)) setSelectedDiscountIds(draft.selected_discount_ids);
-    if (Array.isArray(draft.custom_discounts)) setCustomDiscounts(draft.custom_discounts as any);
+    if (draftCustomDiscounts.length > 0) {
+      setCustomDiscounts(draftCustomDiscounts as any);
+    } else if (snapshotCustomDiscounts.length > 0 && !customDiscountsTouchedRef.current) {
+      setCustomDiscounts(snapshotCustomDiscounts as any);
+    } else if (Array.isArray(draft.custom_discounts)) {
+      setCustomDiscounts([]);
+    }
     if (draft.start_date_overrides && typeof draft.start_date_overrides === "object") {
       setStartDateOverrides(draft.start_date_overrides as any);
     }
     setHydratedFromDraft(true);
     // Only block payment-breakdown hydration if the draft actually has content —
     // otherwise a past link's snapshot (with its custom discount) is our source of truth.
-    if (hasContent) setHydratedFromPending(true);
-  }, [draft, hydratedFromDraft]);
+    if (hasContent && draftCustomDiscounts.length > 0) setHydratedFromPending(true);
+  }, [draft, hydratedFromDraft, paymentDiscountSnapshot]);
 
   // Hydrate from legacy localStorage keys once discountTypes are loaded
   useEffect(() => {
@@ -302,18 +356,9 @@ const AdminStudentPaymentCalc = () => {
   // as long as the draft's own customDiscounts list is empty — this protects
   // against a stale autosave wiping out a manually-entered discount snapshot.
   useEffect(() => {
-    if (!discountTypes.length) return;
+    if (!discountTypes.length || !paymentDiscountSnapshot) return;
     if (hydratedFromPending && customDiscounts.length > 0) return;
-    const source =
-      (pendingPayments && pendingPayments[0]) ||
-      ((allStudentPayments as any[]).find((p) => {
-        const br = p?.enrollment_breakdown;
-        return br && !Array.isArray(br) && br.discounts;
-      }) as any);
-    if (!source) return;
-    const br = source?.enrollment_breakdown;
-    const d = br && !Array.isArray(br) ? br.discounts : null;
-    if (d && typeof d === "object") {
+    const d = paymentDiscountSnapshot;
       if (!hydratedFromPending) {
         const mapped = mapLegacy(d);
         if (mapped.length) setSelectedDiscountIds(mapped);
@@ -321,12 +366,11 @@ const AdminStudentPaymentCalc = () => {
           setStartDateOverrides(d.startDateOverrides);
         }
       }
-      if (customDiscounts.length === 0 && Array.isArray(d.customDiscounts) && d.customDiscounts.length > 0) {
+      if (customDiscounts.length === 0 && Array.isArray(d.customDiscounts) && d.customDiscounts.length > 0 && !customDiscountsTouchedRef.current) {
         setCustomDiscounts(d.customDiscounts);
       }
-    }
     setHydratedFromPending(true);
-  }, [pendingPayments, allStudentPayments, hydratedFromPending, discountTypes, customDiscounts.length]);
+  }, [paymentDiscountSnapshot, hydratedFromPending, discountTypes, customDiscounts.length]);
 
   // Persist discounts to localStorage (same-browser fallback)
   useEffect(() => {
@@ -351,15 +395,28 @@ const AdminStudentPaymentCalc = () => {
   const saveDraftNow = async (opts?: { showToast?: boolean }) => {
     if (!studentId || !yearId) return;
     const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o } = draftStateRef.current;
+    const fallbackSnapshot = paymentDiscountSnapshotRef.current;
+    const customDiscountsToSave =
+      !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
+        ? fallbackSnapshot!.customDiscounts
+        : c;
+    const selectedDiscountIdsToSave =
+      s.length === 0 && (fallbackSnapshot?.selectedDiscountIds?.length ?? 0) > 0
+        ? fallbackSnapshot!.selectedDiscountIds
+        : s;
+    const startDateOverridesToSave =
+      Object.keys(o).length === 0 && fallbackSnapshot?.startDateOverrides && Object.keys(fallbackSnapshot.startDateOverrides).length > 0
+        ? fallbackSnapshot.startDateOverrides
+        : o;
     try {
       if (opts?.showToast) setSavingDraft(true);
       const { error } = await supabase.from("student_payment_drafts" as any).upsert(
         {
           student_id: studentId,
           academic_year_id: yearId,
-          selected_discount_ids: s,
-          custom_discounts: c as any,
-          start_date_overrides: o as any,
+          selected_discount_ids: selectedDiscountIdsToSave,
+          custom_discounts: customDiscountsToSave as any,
+          start_date_overrides: startDateOverridesToSave as any,
         },
         { onConflict: "student_id,academic_year_id" },
       );
@@ -921,13 +978,14 @@ const AdminStudentPaymentCalc = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>הנחות מותאמות</Label>
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }])}>
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }]); }}>
                 <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
             {customDiscounts.map((c, i) => (
               <div key={i} className="grid grid-cols-[1fr_110px_90px_44px] gap-2">
                 <Input placeholder="תיאור" value={c.label} onChange={(e) => {
+                  customDiscountsTouchedRef.current = true;
                   const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; setCustomDiscounts(arr);
                 }} className="h-11 rounded-xl" />
                 <Input
@@ -936,11 +994,13 @@ const AdminStudentPaymentCalc = () => {
                   min="0"
                   value={c.value}
                   onChange={(e) => {
+                    customDiscountsTouchedRef.current = true;
                     const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; setCustomDiscounts(arr);
                   }}
                   className="h-11 rounded-xl"
                 />
                 <Select value={c.mode} onValueChange={(v) => {
+                  customDiscountsTouchedRef.current = true;
                   const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; setCustomDiscounts(arr);
                 }}>
                   <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
@@ -949,7 +1009,7 @@ const AdminStudentPaymentCalc = () => {
                     <SelectItem value="amount">סכום ₪</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => setCustomDiscounts(customDiscounts.filter((_, idx) => idx !== i))}>
+                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts(customDiscounts.filter((_, idx) => idx !== i)); }}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
