@@ -83,6 +83,42 @@ const AdminStudentForm = () => {
     },
   });
 
+  const { data: activeYear } = useQuery({
+    queryKey: ["active-academic-year-id"],
+    queryFn: async () => {
+      const { data } = await supabase.from("academic_years").select("id").eq("is_active", true).maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: yearRegistration } = useQuery({
+    queryKey: ["admin-student-year-registration", studentId, activeYear?.id, student?.national_id],
+    enabled: isEdit && !!activeYear?.id && !!student,
+    queryFn: async () => {
+      const nid = (student as any)?.national_id ? String((student as any).national_id).trim() : "";
+      let q = supabase
+        .from("registrations")
+        .select("id, student_status, existing_student_id, student_national_id, created_at")
+        .eq("academic_year_id", activeYear!.id)
+        .order("created_at", { ascending: false });
+      if (nid) {
+        q = q.or(`existing_student_id.eq.${studentId},student_national_id.eq.${nid}`);
+      } else {
+        q = q.eq("existing_student_id", studentId!);
+      }
+      const { data } = await q.limit(1);
+      return (data && data[0]) || null;
+    },
+  });
+
+  const normalizeRegType = (v: any): "new" | "continuing" | null => {
+    const s = String(v ?? "").trim().toLowerCase();
+    if (s === "new" || s === "חדש") return "new";
+    if (s === "continuing" || s === "ממשיך") return "continuing";
+    return null;
+  };
+
+
   useEffect(() => {
     if (student) {
       reset({
