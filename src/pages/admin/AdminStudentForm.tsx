@@ -426,7 +426,32 @@ const AdminStudentForm = () => {
               />
             </div>
 
+            {/* Registration type (new/continuing) for active year */}
+            {isEdit && (
+              <div className="space-y-1.5">
+                <Label className="text-sm">סוג רישום (שנה נוכחית)</Label>
+                <Controller
+                  name="reg_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange} disabled={!(yearRegistration as any)?.id}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="ללא סימון" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">ללא סימון</SelectItem>
+                        <SelectItem value="new">🆕 חדש</SelectItem>
+                        <SelectItem value="continuing">🔄 ממשיך</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {!(yearRegistration as any)?.id && (
+                  <p className="text-xs text-muted-foreground">ניתן לעריכה רק כשקיימת הרשמה לשנה הפעילה</p>
+                )}
+              </div>
+            )}
+
           </div>
+
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
             <Label>פעיל</Label>
