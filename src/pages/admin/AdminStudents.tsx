@@ -387,12 +387,12 @@ const AdminStudents = () => {
   const renderEnsembleBadges = (items: { id: string; ensemble_id: string; name: string }[]) => {
     if (!items.length) return null;
     return (
-      <>
+      <div className="grid grid-cols-2 gap-1.5">
         {items.map((e) => (
           <Badge
             key={e.id}
             variant="secondary"
-            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent max-w-[180px] truncate"
+            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent w-full truncate"
             onClick={(ev) => {
               ev.stopPropagation();
               navigate(`/admin/ensembles/${e.ensemble_id}`);
@@ -403,7 +403,7 @@ const AdminStudents = () => {
             <span className="truncate">{e.name}</span>
           </Badge>
         ))}
-      </>
+      </div>
     );
   };
 
