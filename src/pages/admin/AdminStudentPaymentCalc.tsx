@@ -324,27 +324,53 @@ const AdminStudentPaymentCalc = () => {
     } catch { /* ignore quota errors */ }
   }, [lsKey, selectedDiscountIds, customDiscounts, startDateOverrides]);
 
-  // Persist to server (student_payment_drafts) — debounced.
+  // Persist to server (student_payment_drafts).
+  // We keep a ref of the latest state so we can flush synchronously (e.g. right
+  // before generating a payment link) without waiting for the debounce window.
+  const draftStateRef = useRef({ selectedDiscountIds, customDiscounts, startDateOverrides });
+  useEffect(() => {
+    draftStateRef.current = { selectedDiscountIds, customDiscounts, startDateOverrides };
+  }, [selectedDiscountIds, customDiscounts, startDateOverrides]);
+
+  const saveDraftNow = async () => {
+    if (!studentId || !yearId) return;
+    const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o } = draftStateRef.current;
+    try {
+      await supabase.from("student_payment_drafts" as any).upsert(
+        {
+          student_id: studentId,
+          academic_year_id: yearId,
+          selected_discount_ids: s,
+          custom_discounts: c as any,
+          start_date_overrides: o as any,
+        },
+        { onConflict: "student_id,academic_year_id" },
+      );
+      queryClient.invalidateQueries({ queryKey: ["priv-payments-drafts"] });
+    } catch { /* ignore transient errors */ }
+  };
+
   useEffect(() => {
     if (!studentId || !yearId) return;
     if (draft === undefined) return; // wait for initial fetch
-    const handle = setTimeout(async () => {
-      try {
-        await supabase.from("student_payment_drafts" as any).upsert(
-          {
-            student_id: studentId,
-            academic_year_id: yearId,
-            selected_discount_ids: selectedDiscountIds,
-            custom_discounts: customDiscounts as any,
-            start_date_overrides: startDateOverrides as any,
-          },
-          { onConflict: "student_id,academic_year_id" },
-        );
-        queryClient.invalidateQueries({ queryKey: ["priv-payments-drafts"] });
-      } catch { /* ignore transient errors */ }
-    }, 600);
+    const handle = setTimeout(() => { void saveDraftNow(); }, 600);
     return () => clearTimeout(handle);
-  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, draft, queryClient]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, draft]);
+
+  // Best-effort flush on unmount / navigation so a fresh custom discount isn't
+  // lost if the user immediately generates a link and navigates away.
+  useEffect(() => {
+    const flush = () => { void saveDraftNow(); };
+    window.addEventListener("beforeunload", flush);
+    window.addEventListener("pagehide", flush);
+    return () => {
+      window.removeEventListener("beforeunload", flush);
+      window.removeEventListener("pagehide", flush);
+      void saveDraftNow();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [studentId, yearId]);
 
   const toggleDiscount = (id: string) => {
     setSelectedDiscountIds((prev) => {
