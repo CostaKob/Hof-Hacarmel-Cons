@@ -312,6 +312,16 @@ const AdminStudentCard = () => {
                 📘 מסלול חטיבה
               </span>
             )}
+            {registrationType === "new" && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+                🆕 חדש
+              </span>
+            )}
+            {registrationType === "continuing" && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-300">
+                🔄 ממשיך
+              </span>
+            )}
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteDialog(true)}>
