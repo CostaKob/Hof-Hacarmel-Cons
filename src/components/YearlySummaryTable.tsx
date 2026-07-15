@@ -72,15 +72,23 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
           ))}
         </TableBody>
       </Table>
+      <EnrollmentHistoryDialog
+        enrollmentId={openRow?.id ?? null}
+        studentName={openRow?.name}
+        onOpenChange={(o) => { if (!o) setOpenRow(null); }}
+      />
     </div>
   );
 };
 
 /* ── Mobile card layout ── */
 export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
+  const [openRow, setOpenRow] = useState<{ id: string; name: string } | null>(null);
+
   if (rows.length === 0) {
     return <p className="text-center text-muted-foreground py-12">לא נמצאו נתונים</p>;
   }
+
 
   return (
     <div className="space-y-3">
