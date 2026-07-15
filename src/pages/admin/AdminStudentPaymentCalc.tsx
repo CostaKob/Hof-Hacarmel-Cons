@@ -978,7 +978,7 @@ const AdminStudentPaymentCalc = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>הנחות מותאמות</Label>
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }])}>
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }]); }}>
                 <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
