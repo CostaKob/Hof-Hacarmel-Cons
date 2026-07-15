@@ -134,6 +134,7 @@ const AdminStudentForm = () => {
         grade: student.grade ?? "__none__",
         playing_level: student.playing_level ?? "__none__",
         student_status: (student as any).student_status ?? "פעיל",
+        reg_type: normalizeRegType((yearRegistration as any)?.student_status) ?? "__none__",
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
@@ -145,7 +146,8 @@ const AdminStudentForm = () => {
         is_active: student.is_active,
       });
     }
-  }, [student, reset]);
+  }, [student, yearRegistration, reset]);
+
 
   const mutation = useMutation({
     mutationFn: async (data: StudentFormData) => {
