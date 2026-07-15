@@ -1,9 +1,11 @@
+import { useState } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getMonthlyRate, getRateColorClass, type EnrollmentSummaryRow } from "@/lib/lessonCounts";
+import EnrollmentHistoryDialog from "@/components/EnrollmentHistoryDialog";
 
 interface Props {
   rows: EnrollmentSummaryRow[];
@@ -11,9 +13,12 @@ interface Props {
 }
 
 const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
+  const [openRow, setOpenRow] = useState<{ id: string; name: string } | null>(null);
+
   if (rows.length === 0) {
     return <p className="text-center text-muted-foreground py-12">לא נמצאו נתונים</p>;
   }
+
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
@@ -37,7 +42,15 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
         <TableBody>
           {rows.map((r) => (
             <TableRow key={r.enrollmentId}>
-              <TableCell className="font-medium whitespace-nowrap">{r.studentName}</TableCell>
+              <TableCell className="font-medium whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={() => setOpenRow({ id: r.enrollmentId, name: r.studentName })}
+                  className="text-primary hover:underline"
+                >
+                  {r.studentName}
+                </button>
+              </TableCell>
               {showTeacher && <TableCell className="whitespace-nowrap">{r.teacherName}</TableCell>}
               <TableCell className="whitespace-nowrap">{r.instrumentName}</TableCell>
               <TableCell className="whitespace-nowrap">{r.schoolName}</TableCell>
@@ -59,22 +72,36 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
           ))}
         </TableBody>
       </Table>
+      <EnrollmentHistoryDialog
+        enrollmentId={openRow?.id ?? null}
+        studentName={openRow?.name}
+        onOpenChange={(o) => { if (!o) setOpenRow(null); }}
+      />
     </div>
   );
 };
 
 /* ── Mobile card layout ── */
 export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
+  const [openRow, setOpenRow] = useState<{ id: string; name: string } | null>(null);
+
   if (rows.length === 0) {
     return <p className="text-center text-muted-foreground py-12">לא נמצאו נתונים</p>;
   }
+
 
   return (
     <div className="space-y-3">
       {rows.map((r) => (
         <div key={r.enrollmentId} className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-foreground">{r.studentName}</span>
+            <button
+              type="button"
+              onClick={() => setOpenRow({ id: r.enrollmentId, name: r.studentName })}
+              className="font-semibold text-primary hover:underline text-right"
+            >
+              {r.studentName}
+            </button>
             <Badge variant="outline" className={`text-[11px] ${r.isActive ? "text-primary border-primary bg-primary/10" : "text-destructive border-destructive bg-destructive/10"}`}>
               {r.isActive ? "פעיל" : "לא פעיל"}
             </Badge>
@@ -98,6 +125,11 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
           </div>
         </div>
       ))}
+      <EnrollmentHistoryDialog
+        enrollmentId={openRow?.id ?? null}
+        studentName={openRow?.name}
+        onOpenChange={(o) => { if (!o) setOpenRow(null); }}
+      />
     </div>
   );
 };
