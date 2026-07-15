@@ -1,0 +1,1 @@
+UPDATE public.enrollments SET instrument_id='b8330bb3-a1c6-4fbc-84b0-2e946f3a0bfa' WHERE id='d96ba206-0023-441f-8abe-99cdf581afc9';
