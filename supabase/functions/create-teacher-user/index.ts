@@ -91,12 +91,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate a cryptographically random password and return it to the admin caller.
-    const randomBytes = new Uint8Array(12);
-    crypto.getRandomValues(randomBytes);
-    const generatedPassword = btoa(String.fromCharCode(...randomBytes))
-      .replace(/[+/=]/g, "")
-      .slice(0, 14);
+    // Default password for all new teachers.
+    const generatedPassword = "1234";
 
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
