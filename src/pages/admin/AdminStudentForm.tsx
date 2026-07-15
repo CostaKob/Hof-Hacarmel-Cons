@@ -33,6 +33,7 @@ interface StudentFormData {
   grade: string;
   playing_level: string;
   student_status: string;
+  reg_type: string;
   parent_name: string;
   parent_phone: string;
   parent_email: string;
@@ -43,6 +44,7 @@ interface StudentFormData {
   parent_national_id_2: string;
   is_active: boolean;
 }
+
 
 const AdminStudentForm = () => {
   const { studentId } = useParams();
@@ -57,8 +59,9 @@ const AdminStudentForm = () => {
     (isEdit ? `/admin/students/${studentId}` : "/admin/students");
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל" },
+    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל", reg_type: "__none__" },
   });
+
 
   const isActive = watch("is_active");
 
@@ -80,6 +83,42 @@ const AdminStudentForm = () => {
     },
   });
 
+  const { data: activeYear } = useQuery({
+    queryKey: ["active-academic-year-id"],
+    queryFn: async () => {
+      const { data } = await supabase.from("academic_years").select("id").eq("is_active", true).maybeSingle();
+      return data;
+    },
+  });
+
+  const { data: yearRegistration } = useQuery({
+    queryKey: ["admin-student-year-registration", studentId, activeYear?.id, student?.national_id],
+    enabled: isEdit && !!activeYear?.id && !!student,
+    queryFn: async () => {
+      const nid = (student as any)?.national_id ? String((student as any).national_id).trim() : "";
+      let q = supabase
+        .from("registrations")
+        .select("id, student_status, existing_student_id, student_national_id, created_at")
+        .eq("academic_year_id", activeYear!.id)
+        .order("created_at", { ascending: false });
+      if (nid) {
+        q = q.or(`existing_student_id.eq.${studentId},student_national_id.eq.${nid}`);
+      } else {
+        q = q.eq("existing_student_id", studentId!);
+      }
+      const { data } = await q.limit(1);
+      return (data && data[0]) || null;
+    },
+  });
+
+  const normalizeRegType = (v: any): "new" | "continuing" | null => {
+    const s = String(v ?? "").trim().toLowerCase();
+    if (s === "new" || s === "חדש") return "new";
+    if (s === "continuing" || s === "ממשיך") return "continuing";
+    return null;
+  };
+
+
   useEffect(() => {
     if (student) {
       reset({
@@ -95,6 +134,7 @@ const AdminStudentForm = () => {
         grade: student.grade ?? "__none__",
         playing_level: student.playing_level ?? "__none__",
         student_status: (student as any).student_status ?? "פעיל",
+        reg_type: normalizeRegType((yearRegistration as any)?.student_status) ?? "__none__",
         parent_name: student.parent_name ?? "",
         parent_phone: student.parent_phone ?? "",
         parent_email: student.parent_email ?? "",
@@ -106,7 +146,8 @@ const AdminStudentForm = () => {
         is_active: student.is_active,
       });
     }
-  }, [student, reset]);
+  }, [student, yearRegistration, reset]);
+
 
   const mutation = useMutation({
     mutationFn: async (data: StudentFormData) => {
@@ -149,18 +190,33 @@ const AdminStudentForm = () => {
         is_active: data.is_active,
       };
 
+      let resultId: string;
       if (isEdit) {
         const { error } = await supabase.from("students").update(payload).eq("id", studentId!);
         if (error) throw error;
-        return studentId!;
+        resultId = studentId!;
       } else {
         const { data: created, error } = await supabase.from("students").insert(payload).select("id").single();
         if (error) throw error;
-        return created.id as string;
+        resultId = created.id as string;
       }
+
+      // Update reg_type on active-year registration if a row exists
+      if (isEdit && (yearRegistration as any)?.id && data.reg_type !== "__none__") {
+        const newVal = data.reg_type === "new" ? "new" : "continuing";
+        const cur = normalizeRegType((yearRegistration as any).student_status);
+        if (cur !== data.reg_type) {
+          await supabase.from("registrations").update({ student_status: newVal } as any).eq("id", (yearRegistration as any).id);
+        }
+      }
+
+      return resultId;
     },
+
     onSuccess: (newId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-year-registration"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students-registrations"] });
       toast.success(isEdit ? "התלמיד עודכן בהצלחה" : "התלמיד נוצר — הוסף רישום והשאלת כלי");
       if (isEdit) {
         navigate(returnTo);
@@ -168,6 +224,7 @@ const AdminStudentForm = () => {
         navigate(`/admin/students/${newId}`);
       }
     },
+
     onError: (e: any) => toast.error(e?.message || "שגיאה בשמירת הנתונים"),
   });
 
@@ -369,7 +426,32 @@ const AdminStudentForm = () => {
               />
             </div>
 
+            {/* Registration type (new/continuing) for active year */}
+            {isEdit && (
+              <div className="space-y-1.5">
+                <Label className="text-sm">סוג רישום (שנה נוכחית)</Label>
+                <Controller
+                  name="reg_type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange} disabled={!(yearRegistration as any)?.id}>
+                      <SelectTrigger className="h-12 rounded-xl"><SelectValue placeholder="ללא סימון" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="__none__">ללא סימון</SelectItem>
+                        <SelectItem value="new">🆕 חדש</SelectItem>
+                        <SelectItem value="continuing">🔄 ממשיך</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {!(yearRegistration as any)?.id && (
+                  <p className="text-xs text-muted-foreground">ניתן לעריכה רק כשקיימת הרשמה לשנה הפעילה</p>
+                )}
+              </div>
+            )}
+
           </div>
+
           <div className="flex items-center gap-3 pt-2">
             <Switch checked={isActive} onCheckedChange={(v) => setValue("is_active", v)} />
             <Label>פעיל</Label>
