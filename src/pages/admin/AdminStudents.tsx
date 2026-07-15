@@ -460,6 +460,21 @@ const AdminStudents = () => {
       const f = map[trackFilter];
       if (f && !s[f]) return false;
     }
+    if (regTypeFilter !== "all") {
+      const rt = getRegType(s);
+      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+    }
+    return true;
+  });
+      const map: Record<string, string> = {
+        music_production: "has_music_production_course",
+        recital: "has_recital_track",
+        major: "is_major_student",
+        junior: "is_junior_track",
+      };
+      const f = map[trackFilter];
+      if (f && !s[f]) return false;
+    }
     return true;
   });
 
