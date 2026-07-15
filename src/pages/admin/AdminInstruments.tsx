@@ -37,16 +37,24 @@ const AdminInstruments = () => {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      // Block deletion if instrument is in use
-      const [{ count: enrollCount }, { count: teacherCount }, { count: smgCount }, { count: smcgCount }] = await Promise.all([
-        supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("instrument_id", id),
-        supabase.from("teacher_instruments").select("id", { count: "exact", head: true }).eq("instrument_id", id),
-        supabase.from("school_music_groups").select("id", { count: "exact", head: true }).eq("instrument_id", id),
-        supabase.from("school_music_class_groups").select("id", { count: "exact", head: true }).eq("instrument_id", id),
+      // Block deletion if instrument is in use — fetch details, not just counts
+      const [enrollRes, teacherRes, smgRes, smcgRes] = await Promise.all([
+        supabase.from("enrollments").select("id, students(first_name, last_name), teachers(first_name, last_name)").eq("instrument_id", id),
+        supabase.from("teacher_instruments").select("id, teachers(first_name, last_name)").eq("instrument_id", id),
+        supabase.from("school_music_groups").select("id, school_music_schools(school_name)").eq("instrument_id", id),
+        supabase.from("school_music_class_groups").select("id, school_music_classes(class_name)").eq("instrument_id", id),
       ]);
-      const total = (enrollCount ?? 0) + (teacherCount ?? 0) + (smgCount ?? 0) + (smcgCount ?? 0);
-      if (total > 0) {
-        throw new Error(`לא ניתן למחוק - כלי הנגינה בשימוש (${total} רשומות). יש להסיר את השיוכים תחילה.`);
+      const enrolls = enrollRes.data || [];
+      const tis = teacherRes.data || [];
+      const smgs = smgRes.data || [];
+      const smcgs = smcgRes.data || [];
+      const parts: string[] = [];
+      if (enrolls.length) parts.push(`שיוכים (${enrolls.length}): ` + enrolls.map((e: any) => `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""} ← ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim()).join(", "));
+      if (tis.length) parts.push(`מורים (${tis.length}): ` + tis.map((t: any) => `${t.teachers?.first_name ?? ""} ${t.teachers?.last_name ?? ""}`.trim()).join(", "));
+      if (smgs.length) parts.push(`קבוצות ביס מנגן (${smgs.length}): ` + smgs.map((g: any) => g.school_music_schools?.school_name).filter(Boolean).join(", "));
+      if (smcgs.length) parts.push(`קבוצות בכיתות (${smcgs.length}): ` + smcgs.map((g: any) => g.school_music_classes?.class_name).filter(Boolean).join(", "));
+      if (parts.length > 0) {
+        throw new Error(`לא ניתן למחוק - כלי הנגינה בשימוש. ${parts.join(" | ")}`);
       }
       const { error } = await supabase.from("instruments").delete().eq("id", id);
       if (error) throw error;
