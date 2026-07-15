@@ -338,11 +338,14 @@ const AdminStudentPaymentCalc = () => {
     draftStateRef.current = { selectedDiscountIds, customDiscounts, startDateOverrides };
   }, [selectedDiscountIds, customDiscounts, startDateOverrides]);
 
-  const saveDraftNow = async () => {
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const saveDraftNow = async (opts?: { showToast?: boolean }) => {
     if (!studentId || !yearId) return;
     const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o } = draftStateRef.current;
     try {
-      await supabase.from("student_payment_drafts" as any).upsert(
+      if (opts?.showToast) setSavingDraft(true);
+      const { error } = await supabase.from("student_payment_drafts" as any).upsert(
         {
           student_id: studentId,
           academic_year_id: yearId,
@@ -352,8 +355,15 @@ const AdminStudentPaymentCalc = () => {
         },
         { onConflict: "student_id,academic_year_id" },
       );
+      if (error) throw error;
+      setLastSavedAt(new Date());
       queryClient.invalidateQueries({ queryKey: ["priv-payments-drafts"] });
-    } catch { /* ignore transient errors */ }
+      if (opts?.showToast) toast.success("החישוב נשמר");
+    } catch (e: any) {
+      if (opts?.showToast) toast.error("שמירה נכשלה: " + (e?.message || "שגיאה"));
+    } finally {
+      if (opts?.showToast) setSavingDraft(false);
+    }
   };
 
   useEffect(() => {
