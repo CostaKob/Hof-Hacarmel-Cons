@@ -61,11 +61,7 @@ Deno.serve(async (req) => {
     const failed: { teacher: string; error: string }[] = [];
     const updated: { teacher: string; email?: string; password: string }[] = [];
 
-    const generatePassword = () => {
-      const bytes = new Uint8Array(12);
-      crypto.getRandomValues(bytes);
-      return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 14);
-    };
+    const generatePassword = () => "1234";
 
     for (const t of teachers ?? []) {
       const newPassword = generatePassword();
