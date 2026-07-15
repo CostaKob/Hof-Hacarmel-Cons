@@ -33,6 +33,7 @@ interface StudentFormData {
   grade: string;
   playing_level: string;
   student_status: string;
+  reg_type: string;
   parent_name: string;
   parent_phone: string;
   parent_email: string;
@@ -43,6 +44,7 @@ interface StudentFormData {
   parent_national_id_2: string;
   is_active: boolean;
 }
+
 
 const AdminStudentForm = () => {
   const { studentId } = useParams();
