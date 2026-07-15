@@ -215,6 +215,8 @@ const AdminStudentForm = () => {
 
     onSuccess: (newId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-student-year-registration"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-students-registrations"] });
       toast.success(isEdit ? "התלמיד עודכן בהצלחה" : "התלמיד נוצר — הוסף רישום והשאלת כלי");
       if (isEdit) {
         navigate(returnTo);
@@ -222,6 +224,7 @@ const AdminStudentForm = () => {
         navigate(`/admin/students/${newId}`);
       }
     },
+
     onError: (e: any) => toast.error(e?.message || "שגיאה בשמירת הנתונים"),
   });
 
