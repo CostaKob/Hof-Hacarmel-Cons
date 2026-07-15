@@ -59,8 +59,9 @@ const AdminStudentForm = () => {
     (isEdit ? `/admin/students/${studentId}` : "/admin/students");
 
   const { register, handleSubmit, setValue, watch, reset, control, formState: { errors } } = useForm<StudentFormData>({
-    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל" },
+    defaultValues: { is_active: true, grade: "__none__", playing_level: "__none__", gender: "__none__", student_status: "פעיל", reg_type: "__none__" },
   });
+
 
   const isActive = watch("is_active");
 
