@@ -1015,7 +1015,21 @@ const AdminStudentPaymentCalc = () => {
           ) : null}
 
           {/* Generate iCount link — inside summary so context is clear */}
-          <div className="pt-3 border-t border-primary/20 flex flex-wrap justify-end gap-2">
+          <div className="pt-3 border-t border-primary/20 flex flex-wrap justify-end items-center gap-2">
+            {lastSavedAt && (
+              <span className="text-xs text-muted-foreground ml-auto">
+                נשמר {lastSavedAt.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+              </span>
+            )}
+            <Button
+              variant="outline"
+              className="h-12 rounded-xl px-5"
+              onClick={() => void saveDraftNow({ showToast: true })}
+              disabled={savingDraft}
+            >
+              {savingDraft ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : null}
+              {savingDraft ? "שומר..." : "שמור חישוב"}
+            </Button>
             <Button
               variant="outline"
               className="h-12 rounded-xl px-5"
