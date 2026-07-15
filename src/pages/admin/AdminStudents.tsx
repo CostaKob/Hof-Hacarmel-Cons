@@ -387,12 +387,12 @@ const AdminStudents = () => {
   const renderEnsembleBadges = (items: { id: string; ensemble_id: string; name: string }[]) => {
     if (!items.length) return null;
     return (
-      <>
+      <div className="grid grid-cols-2 gap-1.5">
         {items.map((e) => (
           <Badge
             key={e.id}
             variant="secondary"
-            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent max-w-[180px] truncate"
+            className="rounded-lg text-[10px] px-1.5 py-0 gap-1 cursor-pointer hover:bg-accent w-full truncate"
             onClick={(ev) => {
               ev.stopPropagation();
               navigate(`/admin/ensembles/${e.ensemble_id}`);
@@ -403,7 +403,7 @@ const AdminStudents = () => {
             <span className="truncate">{e.name}</span>
           </Badge>
         ))}
-      </>
+      </div>
     );
   };
 
@@ -806,8 +806,8 @@ const AdminStudents = () => {
                       </div>
                     </div>
                     <div className="flex flex-col items-start sm:items-end gap-1.5 sm:mr-3 w-full sm:w-auto sm:flex-1 sm:min-w-0 sm:basis-1/2">
+                      {renderEnsembleBadges(ensemblesByStudent.get(s.id) || [])}
                       <div className="flex flex-wrap justify-start sm:justify-end gap-1.5 w-full">
-                        {renderEnsembleBadges(ensemblesByStudent.get(s.id) || [])}
                         {s.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
                         {s.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
                         {s.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
@@ -917,21 +917,23 @@ const AdminStudents = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 w-full sm:w-auto sm:mr-3 shrink-0 pr-9 sm:pr-0">
+                  <div className="flex flex-col items-start sm:items-end gap-1.5 w-full sm:w-auto sm:mr-3 shrink-0 pr-9 sm:pr-0">
                     {renderEnsembleBadges(ensemblesByEnrollment.get(r.id) || [])}
-                    {r.students?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
-                    {r.students?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
-                    {r.students?.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
-                    {r.students?.has_recital_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎼 רסיטל י״ב</Badge>}
-                    <Badge
-                      variant="outline"
-                      className={`rounded-lg text-xs ${payClass}`}
-                    >
-                      {payLabel}
-                    </Badge>
-                    <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
-                      {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
-                    </Badge>
+                    <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 w-full">
+                      {r.students?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
+                      {r.students?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
+                      {r.students?.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה מוסיקלית</Badge>}
+                      {r.students?.has_recital_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎼 רסיטל י״ב</Badge>}
+                      <Badge
+                        variant="outline"
+                        className={`rounded-lg text-xs ${payClass}`}
+                      >
+                        {payLabel}
+                      </Badge>
+                      <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
+                        {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               );
