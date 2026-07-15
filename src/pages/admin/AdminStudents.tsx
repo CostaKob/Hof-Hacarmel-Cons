@@ -45,6 +45,7 @@ const AdminStudents = () => {
   const paymentFilter = searchParams.get("payment") || "all";
   const trackFilter = searchParams.get("track") || "all";
   const instrumentFilter = searchParams.get("instrument") || "all";
+  const regTypeFilter = searchParams.get("reg_type") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -131,13 +132,20 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("registrations")
-        .select("existing_student_id, student_national_id")
+        .select("existing_student_id, student_national_id, student_status, created_at")
         .eq("academic_year_id", selectedYearId);
       if (error) throw error;
       return data ?? [];
     },
     enabled: !!selectedYearId,
   });
+
+  const normalizeRegType = (v: any): "new" | "continuing" | null => {
+    const s = String(v ?? "").trim().toLowerCase();
+    if (s === "new" || s === "חדש") return "new";
+    if (s === "continuing" || s === "ממשיך") return "continuing";
+    return null;
+  };
 
   const registeredStudentIds = useMemo(() => {
     const s = new Set<string>();
@@ -154,6 +162,42 @@ const AdminStudents = () => {
     }
     return s;
   }, [yearRegistrations]);
+
+  const regTypeByStudentId = useMemo(() => {
+    const m = new Map<string, "new" | "continuing">();
+    const sorted = [...(yearRegistrations as any[])].sort((a, b) =>
+      String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+    );
+    for (const r of sorted) {
+      const t = normalizeRegType(r.student_status);
+      if (!t) continue;
+      if (r.existing_student_id && !m.has(r.existing_student_id)) m.set(r.existing_student_id, t);
+    }
+    return m;
+  }, [yearRegistrations]);
+
+  const regTypeByNationalId = useMemo(() => {
+    const m = new Map<string, "new" | "continuing">();
+    const sorted = [...(yearRegistrations as any[])].sort((a, b) =>
+      String(b.created_at ?? "").localeCompare(String(a.created_at ?? ""))
+    );
+    for (const r of sorted) {
+      const t = normalizeRegType(r.student_status);
+      if (!t) continue;
+      const nid = r.student_national_id ? String(r.student_national_id).trim() : "";
+      if (nid && !m.has(nid)) m.set(nid, t);
+    }
+    return m;
+  }, [yearRegistrations]);
+
+  const getRegType = useCallback((s: any): "new" | "continuing" | null => {
+    if (!s) return null;
+    const byId = s.id ? regTypeByStudentId.get(s.id) : undefined;
+    if (byId) return byId;
+    const nid = s.national_id ? String(s.national_id).trim() : "";
+    if (nid) return regTypeByNationalId.get(nid) ?? null;
+    return null;
+  }, [regTypeByStudentId, regTypeByNationalId]);
 
   const { data: discountTypes = [] } = useQuery({
     queryKey: ["discount-types", selectedYearId],
@@ -416,6 +460,10 @@ const AdminStudents = () => {
       const f = map[trackFilter];
       if (f && !s[f]) return false;
     }
+    if (regTypeFilter !== "all") {
+      const rt = getRegType(s);
+      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+    }
     return true;
   });
 
@@ -474,6 +522,10 @@ const AdminStudents = () => {
       if (f && !r.students?.[f]) return false;
     }
     if (instrumentFilter !== "all" && r.instruments?.name !== instrumentFilter) return false;
+    if (regTypeFilter !== "all") {
+      const rt = getRegType(r.students);
+      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+    }
     return true;
   });
 
@@ -632,6 +684,18 @@ const AdminStudents = () => {
           </SelectContent>
         </Select>
 
+        <Select value={regTypeFilter} onValueChange={(v) => setFilter("reg_type", v)}>
+          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="סוג רישום" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">סוג רישום</SelectItem>
+            <SelectItem value="new">🆕 חדש</SelectItem>
+            <SelectItem value="continuing">🔄 ממשיך</SelectItem>
+            <SelectItem value="unknown">ללא סימון</SelectItem>
+          </SelectContent>
+        </Select>
+
+
+
 
 
         {/* Status filter buttons */}
@@ -724,8 +788,14 @@ const AdminStudents = () => {
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
                       <div className="min-w-0">
-                        <p className="font-semibold text-foreground">
-                          {s.first_name} {s.last_name}
+                        <p className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
+                          <span>{s.first_name} {s.last_name}</span>
+                          {(() => {
+                            const rt = getRegType(s);
+                            if (rt === "new") return <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 text-emerald-700 border-emerald-400 bg-emerald-50">🆕 חדש</Badge>;
+                            if (rt === "continuing") return <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 text-sky-700 border-sky-400 bg-sky-50">🔄 ממשיך</Badge>;
+                            return null;
+                          })()}
                         </p>
                         <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
                           {s.national_id && <span>ת.ז {s.national_id}</span>}
@@ -804,8 +874,14 @@ const AdminStudents = () => {
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <span className="text-xs text-muted-foreground w-6 shrink-0 text-center pt-0.5">{index + 1}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground">
-                        {r.students?.first_name} {r.students?.last_name}
+                      <p className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
+                        <span>{r.students?.first_name} {r.students?.last_name}</span>
+                        {(() => {
+                          const rt = getRegType(r.students);
+                          if (rt === "new") return <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 text-emerald-700 border-emerald-400 bg-emerald-50">🆕 חדש</Badge>;
+                          if (rt === "continuing") return <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 text-sky-700 border-sky-400 bg-sky-50">🔄 ממשיך</Badge>;
+                          return null;
+                        })()}
                       </p>
                       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         <span>{r.instruments?.name}</span>

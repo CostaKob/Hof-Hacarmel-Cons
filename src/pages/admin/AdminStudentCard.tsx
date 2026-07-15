@@ -174,6 +174,35 @@ const AdminStudentCard = () => {
     },
   });
 
+  const { data: yearRegistrationForStudent } = useQuery({
+    queryKey: ["admin-student-year-registration", studentId, selectedYearId, (student as any)?.national_id],
+    enabled: !!studentId && !!selectedYearId,
+    queryFn: async () => {
+      const nid = (student as any)?.national_id ? String((student as any).national_id).trim() : "";
+      let q = supabase
+        .from("registrations")
+        .select("student_status, created_at")
+        .eq("academic_year_id", selectedYearId!)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (nid) {
+        q = q.or(`existing_student_id.eq.${studentId},student_national_id.eq.${nid}`);
+      } else {
+        q = q.eq("existing_student_id", studentId!);
+      }
+      const { data, error } = await q;
+      if (error) return null;
+      return (data && data[0]) ?? null;
+    },
+  });
+
+  const registrationType: "new" | "continuing" | null = (() => {
+    const v = String((yearRegistrationForStudent as any)?.student_status ?? "").trim().toLowerCase();
+    if (v === "new" || v === "חדש") return "new";
+    if (v === "continuing" || v === "ממשיך") return "continuing";
+    return null;
+  })();
+
   const { data: enrollments = [] } = useQuery({
     queryKey: ["admin-student-enrollments", studentId, selectedYearId],
     queryFn: async () => {
@@ -281,6 +310,16 @@ const AdminStudentCard = () => {
             {(student as any).is_junior_track && (
               <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-200">
                 📘 מסלול חטיבה
+              </span>
+            )}
+            {registrationType === "new" && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+                🆕 חדש
+              </span>
+            )}
+            {registrationType === "continuing" && (
+              <span className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-sky-100 text-sky-700 border border-sky-300">
+                🔄 ממשיך
               </span>
             )}
           </div>
