@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const failed: { teacher: string; error: string }[] = [];
     const updated: { teacher: string; email?: string; password: string }[] = [];
 
-    const generatePassword = () => "1234";
+    const generatePassword = () => "123456";
 
     for (const t of teachers ?? []) {
       const newPassword = generatePassword();

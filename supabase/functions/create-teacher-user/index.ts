@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
     }
 
     // Default password for all new teachers.
-    const generatedPassword = "1234";
+    const generatedPassword = "123456";
 
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
