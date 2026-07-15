@@ -190,16 +190,29 @@ const AdminStudentForm = () => {
         is_active: data.is_active,
       };
 
+      let resultId: string;
       if (isEdit) {
         const { error } = await supabase.from("students").update(payload).eq("id", studentId!);
         if (error) throw error;
-        return studentId!;
+        resultId = studentId!;
       } else {
         const { data: created, error } = await supabase.from("students").insert(payload).select("id").single();
         if (error) throw error;
-        return created.id as string;
+        resultId = created.id as string;
       }
+
+      // Update reg_type on active-year registration if a row exists
+      if (isEdit && (yearRegistration as any)?.id && data.reg_type !== "__none__") {
+        const newVal = data.reg_type === "new" ? "new" : "continuing";
+        const cur = normalizeRegType((yearRegistration as any).student_status);
+        if (cur !== data.reg_type) {
+          await supabase.from("registrations").update({ student_status: newVal } as any).eq("id", (yearRegistration as any).id);
+        }
+      }
+
+      return resultId;
     },
+
     onSuccess: (newId) => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       toast.success(isEdit ? "התלמיד עודכן בהצלחה" : "התלמיד נוצר — הוסף רישום והשאלת כלי");
