@@ -78,9 +78,10 @@ Deno.serve(async (req) => {
       });
 
     if (updateError) {
+      console.error("updateUserById error:", updateError);
       return new Response(
         JSON.stringify({ error: `שגיאה באיפוס סיסמה: ${updateError.message}` }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
