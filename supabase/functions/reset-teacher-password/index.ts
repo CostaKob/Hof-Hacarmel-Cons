@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     }
 
     // Default reset password.
-    const generatedPassword = "1234";
+    const generatedPassword = "123456";
 
     const { error: updateError } =
       await supabaseAdmin.auth.admin.updateUserById(teacher.user_id, {
