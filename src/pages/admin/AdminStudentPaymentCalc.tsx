@@ -224,13 +224,19 @@ const AdminStudentPaymentCalc = () => {
   // Hydrate from server draft (highest priority besides pending payment)
   useEffect(() => {
     if (hydratedFromDraft || !draft) return;
+    const hasContent =
+      (Array.isArray(draft.selected_discount_ids) && draft.selected_discount_ids.length > 0) ||
+      (Array.isArray(draft.custom_discounts) && draft.custom_discounts.length > 0) ||
+      (draft.start_date_overrides && typeof draft.start_date_overrides === "object" && Object.keys(draft.start_date_overrides).length > 0);
     if (Array.isArray(draft.selected_discount_ids)) setSelectedDiscountIds(draft.selected_discount_ids);
     if (Array.isArray(draft.custom_discounts)) setCustomDiscounts(draft.custom_discounts as any);
     if (draft.start_date_overrides && typeof draft.start_date_overrides === "object") {
       setStartDateOverrides(draft.start_date_overrides as any);
     }
     setHydratedFromDraft(true);
-    setHydratedFromPending(true);
+    // Only block payment-breakdown hydration if the draft actually has content —
+    // otherwise a past link's snapshot (with its custom discount) is our source of truth.
+    if (hasContent) setHydratedFromPending(true);
   }, [draft, hydratedFromDraft]);
 
   // Hydrate from legacy localStorage keys once discountTypes are loaded
