@@ -42,7 +42,15 @@ const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
         <TableBody>
           {rows.map((r) => (
             <TableRow key={r.enrollmentId}>
-              <TableCell className="font-medium whitespace-nowrap">{r.studentName}</TableCell>
+              <TableCell className="font-medium whitespace-nowrap">
+                <button
+                  type="button"
+                  onClick={() => setOpenRow({ id: r.enrollmentId, name: r.studentName })}
+                  className="text-primary hover:underline"
+                >
+                  {r.studentName}
+                </button>
+              </TableCell>
               {showTeacher && <TableCell className="whitespace-nowrap">{r.teacherName}</TableCell>}
               <TableCell className="whitespace-nowrap">{r.instrumentName}</TableCell>
               <TableCell className="whitespace-nowrap">{r.schoolName}</TableCell>
