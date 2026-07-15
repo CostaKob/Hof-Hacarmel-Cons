@@ -874,8 +874,14 @@ const AdminStudents = () => {
                   <div className="flex items-start gap-3 flex-1 min-w-0">
                     <span className="text-xs text-muted-foreground w-6 shrink-0 text-center pt-0.5">{index + 1}</span>
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-foreground">
-                        {r.students?.first_name} {r.students?.last_name}
+                      <p className="font-semibold text-foreground flex items-center gap-1.5 flex-wrap">
+                        <span>{r.students?.first_name} {r.students?.last_name}</span>
+                        {(() => {
+                          const rt = getRegType(r.students);
+                          if (rt === "new") return <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 text-emerald-700 border-emerald-400 bg-emerald-50">🆕 חדש</Badge>;
+                          if (rt === "continuing") return <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 text-sky-700 border-sky-400 bg-sky-50">🔄 ממשיך</Badge>;
+                          return null;
+                        })()}
                       </p>
                       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         <span>{r.instruments?.name}</span>
