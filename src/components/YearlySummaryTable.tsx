@@ -95,7 +95,13 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
       {rows.map((r) => (
         <div key={r.enrollmentId} className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-semibold text-foreground">{r.studentName}</span>
+            <button
+              type="button"
+              onClick={() => setOpenRow({ id: r.enrollmentId, name: r.studentName })}
+              className="font-semibold text-primary hover:underline text-right"
+            >
+              {r.studentName}
+            </button>
             <Badge variant="outline" className={`text-[11px] ${r.isActive ? "text-primary border-primary bg-primary/10" : "text-destructive border-destructive bg-destructive/10"}`}>
               {r.isActive ? "פעיל" : "לא פעיל"}
             </Badge>
@@ -119,6 +125,11 @@ export const YearlySummaryCards = ({ rows, showTeacher = false }: Props) => {
           </div>
         </div>
       ))}
+      <EnrollmentHistoryDialog
+        enrollmentId={openRow?.id ?? null}
+        studentName={openRow?.name}
+        onOpenChange={(o) => { if (!o) setOpenRow(null); }}
+      />
     </div>
   );
 };
