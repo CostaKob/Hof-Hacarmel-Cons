@@ -1,9 +1,11 @@
+import { useState } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getMonthlyRate, getRateColorClass, type EnrollmentSummaryRow } from "@/lib/lessonCounts";
+import EnrollmentHistoryDialog from "@/components/EnrollmentHistoryDialog";
 
 interface Props {
   rows: EnrollmentSummaryRow[];
@@ -11,9 +13,12 @@ interface Props {
 }
 
 const YearlySummaryTable = ({ rows, showTeacher = false }: Props) => {
+  const [openRow, setOpenRow] = useState<{ id: string; name: string } | null>(null);
+
   if (rows.length === 0) {
     return <p className="text-center text-muted-foreground py-12">לא נמצאו נתונים</p>;
   }
+
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
