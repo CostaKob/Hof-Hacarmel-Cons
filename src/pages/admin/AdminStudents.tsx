@@ -522,6 +522,10 @@ const AdminStudents = () => {
       if (f && !r.students?.[f]) return false;
     }
     if (instrumentFilter !== "all" && r.instruments?.name !== instrumentFilter) return false;
+    if (regTypeFilter !== "all") {
+      const rt = getRegType(r.students);
+      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+    }
     return true;
   });
 
