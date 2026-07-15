@@ -637,6 +637,10 @@ const AdminStudentPaymentCalc = () => {
     if (balance <= 0) return;
     setGeneratingLink(true);
     try {
+      // Flush the calc state (discounts, custom discounts, date overrides) to
+      // the server BEFORE creating the link, so the exact snapshot the user
+      // sees is preserved and can't be lost by the debounced save.
+      await saveDraftNow();
       const data = await callGeneratePaylink();
       setGeneratedPaymentData(data);
       try { await navigator.clipboard.writeText(data.url); } catch { /* clipboard may be unavailable */ }
