@@ -195,6 +195,49 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fire-and-forget notification to the studio admin inbox.
+    // Uses a distinct subject prefix "[הרשמה חדשה]" so Gmail filters can route it out of the main inbox.
+    try {
+      const adminIdempotencyKey = `admin-new-registration-${registrationId}`;
+      await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${SERVICE_ROLE}`,
+          apikey: SERVICE_ROLE,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          templateName: "admin-new-registration",
+          recipientEmail: "musichof@gmail.com",
+          idempotencyKey: adminIdempotencyKey,
+          messageId: adminIdempotencyKey,
+          replyTo: parentEmail || undefined,
+          templateData: {
+            studentName,
+            studentNationalId: (reg as any).student_national_id || "",
+            parentName,
+            parentPhone: (reg as any).parent_phone || "",
+            parentEmail: parentEmail || "",
+            yearName,
+            branch,
+            instruments,
+            lessonDuration,
+            grade: (reg as any).grade || "",
+            city: (reg as any).city || "",
+            studentPhone: (reg as any).student_phone || "",
+            studentSchool: (reg as any).student_school_text || (reg as any).educational_school || "",
+            notes: (reg as any).notes || "",
+            wantsMusicProduction: !!(reg as any).wants_music_production,
+            wantsRecitalTrack: !!(reg as any).wants_recital_track,
+            submittedAt,
+            registrationUrl: "https://musichof.com",
+          },
+        }),
+      });
+    } catch (adminErr) {
+      console.error("admin-new-registration send failed:", adminErr);
+    }
+
     return new Response(JSON.stringify({ ok: true, sheetsSynced, result: body }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
