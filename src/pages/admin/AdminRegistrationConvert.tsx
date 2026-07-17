@@ -246,7 +246,7 @@ const AdminRegistrationConvert = () => {
     // Determine duration from registration
     let duration = "45";
     if (r.requested_lesson_duration) {
-      const d = r.requested_lesson_duration.replace(/[^\\d]/g, "");
+      const d = String(r.requested_lesson_duration).replace(/\D/g, "");
       if (["30", "45", "60"].includes(d)) duration = d;
     }
 
