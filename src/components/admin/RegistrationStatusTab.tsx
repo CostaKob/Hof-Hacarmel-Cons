@@ -27,7 +27,7 @@ const RegistrationStatusTab = () => {
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "registered" | "pending">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "registered" | "pending" | "graduated">("all");
 
   // Previous year enrollments
   const { data: prevEnrollments = [], isLoading: prevLoading } = useQuery({
