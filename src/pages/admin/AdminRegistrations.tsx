@@ -118,7 +118,15 @@ const AdminRegistrations = () => {
   return (
     <AdminLayout title="הרשמות" backPath="/admin">
       <PageTitle title="ניהול הרשמות" />
-      <div className="space-y-4">
+      <Tabs dir="rtl" defaultValue="registrations" className="flex flex-col gap-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="registrations">הרשמות</TabsTrigger>
+          <TabsTrigger value="status">מצב הרשמה</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="registrations" className="mt-0">
+          <div className="space-y-4">
+
 
         {/* Search + Actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
