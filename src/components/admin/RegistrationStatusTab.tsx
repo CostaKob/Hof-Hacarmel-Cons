@@ -271,7 +271,15 @@ const RegistrationStatusTab = () => {
             {instrumentOptions.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={gradeFilter} onValueChange={setGradeFilter}>
+          <SelectTrigger className="w-36 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">כל הכיתות</SelectItem>
+            {gradeOptions.map((g) => <SelectItem key={g} value={g}>כיתה {g}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
+
 
       {/* List */}
       {prevLoading ? (
