@@ -14,6 +14,8 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import RegistrationStatusTab from "@/components/admin/RegistrationStatusTab";
 
 // Count potential enrollment slots from requested instruments.
 // Guitar and bass guitar are separate slots (2). Classical/electric guitar variants share one slot.
@@ -116,7 +118,15 @@ const AdminRegistrations = () => {
   return (
     <AdminLayout title="הרשמות" backPath="/admin">
       <PageTitle title="ניהול הרשמות" />
-      <div className="space-y-4">
+      <Tabs dir="rtl" defaultValue="registrations" className="flex flex-col gap-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="registrations">הרשמות</TabsTrigger>
+          <TabsTrigger value="status">מצב הרשמה</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="registrations" className="mt-0">
+          <div className="space-y-4">
+
 
         {/* Search + Actions */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -338,8 +348,15 @@ const AdminRegistrations = () => {
             })}
           </div>
         )}
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="status" className="mt-0">
+          <RegistrationStatusTab />
+        </TabsContent>
+      </Tabs>
     </AdminLayout>
+
   );
 };
 
