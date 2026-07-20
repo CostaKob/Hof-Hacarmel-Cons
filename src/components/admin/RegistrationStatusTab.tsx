@@ -27,7 +27,7 @@ const RegistrationStatusTab = () => {
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "registered" | "pending">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "registered" | "pending" | "graduated">("all");
 
   // Previous year enrollments
   const { data: prevEnrollments = [], isLoading: prevLoading } = useQuery({
@@ -119,9 +119,11 @@ const RegistrationStatusTab = () => {
     }
     return Array.from(map.values()).map((s) => ({
       ...s,
+      isGraduated: s.previousGrade === "יב",
       isRegistered: (s.nationalId && registeredNids.has(s.nationalId)) || registeredStudentIds.has(s.studentId),
     }));
   }, [prevEnrollments, registeredNids, registeredStudentIds]);
+
 
   const teacherOptions = useMemo(() => {
     const set = new Set<string>();
@@ -144,8 +146,9 @@ const RegistrationStatusTab = () => {
   const filtered = useMemo(() => {
     return students
       .filter((s) => {
-        if (statusFilter === "registered" && !s.isRegistered) return false;
-        if (statusFilter === "pending" && s.isRegistered) return false;
+        if (statusFilter === "registered" && (!s.isRegistered || s.isGraduated)) return false;
+        if (statusFilter === "pending" && (s.isRegistered || s.isGraduated)) return false;
+        if (statusFilter === "graduated" && !s.isGraduated) return false;
         if (teacherFilter !== "all" && !s.enrollments.some((e: any) => e.teacherName === teacherFilter)) return false;
         if (schoolFilter !== "all" && !s.enrollments.some((e: any) => e.schoolName === schoolFilter)) return false;
         if (instrumentFilter !== "all" && !s.enrollments.some((e: any) => e.instrumentName === instrumentFilter)) return false;
@@ -157,15 +160,17 @@ const RegistrationStatusTab = () => {
         return true;
       })
       .sort((a, b) => {
-        const aGrad = a.previousGrade === "יב" ? 1 : 0;
-        const bGrad = b.previousGrade === "יב" ? 1 : 0;
+        const aGrad = a.isGraduated ? 1 : 0;
+        const bGrad = b.isGraduated ? 1 : 0;
         if (aGrad !== bGrad) return aGrad - bGrad;
         return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, "he");
       });
   }, [students, statusFilter, teacherFilter, schoolFilter, instrumentFilter, search]);
 
-  const registeredCount = students.filter((s) => s.isRegistered).length;
-  const pendingCount = students.length - registeredCount;
+  const graduatedCount = students.filter((s) => s.isGraduated).length;
+  const registeredCount = students.filter((s) => s.isRegistered && !s.isGraduated).length;
+  const pendingCount = students.filter((s) => !s.isRegistered && !s.isGraduated).length;
+
 
   if (!previousYear) {
     return (
@@ -185,7 +190,7 @@ const RegistrationStatusTab = () => {
           <span className="text-muted-foreground"> לשנת </span>
           <span className="font-semibold">{activeYear?.name}</span>
         </div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <button
             type="button"
             onClick={() => setStatusFilter("all")}
@@ -210,7 +215,16 @@ const RegistrationStatusTab = () => {
             <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{pendingCount}</div>
             <div className="text-xs text-amber-700 dark:text-amber-400">עדיין לא</div>
           </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter("graduated")}
+            className={`rounded-xl px-3 py-2.5 text-center border transition ${statusFilter === "graduated" ? "bg-muted border-border" : "bg-muted/30 border-transparent"}`}
+          >
+            <div className="text-2xl font-bold text-muted-foreground">{graduatedCount}</div>
+            <div className="text-xs text-muted-foreground">סיימו לימודים</div>
+          </button>
         </div>
+
       </div>
 
       {/* Search + filters */}
@@ -306,12 +320,15 @@ const RegistrationStatusTab = () => {
                   )}
                 </div>
                 <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${
-                  s.isRegistered
+                  isGraduated
+                    ? "bg-muted text-muted-foreground border border-border"
+                    : s.isRegistered
                     ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                     : "bg-amber-100 text-amber-700 border border-amber-200"
                 }`}>
-                  {s.isRegistered ? "נרשם" : "טרם נרשם"}
+                  {isGraduated ? "סיים לימודים" : s.isRegistered ? "נרשם" : "טרם נרשם"}
                 </span>
+
               </button>
             );
           })}
