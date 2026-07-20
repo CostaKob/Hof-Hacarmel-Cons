@@ -14,6 +14,8 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import RegistrationStatusTab from "@/components/admin/RegistrationStatusTab";
 
 // Count potential enrollment slots from requested instruments.
 // Guitar and bass guitar are separate slots (2). Classical/electric guitar variants share one slot.
