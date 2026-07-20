@@ -348,8 +348,15 @@ const AdminRegistrations = () => {
             })}
           </div>
         )}
-      </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="status" className="mt-0">
+          <RegistrationStatusTab />
+        </TabsContent>
+      </Tabs>
     </AdminLayout>
+
   );
 };
 
