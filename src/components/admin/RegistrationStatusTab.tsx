@@ -320,12 +320,15 @@ const RegistrationStatusTab = () => {
                   )}
                 </div>
                 <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${
-                  s.isRegistered
+                  isGraduated
+                    ? "bg-muted text-muted-foreground border border-border"
+                    : s.isRegistered
                     ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
                     : "bg-amber-100 text-amber-700 border border-amber-200"
                 }`}>
-                  {s.isRegistered ? "נרשם" : "טרם נרשם"}
+                  {isGraduated ? "סיים לימודים" : s.isRegistered ? "נרשם" : "טרם נרשם"}
                 </span>
+
               </button>
             );
           })}
