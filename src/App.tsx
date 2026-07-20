@@ -94,7 +94,10 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={["admin"]}>{children}</ProtectedRoute>
 );
 const TeacherRoute = ({ children }: { children: React.ReactNode }) => (
-  <ProtectedRoute allowedRoles={["teacher"]}>{children}</ProtectedRoute>
+  <ProtectedRoute allowedRoles={["teacher"]}>
+    {children}
+    <TeacherBottomNav />
+  </ProtectedRoute>
 );
 
 const App = () => (
