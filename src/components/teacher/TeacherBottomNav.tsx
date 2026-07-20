@@ -26,8 +26,8 @@ const TeacherBottomNav = () => {
 
   return (
     <>
-      <div className="h-20 md:hidden" aria-hidden />
-      <nav className="fixed bottom-0 left-0 right-0 z-30 flex border-t border-border bg-card shadow-lg md:hidden safe-area-pb">
+      <div className="h-24 md:hidden" aria-hidden />
+      <nav className="fixed bottom-3 left-3 right-3 z-30 flex rounded-full border border-border bg-card/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl md:hidden safe-area-pb">
         {items.map((item) => {
           const isActive = item.exact
             ? location.pathname === item.path
@@ -36,8 +36,8 @@ const TeacherBottomNav = () => {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition-colors ${
-                isActive ? "text-primary" : "text-muted-foreground"
+              className={`flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-medium transition-colors ${
+                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground"
               }`}
             >
               <item.icon className="h-5 w-5" />
@@ -48,6 +48,7 @@ const TeacherBottomNav = () => {
       </nav>
     </>
   );
+
 };
 
 export default TeacherBottomNav;
