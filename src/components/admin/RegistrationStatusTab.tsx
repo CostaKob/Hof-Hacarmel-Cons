@@ -146,8 +146,9 @@ const RegistrationStatusTab = () => {
   const filtered = useMemo(() => {
     return students
       .filter((s) => {
-        if (statusFilter === "registered" && !s.isRegistered) return false;
-        if (statusFilter === "pending" && s.isRegistered) return false;
+        if (statusFilter === "registered" && (!s.isRegistered || s.isGraduated)) return false;
+        if (statusFilter === "pending" && (s.isRegistered || s.isGraduated)) return false;
+        if (statusFilter === "graduated" && !s.isGraduated) return false;
         if (teacherFilter !== "all" && !s.enrollments.some((e: any) => e.teacherName === teacherFilter)) return false;
         if (schoolFilter !== "all" && !s.enrollments.some((e: any) => e.schoolName === schoolFilter)) return false;
         if (instrumentFilter !== "all" && !s.enrollments.some((e: any) => e.instrumentName === instrumentFilter)) return false;
@@ -159,15 +160,17 @@ const RegistrationStatusTab = () => {
         return true;
       })
       .sort((a, b) => {
-        const aGrad = a.previousGrade === "יב" ? 1 : 0;
-        const bGrad = b.previousGrade === "יב" ? 1 : 0;
+        const aGrad = a.isGraduated ? 1 : 0;
+        const bGrad = b.isGraduated ? 1 : 0;
         if (aGrad !== bGrad) return aGrad - bGrad;
         return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, "he");
       });
   }, [students, statusFilter, teacherFilter, schoolFilter, instrumentFilter, search]);
 
-  const registeredCount = students.filter((s) => s.isRegistered).length;
-  const pendingCount = students.length - registeredCount;
+  const graduatedCount = students.filter((s) => s.isGraduated).length;
+  const registeredCount = students.filter((s) => s.isRegistered && !s.isGraduated).length;
+  const pendingCount = students.filter((s) => !s.isRegistered && !s.isGraduated).length;
+
 
   if (!previousYear) {
     return (
