@@ -145,6 +145,13 @@ const RegistrationStatusTab = () => {
     return Array.from(set).sort((a, b) => a.localeCompare(b, "he"));
   }, [students]);
 
+  const GRADE_ORDER = ["א","ב","ג","ד","ה","ו","ז","ח","ט","י","יא","יב"];
+  const gradeOptions = useMemo(() => {
+    const set = new Set<string>();
+    students.forEach((s: any) => { if (s.previousGrade) set.add(s.previousGrade); });
+    return Array.from(set).sort((a, b) => GRADE_ORDER.indexOf(a) - GRADE_ORDER.indexOf(b));
+  }, [students]);
+
   const filtered = useMemo(() => {
     return students
       .filter((s) => {
@@ -154,6 +161,7 @@ const RegistrationStatusTab = () => {
         if (teacherFilter !== "all" && !s.enrollments.some((e: any) => e.teacherName === teacherFilter)) return false;
         if (schoolFilter !== "all" && !s.enrollments.some((e: any) => e.schoolName === schoolFilter)) return false;
         if (instrumentFilter !== "all" && !s.enrollments.some((e: any) => e.instrumentName === instrumentFilter)) return false;
+        if (gradeFilter !== "all" && s.previousGrade !== gradeFilter) return false;
         if (search) {
           const q = search.toLowerCase().trim();
           const hay = `${s.firstName} ${s.lastName} ${s.nationalId} ${s.parentPhone ?? ""} ${s.phone ?? ""} ${s.enrollments.map((e: any) => `${e.teacherName} ${e.instrumentName} ${e.schoolName}`).join(" ")}`.toLowerCase();
@@ -167,7 +175,8 @@ const RegistrationStatusTab = () => {
         if (aGrad !== bGrad) return aGrad - bGrad;
         return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`, "he");
       });
-  }, [students, statusFilter, teacherFilter, schoolFilter, instrumentFilter, search]);
+  }, [students, statusFilter, teacherFilter, schoolFilter, instrumentFilter, gradeFilter, search]);
+
 
   const graduatedCount = students.filter((s) => s.isGraduated).length;
   const registeredCount = students.filter((s) => s.isRegistered && !s.isGraduated).length;
