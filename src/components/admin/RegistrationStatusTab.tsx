@@ -119,9 +119,11 @@ const RegistrationStatusTab = () => {
     }
     return Array.from(map.values()).map((s) => ({
       ...s,
+      isGraduated: s.previousGrade === "יב",
       isRegistered: (s.nationalId && registeredNids.has(s.nationalId)) || registeredStudentIds.has(s.studentId),
     }));
   }, [prevEnrollments, registeredNids, registeredStudentIds]);
+
 
   const teacherOptions = useMemo(() => {
     const set = new Set<string>();
