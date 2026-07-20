@@ -181,12 +181,12 @@
   -webkit-backdrop-filter: blur(14px) saturate(160%);
 }
 
-/* Inputs and form controls — frosted */
+/* Page background — solid (no backdrop-filter here; it would create a
+   containing block and break `position: fixed` for the floating bottom nav). */
 .bg-background {
-  background-color: hsl(var(--background) / 0.6);
-  backdrop-filter: blur(10px) saturate(150%);
-  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  background-color: hsl(var(--background));
 }
+
 
 /* Mobile bottom nav (uses bg-card already, but ensure heavier blur) */
 nav.bg-card {
