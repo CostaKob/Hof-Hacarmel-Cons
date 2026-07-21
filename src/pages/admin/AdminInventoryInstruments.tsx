@@ -383,13 +383,9 @@ const AdminInventoryInstruments = () => {
                       <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
                         {CONDITION_LABELS[it.condition as InstrumentCondition]}
                       </Badge>
-                      {verifiedToday ? (
+                      {verifiedAt ? (
                         <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px] gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> נבדק היום
-                        </Badge>
-                      ) : verifiedAt ? (
-                        <Badge variant="outline" className="text-[10px] gap-1">
-                          נבדק {format(verifiedAt, "dd/MM/yy")}
+                          <CheckCircle2 className="h-3 w-3" /> נבדק
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] gap-1">
