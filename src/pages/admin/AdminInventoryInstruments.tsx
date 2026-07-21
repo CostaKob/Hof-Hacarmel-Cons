@@ -412,11 +412,11 @@ const AdminInventoryInstruments = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-9 w-9 ${verifiedToday ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
-                      title="סמן כנבדק"
+                      className={`h-9 w-9 ${verifiedAt ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
+                      title={verifiedAt ? "בטל סימון" : "סמן כנבדק"}
                       onClick={(e) => {
                         e.stopPropagation();
-                        verifyMutation.mutate([it.id]);
+                        verifyMutation.mutate({ ids: [it.id], verified: !verifiedAt });
                       }}
                       disabled={verifyMutation.isPending}
                     >
