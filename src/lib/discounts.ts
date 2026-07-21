@@ -75,6 +75,13 @@ export function computeStandardDiscounts(
 
   for (const d of selected) {
     const pct = Number(d.percentage) || 0;
+    const override = overridesByDiscountId[d.id];
+    const discountedIds =
+      d.applies_to === "cheapest_enrollment"
+        ? (Array.isArray(override) && override.length > 0
+            ? override.filter((id) => rows.some((r) => r.enrollmentId === id))
+            : autoDiscountedIds)
+        : [];
     if (!pct) {
       lines.push({
         discountTypeId: d.id,
@@ -88,7 +95,6 @@ export function computeStandardDiscounts(
     }
     if (d.applies_to === "cheapest_enrollment") {
       if (discountedIds.length === 0) {
-        // Needs 2+ enrollments — skip
         lines.push({
           discountTypeId: d.id,
           label: d.label,
@@ -114,6 +120,7 @@ export function computeStandardDiscounts(
         amount: Math.round(amount) / 100,
       });
     } else {
+
       let amount = 0;
       for (const r of rows) {
         perEnrollmentPct.set(r.enrollmentId, (perEnrollmentPct.get(r.enrollmentId) ?? 0) + pct);
