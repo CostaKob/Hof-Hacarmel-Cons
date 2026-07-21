@@ -37,6 +37,7 @@ const AdminInventoryInstrumentForm = () => {
   const [editingLoanId, setEditingLoanId] = useState<string | null>(null);
   const [editLoanDate, setEditLoanDate] = useState("");
   const [editReturnDate, setEditReturnDate] = useState("");
+  const [verifyNotes, setVerifyNotes] = useState("");
 
   const updateLoanMutation = useMutation({
     mutationFn: async ({ loanId, loan_date, return_date }: { loanId: string; loan_date: string; return_date: string | null }) => {
