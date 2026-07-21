@@ -391,9 +391,19 @@ const AdminInventoryInstruments = () => {
                         {CONDITION_LABELS[it.condition as InstrumentCondition]}
                       </Badge>
                       {verifiedAt ? (
-                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px] gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> נבדק
-                        </Badge>
+                        <>
+                          <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px] gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> נבדק
+                          </Badge>
+                          {it.last_verified_status === "ok" && (
+                            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px]">תקין</Badge>
+                          )}
+                          {(it.last_verified_status === "needs_attention" || it.last_verified_status === "needs_repair" || it.last_verified_status === "needs_completion") && (
+                            <Badge variant="outline" className="bg-amber-100 text-amber-800 border-amber-200 text-[10px] gap-1">
+                              <AlertTriangle className="h-3 w-3" /> צריך תיקון/השלמות
+                            </Badge>
+                          )}
+                        </>
                       ) : (
                         <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] gap-1">
                           <Circle className="h-3 w-3" /> טרם נבדק
@@ -413,22 +423,54 @@ const AdminInventoryInstruments = () => {
                           {it._borrower_school ? ` · ${it._borrower_school}` : ""}
                         </span>
                       )}
+                      {verifiedAt && it.last_verified_notes && (
+                        <span className="w-full text-amber-800">📝 {it.last_verified_notes}</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-9 w-9 ${verifiedAt ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
-                      title={verifiedAt ? "בטל סימון" : "סמן כנבדק"}
+                      className="h-9 w-9 text-green-700 hover:bg-green-100"
+                      title="נבדק - תקין"
                       onClick={(e) => {
                         e.stopPropagation();
-                        verifyMutation.mutate({ ids: [it.id], verified: !verifiedAt });
+                        verifyMutation.mutate({ ids: [it.id], verified: true, status: "ok", notes: null });
                       }}
                       disabled={verifyMutation.isPending}
                     >
                       <CheckCircle2 className="h-4 w-4" />
                     </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-amber-700 hover:bg-amber-100"
+                      title="צריך תיקון/השלמות"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAttentionNotes(it.last_verified_notes || "");
+                        setAttentionFor({ id: it.id, serial: it.serial_number });
+                      }}
+                      disabled={verifyMutation.isPending}
+                    >
+                      <AlertTriangle className="h-4 w-4" />
+                    </Button>
+                    {verifiedAt && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-muted-foreground hover:bg-muted"
+                        title="בטל סימון"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          verifyMutation.mutate({ ids: [it.id], verified: false });
+                        }}
+                        disabled={verifyMutation.isPending}
+                      >
+                        <Circle className="h-4 w-4" />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
