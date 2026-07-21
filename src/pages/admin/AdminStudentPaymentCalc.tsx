@@ -293,11 +293,15 @@ const AdminStudentPaymentCalc = () => {
     if (draft.start_date_overrides && typeof draft.start_date_overrides === "object") {
       setStartDateOverrides(draft.start_date_overrides as any);
     }
+    if (draft.discount_enrollment_overrides && typeof draft.discount_enrollment_overrides === "object") {
+      setDiscountEnrollmentOverrides(draft.discount_enrollment_overrides as any);
+    }
     setHydratedFromDraft(true);
     // Only block payment-breakdown hydration if the draft actually has content —
     // otherwise a past link's snapshot (with its custom discount) is our source of truth.
     if (hasContent && draftCustomDiscounts.length > 0) setHydratedFromPending(true);
   }, [draft, hydratedFromDraft, paymentDiscountSnapshot]);
+
 
   // Hydrate from legacy localStorage keys once discountTypes are loaded
   useEffect(() => {
