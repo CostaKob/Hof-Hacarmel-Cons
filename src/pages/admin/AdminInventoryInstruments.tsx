@@ -132,17 +132,18 @@ const AdminInventoryInstruments = () => {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
+    mutationFn: async ({ ids, verified }: { ids: string[]; verified: boolean }) => {
       const { data: userRes } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from("inventory_instruments")
-        .update({ last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null })
-        .in("id", ids);
+      const payload = verified
+        ? { last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null }
+        : { last_verified_at: null, last_verified_by: null };
+      const { error } = await supabase.from("inventory_instruments").update(payload).in("id", ids);
       if (error) throw error;
     },
-    onSuccess: (_d, ids) => {
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-      toast.success(`סומנו ${ids.length} כלים כנבדקו`);
+      queryClient.invalidateQueries({ queryKey: ["admin-inventory-instrument"] });
+      toast.success(vars.verified ? `סומנו ${vars.ids.length} כלים כנבדקו` : `הוסר סימון מ-${vars.ids.length} כלים`);
       setSelectedIds(new Set());
     },
     onError: (err: any) => toast.error(err.message || "שגיאה בסימון"),
@@ -168,16 +169,8 @@ const AdminInventoryInstruments = () => {
       if (filterSchool === "none" && it._borrower_school) return false;
       if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
     }
-    if (filterVerified !== "all") {
-      const v = it.last_verified_at ? new Date(it.last_verified_at) : null;
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      if (filterVerified === "never" && v) return false;
-      if (filterVerified === "not_today" && v && v >= startOfToday) return false;
-      if (filterVerified === "today" && (!v || v < startOfToday)) return false;
-      if (filterVerified === "not_week" && v && v >= sevenDaysAgo) return false;
-    }
+    if (filterVerified === "verified" && !it.last_verified_at) return false;
+    if (filterVerified === "not_verified" && it.last_verified_at) return false;
     if (search) {
       const s = search.toLowerCase();
       const matches =
@@ -323,10 +316,8 @@ const AdminInventoryInstruments = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל סטטוסי הבדיקה</SelectItem>
-              <SelectItem value="not_today">לא נבדק היום</SelectItem>
-              <SelectItem value="today">נבדק היום</SelectItem>
-              <SelectItem value="not_week">לא נבדק בשבוע האחרון</SelectItem>
-              <SelectItem value="never">מעולם לא נבדק</SelectItem>
+              <SelectItem value="not_verified">טרם נבדק</SelectItem>
+              <SelectItem value="verified">נבדק</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -340,7 +331,7 @@ const AdminInventoryInstruments = () => {
               <Button
                 className="h-10 rounded-xl"
                 disabled={verifyMutation.isPending}
-                onClick={() => verifyMutation.mutate(Array.from(selectedIds))}
+                onClick={() => verifyMutation.mutate({ ids: Array.from(selectedIds), verified: true })}
               >
                 <CheckCircle2 className="h-4 w-4" /> סמן כנבדק
               </Button>
@@ -360,9 +351,6 @@ const AdminInventoryInstruments = () => {
             {filtered.map((it: any) => {
               const isChecked = selectedIds.has(it.id);
               const verifiedAt = it.last_verified_at ? new Date(it.last_verified_at) : null;
-              const now = new Date();
-              const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const verifiedToday = verifiedAt && verifiedAt >= startOfToday;
               return (
                 <div
                   key={it.id}
@@ -392,13 +380,9 @@ const AdminInventoryInstruments = () => {
                       <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
                         {CONDITION_LABELS[it.condition as InstrumentCondition]}
                       </Badge>
-                      {verifiedToday ? (
+                      {verifiedAt ? (
                         <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px] gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> נבדק היום
-                        </Badge>
-                      ) : verifiedAt ? (
-                        <Badge variant="outline" className="text-[10px] gap-1">
-                          נבדק {format(verifiedAt, "dd/MM/yy")}
+                          <CheckCircle2 className="h-3 w-3" /> נבדק
                         </Badge>
                       ) : (
                         <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] gap-1">
@@ -425,11 +409,11 @@ const AdminInventoryInstruments = () => {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={`h-9 w-9 ${verifiedToday ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
-                      title="סמן כנבדק"
+                      className={`h-9 w-9 ${verifiedAt ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
+                      title={verifiedAt ? "בטל סימון" : "סמן כנבדק"}
                       onClick={(e) => {
                         e.stopPropagation();
-                        verifyMutation.mutate([it.id]);
+                        verifyMutation.mutate({ ids: [it.id], verified: !verifiedAt });
                       }}
                       disabled={verifyMutation.isPending}
                     >

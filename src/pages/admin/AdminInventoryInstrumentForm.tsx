@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
-import { User, ExternalLink, Pencil, Check, X } from "lucide-react";
+import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 import PageTitle from "@/components/PageTitle";
 
@@ -283,6 +283,50 @@ const AdminInventoryInstrumentForm = () => {
             </div>
           </div>
         </div>
+
+        {isEdit && item && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+            <h2 className="font-semibold text-foreground text-base">בדיקה פיזית</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2">
+                {(item as any).last_verified_at ? (
+                  <>
+                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 gap-1">
+                      <CheckCircle2 className="h-3.5 w-3.5" /> נבדק
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date((item as any).last_verified_at), "dd/MM/yyyy HH:mm")}
+                    </span>
+                  </>
+                ) : (
+                  <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 gap-1">
+                    <Circle className="h-3.5 w-3.5" /> טרם נבדק
+                  </Badge>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant={(item as any).last_verified_at ? "outline" : "default"}
+                className="h-10 rounded-xl"
+                onClick={async () => {
+                  const verified = !(item as any).last_verified_at;
+                  const { data: userRes } = await supabase.auth.getUser();
+                  const payload = verified
+                    ? { last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null }
+                    : { last_verified_at: null, last_verified_by: null };
+                  const { error } = await supabase.from("inventory_instruments").update(payload).eq("id", id!);
+                  if (error) { toast.error(error.message); return; }
+                  qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+                  qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+                  toast.success(verified ? "סומן כנבדק" : "הוסר סימון");
+                }}
+              >
+                {(item as any).last_verified_at ? "בטל סימון" : "סמן כנבדק"}
+              </Button>
+            </div>
+          </div>
+        )}
+
 
         {isEdit && (
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
