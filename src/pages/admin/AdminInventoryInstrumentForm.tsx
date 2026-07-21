@@ -292,10 +292,11 @@ const AdminInventoryInstrumentForm = () => {
           const savedNotes = (item as any).last_verified_notes as string | null;
           const STATUS_META: Record<string, { label: string; cls: string }> = {
             ok: { label: "תקין", cls: "bg-green-100 text-green-800 border-green-200" },
-            needs_repair: { label: "צריך תיקון", cls: "bg-red-100 text-red-800 border-red-200" },
-            needs_completion: { label: "צריך השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
+            needs_attention: { label: "צריך תיקון/השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
+            needs_repair: { label: "צריך תיקון/השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
+            needs_completion: { label: "צריך תיקון/השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
           };
-          const markVerified = async (newStatus: "ok" | "needs_repair" | "needs_completion") => {
+          const markVerified = async (newStatus: "ok" | "needs_attention") => {
             const { data: userRes } = await supabase.auth.getUser();
             const { error } = await supabase.from("inventory_instruments").update({
               last_verified_at: new Date().toISOString(),
