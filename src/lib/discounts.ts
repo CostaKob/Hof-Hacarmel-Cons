@@ -47,19 +47,26 @@ export interface ComputeDiscountsResult {
 
 /**
  * Apply selected discount_types against a set of prorated enrollments.
+ *
+ * `overridesByDiscountId` — optional per-discount override selecting exactly
+ * which enrollments receive that discount. Only meaningful for
+ * `cheapest_enrollment` scope; when provided (non-empty array), it fully
+ * replaces the automatic "all except most expensive" default. Pass an empty
+ * object (or omit) to keep automatic behavior.
  */
 export function computeStandardDiscounts(
   rows: EnrollmentProrated[],
   selected: DiscountType[],
+  overridesByDiscountId: Record<string, string[]> = {},
 ): ComputeDiscountsResult {
-  // For "cheapest_enrollment": apply to every enrollment EXCEPT the single
+  // For "cheapest_enrollment": default = every enrollment EXCEPT the single
   // most expensive one. Requires 2+ enrollments.
-  const discountedIds: string[] = (() => {
+  const autoDiscountedIds: string[] = (() => {
     if (rows.length < 2) return [];
     const sorted = [...rows].sort((a, b) => b.prorated - a.prorated); // desc
-    // Drop the most expensive; the rest all receive the discount.
     return sorted.slice(1).map((r) => r.enrollmentId);
   })();
+
 
   const perEnrollmentPct = new Map<string, number>();
   for (const r of rows) perEnrollmentPct.set(r.enrollmentId, 0);
