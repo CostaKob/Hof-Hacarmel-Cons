@@ -568,7 +568,9 @@ const AdminStudentPaymentCalc = () => {
   const stdCompute = computeStandardDiscounts(
     rows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
     selectedDiscounts,
+    discountEnrollmentOverrides,
   );
+
 
   const rowsAfterStd = rows.map((r) => {
     const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
