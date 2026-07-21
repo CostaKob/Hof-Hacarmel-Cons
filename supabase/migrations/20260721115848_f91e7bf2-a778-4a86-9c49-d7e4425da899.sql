@@ -1,0 +1,2 @@
+ALTER TABLE public.inventory_instruments DROP CONSTRAINT inventory_instruments_last_verified_status_check;
+ALTER TABLE public.inventory_instruments ADD CONSTRAINT inventory_instruments_last_verified_status_check CHECK (last_verified_status IS NULL OR last_verified_status = ANY (ARRAY['ok'::text, 'needs_attention'::text]));
