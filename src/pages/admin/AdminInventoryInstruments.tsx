@@ -150,8 +150,22 @@ const AdminInventoryInstruments = () => {
       const { error } = await supabase.from("inventory_instruments").update(payload).in("id", ids);
       if (error) throw error;
     },
-    onSuccess: (_d, vars) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+    onSuccess: async (_d, vars) => {
+      // Update cache in place to preserve current list order (avoid re-sorting after status change)
+      const idSet = new Set(vars.ids);
+      const { data: userRes } = await supabase.auth.getUser();
+      const patch: any = vars.verified
+        ? {
+            last_verified_at: new Date().toISOString(),
+            last_verified_by: userRes.user?.id ?? null,
+            last_verified_status: vars.status ?? "ok",
+            last_verified_notes: vars.notes ?? null,
+          }
+        : { last_verified_at: null, last_verified_by: null, last_verified_status: null, last_verified_notes: null };
+      queryClient.setQueryData(["admin-inventory-instruments"], (old: any) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((it: any) => (idSet.has(it.id) ? { ...it, ...patch } : it));
+      });
       queryClient.invalidateQueries({ queryKey: ["admin-inventory-instrument"] });
       toast.success(vars.verified ? `סומנו ${vars.ids.length} כלים כנבדקו` : `הוסר סימון מ-${vars.ids.length} כלים`);
       setSelectedIds(new Set());
