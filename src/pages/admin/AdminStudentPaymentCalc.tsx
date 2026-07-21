@@ -239,6 +239,12 @@ const AdminStudentPaymentCalc = () => {
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>(
     lsInitial?.startDateOverrides && typeof lsInitial.startDateOverrides === "object" ? lsInitial.startDateOverrides : {}
   );
+  // Per-discount override selecting which enrollments a "cheapest_enrollment"
+  // discount applies to. Empty/undefined array = automatic default (all except
+  // the most expensive enrollment).
+  const [discountEnrollmentOverrides, setDiscountEnrollmentOverrides] =
+    useState<Record<string, string[]>>({});
+
   const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
   const [hydratedFromDraft, setHydratedFromDraft] = useState<boolean>(false);
   const paymentDiscountSnapshotRef = useRef<PaymentDiscountSnapshot | null>(paymentDiscountSnapshot);
@@ -287,11 +293,15 @@ const AdminStudentPaymentCalc = () => {
     if (draft.start_date_overrides && typeof draft.start_date_overrides === "object") {
       setStartDateOverrides(draft.start_date_overrides as any);
     }
+    if (draft.discount_enrollment_overrides && typeof draft.discount_enrollment_overrides === "object") {
+      setDiscountEnrollmentOverrides(draft.discount_enrollment_overrides as any);
+    }
     setHydratedFromDraft(true);
     // Only block payment-breakdown hydration if the draft actually has content —
     // otherwise a past link's snapshot (with its custom discount) is our source of truth.
     if (hasContent && draftCustomDiscounts.length > 0) setHydratedFromPending(true);
   }, [draft, hydratedFromDraft, paymentDiscountSnapshot]);
+
 
   // Hydrate from legacy localStorage keys once discountTypes are loaded
   useEffect(() => {
@@ -385,16 +395,16 @@ const AdminStudentPaymentCalc = () => {
   // Persist to server (student_payment_drafts).
   // We keep a ref of the latest state so we can flush synchronously (e.g. right
   // before generating a payment link) without waiting for the debounce window.
-  const draftStateRef = useRef({ selectedDiscountIds, customDiscounts, startDateOverrides });
+  const draftStateRef = useRef({ selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides });
   useEffect(() => {
-    draftStateRef.current = { selectedDiscountIds, customDiscounts, startDateOverrides };
-  }, [selectedDiscountIds, customDiscounts, startDateOverrides]);
+    draftStateRef.current = { selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides };
+  }, [selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides]);
 
   const [savingDraft, setSavingDraft] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const saveDraftNow = async (opts?: { showToast?: boolean }) => {
     if (!studentId || !yearId) return;
-    const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o } = draftStateRef.current;
+    const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o, discountEnrollmentOverrides: deo } = draftStateRef.current;
     const fallbackSnapshot = paymentDiscountSnapshotRef.current;
     const customDiscountsToSave =
       !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
@@ -417,6 +427,7 @@ const AdminStudentPaymentCalc = () => {
           selected_discount_ids: selectedDiscountIdsToSave,
           custom_discounts: customDiscountsToSave as any,
           start_date_overrides: startDateOverridesToSave as any,
+          discount_enrollment_overrides: deo as any,
         },
         { onConflict: "student_id,academic_year_id" },
       );
@@ -437,13 +448,14 @@ const AdminStudentPaymentCalc = () => {
     const handle = setTimeout(() => { void saveDraftNow(); }, 600);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, draft]);
+  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides, draft]);
 
   // Best-effort flush on unmount / navigation so a fresh custom discount isn't
   // lost if the user immediately generates a link and navigates away.
   useEffect(() => {
     const flush = () => { void saveDraftNow(); };
     window.addEventListener("beforeunload", flush);
+
     window.addEventListener("pagehide", flush);
     return () => {
       window.removeEventListener("beforeunload", flush);
@@ -556,7 +568,9 @@ const AdminStudentPaymentCalc = () => {
   const stdCompute = computeStandardDiscounts(
     rows.map((r) => ({ enrollmentId: r.enrollmentId, prorated: r.prorated })),
     selectedDiscounts,
+    discountEnrollmentOverrides,
   );
+
 
   const rowsAfterStd = rows.map((r) => {
     const pct = stdCompute.perEnrollmentPct.get(r.enrollmentId) ?? 0;
@@ -698,7 +712,9 @@ const AdminStudentPaymentCalc = () => {
         })),
         customDiscounts,
         startDateOverrides,
+        discountEnrollmentOverrides,
       },
+
     };
   };
 
@@ -952,23 +968,78 @@ const AdminStudentPaymentCalc = () => {
                   d.applies_to === "cheapest_enrollment"
                     ? " · על כלים נוספים"
                     : " · על שיעורים פרטניים";
+                const isPerEnrollment = d.applies_to === "cheapest_enrollment";
+                const override = discountEnrollmentOverrides[d.id];
+                const usingOverride = Array.isArray(override) && override.length > 0;
+                const appliedIds = new Set(
+                  stdCompute.lines.find((l) => l.discountTypeId === d.id)?.appliedEnrollmentIds ?? [],
+                );
                 return (
-                  <label
+                  <div
                     key={d.id}
-                    className={`flex items-center gap-2 rounded-xl border border-border p-3 ${
-                      blockedByExclusive ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/30"
+                    className={`flex flex-col gap-2 rounded-xl border border-border p-3 ${
+                      blockedByExclusive ? "opacity-50" : ""
                     }`}
                     title={blockedByExclusive ? "לא ניתן לשלב עם הנחת אחוזים אחרת" : undefined}
                   >
-                    <Checkbox
-                      checked={checked}
-                      disabled={blockedByExclusive}
-                      onCheckedChange={() => toggleDiscount(d.id)}
-                    />
-                    <span className="text-sm">
-                      {d.label} ({Number(d.percentage)}%{scopeNote})
-                    </span>
-                  </label>
+                    <label className={`flex items-center gap-2 ${blockedByExclusive ? "cursor-not-allowed" : "cursor-pointer"}`}>
+                      <Checkbox
+                        checked={checked}
+                        disabled={blockedByExclusive}
+                        onCheckedChange={() => toggleDiscount(d.id)}
+                      />
+                      <span className="text-sm">
+                        {d.label} ({Number(d.percentage)}%{scopeNote})
+                      </span>
+                    </label>
+                    {checked && isPerEnrollment && rows.length >= 2 && (
+                      <div className="mt-1 pr-6 space-y-1.5 border-t border-border pt-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-muted-foreground">בחר שיוכים להנחה:</span>
+                          {usingOverride && (
+                            <button
+                              type="button"
+                              className="text-[11px] text-primary underline"
+                              onClick={() => setDiscountEnrollmentOverrides((prev) => {
+                                const { [d.id]: _drop, ...rest } = prev;
+                                return rest;
+                              })}
+                            >
+                              איפוס לברירת מחדל
+                            </button>
+                          )}
+                        </div>
+                        {rows.map((r) => {
+                          const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
+                          const label = `${e?.instruments?.name ?? "—"} · ${e?.schools?.name ?? "—"} · ${e?.lesson_duration_minutes ?? "—"} דק׳`;
+                          const isOn = appliedIds.has(r.enrollmentId);
+                          return (
+                            <label key={r.enrollmentId} className="flex items-center gap-2 text-xs cursor-pointer">
+                              <Checkbox
+                                checked={isOn}
+                                onCheckedChange={(c) => {
+                                  setDiscountEnrollmentOverrides((prev) => {
+                                    const current =
+                                      Array.isArray(prev[d.id]) && prev[d.id].length > 0
+                                        ? prev[d.id]
+                                        : Array.from(appliedIds);
+                                    const next = c === true
+                                      ? Array.from(new Set([...current, r.enrollmentId]))
+                                      : current.filter((id) => id !== r.enrollmentId);
+                                    return { ...prev, [d.id]: next };
+                                  });
+                                }}
+                              />
+                              <span>{label}</span>
+                            </label>
+                          );
+                        })}
+                        {!usingOverride && (
+                          <div className="text-[10px] text-muted-foreground">ברירת מחדל: כל השיוכים למעט היקר ביותר.</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
 

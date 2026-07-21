@@ -1886,6 +1886,7 @@ export type Database = {
           academic_year_id: string
           created_at: string
           custom_discounts: Json
+          discount_enrollment_overrides: Json
           id: string
           selected_discount_ids: string[]
           start_date_overrides: Json
@@ -1897,6 +1898,7 @@ export type Database = {
           academic_year_id: string
           created_at?: string
           custom_discounts?: Json
+          discount_enrollment_overrides?: Json
           id?: string
           selected_discount_ids?: string[]
           start_date_overrides?: Json
@@ -1908,6 +1910,7 @@ export type Database = {
           academic_year_id?: string
           created_at?: string
           custom_discounts?: Json
+          discount_enrollment_overrides?: Json
           id?: string
           selected_discount_ids?: string[]
           start_date_overrides?: Json

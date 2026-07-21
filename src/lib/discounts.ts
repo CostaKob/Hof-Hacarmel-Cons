@@ -47,19 +47,26 @@ export interface ComputeDiscountsResult {
 
 /**
  * Apply selected discount_types against a set of prorated enrollments.
+ *
+ * `overridesByDiscountId` — optional per-discount override selecting exactly
+ * which enrollments receive that discount. Only meaningful for
+ * `cheapest_enrollment` scope; when provided (non-empty array), it fully
+ * replaces the automatic "all except most expensive" default. Pass an empty
+ * object (or omit) to keep automatic behavior.
  */
 export function computeStandardDiscounts(
   rows: EnrollmentProrated[],
   selected: DiscountType[],
+  overridesByDiscountId: Record<string, string[]> = {},
 ): ComputeDiscountsResult {
-  // For "cheapest_enrollment": apply to every enrollment EXCEPT the single
+  // For "cheapest_enrollment": default = every enrollment EXCEPT the single
   // most expensive one. Requires 2+ enrollments.
-  const discountedIds: string[] = (() => {
+  const autoDiscountedIds: string[] = (() => {
     if (rows.length < 2) return [];
     const sorted = [...rows].sort((a, b) => b.prorated - a.prorated); // desc
-    // Drop the most expensive; the rest all receive the discount.
     return sorted.slice(1).map((r) => r.enrollmentId);
   })();
+
 
   const perEnrollmentPct = new Map<string, number>();
   for (const r of rows) perEnrollmentPct.set(r.enrollmentId, 0);
@@ -68,6 +75,13 @@ export function computeStandardDiscounts(
 
   for (const d of selected) {
     const pct = Number(d.percentage) || 0;
+    const override = overridesByDiscountId[d.id];
+    const discountedIds =
+      d.applies_to === "cheapest_enrollment"
+        ? (Array.isArray(override) && override.length > 0
+            ? override.filter((id) => rows.some((r) => r.enrollmentId === id))
+            : autoDiscountedIds)
+        : [];
     if (!pct) {
       lines.push({
         discountTypeId: d.id,
@@ -81,7 +95,6 @@ export function computeStandardDiscounts(
     }
     if (d.applies_to === "cheapest_enrollment") {
       if (discountedIds.length === 0) {
-        // Needs 2+ enrollments — skip
         lines.push({
           discountTypeId: d.id,
           label: d.label,
@@ -107,6 +120,7 @@ export function computeStandardDiscounts(
         amount: Math.round(amount) / 100,
       });
     } else {
+
       let amount = 0;
       for (const r of rows) {
         perEnrollmentPct.set(r.enrollmentId, (perEnrollmentPct.get(r.enrollmentId) ?? 0) + pct);
