@@ -239,6 +239,12 @@ const AdminStudentPaymentCalc = () => {
   const [startDateOverrides, setStartDateOverrides] = useState<Record<string, string>>(
     lsInitial?.startDateOverrides && typeof lsInitial.startDateOverrides === "object" ? lsInitial.startDateOverrides : {}
   );
+  // Per-discount override selecting which enrollments a "cheapest_enrollment"
+  // discount applies to. Empty/undefined array = automatic default (all except
+  // the most expensive enrollment).
+  const [discountEnrollmentOverrides, setDiscountEnrollmentOverrides] =
+    useState<Record<string, string[]>>({});
+
   const [hydratedFromPending, setHydratedFromPending] = useState<boolean>(!!lsInitial);
   const [hydratedFromDraft, setHydratedFromDraft] = useState<boolean>(false);
   const paymentDiscountSnapshotRef = useRef<PaymentDiscountSnapshot | null>(paymentDiscountSnapshot);
