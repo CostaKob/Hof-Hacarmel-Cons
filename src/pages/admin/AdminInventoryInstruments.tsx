@@ -45,6 +45,8 @@ const AdminInventoryInstruments = () => {
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [attentionFor, setAttentionFor] = useState<{ id: string; serial: string } | null>(null);
+  const [attentionNotes, setAttentionNotes] = useState("");
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
