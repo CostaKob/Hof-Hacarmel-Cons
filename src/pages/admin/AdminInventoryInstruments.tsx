@@ -479,11 +479,11 @@ const AdminInventoryInstruments = () => {
                         title="בטל סימון"
                         onClick={(e) => {
                           e.stopPropagation();
-                          verifyMutation.mutate({ ids: [it.id], verified: false });
+                          setClearVerifyFor({ id: it.id, serial: it.serial_number });
                         }}
                         disabled={verifyMutation.isPending}
                       >
-                        <Circle className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
