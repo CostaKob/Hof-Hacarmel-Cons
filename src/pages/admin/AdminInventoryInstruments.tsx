@@ -135,11 +135,16 @@ const AdminInventoryInstruments = () => {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async ({ ids, verified }: { ids: string[]; verified: boolean }) => {
+    mutationFn: async ({ ids, verified, status, notes }: { ids: string[]; verified: boolean; status?: "ok" | "needs_attention"; notes?: string | null }) => {
       const { data: userRes } = await supabase.auth.getUser();
-      const payload = verified
-        ? { last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null }
-        : { last_verified_at: null, last_verified_by: null };
+      const payload: any = verified
+        ? {
+            last_verified_at: new Date().toISOString(),
+            last_verified_by: userRes.user?.id ?? null,
+            last_verified_status: status ?? "ok",
+            last_verified_notes: notes ?? null,
+          }
+        : { last_verified_at: null, last_verified_by: null, last_verified_status: null, last_verified_notes: null };
       const { error } = await supabase.from("inventory_instruments").update(payload).in("id", ids);
       if (error) throw error;
     },
