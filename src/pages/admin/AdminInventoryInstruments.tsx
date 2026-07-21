@@ -177,6 +177,7 @@ const AdminInventoryInstruments = () => {
       if (filterVerified === "not_today" && v && v >= startOfToday) return false;
       if (filterVerified === "today" && (!v || v < startOfToday)) return false;
       if (filterVerified === "not_week" && v && v >= sevenDaysAgo) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const matches =
