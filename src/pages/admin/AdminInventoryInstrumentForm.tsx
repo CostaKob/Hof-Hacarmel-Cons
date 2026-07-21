@@ -127,6 +127,7 @@ const AdminInventoryInstrumentForm = () => {
         purchase_date: item.purchase_date || "",
         notes: item.notes || "",
       });
+      setVerifyNotes(((item as any).last_verified_notes as string) || "");
     }
   }, [item, reset]);
 
