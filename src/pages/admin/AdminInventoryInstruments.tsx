@@ -357,55 +357,100 @@ const AdminInventoryInstruments = () => {
         <>
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} כלים</p>
           <div className="space-y-2">
-            {filtered.map((it: any) => (
-              <div
-                key={it.id}
-                onClick={() => {
-                  saveListScrollPosition(ROUTE_KEY);
-                  navigate(`/admin/inventory-instruments/${it.id}/edit`);
-                }}
-                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-semibold text-foreground">{it.instruments?.name}</span>
-                    <span className="text-sm text-muted-foreground">#{it.serial_number}</span>
-                    {it.size && <Badge variant="outline" className="text-[10px]">גודל {it.size}</Badge>}
-                    <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
-                      {CONDITION_LABELS[it.condition as InstrumentCondition]}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                    {(it.brand || it.model) && <span>{[it.brand, it.model].filter(Boolean).join(" / ")}</span>}
-                    {it.instrument_storage_locations?.name && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {it.instrument_storage_locations.name}
-                      </span>
-                    )}
-                    {it.condition === "loaned" && it._borrower_name && (
-                      <span className="text-blue-700 font-medium">
-                        מושאל ל: {it._borrower_name}
-                        {it._borrower_school ? ` · ${it._borrower_school}` : ""}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setToDelete({ id: it.id, serial: it.serial_number });
-                    }}
+            {filtered.map((it: any) => {
+              const isChecked = selectedIds.has(it.id);
+              const verifiedAt = it.last_verified_at ? new Date(it.last_verified_at) : null;
+              const now = new Date();
+              const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              const verifiedToday = verifiedAt && verifiedAt >= startOfToday;
+              return (
+                <div
+                  key={it.id}
+                  onClick={() => {
+                    saveListScrollPosition(ROUTE_KEY);
+                    navigate(`/admin/inventory-instruments/${it.id}/edit`);
+                  }}
+                  className={`flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
+                    isChecked ? "border-primary ring-1 ring-primary/30" : "border-border"
+                  }`}
+                >
+                  <div
+                    className="flex items-center shrink-0 pl-2"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => toggleSelected(it.id)}
+                      aria-label="בחר כלי"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">{it.instruments?.name}</span>
+                      <span className="text-sm text-muted-foreground">#{it.serial_number}</span>
+                      {it.size && <Badge variant="outline" className="text-[10px]">גודל {it.size}</Badge>}
+                      <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
+                        {CONDITION_LABELS[it.condition as InstrumentCondition]}
+                      </Badge>
+                      {verifiedToday ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px] gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> נבדק היום
+                        </Badge>
+                      ) : verifiedAt ? (
+                        <Badge variant="outline" className="text-[10px] gap-1">
+                          נבדק {format(verifiedAt, "dd/MM/yy")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] gap-1">
+                          <Circle className="h-3 w-3" /> טרם נבדק
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      {(it.brand || it.model) && <span>{[it.brand, it.model].filter(Boolean).join(" / ")}</span>}
+                      {it.instrument_storage_locations?.name && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {it.instrument_storage_locations.name}
+                        </span>
+                      )}
+                      {it.condition === "loaned" && it._borrower_name && (
+                        <span className="text-blue-700 font-medium">
+                          מושאל ל: {it._borrower_name}
+                          {it._borrower_school ? ` · ${it._borrower_school}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-9 w-9 ${verifiedToday ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
+                      title="סמן כנבדק"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        verifyMutation.mutate([it.id]);
+                      }}
+                      disabled={verifyMutation.isPending}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setToDelete({ id: it.id, serial: it.serial_number });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
