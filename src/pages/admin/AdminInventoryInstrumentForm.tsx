@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
-import { User, ExternalLink, Pencil, Check, X } from "lucide-react";
+import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 import PageTitle from "@/components/PageTitle";
 
