@@ -315,10 +315,8 @@ const AdminInventoryInstruments = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">כל סטטוסי הבדיקה</SelectItem>
-              <SelectItem value="not_today">לא נבדק היום</SelectItem>
-              <SelectItem value="today">נבדק היום</SelectItem>
-              <SelectItem value="not_week">לא נבדק בשבוע האחרון</SelectItem>
-              <SelectItem value="never">מעולם לא נבדק</SelectItem>
+              <SelectItem value="not_verified">טרם נבדק</SelectItem>
+              <SelectItem value="verified">נבדק</SelectItem>
             </SelectContent>
           </Select>
         </div>
