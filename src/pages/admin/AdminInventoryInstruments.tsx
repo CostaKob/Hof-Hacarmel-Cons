@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload, FileDown, CheckCircle2, Circle, AlertTriangle } from "lucide-react";
+import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload, FileDown, CheckCircle2, Circle, AlertTriangle, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -47,6 +47,7 @@ const AdminInventoryInstruments = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [attentionFor, setAttentionFor] = useState<{ id: string; serial: string } | null>(null);
   const [attentionNotes, setAttentionNotes] = useState("");
+  const [clearVerifyFor, setClearVerifyFor] = useState<{ id: string; serial: string } | null>(null);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
@@ -478,11 +479,11 @@ const AdminInventoryInstruments = () => {
                         title="בטל סימון"
                         onClick={(e) => {
                           e.stopPropagation();
-                          verifyMutation.mutate({ ids: [it.id], verified: false });
+                          setClearVerifyFor({ id: it.id, serial: it.serial_number });
                         }}
                         disabled={verifyMutation.isPending}
                       >
-                        <Circle className="h-4 w-4" />
+                        <X className="h-4 w-4" />
                       </Button>
                     )}
                     <Button
@@ -564,6 +565,34 @@ const AdminInventoryInstruments = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!clearVerifyFor} onOpenChange={(open) => !open && setClearVerifyFor(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ביטול סימון בדיקה</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך לבטל את סימון הבדיקה של הכלי #{clearVerifyFor?.serial}? הסטטוס יחזור ל"טרם נבדק" וההערות יימחקו.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (clearVerifyFor) {
+                  verifyMutation.mutate(
+                    { ids: [clearVerifyFor.id], verified: false },
+                    { onSuccess: () => setClearVerifyFor(null) },
+                  );
+                }
+              }}
+              disabled={verifyMutation.isPending}
+            >
+              כן, בטל סימון
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <InventoryImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
