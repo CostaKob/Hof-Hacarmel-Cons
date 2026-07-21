@@ -331,7 +331,7 @@ const AdminInventoryInstruments = () => {
               <Button
                 className="h-10 rounded-xl"
                 disabled={verifyMutation.isPending}
-                onClick={() => verifyMutation.mutate(Array.from(selectedIds))}
+                onClick={() => verifyMutation.mutate({ ids: Array.from(selectedIds), verified: true })}
               >
                 <CheckCircle2 className="h-4 w-4" /> סמן כנבדק
               </Button>
