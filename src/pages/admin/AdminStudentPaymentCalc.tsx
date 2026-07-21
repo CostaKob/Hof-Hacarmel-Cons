@@ -403,17 +403,21 @@ const AdminStudentPaymentCalc = () => {
   const saveDraftNow = async (opts?: { showToast?: boolean }) => {
     if (!studentId || !yearId) return;
     const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o, discountEnrollmentOverrides: deo } = draftStateRef.current;
-    const fallbackSnapshot = paymentDiscountSnapshotRef.current;
+    // Fallback to the last payment snapshot only when SEEDING for the first
+    // time (no draft row yet). Once a draft exists it is authoritative and
+    // an empty list must remain empty across devices.
+    const canFallback = !draft;
+    const fallbackSnapshot = canFallback ? paymentDiscountSnapshotRef.current : null;
     const customDiscountsToSave =
-      !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
+      canFallback && !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
         ? fallbackSnapshot!.customDiscounts
         : c;
     const selectedDiscountIdsToSave =
-      s.length === 0 && (fallbackSnapshot?.selectedDiscountIds?.length ?? 0) > 0
+      canFallback && s.length === 0 && (fallbackSnapshot?.selectedDiscountIds?.length ?? 0) > 0
         ? fallbackSnapshot!.selectedDiscountIds
         : s;
     const startDateOverridesToSave =
-      Object.keys(o).length === 0 && fallbackSnapshot?.startDateOverrides && Object.keys(fallbackSnapshot.startDateOverrides).length > 0
+      canFallback && Object.keys(o).length === 0 && fallbackSnapshot?.startDateOverrides && Object.keys(fallbackSnapshot.startDateOverrides).length > 0
         ? fallbackSnapshot.startDateOverrides
         : o;
     try {
