@@ -284,18 +284,57 @@ const AdminInventoryInstrumentForm = () => {
           </div>
         </div>
 
-        {isEdit && item && (
-          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-            <h2 className="font-semibold text-foreground text-base">בדיקה פיזית</h2>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                {(item as any).last_verified_at ? (
+        {isEdit && item && (() => {
+          const verifiedAt = (item as any).last_verified_at as string | null;
+          const status = (item as any).last_verified_status as string | null;
+          const savedNotes = (item as any).last_verified_notes as string | null;
+          const STATUS_META: Record<string, { label: string; cls: string }> = {
+            ok: { label: "תקין", cls: "bg-green-100 text-green-800 border-green-200" },
+            needs_repair: { label: "צריך תיקון", cls: "bg-red-100 text-red-800 border-red-200" },
+            needs_completion: { label: "צריך השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
+          };
+          const markVerified = async (newStatus: "ok" | "needs_repair" | "needs_completion") => {
+            const { data: userRes } = await supabase.auth.getUser();
+            const { error } = await supabase.from("inventory_instruments").update({
+              last_verified_at: new Date().toISOString(),
+              last_verified_by: userRes.user?.id ?? null,
+              last_verified_status: newStatus,
+              last_verified_notes: verifyNotes || null,
+            }).eq("id", id!);
+            if (error) { toast.error(error.message); return; }
+            qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+            qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+            toast.success("סומן כנבדק");
+          };
+          const clearVerified = async () => {
+            const { error } = await supabase.from("inventory_instruments").update({
+              last_verified_at: null,
+              last_verified_by: null,
+              last_verified_status: null,
+              last_verified_notes: null,
+            }).eq("id", id!);
+            if (error) { toast.error(error.message); return; }
+            setVerifyNotes("");
+            qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+            qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+            toast.success("הוסר סימון");
+          };
+          return (
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+              <h2 className="font-semibold text-foreground text-base">בדיקה פיזית</h2>
+              <div className="flex flex-wrap items-center gap-2">
+                {verifiedAt ? (
                   <>
                     <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 gap-1">
                       <CheckCircle2 className="h-3.5 w-3.5" /> נבדק
                     </Badge>
+                    {status && STATUS_META[status] && (
+                      <Badge variant="outline" className={`${STATUS_META[status].cls} gap-1`}>
+                        {STATUS_META[status].label}
+                      </Badge>
+                    )}
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date((item as any).last_verified_at), "dd/MM/yyyy HH:mm")}
+                      {format(new Date(verifiedAt), "dd/MM/yyyy HH:mm")}
                     </span>
                   </>
                 ) : (
@@ -304,28 +343,42 @@ const AdminInventoryInstrumentForm = () => {
                   </Badge>
                 )}
               </div>
-              <Button
-                type="button"
-                variant={(item as any).last_verified_at ? "outline" : "default"}
-                className="h-10 rounded-xl"
-                onClick={async () => {
-                  const verified = !(item as any).last_verified_at;
-                  const { data: userRes } = await supabase.auth.getUser();
-                  const payload = verified
-                    ? { last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null }
-                    : { last_verified_at: null, last_verified_by: null };
-                  const { error } = await supabase.from("inventory_instruments").update(payload).eq("id", id!);
-                  if (error) { toast.error(error.message); return; }
-                  qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
-                  qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-                  toast.success(verified ? "סומן כנבדק" : "הוסר סימון");
-                }}
-              >
-                {(item as any).last_verified_at ? "בטל סימון" : "סמן כנבדק"}
-              </Button>
+
+              {verifiedAt && savedNotes && (
+                <div className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-muted/40 p-3">
+                  {savedNotes}
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <Label className="text-sm">הערות בדיקה (אופציונלי)</Label>
+                <Textarea
+                  value={verifyNotes}
+                  onChange={(e) => setVerifyNotes(e.target.value)}
+                  placeholder="תיאור הליקוי / השלמות נדרשות..."
+                  className="rounded-xl min-h-16"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" className="h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white" onClick={() => markVerified("ok")}>
+                  תקין
+                </Button>
+                <Button type="button" variant="outline" className="h-10 rounded-xl border-red-300 text-red-700 hover:bg-red-50" onClick={() => markVerified("needs_repair")}>
+                  צריך תיקון
+                </Button>
+                <Button type="button" variant="outline" className="h-10 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => markVerified("needs_completion")}>
+                  צריך השלמות
+                </Button>
+                {verifiedAt && (
+                  <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={clearVerified}>
+                    בטל סימון
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
 
         {isEdit && (
