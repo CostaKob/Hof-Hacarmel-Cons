@@ -515,6 +515,42 @@ const AdminInventoryInstruments = () => {
         </AlertDialogContent>
       </AlertDialog>
 
+      <Dialog open={!!attentionFor} onOpenChange={(open) => { if (!open) { setAttentionFor(null); setAttentionNotes(""); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>צריך תיקון / השלמות — #{attentionFor?.serial}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label className="text-sm">מה חסר או מה צריך לתקן?</Label>
+            <Textarea
+              value={attentionNotes}
+              onChange={(e) => setAttentionNotes(e.target.value)}
+              placeholder="תיאור הליקוי / השלמות נדרשות..."
+              className="rounded-xl min-h-24"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="rounded-xl" onClick={() => { setAttentionFor(null); setAttentionNotes(""); }}>
+              ביטול
+            </Button>
+            <Button
+              className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white"
+              disabled={verifyMutation.isPending}
+              onClick={() => {
+                if (!attentionFor) return;
+                verifyMutation.mutate(
+                  { ids: [attentionFor.id], verified: true, status: "needs_attention", notes: attentionNotes.trim() || null },
+                  { onSuccess: () => { setAttentionFor(null); setAttentionNotes(""); } },
+                );
+              }}
+            >
+              שמור
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <InventoryImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
   );
