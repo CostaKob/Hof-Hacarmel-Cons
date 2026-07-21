@@ -270,7 +270,7 @@ const AdminInventoryInstruments = () => {
             <MapPin className="h-4 w-4" /> מיקומי אחסון
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
           <Select value={filterInstrument} onValueChange={setFilterInstrument}>
             <SelectTrigger className="h-11 rounded-xl">
               <SelectValue placeholder="סוג כלי" />
