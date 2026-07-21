@@ -395,16 +395,16 @@ const AdminStudentPaymentCalc = () => {
   // Persist to server (student_payment_drafts).
   // We keep a ref of the latest state so we can flush synchronously (e.g. right
   // before generating a payment link) without waiting for the debounce window.
-  const draftStateRef = useRef({ selectedDiscountIds, customDiscounts, startDateOverrides });
+  const draftStateRef = useRef({ selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides });
   useEffect(() => {
-    draftStateRef.current = { selectedDiscountIds, customDiscounts, startDateOverrides };
-  }, [selectedDiscountIds, customDiscounts, startDateOverrides]);
+    draftStateRef.current = { selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides };
+  }, [selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides]);
 
   const [savingDraft, setSavingDraft] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const saveDraftNow = async (opts?: { showToast?: boolean }) => {
     if (!studentId || !yearId) return;
-    const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o } = draftStateRef.current;
+    const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o, discountEnrollmentOverrides: deo } = draftStateRef.current;
     const fallbackSnapshot = paymentDiscountSnapshotRef.current;
     const customDiscountsToSave =
       !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
@@ -427,6 +427,7 @@ const AdminStudentPaymentCalc = () => {
           selected_discount_ids: selectedDiscountIdsToSave,
           custom_discounts: customDiscountsToSave as any,
           start_date_overrides: startDateOverridesToSave as any,
+          discount_enrollment_overrides: deo as any,
         },
         { onConflict: "student_id,academic_year_id" },
       );
@@ -447,13 +448,14 @@ const AdminStudentPaymentCalc = () => {
     const handle = setTimeout(() => { void saveDraftNow(); }, 600);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, draft]);
+  }, [studentId, yearId, selectedDiscountIds, customDiscounts, startDateOverrides, discountEnrollmentOverrides, draft]);
 
   // Best-effort flush on unmount / navigation so a fresh custom discount isn't
   // lost if the user immediately generates a link and navigates away.
   useEffect(() => {
     const flush = () => { void saveDraftNow(); };
     window.addEventListener("beforeunload", flush);
+
     window.addEventListener("pagehide", flush);
     return () => {
       window.removeEventListener("beforeunload", flush);
