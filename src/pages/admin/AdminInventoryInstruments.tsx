@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload, FileDown } from "lucide-react";
+import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload, FileDown, CheckCircle2, Circle } from "lucide-react";
+import { format } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 import * as XLSX from "xlsx";
 import InventoryImportDialog from "@/components/admin/InventoryImportDialog";
 import {
@@ -36,8 +38,10 @@ const AdminInventoryInstruments = () => {
   const [filterCondition, setFilterCondition] = usePersistedState<string>(ROUTE_KEY, "filterCondition", "all");
   const [filterLocation, setFilterLocation] = usePersistedState<string>(ROUTE_KEY, "filterLocation", "all");
   const [filterSchool, setFilterSchool] = usePersistedState<string>(ROUTE_KEY, "filterSchool", "all");
+  const [filterVerified, setFilterVerified] = usePersistedState<string>(ROUTE_KEY, "filterVerified", "all");
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
@@ -127,6 +131,32 @@ const AdminInventoryInstruments = () => {
     onError: (err: any) => toast.error(err.message || "שגיאה במחיקה"),
   });
 
+  const verifyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("inventory_instruments")
+        .update({ last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_d, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      toast.success(`סומנו ${ids.length} כלים כנבדקו`);
+      setSelectedIds(new Set());
+    },
+    onError: (err: any) => toast.error(err.message || "שגיאה בסימון"),
+  });
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const filtered = items.filter((it: any) => {
     if (filterInstrument !== "all" && it.instrument_id !== filterInstrument) return false;
     if (filterCondition !== "all" && it.condition !== filterCondition) return false;
@@ -137,6 +167,16 @@ const AdminInventoryInstruments = () => {
     if (filterSchool !== "all") {
       if (filterSchool === "none" && it._borrower_school) return false;
       if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
+    }
+    if (filterVerified !== "all") {
+      const v = it.last_verified_at ? new Date(it.last_verified_at) : null;
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      if (filterVerified === "never" && v) return false;
+      if (filterVerified === "not_today" && v && v >= startOfToday) return false;
+      if (filterVerified === "today" && (!v || v < startOfToday)) return false;
+      if (filterVerified === "not_week" && v && v >= sevenDaysAgo) return false;
     }
     if (search) {
       const s = search.toLowerCase();
@@ -230,7 +270,7 @@ const AdminInventoryInstruments = () => {
             <MapPin className="h-4 w-4" /> מיקומי אחסון
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
           <Select value={filterInstrument} onValueChange={setFilterInstrument}>
             <SelectTrigger className="h-11 rounded-xl">
               <SelectValue placeholder="סוג כלי" />
@@ -277,7 +317,36 @@ const AdminInventoryInstruments = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={filterVerified} onValueChange={setFilterVerified}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="בדיקה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל סטטוסי הבדיקה</SelectItem>
+              <SelectItem value="not_today">לא נבדק היום</SelectItem>
+              <SelectItem value="today">נבדק היום</SelectItem>
+              <SelectItem value="not_week">לא נבדק בשבוע האחרון</SelectItem>
+              <SelectItem value="never">מעולם לא נבדק</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+        {selectedIds.size > 0 && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <span className="text-sm font-medium text-foreground">נבחרו {selectedIds.size} כלים</span>
+            <div className="flex gap-2">
+              <Button variant="outline" className="h-10 rounded-xl" onClick={() => setSelectedIds(new Set())}>
+                נקה בחירה
+              </Button>
+              <Button
+                className="h-10 rounded-xl"
+                disabled={verifyMutation.isPending}
+                onClick={() => verifyMutation.mutate(Array.from(selectedIds))}
+              >
+                <CheckCircle2 className="h-4 w-4" /> סמן כנבדק
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
@@ -288,55 +357,100 @@ const AdminInventoryInstruments = () => {
         <>
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} כלים</p>
           <div className="space-y-2">
-            {filtered.map((it: any) => (
-              <div
-                key={it.id}
-                onClick={() => {
-                  saveListScrollPosition(ROUTE_KEY);
-                  navigate(`/admin/inventory-instruments/${it.id}/edit`);
-                }}
-                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <span className="font-semibold text-foreground">{it.instruments?.name}</span>
-                    <span className="text-sm text-muted-foreground">#{it.serial_number}</span>
-                    {it.size && <Badge variant="outline" className="text-[10px]">גודל {it.size}</Badge>}
-                    <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
-                      {CONDITION_LABELS[it.condition as InstrumentCondition]}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
-                    {(it.brand || it.model) && <span>{[it.brand, it.model].filter(Boolean).join(" / ")}</span>}
-                    {it.instrument_storage_locations?.name && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" /> {it.instrument_storage_locations.name}
-                      </span>
-                    )}
-                    {it.condition === "loaned" && it._borrower_name && (
-                      <span className="text-blue-700 font-medium">
-                        מושאל ל: {it._borrower_name}
-                        {it._borrower_school ? ` · ${it._borrower_school}` : ""}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setToDelete({ id: it.id, serial: it.serial_number });
-                    }}
+            {filtered.map((it: any) => {
+              const isChecked = selectedIds.has(it.id);
+              const verifiedAt = it.last_verified_at ? new Date(it.last_verified_at) : null;
+              const now = new Date();
+              const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+              const verifiedToday = verifiedAt && verifiedAt >= startOfToday;
+              return (
+                <div
+                  key={it.id}
+                  onClick={() => {
+                    saveListScrollPosition(ROUTE_KEY);
+                    navigate(`/admin/inventory-instruments/${it.id}/edit`);
+                  }}
+                  className={`flex items-center justify-between rounded-xl border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${
+                    isChecked ? "border-primary ring-1 ring-primary/30" : "border-border"
+                  }`}
+                >
+                  <div
+                    className="flex items-center shrink-0 pl-2"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                    <Checkbox
+                      checked={isChecked}
+                      onCheckedChange={() => toggleSelected(it.id)}
+                      aria-label="בחר כלי"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <span className="font-semibold text-foreground">{it.instruments?.name}</span>
+                      <span className="text-sm text-muted-foreground">#{it.serial_number}</span>
+                      {it.size && <Badge variant="outline" className="text-[10px]">גודל {it.size}</Badge>}
+                      <Badge variant="outline" className={CONDITION_COLORS[it.condition as InstrumentCondition]}>
+                        {CONDITION_LABELS[it.condition as InstrumentCondition]}
+                      </Badge>
+                      {verifiedToday ? (
+                        <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 text-[10px] gap-1">
+                          <CheckCircle2 className="h-3 w-3" /> נבדק היום
+                        </Badge>
+                      ) : verifiedAt ? (
+                        <Badge variant="outline" className="text-[10px] gap-1">
+                          נבדק {format(verifiedAt, "dd/MM/yy")}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 text-[10px] gap-1">
+                          <Circle className="h-3 w-3" /> טרם נבדק
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      {(it.brand || it.model) && <span>{[it.brand, it.model].filter(Boolean).join(" / ")}</span>}
+                      {it.instrument_storage_locations?.name && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" /> {it.instrument_storage_locations.name}
+                        </span>
+                      )}
+                      {it.condition === "loaned" && it._borrower_name && (
+                        <span className="text-blue-700 font-medium">
+                          מושאל ל: {it._borrower_name}
+                          {it._borrower_school ? ` · ${it._borrower_school}` : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-9 w-9 ${verifiedToday ? "text-green-700 hover:bg-green-100" : "text-muted-foreground hover:bg-muted"}`}
+                      title="סמן כנבדק"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        verifyMutation.mutate([it.id]);
+                      }}
+                      disabled={verifyMutation.isPending}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setToDelete({ id: it.id, serial: it.serial_number });
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}

@@ -669,6 +669,8 @@ export type Database = {
           created_at: string
           id: string
           instrument_id: string
+          last_verified_at: string | null
+          last_verified_by: string | null
           model: string | null
           notes: string | null
           purchase_date: string | null
@@ -683,6 +685,8 @@ export type Database = {
           created_at?: string
           id?: string
           instrument_id: string
+          last_verified_at?: string | null
+          last_verified_by?: string | null
           model?: string | null
           notes?: string | null
           purchase_date?: string | null
@@ -697,6 +701,8 @@ export type Database = {
           created_at?: string
           id?: string
           instrument_id?: string
+          last_verified_at?: string | null
+          last_verified_by?: string | null
           model?: string | null
           notes?: string | null
           purchase_date?: string | null
