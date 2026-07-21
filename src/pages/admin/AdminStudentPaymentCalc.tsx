@@ -273,45 +273,6 @@ const AdminStudentPaymentCalc = () => {
     return Array.from(ids);
   };
 
-  // Hydrate from server draft (highest priority besides pending payment)
-  useEffect(() => {
-    if (hydratedFromDraft || !draft) return;
-    const draftCustomDiscounts = Array.isArray(draft.custom_discounts) ? (draft.custom_discounts as any[]) : [];
-    const snapshotCustomDiscounts = paymentDiscountSnapshot?.customDiscounts ?? [];
-    const hasContent =
-      (Array.isArray(draft.selected_discount_ids) && draft.selected_discount_ids.length > 0) ||
-      draftCustomDiscounts.length > 0 ||
-      (draft.start_date_overrides && typeof draft.start_date_overrides === "object" && Object.keys(draft.start_date_overrides).length > 0);
-    if (Array.isArray(draft.selected_discount_ids)) setSelectedDiscountIds(draft.selected_discount_ids);
-    if (draftCustomDiscounts.length > 0) {
-      setCustomDiscounts(draftCustomDiscounts as any);
-    } else if (snapshotCustomDiscounts.length > 0 && !customDiscountsTouchedRef.current) {
-      setCustomDiscounts(snapshotCustomDiscounts as any);
-    } else if (Array.isArray(draft.custom_discounts)) {
-      setCustomDiscounts([]);
-    }
-    if (draft.start_date_overrides && typeof draft.start_date_overrides === "object") {
-      setStartDateOverrides(draft.start_date_overrides as any);
-    }
-    if (draft.discount_enrollment_overrides && typeof draft.discount_enrollment_overrides === "object") {
-      setDiscountEnrollmentOverrides(draft.discount_enrollment_overrides as any);
-    }
-    setHydratedFromDraft(true);
-    // Only block payment-breakdown hydration if the draft actually has content —
-    // otherwise a past link's snapshot (with its custom discount) is our source of truth.
-    if (hasContent && draftCustomDiscounts.length > 0) setHydratedFromPending(true);
-  }, [draft, hydratedFromDraft, paymentDiscountSnapshot]);
-
-
-  // Hydrate from legacy localStorage keys once discountTypes are loaded
-  useEffect(() => {
-    if (!lsInitial || !discountTypes.length) return;
-    if (Array.isArray(lsInitial.selectedDiscountIds)) return;
-    const mapped = mapLegacy(lsInitial);
-    if (mapped.length) setSelectedDiscountIds(mapped);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [discountTypes.length]);
-
   // Mutually-exclusive percentage discounts on private lessons — only one
   // of {major_student, second_instrument, sibling} can be selected at a time.
   const EXCLUSIVE_KEYS = ["major_student", "second_instrument", "sibling"] as const;
@@ -319,12 +280,71 @@ const AdminStudentPaymentCalc = () => {
     discountTypes.filter((d) => EXCLUSIVE_KEYS.includes(d.legacy_key as any)).map((d) => d.id),
   );
 
-  // Auto-selects run once per page load. They apply based on current student
-  // data (major status, active enrollment count, כרם מהר״ל branch) as long as
-  // no exclusive percentage discount is already selected. Deselecting during
-  // the session sticks because deps don't change — but reopening the page will
-  // re-evaluate, matching user expectation for "automatic" behavior.
+  // ─────────────────────────────────────────────────────────────────────────
+  // Hydration priority (single source of truth = server draft):
+  //   1. If a server draft row exists → apply it exactly as saved and STOP.
+  //      No auto-selects, no snapshot merging. Empty arrays mean the user
+  //      explicitly cleared those discounts and that must be honored on
+  //      every device.
+  //   2. If no draft exists yet → seed from (localStorage fallback →
+  //      last payment snapshot → auto-selects), then let the debounced
+  //      autosave write it back so every other device sees the same state.
+  // ─────────────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (hydratedFromDraft) return;
+    if (draft === undefined) return; // still loading
+    if (draft) {
+      setSelectedDiscountIds(Array.isArray(draft.selected_discount_ids) ? draft.selected_discount_ids : []);
+      setCustomDiscounts(Array.isArray(draft.custom_discounts) ? (draft.custom_discounts as any) : []);
+      setStartDateOverrides(
+        draft.start_date_overrides && typeof draft.start_date_overrides === "object"
+          ? (draft.start_date_overrides as any)
+          : {},
+      );
+      setDiscountEnrollmentOverrides(
+        draft.discount_enrollment_overrides && typeof draft.discount_enrollment_overrides === "object"
+          ? (draft.discount_enrollment_overrides as any)
+          : {},
+      );
+      setHydratedFromDraft(true);
+      setHydratedFromPending(true);
+    } else {
+      // No draft yet — mark ready so the seeding effects below can run.
+      setHydratedFromDraft(true);
+    }
+  }, [draft, hydratedFromDraft]);
+
+  // Map legacy per-flag localStorage / payment snapshot payloads into
+  // discount_type ids once discountTypes are loaded (seeding only).
+  useEffect(() => {
+    if (draft || !lsInitial || !discountTypes.length) return;
+    if (Array.isArray(lsInitial.selectedDiscountIds)) return;
+    const mapped = mapLegacy(lsInitial);
+    if (mapped.length) setSelectedDiscountIds(mapped);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [discountTypes.length, draft]);
+
+  // Seed from the most recent payment snapshot ONLY when there is no draft
+  // yet. Once a draft exists, the draft wins.
+  useEffect(() => {
+    if (draft) return;
+    if (!discountTypes.length || !paymentDiscountSnapshot) return;
+    if (hydratedFromPending) return;
+    const d = paymentDiscountSnapshot;
+    const mapped = mapLegacy(d);
+    if (mapped.length) setSelectedDiscountIds(mapped);
+    if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
+      setStartDateOverrides(d.startDateOverrides);
+    }
+    if (Array.isArray(d.customDiscounts) && d.customDiscounts.length > 0 && !customDiscountsTouchedRef.current) {
+      setCustomDiscounts(d.customDiscounts);
+    }
+    setHydratedFromPending(true);
+  }, [paymentDiscountSnapshot, hydratedFromPending, discountTypes, draft]);
+
+  // Auto-selects only run when seeding a fresh calc (no draft row yet).
+  useEffect(() => {
+    if (draft) return;
     if (!student?.is_major_student || !discountTypes.length) return;
     const dt = discountTypes.find((d) => d.legacy_key === "major_student");
     if (!dt) return;
@@ -333,11 +353,10 @@ const AdminStudentPaymentCalc = () => {
       if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
       return [...prev, dt.id];
     });
-  }, [student, discountTypes]);
+  }, [student, discountTypes, draft]);
 
-  // Auto-select "כלי שני" when the student has 2+ active enrollments and no
-  // exclusive percentage discount is already selected.
   useEffect(() => {
+    if (draft) return;
     if (!discountTypes.length || !enrollments) return;
     const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
     if (activeCount < 2) return;
@@ -345,12 +364,13 @@ const AdminStudentPaymentCalc = () => {
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
       if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      if (prev.includes(dt.id)) return prev;
       return [...prev, dt.id];
     });
-  }, [enrollments, discountTypes]);
+  }, [enrollments, discountTypes, draft]);
 
-  // Auto-select "שלוחה אחה״צ" when any enrollment is at כרם מהר״ל.
   useEffect(() => {
+    if (draft) return;
     if (!discountTypes.length || !enrollments) return;
     const hasKarmel = (enrollments as any[]).some(
       (e) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
@@ -358,29 +378,7 @@ const AdminStudentPaymentCalc = () => {
     if (!hasKarmel) return;
     const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
     if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
-  }, [enrollments, discountTypes]);
-
-  // Hydrate discount state from the most recent payment (pending or paid) so
-  // reopening the card shows the same discounts that were used previously.
-  // Custom discounts are restored even when the draft is otherwise populated,
-  // as long as the draft's own customDiscounts list is empty — this protects
-  // against a stale autosave wiping out a manually-entered discount snapshot.
-  useEffect(() => {
-    if (!discountTypes.length || !paymentDiscountSnapshot) return;
-    if (hydratedFromPending && customDiscounts.length > 0) return;
-    const d = paymentDiscountSnapshot;
-      if (!hydratedFromPending) {
-        const mapped = mapLegacy(d);
-        if (mapped.length) setSelectedDiscountIds(mapped);
-        if (d.startDateOverrides && typeof d.startDateOverrides === "object") {
-          setStartDateOverrides(d.startDateOverrides);
-        }
-      }
-      if (customDiscounts.length === 0 && Array.isArray(d.customDiscounts) && d.customDiscounts.length > 0 && !customDiscountsTouchedRef.current) {
-        setCustomDiscounts(d.customDiscounts);
-      }
-    setHydratedFromPending(true);
-  }, [paymentDiscountSnapshot, hydratedFromPending, discountTypes, customDiscounts.length]);
+  }, [enrollments, discountTypes, draft]);
 
   // Persist discounts to localStorage (same-browser fallback)
   useEffect(() => {
@@ -405,17 +403,21 @@ const AdminStudentPaymentCalc = () => {
   const saveDraftNow = async (opts?: { showToast?: boolean }) => {
     if (!studentId || !yearId) return;
     const { selectedDiscountIds: s, customDiscounts: c, startDateOverrides: o, discountEnrollmentOverrides: deo } = draftStateRef.current;
-    const fallbackSnapshot = paymentDiscountSnapshotRef.current;
+    // Fallback to the last payment snapshot only when SEEDING for the first
+    // time (no draft row yet). Once a draft exists it is authoritative and
+    // an empty list must remain empty across devices.
+    const canFallback = !draft;
+    const fallbackSnapshot = canFallback ? paymentDiscountSnapshotRef.current : null;
     const customDiscountsToSave =
-      !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
+      canFallback && !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
         ? fallbackSnapshot!.customDiscounts
         : c;
     const selectedDiscountIdsToSave =
-      s.length === 0 && (fallbackSnapshot?.selectedDiscountIds?.length ?? 0) > 0
+      canFallback && s.length === 0 && (fallbackSnapshot?.selectedDiscountIds?.length ?? 0) > 0
         ? fallbackSnapshot!.selectedDiscountIds
         : s;
     const startDateOverridesToSave =
-      Object.keys(o).length === 0 && fallbackSnapshot?.startDateOverrides && Object.keys(fallbackSnapshot.startDateOverrides).length > 0
+      canFallback && Object.keys(o).length === 0 && fallbackSnapshot?.startDateOverrides && Object.keys(fallbackSnapshot.startDateOverrides).length > 0
         ? fallbackSnapshot.startDateOverrides
         : o;
     try {
