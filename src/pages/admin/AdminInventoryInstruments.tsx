@@ -132,17 +132,18 @@ const AdminInventoryInstruments = () => {
   });
 
   const verifyMutation = useMutation({
-    mutationFn: async (ids: string[]) => {
+    mutationFn: async ({ ids, verified }: { ids: string[]; verified: boolean }) => {
       const { data: userRes } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from("inventory_instruments")
-        .update({ last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null })
-        .in("id", ids);
+      const payload = verified
+        ? { last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null }
+        : { last_verified_at: null, last_verified_by: null };
+      const { error } = await supabase.from("inventory_instruments").update(payload).in("id", ids);
       if (error) throw error;
     },
-    onSuccess: (_d, ids) => {
+    onSuccess: (_d, vars) => {
       queryClient.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-      toast.success(`סומנו ${ids.length} כלים כנבדקו`);
+      queryClient.invalidateQueries({ queryKey: ["admin-inventory-instrument"] });
+      toast.success(vars.verified ? `סומנו ${vars.ids.length} כלים כנבדקו` : `הוסר סימון מ-${vars.ids.length} כלים`);
       setSelectedIds(new Set());
     },
     onError: (err: any) => toast.error(err.message || "שגיאה בסימון"),
