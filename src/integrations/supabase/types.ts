@@ -671,6 +671,8 @@ export type Database = {
           instrument_id: string
           last_verified_at: string | null
           last_verified_by: string | null
+          last_verified_notes: string | null
+          last_verified_status: string | null
           model: string | null
           notes: string | null
           purchase_date: string | null
@@ -687,6 +689,8 @@ export type Database = {
           instrument_id: string
           last_verified_at?: string | null
           last_verified_by?: string | null
+          last_verified_notes?: string | null
+          last_verified_status?: string | null
           model?: string | null
           notes?: string | null
           purchase_date?: string | null
@@ -703,6 +707,8 @@ export type Database = {
           instrument_id?: string
           last_verified_at?: string | null
           last_verified_by?: string | null
+          last_verified_notes?: string | null
+          last_verified_status?: string | null
           model?: string | null
           notes?: string | null
           purchase_date?: string | null
