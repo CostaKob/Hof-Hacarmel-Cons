@@ -168,16 +168,8 @@ const AdminInventoryInstruments = () => {
       if (filterSchool === "none" && it._borrower_school) return false;
       if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
     }
-    if (filterVerified !== "all") {
-      const v = it.last_verified_at ? new Date(it.last_verified_at) : null;
-      const now = new Date();
-      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      if (filterVerified === "never" && v) return false;
-      if (filterVerified === "not_today" && v && v >= startOfToday) return false;
-      if (filterVerified === "today" && (!v || v < startOfToday)) return false;
-      if (filterVerified === "not_week" && v && v >= sevenDaysAgo) return false;
-    }
+    if (filterVerified === "verified" && !it.last_verified_at) return false;
+    if (filterVerified === "not_verified" && it.last_verified_at) return false;
     if (search) {
       const s = search.toLowerCase();
       const matches =
