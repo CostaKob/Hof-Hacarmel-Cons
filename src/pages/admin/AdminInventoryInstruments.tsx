@@ -351,9 +351,6 @@ const AdminInventoryInstruments = () => {
             {filtered.map((it: any) => {
               const isChecked = selectedIds.has(it.id);
               const verifiedAt = it.last_verified_at ? new Date(it.last_verified_at) : null;
-              const now = new Date();
-              const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-              const verifiedToday = verifiedAt && verifiedAt >= startOfToday;
               return (
                 <div
                   key={it.id}
