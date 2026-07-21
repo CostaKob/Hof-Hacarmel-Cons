@@ -131,6 +131,32 @@ const AdminInventoryInstruments = () => {
     onError: (err: any) => toast.error(err.message || "שגיאה במחיקה"),
   });
 
+  const verifyMutation = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from("inventory_instruments")
+        .update({ last_verified_at: new Date().toISOString(), last_verified_by: userRes.user?.id ?? null })
+        .in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: (_d, ids) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      toast.success(`סומנו ${ids.length} כלים כנבדקו`);
+      setSelectedIds(new Set());
+    },
+    onError: (err: any) => toast.error(err.message || "שגיאה בסימון"),
+  });
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const filtered = items.filter((it: any) => {
     if (filterInstrument !== "all" && it.instrument_id !== filterInstrument) return false;
     if (filterCondition !== "all" && it.condition !== filterCondition) return false;
