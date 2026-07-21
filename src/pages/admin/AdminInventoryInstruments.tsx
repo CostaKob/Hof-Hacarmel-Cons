@@ -317,7 +317,36 @@ const AdminInventoryInstruments = () => {
               ))}
             </SelectContent>
           </Select>
+          <Select value={filterVerified} onValueChange={setFilterVerified}>
+            <SelectTrigger className="h-11 rounded-xl">
+              <SelectValue placeholder="בדיקה" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל סטטוסי הבדיקה</SelectItem>
+              <SelectItem value="not_today">לא נבדק היום</SelectItem>
+              <SelectItem value="today">נבדק היום</SelectItem>
+              <SelectItem value="not_week">לא נבדק בשבוע האחרון</SelectItem>
+              <SelectItem value="never">מעולם לא נבדק</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+        {selectedIds.size > 0 && (
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+            <span className="text-sm font-medium text-foreground">נבחרו {selectedIds.size} כלים</span>
+            <div className="flex gap-2">
+              <Button variant="outline" className="h-10 rounded-xl" onClick={() => setSelectedIds(new Set())}>
+                נקה בחירה
+              </Button>
+              <Button
+                className="h-10 rounded-xl"
+                disabled={verifyMutation.isPending}
+                onClick={() => verifyMutation.mutate(Array.from(selectedIds))}
+              >
+                <CheckCircle2 className="h-4 w-4" /> סמן כנבדק
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {isLoading ? (
