@@ -1,0 +1,2 @@
+DROP TRIGGER IF EXISTS preserve_student_payment_draft_custom_discounts_trigger ON public.student_payment_drafts;
+DROP FUNCTION IF EXISTS public.preserve_student_payment_draft_custom_discounts();
