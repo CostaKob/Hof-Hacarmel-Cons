@@ -566,6 +566,34 @@ const AdminInventoryInstruments = () => {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog open={!!clearVerifyFor} onOpenChange={(open) => !open && setClearVerifyFor(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ביטול סימון בדיקה</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך לבטל את סימון הבדיקה של הכלי #{clearVerifyFor?.serial}? הסטטוס יחזור ל"טרם נבדק" וההערות יימחקו.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                if (clearVerifyFor) {
+                  verifyMutation.mutate(
+                    { ids: [clearVerifyFor.id], verified: false },
+                    { onSuccess: () => setClearVerifyFor(null) },
+                  );
+                }
+              }}
+              disabled={verifyMutation.isPending}
+            >
+              כן, בטל סימון
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <InventoryImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </AdminLayout>
   );
