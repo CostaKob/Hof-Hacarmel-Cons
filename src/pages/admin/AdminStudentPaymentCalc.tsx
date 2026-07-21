@@ -966,23 +966,78 @@ const AdminStudentPaymentCalc = () => {
                   d.applies_to === "cheapest_enrollment"
                     ? " · על כלים נוספים"
                     : " · על שיעורים פרטניים";
+                const isPerEnrollment = d.applies_to === "cheapest_enrollment";
+                const override = discountEnrollmentOverrides[d.id];
+                const usingOverride = Array.isArray(override) && override.length > 0;
+                const appliedIds = new Set(
+                  stdCompute.lines.find((l) => l.discountTypeId === d.id)?.appliedEnrollmentIds ?? [],
+                );
                 return (
-                  <label
+                  <div
                     key={d.id}
-                    className={`flex items-center gap-2 rounded-xl border border-border p-3 ${
-                      blockedByExclusive ? "opacity-50 cursor-not-allowed" : "cursor-pointer hover:bg-muted/30"
+                    className={`flex flex-col gap-2 rounded-xl border border-border p-3 ${
+                      blockedByExclusive ? "opacity-50" : ""
                     }`}
                     title={blockedByExclusive ? "לא ניתן לשלב עם הנחת אחוזים אחרת" : undefined}
                   >
-                    <Checkbox
-                      checked={checked}
-                      disabled={blockedByExclusive}
-                      onCheckedChange={() => toggleDiscount(d.id)}
-                    />
-                    <span className="text-sm">
-                      {d.label} ({Number(d.percentage)}%{scopeNote})
-                    </span>
-                  </label>
+                    <label className={`flex items-center gap-2 ${blockedByExclusive ? "cursor-not-allowed" : "cursor-pointer"}`}>
+                      <Checkbox
+                        checked={checked}
+                        disabled={blockedByExclusive}
+                        onCheckedChange={() => toggleDiscount(d.id)}
+                      />
+                      <span className="text-sm">
+                        {d.label} ({Number(d.percentage)}%{scopeNote})
+                      </span>
+                    </label>
+                    {checked && isPerEnrollment && rows.length >= 2 && (
+                      <div className="mt-1 pr-6 space-y-1.5 border-t border-border pt-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-muted-foreground">בחר שיוכים להנחה:</span>
+                          {usingOverride && (
+                            <button
+                              type="button"
+                              className="text-[11px] text-primary underline"
+                              onClick={() => setDiscountEnrollmentOverrides((prev) => {
+                                const { [d.id]: _drop, ...rest } = prev;
+                                return rest;
+                              })}
+                            >
+                              איפוס לברירת מחדל
+                            </button>
+                          )}
+                        </div>
+                        {rows.map((r) => {
+                          const e = enrollments?.find((x: any) => x.id === r.enrollmentId);
+                          const label = `${e?.instruments?.name ?? "—"} · ${e?.schools?.name ?? "—"} · ${e?.lesson_duration_minutes ?? "—"} דק׳`;
+                          const isOn = appliedIds.has(r.enrollmentId);
+                          return (
+                            <label key={r.enrollmentId} className="flex items-center gap-2 text-xs cursor-pointer">
+                              <Checkbox
+                                checked={isOn}
+                                onCheckedChange={(c) => {
+                                  setDiscountEnrollmentOverrides((prev) => {
+                                    const current =
+                                      Array.isArray(prev[d.id]) && prev[d.id].length > 0
+                                        ? prev[d.id]
+                                        : Array.from(appliedIds);
+                                    const next = c === true
+                                      ? Array.from(new Set([...current, r.enrollmentId]))
+                                      : current.filter((id) => id !== r.enrollmentId);
+                                    return { ...prev, [d.id]: next };
+                                  });
+                                }}
+                              />
+                              <span>{label}</span>
+                            </label>
+                          );
+                        })}
+                        {!usingOverride && (
+                          <div className="text-[10px] text-muted-foreground">ברירת מחדל: כל השיוכים למעט היקר ביותר.</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
 
