@@ -712,7 +712,9 @@ const AdminStudentPaymentCalc = () => {
         })),
         customDiscounts,
         startDateOverrides,
+        discountEnrollmentOverrides,
       },
+
     };
   };
 
