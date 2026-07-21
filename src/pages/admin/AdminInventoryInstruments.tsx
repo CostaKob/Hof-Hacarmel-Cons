@@ -47,6 +47,7 @@ const AdminInventoryInstruments = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [attentionFor, setAttentionFor] = useState<{ id: string; serial: string } | null>(null);
   const [attentionNotes, setAttentionNotes] = useState("");
+  const [clearVerifyFor, setClearVerifyFor] = useState<{ id: string; serial: string } | null>(null);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
