@@ -1,0 +1,1 @@
+ALTER TABLE public.student_payment_drafts ADD COLUMN IF NOT EXISTS discount_enrollment_overrides jsonb NOT NULL DEFAULT '{}'::jsonb;
