@@ -367,11 +367,8 @@ const AdminInventoryInstrumentForm = () => {
                 <Button type="button" className="h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white" onClick={() => markVerified("ok")}>
                   תקין
                 </Button>
-                <Button type="button" variant="outline" className="h-10 rounded-xl border-red-300 text-red-700 hover:bg-red-50" onClick={() => markVerified("needs_repair")}>
-                  צריך תיקון
-                </Button>
-                <Button type="button" variant="outline" className="h-10 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => markVerified("needs_completion")}>
-                  צריך השלמות
+                <Button type="button" variant="outline" className="h-10 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => markVerified("needs_attention")}>
+                  צריך תיקון/השלמות
                 </Button>
                 {verifiedAt && (
                   <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={clearVerified}>
