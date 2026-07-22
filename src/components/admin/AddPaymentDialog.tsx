@@ -1013,7 +1013,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       <button
                         type="button"
                         onClick={() =>
-                          setSplitParts((prev) => [...prev, { label: `חלק ${prev.length + 1}`, amount: "" }])
+                          setSplitParts((prev) => [...prev, { label: `הורה ${prev.length + 1}`, amount: "" }])
                         }
                         className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
