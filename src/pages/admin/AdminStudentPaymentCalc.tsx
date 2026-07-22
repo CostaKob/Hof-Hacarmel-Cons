@@ -1168,6 +1168,23 @@ const AdminStudentPaymentCalc = () => {
                     <div className="text-muted-foreground">
                       לתלמיד/ה ולכל האחים/ות בקבוצה יש כבר הנחה בלעדית אחרת (למשל תלמיד/ת מגמה) — אין זכאות נוספת להנחת <strong>"{sibDt.label}"</strong> כי אין כפל הנחות.
                     </div>
+                    {siblingCheapestInfo.siblingTotals.length > 0 && (
+                      <div className="text-xs text-muted-foreground pt-1">
+                        אח/ות בקבוצה:{" "}
+                        {siblingCheapestInfo.siblingTotals.map((s, i) => (
+                          <span key={s.id}>
+                            {i > 0 && ", "}
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/admin/students/${s.id}`)}
+                              className="font-semibold text-primary underline hover:no-underline"
+                            >
+                              {s.name}
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               }
