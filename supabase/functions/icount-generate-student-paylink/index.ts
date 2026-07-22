@@ -228,7 +228,16 @@ Deno.serve(async (req: Request) => {
     const payerId = student.parent_national_id || student.national_id || "";
 
     const params = new URLSearchParams();
-    if (!skipPayerPrefill) {
+    if (payerDetails && (payerDetails.firstName || payerDetails.lastName || payerDetails.email || payerDetails.phone)) {
+      const first = (payerDetails.firstName ?? "").trim();
+      const last = (payerDetails.lastName ?? "").trim();
+      const full = `${first} ${last}`.trim();
+      if (full) params.set("name_on_invoice", full);
+      if (first) params.set("fname", first);
+      if (last) params.set("lname", last);
+      if (payerDetails.email) params.set("email", String(payerDetails.email).trim());
+      if (payerDetails.phone) params.set("phone", String(payerDetails.phone).trim());
+    } else if (!skipPayerPrefill) {
       if (parentName) params.set("name_on_invoice", parentName);
       if (parentFirstName) params.set("fname", parentFirstName);
       if (parentLastName) params.set("lname", parentLastName);
