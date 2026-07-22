@@ -472,6 +472,8 @@ const AdminStudentCard = () => {
 
         <StudentEnsemblesSection studentId={studentId!} enrollments={enrollments as any} />
 
+        <StudentSiblingsSection studentId={studentId!} />
+
 
 
         {(() => {
