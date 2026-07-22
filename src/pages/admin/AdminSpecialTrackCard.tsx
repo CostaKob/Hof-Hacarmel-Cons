@@ -291,6 +291,13 @@ const AdminSpecialTrackCard = () => {
                         {s.parent_phone && (<><span>·</span><PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
                         {!s.parent_phone && s.phone && (<><span>·</span><PhoneDisplay phone={s.phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
                       </div>
+                      {(enrollmentsByStudent[s.id]?.length ?? 0) > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {enrollmentsByStudent[s.id].map((i) => (
+                            <Badge key={i.id} variant="secondary" className="text-xs">🎵 {i.name}</Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <button
