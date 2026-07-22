@@ -533,6 +533,15 @@ const AdminPrivatePayments = () => {
             <Undo2 className="h-3.5 w-3.5" />
             {statusFilter === "refunded" ? "בטל סינון החזרים" : "החזרים בלבד"}
           </Button>
+          <Button
+            variant={statusFilter === "active_links" ? "default" : "outline"}
+            size="sm"
+            className="h-9 rounded-xl gap-1"
+            onClick={() => setStatusFilter(statusFilter === "active_links" ? "all" : "active_links")}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            {statusFilter === "active_links" ? "בטל סינון לינקים" : "לינקים פעילים בלבד"}
+          </Button>
           <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={exportCsv}>
             <Download className="h-3.5 w-3.5" />
             ייצוא לאקסל
