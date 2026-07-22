@@ -661,19 +661,43 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הקישורים"),
   });
 
-  // Autofill split parts from total when opening the split panel
+  // Autofill split parts (amount split + parent 1 details from student) on open.
   useEffect(() => {
     if (!splitOpen) return;
-    if (splitParts.some((p) => parseFloat(p.amount) > 0)) return;
-    if (totalSelected <= 0) return;
-    const per = Math.round((totalSelected / splitParts.length) * 100) / 100;
-    const rounded = Array(splitParts.length).fill(per);
-    // fix rounding drift on last part
-    const diff = Math.round((totalSelected - rounded.reduce((s, v) => s + v, 0)) * 100) / 100;
-    rounded[rounded.length - 1] = Math.round((rounded[rounded.length - 1] + diff) * 100) / 100;
-    setSplitParts((prev) => prev.map((p, i) => ({ ...p, amount: String(rounded[i]) })));
+    const parentName = (student?.parent_name ?? "").trim();
+    const [pFirst, ...pRest] = parentName.split(/\s+/);
+    const parent1First = pFirst ?? "";
+    const parent1Last = pRest.join(" ");
+    const parent1Email = student?.parent_email ?? "";
+    const parent1Phone = student?.parent_phone ?? "";
+
+    setSplitParts((prev) => {
+      const hasAmounts = prev.some((p) => parseFloat(p.amount) > 0);
+      let amounts = prev.map((p) => p.amount);
+      if (!hasAmounts && totalSelected > 0) {
+        const per = Math.round((totalSelected / prev.length) * 100) / 100;
+        amounts = Array(prev.length).fill(String(per));
+        const diff = Math.round((totalSelected - per * prev.length) * 100) / 100;
+        if (Math.abs(diff) >= 0.01) {
+          amounts[amounts.length - 1] = String(Math.round((per + diff) * 100) / 100);
+        }
+      }
+      return prev.map((p, i) => {
+        if (i === 0) {
+          return {
+            ...p,
+            amount: amounts[i],
+            firstName: p.firstName || parent1First,
+            lastName: p.lastName || parent1Last,
+            email: p.email || parent1Email,
+            phone: p.phone || parent1Phone,
+          };
+        }
+        return { ...p, amount: amounts[i] };
+      });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [splitOpen]);
+  }, [splitOpen, student?.id]);
 
   const resetForm = () => {
     setPaymentDate(today);
