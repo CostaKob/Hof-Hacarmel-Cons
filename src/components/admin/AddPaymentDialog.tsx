@@ -1193,16 +1193,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               </div>
               </div>
             )}
-            <div className="flex gap-2">
-              <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
-                {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
-              </Button>
-              {isEdit && (
-                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteConfirm(true)}>
-                  <Trash2 className="h-4 w-4" />
+            {/* Save button: only for cash/checks or when editing an existing row.
+                Credit-card flow only produces payment links — the actual payment
+                row is created by the iCount webhook after the parent pays. */}
+            {(isEdit || paymentMethod === "cash" || paymentMethod === "check") && (
+              <div className="flex gap-2">
+                <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
+                  {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
                 </Button>
-              )}
-            </div>
+                {isEdit && (
+                  <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteConfirm(true)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
