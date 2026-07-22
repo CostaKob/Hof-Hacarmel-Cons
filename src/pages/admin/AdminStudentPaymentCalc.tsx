@@ -455,16 +455,28 @@ const AdminStudentPaymentCalc = () => {
     }));
     const allTotals = [{ id: studentId!, name: "current", total: myTotal }, ...siblingTotals];
     const min = Math.min(...allTotals.map((t) => t.total));
-    // Deterministic tie-break: when several siblings share the lowest total,
-    // pick the one with the smallest id so exactly one card auto-applies.
+    const sibDtId = discountTypes.find(
+      (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
+    )?.id;
+    // A student is "blocked" from receiving the sibling discount if their draft
+    // already has another exclusive discount (e.g. תלמיד מגמה) — no stacking.
+    const hasOtherExclusive = (id: string): boolean => {
+      const ids = id === studentId
+        ? selectedDiscountIds
+        : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
+      return (ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x));
+    };
+    // Tie-break among the cheapest: prefer candidates NOT already blocked by
+    // another exclusive discount; then deterministically pick the smallest id.
     const tiedAtMin = allTotals
       .filter((t) => Math.abs(t.total - min) < 0.005)
-      .map((t) => t.id)
-      .sort();
-    const chosenId = tiedAtMin[0];
+      .map((t) => t.id);
+    const eligible = tiedAtMin.filter((id) => !hasOtherExclusive(id));
+    const pool = eligible.length > 0 ? eligible : tiedAtMin;
+    const chosenId = [...pool].sort()[0];
     const isCheapest = myTotal > 0 && chosenId === studentId;
     return { isCheapest, siblingTotals, myTotal };
-  }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId]);
+  }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId, discountTypes, siblingDrafts, selectedDiscountIds, exclusiveIdsSet]);
 
   // Which (if any) sibling already has the sibling discount selected in their draft.
   const siblingWithSiblingDiscount = useMemo(() => {
