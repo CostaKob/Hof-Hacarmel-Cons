@@ -155,6 +155,22 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  // Drafts for confirmed siblings — used to detect whether one of them already
+  // has the sibling discount applied so we don't double-apply it.
+  const { data: siblingDrafts = [] } = useQuery({
+    queryKey: ["calc-sibling-drafts", siblingIds.sort().join(","), yearId],
+    enabled: siblingIds.length > 0 && !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("student_id, selected_discount_ids")
+        .in("student_id", siblingIds)
+        .eq("academic_year_id", yearId!);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
   const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
@@ -444,10 +460,27 @@ const AdminStudentPaymentCalc = () => {
     return { isCheapest, siblingTotals, myTotal };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId]);
 
+  // Which (if any) sibling already has the sibling discount selected in their draft.
+  const siblingWithSiblingDiscount = useMemo(() => {
+    const sibDt = discountTypes.find(
+      (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
+    );
+    if (!sibDt) return null;
+    for (const dr of siblingDrafts) {
+      const ids = Array.isArray(dr?.selected_discount_ids) ? dr.selected_discount_ids : [];
+      if (ids.includes(sibDt.id)) {
+        const s = siblingsList.find((x) => x.id === dr.student_id);
+        if (s) return { id: s.id, name: `${s.first_name} ${s.last_name}` };
+      }
+    }
+    return null;
+  }, [siblingDrafts, siblingsList, discountTypes]);
+
   useEffect(() => {
     if (draft) return;
     if (!discountTypes.length) return;
     if (!siblingCheapestInfo?.isCheapest) return;
+    if (siblingWithSiblingDiscount) return; // already applied on a sibling — don't double-apply
     const dt = discountTypes.find((d) => d.legacy_key === "sibling" || d.applies_to === "sibling_cheapest");
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
@@ -455,7 +488,7 @@ const AdminStudentPaymentCalc = () => {
       if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
       return [...prev, dt.id];
     });
-  }, [siblingCheapestInfo, discountTypes, draft]);
+  }, [siblingCheapestInfo, discountTypes, draft, siblingWithSiblingDiscount]);
 
 
   // Persist discounts to localStorage (same-browser fallback)
@@ -1029,7 +1062,7 @@ const AdminStudentPaymentCalc = () => {
             </button>
           </div>
           {(() => {
-            if (!siblingCheapestInfo || siblingsList.length === 0) return null;
+            if (siblingsList.length === 0) return null;
             const sibDt = discountTypes.find(
               (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
             );
@@ -1038,6 +1071,37 @@ const AdminStudentPaymentCalc = () => {
             const blockedByOther = selectedDiscountIds.some(
               (id) => id !== sibDt.id && exclusiveIdsSet.has(id),
             );
+
+            // Case A: another sibling already has the sibling discount applied.
+            if (siblingWithSiblingDiscount) {
+              return (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm space-y-2">
+                  <div>
+                    הנחת <strong>"{sibDt.label}"</strong> כבר מוחלת אצל{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/students/${siblingWithSiblingDiscount.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline"
+                    >
+                      {siblingWithSiblingDiscount.name}
+                    </button>
+                    {" "}— אין כפל הנחות בקבוצת אחים.
+                  </div>
+                  {alreadySelected && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 rounded-lg"
+                      onClick={() => toggleDiscount(sibDt.id)}
+                    >
+                      הסר הנחה כאן
+                    </Button>
+                  )}
+                </div>
+              );
+            }
+
+            if (!siblingCheapestInfo) return null;
             if (siblingCheapestInfo.isCheapest) {
               if (alreadySelected) {
                 return (
@@ -1072,7 +1136,15 @@ const AdminStudentPaymentCalc = () => {
             );
             return (
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                האח/ות הזול/ה בקבוצה: <strong className="text-foreground">{cheapest?.name}</strong> — הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
+                האח/ות הזול/ה בקבוצה:{" "}
+                <button
+                  type="button"
+                  onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
+                  className="font-semibold text-foreground underline hover:no-underline"
+                >
+                  {cheapest?.name}
+                </button>
+                {" "}— הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
               </div>
             );
           })()}
