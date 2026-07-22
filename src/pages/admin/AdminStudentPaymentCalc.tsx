@@ -127,6 +127,34 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  // ── Sibling detection: load confirmed siblings + their enrollments to detect
+  // whether the current student has the lowest annual total (before discounts).
+  const { data: siblingsList = [] } = useQuery({
+    queryKey: ["calc-siblings", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_confirmed_siblings", { _student_id: studentId });
+      if (error) throw error;
+      return (data ?? []) as { id: string; first_name: string; last_name: string }[];
+    },
+  });
+
+  const siblingIds = siblingsList.map((s) => s.id);
+  const { data: siblingEnrollments = [] } = useQuery({
+    queryKey: ["calc-sibling-enrollments", siblingIds.sort().join(","), yearId],
+    enabled: siblingIds.length > 0 && !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, student_id, duration, start_date, end_date, price_per_lesson_override, is_active")
+        .in("student_id", siblingIds)
+        .eq("academic_year_id", yearId!)
+        .eq("is_active", true);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
   const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
