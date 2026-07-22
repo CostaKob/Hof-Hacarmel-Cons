@@ -640,11 +640,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             academicYearId,
             academicYearName: hebrewYear || activeYear?.name || null,
             lines: finalLines,
-            // The first parent is prefilled with the student's parent-on-file.
-            // Every additional parent must fill in their own details on the
-            // iCount page — do NOT prefill name/phone/id/email for them.
-            skipPayerPrefill: idx > 0,
+            // Skip the student-record autofill — we send explicit payer details
+            // per part (parent 1 arrives pre-populated in the UI, parent 2+ are
+            // filled by the operator).
+            skipPayerPrefill: true,
             payerLabel: p.label,
+            payerDetails: {
+              firstName: p.firstName,
+              lastName: p.lastName,
+              email: p.email,
+              phone: p.phone,
+            },
             // Force a brand new paypage per part so the URLs don't collide
             // on the cached pending row.
             forceNewPaypage: true,
