@@ -496,6 +496,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
               <SelectItem value="refunded">עם החזרים</SelectItem>
+              <SelectItem value="active_links">עם לינק פעיל</SelectItem>
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
