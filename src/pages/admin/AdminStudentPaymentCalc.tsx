@@ -217,6 +217,7 @@ const AdminStudentPaymentCalc = () => {
     [allStudentPayments],
   );
   const pendingPayments = allPendingPayments as any[];
+  const [deletingPendingId, setDeletingPendingId] = useState<string | null>(null);
 
   const paymentDiscountSnapshot = useMemo(() => {
     const candidates = [...pendingPayments, ...(allStudentPayments as any[])]
