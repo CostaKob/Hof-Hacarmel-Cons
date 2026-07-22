@@ -425,7 +425,6 @@ const AdminPrivatePayments = () => {
               const statusBadge =
                 r.status === "paid" ? { label: "שולם", variant: "default" as const } :
                 r.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
-                r.status === "uncalculated" ? { label: "טרם חושב שכר לימוד", variant: "outline" as const } :
                 { label: "לא שולם", variant: "outline" as const };
               return (
                 <div
