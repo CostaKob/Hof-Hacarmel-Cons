@@ -466,22 +466,22 @@ const AdminStudentPaymentCalc = () => {
         : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
       return (ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x));
     };
-    // Sibling discount rule: everyone in the group EXCEPT the most expensive
-    // eligible sibling receives the discount (N-1). Ties on max are broken
-    // deterministically (largest id excluded) so smaller-id students still
-    // receive the discount when totals are equal.
-    const eligibleTotals = allTotals.filter((t) => !hasOtherExclusive(t.id));
+    // Sibling discount rule (N-1): the single most expensive sibling in the
+    // FULL group is excluded; everyone else receives the discount — unless
+    // they're already on another exclusive discount (מגמה/הפקה/רסיטל), in
+    // which case they simply don't stack it. Ties on max are broken
+    // deterministically (largest id excluded).
     const recipientIds = new Set<string>();
     let excludedId: string | null = null;
-    if (eligibleTotals.length >= 2) {
-      const maxEligible = Math.max(...eligibleTotals.map((t) => t.total));
-      excludedId = eligibleTotals
-        .filter((t) => Math.abs(t.total - maxEligible) < 0.005)
+    if (allTotals.length >= 2) {
+      const maxTotal = Math.max(...allTotals.map((t) => t.total));
+      excludedId = allTotals
+        .filter((t) => Math.abs(t.total - maxTotal) < 0.005)
         .map((t) => t.id)
         .sort()
         .reverse()[0];
-      for (const t of eligibleTotals) {
-        if (t.id !== excludedId) recipientIds.add(t.id);
+      for (const t of allTotals) {
+        if (t.id !== excludedId && !hasOtherExclusive(t.id)) recipientIds.add(t.id);
       }
     }
     const isCheapest = myTotal > 0 && recipientIds.has(studentId!);
