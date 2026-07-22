@@ -1091,6 +1091,24 @@ const AdminStudentPaymentCalc = () => {
               (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
             );
             if (!sibDt) return null;
+            const siblingsLine = siblingsList.length > 0 ? (
+              <div className="text-xs text-muted-foreground pt-1">
+                אחים/ות בקבוצה:{" "}
+                {siblingsList.map((s, i) => (
+                  <span key={s.id}>
+                    {i > 0 && ", "}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/students/${s.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline"
+                    >
+                      {s.first_name} {s.last_name}
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null;
+            // dummy line to preserve original line below
             const alreadySelected = selectedDiscountIds.includes(sibDt.id);
             const blockedByOther = selectedDiscountIds.some(
               (id) => id !== sibDt.id && exclusiveIdsSet.has(id),
