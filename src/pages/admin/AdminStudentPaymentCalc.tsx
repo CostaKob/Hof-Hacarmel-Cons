@@ -1091,6 +1091,24 @@ const AdminStudentPaymentCalc = () => {
               (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
             );
             if (!sibDt) return null;
+            const siblingsLine = siblingsList.length > 0 ? (
+              <div className="text-xs text-muted-foreground pt-1">
+                אחים/ות בקבוצה:{" "}
+                {siblingsList.map((s, i) => (
+                  <span key={s.id}>
+                    {i > 0 && ", "}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/students/${s.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline"
+                    >
+                      {s.first_name} {s.last_name}
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null;
+            // dummy line to preserve original line below
             const alreadySelected = selectedDiscountIds.includes(sibDt.id);
             const blockedByOther = selectedDiscountIds.some(
               (id) => id !== sibDt.id && exclusiveIdsSet.has(id),
@@ -1121,6 +1139,7 @@ const AdminStudentPaymentCalc = () => {
                       הסר הנחה כאן
                     </Button>
                   )}
+                  {siblingsLine}
                 </div>
               );
             }
@@ -1129,8 +1148,9 @@ const AdminStudentPaymentCalc = () => {
             if (siblingCheapestInfo.isCheapest) {
               if (alreadySelected) {
                 return (
-                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100">
-                    ✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
+                    <div>✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
+                    {siblingsLine}
                   </div>
                 );
               }
@@ -1151,6 +1171,7 @@ const AdminStudentPaymentCalc = () => {
                       שים לב: תוסר הנחת האחוזים האחרת הפעילה כרגע (אין כפל).
                     </div>
                   )}
+                  {siblingsLine}
                 </div>
               );
             }
@@ -1168,23 +1189,7 @@ const AdminStudentPaymentCalc = () => {
                     <div className="text-muted-foreground">
                       לתלמיד/ה ולכל האחים/ות בקבוצה יש כבר הנחה בלעדית אחרת (למשל תלמיד/ת מגמה) — אין זכאות נוספת להנחת <strong>"{sibDt.label}"</strong> כי אין כפל הנחות.
                     </div>
-                    {siblingCheapestInfo.siblingTotals.length > 0 && (
-                      <div className="text-xs text-muted-foreground pt-1">
-                        אח/ות בקבוצה:{" "}
-                        {siblingCheapestInfo.siblingTotals.map((s, i) => (
-                          <span key={s.id}>
-                            {i > 0 && ", "}
-                            <button
-                              type="button"
-                              onClick={() => navigate(`/admin/students/${s.id}`)}
-                              className="font-semibold text-primary underline hover:no-underline"
-                            >
-                              {s.name}
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
+                    {siblingsLine}
                   </div>
                 );
               }
@@ -1201,20 +1206,24 @@ const AdminStudentPaymentCalc = () => {
                     </button>
                     זכאי/ת להנחת <strong>"{sibDt.label}"</strong> בכרטיס שלו/ה.
                   </div>
+                  {siblingsLine}
                 </div>
               );
             }
             return (
-              <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                האח/ות הזול/ה בקבוצה:{" "}
-                <button
-                  type="button"
-                  onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                  className="font-semibold text-foreground underline hover:no-underline"
-                >
-                  {cheapest?.name}
-                </button>
-                {" "}— הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
+              <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
+                <div>
+                  האח/ות הזול/ה בקבוצה:{" "}
+                  <button
+                    type="button"
+                    onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
+                    className="font-semibold text-foreground underline hover:no-underline"
+                  >
+                    {cheapest?.name}
+                  </button>
+                  {" "}— הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
+                </div>
+                {siblingsLine}
               </div>
             );
           })()}
