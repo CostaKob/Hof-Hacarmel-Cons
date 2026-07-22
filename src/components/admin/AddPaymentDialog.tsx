@@ -74,7 +74,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     { label: "הורה 1", amount: "", firstName: "", lastName: "", email: "", phone: "" },
     { label: "הורה 2", amount: "", firstName: "", lastName: "", email: "", phone: "" },
   ]);
-  const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string }>>([]);
+  const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string; amount: number; firstName: string; lastName: string; email: string; phone: string }>>([]);
 
   // ---- Check spread state ----
   const [checksOpen, setChecksOpen] = useState(false);
