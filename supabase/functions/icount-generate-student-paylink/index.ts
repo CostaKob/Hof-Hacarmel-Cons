@@ -103,6 +103,7 @@ Deno.serve(async (req: Request) => {
       skipPayerPrefill,
       payerLabel,
       payerDetails,
+      splitInfo,
       forceNewPaypage,
     } = await req.json().catch(() => ({}));
 
