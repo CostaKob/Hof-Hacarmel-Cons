@@ -7,7 +7,7 @@
 //                            3 → on 2, 4 → on 3, etc.).
 //                            Only active when there are 2+ enrollments.
 
-export type DiscountAppliesTo = "all" | "cheapest_enrollment";
+export type DiscountAppliesTo = "all" | "cheapest_enrollment" | "sibling_cheapest";
 
 export interface DiscountType {
   id: string;
