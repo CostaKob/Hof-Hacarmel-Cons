@@ -70,9 +70,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   // invoiceMode removed — always combined when multiple entries
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
-  const [splitParts, setSplitParts] = useState<Array<{ label: string; amount: string }>>([
-    { label: "הורה 1", amount: "" },
-    { label: "הורה 2", amount: "" },
+  const [splitParts, setSplitParts] = useState<Array<{ label: string; amount: string; firstName: string; lastName: string; email: string; phone: string }>>([
+    { label: "הורה 1", amount: "", firstName: "", lastName: "", email: "", phone: "" },
+    { label: "הורה 2", amount: "", firstName: "", lastName: "", email: "", phone: "" },
   ]);
   const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string }>>([]);
 
@@ -570,7 +570,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const splitLinksMutation = useMutation({
     mutationFn: async () => {
       const parts = splitParts
-        .map((p) => ({ label: p.label.trim() || "הורה", amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100 }))
+        .map((p) => ({
+          label: p.label.trim() || "הורה",
+          amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100,
+          firstName: p.firstName.trim(),
+          lastName: p.lastName.trim(),
+          email: p.email.trim(),
+          phone: p.phone.trim(),
+        }))
         .filter((p) => p.amount > 0);
       if (parts.length < 2) throw new Error("יש להזין לפחות שני חלקים עם סכום");
 
@@ -633,11 +640,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             academicYearId,
             academicYearName: hebrewYear || activeYear?.name || null,
             lines: finalLines,
-            // The first parent is prefilled with the student's parent-on-file.
-            // Every additional parent must fill in their own details on the
-            // iCount page — do NOT prefill name/phone/id/email for them.
-            skipPayerPrefill: idx > 0,
+            // Skip the student-record autofill — we send explicit payer details
+            // per part (parent 1 arrives pre-populated in the UI, parent 2+ are
+            // filled by the operator).
+            skipPayerPrefill: true,
             payerLabel: p.label,
+            payerDetails: {
+              firstName: p.firstName,
+              lastName: p.lastName,
+              email: p.email,
+              phone: p.phone,
+            },
             // Force a brand new paypage per part so the URLs don't collide
             // on the cached pending row.
             forceNewPaypage: true,
@@ -661,19 +674,43 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הקישורים"),
   });
 
-  // Autofill split parts from total when opening the split panel
+  // Autofill split parts (amount split + parent 1 details from student) on open.
   useEffect(() => {
     if (!splitOpen) return;
-    if (splitParts.some((p) => parseFloat(p.amount) > 0)) return;
-    if (totalSelected <= 0) return;
-    const per = Math.round((totalSelected / splitParts.length) * 100) / 100;
-    const rounded = Array(splitParts.length).fill(per);
-    // fix rounding drift on last part
-    const diff = Math.round((totalSelected - rounded.reduce((s, v) => s + v, 0)) * 100) / 100;
-    rounded[rounded.length - 1] = Math.round((rounded[rounded.length - 1] + diff) * 100) / 100;
-    setSplitParts((prev) => prev.map((p, i) => ({ ...p, amount: String(rounded[i]) })));
+    const parentName = (student?.parent_name ?? "").trim();
+    const [pFirst, ...pRest] = parentName.split(/\s+/);
+    const parent1First = pFirst ?? "";
+    const parent1Last = pRest.join(" ");
+    const parent1Email = student?.parent_email ?? "";
+    const parent1Phone = student?.parent_phone ?? "";
+
+    setSplitParts((prev) => {
+      const hasAmounts = prev.some((p) => parseFloat(p.amount) > 0);
+      let amounts = prev.map((p) => p.amount);
+      if (!hasAmounts && totalSelected > 0) {
+        const per = Math.round((totalSelected / prev.length) * 100) / 100;
+        amounts = Array(prev.length).fill(String(per));
+        const diff = Math.round((totalSelected - per * prev.length) * 100) / 100;
+        if (Math.abs(diff) >= 0.01) {
+          amounts[amounts.length - 1] = String(Math.round((per + diff) * 100) / 100);
+        }
+      }
+      return prev.map((p, i) => {
+        if (i === 0) {
+          return {
+            ...p,
+            amount: amounts[i],
+            firstName: p.firstName || parent1First,
+            lastName: p.lastName || parent1Last,
+            email: p.email || parent1Email,
+            phone: p.phone || parent1Phone,
+          };
+        }
+        return { ...p, amount: amounts[i] };
+      });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [splitOpen]);
+  }, [splitOpen, student?.id]);
 
   const resetForm = () => {
     setPaymentDate(today);
@@ -687,7 +724,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setEditAmount("");
     
     setSplitOpen(false);
-    setSplitParts([{ label: "הורה 1", amount: "" }, { label: "הורה 2", amount: "" }]);
+    setSplitParts([
+      { label: "הורה 1", amount: "", firstName: "", lastName: "", email: "", phone: "" },
+      { label: "הורה 2", amount: "", firstName: "", lastName: "", email: "", phone: "" },
+    ]);
     setSplitResults([]);
     setChecksOpen(false);
     setNumChecks("1");
@@ -1033,44 +1073,55 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     <p className="text-xs text-muted-foreground">
                       צור מספר קישורים במקביל לחלוקת התשלום בין משלמים שונים (למשל שני הורים).
                     </p>
-                    {splitParts.map((part, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Input
-                          value={part.label}
-                          onChange={(e) =>
-                            setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, label: e.target.value } : p)))
-                          }
-                          placeholder={`הורה ${idx + 1}`}
-                          className="flex-1 h-9"
-                        />
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={part.amount}
-                          onChange={(e) =>
-                            setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, amount: e.target.value } : p)))
-                          }
-                          placeholder="0.00"
-                          className="w-28 h-9"
-                        />
-                        {splitParts.length > 2 && (
-                          <button
-                            type="button"
-                            className="text-destructive hover:opacity-70"
-                            onClick={() => setSplitParts((prev) => prev.filter((_, i) => i !== idx))}
-                            aria-label="הסר"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    {splitParts.map((part, idx) => {
+                      const update = (patch: Partial<typeof part>) =>
+                        setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+                      return (
+                        <div key={idx} className="space-y-2 rounded-lg border border-border bg-muted/20 p-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={part.label}
+                              onChange={(e) => update({ label: e.target.value })}
+                              placeholder={`הורה ${idx + 1}`}
+                              className="flex-1 h-9"
+                            />
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={part.amount}
+                              onChange={(e) => update({ amount: e.target.value })}
+                              placeholder="סכום"
+                              className="w-28 h-9"
+                            />
+                            {splitParts.length > 2 && (
+                              <button
+                                type="button"
+                                className="text-destructive hover:opacity-70"
+                                onClick={() => setSplitParts((prev) => prev.filter((_, i) => i !== idx))}
+                                aria-label="הסר"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input value={part.firstName} onChange={(e) => update({ firstName: e.target.value })} placeholder="שם פרטי" className="h-9" />
+                            <Input value={part.lastName} onChange={(e) => update({ lastName: e.target.value })} placeholder="שם משפחה" className="h-9" />
+                            <Input value={part.email} onChange={(e) => update({ email: e.target.value })} placeholder="מייל" className="h-9" dir="ltr" />
+                            <Input value={part.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="טלפון" className="h-9" dir="ltr" />
+                          </div>
+                        </div>
+                      );
+                    })}
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() =>
-                          setSplitParts((prev) => [...prev, { label: `הורה ${prev.length + 1}`, amount: "" }])
+                          setSplitParts((prev) => [
+                            ...prev,
+                            { label: `הורה ${prev.length + 1}`, amount: "", firstName: "", lastName: "", email: "", phone: "" },
+                          ])
                         }
                         className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
@@ -1142,16 +1193,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               </div>
               </div>
             )}
-            <div className="flex gap-2">
-              <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
-                {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
-              </Button>
-              {isEdit && (
-                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteConfirm(true)}>
-                  <Trash2 className="h-4 w-4" />
+            {/* Save button: only for cash/checks or when editing an existing row.
+                Credit-card flow only produces payment links — the actual payment
+                row is created by the iCount webhook after the parent pays. */}
+            {(isEdit || paymentMethod === "cash" || paymentMethod === "check") && (
+              <div className="flex gap-2">
+                <Button className="flex-1 h-11 rounded-xl" onClick={() => mutation.mutate()} disabled={!canSubmit || mutation.isPending}>
+                  {mutation.isPending ? "שומר..." : isEdit ? "עדכן" : transactionType === "credit" ? "שמור זיכוי" : "שמור תשלום"}
                 </Button>
-              )}
-            </div>
+                {isEdit && (
+                  <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteConfirm(true)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
