@@ -885,7 +885,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 ))}
               </select>
             </div>
-            {paymentMethod !== "check" && paymentMethod !== "credit_card" && (
+            {paymentMethod !== "check" && paymentMethod !== "credit_card" && paymentMethod !== "cash" && (
               <div>
                 <Label htmlFor="installments">מספר תשלומים</Label>
                 <select id="installments" value={installments} onChange={(e) => setInstallments(e.target.value)} className={selectClass}>
