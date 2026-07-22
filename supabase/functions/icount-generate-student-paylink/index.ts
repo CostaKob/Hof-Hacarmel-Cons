@@ -151,7 +151,7 @@ Deno.serve(async (req: Request) => {
         cachedBaseUrl = p.payment_link_url ?? null;
         rowAmount = Number(p.amount) || null;
       }
-    } else {
+    } else if (!forceNewPaypage) {
       const { data: p } = await supabase
         .from("student_payments")
         .select("id, payment_link_url, payment_status, amount")
@@ -167,7 +167,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const breakdown = { lines, discounts: discounts ?? null };
+    const breakdown = { lines, discounts: discounts ?? null, payerLabel: payerLabel ?? null };
 
     // Create pending row if none exists
     if (!paymentId) {
