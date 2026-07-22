@@ -92,12 +92,12 @@ export function computeStandardDiscounts(
         label: d.label,
         percentage: pct,
         applies_to: d.applies_to,
-        appliedEnrollmentIds: d.applies_to === "cheapest_enrollment" ? discountedIds : [],
+        appliedEnrollmentIds: scope === "cheapest_enrollment" ? discountedIds : [],
         amount: 0,
       });
       continue;
     }
-    if (d.applies_to === "cheapest_enrollment") {
+    if (scope === "cheapest_enrollment") {
       if (discountedIds.length === 0) {
         lines.push({
           discountTypeId: d.id,
