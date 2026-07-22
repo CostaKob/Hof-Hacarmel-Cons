@@ -426,10 +426,10 @@ const AdminStudentPaymentCalc = () => {
       .filter((e) => e.is_active !== false)
       .reduce((sum, e) => sum + calcEnrollment({
         id: e.id,
-        duration: Number(e.duration) || 0,
+        duration: Number(e.lesson_duration_minutes) || 0,
         startDate: e.start_date,
         endDate: e.end_date ?? null,
-        pricePerLessonOverride: e.price_per_lesson_override ?? null,
+        pricePerLessonOverride: e.price_per_lesson ?? null,
       }, globalPrices, yStart, yEnd).prorated, 0);
     const myTotal = totalFor(enrollments as any[]);
     const siblingTotals = siblingsList.map((s) => ({
