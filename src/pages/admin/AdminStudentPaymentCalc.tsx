@@ -460,10 +460,27 @@ const AdminStudentPaymentCalc = () => {
     return { isCheapest, siblingTotals, myTotal };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId]);
 
+  // Which (if any) sibling already has the sibling discount selected in their draft.
+  const siblingWithSiblingDiscount = useMemo(() => {
+    const sibDt = discountTypes.find(
+      (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
+    );
+    if (!sibDt) return null;
+    for (const dr of siblingDrafts) {
+      const ids = Array.isArray(dr?.selected_discount_ids) ? dr.selected_discount_ids : [];
+      if (ids.includes(sibDt.id)) {
+        const s = siblingsList.find((x) => x.id === dr.student_id);
+        if (s) return { id: s.id, name: `${s.first_name} ${s.last_name}` };
+      }
+    }
+    return null;
+  }, [siblingDrafts, siblingsList, discountTypes]);
+
   useEffect(() => {
     if (draft) return;
     if (!discountTypes.length) return;
     if (!siblingCheapestInfo?.isCheapest) return;
+    if (siblingWithSiblingDiscount) return; // already applied on a sibling — don't double-apply
     const dt = discountTypes.find((d) => d.legacy_key === "sibling" || d.applies_to === "sibling_cheapest");
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
@@ -471,7 +488,7 @@ const AdminStudentPaymentCalc = () => {
       if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
       return [...prev, dt.id];
     });
-  }, [siblingCheapestInfo, discountTypes, draft]);
+  }, [siblingCheapestInfo, discountTypes, draft, siblingWithSiblingDiscount]);
 
 
   // Persist discounts to localStorage (same-browser fallback)
