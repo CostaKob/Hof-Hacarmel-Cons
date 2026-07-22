@@ -1139,6 +1139,7 @@ const AdminStudentPaymentCalc = () => {
                       הסר הנחה כאן
                     </Button>
                   )}
+                  {siblingsLine}
                 </div>
               );
             }
