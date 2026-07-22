@@ -570,7 +570,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const splitLinksMutation = useMutation({
     mutationFn: async () => {
       const parts = splitParts
-        .map((p) => ({ label: p.label.trim() || "הורה", amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100 }))
+        .map((p) => ({
+          label: p.label.trim() || "הורה",
+          amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100,
+          firstName: p.firstName.trim(),
+          lastName: p.lastName.trim(),
+          email: p.email.trim(),
+          phone: p.phone.trim(),
+        }))
         .filter((p) => p.amount > 0);
       if (parts.length < 2) throw new Error("יש להזין לפחות שני חלקים עם סכום");
 
