@@ -11,10 +11,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Search, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { sortByPerson } from "@/lib/sortHebrew";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 export const SPECIAL_TRACKS: Record<
   string,
@@ -31,10 +34,13 @@ const AdminSpecialTrackCard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const track = trackKey ? SPECIAL_TRACKS[trackKey] : undefined;
+  const { selectedYearId } = useAcademicYear();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [gradeFilter, setGradeFilter] = useState<string>("all");
+  const [instrumentFilter, setInstrumentFilter] = useState<string>("all");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["special-track-students", track?.column] });
@@ -54,6 +60,57 @@ const AdminSpecialTrackCard = () => {
     },
     enabled: !!track,
   });
+
+  const studentIds = useMemo(() => students.map((s: any) => s.id), [students]);
+
+  const { data: enrollmentsByStudent = {} } = useQuery({
+    queryKey: ["special-track-enrollments", track?.column, selectedYearId, studentIds],
+    queryFn: async () => {
+      if (!selectedYearId || studentIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("student_id, instruments(id, name)")
+        .eq("academic_year_id", selectedYearId)
+        .eq("is_active", true)
+        .in("student_id", studentIds);
+      if (error) throw error;
+      const map: Record<string, { id: string; name: string }[]> = {};
+      (data || []).forEach((e: any) => {
+        if (!e.instruments) return;
+        if (!map[e.student_id]) map[e.student_id] = [];
+        if (!map[e.student_id].some((i) => i.id === e.instruments.id)) {
+          map[e.student_id].push(e.instruments);
+        }
+      });
+      return map;
+    },
+    enabled: !!track && !!selectedYearId && studentIds.length > 0,
+  });
+
+  const availableGrades = useMemo(() => {
+    const set = new Set<string>();
+    students.forEach((s: any) => { if (s.grade) set.add(s.grade); });
+    return Array.from(set).sort();
+  }, [students]);
+
+  const availableInstruments = useMemo(() => {
+    const map = new Map<string, string>();
+    Object.values(enrollmentsByStudent).forEach((arr) => {
+      arr.forEach((i) => map.set(i.id, i.name));
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, "he"));
+  }, [enrollmentsByStudent]);
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((s: any) => {
+      if (gradeFilter !== "all" && s.grade !== gradeFilter) return false;
+      if (instrumentFilter !== "all") {
+        const insts = enrollmentsByStudent[s.id] || [];
+        if (!insts.some((i) => i.id === instrumentFilter)) return false;
+      }
+      return true;
+    });
+  }, [students, gradeFilter, instrumentFilter, enrollmentsByStudent]);
 
   const { data: allStudents = [] } = useQuery({
     queryKey: ["special-track-all-students"],
@@ -129,7 +186,10 @@ const AdminSpecialTrackCard = () => {
       <Card>
 
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg">תלמידים ({students.length})</CardTitle>
+          <CardTitle className="text-lg">
+            תלמידים ({filteredStudents.length}
+            {filteredStudents.length !== students.length && <span className="text-muted-foreground text-sm"> מתוך {students.length}</span>})
+          </CardTitle>
           <Dialog open={pickerOpen} onOpenChange={(v) => { setPickerOpen(v); if (!v) { setSelected(new Set()); setSearch(""); } }}>
             <DialogTrigger asChild>
               <Button size="sm"><Plus className="h-4 w-4 ml-1" /> הוסף תלמידים</Button>
@@ -177,13 +237,42 @@ const AdminSpecialTrackCard = () => {
           </Dialog>
         </CardHeader>
         <CardContent>
+          {(availableGrades.length > 0 || availableInstruments.length > 0) && (
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              {availableGrades.length > 0 && (
+                <Select value={gradeFilter} onValueChange={setGradeFilter}>
+                  <SelectTrigger className="h-11 rounded-xl sm:w-48"><SelectValue placeholder="כיתה" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הכיתות</SelectItem>
+                    {availableGrades.map((g) => <SelectItem key={g} value={g}>כיתה {g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              {availableInstruments.length > 0 && (
+                <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
+                  <SelectTrigger className="h-11 rounded-xl sm:w-56"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הכלים</SelectItem>
+                    {availableInstruments.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              {(gradeFilter !== "all" || instrumentFilter !== "all") && (
+                <Button variant="ghost" size="sm" onClick={() => { setGradeFilter("all"); setInstrumentFilter("all"); }}>
+                  <X className="h-4 w-4 ml-1" /> נקה
+                </Button>
+              )}
+            </div>
+          )}
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">טוען...</p>
           ) : students.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">אין תלמידים במסלול זה</p>
+          ) : filteredStudents.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">אין תוצאות עבור הסינון שנבחר</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {students.map((s: any, index: number) => (
+              {filteredStudents.map((s: any, index: number) => (
                 <div
                   key={s.id}
                   onClick={() => navigate(`/admin/students/${s.id}`)}
