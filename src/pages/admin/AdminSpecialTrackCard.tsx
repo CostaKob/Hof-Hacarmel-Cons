@@ -186,7 +186,10 @@ const AdminSpecialTrackCard = () => {
       <Card>
 
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-lg">תלמידים ({students.length})</CardTitle>
+          <CardTitle className="text-lg">
+            תלמידים ({filteredStudents.length}
+            {filteredStudents.length !== students.length && <span className="text-muted-foreground text-sm"> מתוך {students.length}</span>})
+          </CardTitle>
           <Dialog open={pickerOpen} onOpenChange={(v) => { setPickerOpen(v); if (!v) { setSelected(new Set()); setSearch(""); } }}>
             <DialogTrigger asChild>
               <Button size="sm"><Plus className="h-4 w-4 ml-1" /> הוסף תלמידים</Button>
