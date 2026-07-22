@@ -405,7 +405,13 @@ const AdminStudentPaymentCalc = () => {
     );
     if (!hasKarmel) return;
     const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
-    if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.includes(dt.id)) return prev;
+      if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      return [...prev, dt.id];
+    });
+
   }, [enrollments, discountTypes, draft]);
 
   // ── Sibling discount: auto-select "sibling" discount when the current
