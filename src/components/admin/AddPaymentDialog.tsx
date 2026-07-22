@@ -1060,44 +1060,55 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     <p className="text-xs text-muted-foreground">
                       צור מספר קישורים במקביל לחלוקת התשלום בין משלמים שונים (למשל שני הורים).
                     </p>
-                    {splitParts.map((part, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Input
-                          value={part.label}
-                          onChange={(e) =>
-                            setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, label: e.target.value } : p)))
-                          }
-                          placeholder={`הורה ${idx + 1}`}
-                          className="flex-1 h-9"
-                        />
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={part.amount}
-                          onChange={(e) =>
-                            setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, amount: e.target.value } : p)))
-                          }
-                          placeholder="0.00"
-                          className="w-28 h-9"
-                        />
-                        {splitParts.length > 2 && (
-                          <button
-                            type="button"
-                            className="text-destructive hover:opacity-70"
-                            onClick={() => setSplitParts((prev) => prev.filter((_, i) => i !== idx))}
-                            aria-label="הסר"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                    {splitParts.map((part, idx) => {
+                      const update = (patch: Partial<typeof part>) =>
+                        setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+                      return (
+                        <div key={idx} className="space-y-2 rounded-lg border border-border bg-muted/20 p-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={part.label}
+                              onChange={(e) => update({ label: e.target.value })}
+                              placeholder={`הורה ${idx + 1}`}
+                              className="flex-1 h-9"
+                            />
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={part.amount}
+                              onChange={(e) => update({ amount: e.target.value })}
+                              placeholder="סכום"
+                              className="w-28 h-9"
+                            />
+                            {splitParts.length > 2 && (
+                              <button
+                                type="button"
+                                className="text-destructive hover:opacity-70"
+                                onClick={() => setSplitParts((prev) => prev.filter((_, i) => i !== idx))}
+                                aria-label="הסר"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input value={part.firstName} onChange={(e) => update({ firstName: e.target.value })} placeholder="שם פרטי" className="h-9" />
+                            <Input value={part.lastName} onChange={(e) => update({ lastName: e.target.value })} placeholder="שם משפחה" className="h-9" />
+                            <Input value={part.email} onChange={(e) => update({ email: e.target.value })} placeholder="מייל" className="h-9" dir="ltr" />
+                            <Input value={part.phone} onChange={(e) => update({ phone: e.target.value })} placeholder="טלפון" className="h-9" dir="ltr" />
+                          </div>
+                        </div>
+                      );
+                    })}
                     <div className="flex items-center justify-between">
                       <button
                         type="button"
                         onClick={() =>
-                          setSplitParts((prev) => [...prev, { label: `הורה ${prev.length + 1}`, amount: "" }])
+                          setSplitParts((prev) => [
+                            ...prev,
+                            { label: `הורה ${prev.length + 1}`, amount: "", firstName: "", lastName: "", email: "", phone: "" },
+                          ])
                         }
                         className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
