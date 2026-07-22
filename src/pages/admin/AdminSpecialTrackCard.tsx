@@ -34,10 +34,13 @@ const AdminSpecialTrackCard = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const track = trackKey ? SPECIAL_TRACKS[trackKey] : undefined;
+  const { selectedYearId } = useAcademicYear();
 
   const [pickerOpen, setPickerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [gradeFilter, setGradeFilter] = useState<string>("all");
+  const [instrumentFilter, setInstrumentFilter] = useState<string>("all");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["special-track-students", track?.column] });
