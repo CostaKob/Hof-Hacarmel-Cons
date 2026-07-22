@@ -466,16 +466,21 @@ const AdminStudentPaymentCalc = () => {
         : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
       return (ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x));
     };
-    // Tie-break among the cheapest: prefer candidates NOT already blocked by
-    // another exclusive discount; then deterministically pick the smallest id.
-    const tiedAtMin = allTotals
-      .filter((t) => Math.abs(t.total - min) < 0.005)
-      .map((t) => t.id);
-    const eligible = tiedAtMin.filter((id) => !hasOtherExclusive(id));
-    const pool = eligible.length > 0 ? eligible : tiedAtMin;
-    const chosenId = [...pool].sort()[0];
+    // Only students without another exclusive discount are candidates for the
+    // sibling discount (no stacking). Pick the cheapest among eligible; break
+    // ties deterministically by id.
+    const eligibleTotals = allTotals.filter((t) => !hasOtherExclusive(t.id));
+    let chosenId: string | null = null;
+    if (eligibleTotals.length > 0) {
+      const minEligible = Math.min(...eligibleTotals.map((t) => t.total));
+      chosenId = eligibleTotals
+        .filter((t) => Math.abs(t.total - minEligible) < 0.005)
+        .map((t) => t.id)
+        .sort()[0];
+    }
     const isCheapest = myTotal > 0 && chosenId === studentId;
-    return { isCheapest, siblingTotals, myTotal };
+    const meBlocked = hasOtherExclusive(studentId!);
+    return { isCheapest, siblingTotals, myTotal, meBlocked };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId, discountTypes, siblingDrafts, selectedDiscountIds, exclusiveIdsSet]);
 
   // Which (if any) sibling already has the sibling discount selected in their draft.
@@ -1152,6 +1157,23 @@ const AdminStudentPaymentCalc = () => {
               (a, b) => (b.total < a.total ? b : a),
               siblingCheapestInfo.siblingTotals[0],
             );
+            if (siblingCheapestInfo.meBlocked) {
+              return (
+                <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 p-3 text-sm space-y-1">
+                  <div>
+                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). ייתכן ש
+                    <button
+                      type="button"
+                      onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline mx-1"
+                    >
+                      {cheapest?.name}
+                    </button>
+                    זכאי/ת להנחת <strong>"{sibDt.label}"</strong> בכרטיס שלו/ה.
+                  </div>
+                </div>
+              );
+            }
             return (
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
                 האח/ות הזול/ה בקבוצה:{" "}
