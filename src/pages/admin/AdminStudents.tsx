@@ -214,6 +214,29 @@ const AdminStudents = () => {
     },
   });
 
+  // Server-side payment drafts are the single source of truth across devices.
+  const { data: paymentDrafts = [] } = useQuery({
+    queryKey: ["admin-students-payment-drafts", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("student_id, selected_discount_ids, custom_discounts, start_date_overrides, discount_enrollment_overrides")
+        .eq("academic_year_id", selectedYearId!);
+      if (error) throw error;
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const draftByStudent = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const d of paymentDrafts as any[]) {
+      if (d.student_id) m.set(d.student_id, d);
+    }
+    return m;
+  }, [paymentDrafts]);
+
+
   const enrollmentRowsByStudent = useMemo(() => {
     const map = new Map<string, any[]>();
     for (const r of rows as any[]) {
