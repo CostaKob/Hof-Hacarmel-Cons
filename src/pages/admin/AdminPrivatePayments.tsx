@@ -316,7 +316,7 @@ const AdminPrivatePayments = () => {
       if (r.hasSpecialCourse) { specialCount += 1; }
       if (r.student.has_music_production_course) { productionCount += 1; }
       if (r.student.has_recital_track) { recitalCount += 1; }
-      if (!r.hasSource) continue;
+      
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
