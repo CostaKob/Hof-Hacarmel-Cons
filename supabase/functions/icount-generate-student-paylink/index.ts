@@ -218,6 +218,7 @@ Deno.serve(async (req: Request) => {
         paymentId: paymentId!,
         lines,
         yearName: academicYearName ?? null,
+        splitInfo: splitInfo ?? null,
       });
       baseUrl = created.url;
       paypageId = created.paypageId;
