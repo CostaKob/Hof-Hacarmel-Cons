@@ -145,6 +145,9 @@ const AdminPrivatePayments = () => {
       paymentsByStudent.set(sid, arr);
     }
 
+    const draftByStudent = new Map<string, any>();
+    for (const d of drafts as any[]) if (d.student_id) draftByStudent.set(d.student_id, d);
+
     const result: any[] = [];
 
 
@@ -159,8 +162,9 @@ const AdminPrivatePayments = () => {
         const br = p?.enrollment_breakdown;
         return br && !Array.isArray(br) && br.discounts;
       });
-      const source = pendingSrc ?? paidWithBreakdown;
-      const hasSource = !!source;
+      const paymentSource = pendingSrc ?? paidWithBreakdown;
+      const draftSource = draftByStudent.get(studentId);
+      const hasSource = !!(paymentSource || draftSource);
 
       let totalDue = 0;
       let paid = 0;
@@ -170,9 +174,16 @@ const AdminPrivatePayments = () => {
       let proratedTotal = 0;
 
       if (hasSource) {
-        const brDiscounts: any = source.enrollment_breakdown && !Array.isArray(source.enrollment_breakdown)
-          ? source.enrollment_breakdown.discounts ?? {}
-          : {};
+        // Prefer draft (most recent, cross-device). Fall back to payment snapshot.
+        const brDiscounts: any = draftSource
+          ? {
+              selectedDiscountIds: Array.isArray(draftSource.selected_discount_ids) ? draftSource.selected_discount_ids : [],
+              customDiscounts: Array.isArray(draftSource.custom_discounts) ? draftSource.custom_discounts : [],
+              startDateOverrides: draftSource.start_date_overrides && typeof draftSource.start_date_overrides === "object" ? draftSource.start_date_overrides : {},
+            }
+          : (paymentSource!.enrollment_breakdown && !Array.isArray(paymentSource!.enrollment_breakdown)
+              ? paymentSource!.enrollment_breakdown.discounts ?? {}
+              : {});
 
         const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
           ? brDiscounts.selectedDiscountIds
@@ -259,12 +270,9 @@ const AdminPrivatePayments = () => {
       });
     }
 
-    // Special-track-only students without a payment link are intentionally omitted —
-    // report shows exact numbers from payment links only.
-
-
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, year, settings, discountTypes, specialStudents]);
+  }, [enrollments, payments, drafts, year, settings, discountTypes, specialStudents]);
+
 
 
   const schoolOptions = useMemo(() => {
