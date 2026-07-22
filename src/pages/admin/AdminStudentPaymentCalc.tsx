@@ -1190,10 +1190,6 @@ const AdminStudentPaymentCalc = () => {
                 </div>
               );
             }
-            const cheapest = siblingCheapestInfo.siblingTotals.reduce(
-              (a, b) => (b.total < a.total ? b : a),
-              siblingCheapestInfo.siblingTotals[0],
-            );
             if (siblingCheapestInfo.meBlocked) {
               if (siblingCheapestInfo.noOneEligible) {
                 return (
@@ -1211,32 +1207,18 @@ const AdminStudentPaymentCalc = () => {
               return (
                 <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 p-3 text-sm space-y-1">
                   <div>
-                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). ייתכן ש
-                    <button
-                      type="button"
-                      onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                      className="font-semibold text-primary underline hover:no-underline mx-1"
-                    >
-                      {cheapest?.name}
-                    </button>
-                    זכאי/ת להנחת <strong>"{sibDt.label}"</strong> בכרטיס שלו/ה.
+                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). הנחת <strong>"{sibDt.label}"</strong> תוחל בכרטיסי האחים/ות הזכאים.
                   </div>
                   {siblingsLine}
                 </div>
               );
             }
+            // Current student is the most expensive in the group (excluded from
+            // the N-1 sibling discount by design).
             return (
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
                 <div>
-                  האח/ות הזול/ה בקבוצה:{" "}
-                  <button
-                    type="button"
-                    onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                    className="font-semibold text-foreground underline hover:no-underline"
-                  >
-                    {cheapest?.name}
-                  </button>
-                  {" "}— הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
+                  התלמיד/ה הוא/היא <strong>היקר/ה ביותר</strong> בקבוצת האחים — הנחת "{sibDt.label}" תוחל בכרטיסי שאר האחים/ות ולא כאן.
                 </div>
                 {siblingsLine}
               </div>
