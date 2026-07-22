@@ -626,12 +626,17 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         if (scaled.length > 0 && Math.abs(drift) >= 0.01) {
           scaled[scaled.length - 1].amount = Math.round((scaled[scaled.length - 1].amount + drift) * 100) / 100;
         }
-        // Add a clear note line so the parent understands they are paying a share
+        // Add a clear note line so the parent understands they are paying a share.
+        // Placed FIRST so it's the most visible item on the iCount page.
+        const sharePct = Math.round(ratio * 100);
         const shareNote = {
-          description: `חלקו של ${p.label} מתוך ${partsCount} משלמים (סה״כ החשבון ₪${grossTotal.toLocaleString()})`,
+          description:
+            `⚠ תשלום חלקי — חלק ${idx + 1} מתוך ${partsCount} משלמים. ` +
+            `חלקך: ₪${p.amount.toLocaleString()} (${sharePct}%) מתוך סה״כ ₪${grossTotal.toLocaleString()}. ` +
+            `יתרת הסכום תשולם בקישור נפרד ע״י המשלמים הנוספים.`,
           amount: 0,
         };
-        const finalLines = [...scaled, shareNote];
+        const finalLines = [shareNote, ...scaled];
 
         const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
           body: {
@@ -650,6 +655,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               lastName: p.lastName,
               email: p.email,
               phone: p.phone,
+            },
+            splitInfo: {
+              partIndex: idx + 1,
+              partsCount,
+              grossTotal,
+              sharePct,
             },
             // Force a brand new paypage per part so the URLs don't collide
             // on the cached pending row.
