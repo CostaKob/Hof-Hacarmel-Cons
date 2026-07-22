@@ -168,7 +168,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const breakdown = { lines, discounts: discounts ?? null, payerLabel: payerLabel ?? null };
+    const breakdown = { lines, discounts: discounts ?? null, payerLabel: payerLabel ?? null, payerDetails: payerDetails ?? null };
 
     // Create pending row if none exists
     if (!paymentId) {
