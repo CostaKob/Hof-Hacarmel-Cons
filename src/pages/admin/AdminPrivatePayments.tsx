@@ -395,7 +395,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="unpaid">לא שולם</SelectItem>
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
-              <SelectItem value="uncalculated">טרם חושב שכר לימוד</SelectItem>
+              
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
