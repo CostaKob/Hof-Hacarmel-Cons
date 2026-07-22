@@ -779,35 +779,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       );
                     })}
                     {Object.keys(selectedAmounts).length > 1 && (
-                      <>
-                        <p className="text-xs text-muted-foreground text-end">
-                          סה״כ: ₪{totalSelected.toLocaleString()}
-                        </p>
-                        <div className="rounded-lg border border-border p-2 space-y-2 bg-muted/30">
-                          <Label className="text-xs">מצב קבלה</Label>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "combined" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
-                              onClick={() => setInvoiceMode("combined")}
-                            >
-                              קבלה מאוחדת אחת
-                            </button>
-                            <button
-                              type="button"
-                              className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "separate" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
-                              onClick={() => setInvoiceMode("separate")}
-                            >
-                              קבלה נפרדת לכל שיוך
-                            </button>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">
-                            {invoiceMode === "combined"
-                              ? "ייווצר רישום תשלום אחד מאוחד וקבלה אחת עם פירוט פר שיוך."
-                              : "ייווצר רישום נפרד לכל שיוך וקבלה נפרדת לכל אחד."}
-                          </p>
-                        </div>
-                      </>
+                      <p className="text-xs text-muted-foreground text-end">
+                        סה״כ: ₪{totalSelected.toLocaleString()}
+                      </p>
                     )}
                   </div>
                 )}
