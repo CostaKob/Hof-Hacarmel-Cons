@@ -1499,7 +1499,13 @@ const AdminStudentPaymentCalc = () => {
         {pendingPayments.length > 0 && (
           <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-5 shadow-sm space-y-2">
             <h2 className="font-semibold text-foreground text-base">קישורי תשלום ממתינים ({pendingPayments.length})</h2>
-            {pendingPayments.map((p: any) => (
+            {pendingPayments.map((p: any) => {
+              const bd = p.enrollment_breakdown ?? {};
+              const pd = bd.payerDetails ?? null;
+              const payerLabel: string | null = bd.payerLabel ?? null;
+              const payerFullName = pd ? [pd.firstName, pd.lastName].filter(Boolean).join(" ").trim() : "";
+              const payerContact = pd ? [pd.phone, pd.email].filter(Boolean).join(" · ") : "";
+              return (
               <div key={p.id} className="flex items-center justify-between gap-2 rounded-xl border border-border bg-card p-3">
                 <div className="min-w-0">
                   <p className="font-medium text-foreground text-sm">
@@ -1510,7 +1516,17 @@ const AdminStudentPaymentCalc = () => {
                       </span>
                     )}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate" dir="ltr">{p.payment_link_url || "—"}</p>
+                  {(payerLabel || payerFullName) && (
+                    <p className="text-xs text-foreground mt-0.5">
+                      {payerLabel}
+                      {payerLabel && payerFullName ? " · " : ""}
+                      {payerFullName && <span className="font-medium">{payerFullName}</span>}
+                    </p>
+                  )}
+                  {payerContact && (
+                    <p className="text-[11px] text-muted-foreground">{payerContact}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground truncate mt-0.5" dir="ltr">{p.payment_link_url || "—"}</p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   {p.payment_link_url && (
