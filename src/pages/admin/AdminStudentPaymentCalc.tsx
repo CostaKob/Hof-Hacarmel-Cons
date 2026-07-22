@@ -1148,8 +1148,9 @@ const AdminStudentPaymentCalc = () => {
             if (siblingCheapestInfo.isCheapest) {
               if (alreadySelected) {
                 return (
-                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100">
-                    ✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
+                    <div>✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
+                    {siblingsLine}
                   </div>
                 );
               }
