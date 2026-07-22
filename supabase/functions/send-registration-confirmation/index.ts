@@ -238,6 +238,52 @@ Deno.serve(async (req) => {
       console.error("admin-new-registration send failed:", adminErr);
     }
 
+    // Additional notification to branch coordinator (Avi Sharabani) for his branches.
+    try {
+      const coordinatorBranches = ["כרם מהר", "עין איילה", "עין אילה", "גבע כרמל", "העוגן", "העמר"];
+      const branchNorm = (branch || "").trim();
+      if (branchNorm && coordinatorBranches.some((b) => branchNorm.includes(b))) {
+        const coordIdempotencyKey = `coord-avi-new-registration-${registrationId}`;
+        await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${SERVICE_ROLE}`,
+            apikey: SERVICE_ROLE,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            templateName: "admin-new-registration",
+            recipientEmail: "avishar48@gmail.com",
+            idempotencyKey: coordIdempotencyKey,
+            messageId: coordIdempotencyKey,
+            replyTo: parentEmail || undefined,
+            templateData: {
+              studentName,
+              studentNationalId: (reg as any).student_national_id || "",
+              parentName,
+              parentPhone: (reg as any).parent_phone || "",
+              parentEmail: parentEmail || "",
+              yearName,
+              branch,
+              instruments,
+              lessonDuration,
+              grade: (reg as any).grade || "",
+              city: (reg as any).city || "",
+              studentPhone: (reg as any).student_phone || "",
+              studentSchool: (reg as any).student_school_text || (reg as any).educational_school || "",
+              notes: (reg as any).notes || "",
+              wantsMusicProduction: !!(reg as any).wants_music_production,
+              wantsRecitalTrack: !!(reg as any).wants_recital_track,
+              submittedAt,
+              registrationUrl: "https://musichof.com",
+            },
+          }),
+        });
+      }
+    } catch (coordErr) {
+      console.error("coordinator new-registration send failed:", coordErr);
+    }
+
     return new Response(JSON.stringify({ ok: true, sheetsSynced, result: body }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
