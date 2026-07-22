@@ -155,6 +155,22 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  // Drafts for confirmed siblings — used to detect whether one of them already
+  // has the sibling discount applied so we don't double-apply it.
+  const { data: siblingDrafts = [] } = useQuery({
+    queryKey: ["calc-sibling-drafts", siblingIds.sort().join(","), yearId],
+    enabled: siblingIds.length > 0 && !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("student_id, selected_discount_ids")
+        .in("student_id", siblingIds)
+        .eq("academic_year_id", yearId!);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
   const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
