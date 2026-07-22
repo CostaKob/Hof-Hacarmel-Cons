@@ -1564,7 +1564,8 @@ const AdminStudentPaymentCalc = () => {
                   </Button>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
