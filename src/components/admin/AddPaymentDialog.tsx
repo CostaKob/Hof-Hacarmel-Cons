@@ -1147,10 +1147,23 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       <div className="space-y-2 pt-3 mt-1 border-t border-border">
                         <p className="text-xs font-medium text-foreground">הקישורים שנוצרו:</p>
                         <div className="space-y-2">
-                          {splitResults.map((r, i) => (
-                            <div key={i} className="w-full rounded-lg border border-border bg-muted/30 p-2">
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <p className="text-xs font-semibold text-foreground truncate flex-1 min-w-0">{r.label}</p>
+                          {splitResults.map((r, i) => {
+                            const fullName = [r.firstName, r.lastName].filter(Boolean).join(" ").trim();
+                            return (
+                            <div key={i} className="w-full rounded-lg border border-border bg-muted/30 p-2.5">
+                              <div className="flex items-center justify-between gap-2 mb-1.5">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate">
+                                    {r.label}
+                                    {fullName ? ` · ${fullName}` : ""}
+                                    <span className="text-muted-foreground font-normal"> · ₪{r.amount.toLocaleString()}</span>
+                                  </p>
+                                  {(r.email || r.phone) && (
+                                    <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                                      {[r.phone, r.email].filter(Boolean).join(" · ")}
+                                    </p>
+                                  )}
+                                </div>
                                 <div className="flex items-center gap-1 shrink-0">
                                   <button
                                     type="button"
@@ -1184,7 +1197,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                                 {r.url}
                               </p>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </div>
                     )}
