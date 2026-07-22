@@ -276,6 +276,8 @@ const AdminPrivatePayments = () => {
     return rows.filter((r) => {
       if (statusFilter === "refunded") {
         if (!(r.refunds > 0.01)) return false;
+      } else if (statusFilter === "active_links") {
+        if (!(r.activeLinks > 0)) return false;
       } else if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (schoolFilter !== ALL && !r.enrollments.some((e: any) => e.schools?.id === schoolFilter)) return false;
       if (teacherFilter !== ALL && !r.enrollments.some((e: any) => e.teachers?.id === teacherFilter)) return false;
