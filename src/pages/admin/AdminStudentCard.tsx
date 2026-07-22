@@ -31,6 +31,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
 import StudentEnsemblesSection from "@/components/admin/StudentEnsemblesSection";
+import StudentSiblingsSection from "@/components/admin/StudentSiblingsSection";
 
 
 
