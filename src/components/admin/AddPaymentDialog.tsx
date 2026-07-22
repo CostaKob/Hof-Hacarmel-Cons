@@ -687,7 +687,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setEditAmount("");
     
     setSplitOpen(false);
-    setSplitParts([{ label: "הורה 1", amount: "" }, { label: "הורה 2", amount: "" }]);
+    setSplitParts([
+      { label: "הורה 1", amount: "", firstName: "", lastName: "", email: "", phone: "" },
+      { label: "הורה 2", amount: "", firstName: "", lastName: "", email: "", phone: "" },
+    ]);
     setSplitResults([]);
     setChecksOpen(false);
     setNumChecks("1");
