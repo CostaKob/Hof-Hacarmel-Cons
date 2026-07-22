@@ -57,7 +57,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [transactionType, setTransactionType] = useState<"payment" | "credit">("payment");
-  const [invoiceMode, setInvoiceMode] = useState<"combined" | "separate">("combined");
+  // invoiceMode removed — always combined when multiple entries
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitParts, setSplitParts] = useState<Array<{ label: string; amount: string }>>([
