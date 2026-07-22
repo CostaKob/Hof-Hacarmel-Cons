@@ -61,6 +61,57 @@ const AdminSpecialTrackCard = () => {
     enabled: !!track,
   });
 
+  const studentIds = useMemo(() => students.map((s: any) => s.id), [students]);
+
+  const { data: enrollmentsByStudent = {} } = useQuery({
+    queryKey: ["special-track-enrollments", track?.column, selectedYearId, studentIds],
+    queryFn: async () => {
+      if (!selectedYearId || studentIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("student_id, instruments(id, name)")
+        .eq("academic_year_id", selectedYearId)
+        .eq("is_active", true)
+        .in("student_id", studentIds);
+      if (error) throw error;
+      const map: Record<string, { id: string; name: string }[]> = {};
+      (data || []).forEach((e: any) => {
+        if (!e.instruments) return;
+        if (!map[e.student_id]) map[e.student_id] = [];
+        if (!map[e.student_id].some((i) => i.id === e.instruments.id)) {
+          map[e.student_id].push(e.instruments);
+        }
+      });
+      return map;
+    },
+    enabled: !!track && !!selectedYearId && studentIds.length > 0,
+  });
+
+  const availableGrades = useMemo(() => {
+    const set = new Set<string>();
+    students.forEach((s: any) => { if (s.grade) set.add(s.grade); });
+    return Array.from(set).sort();
+  }, [students]);
+
+  const availableInstruments = useMemo(() => {
+    const map = new Map<string, string>();
+    Object.values(enrollmentsByStudent).forEach((arr) => {
+      arr.forEach((i) => map.set(i.id, i.name));
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name, "he"));
+  }, [enrollmentsByStudent]);
+
+  const filteredStudents = useMemo(() => {
+    return students.filter((s: any) => {
+      if (gradeFilter !== "all" && s.grade !== gradeFilter) return false;
+      if (instrumentFilter !== "all") {
+        const insts = enrollmentsByStudent[s.id] || [];
+        if (!insts.some((i) => i.id === instrumentFilter)) return false;
+      }
+      return true;
+    });
+  }, [students, gradeFilter, instrumentFilter, enrollmentsByStudent]);
+
   const { data: allStudents = [] } = useQuery({
     queryKey: ["special-track-all-students"],
     queryFn: async () => {
