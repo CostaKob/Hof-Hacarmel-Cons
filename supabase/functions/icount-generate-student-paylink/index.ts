@@ -36,6 +36,7 @@ async function createPaypage(opts: {
   paymentId: string;
   lines: LineInput[];
   yearName?: string | null;
+  splitInfo?: { partIndex: number; partsCount: number; grossTotal: number; sharePct: number } | null;
 }): Promise<{ url: string; paypageId: string | null }> {
   const items = opts.lines
     .filter((l) => Number(l.amount) !== 0)
@@ -46,11 +47,14 @@ async function createPaypage(opts: {
       tax_exempt: 1,
     }));
   const yearSuffix = opts.yearName ? ` ${opts.yearName}` : "";
+  const splitSuffix = opts.splitInfo
+    ? ` — חלק ${opts.splitInfo.partIndex}/${opts.splitInfo.partsCount} (${opts.splitInfo.sharePct}% מתוך ₪${opts.splitInfo.grossTotal.toLocaleString()})`
+    : "";
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
     pass: Deno.env.get("ICOUNT_PASSWORD"),
-    page_name: `תשלום שכר לימוד${yearSuffix} - ${opts.studentName}`,
+    page_name: `תשלום שכר לימוד${yearSuffix} - ${opts.studentName}${splitSuffix}`,
     doctype: "receipt",
     currency_id: 5,
     language: "he",
@@ -99,6 +103,7 @@ Deno.serve(async (req: Request) => {
       skipPayerPrefill,
       payerLabel,
       payerDetails,
+      splitInfo,
       forceNewPaypage,
     } = await req.json().catch(() => ({}));
 
@@ -213,6 +218,7 @@ Deno.serve(async (req: Request) => {
         paymentId: paymentId!,
         lines,
         yearName: academicYearName ?? null,
+        splitInfo: splitInfo ?? null,
       });
       baseUrl = created.url;
       paypageId = created.paypageId;
