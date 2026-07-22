@@ -340,7 +340,7 @@ const AdminPrivatePayments = () => {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const statusLabel: Record<StatusFilter, string> = {
-      all: "", unpaid: "לא שולם", partial: "שולם חלקית", paid: "שולם", refunded: "הוחזר",
+      all: "", unpaid: "לא שולם", partial: "שולם חלקית", paid: "שולם", refunded: "הוחזר", active_links: "לינק פעיל",
     };
     const lines = [headers.join(",")];
     filtered.forEach((r, idx) => {
