@@ -1359,15 +1359,14 @@ const AdminStudentPaymentCalc = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>הנחות מותאמות</Label>
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }]); }}>
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => updateCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }])}>
                 <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
             {customDiscounts.map((c, i) => (
               <div key={i} className="grid grid-cols-[1fr_110px_90px_44px] gap-2">
                 <Input placeholder="תיאור" value={c.label} onChange={(e) => {
-                  customDiscountsTouchedRef.current = true;
-                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; setCustomDiscounts(arr);
+                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; updateCustomDiscounts(arr);
                 }} className="h-11 rounded-xl" />
                 <Input
                   placeholder={c.mode === "pct" ? "%" : "₪"}
@@ -1375,14 +1374,12 @@ const AdminStudentPaymentCalc = () => {
                   min="0"
                   value={c.value}
                   onChange={(e) => {
-                    customDiscountsTouchedRef.current = true;
-                    const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; setCustomDiscounts(arr);
+                    const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; updateCustomDiscounts(arr);
                   }}
                   className="h-11 rounded-xl"
                 />
                 <Select value={c.mode} onValueChange={(v) => {
-                  customDiscountsTouchedRef.current = true;
-                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; setCustomDiscounts(arr);
+                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; updateCustomDiscounts(arr);
                 }}>
                   <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1390,7 +1387,7 @@ const AdminStudentPaymentCalc = () => {
                     <SelectItem value="amount">סכום ₪</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts(customDiscounts.filter((_, idx) => idx !== i)); }}>
+                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => removeCustomDiscount(i)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
