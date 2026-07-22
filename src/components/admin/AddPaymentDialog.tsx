@@ -1036,37 +1036,48 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       )}
                     </Button>
                     {splitResults.length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-border">
-                        <p className="text-xs font-medium">הקישורים שנוצרו:</p>
-                        {splitResults.map((r, i) => (
-                          <div key={i} className="flex items-center gap-2 rounded-lg border border-border p-2 bg-muted/30">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{r.label}</p>
-                              <p className="text-[11px] text-muted-foreground truncate" dir="ltr">{r.url}</p>
+                      <div className="space-y-2 pt-3 mt-1 border-t border-border">
+                        <p className="text-xs font-medium text-foreground">הקישורים שנוצרו:</p>
+                        <div className="space-y-2">
+                          {splitResults.map((r, i) => (
+                            <div key={i} className="w-full rounded-lg border border-border bg-muted/30 p-2">
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <p className="text-xs font-semibold text-foreground truncate flex-1 min-w-0">{r.label}</p>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      try {
+                                        await navigator.clipboard.writeText(r.url);
+                                        toast.success(`הועתק: ${r.label}`);
+                                      } catch { /* noop */ }
+                                    }}
+                                    className="p-1.5 hover:bg-background rounded-md"
+                                    aria-label="העתק"
+                                    title="העתק קישור"
+                                  >
+                                    <Copy className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => window.open(r.url, "_blank")}
+                                    className="p-1.5 hover:bg-background rounded-md"
+                                    aria-label="פתח"
+                                    title="פתח קישור"
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                              <p
+                                className="text-[10px] text-muted-foreground font-mono leading-tight break-all line-clamp-2"
+                                dir="ltr"
+                              >
+                                {r.url}
+                              </p>
                             </div>
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                try {
-                                  await navigator.clipboard.writeText(r.url);
-                                  toast.success(`הועתק: ${r.label}`);
-                                } catch { /* noop */ }
-                              }}
-                              className="p-1 hover:bg-background rounded"
-                              aria-label="העתק"
-                            >
-                              <Copy className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => window.open(r.url, "_blank")}
-                              className="p-1 hover:bg-background rounded"
-                              aria-label="פתח"
-                            >
-                              <ExternalLink className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
