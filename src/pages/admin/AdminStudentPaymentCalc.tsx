@@ -1190,23 +1190,6 @@ const AdminStudentPaymentCalc = () => {
                 </div>
               );
             }
-                  </div>
-                  <Button
-                    size="sm"
-                    className="h-8 rounded-lg"
-                    onClick={() => toggleDiscount(sibDt.id)}
-                  >
-                    החל הנחה
-                  </Button>
-                  {blockedByOther && (
-                    <div className="text-xs text-muted-foreground">
-                      שים לב: תוסר הנחת האחוזים האחרת הפעילה כרגע (אין כפל).
-                    </div>
-                  )}
-                  {siblingsLine}
-                </div>
-              );
-            }
             const cheapest = siblingCheapestInfo.siblingTotals.reduce(
               (a, b) => (b.total < a.total ? b : a),
               siblingCheapestInfo.siblingTotals[0],
