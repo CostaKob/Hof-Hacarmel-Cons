@@ -1227,36 +1227,6 @@ const AdminStudentPaymentCalc = () => {
               </div>
             );
           })()}
-              return (
-                <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 p-3 text-sm space-y-1">
-                  <div>
-                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). ייתכן ש
-                    <button
-                      type="button"
-                      onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                      className="font-semibold text-primary underline hover:no-underline mx-1"
-                    >
-                      {cheapest?.name}
-                    </button>
-                    זכאי/ת להנחת <strong>"{sibDt.label}"</strong> בכרטיס שלו/ה.
-                  </div>
-                </div>
-              );
-            }
-            return (
-              <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
-                האח/ות הזול/ה בקבוצה:{" "}
-                <button
-                  type="button"
-                  onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                  className="font-semibold text-foreground underline hover:no-underline"
-                >
-                  {cheapest?.name}
-                </button>
-                {" "}— הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
-              </div>
-            );
-          })()}
 
           {discountTypes.length === 0 ? (
             <p className="text-sm text-muted-foreground">
