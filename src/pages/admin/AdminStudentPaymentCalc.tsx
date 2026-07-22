@@ -293,6 +293,7 @@ const AdminStudentPaymentCalc = () => {
   const [hydratedFromDraft, setHydratedFromDraft] = useState<boolean>(false);
   const paymentDiscountSnapshotRef = useRef<PaymentDiscountSnapshot | null>(paymentDiscountSnapshot);
   const customDiscountsTouchedRef = useRef(false);
+  const hasAuthoritativeDraftRef = useRef(false);
 
   useEffect(() => {
     paymentDiscountSnapshotRef.current = paymentDiscountSnapshot;
@@ -338,6 +339,7 @@ const AdminStudentPaymentCalc = () => {
     if (hydratedFromDraft) return;
     if (draft === undefined) return; // still loading
     if (draft) {
+      hasAuthoritativeDraftRef.current = true;
       setSelectedDiscountIds(Array.isArray(draft.selected_discount_ids) ? draft.selected_discount_ids : []);
       setCustomDiscounts(Array.isArray(draft.custom_discounts) ? (draft.custom_discounts as any) : []);
       setStartDateOverrides(
@@ -567,7 +569,7 @@ const AdminStudentPaymentCalc = () => {
     // Fallback to the last payment snapshot only when SEEDING for the first
     // time (no draft row yet). Once a draft exists it is authoritative and
     // an empty list must remain empty across devices.
-    const canFallback = !draft;
+    const canFallback = !hasAuthoritativeDraftRef.current && !draft;
     const fallbackSnapshot = canFallback ? paymentDiscountSnapshotRef.current : null;
     const customDiscountsToSave =
       canFallback && !customDiscountsTouchedRef.current && c.length === 0 && (fallbackSnapshot?.customDiscounts?.length ?? 0) > 0
@@ -583,18 +585,21 @@ const AdminStudentPaymentCalc = () => {
         : o;
     try {
       if (opts?.showToast) setSavingDraft(true);
+      const savedDraftPayload = {
+        student_id: studentId,
+        academic_year_id: yearId,
+        selected_discount_ids: selectedDiscountIdsToSave,
+        custom_discounts: customDiscountsToSave as any,
+        start_date_overrides: startDateOverridesToSave as any,
+        discount_enrollment_overrides: deo as any,
+      };
       const { error } = await supabase.from("student_payment_drafts" as any).upsert(
-        {
-          student_id: studentId,
-          academic_year_id: yearId,
-          selected_discount_ids: selectedDiscountIdsToSave,
-          custom_discounts: customDiscountsToSave as any,
-          start_date_overrides: startDateOverridesToSave as any,
-          discount_enrollment_overrides: deo as any,
-        },
+        savedDraftPayload,
         { onConflict: "student_id,academic_year_id" },
       );
       if (error) throw error;
+      hasAuthoritativeDraftRef.current = true;
+      queryClient.setQueryData(["payment-draft", studentId, yearId], savedDraftPayload);
       setLastSavedAt(new Date());
       queryClient.invalidateQueries({ queryKey: ["priv-payments-drafts"] });
       if (opts?.showToast) toast.success("החישוב נשמר");
@@ -603,6 +608,18 @@ const AdminStudentPaymentCalc = () => {
     } finally {
       if (opts?.showToast) setSavingDraft(false);
     }
+  };
+
+  const updateCustomDiscounts = (next: { label: string; value: string; mode: "pct" | "amount" }[]) => {
+    customDiscountsTouchedRef.current = true;
+    draftStateRef.current = { ...draftStateRef.current, customDiscounts: next };
+    setCustomDiscounts(next);
+  };
+
+  const removeCustomDiscount = (index: number) => {
+    const next = customDiscounts.filter((_, idx) => idx !== index);
+    updateCustomDiscounts(next);
+    void saveDraftNow();
   };
 
   useEffect(() => {
@@ -1342,15 +1359,14 @@ const AdminStudentPaymentCalc = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label>הנחות מותאמות</Label>
-              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }]); }}>
+              <Button variant="outline" size="sm" className="rounded-xl h-9" onClick={() => updateCustomDiscounts([...customDiscounts, { label: "", value: "", mode: "pct" }])}>
                 <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
             {customDiscounts.map((c, i) => (
               <div key={i} className="grid grid-cols-[1fr_110px_90px_44px] gap-2">
                 <Input placeholder="תיאור" value={c.label} onChange={(e) => {
-                  customDiscountsTouchedRef.current = true;
-                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; setCustomDiscounts(arr);
+                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], label: e.target.value }; updateCustomDiscounts(arr);
                 }} className="h-11 rounded-xl" />
                 <Input
                   placeholder={c.mode === "pct" ? "%" : "₪"}
@@ -1358,14 +1374,12 @@ const AdminStudentPaymentCalc = () => {
                   min="0"
                   value={c.value}
                   onChange={(e) => {
-                    customDiscountsTouchedRef.current = true;
-                    const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; setCustomDiscounts(arr);
+                    const arr = [...customDiscounts]; arr[i] = { ...arr[i], value: e.target.value }; updateCustomDiscounts(arr);
                   }}
                   className="h-11 rounded-xl"
                 />
                 <Select value={c.mode} onValueChange={(v) => {
-                  customDiscountsTouchedRef.current = true;
-                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; setCustomDiscounts(arr);
+                  const arr = [...customDiscounts]; arr[i] = { ...arr[i], mode: v as "pct" | "amount" }; updateCustomDiscounts(arr);
                 }}>
                   <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -1373,7 +1387,7 @@ const AdminStudentPaymentCalc = () => {
                     <SelectItem value="amount">סכום ₪</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => { customDiscountsTouchedRef.current = true; setCustomDiscounts(customDiscounts.filter((_, idx) => idx !== i)); }}>
+                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive" onClick={() => removeCustomDiscount(i)}>
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
