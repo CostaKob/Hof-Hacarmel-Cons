@@ -1171,6 +1171,7 @@ const AdminStudentPaymentCalc = () => {
                       שים לב: תוסר הנחת האחוזים האחרת הפעילה כרגע (אין כפל).
                     </div>
                   )}
+                  {siblingsLine}
                 </div>
               );
             }
