@@ -237,16 +237,50 @@ const AdminSpecialTrackCard = () => {
           </Dialog>
         </CardHeader>
         <CardContent>
+        <CardContent>
+          {(availableGrades.length > 0 || availableInstruments.length > 0) && (
+            <div className="flex flex-col sm:flex-row gap-2 mb-4">
+              {availableGrades.length > 0 && (
+                <Select value={gradeFilter} onValueChange={setGradeFilter}>
+                  <SelectTrigger className="h-11 rounded-xl sm:w-48"><SelectValue placeholder="כיתה" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הכיתות</SelectItem>
+                    {availableGrades.map((g) => <SelectItem key={g} value={g}>כיתה {g}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              {availableInstruments.length > 0 && (
+                <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
+                  <SelectTrigger className="h-11 rounded-xl sm:w-56"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">כל הכלים</SelectItem>
+                    {availableInstruments.map((i) => <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+              {(gradeFilter !== "all" || instrumentFilter !== "all") && (
+                <Button variant="ghost" size="sm" onClick={() => { setGradeFilter("all"); setInstrumentFilter("all"); }}>
+                  <X className="h-4 w-4 ml-1" /> נקה
+                </Button>
+              )}
+            </div>
+          )}
           {isLoading ? (
             <p className="text-center text-muted-foreground py-8">טוען...</p>
           ) : students.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">אין תלמידים במסלול זה</p>
+          ) : filteredStudents.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">אין תוצאות עבור הסינון שנבחר</p>
           ) : (
             <div className="flex flex-col gap-2">
-              {students.map((s: any, index: number) => (
+              {filteredStudents.map((s: any, index: number) => (
                 <div
                   key={s.id}
                   onClick={() => navigate(`/admin/students/${s.id}`)}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
                   className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-3 flex-1 min-w-0">
