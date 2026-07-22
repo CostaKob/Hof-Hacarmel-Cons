@@ -57,7 +57,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [transactionType, setTransactionType] = useState<"payment" | "credit">("payment");
-  const [invoiceMode, setInvoiceMode] = useState<"combined" | "separate">("combined");
+  // invoiceMode removed — always combined when multiple entries
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
   const [splitParts, setSplitParts] = useState<Array<{ label: string; amount: string }>>([
@@ -404,8 +404,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           amount: Math.round(e.amt * ratio * 100) / 100,
         }));
 
-      // If there are discount lines, force combined behavior (single row + breakdown)
-      const effectiveMode = hasDiscounts ? "combined" : invoiceMode;
+      // Always create a single combined row when there are multiple entries
+      const effectiveMode = "combined";
 
       let rows: any[];
       if (useCheckSpread) {
@@ -600,7 +600,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setSelectedAmounts({});
     setEditEnrollmentId("");
     setEditAmount("");
-    setInvoiceMode("combined");
+    
     setSplitOpen(false);
     setSplitParts([{ label: "חלק 1", amount: "" }, { label: "חלק 2", amount: "" }]);
     setSplitResults([]);
@@ -779,35 +779,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       );
                     })}
                     {Object.keys(selectedAmounts).length > 1 && (
-                      <>
-                        <p className="text-xs text-muted-foreground text-end">
-                          סה״כ: ₪{totalSelected.toLocaleString()}
-                        </p>
-                        <div className="rounded-lg border border-border p-2 space-y-2 bg-muted/30">
-                          <Label className="text-xs">מצב קבלה</Label>
-                          <div className="flex gap-2">
-                            <button
-                              type="button"
-                              className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "combined" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
-                              onClick={() => setInvoiceMode("combined")}
-                            >
-                              קבלה מאוחדת אחת
-                            </button>
-                            <button
-                              type="button"
-                              className={`flex-1 h-9 rounded-md text-xs font-medium border transition-colors ${invoiceMode === "separate" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
-                              onClick={() => setInvoiceMode("separate")}
-                            >
-                              קבלה נפרדת לכל שיוך
-                            </button>
-                          </div>
-                          <p className="text-[11px] text-muted-foreground">
-                            {invoiceMode === "combined"
-                              ? "ייווצר רישום תשלום אחד מאוחד וקבלה אחת עם פירוט פר שיוך."
-                              : "ייווצר רישום נפרד לכל שיוך וקבלה נפרדת לכל אחד."}
-                          </p>
-                        </div>
-                      </>
+                      <p className="text-xs text-muted-foreground text-end">
+                        סה״כ: ₪{totalSelected.toLocaleString()}
+                      </p>
                     )}
                   </div>
                 )}
