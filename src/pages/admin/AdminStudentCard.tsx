@@ -31,6 +31,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
 import StudentEnsemblesSection from "@/components/admin/StudentEnsemblesSection";
+import StudentSiblingsSection from "@/components/admin/StudentSiblingsSection";
 
 
 
@@ -471,6 +472,8 @@ const AdminStudentCard = () => {
         )}
 
         <StudentEnsemblesSection studentId={studentId!} enrollments={enrollments as any} />
+
+        <StudentSiblingsSection studentId={studentId!} />
 
 
 

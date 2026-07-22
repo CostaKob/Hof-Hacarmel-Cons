@@ -7,7 +7,7 @@
 //                            3 → on 2, 4 → on 3, etc.).
 //                            Only active when there are 2+ enrollments.
 
-export type DiscountAppliesTo = "all" | "cheapest_enrollment";
+export type DiscountAppliesTo = "all" | "cheapest_enrollment" | "sibling_cheapest";
 
 export interface DiscountType {
   id: string;
@@ -76,8 +76,12 @@ export function computeStandardDiscounts(
   for (const d of selected) {
     const pct = Number(d.percentage) || 0;
     const override = overridesByDiscountId[d.id];
+    // sibling_cheapest is a percentage discount decided externally (based on
+    // whether the student is the cheapest among their siblings). When it's in
+    // `selected` it applies to every enrollment, just like `all`.
+    const scope: DiscountAppliesTo = d.applies_to === "sibling_cheapest" ? "all" : d.applies_to;
     const discountedIds =
-      d.applies_to === "cheapest_enrollment"
+      scope === "cheapest_enrollment"
         ? (Array.isArray(override) && override.length > 0
             ? override.filter((id) => rows.some((r) => r.enrollmentId === id))
             : autoDiscountedIds)
@@ -88,12 +92,12 @@ export function computeStandardDiscounts(
         label: d.label,
         percentage: pct,
         applies_to: d.applies_to,
-        appliedEnrollmentIds: d.applies_to === "cheapest_enrollment" ? discountedIds : [],
+        appliedEnrollmentIds: scope === "cheapest_enrollment" ? discountedIds : [],
         amount: 0,
       });
       continue;
     }
-    if (d.applies_to === "cheapest_enrollment") {
+    if (scope === "cheapest_enrollment") {
       if (discountedIds.length === 0) {
         lines.push({
           discountTypeId: d.id,

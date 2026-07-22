@@ -261,6 +261,7 @@ const AdminPaymentSettings = () => {
                       <SelectContent>
                         <SelectItem value="all">כל הרישומים</SelectItem>
                         <SelectItem value="cheapest_enrollment">כלים נוספים</SelectItem>
+                        <SelectItem value="sibling_cheapest">אח שני (אוטומטי - האח הזול)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

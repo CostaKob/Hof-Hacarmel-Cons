@@ -127,6 +127,34 @@ const AdminStudentPaymentCalc = () => {
     },
   });
 
+  // ── Sibling detection: load confirmed siblings + their enrollments to detect
+  // whether the current student has the lowest annual total (before discounts).
+  const { data: siblingsList = [] } = useQuery({
+    queryKey: ["calc-siblings", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc("get_confirmed_siblings", { _student_id: studentId });
+      if (error) throw error;
+      return (data ?? []) as { id: string; first_name: string; last_name: string }[];
+    },
+  });
+
+  const siblingIds = siblingsList.map((s) => s.id);
+  const { data: siblingEnrollments = [] } = useQuery({
+    queryKey: ["calc-sibling-enrollments", siblingIds.sort().join(","), yearId],
+    enabled: siblingIds.length > 0 && !!yearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, student_id, duration, start_date, end_date, price_per_lesson_override, is_active")
+        .in("student_id", siblingIds)
+        .eq("academic_year_id", yearId!)
+        .eq("is_active", true);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
   const { data: allStudentPayments = [] } = useQuery({
     queryKey: ["calc-payments", studentId, yearId],
     enabled: !!studentId && !!yearId,
@@ -379,6 +407,50 @@ const AdminStudentPaymentCalc = () => {
     const dt = discountTypes.find((d) => d.legacy_key === "afterschool_branch");
     if (dt) setSelectedDiscountIds((prev) => (prev.includes(dt.id) ? prev : [...prev, dt.id]));
   }, [enrollments, discountTypes, draft]);
+
+  // ── Sibling discount: auto-select "sibling" discount when the current
+  // student has the lowest base annual total (before discounts) among their
+  // confirmed siblings. Runs only when seeding a fresh calc (no draft yet).
+  const siblingCheapestInfo = useMemo(() => {
+    if (!yearFull || !settings || siblingsList.length === 0 || !enrollments) return null;
+    const globalPrices = (settings.lesson_prices ?? {}) as Record<string, number>;
+    const yStart = yearFull.start_date as string;
+    const yEnd = yearFull.end_date as string;
+    const totalFor = (enrs: any[]) => enrs
+      .filter((e) => e.is_active !== false)
+      .reduce((sum, e) => sum + calcEnrollment({
+        id: e.id,
+        duration: Number(e.duration) || 0,
+        startDate: e.start_date,
+        endDate: e.end_date ?? null,
+        pricePerLessonOverride: e.price_per_lesson_override ?? null,
+      }, globalPrices, yStart, yEnd).prorated, 0);
+    const myTotal = totalFor(enrollments as any[]);
+    const siblingTotals = siblingsList.map((s) => ({
+      id: s.id,
+      name: `${s.first_name} ${s.last_name}`,
+      total: totalFor(siblingEnrollments.filter((e: any) => e.student_id === s.id)),
+    }));
+    const allTotals = [{ id: studentId!, name: "current", total: myTotal }, ...siblingTotals];
+    const min = Math.min(...allTotals.map((t) => t.total));
+    // Current student must be strictly the cheapest (or tied) AND have a positive total.
+    const isCheapest = myTotal > 0 && Math.abs(myTotal - min) < 0.005;
+    return { isCheapest, siblingTotals, myTotal };
+  }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId]);
+
+  useEffect(() => {
+    if (draft) return;
+    if (!discountTypes.length) return;
+    if (!siblingCheapestInfo?.isCheapest) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "sibling" || d.applies_to === "sibling_cheapest");
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.includes(dt.id)) return prev;
+      if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      return [...prev, dt.id];
+    });
+  }, [siblingCheapestInfo, discountTypes, draft]);
+
 
   // Persist discounts to localStorage (same-browser fallback)
   useEffect(() => {

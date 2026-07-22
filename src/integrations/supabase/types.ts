@@ -2070,6 +2070,51 @@ export type Database = {
           },
         ]
       }
+      student_siblings: {
+        Row: {
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          match_reason: string | null
+          match_score: number
+          student_a_id: string
+          student_b_id: string
+        }
+        Insert: {
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          match_score?: number
+          student_a_id: string
+          student_b_id: string
+        }
+        Update: {
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          match_reason?: string | null
+          match_score?: number
+          student_a_id?: string
+          student_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_siblings_student_a_id_fkey"
+            columns: ["student_a_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_siblings_student_b_id_fkey"
+            columns: ["student_b_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
@@ -2397,6 +2442,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      _norm_phone: { Args: { _p: string }; Returns: string }
       admin_sync_email_identity: {
         Args: { _new_email: string; _user_id: string }
         Returns: undefined
@@ -2409,6 +2455,17 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      get_confirmed_siblings: {
+        Args: { _student_id: string }
+        Returns: {
+          first_name: string
+          grade: string
+          id: string
+          last_name: string
+          link_id: string
+          match_reason: string
+        }[]
       }
       get_public_pricing: { Args: never; Returns: Json }
       get_public_school_music_school_by_slug: {
@@ -2494,6 +2551,21 @@ export type Database = {
       get_school_music_school_year: {
         Args: { _school_id: string }
         Returns: string
+      }
+      get_sibling_candidates: {
+        Args: { _student_id: string }
+        Returns: {
+          already_linked: boolean
+          city: string
+          first_name: string
+          grade: string
+          id: string
+          last_name: string
+          match_reason: string
+          match_score: number
+          parent_name: string
+          parent_phone: string
+        }[]
       }
       get_sm_payment_public_status: {
         Args: { _payment_id: string }
