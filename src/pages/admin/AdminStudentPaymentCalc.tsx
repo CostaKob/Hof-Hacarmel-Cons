@@ -146,7 +146,7 @@ const AdminStudentPaymentCalc = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, student_id, duration, start_date, end_date, price_per_lesson_override, is_active")
+        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active")
         .in("student_id", siblingIds)
         .eq("academic_year_id", yearId!)
         .eq("is_active", true);
@@ -426,10 +426,10 @@ const AdminStudentPaymentCalc = () => {
       .filter((e) => e.is_active !== false)
       .reduce((sum, e) => sum + calcEnrollment({
         id: e.id,
-        duration: Number(e.duration) || 0,
+        duration: Number(e.lesson_duration_minutes) || 0,
         startDate: e.start_date,
         endDate: e.end_date ?? null,
-        pricePerLessonOverride: e.price_per_lesson_override ?? null,
+        pricePerLessonOverride: e.price_per_lesson ?? null,
       }, globalPrices, yStart, yEnd).prorated, 0);
     const myTotal = totalFor(enrollments as any[]);
     const siblingTotals = siblingsList.map((s) => ({
@@ -1028,6 +1028,55 @@ const AdminStudentPaymentCalc = () => {
               ניהול סוגי הנחות
             </button>
           </div>
+          {(() => {
+            if (!siblingCheapestInfo || siblingsList.length === 0) return null;
+            const sibDt = discountTypes.find(
+              (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
+            );
+            if (!sibDt) return null;
+            const alreadySelected = selectedDiscountIds.includes(sibDt.id);
+            const blockedByOther = selectedDiscountIds.some(
+              (id) => id !== sibDt.id && exclusiveIdsSet.has(id),
+            );
+            if (siblingCheapestInfo.isCheapest) {
+              if (alreadySelected) {
+                return (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100">
+                    ✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).
+                  </div>
+                );
+              }
+              return (
+                <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm space-y-2">
+                  <div>
+                    התלמיד/ה הוא/היא <strong>הזול/ה ביותר</strong> בקבוצת האחים (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}) — מומלץ להחיל את הנחת <strong>"{sibDt.label}"</strong>.
+                  </div>
+                  <Button
+                    size="sm"
+                    className="h-8 rounded-lg"
+                    onClick={() => toggleDiscount(sibDt.id)}
+                  >
+                    החל הנחה
+                  </Button>
+                  {blockedByOther && (
+                    <div className="text-xs text-muted-foreground">
+                      שים לב: תוסר הנחת האחוזים האחרת הפעילה כרגע (אין כפל).
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            const cheapest = siblingCheapestInfo.siblingTotals.reduce(
+              (a, b) => (b.total < a.total ? b : a),
+              siblingCheapestInfo.siblingTotals[0],
+            );
+            return (
+              <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+                האח/ות הזול/ה בקבוצה: <strong className="text-foreground">{cheapest?.name}</strong> — הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
+              </div>
+            );
+          })()}
+
           {discountTypes.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               לא הוגדרו סוגי הנחות לשנה זו.{" "}
