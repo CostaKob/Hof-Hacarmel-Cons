@@ -234,6 +234,23 @@ const StudentPaymentsSection = ({
                     {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
                   </p>
+                  {(() => {
+                    const bd = p.enrollment_breakdown;
+                    const pd = bd && !Array.isArray(bd) ? (bd as any).payerDetails : null;
+                    const pl = bd && !Array.isArray(bd) ? (bd as any).payerLabel : null;
+                    if (!pd && !pl) return null;
+                    const fullName = pd ? [pd.firstName, pd.lastName].filter(Boolean).join(" ").trim() : "";
+                    const contact = pd ? [pd.phone, pd.email].filter(Boolean).join(" · ") : "";
+                    return (
+                      <p className="text-xs text-foreground mt-0.5">
+                        <span className="text-muted-foreground">שולם ע״י: </span>
+                        {pl}
+                        {pl && fullName ? " · " : ""}
+                        {fullName && <span className="font-medium">{fullName}</span>}
+                        {contact && <span className="text-muted-foreground"> · {contact}</span>}
+                      </p>
+                    );
+                  })()}
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
