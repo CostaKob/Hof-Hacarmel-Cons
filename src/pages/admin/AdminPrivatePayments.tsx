@@ -489,7 +489,6 @@ const AdminPrivatePayments = () => {
         <p className="text-xs text-muted-foreground text-center pt-2">
           מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
         </p>
-        </p>
       </div>
     </AdminLayout>
   );
