@@ -17,7 +17,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const ALL = "__all__";
 
-type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "refunded";
+type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "refunded" | "active_links";
 
 const AdminPrivatePayments = () => {
   const navigate = useNavigate();
