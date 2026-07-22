@@ -466,22 +466,31 @@ const AdminStudentPaymentCalc = () => {
         : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
       return (ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x));
     };
-    // Only students without another exclusive discount are candidates for the
-    // sibling discount (no stacking). Pick the cheapest among eligible; break
-    // ties deterministically by id.
+    // Sibling discount rule: everyone in the group EXCEPT the most expensive
+    // eligible sibling receives the discount (N-1). Ties on max are broken
+    // deterministically (largest id excluded) so smaller-id students still
+    // receive the discount when totals are equal.
     const eligibleTotals = allTotals.filter((t) => !hasOtherExclusive(t.id));
-    let chosenId: string | null = null;
-    if (eligibleTotals.length > 0) {
-      const minEligible = Math.min(...eligibleTotals.map((t) => t.total));
-      chosenId = eligibleTotals
-        .filter((t) => Math.abs(t.total - minEligible) < 0.005)
+    const recipientIds = new Set<string>();
+    let excludedId: string | null = null;
+    if (eligibleTotals.length >= 2) {
+      const maxEligible = Math.max(...eligibleTotals.map((t) => t.total));
+      excludedId = eligibleTotals
+        .filter((t) => Math.abs(t.total - maxEligible) < 0.005)
         .map((t) => t.id)
-        .sort()[0];
+        .sort()
+        .reverse()[0];
+      for (const t of eligibleTotals) {
+        if (t.id !== excludedId) recipientIds.add(t.id);
+      }
     }
-    const isCheapest = myTotal > 0 && chosenId === studentId;
+    const isCheapest = myTotal > 0 && recipientIds.has(studentId!);
     const meBlocked = hasOtherExclusive(studentId!);
-    const noOneEligible = eligibleTotals.length === 0;
-    return { isCheapest, siblingTotals, myTotal, meBlocked, noOneEligible };
+    const noOneEligible = recipientIds.size === 0;
+    const mostExpensive = excludedId
+      ? (allTotals.find((t) => t.id === excludedId) ?? null)
+      : null;
+    return { isCheapest, siblingTotals, myTotal, meBlocked, noOneEligible, mostExpensive };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId, discountTypes, siblingDrafts, selectedDiscountIds, exclusiveIdsSet]);
 
   // Which (if any) sibling already has the sibling discount selected in their draft.
@@ -504,7 +513,8 @@ const AdminStudentPaymentCalc = () => {
     if (draft) return;
     if (!discountTypes.length) return;
     if (!siblingCheapestInfo?.isCheapest) return;
-    if (siblingWithSiblingDiscount) return; // already applied on a sibling — don't double-apply
+    // With N-1 sibling rule, multiple recipients may exist — don't skip when a
+    // sibling already has the discount as long as current student is also a recipient.
     const dt = discountTypes.find((d) => d.legacy_key === "sibling" || d.applies_to === "sibling_cheapest");
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
@@ -1114,42 +1124,16 @@ const AdminStudentPaymentCalc = () => {
               (id) => id !== sibDt.id && exclusiveIdsSet.has(id),
             );
 
-            // Case A: another sibling already has the sibling discount applied.
-            if (siblingWithSiblingDiscount) {
-              return (
-                <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm space-y-2">
-                  <div>
-                    הנחת <strong>"{sibDt.label}"</strong> כבר מוחלת אצל{" "}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/admin/students/${siblingWithSiblingDiscount.id}`)}
-                      className="font-semibold text-primary underline hover:no-underline"
-                    >
-                      {siblingWithSiblingDiscount.name}
-                    </button>
-                    {" "}— אין כפל הנחות בקבוצת אחים.
-                  </div>
-                  {alreadySelected && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 rounded-lg"
-                      onClick={() => toggleDiscount(sibDt.id)}
-                    >
-                      הסר הנחה כאן
-                    </Button>
-                  )}
-                  {siblingsLine}
-                </div>
-              );
-            }
-
             if (!siblingCheapestInfo) return null;
+
+            // Current student is a recipient of the sibling discount (one of
+            // the N-1 cheaper siblings). Show recommend/applied — do NOT
+            // treat other siblings having the discount as a conflict.
             if (siblingCheapestInfo.isCheapest) {
               if (alreadySelected) {
                 return (
                   <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
-                    <div>✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
+                    <div>✓ זכאי/ת להנחת <strong>"{sibDt.label}"</strong> — פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
                     {siblingsLine}
                   </div>
                 );
@@ -1157,7 +1141,7 @@ const AdminStudentPaymentCalc = () => {
               return (
                 <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm space-y-2">
                   <div>
-                    התלמיד/ה הוא/היא <strong>הזול/ה ביותר</strong> בקבוצת האחים (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}) — מומלץ להחיל את הנחת <strong>"{sibDt.label}"</strong>.
+                    התלמיד/ה <strong>זכאי/ת</strong> להנחת <strong>"{sibDt.label}"</strong> (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}) — כל האחים/ות בקבוצה מקבלים את ההנחה חוץ מהיקר/ה ביותר.
                   </div>
                   <Button
                     size="sm"
@@ -1175,10 +1159,37 @@ const AdminStudentPaymentCalc = () => {
                 </div>
               );
             }
-            const cheapest = siblingCheapestInfo.siblingTotals.reduce(
-              (a, b) => (b.total < a.total ? b : a),
-              siblingCheapestInfo.siblingTotals[0],
-            );
+
+            // Not a recipient — current student is either the most expensive
+            // (excluded) or blocked by another exclusive discount.
+            // Case A: another sibling already has the discount and this
+            // student was already marked with it → suggest removal.
+            if (siblingWithSiblingDiscount && alreadySelected) {
+              return (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm space-y-2">
+                  <div>
+                    הנחת <strong>"{sibDt.label}"</strong> אינה מיועדת לתלמיד/ה זה/ו (היקר/ה ביותר בקבוצה). היא כבר מוחלת אצל{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/students/${siblingWithSiblingDiscount.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline"
+                    >
+                      {siblingWithSiblingDiscount.name}
+                    </button>
+                    .
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 rounded-lg"
+                    onClick={() => toggleDiscount(sibDt.id)}
+                  >
+                    הסר הנחה כאן
+                  </Button>
+                  {siblingsLine}
+                </div>
+              );
+            }
             if (siblingCheapestInfo.meBlocked) {
               if (siblingCheapestInfo.noOneEligible) {
                 return (
@@ -1196,32 +1207,18 @@ const AdminStudentPaymentCalc = () => {
               return (
                 <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 p-3 text-sm space-y-1">
                   <div>
-                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). ייתכן ש
-                    <button
-                      type="button"
-                      onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                      className="font-semibold text-primary underline hover:no-underline mx-1"
-                    >
-                      {cheapest?.name}
-                    </button>
-                    זכאי/ת להנחת <strong>"{sibDt.label}"</strong> בכרטיס שלו/ה.
+                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). הנחת <strong>"{sibDt.label}"</strong> תוחל בכרטיסי האחים/ות הזכאים.
                   </div>
                   {siblingsLine}
                 </div>
               );
             }
+            // Current student is the most expensive in the group (excluded from
+            // the N-1 sibling discount by design).
             return (
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
                 <div>
-                  האח/ות הזול/ה בקבוצה:{" "}
-                  <button
-                    type="button"
-                    onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
-                    className="font-semibold text-foreground underline hover:no-underline"
-                  >
-                    {cheapest?.name}
-                  </button>
-                  {" "}— הנחת "{sibDt.label}" תוחל בכרטיס שלו/ה, לא כאן.
+                  התלמיד/ה הוא/היא <strong>היקר/ה ביותר</strong> בקבוצת האחים — הנחת "{sibDt.label}" תוחל בכרטיסי שאר האחים/ות ולא כאן.
                 </div>
                 {siblingsLine}
               </div>
