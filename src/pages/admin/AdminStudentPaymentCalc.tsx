@@ -459,12 +459,22 @@ const AdminStudentPaymentCalc = () => {
       (d) => d.applies_to === "sibling_cheapest" || d.legacy_key === "sibling",
     )?.id;
     // A student is "blocked" from receiving the sibling discount if their draft
-    // already has another exclusive discount (e.g. תלמיד מגמה) — no stacking.
+    // already has another exclusive discount (e.g. תלמיד מגמה, שלוחת אחה"צ) —
+    // no stacking. We also treat "learns at כרם מהר״ל" as blocked even if the
+    // afternoon-branch discount hasn't been auto-selected in their draft yet,
+    // because that discount always applies to those students.
+    const hasKarmel = (id: string): boolean => {
+      const enrs = id === studentId
+        ? (enrollments as any[])
+        : siblingEnrollments.filter((e: any) => e.student_id === id);
+      return (enrs || []).some((e: any) => e.is_active && (e.schools?.name || "").includes("כרם מהר"));
+    };
     const hasOtherExclusive = (id: string): boolean => {
       const ids = id === studentId
         ? selectedDiscountIds
         : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
-      return (ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x));
+      if ((ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x))) return true;
+      return hasKarmel(id);
     };
     // Sibling discount rule (N-1): the single most expensive sibling in the
     // FULL group is excluded; everyone else receives the discount — unless
