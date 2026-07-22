@@ -1124,42 +1124,16 @@ const AdminStudentPaymentCalc = () => {
               (id) => id !== sibDt.id && exclusiveIdsSet.has(id),
             );
 
-            // Case A: another sibling already has the sibling discount applied.
-            if (siblingWithSiblingDiscount) {
-              return (
-                <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm space-y-2">
-                  <div>
-                    הנחת <strong>"{sibDt.label}"</strong> כבר מוחלת אצל{" "}
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/admin/students/${siblingWithSiblingDiscount.id}`)}
-                      className="font-semibold text-primary underline hover:no-underline"
-                    >
-                      {siblingWithSiblingDiscount.name}
-                    </button>
-                    {" "}— אין כפל הנחות בקבוצת אחים.
-                  </div>
-                  {alreadySelected && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-8 rounded-lg"
-                      onClick={() => toggleDiscount(sibDt.id)}
-                    >
-                      הסר הנחה כאן
-                    </Button>
-                  )}
-                  {siblingsLine}
-                </div>
-              );
-            }
-
             if (!siblingCheapestInfo) return null;
+
+            // Current student is a recipient of the sibling discount (one of
+            // the N-1 cheaper siblings). Show recommend/applied — do NOT
+            // treat other siblings having the discount as a conflict.
             if (siblingCheapestInfo.isCheapest) {
               if (alreadySelected) {
                 return (
                   <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
-                    <div>✓ התלמיד/ה הזול/ה בקבוצת האחים — הנחת "{sibDt.label}" פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
+                    <div>✓ זכאי/ת להנחת <strong>"{sibDt.label}"</strong> — פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
                     {siblingsLine}
                   </div>
                 );
@@ -1167,7 +1141,55 @@ const AdminStudentPaymentCalc = () => {
               return (
                 <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm space-y-2">
                   <div>
-                    התלמיד/ה הוא/היא <strong>הזול/ה ביותר</strong> בקבוצת האחים (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}) — מומלץ להחיל את הנחת <strong>"{sibDt.label}"</strong>.
+                    התלמיד/ה <strong>זכאי/ת</strong> להנחת <strong>"{sibDt.label}"</strong> (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}) — כל האחים/ות בקבוצה מקבלים את ההנחה חוץ מהיקר/ה ביותר.
+                  </div>
+                  <Button
+                    size="sm"
+                    className="h-8 rounded-lg"
+                    onClick={() => toggleDiscount(sibDt.id)}
+                  >
+                    החל הנחה
+                  </Button>
+                  {blockedByOther && (
+                    <div className="text-xs text-muted-foreground">
+                      שים לב: תוסר הנחת האחוזים האחרת הפעילה כרגע (אין כפל).
+                    </div>
+                  )}
+                  {siblingsLine}
+                </div>
+              );
+            }
+
+            // Not a recipient — current student is either the most expensive
+            // (excluded) or blocked by another exclusive discount.
+            // Case A: another sibling already has the discount and this
+            // student was already marked with it → suggest removal.
+            if (siblingWithSiblingDiscount && alreadySelected) {
+              return (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-3 text-sm space-y-2">
+                  <div>
+                    הנחת <strong>"{sibDt.label}"</strong> אינה מיועדת לתלמיד/ה זה/ו (היקר/ה ביותר בקבוצה). היא כבר מוחלת אצל{" "}
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/admin/students/${siblingWithSiblingDiscount.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline"
+                    >
+                      {siblingWithSiblingDiscount.name}
+                    </button>
+                    .
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 rounded-lg"
+                    onClick={() => toggleDiscount(sibDt.id)}
+                  >
+                    הסר הנחה כאן
+                  </Button>
+                  {siblingsLine}
+                </div>
+              );
+            }
                   </div>
                   <Button
                     size="sm"
