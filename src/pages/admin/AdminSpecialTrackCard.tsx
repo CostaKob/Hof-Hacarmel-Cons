@@ -11,10 +11,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Search, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { sortByPerson } from "@/lib/sortHebrew";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 export const SPECIAL_TRACKS: Record<
   string,
