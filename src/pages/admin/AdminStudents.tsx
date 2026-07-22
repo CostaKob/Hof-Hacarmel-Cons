@@ -214,6 +214,29 @@ const AdminStudents = () => {
     },
   });
 
+  // Server-side payment drafts are the single source of truth across devices.
+  const { data: paymentDrafts = [] } = useQuery({
+    queryKey: ["admin-students-payment-drafts", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payment_drafts" as any)
+        .select("student_id, selected_discount_ids, custom_discounts, start_date_overrides, discount_enrollment_overrides")
+        .eq("academic_year_id", selectedYearId!);
+      if (error) throw error;
+      return (data as any[]) ?? [];
+    },
+  });
+
+  const draftByStudent = useMemo(() => {
+    const m = new Map<string, any>();
+    for (const d of paymentDrafts as any[]) {
+      if (d.student_id) m.set(d.student_id, d);
+    }
+    return m;
+  }, [paymentDrafts]);
+
+
   const enrollmentRowsByStudent = useMemo(() => {
     const map = new Map<string, any[]>();
     for (const r of rows as any[]) {
@@ -255,6 +278,18 @@ const AdminStudents = () => {
   }, [ensembleMemberships]);
 
   const getSavedDiscountState = useCallback((sid: string) => {
+    // 1. Server draft (authoritative, cross-device).
+    const draft = draftByStudent.get(sid);
+    if (draft) {
+      return {
+        selectedDiscountIds: Array.isArray(draft.selected_discount_ids) ? draft.selected_discount_ids : [],
+        customDiscounts: Array.isArray(draft.custom_discounts) ? draft.custom_discounts : [],
+        startDateOverrides: draft.start_date_overrides && typeof draft.start_date_overrides === "object" ? draft.start_date_overrides : {},
+        discountEnrollmentOverrides: draft.discount_enrollment_overrides && typeof draft.discount_enrollment_overrides === "object" ? draft.discount_enrollment_overrides : {},
+      };
+    }
+
+    // 2. Fallback to snapshot on last generated payment link (legacy behavior).
     const fromPayment = (yearPayments as any[]).find((p) => {
       const br = p?.enrollment_breakdown;
       return p.student_id === sid && br && !Array.isArray(br) && br.discounts && p.payment_status === "pending";
@@ -263,6 +298,7 @@ const AdminStudents = () => {
       return br && !Array.isArray(br) && br.discounts && p.student_id === sid;
     });
 
+    // 3. Local per-device cache (only if nothing above exists).
     let saved: any = null;
     if (selectedYearId && typeof window !== "undefined") {
       try {
@@ -272,8 +308,9 @@ const AdminStudents = () => {
     }
 
     const paymentDiscounts = fromPayment?.enrollment_breakdown?.discounts;
-    return saved ?? paymentDiscounts ?? null;
-  }, [selectedYearId, yearPayments]);
+    return paymentDiscounts ?? saved ?? null;
+  }, [selectedYearId, yearPayments, draftByStudent]);
+
 
   // Net paid summed at student level (paid/credit only; pending links do not reduce debt)
   const paidByStudent = useMemo(() => {
