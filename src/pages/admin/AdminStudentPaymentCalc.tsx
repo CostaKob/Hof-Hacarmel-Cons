@@ -480,7 +480,8 @@ const AdminStudentPaymentCalc = () => {
     }
     const isCheapest = myTotal > 0 && chosenId === studentId;
     const meBlocked = hasOtherExclusive(studentId!);
-    return { isCheapest, siblingTotals, myTotal, meBlocked };
+    const noOneEligible = eligibleTotals.length === 0;
+    return { isCheapest, siblingTotals, myTotal, meBlocked, noOneEligible };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId, discountTypes, siblingDrafts, selectedDiscountIds, exclusiveIdsSet]);
 
   // Which (if any) sibling already has the sibling discount selected in their draft.
