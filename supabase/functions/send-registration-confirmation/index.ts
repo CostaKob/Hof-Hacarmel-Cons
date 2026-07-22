@@ -240,9 +240,9 @@ Deno.serve(async (req) => {
 
     // Additional notification to branch coordinator (Avi Sharabani) for his branches.
     try {
-      const coordinatorBranches = ["כרם מהר״ל", "כרם מהרל", 'כרם מהר"ל', "עין איילה", "עין אילה", "גבע כרמל", "העוגן", "העמר"];
+      const coordinatorBranches = ["כרם מהר", "עין איילה", "עין אילה", "גבע כרמל", "העוגן", "העמר"];
       const branchNorm = (branch || "").trim();
-      if (coordinatorBranches.some((b) => branchNorm.includes(b) || b.includes(branchNorm) && branchNorm.length > 0)) {
+      if (branchNorm && coordinatorBranches.some((b) => branchNorm.includes(b))) {
         const coordIdempotencyKey = `coord-avi-new-registration-${registrationId}`;
         await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
           method: "POST",
