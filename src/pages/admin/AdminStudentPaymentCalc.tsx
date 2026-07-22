@@ -513,7 +513,8 @@ const AdminStudentPaymentCalc = () => {
     if (draft) return;
     if (!discountTypes.length) return;
     if (!siblingCheapestInfo?.isCheapest) return;
-    if (siblingWithSiblingDiscount) return; // already applied on a sibling — don't double-apply
+    // With N-1 sibling rule, multiple recipients may exist — don't skip when a
+    // sibling already has the discount as long as current student is also a recipient.
     const dt = discountTypes.find((d) => d.legacy_key === "sibling" || d.applies_to === "sibling_cheapest");
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
