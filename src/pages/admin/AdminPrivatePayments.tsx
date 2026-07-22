@@ -169,21 +169,24 @@ const AdminPrivatePayments = () => {
       let totalDue = 0;
       let paid = 0;
       let balance = 0;
-      let status: StatusFilter = "uncalculated";
+      let status: StatusFilter = "unpaid";
       let specialRevenue = 0;
       let proratedTotal = 0;
 
-      if (hasSource) {
+      {
         // Prefer draft (most recent, cross-device). Fall back to payment snapshot.
+        // If neither exists, compute a baseline (no discounts) so every student has a default.
         const brDiscounts: any = draftSource
           ? {
               selectedDiscountIds: Array.isArray(draftSource.selected_discount_ids) ? draftSource.selected_discount_ids : [],
               customDiscounts: Array.isArray(draftSource.custom_discounts) ? draftSource.custom_discounts : [],
               startDateOverrides: draftSource.start_date_overrides && typeof draftSource.start_date_overrides === "object" ? draftSource.start_date_overrides : {},
             }
-          : (paymentSource!.enrollment_breakdown && !Array.isArray(paymentSource!.enrollment_breakdown)
-              ? paymentSource!.enrollment_breakdown.discounts ?? {}
-              : {});
+          : paymentSource
+            ? (paymentSource.enrollment_breakdown && !Array.isArray(paymentSource.enrollment_breakdown)
+                ? paymentSource.enrollment_breakdown.discounts ?? {}
+                : {})
+            : {};
 
         const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
           ? brDiscounts.selectedDiscountIds
