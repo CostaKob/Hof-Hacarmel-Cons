@@ -237,7 +237,6 @@ const AdminSpecialTrackCard = () => {
           </Dialog>
         </CardHeader>
         <CardContent>
-        <CardContent>
           {(availableGrades.length > 0 || availableInstruments.length > 0) && (
             <div className="flex flex-col sm:flex-row gap-2 mb-4">
               {availableGrades.length > 0 && (
