@@ -1053,7 +1053,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   {generateLinkMutation.isPending ? (
                     <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישור...</>
                   ) : (
-                    <><LinkIcon className="h-4 w-4 ml-2" /> צור קישור לתשלום באשראי {totalSelected > 0 ? `(₪${totalSelected.toLocaleString()})` : ""}</>
+                    <><LinkIcon className="h-4 w-4 ml-2" /> צור קישור לסכום מותאם {totalSelected > 0 ? `(₪${totalSelected.toLocaleString()})` : ""}</>
                   )}
                 </Button>
                 <div className="rounded-xl border border-border p-3 space-y-2">
