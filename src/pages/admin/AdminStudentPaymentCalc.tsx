@@ -466,22 +466,31 @@ const AdminStudentPaymentCalc = () => {
         : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
       return (ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x));
     };
-    // Only students without another exclusive discount are candidates for the
-    // sibling discount (no stacking). Pick the cheapest among eligible; break
-    // ties deterministically by id.
+    // Sibling discount rule: everyone in the group EXCEPT the most expensive
+    // eligible sibling receives the discount (N-1). Ties on max are broken
+    // deterministically (largest id excluded) so smaller-id students still
+    // receive the discount when totals are equal.
     const eligibleTotals = allTotals.filter((t) => !hasOtherExclusive(t.id));
-    let chosenId: string | null = null;
-    if (eligibleTotals.length > 0) {
-      const minEligible = Math.min(...eligibleTotals.map((t) => t.total));
-      chosenId = eligibleTotals
-        .filter((t) => Math.abs(t.total - minEligible) < 0.005)
+    const recipientIds = new Set<string>();
+    let excludedId: string | null = null;
+    if (eligibleTotals.length >= 2) {
+      const maxEligible = Math.max(...eligibleTotals.map((t) => t.total));
+      excludedId = eligibleTotals
+        .filter((t) => Math.abs(t.total - maxEligible) < 0.005)
         .map((t) => t.id)
-        .sort()[0];
+        .sort()
+        .reverse()[0];
+      for (const t of eligibleTotals) {
+        if (t.id !== excludedId) recipientIds.add(t.id);
+      }
     }
-    const isCheapest = myTotal > 0 && chosenId === studentId;
+    const isCheapest = myTotal > 0 && recipientIds.has(studentId!);
     const meBlocked = hasOtherExclusive(studentId!);
-    const noOneEligible = eligibleTotals.length === 0;
-    return { isCheapest, siblingTotals, myTotal, meBlocked, noOneEligible };
+    const noOneEligible = recipientIds.size === 0;
+    const mostExpensive = excludedId
+      ? (allTotals.find((t) => t.id === excludedId) ?? null)
+      : null;
+    return { isCheapest, siblingTotals, myTotal, meBlocked, noOneEligible, mostExpensive };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId, discountTypes, siblingDrafts, selectedDiscountIds, exclusiveIdsSet]);
 
   // Which (if any) sibling already has the sibling discount selected in their draft.
