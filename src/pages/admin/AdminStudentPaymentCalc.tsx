@@ -455,8 +455,14 @@ const AdminStudentPaymentCalc = () => {
     }));
     const allTotals = [{ id: studentId!, name: "current", total: myTotal }, ...siblingTotals];
     const min = Math.min(...allTotals.map((t) => t.total));
-    // Current student must be strictly the cheapest (or tied) AND have a positive total.
-    const isCheapest = myTotal > 0 && Math.abs(myTotal - min) < 0.005;
+    // Deterministic tie-break: when several siblings share the lowest total,
+    // pick the one with the smallest id so exactly one card auto-applies.
+    const tiedAtMin = allTotals
+      .filter((t) => Math.abs(t.total - min) < 0.005)
+      .map((t) => t.id)
+      .sort();
+    const chosenId = tiedAtMin[0];
+    const isCheapest = myTotal > 0 && chosenId === studentId;
     return { isCheapest, siblingTotals, myTotal };
   }, [yearFull, settings, siblingsList, siblingEnrollments, enrollments, studentId]);
 
