@@ -1159,6 +1159,18 @@ const AdminStudentPaymentCalc = () => {
               siblingCheapestInfo.siblingTotals[0],
             );
             if (siblingCheapestInfo.meBlocked) {
+              if (siblingCheapestInfo.noOneEligible) {
+                return (
+                  <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm space-y-1">
+                    <div className="font-semibold text-emerald-700 dark:text-emerald-300">
+                      ✓ כל ההנחות המקסימליות הופעלו
+                    </div>
+                    <div className="text-muted-foreground">
+                      לתלמיד/ה ולכל האחים/ות בקבוצה יש כבר הנחה בלעדית אחרת (למשל תלמיד/ת מגמה) — אין זכאות נוספת להנחת <strong>"{sibDt.label}"</strong> כי אין כפל הנחות.
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 p-3 text-sm space-y-1">
                   <div>
