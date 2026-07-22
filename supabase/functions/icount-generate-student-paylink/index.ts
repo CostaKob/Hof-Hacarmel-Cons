@@ -96,6 +96,9 @@ Deno.serve(async (req: Request) => {
       academicYearId,
       academicYearName,
       discounts,
+      skipPayerPrefill,
+      payerLabel,
+      forceNewPaypage,
     } = await req.json().catch(() => ({}));
 
 
@@ -148,7 +151,7 @@ Deno.serve(async (req: Request) => {
         cachedBaseUrl = p.payment_link_url ?? null;
         rowAmount = Number(p.amount) || null;
       }
-    } else {
+    } else if (!forceNewPaypage) {
       const { data: p } = await supabase
         .from("student_payments")
         .select("id, payment_link_url, payment_status, amount")
@@ -164,7 +167,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const breakdown = { lines, discounts: discounts ?? null };
+    const breakdown = { lines, discounts: discounts ?? null, payerLabel: payerLabel ?? null };
 
     // Create pending row if none exists
     if (!paymentId) {
@@ -214,7 +217,9 @@ Deno.serve(async (req: Request) => {
       paypageId = created.paypageId;
     }
 
-    // Prefill from URL params
+    // Prefill from URL params. When `skipPayerPrefill` is set (e.g. for the
+    // 2nd/3rd parent link in a split), we deliberately leave name/phone/id/email
+    // blank so the paying parent fills their own details on the iCount page.
     const parentName: string = (student.parent_name ?? "").trim();
     const parentNameParts = parentName.split(/\s+/);
     const parentFirstName = parentNameParts[0] ?? "";
@@ -222,12 +227,14 @@ Deno.serve(async (req: Request) => {
     const payerId = student.parent_national_id || student.national_id || "";
 
     const params = new URLSearchParams();
-    if (parentName) params.set("name_on_invoice", parentName);
-    if (parentFirstName) params.set("fname", parentFirstName);
-    if (parentLastName) params.set("lname", parentLastName);
-    if (student.parent_email) params.set("email", student.parent_email);
-    if (student.parent_phone) params.set("phone", student.parent_phone);
-    if (payerId) params.set("id_no", payerId);
+    if (!skipPayerPrefill) {
+      if (parentName) params.set("name_on_invoice", parentName);
+      if (parentFirstName) params.set("fname", parentFirstName);
+      if (parentLastName) params.set("lname", parentLastName);
+      if (student.parent_email) params.set("email", student.parent_email);
+      if (student.parent_phone) params.set("phone", student.parent_phone);
+      if (payerId) params.set("id_no", payerId);
+    }
     params.set("custom1", paymentId!);
     params.set("custom2", studentId);
     params.set("paypage_config", PAYPAGE_CONFIG_VERSION);
