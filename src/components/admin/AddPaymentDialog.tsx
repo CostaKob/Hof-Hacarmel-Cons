@@ -70,9 +70,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   // invoiceMode removed — always combined when multiple entries
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [splitOpen, setSplitOpen] = useState(false);
-  const [splitParts, setSplitParts] = useState<Array<{ label: string; amount: string }>>([
-    { label: "הורה 1", amount: "" },
-    { label: "הורה 2", amount: "" },
+  const [splitParts, setSplitParts] = useState<Array<{ label: string; amount: string; firstName: string; lastName: string; email: string; phone: string }>>([
+    { label: "הורה 1", amount: "", firstName: "", lastName: "", email: "", phone: "" },
+    { label: "הורה 2", amount: "", firstName: "", lastName: "", email: "", phone: "" },
   ]);
   const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string }>>([]);
 
