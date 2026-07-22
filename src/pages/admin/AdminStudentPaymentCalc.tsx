@@ -1553,22 +1553,29 @@ const AdminStudentPaymentCalc = () => {
                     </>
                   )}
                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10" title="בטל קישור ממתין"
+                    disabled={deletingPendingId === p.id}
                     onClick={async () => {
+                      if (deletingPendingId) return;
                       if (!confirm("לבטל את קישור התשלום הממתין? דף הסליקה יימחק מ-iCount.")) return;
-                      if (p.payment_link_url || p.icount_payment_page_id) {
-                        const { data, error } = await supabase.functions.invoke("icount-delete-student-paypage", {
-                          body: { paymentId: p.id, strict: true },
-                        });
-                        if (error || data?.error) {
-                          toast.error(`שגיאה במחיקת דף הסליקה: ${error?.message || data?.error}`);
-                          return;
+                      setDeletingPendingId(p.id);
+                      try {
+                        if (p.payment_link_url || p.icount_payment_page_id) {
+                          const { data, error } = await supabase.functions.invoke("icount-delete-student-paypage", {
+                            body: { paymentId: p.id, strict: true },
+                          });
+                          if (error || data?.error) {
+                            toast.error(`שגיאה במחיקת דף הסליקה: ${error?.message || data?.error}`);
+                            return;
+                          }
                         }
+                        const { error } = await supabase.from("student_payments").delete().eq("id", p.id);
+                        if (error) toast.error(`שגיאה: ${error.message}`);
+                        else { toast.success("הקישור בוטל ודף הסליקה נמחק"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] }); }
+                      } finally {
+                        setDeletingPendingId(null);
                       }
-                      const { error } = await supabase.from("student_payments").delete().eq("id", p.id);
-                      if (error) toast.error(`שגיאה: ${error.message}`);
-                      else { toast.success("הקישור בוטל ודף הסליקה נמחק"); queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] }); queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] }); }
                     }}>
-                    <X className="h-4 w-4" />
+                    {deletingPendingId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
