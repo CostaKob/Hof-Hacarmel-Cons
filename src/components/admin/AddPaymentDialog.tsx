@@ -404,8 +404,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           amount: Math.round(e.amt * ratio * 100) / 100,
         }));
 
-      // If there are discount lines, force combined behavior (single row + breakdown)
-      const effectiveMode = hasDiscounts ? "combined" : invoiceMode;
+      // Always create a single combined row when there are multiple entries
+      const effectiveMode = "combined";
 
       let rows: any[];
       if (useCheckSpread) {
