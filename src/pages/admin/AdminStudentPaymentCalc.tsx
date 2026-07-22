@@ -301,12 +301,12 @@ const AdminStudentPaymentCalc = () => {
     return Array.from(ids);
   };
 
-  // Mutually-exclusive percentage discounts on private lessons — only one
-  // of {major_student, second_instrument, sibling} can be selected at a time.
-  const EXCLUSIVE_KEYS = ["major_student", "second_instrument", "sibling"] as const;
-  const exclusiveIdsSet = new Set(
-    discountTypes.filter((d) => EXCLUSIVE_KEYS.includes(d.legacy_key as any)).map((d) => d.id),
-  );
+  // Mutually-exclusive percentage discounts on private lessons — only ONE
+  // preset discount type may be active at a time (sibling, major, second
+  // instrument, afterschool branch, school-music graduate, etc.). Manual
+  // custom discounts are the only ones that stack.
+  const exclusiveIdsSet = new Set(discountTypes.map((d) => d.id));
+
 
   // ─────────────────────────────────────────────────────────────────────────
   // Hydration priority (single source of truth = server draft):
