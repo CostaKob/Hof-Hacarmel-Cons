@@ -659,7 +659,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         if (error) throw error;
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
         if (!data?.url) throw new Error("לא התקבל קישור");
-        results.push({ label: p.label, url: data.url as string });
+        results.push({ label: p.label, url: data.url as string, amount: p.amount, firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone });
       }
       return results;
     },
