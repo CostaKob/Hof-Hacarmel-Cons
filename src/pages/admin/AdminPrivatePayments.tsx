@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Undo2 } from "lucide-react";
+import { Search, Download, Undo2, Link2 } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -17,7 +17,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const ALL = "__all__";
 
-type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "refunded";
+type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "refunded" | "active_links";
 
 const AdminPrivatePayments = () => {
   const navigate = useNavigate();
@@ -276,6 +276,8 @@ const AdminPrivatePayments = () => {
     return rows.filter((r) => {
       if (statusFilter === "refunded") {
         if (!(r.refunds > 0.01)) return false;
+      } else if (statusFilter === "active_links") {
+        if (!(r.activeLinks > 0)) return false;
       } else if (statusFilter !== "all" && r.status !== statusFilter) return false;
       if (schoolFilter !== ALL && !r.enrollments.some((e: any) => e.schools?.id === schoolFilter)) return false;
       if (teacherFilter !== ALL && !r.enrollments.some((e: any) => e.teachers?.id === teacherFilter)) return false;
@@ -338,7 +340,7 @@ const AdminPrivatePayments = () => {
       return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
     const statusLabel: Record<StatusFilter, string> = {
-      all: "", unpaid: "לא שולם", partial: "שולם חלקית", paid: "שולם", refunded: "הוחזר",
+      all: "", unpaid: "לא שולם", partial: "שולם חלקית", paid: "שולם", refunded: "הוחזר", active_links: "לינק פעיל",
     };
     const lines = [headers.join(",")];
     filtered.forEach((r, idx) => {
@@ -494,6 +496,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
               <SelectItem value="refunded">עם החזרים</SelectItem>
+              <SelectItem value="active_links">עם לינק פעיל</SelectItem>
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
@@ -529,6 +532,15 @@ const AdminPrivatePayments = () => {
           >
             <Undo2 className="h-3.5 w-3.5" />
             {statusFilter === "refunded" ? "בטל סינון החזרים" : "החזרים בלבד"}
+          </Button>
+          <Button
+            variant={statusFilter === "active_links" ? "default" : "outline"}
+            size="sm"
+            className="h-9 rounded-xl gap-1"
+            onClick={() => setStatusFilter(statusFilter === "active_links" ? "all" : "active_links")}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            {statusFilter === "active_links" ? "בטל סינון לינקים" : "לינקים פעילים בלבד"}
           </Button>
           <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={exportCsv}>
             <Download className="h-3.5 w-3.5" />
