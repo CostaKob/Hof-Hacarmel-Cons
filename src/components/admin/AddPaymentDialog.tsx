@@ -495,20 +495,38 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const generateLinkMutation = useMutation({
     mutationFn: async () => {
       const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
+      // Include ALL selected entries — enrollments, specials, and discount lines
+      // (negative amounts). The link total is the net of everything the user
+      // sees in the dialog, matching the main calc-page link exactly.
       const entries = Object.entries(selectedAmounts)
         .map(([id, amt]) => ({ id, amt: parseFloat(amt), item: itemById.get(id) }))
-        .filter((x) => x.amt > 0);
-      if (entries.length === 0) throw new Error("יש לבחור לפחות שיוך אחד עם סכום");
+        .filter((x) => !Number.isNaN(x.amt) && x.amt !== 0);
+      if (entries.length === 0) throw new Error("יש לבחור לפחות שורה עם סכום");
       const total = Math.round(entries.reduce((s, x) => s + x.amt, 0) * 100) / 100;
-      if (total <= 0) throw new Error("סכום חייב להיות גדול מ-0");
+      if (total <= 0) throw new Error("סה״כ הקישור חייב להיות גדול מ-0");
+
+      const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
+      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
       const lines = entries.map(({ id, amt, item }) => {
+        const amount = Math.round(amt * 100) / 100;
         if (item?.kind === "special") {
-          return { description: item.label, amount: Math.round(amt * 100) / 100 };
+          return { description: `${item.label}${yearSuffix}`, amount };
+        }
+        if (item?.kind === "discount") {
+          // item.label already includes the discount name (and % if applicable).
+          return { description: `${item.label}${yearSuffix}`, amount };
         }
         const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
-        const desc = e ? `${e.instruments?.name ?? "שכר לימוד"} — ${e.schools?.name ?? ""}`.trim() : "שכר לימוד";
-        return { description: desc.replace(/ — $/, ""), amount: Math.round(amt * 100) / 100 };
+        const descParts = [
+          e?.instruments?.name ?? "שכר לימוד",
+          e?.schools?.name ? `· ${e.schools.name}` : "",
+          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+        ].filter(Boolean).join(" ");
+        return {
+          description: `שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
+          amount,
+        };
       });
 
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
@@ -516,7 +534,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           studentId,
           amount: total,
           academicYearId,
-          academicYearName: activeYear?.name ?? null,
+          academicYearName: hebrewYear || activeYear?.name || null,
           lines,
         },
       });
