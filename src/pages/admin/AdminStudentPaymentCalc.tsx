@@ -523,6 +523,12 @@ const AdminStudentPaymentCalc = () => {
     if (draft) return;
     if (!discountTypes.length) return;
     if (!siblingCheapestInfo?.isCheapest) return;
+    // Don't auto-add sibling when the student learns at כרם מהר״ל — the
+    // afternoon-branch discount takes precedence and both are mutually exclusive.
+    const hasKarmelHere = (enrollments as any[] | undefined)?.some(
+      (e) => e.is_active && (e.schools?.name || "").includes("כרם מהר"),
+    );
+    if (hasKarmelHere) return;
     // With N-1 sibling rule, multiple recipients may exist — don't skip when a
     // sibling already has the discount as long as current student is also a recipient.
     const dt = discountTypes.find((d) => d.legacy_key === "sibling" || d.applies_to === "sibling_cheapest");
@@ -532,7 +538,7 @@ const AdminStudentPaymentCalc = () => {
       if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
       return [...prev, dt.id];
     });
-  }, [siblingCheapestInfo, discountTypes, draft, siblingWithSiblingDiscount]);
+  }, [siblingCheapestInfo, discountTypes, draft, siblingWithSiblingDiscount, enrollments]);
 
 
   // Persist discounts to localStorage (same-browser fallback)
