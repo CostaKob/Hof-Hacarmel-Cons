@@ -16,7 +16,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const ALL = "__all__";
 
-type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "uncalculated";
+type StatusFilter = "all" | "unpaid" | "partial" | "paid";
 
 const AdminPrivatePayments = () => {
   const navigate = useNavigate();
@@ -169,21 +169,24 @@ const AdminPrivatePayments = () => {
       let totalDue = 0;
       let paid = 0;
       let balance = 0;
-      let status: StatusFilter = "uncalculated";
+      let status: StatusFilter = "unpaid";
       let specialRevenue = 0;
       let proratedTotal = 0;
 
-      if (hasSource) {
+      {
         // Prefer draft (most recent, cross-device). Fall back to payment snapshot.
+        // If neither exists, compute a baseline (no discounts) so every student has a default.
         const brDiscounts: any = draftSource
           ? {
               selectedDiscountIds: Array.isArray(draftSource.selected_discount_ids) ? draftSource.selected_discount_ids : [],
               customDiscounts: Array.isArray(draftSource.custom_discounts) ? draftSource.custom_discounts : [],
               startDateOverrides: draftSource.start_date_overrides && typeof draftSource.start_date_overrides === "object" ? draftSource.start_date_overrides : {},
             }
-          : (paymentSource!.enrollment_breakdown && !Array.isArray(paymentSource!.enrollment_breakdown)
-              ? paymentSource!.enrollment_breakdown.discounts ?? {}
-              : {});
+          : paymentSource
+            ? (paymentSource.enrollment_breakdown && !Array.isArray(paymentSource.enrollment_breakdown)
+                ? paymentSource.enrollment_breakdown.discounts ?? {}
+                : {})
+            : {};
 
         const selectedDiscountIds: string[] = Array.isArray(brDiscounts.selectedDiscountIds)
           ? brDiscounts.selectedDiscountIds
@@ -313,7 +316,7 @@ const AdminPrivatePayments = () => {
       if (r.hasSpecialCourse) { specialCount += 1; }
       if (r.student.has_music_production_course) { productionCount += 1; }
       if (r.student.has_recital_track) { recitalCount += 1; }
-      if (!r.hasSource) continue;
+      
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
       balance += Math.max(0, r.balance);
@@ -392,7 +395,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="unpaid">לא שולם</SelectItem>
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
-              <SelectItem value="uncalculated">טרם חושב שכר לימוד</SelectItem>
+              
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
@@ -422,7 +425,6 @@ const AdminPrivatePayments = () => {
               const statusBadge =
                 r.status === "paid" ? { label: "שולם", variant: "default" as const } :
                 r.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
-                r.status === "uncalculated" ? { label: "טרם חושב שכר לימוד", variant: "outline" as const } :
                 { label: "לא שולם", variant: "outline" as const };
               return (
                 <div
@@ -464,27 +466,18 @@ const AdminPrivatePayments = () => {
                       </div>
                     </div>
                     <div className="text-left shrink-0 space-y-0.5">
-                      {r.hasSource ? (
-                        <>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">פוטנציאל</p>
-                            <p className="text-lg font-bold text-foreground leading-tight">{fmt(r.totalDue)} ₪</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">שולם</p>
-                            <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(Math.max(0, r.paid))} ₪</p>
-                          </div>
-                          <div>
-                            <p className="text-[10px] text-muted-foreground">יתרה</p>
-                            <p className={`text-sm font-semibold leading-tight ${r.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, r.balance))} ₪</p>
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-right">
-                          <p className="text-xs text-muted-foreground leading-tight">טרם חושב</p>
-                          <p className="text-sm font-semibold text-muted-foreground leading-tight">שכר לימוד</p>
-                        </div>
-                      )}
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">פוטנציאל</p>
+                        <p className="text-lg font-bold text-foreground leading-tight">{fmt(r.totalDue)} ₪</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">שולם</p>
+                        <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(Math.max(0, r.paid))} ₪</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">יתרה</p>
+                        <p className={`text-sm font-semibold leading-tight ${r.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, r.balance))} ₪</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -494,7 +487,7 @@ const AdminPrivatePayments = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pt-2">
-          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והנחות שנשמרו בקישור התשלום האחרון של כל תלמיד · תלמידים ללא קישור תשלום מסומנים כ"טרם חושב שכר לימוד"
+          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
         </p>
       </div>
     </AdminLayout>
