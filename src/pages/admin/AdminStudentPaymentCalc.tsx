@@ -146,7 +146,7 @@ const AdminStudentPaymentCalc = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active")
+        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, schools:school_id(name)")
         .in("student_id", siblingIds)
         .eq("academic_year_id", yearId!)
         .eq("is_active", true);
