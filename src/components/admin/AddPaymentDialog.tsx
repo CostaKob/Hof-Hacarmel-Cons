@@ -983,7 +983,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                           onChange={(e) =>
                             setSplitParts((prev) => prev.map((p, i) => (i === idx ? { ...p, label: e.target.value } : p)))
                           }
-                          placeholder={`חלק ${idx + 1}`}
+                          placeholder={`הורה ${idx + 1}`}
                           className="flex-1 h-9"
                         />
                         <Input
