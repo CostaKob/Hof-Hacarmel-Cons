@@ -1499,7 +1499,14 @@ const AdminStudentPaymentCalc = () => {
         {pendingPayments.length > 0 && (
           <div className="rounded-2xl border border-amber-400/40 bg-amber-50/60 dark:bg-amber-950/20 p-5 shadow-sm space-y-2">
             <h2 className="font-semibold text-foreground text-base">קישורי תשלום ממתינים ({pendingPayments.length})</h2>
-            {pendingPayments.map((p: any) => {
+            {[...pendingPayments].sort((a: any, b: any) => {
+              const la = a.enrollment_breakdown?.payerLabel ?? "";
+              const lb = b.enrollment_breakdown?.payerLabel ?? "";
+              const na = parseInt((la.match(/\d+/) || ["0"])[0], 10);
+              const nb = parseInt((lb.match(/\d+/) || ["0"])[0], 10);
+              if (na !== nb) return na - nb;
+              return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            }).map((p: any) => {
               const bd = p.enrollment_breakdown ?? {};
               const pd = bd.payerDetails ?? null;
               const payerLabel: string | null = bd.payerLabel ?? null;
