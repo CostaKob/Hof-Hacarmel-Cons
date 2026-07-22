@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Undo2 } from "lucide-react";
+import { Search, Download, Undo2, Link2 } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
