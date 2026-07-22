@@ -319,11 +319,11 @@ const AdminPrivatePayments = () => {
       
       potential += r.totalDue;
       paid += Math.max(0, r.paid);
-      balance += Math.max(0, r.balance);
       if (r.hasSpecialCourse) { specialRevenue += r.specialRevenue ?? 0; }
       if (r.student.has_music_production_course) { productionRevenue += musicProdPrice; }
       if (r.student.has_recital_track) { recitalRevenue += recitalPrice; }
     }
+    balance = Math.max(0, Math.round((potential - paid) * 100) / 100);
     return { potential, paid, balance, studentsCount: filtered.length, enrollmentsCount, specialRevenue, specialCount, productionRevenue, recitalRevenue, productionCount, recitalCount };
   }, [filtered, settings]);
 
