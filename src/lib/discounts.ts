@@ -76,8 +76,12 @@ export function computeStandardDiscounts(
   for (const d of selected) {
     const pct = Number(d.percentage) || 0;
     const override = overridesByDiscountId[d.id];
+    // sibling_cheapest is a percentage discount decided externally (based on
+    // whether the student is the cheapest among their siblings). When it's in
+    // `selected` it applies to every enrollment, just like `all`.
+    const scope: DiscountAppliesTo = d.applies_to === "sibling_cheapest" ? "all" : d.applies_to;
     const discountedIds =
-      d.applies_to === "cheapest_enrollment"
+      scope === "cheapest_enrollment"
         ? (Array.isArray(override) && override.length > 0
             ? override.filter((id) => rows.some((r) => r.enrollmentId === id))
             : autoDiscountedIds)
