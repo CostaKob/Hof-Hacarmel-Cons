@@ -570,27 +570,84 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const splitLinksMutation = useMutation({
     mutationFn: async () => {
       const parts = splitParts
-        .map((p) => ({ label: p.label.trim() || "חלק", amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100 }))
+        .map((p) => ({ label: p.label.trim() || "הורה", amount: Math.round((parseFloat(p.amount) || 0) * 100) / 100 }))
         .filter((p) => p.amount > 0);
       if (parts.length < 2) throw new Error("יש להזין לפחות שני חלקים עם סכום");
 
-      const results = await Promise.all(
-        parts.map(async (p) => {
-          const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
-            body: {
-              studentId,
-              amount: p.amount,
-              academicYearId,
-              academicYearName: activeYear?.name ?? null,
-              lines: [{ description: `שכר לימוד — ${p.label}`, amount: p.amount }],
-            },
-          });
-          if (error) throw error;
-          if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-          if (!data?.url) throw new Error("לא התקבל קישור");
-          return { label: p.label, url: data.url as string };
-        }),
-      );
+      // Build the full detailed line items exactly like the single-link flow —
+      // each parent needs to see *all* enrollments (both instruments etc.) on
+      // their payment page, just at their share of the amount.
+      const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
+      const baseEntries = Object.entries(selectedAmounts)
+        .map(([id, amt]) => ({ id, amt: parseFloat(amt), item: itemById.get(id) }))
+        .filter((x) => !Number.isNaN(x.amt) && x.amt !== 0);
+      if (baseEntries.length === 0) throw new Error("יש לבחור לפחות שורה עם סכום");
+      const grossTotal = Math.round(baseEntries.reduce((s, x) => s + x.amt, 0) * 100) / 100;
+      if (grossTotal <= 0) throw new Error("סה״כ החישוב חייב להיות גדול מ-0");
+
+      const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
+      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
+
+      const baseLines = baseEntries.map(({ id, amt, item }) => {
+        const amount = Math.round(amt * 100) / 100;
+        if (item?.kind === "special") return { description: `${item.label}${yearSuffix}`, amount };
+        if (item?.kind === "discount") return { description: `${item.label}${yearSuffix}`, amount };
+        const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
+        const descParts = [
+          e?.instruments?.name ?? "שכר לימוד",
+          e?.schools?.name ? `· ${e.schools.name}` : "",
+          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+        ].filter(Boolean).join(" ");
+        return {
+          description: `שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
+          amount,
+        };
+      });
+
+      const partsCount = parts.length;
+      const results: Array<{ label: string; url: string }> = [];
+      // Sequential to avoid iCount rate-limits and to make ordering deterministic
+      for (let idx = 0; idx < partsCount; idx++) {
+        const p = parts[idx];
+        const ratio = p.amount / grossTotal;
+        // Scale each line proportionally, then fix rounding drift on the last line.
+        const scaled = baseLines.map((l) => ({
+          description: l.description,
+          amount: Math.round(l.amount * ratio * 100) / 100,
+        }));
+        const drift = Math.round((p.amount - scaled.reduce((s, l) => s + l.amount, 0)) * 100) / 100;
+        if (scaled.length > 0 && Math.abs(drift) >= 0.01) {
+          scaled[scaled.length - 1].amount = Math.round((scaled[scaled.length - 1].amount + drift) * 100) / 100;
+        }
+        // Add a clear note line so the parent understands they are paying a share
+        const shareNote = {
+          description: `חלקו של ${p.label} מתוך ${partsCount} משלמים (סה״כ החשבון ₪${grossTotal.toLocaleString()})`,
+          amount: 0,
+        };
+        const finalLines = [...scaled, shareNote];
+
+        const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
+          body: {
+            studentId,
+            amount: p.amount,
+            academicYearId,
+            academicYearName: hebrewYear || activeYear?.name || null,
+            lines: finalLines,
+            // The first parent is prefilled with the student's parent-on-file.
+            // Every additional parent must fill in their own details on the
+            // iCount page — do NOT prefill name/phone/id/email for them.
+            skipPayerPrefill: idx > 0,
+            payerLabel: p.label,
+            // Force a brand new paypage per part so the URLs don't collide
+            // on the cached pending row.
+            forceNewPaypage: true,
+          },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+        if (!data?.url) throw new Error("לא התקבל קישור");
+        results.push({ label: p.label, url: data.url as string });
+      }
       return results;
     },
     onSuccess: (results) => {
