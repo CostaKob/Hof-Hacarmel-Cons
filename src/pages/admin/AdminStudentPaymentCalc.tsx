@@ -1157,6 +1157,23 @@ const AdminStudentPaymentCalc = () => {
               (a, b) => (b.total < a.total ? b : a),
               siblingCheapestInfo.siblingTotals[0],
             );
+            if (siblingCheapestInfo.meBlocked) {
+              return (
+                <div className="rounded-xl border border-sky-500/40 bg-sky-500/5 p-3 text-sm space-y-1">
+                  <div>
+                    לתלמיד/ה כבר יש הנחה בלעדית אחרת (אין כפל). ייתכן ש
+                    <button
+                      type="button"
+                      onClick={() => cheapest?.id && navigate(`/admin/students/${cheapest.id}`)}
+                      className="font-semibold text-primary underline hover:no-underline mx-1"
+                    >
+                      {cheapest?.name}
+                    </button>
+                    זכאי/ת להנחת <strong>"{sibDt.label}"</strong> בכרטיס שלו/ה.
+                  </div>
+                </div>
+              );
+            }
             return (
               <div className="rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
                 האח/ות הזול/ה בקבוצה:{" "}
