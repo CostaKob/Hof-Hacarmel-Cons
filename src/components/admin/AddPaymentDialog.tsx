@@ -630,7 +630,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setEditAmount("");
     
     setSplitOpen(false);
-    setSplitParts([{ label: "חלק 1", amount: "" }, { label: "חלק 2", amount: "" }]);
+    setSplitParts([{ label: "הורה 1", amount: "" }, { label: "הורה 2", amount: "" }]);
     setSplitResults([]);
     setChecksOpen(false);
     setNumChecks("1");
