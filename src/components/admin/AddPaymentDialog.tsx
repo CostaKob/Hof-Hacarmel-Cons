@@ -612,7 +612,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       });
 
       const partsCount = parts.length;
-      const results: Array<{ label: string; url: string }> = [];
+      const results: Array<{ label: string; url: string; amount: number; firstName: string; lastName: string; email: string; phone: string }> = [];
       // Sequential to avoid iCount rate-limits and to make ordering deterministic
       for (let idx = 0; idx < partsCount; idx++) {
         const p = parts[idx];
