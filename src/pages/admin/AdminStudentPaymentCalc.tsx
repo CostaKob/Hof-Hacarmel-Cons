@@ -463,22 +463,25 @@ const AdminStudentPaymentCalc = () => {
     )?.id;
     // A student is "blocked" from receiving the sibling discount if their draft
     // already has another exclusive discount (e.g. תלמיד מגמה, שלוחת אחה"צ) —
-    // no stacking. We also treat "learns at כרם מהר״ל" as blocked even if the
-    // afternoon-branch discount hasn't been auto-selected in their draft yet,
-    // because that discount always applies to those students.
-    const hasKarmel = (id: string): boolean => {
-      const enrs = id === studentId
-        ? (enrollments as any[])
-        : siblingEnrollments.filter((e: any) => e.student_id === id);
-      return (enrs || []).some((e: any) => e.is_active && (e.schools?.name || "").includes("כרם מהר"));
+    // no stacking. We check what's actually selected in their draft (not the
+    // school membership) so that manually removing the afternoon-branch
+    // discount makes the sibling discount available again.
+    const afternoonDtId = discountTypes.find((d) => d.legacy_key === "afterschool_branch")?.id;
+    const hasAfternoonSelected = (id: string): boolean => {
+      if (!afternoonDtId) return false;
+      const ids = id === studentId
+        ? selectedDiscountIds
+        : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
+      return (ids as string[]).includes(afternoonDtId);
     };
     const hasOtherExclusive = (id: string): boolean => {
       const ids = id === studentId
         ? selectedDiscountIds
         : (siblingDrafts.find((d) => d.student_id === id)?.selected_discount_ids ?? []);
       if ((ids as string[]).some((x) => x !== sibDtId && exclusiveIdsSet.has(x))) return true;
-      return hasKarmel(id);
+      return hasAfternoonSelected(id);
     };
+
     // Sibling discount rule (N-1): the single most expensive sibling in the
     // FULL group is excluded; everyone else receives the discount — unless
     // they're already on another exclusive discount (מגמה/הפקה/רסיטל), in
