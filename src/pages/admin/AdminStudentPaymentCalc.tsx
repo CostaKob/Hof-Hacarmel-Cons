@@ -1182,11 +1182,12 @@ const AdminStudentPaymentCalc = () => {
               if (alreadySelected) {
                 return (
                   <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3 text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
-                    <div>✓ זכאי/ת להנחת <strong>"{sibDt.label}"</strong> — פעילה (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
+                    <div>✓ הנחת <strong>"{sibDt.label}"</strong> מוחלת (סה"כ בסיס ₪{Math.round(siblingCheapestInfo.myTotal).toLocaleString("he-IL")}).</div>
                     {siblingsLine}
                   </div>
                 );
               }
+
               return (
                 <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 text-sm space-y-2">
                   <div>
