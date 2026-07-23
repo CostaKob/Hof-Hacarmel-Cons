@@ -151,6 +151,7 @@ Deno.serve(async (req: Request) => {
 
     return new Response(JSON.stringify({
       ok: true, doc_id: docId, doc_number: docNumber, url: docUrl, credit_payment_id: credit?.id,
+      sent_to_email: email || null, refund_amount: Math.abs(refundAmount),
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("[icount-create-sm-refund]", e);
