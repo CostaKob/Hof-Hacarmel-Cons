@@ -467,7 +467,7 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
+      <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
 
     </div>
   );
