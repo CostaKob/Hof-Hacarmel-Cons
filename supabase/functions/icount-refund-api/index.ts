@@ -291,6 +291,7 @@ Deno.serve(async (req: Request) => {
       credit_payment_id: credit?.id,
       sent_to_email: email || null,
       refund_amount: Math.abs(requested),
+      cc_last4: ccLast4,
       details: { cc: ccRefundResult, doc: docData },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
