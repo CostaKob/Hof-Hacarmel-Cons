@@ -24,6 +24,20 @@
 
   <body>
     <div id="root"></div>
+    <script>
+      // Track visual viewport (keyboard) so dialogs can stay centered when keyboard opens
+      (function () {
+        var vv = window.visualViewport;
+        if (!vv) return;
+        function update() {
+          document.documentElement.style.setProperty('--vvh', vv.height + 'px');
+          document.documentElement.style.setProperty('--vvo', vv.offsetTop + 'px');
+        }
+        update();
+        vv.addEventListener('resize', update);
+        vv.addEventListener('scroll', update);
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
