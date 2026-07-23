@@ -98,6 +98,7 @@ Deno.serve(async (req: Request) => {
     const auth = getAuth();
     const negSum = -Math.abs(requested);
     let ccRefundResult: any = null;
+    let ccLast4: string | null = null;
 
     // Step 1: refund the credit card transaction if we have cc_bill_log_id
     let dealId = payment.icount_transaction_id;
