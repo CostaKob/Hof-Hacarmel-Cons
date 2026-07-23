@@ -94,6 +94,7 @@ Deno.serve(async (req: Request) => {
     const auth = getAuth();
     const negSum = -Math.abs(requested);
     let ccRefundResult: any = null;
+    let ccLast4: string | null = null;
 
     let dealId = payment.icount_transaction_id;
     const isCcMethod = payment.payment_method === "credit_card";
