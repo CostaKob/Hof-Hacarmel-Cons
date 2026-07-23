@@ -8,6 +8,7 @@ export interface RefundSuccessInfo {
   sentToEmail?: string | null;
   url?: string | null;
   ccRefund?: boolean;
+  ccLast4?: string | null;
 }
 
 interface Props {
@@ -38,6 +39,7 @@ const RefundSuccessDialog = ({ info, onClose }: Props) => {
               {info.ccRefund && (
                 <div className="text-xs text-emerald-700 dark:text-emerald-400 mt-1">
                   ✓ הכסף הוחזר לכרטיס האשראי המקורי
+                  {info.ccLast4 && <> · מסתיים ב-<span className="font-mono font-semibold">{info.ccLast4}</span></>}
                 </div>
               )}
             </div>

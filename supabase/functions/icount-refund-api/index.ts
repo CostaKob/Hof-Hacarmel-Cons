@@ -98,6 +98,7 @@ Deno.serve(async (req: Request) => {
     const auth = getAuth();
     const negSum = -Math.abs(requested);
     let ccRefundResult: any = null;
+    let ccLast4: string | null = null;
 
     // Step 1: refund the credit card transaction if we have cc_bill_log_id
     let dealId = payment.icount_transaction_id;
@@ -123,6 +124,7 @@ Deno.serve(async (req: Request) => {
         const ccList = Array.isArray(ccArr) ? ccArr : Object.values(ccArr || {});
         const ccRow: any = ccList[0];
         const dateissued = infoData?.doc_info?.dateissued || infoData?.dateissued;
+        if (ccRow?.card_number) ccLast4 = String(ccRow.card_number).slice(-4);
         if (ccRow && (ccRow.confirmation_code || ccRow.card_number)) {
           const txPayload: any = {
             ...auth,
@@ -289,6 +291,7 @@ Deno.serve(async (req: Request) => {
       credit_payment_id: credit?.id,
       sent_to_email: email || null,
       refund_amount: Math.abs(requested),
+      cc_last4: ccLast4,
       details: { cc: ccRefundResult, doc: docData },
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
