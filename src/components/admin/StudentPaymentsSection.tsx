@@ -10,6 +10,7 @@ import { Plus, FileDown, Undo2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
 interface StudentPaymentsSectionProps {
   studentId: string;
