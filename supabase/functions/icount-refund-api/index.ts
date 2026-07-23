@@ -124,6 +124,7 @@ Deno.serve(async (req: Request) => {
         const ccList = Array.isArray(ccArr) ? ccArr : Object.values(ccArr || {});
         const ccRow: any = ccList[0];
         const dateissued = infoData?.doc_info?.dateissued || infoData?.dateissued;
+        if (ccRow?.card_number) ccLast4 = String(ccRow.card_number).slice(-4);
         if (ccRow && (ccRow.confirmation_code || ccRow.card_number)) {
           const txPayload: any = {
             ...auth,
