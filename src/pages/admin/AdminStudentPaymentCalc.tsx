@@ -407,6 +407,10 @@ const AdminStudentPaymentCalc = () => {
     if (!discountTypes.length || !enrollments) return;
     const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
     if (activeCount < 2) return;
+    // If this student qualifies as a sibling-discount recipient, prefer the
+    // sibling discount (applies to ALL their instruments) over the
+    // "additional instrument" discount (skips the most expensive one).
+    if (siblingCheapestInfo?.isCheapest) return;
     const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
     if (!dt) return;
     setSelectedDiscountIds((prev) => {
@@ -414,7 +418,8 @@ const AdminStudentPaymentCalc = () => {
       if (prev.includes(dt.id)) return prev;
       return [...prev, dt.id];
     });
-  }, [enrollments, discountTypes, draft]);
+  }, [enrollments, discountTypes, draft, siblingCheapestInfo]);
+
 
   useEffect(() => {
     if (draft) return;
