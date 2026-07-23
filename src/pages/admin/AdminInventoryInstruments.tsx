@@ -531,9 +531,11 @@ const AdminInventoryInstruments = () => {
       </AlertDialog>
 
       <Dialog open={!!attentionFor} onOpenChange={(open) => { if (!open) { setAttentionFor(null); setAttentionNotes(""); } }}>
-        <DialogContent>
+        <DialogContent className="max-w-md w-[95vw] max-h-[90vh] overflow-y-auto overscroll-contain rounded-2xl">
           <DialogHeader>
-            <DialogTitle>צריך תיקון / השלמות — #{attentionFor?.serial}</DialogTitle>
+            <DialogTitle className="text-base sm:text-lg break-words">
+              צריך תיקון / השלמות — #{attentionFor?.serial}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <Label className="text-sm">מה חסר או מה צריך לתקן?</Label>
@@ -541,16 +543,16 @@ const AdminInventoryInstruments = () => {
               value={attentionNotes}
               onChange={(e) => setAttentionNotes(e.target.value)}
               placeholder="תיאור הליקוי / השלמות נדרשות..."
-              className="rounded-xl min-h-24"
+              className="rounded-xl min-h-24 text-base"
               autoFocus
             />
           </div>
-          <DialogFooter>
-            <Button variant="outline" className="rounded-xl" onClick={() => { setAttentionFor(null); setAttentionNotes(""); }}>
+          <DialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <Button variant="outline" className="rounded-xl h-11 w-full sm:w-auto" onClick={() => { setAttentionFor(null); setAttentionNotes(""); }}>
               ביטול
             </Button>
             <Button
-              className="rounded-xl bg-amber-600 hover:bg-amber-700 text-white"
+              className="rounded-xl h-11 w-full sm:w-auto bg-amber-600 hover:bg-amber-700 text-white"
               disabled={verifyMutation.isPending}
               onClick={() => {
                 if (!attentionFor) return;
