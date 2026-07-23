@@ -119,6 +119,7 @@ const StudentPaymentsSection = ({
         sentToEmail: data?.sent_to_email,
         url: data?.url,
         ccRefund: !!data?.cc_refund,
+        ccLast4: data?.cc_last4 ?? null,
       });
     },
     onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
