@@ -37,10 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let currentUserId: string | null = null;
+
     // getSession handles initial load — waits for roles before clearing loading
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      currentUserId = session?.user?.id ?? null;
       if (session?.user) {
         await fetchRoles(session.user.id);
       } else {
@@ -49,11 +52,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // onAuthStateChange handles subsequent events — no await to avoid deadlock
+    // onAuthStateChange handles subsequent events — no await to avoid deadlock.
+    // Only refetch roles when the user actually changed (sign in/out), NOT on
+    // TOKEN_REFRESHED / focus events — otherwise ProtectedRoute would flip to
+    // its "loading" state and remount children, losing scroll position when
+    // the user returns to the tab.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
+        const nextUserId = session?.user?.id ?? null;
         setUser(session?.user ?? null);
+        if (nextUserId === currentUserId) {
+          return;
+        }
+        currentUserId = nextUserId;
         if (session?.user) {
           fetchRoles(session.user.id);
         } else {
