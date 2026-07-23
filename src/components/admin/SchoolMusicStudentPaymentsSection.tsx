@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
 interface Props {
   studentId: string;
