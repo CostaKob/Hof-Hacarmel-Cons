@@ -538,6 +538,26 @@ const AdminStudentPaymentCalc = () => {
     });
   }, [siblingCheapestInfo, discountTypes, draft, siblingWithSiblingDiscount, enrollments]);
 
+  // Auto-select "additional instrument" (second_instrument) when the student
+  // has 2+ active enrollments — but defer to the sibling discount when they
+  // qualify as a sibling-discount recipient, since the sibling discount
+  // covers ALL their instruments (vs. all-but-most-expensive).
+  useEffect(() => {
+    if (draft) return;
+    if (!discountTypes.length || !enrollments) return;
+    const activeCount = (enrollments as any[]).filter((e) => e.is_active).length;
+    if (activeCount < 2) return;
+    if (siblingCheapestInfo?.isCheapest) return;
+    const dt = discountTypes.find((d) => d.legacy_key === "second_instrument");
+    if (!dt) return;
+    setSelectedDiscountIds((prev) => {
+      if (prev.some((id) => exclusiveIdsSet.has(id))) return prev;
+      if (prev.includes(dt.id)) return prev;
+      return [...prev, dt.id];
+    });
+  }, [enrollments, discountTypes, draft, siblingCheapestInfo]);
+
+
 
   // Persist discounts to localStorage (same-browser fallback)
   useEffect(() => {
