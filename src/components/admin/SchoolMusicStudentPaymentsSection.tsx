@@ -732,6 +732,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
     </div>
   );
 };
