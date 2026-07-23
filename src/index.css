@@ -213,7 +213,7 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
 
 /* Keep Radix dialogs centered within the visual viewport (handles iOS keyboard) */
 [role="dialog"][data-state="open"].fixed.left-\[50\%\].top-\[50\%\] {
-  top: calc(var(--vvo, 0px) + var(--vvh, 100vh) / 2) !important;
+  top: max(50%, calc(var(--vvo, 0px) + var(--vvh, 100vh) / 2)) !important;
   max-height: calc(var(--vvh, 100vh) - 24px);
   overflow-y: auto;
   overscroll-behavior: contain;
