@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,6 +48,7 @@ const AdminInventoryInstruments = () => {
   const [attentionFor, setAttentionFor] = useState<{ id: string; serial: string } | null>(null);
   const [attentionNotes, setAttentionNotes] = useState("");
   const [clearVerifyFor, setClearVerifyFor] = useState<{ id: string; serial: string } | null>(null);
+  const attentionTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-inventory-instruments"],
@@ -531,7 +532,15 @@ const AdminInventoryInstruments = () => {
       </AlertDialog>
 
       <Dialog open={!!attentionFor} onOpenChange={(open) => { if (!open) { setAttentionFor(null); setAttentionNotes(""); } }}>
-        <DialogContent className="max-w-md w-[95vw] max-h-[90vh] overflow-y-auto overscroll-contain rounded-2xl">
+        <DialogContent
+          className="max-w-md w-[95vw] max-h-[90vh] overflow-y-auto overscroll-contain rounded-2xl"
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            requestAnimationFrame(() => {
+              attentionTextareaRef.current?.focus({ preventScroll: true });
+            });
+          }}
+        >
           <DialogHeader>
             <DialogTitle className="text-base sm:text-lg break-words">
               צריך תיקון / השלמות — #{attentionFor?.serial}
@@ -540,6 +549,7 @@ const AdminInventoryInstruments = () => {
           <div className="space-y-2">
             <Label className="text-sm">מה חסר או מה צריך לתקן?</Label>
             <Textarea
+              ref={attentionTextareaRef}
               value={attentionNotes}
               onChange={(e) => setAttentionNotes(e.target.value)}
               placeholder="תיאור הליקוי / השלמות נדרשות..."
