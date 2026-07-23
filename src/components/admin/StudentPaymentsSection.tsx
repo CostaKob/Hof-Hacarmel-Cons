@@ -10,6 +10,7 @@ import { Plus, FileDown, Undo2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
+import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
 interface StudentPaymentsSectionProps {
   studentId: string;
@@ -49,6 +50,7 @@ const StudentPaymentsSection = ({
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
+  const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
@@ -83,12 +85,17 @@ const StudentPaymentsSection = ({
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, vars) => {
       invalidateAll();
-      toast.success(`זיכוי ${data?.doc_number ?? ""} בוצע`);
       setRefundTarget(null);
       setRefundAmount("");
-      if (data?.url) window.open(data.url, "_blank");
+      setRefundSuccess({
+        amount: Number(data?.refund_amount ?? vars.amount ?? 0),
+        docNumber: data?.doc_number,
+        sentToEmail: data?.sent_to_email,
+        url: data?.url,
+        ccRefund: false,
+      });
     },
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
@@ -102,12 +109,17 @@ const StudentPaymentsSection = ({
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, vars) => {
       invalidateAll();
-      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
       setRefundTarget(null);
       setRefundAmount("");
-      if (data?.url) window.open(data.url, "_blank");
+      setRefundSuccess({
+        amount: Number(data?.refund_amount ?? vars.amount ?? 0),
+        docNumber: data?.doc_number,
+        sentToEmail: data?.sent_to_email,
+        url: data?.url,
+        ccRefund: !!data?.cc_refund,
+      });
     },
     onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
   });
@@ -455,7 +467,7 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
+      <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
 
     </div>
   );
