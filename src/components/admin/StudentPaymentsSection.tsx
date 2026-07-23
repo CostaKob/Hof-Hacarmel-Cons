@@ -85,12 +85,17 @@ const StudentPaymentsSection = ({
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, vars) => {
       invalidateAll();
-      toast.success(`זיכוי ${data?.doc_number ?? ""} בוצע`);
       setRefundTarget(null);
       setRefundAmount("");
-      if (data?.url) window.open(data.url, "_blank");
+      setRefundSuccess({
+        amount: Number(data?.refund_amount ?? vars.amount ?? 0),
+        docNumber: data?.doc_number,
+        sentToEmail: data?.sent_to_email,
+        url: data?.url,
+        ccRefund: false,
+      });
     },
     onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
   });
@@ -104,12 +109,17 @@ const StudentPaymentsSection = ({
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, vars) => {
       invalidateAll();
-      toast.success(`החזר אשראי בוצע${data?.doc_number ? ` · קבלה ${data.doc_number}` : ""}`);
       setRefundTarget(null);
       setRefundAmount("");
-      if (data?.url) window.open(data.url, "_blank");
+      setRefundSuccess({
+        amount: Number(data?.refund_amount ?? vars.amount ?? 0),
+        docNumber: data?.doc_number,
+        sentToEmail: data?.sent_to_email,
+        url: data?.url,
+        ccRefund: !!data?.cc_refund,
+      });
     },
     onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
   });
