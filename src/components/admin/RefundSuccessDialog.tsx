@@ -8,6 +8,7 @@ export interface RefundSuccessInfo {
   sentToEmail?: string | null;
   url?: string | null;
   ccRefund?: boolean;
+  ccLast4?: string | null;
 }
 
 interface Props {
