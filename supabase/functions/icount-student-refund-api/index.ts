@@ -175,15 +175,39 @@ Deno.serve(async (req: Request) => {
     const studentFullName = `${student.first_name ?? ""} ${student.last_name ?? ""}`.trim();
     const isPartial = requested < original;
     const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${original.toLocaleString()}, החזר ₪${requested.toLocaleString()})`;
-    const phone = student.parent_phone || student.parent_phone_2 || undefined;
-    const email = student.parent_email || student.parent_email_2 || undefined;
+
+    // Prefer the client details from the ORIGINAL receipt (e.g. split-link payer name),
+    // fall back to the student record only if we couldn't fetch them.
+    let origClientName: string | undefined;
+    let origClientAddress: string | undefined;
+    let origClientCity: string | undefined;
+    let origPhone: string | undefined;
+    let origEmail: string | undefined;
+    try {
+      const infoPayload: any = { ...auth, doctype: payment.icount_doc_type || "receipt" };
+      if (payment.icount_doc_id) infoPayload.doc_id = payment.icount_doc_id;
+      if (payment.icount_doc_number) infoPayload.docnum = payment.icount_doc_number;
+      const { data: origInfo } = await icountJson("/doc/info", infoPayload);
+      const di = origInfo?.doc_info || origInfo || {};
+      const client = di.client_info || di.client || {};
+      origClientName = di.client_name || client.client_name || client.name;
+      origClientAddress = di.client_address || client.address;
+      origClientCity = di.client_city || client.city;
+      origPhone = di.client_phone || di.client_mobile || client.phone || client.mobile;
+      origEmail = di.email || di.client_email || client.email;
+    } catch (e) {
+      console.warn("[icount-student-refund-api] could not fetch original doc client info", e);
+    }
+
+    const phone = origPhone || student.parent_phone || student.parent_phone_2 || undefined;
+    const email = origEmail || student.parent_email || student.parent_email_2 || undefined;
 
     const docPayload: any = {
       ...auth,
       doctype: "receipt",
-      client_name: student.parent_name || studentFullName,
-      client_address: student.address || student.city || undefined,
-      client_city: student.city || undefined,
+      client_name: origClientName || student.parent_name || studentFullName,
+      client_address: origClientAddress || student.address || student.city || undefined,
+      client_city: origClientCity || student.city || undefined,
       client_phone: phone, client_mobile: phone,
       phone, mobile: phone, email,
       send_email: !!email,
