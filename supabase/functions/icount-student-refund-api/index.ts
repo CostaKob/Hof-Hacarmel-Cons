@@ -176,27 +176,39 @@ Deno.serve(async (req: Request) => {
     const isPartial = requested < original;
     const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${original.toLocaleString()}, החזר ₪${requested.toLocaleString()})`;
 
-    // Prefer the client details from the ORIGINAL receipt (e.g. split-link payer name),
-    // fall back to the student record only if we couldn't fetch them.
+    // Prefer the payer details stored on the original payment (from split-link
+    // checkout), then fall back to the iCount original document, then to the
+    // student record.
     let origClientName: string | undefined;
     let origClientAddress: string | undefined;
     let origClientCity: string | undefined;
     let origPhone: string | undefined;
     let origEmail: string | undefined;
-    try {
-      const infoPayload: any = { ...auth, doctype: payment.icount_doc_type || "receipt" };
-      if (payment.icount_doc_id) infoPayload.doc_id = payment.icount_doc_id;
-      if (payment.icount_doc_number) infoPayload.docnum = payment.icount_doc_number;
-      const { data: origInfo } = await icountJson("/doc/info", infoPayload);
-      const di = origInfo?.doc_info || origInfo || {};
-      const client = di.client_info || di.client || {};
-      origClientName = di.client_name || client.client_name || client.name;
-      origClientAddress = di.client_address || client.address;
-      origClientCity = di.client_city || client.city;
-      origPhone = di.client_phone || di.client_mobile || client.phone || client.mobile;
-      origEmail = di.email || di.client_email || client.email;
-    } catch (e) {
-      console.warn("[icount-student-refund-api] could not fetch original doc client info", e);
+
+    const payer = (payment.enrollment_breakdown as any)?.payerDetails;
+    if (payer && typeof payer === "object") {
+      const fullName = `${payer.firstName ?? ""} ${payer.lastName ?? ""}`.trim();
+      if (fullName) origClientName = fullName;
+      if (payer.phone) origPhone = String(payer.phone);
+      if (payer.email) origEmail = String(payer.email);
+    }
+
+    if (!origClientName || !origEmail || !origPhone) {
+      try {
+        const infoPayload: any = { ...auth, doctype: payment.icount_doc_type || "receipt" };
+        if (payment.icount_doc_id) infoPayload.doc_id = payment.icount_doc_id;
+        if (payment.icount_doc_number) infoPayload.docnum = payment.icount_doc_number;
+        const { data: origInfo } = await icountJson("/doc/info", infoPayload);
+        const di = origInfo?.doc_info || origInfo || {};
+        const client = di.client_info || di.client || {};
+        origClientName = origClientName || di.client_name || client.client_name || client.name;
+        origClientAddress = origClientAddress || di.client_address || client.address;
+        origClientCity = origClientCity || di.client_city || client.city;
+        origPhone = origPhone || di.client_phone || di.client_mobile || client.phone || client.mobile;
+        origEmail = origEmail || di.email || di.client_email || client.email;
+      } catch (e) {
+        console.warn("[icount-student-refund-api] could not fetch original doc client info", e);
+      }
     }
 
     const phone = origPhone || student.parent_phone || student.parent_phone_2 || undefined;
