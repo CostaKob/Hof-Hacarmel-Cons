@@ -205,3 +205,8 @@ nav.bg-card {
   .bg-accent { background-color: hsl(var(--accent)); }
   .bg-background { background-color: hsl(var(--background)); }
 }
+
+/* Hide floating bottom nav when a dialog is open (prevents overlap with dialog buttons, especially on mobile with keyboard open) */
+body[data-scroll-locked] nav.fixed.bottom-3 {
+  display: none !important;
+}
