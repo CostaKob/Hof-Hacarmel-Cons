@@ -77,28 +77,45 @@ const AdminBulkMessage = () => {
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
-  const [manualEmailsInput, setManualEmailsInput] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return window.localStorage.getItem("bulk-message-manual-emails") ?? "";
+  const [manualEntries, setManualEntries] = useState<Recipient[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem("bulk-message-manual-entries");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      const legacy = window.localStorage.getItem("bulk-message-manual-emails");
+      if (legacy) {
+        return legacy
+          .split(/[\s,;]+/)
+          .map((s) => s.trim().toLowerCase())
+          .filter((e) => /^\S+@\S+\.\S+$/.test(e))
+          .map((email) => ({ email, parentName: "", studentName: "" }));
+      }
+    } catch {}
+    return [];
   });
   useEffect(() => {
-    try { window.localStorage.setItem("bulk-message-manual-emails", manualEmailsInput); } catch {}
-  }, [manualEmailsInput]);
+    try { window.localStorage.setItem("bulk-message-manual-entries", JSON.stringify(manualEntries)); } catch {}
+  }, [manualEntries]);
   const manualRecipients = useMemo<Recipient[]>(() => {
-    const parts = manualEmailsInput
-      .split(/[\s,;]+/)
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
     const seen = new Set<string>();
     const out: Recipient[] = [];
-    for (const email of parts) {
+    for (const r of manualEntries) {
+      const email = (r.email || "").trim().toLowerCase();
       if (!/^\S+@\S+\.\S+$/.test(email)) continue;
       if (seen.has(email)) continue;
       seen.add(email);
-      out.push({ email, parentName: "", studentName: "" });
+      out.push({ email, parentName: (r.parentName || "").trim(), studentName: (r.studentName || "").trim() });
     }
     return out;
-  }, [manualEmailsInput]);
+  }, [manualEntries]);
+  const updateManualEntry = (idx: number, patch: Partial<Recipient>) => {
+    setManualEntries((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
+  };
+  const addManualEntry = () => setManualEntries((prev) => [...prev, { email: "", parentName: "", studentName: "" }]);
+  const removeManualEntry = (idx: number) => setManualEntries((prev) => prev.filter((_, i) => i !== idx));
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -487,17 +504,60 @@ const AdminBulkMessage = () => {
             </Button>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">הוספת כתובות מייל ידנית</Label>
-            <textarea
-              value={manualEmailsInput}
-              onChange={(e) => setManualEmailsInput(e.target.value)}
-              placeholder="ניתן להדביק כתובות מיילים מופרדות בפסיק, רווח או שורה חדשה"
-              className="w-full min-h-[72px] rounded-xl border border-input bg-background p-2 text-sm"
-              dir="ltr"
-            />
-            {manualRecipients.length > 0 && (
-              <p className="text-xs text-muted-foreground">נוספו {manualRecipients.length} כתובות תקינות</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">הוספת נמענים ידנית</Label>
+              <Button type="button" variant="outline" size="sm" className="h-8 rounded-lg" onClick={addManualEntry}>
+                + הוסף נמען
+              </Button>
+            </div>
+            {manualEntries.length === 0 ? (
+              <p className="text-xs text-muted-foreground">אין נמענים ידניים. לחצו "הוסף נמען" כדי להוסיף מייל, שם הורה ושם תלמיד.</p>
+            ) : (
+              <div className="space-y-2">
+                {manualEntries.map((entry, idx) => {
+                  const email = (entry.email || "").trim().toLowerCase();
+                  const invalid = email.length > 0 && !/^\S+@\S+\.\S+$/.test(email);
+                  return (
+                    <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] items-start">
+                      <Input
+                        value={entry.email}
+                        onChange={(e) => updateManualEntry(idx, { email: e.target.value })}
+                        placeholder="example@email.com"
+                        className={`h-10 rounded-xl ${invalid ? "border-destructive" : ""}`}
+                        dir="ltr"
+                      />
+                      <Input
+                        value={entry.parentName}
+                        onChange={(e) => updateManualEntry(idx, { parentName: e.target.value })}
+                        placeholder="שם הורה"
+                        className="h-10 rounded-xl"
+                        dir="rtl"
+                      />
+                      <Input
+                        value={entry.studentName}
+                        onChange={(e) => updateManualEntry(idx, { studentName: e.target.value })}
+                        placeholder="שם תלמיד"
+                        className="h-10 rounded-xl"
+                        dir="rtl"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-xl text-muted-foreground"
+                        onClick={() => removeManualEntry(idx)}
+                        aria-label="הסר נמען"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground">
+                  נוספו {manualRecipients.length} נמענים תקינים מתוך {manualEntries.length}.
+                </p>
+              </div>
             )}
           </div>
 
@@ -508,6 +568,7 @@ const AdminBulkMessage = () => {
             className="h-10 rounded-xl"
             dir="rtl"
           />
+
 
 
           {isLoading ? (
