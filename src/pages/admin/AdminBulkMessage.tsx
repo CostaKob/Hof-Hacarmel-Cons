@@ -78,6 +78,7 @@ const AdminBulkMessage = () => {
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
+  const [siblingsOnly, setSiblingsOnly] = useState(false);
   const [manualEntries, setManualEntries] = useState<Recipient[]>(() => {
     if (typeof window === "undefined") return [];
     try {
