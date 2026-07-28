@@ -98,10 +98,9 @@ const Email = ({ subject = 'הודעה', body = '', bodyHtml = '', parentName = 
             <tr>
               <td align="right" dir="rtl" style={{ direction: 'rtl', textAlign: 'right' }}>
                 <Container style={container} dir="rtl">
-                  <Heading style={h1}>אולפן ומגמת המוסיקה חוף הכרמל</Heading>
-                  <Hr style={hr} />
-                  {subject ? <Heading style={h2}>{subject}</Heading> : null}
-                  {parentName ? <Text style={p}>שלום {parentName},</Text> : null}
+                  <Section style={{ textAlign: 'center', margin: '0 0 16px' }}>
+                    <Img src={LOGO_URL} alt="אולפן ומגמת המוסיקה חוף הכרמל" width="120" style={{ display: 'inline-block', height: 'auto' }} />
+                  </Section>
 
                   {hasHtml ? (
                     <div
@@ -133,7 +132,6 @@ const Email = ({ subject = 'הודעה', body = '', bodyHtml = '', parentName = 
                     <Text style={contactLine}>קורין: 054-7467498</Text>
                   </Section>
 
-                  <Hr style={hr} />
                   <Text style={footer}>
                     בברכה,<br />
                     אולפן ומגמת המוסיקה חוף הכרמל
