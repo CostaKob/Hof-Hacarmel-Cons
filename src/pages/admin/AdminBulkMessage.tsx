@@ -331,21 +331,29 @@ const AdminBulkMessage = () => {
                     variant="outline"
                     size="sm"
                     className="h-7 rounded-lg text-xs"
-                    onClick={() => setBody((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${t.key}` : t.key))}
+                    onClick={() => {
+                      const host = editorHostRef.current;
+                      const editable = host?.querySelector<HTMLDivElement>('[contenteditable="true"]');
+                      if (editable) {
+                        editable.dispatchEvent(new CustomEvent("rte-insert", { detail: t.key }));
+                      } else {
+                        setBody((prev) => (prev ? `${prev} ${t.key}` : t.key));
+                      }
+                    }}
                   >
                     + {t.label}
                   </Button>
                 ))}
               </div>
             </div>
-            <Textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={10}
-              placeholder={"כתבו כאן את תוכן ההודעה. אפשר לשלב שמות אישיים באמצעות הכפתורים למעלה, למשל: שלום {{שם_הורה}},"}
-              className="rounded-xl"
-              dir="rtl"
-            />
+            <div ref={editorHostRef}>
+              <RichTextEditor
+                value={body}
+                onChange={setBody}
+                placeholder="כתבו כאן את תוכן ההודעה. השתמשו בסרגל הכלים לעיצוב טקסט, קישורים, רשימות ויישור."
+                minHeight={240}
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען.
             </p>
