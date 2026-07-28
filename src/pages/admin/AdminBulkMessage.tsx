@@ -227,8 +227,11 @@ const AdminBulkMessage = () => {
       if (!r.email) continue;
       if (!map.has(r.email)) map.set(r.email, r);
     }
+    for (const r of manualRecipients) {
+      if (!map.has(r.email)) map.set(r.email, r);
+    }
     return Array.from(map.values()).sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
-  }, [recipients]);
+  }, [recipients, manualRecipients]);
 
   // Default: all selected
   const allSelectedInitial = useMemo(() => {
