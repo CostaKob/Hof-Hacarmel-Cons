@@ -17,6 +17,8 @@ import {
   RemoveFormatting,
   Undo2,
   Redo2,
+  PilcrowRight,
+  PilcrowLeft,
 } from "lucide-react";
 
 interface Props {
