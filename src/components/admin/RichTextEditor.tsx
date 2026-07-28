@@ -33,12 +33,19 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
   const lastValueRef = useRef<string>("");
 
   useEffect(() => {
+    // Force <p> as the paragraph separator so Enter doesn't create <div><br></div>
+    // pairs that visually double the line spacing.
+    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch {}
+  }, []);
+
+  useEffect(() => {
     if (!editorRef.current) return;
     if (value !== lastValueRef.current && value !== editorRef.current.innerHTML) {
       editorRef.current.innerHTML = value || "";
       lastValueRef.current = value || "";
     }
   }, [value]);
+
 
   const emit = useCallback(() => {
     if (!editorRef.current) return;
