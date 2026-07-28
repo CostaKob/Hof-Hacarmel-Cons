@@ -111,7 +111,6 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
   const emit = useCallback(() => {
     if (!editorRef.current) return;
     const html = normalizeHtml(editorRef.current.innerHTML);
-    if (html !== editorRef.current.innerHTML) editorRef.current.innerHTML = html;
     lastValueRef.current = html;
     onChange(html);
     saveSelection();
