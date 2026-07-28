@@ -295,13 +295,19 @@ export default function AdminEmailDashboard() {
       </div>
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>פרטי מייל</DialogTitle>
           </DialogHeader>
           {detail && (
             <div className="space-y-3 text-sm">
               <div><span className="text-muted-foreground">נמען: </span>{detail.recipient_email}</div>
+              {detail.metadata?.from && (
+                <div><span className="text-muted-foreground">מאת: </span>{detail.metadata.from}</div>
+              )}
+              {detail.metadata?.subject && (
+                <div><span className="text-muted-foreground">נושא: </span><span className="font-medium">{detail.metadata.subject}</span></div>
+              )}
               <div><span className="text-muted-foreground">סוג: </span>{detail.template_name}</div>
               <div><span className="text-muted-foreground">סטטוס: </span><StatusBadge status={detail.status} /></div>
               <div><span className="text-muted-foreground">תאריך: </span>{format(new Date(detail.created_at), "dd/MM/yyyy HH:mm:ss")}</div>
@@ -314,11 +320,29 @@ export default function AdminEmailDashboard() {
                   <div className="rounded-md bg-red-50 border border-red-200 p-2 text-red-800 text-xs whitespace-pre-wrap">{detail.error_message}</div>
                 </div>
               )}
-              {detail.metadata && Object.keys(detail.metadata).length > 0 && (
+              {detail.metadata?.html ? (
                 <div>
-                  <div className="text-muted-foreground mb-1">מידע נוסף:</div>
-                  <pre className="rounded-md bg-slate-50 border p-2 text-xs overflow-x-auto" dir="ltr">{JSON.stringify(detail.metadata, null, 2)}</pre>
+                  <div className="text-muted-foreground mb-1">תוכן המייל:</div>
+                  <iframe
+                    title="email-preview"
+                    srcDoc={detail.metadata.html}
+                    className="w-full h-[500px] rounded-md border bg-white"
+                    sandbox=""
+                  />
                 </div>
+              ) : detail.metadata?.text ? (
+                <div>
+                  <div className="text-muted-foreground mb-1">תוכן המייל:</div>
+                  <pre className="rounded-md bg-slate-50 border p-2 text-xs whitespace-pre-wrap">{detail.metadata.text}</pre>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">תוכן המייל לא נשמר עבור רשומה זו (מיילים ישנים לפני העדכון).</div>
+              )}
+              {detail.metadata && (
+                <details>
+                  <summary className="text-xs text-muted-foreground cursor-pointer">מידע גולמי</summary>
+                  <pre className="mt-2 rounded-md bg-slate-50 border p-2 text-xs overflow-x-auto" dir="ltr">{JSON.stringify({ ...detail.metadata, html: detail.metadata.html ? '[…]' : undefined }, null, 2)}</pre>
+                </details>
               )}
             </div>
           )}
