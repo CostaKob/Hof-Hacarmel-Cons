@@ -38,6 +38,21 @@ interface Recipient {
   studentName: string;
 }
 
+const firstNameOf = (full: string) => (full || "").trim().split(/\s+/)[0] || "";
+
+const TOKENS: { key: string; label: string; sample: string; get: (r: { parentName: string; studentName: string }) => string }[] = [
+  { key: "{{שם_הורה}}", label: "שם הורה (פרטי)", sample: "דנה", get: (r) => firstNameOf(r.parentName) },
+  { key: "{{שם_הורה_מלא}}", label: "שם הורה מלא", sample: "דנה כהן", get: (r) => r.parentName || "" },
+  { key: "{{שם_תלמיד}}", label: "שם תלמיד (פרטי)", sample: "נועם", get: (r) => firstNameOf(r.studentName) },
+  { key: "{{שם_תלמיד_מלא}}", label: "שם תלמיד מלא", sample: "נועם כהן", get: (r) => r.studentName || "" },
+];
+
+const renderTemplate = (text: string, r: { parentName: string; studentName: string }) => {
+  let out = text;
+  for (const t of TOKENS) out = out.split(t.key).join(t.get(r));
+  return out;
+};
+
 const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
   const [source, setSource] = useState<Source>("registrations");
@@ -45,6 +60,7 @@ const AdminBulkMessage = () => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
