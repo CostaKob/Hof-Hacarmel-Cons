@@ -91,6 +91,22 @@ const sanitizeHtml = (raw: string): string => {
     return `<${t}${attrs} style="margin:${defaultMargin}">`
   })
 
+  // Make formatting survive strict email clients by putting the important
+  // rich-text styling inline on the exact elements, not only relying on tags.
+  const addInlineStyle = (html: string, tags: string, style: string) =>
+    html.replace(new RegExp(`<(${tags})(\\b[^>]*)>`, 'gi'), (_m, tag, attrs) => {
+      const t = String(tag).toLowerCase()
+      if (/style\s*=/i.test(attrs)) {
+        return `<${t}${attrs.replace(/style\s*=\s*("|')([^"']*)\1/i, (_s, q, v) => `style=${q}${style};${v}${q}`)}>`
+      }
+      return `<${t}${attrs} style="${style}">`
+    })
+
+  out = addInlineStyle(out, 'b|strong', 'font-weight:700')
+  out = addInlineStyle(out, 'i|em', 'font-style:italic')
+  out = addInlineStyle(out, 'u', 'text-decoration:underline')
+  out = addInlineStyle(out, 's|strike', 'text-decoration:line-through')
+
   return out
 }
 

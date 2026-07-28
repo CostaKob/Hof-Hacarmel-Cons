@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -31,6 +31,67 @@ interface Props {
 const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const lastValueRef = useRef<string>("");
+  const savedSelectionRef = useRef<Range | null>(null);
+
+  const selectionBelongsToEditor = useCallback((selection: Selection | null) => {
+    const editor = editorRef.current;
+    if (!editor || !selection || selection.rangeCount === 0) return false;
+    const range = selection.getRangeAt(0);
+    return editor.contains(range.commonAncestorContainer);
+  }, []);
+
+  const saveSelection = useCallback(() => {
+    const selection = window.getSelection();
+    if (!selectionBelongsToEditor(selection)) return;
+    savedSelectionRef.current = selection?.getRangeAt(0).cloneRange() ?? null;
+  }, [selectionBelongsToEditor]);
+
+  const restoreSelection = useCallback(() => {
+    const editor = editorRef.current;
+    const range = savedSelectionRef.current;
+    if (!editor || !range || !editor.contains(range.commonAncestorContainer)) return;
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }, []);
+
+  const normalizeHtml = useCallback((html: string) => {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+
+    template.content.querySelectorAll("b").forEach((node) => {
+      const replacement = document.createElement("strong");
+      replacement.innerHTML = node.innerHTML;
+      Array.from(node.attributes).forEach((attr) => replacement.setAttribute(attr.name, attr.value));
+      node.replaceWith(replacement);
+    });
+
+    template.content.querySelectorAll("i").forEach((node) => {
+      const replacement = document.createElement("em");
+      replacement.innerHTML = node.innerHTML;
+      Array.from(node.attributes).forEach((attr) => replacement.setAttribute(attr.name, attr.value));
+      node.replaceWith(replacement);
+    });
+
+    template.content.querySelectorAll("strong, b").forEach((node) => {
+      const el = node as HTMLElement;
+      el.style.fontWeight = "700";
+    });
+    template.content.querySelectorAll("em, i").forEach((node) => {
+      const el = node as HTMLElement;
+      el.style.fontStyle = "italic";
+    });
+    template.content.querySelectorAll("u").forEach((node) => {
+      const el = node as HTMLElement;
+      el.style.textDecoration = "underline";
+    });
+    template.content.querySelectorAll("s, strike").forEach((node) => {
+      const el = node as HTMLElement;
+      el.style.textDecoration = "line-through";
+    });
+
+    return template.innerHTML;
+  }, []);
 
   useEffect(() => {
     // Force <p> as the paragraph separator so Enter doesn't create <div><br></div>
@@ -49,25 +110,29 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
 
   const emit = useCallback(() => {
     if (!editorRef.current) return;
-    const html = editorRef.current.innerHTML;
+    const html = normalizeHtml(editorRef.current.innerHTML);
     lastValueRef.current = html;
     onChange(html);
-  }, [onChange]);
+    saveSelection();
+  }, [normalizeHtml, onChange, saveSelection]);
 
   const exec = useCallback(
     (command: string, arg?: string) => {
+      restoreSelection();
       editorRef.current?.focus();
+      restoreSelection();
       try {
         document.execCommand(command, false, arg);
       } catch {}
       emit();
     },
-    [emit],
+    [emit, restoreSelection],
   );
 
   const insertLink = useCallback(() => {
     const url = window.prompt("הכנס קישור (URL):", "https://");
     if (!url) return;
+    restoreSelection();
     exec("createLink", url);
     // Ensure link opens in new tab
     const sel = window.getSelection();
@@ -77,11 +142,12 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
       node.setAttribute("rel", "noopener noreferrer");
       emit();
     }
-  }, [exec, emit]);
+  }, [exec, emit, restoreSelection]);
 
   const setDirection = useCallback(
     (dir: "rtl" | "ltr") => {
       editorRef.current?.focus();
+      restoreSelection();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0) return;
       const range = sel.getRangeAt(0);
@@ -124,12 +190,13 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
       });
       emit();
     },
-    [emit],
+    [emit, restoreSelection],
   );
 
   const insertAtCursor = useCallback(
     (text: string) => {
       editorRef.current?.focus();
+      restoreSelection();
       try {
         document.execCommand("insertText", false, text);
       } catch {
@@ -137,7 +204,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
       }
       emit();
     },
-    [emit],
+    [emit, restoreSelection],
   );
 
   // Expose insert method through a custom event to keep API simple
@@ -153,80 +220,84 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
   }, [insertAtCursor]);
 
   const btnCls = "h-8 w-8 p-0 rounded-md";
+  const keepEditorSelection = (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    saveSelection();
+  };
 
   return (
     <div className="rounded-xl border border-input bg-background overflow-hidden">
       <div className="flex flex-wrap items-center gap-1 border-b border-border/60 bg-muted/30 p-1.5" dir="rtl">
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("bold")} title="הדגשה">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("bold")} title="הדגשה">
           <Bold className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("italic")} title="הטיה">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("italic")} title="הטיה">
           <Italic className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("underline")} title="קו תחתון">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("underline")} title="קו תחתון">
           <Underline className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("strikeThrough")} title="קו חוצה">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("strikeThrough")} title="קו חוצה">
           <Strikethrough className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("formatBlock", "H1")} title="כותרת 1">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("formatBlock", "H1")} title="כותרת 1">
           <Heading1 className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("formatBlock", "H2")} title="כותרת 2">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("formatBlock", "H2")} title="כותרת 2">
           <Heading2 className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("insertUnorderedList")} title="רשימה">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("insertUnorderedList")} title="רשימה">
           <List className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("insertOrderedList")} title="רשימה ממוספרת">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("insertOrderedList")} title="רשימה ממוספרת">
           <ListOrdered className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("justifyRight")} title="יישור לימין">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("justifyRight")} title="יישור לימין">
           <AlignRight className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("justifyCenter")} title="יישור למרכז">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("justifyCenter")} title="יישור למרכז">
           <AlignCenter className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("justifyLeft")} title="יישור לשמאל">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("justifyLeft")} title="יישור לשמאל">
           <AlignLeft className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("justifyFull")} title="יישור לשני הצדדים">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("justifyFull")} title="יישור לשני הצדדים">
           <AlignJustify className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => setDirection("rtl")} title="כיוון ימין לשמאל (RTL)">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => setDirection("rtl")} title="כיוון ימין לשמאל (RTL)">
           <PilcrowRight className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => setDirection("ltr")} title="כיוון שמאל לימין (LTR)">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => setDirection("ltr")} title="כיוון שמאל לימין (LTR)">
           <PilcrowLeft className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={insertLink} title="קישור">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={insertLink} title="קישור">
           <LinkIcon className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("removeFormat")} title="נקה עיצוב">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("removeFormat")} title="נקה עיצוב">
           <RemoveFormatting className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
 
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("undo")} title="בטל">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("undo")} title="בטל">
           <Undo2 className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("redo")} title="חזור">
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onMouseDown={keepEditorSelection} onClick={() => exec("redo")} title="חזור">
           <Redo2 className="h-4 w-4" />
         </Button>
       </div>
@@ -239,6 +310,8 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
         aria-multiline="true"
         data-placeholder={placeholder}
         onInput={emit}
+        onKeyUp={saveSelection}
+        onMouseUp={saveSelection}
         onBlur={emit}
         className="prose prose-sm max-w-none p-3 text-sm text-foreground focus:outline-none [&_p]:my-1 [&_div]:my-0 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:my-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:my-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pr-5 [&_ol]:pr-5 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         style={{ minHeight, direction: "rtl", textAlign: "right" }}
