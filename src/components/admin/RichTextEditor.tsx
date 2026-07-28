@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Bold,
@@ -221,7 +221,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
   }, [insertAtCursor]);
 
   const btnCls = "h-8 w-8 p-0 rounded-md";
-  const keepEditorSelection = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const keepEditorSelection = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     saveSelection();
   };
