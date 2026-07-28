@@ -393,6 +393,11 @@ const AdminBulkMessage = () => {
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold">נמענים</h2>
               <Badge variant="outline">{selectedEmails.length} / {uniqueRecipients.length}</Badge>
+              {recipients.length > uniqueRecipients.length && (
+                <span className="text-xs text-muted-foreground">
+                  ({uniqueRecipients.length} מיילים ייחודיים מתוך {recipients.length} רשומות — אותו מייל הורה משמש כמה תלמידים)
+                </span>
+              )}
             </div>
             <Button variant="outline" size="sm" onClick={toggleAll} disabled={filteredRecipients.length === 0}>
               {allFilteredChecked ? "בטל בחירה" : search ? "בחר את המסוננים" : "בחר הכול"}
