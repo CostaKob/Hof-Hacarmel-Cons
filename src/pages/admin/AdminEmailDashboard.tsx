@@ -154,7 +154,7 @@ export default function AdminEmailDashboard() {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout title="לוח בקרת מיילים" backPath="/admin">
       <PageTitle title="לוח בקרת מיילים" />
       <div className="space-y-6 pb-24">
         <div className="flex items-center gap-3">
