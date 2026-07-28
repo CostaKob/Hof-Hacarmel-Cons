@@ -240,7 +240,8 @@ const AdminBulkMessage = () => {
               idempotencyKey: `broadcast-${stamp}-${r.email}`,
               templateData: {
                 subject: renderTemplate(subject.trim(), r),
-                body: renderTemplate(body, r),
+                bodyHtml: renderTemplate(body, r),
+                body: renderTemplate(stripHtml(body), r),
                 parentName: r.parentName || "",
               },
             },
