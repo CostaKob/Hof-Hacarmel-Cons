@@ -28,40 +28,48 @@ const Email = ({ subject = 'הודעה', body = '', parentName = '' }: Props) =>
       </Head>
       <Preview>{subject}</Preview>
       <Body style={main}>
-        <Container style={container} dir="rtl">
-          <Heading style={h1}>אולפן ומגמת המוסיקה חוף הכרמל</Heading>
-          <Hr style={hr} />
-          {subject ? <Heading style={h2}>{subject}</Heading> : null}
-          {parentName ? <Text style={p}>שלום {parentName},</Text> : null}
+        <table role="presentation" width="100%" cellPadding={0} cellSpacing={0} border={0} dir="rtl" style={{ direction: 'rtl' }}>
+          <tbody>
+            <tr>
+              <td align="right" dir="rtl" style={{ direction: 'rtl', textAlign: 'right' }}>
+                <Container style={container} dir="rtl">
+                  <Heading style={h1}>אולפן ומגמת המוסיקה חוף הכרמל</Heading>
+                  <Hr style={hr} />
+                  {subject ? <Heading style={h2}>{subject}</Heading> : null}
+                  {parentName ? <Text style={p}>שלום {parentName},</Text> : null}
 
-          <Section style={{ margin: '8px 0 16px' }} dir="rtl">
-            {lines.map((line, i) => (
-              <Text key={i} style={lineStyle} dir="rtl">
-                {line.length === 0 ? '\u00A0' : line}
-              </Text>
-            ))}
-          </Section>
+                  <Section style={{ margin: '8px 0 16px' }} dir="rtl">
+                    {lines.map((line, i) => (
+                      <Text key={i} style={lineStyle} dir="rtl">
+                        {line.length === 0 ? '\u00A0' : line}
+                      </Text>
+                    ))}
+                  </Section>
 
-          <Hr style={hr} />
+                  <Hr style={hr} />
 
-          <Section style={contactBox} dir="rtl">
-            <Text style={contactHeading}>פרטי קשר</Text>
-            <Text style={contactLine}>
-              מייל:{' '}
-              <Link href="mailto:musichof@gmail.com" style={link}>
-                musichof@gmail.com
-              </Link>
-            </Text>
-            <Text style={contactLine}>טלפון משרד: 04-6299711</Text>
-            <Text style={contactLine}>קורין: 054-7467498</Text>
-          </Section>
+                  <Section style={contactBox} dir="rtl">
+                    <Text style={contactHeading}>פרטי קשר</Text>
+                    <Text style={contactLine}>
+                      מייל:{' '}
+                      <Link href="mailto:musichof@gmail.com" style={link}>
+                        musichof@gmail.com
+                      </Link>
+                    </Text>
+                    <Text style={contactLine}>טלפון משרד: 04-6299711</Text>
+                    <Text style={contactLine}>קורין: 054-7467498</Text>
+                  </Section>
 
-          <Hr style={hr} />
-          <Text style={footer}>
-            בברכה,<br />
-            אולפן ומגמת המוסיקה חוף הכרמל
-          </Text>
-        </Container>
+                  <Hr style={hr} />
+                  <Text style={footer}>
+                    בברכה,<br />
+                    אולפן ומגמת המוסיקה חוף הכרמל
+                  </Text>
+                </Container>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </Body>
     </Html>
   )
