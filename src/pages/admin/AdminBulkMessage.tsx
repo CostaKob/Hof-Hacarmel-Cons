@@ -297,17 +297,33 @@ const AdminBulkMessage = () => {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">תוכן ההודעה</Label>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <Label className="text-xs">תוכן ההודעה</Label>
+              <div className="flex flex-wrap gap-1">
+                {TOKENS.map((t) => (
+                  <Button
+                    key={t.key}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-lg text-xs"
+                    onClick={() => setBody((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${t.key}` : t.key))}
+                  >
+                    + {t.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={10}
-              placeholder="כתבו כאן את תוכן ההודעה. כל שורה חדשה תופיע כפסקה במייל."
+              placeholder={"כתבו כאן את תוכן ההודעה. אפשר לשלב שמות אישיים באמצעות הכפתורים למעלה, למשל: שלום {{שם_הורה}},"}
               className="rounded-xl"
               dir="rtl"
             />
             <p className="text-xs text-muted-foreground">
-              המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה — בעיצוב מותג.
+              המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען.
             </p>
           </div>
 
