@@ -294,6 +294,33 @@ const AdminBulkMessage = () => {
               המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה — בעיצוב מותג.
             </p>
           </div>
+
+          <div className="pt-3 border-t border-border/50 space-y-1">
+            <Label className="text-xs">שליחת מייל בדיקה</Label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="example@email.com"
+                className="h-11 rounded-xl flex-1"
+                dir="ltr"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSendTest}
+                disabled={sendingTest || !subject.trim() || !body.trim()}
+                className="h-11 rounded-xl gap-2"
+              >
+                {sendingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                שלח בדיקה
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              נשלח רק לכתובת שהוזנה, עם הקידומת [בדיקה] בנושא.
+            </p>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
