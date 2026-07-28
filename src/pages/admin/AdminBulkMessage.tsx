@@ -487,6 +487,20 @@ const AdminBulkMessage = () => {
             </Button>
           </div>
 
+          <div className="space-y-1">
+            <Label className="text-xs">הוספת כתובות מייל ידנית</Label>
+            <textarea
+              value={manualEmailsInput}
+              onChange={(e) => setManualEmailsInput(e.target.value)}
+              placeholder="ניתן להדביק כתובות מיילים מופרדות בפסיק, רווח או שורה חדשה"
+              className="w-full min-h-[72px] rounded-xl border border-input bg-background p-2 text-sm"
+              dir="ltr"
+            />
+            {manualRecipients.length > 0 && (
+              <p className="text-xs text-muted-foreground">נוספו {manualRecipients.length} כתובות תקינות</p>
+            )}
+          </div>
+
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -494,6 +508,7 @@ const AdminBulkMessage = () => {
             className="h-10 rounded-xl"
             dir="rtl"
           />
+
 
           {isLoading ? (
             <p className="text-sm text-muted-foreground">טוען נמענים...</p>
