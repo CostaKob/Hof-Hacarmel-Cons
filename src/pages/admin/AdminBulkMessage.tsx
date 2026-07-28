@@ -86,9 +86,9 @@ const AdminBulkMessage = () => {
           replyTo: "musichof@gmail.com",
           idempotencyKey: `broadcast-test-${Date.now()}-${email}`,
           templateData: {
-            subject: `[בדיקה] ${subject.trim()}`,
-            body,
-            parentName: "בדיקה",
+            subject: `[בדיקה] ${renderTemplate(subject.trim(), { parentName: "דנה כהן", studentName: "נועם כהן" })}`,
+            body: renderTemplate(body, { parentName: "דנה כהן", studentName: "נועם כהן" }),
+            parentName: "דנה כהן",
           },
         },
       });
