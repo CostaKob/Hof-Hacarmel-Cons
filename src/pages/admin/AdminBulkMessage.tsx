@@ -66,6 +66,7 @@ const AdminBulkMessage = () => {
   const [regStatus, setRegStatus] = useState<string>("all");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
 
