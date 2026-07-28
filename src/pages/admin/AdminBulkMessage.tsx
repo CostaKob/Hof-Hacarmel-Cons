@@ -504,17 +504,60 @@ const AdminBulkMessage = () => {
             </Button>
           </div>
 
-          <div className="space-y-1">
-            <Label className="text-xs">הוספת כתובות מייל ידנית</Label>
-            <textarea
-              value={manualEmailsInput}
-              onChange={(e) => setManualEmailsInput(e.target.value)}
-              placeholder="ניתן להדביק כתובות מיילים מופרדות בפסיק, רווח או שורה חדשה"
-              className="w-full min-h-[72px] rounded-xl border border-input bg-background p-2 text-sm"
-              dir="ltr"
-            />
-            {manualRecipients.length > 0 && (
-              <p className="text-xs text-muted-foreground">נוספו {manualRecipients.length} כתובות תקינות</p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">הוספת נמענים ידנית</Label>
+              <Button type="button" variant="outline" size="sm" className="h-8 rounded-lg" onClick={addManualEntry}>
+                + הוסף נמען
+              </Button>
+            </div>
+            {manualEntries.length === 0 ? (
+              <p className="text-xs text-muted-foreground">אין נמענים ידניים. לחצו "הוסף נמען" כדי להוסיף מייל, שם הורה ושם תלמיד.</p>
+            ) : (
+              <div className="space-y-2">
+                {manualEntries.map((entry, idx) => {
+                  const email = (entry.email || "").trim().toLowerCase();
+                  const invalid = email.length > 0 && !/^\S+@\S+\.\S+$/.test(email);
+                  return (
+                    <div key={idx} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto] items-start">
+                      <Input
+                        value={entry.email}
+                        onChange={(e) => updateManualEntry(idx, { email: e.target.value })}
+                        placeholder="example@email.com"
+                        className={`h-10 rounded-xl ${invalid ? "border-destructive" : ""}`}
+                        dir="ltr"
+                      />
+                      <Input
+                        value={entry.parentName}
+                        onChange={(e) => updateManualEntry(idx, { parentName: e.target.value })}
+                        placeholder="שם הורה"
+                        className="h-10 rounded-xl"
+                        dir="rtl"
+                      />
+                      <Input
+                        value={entry.studentName}
+                        onChange={(e) => updateManualEntry(idx, { studentName: e.target.value })}
+                        placeholder="שם תלמיד"
+                        className="h-10 rounded-xl"
+                        dir="rtl"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 rounded-xl text-muted-foreground"
+                        onClick={() => removeManualEntry(idx)}
+                        aria-label="הסר נמען"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  );
+                })}
+                <p className="text-xs text-muted-foreground">
+                  נוספו {manualRecipients.length} נמענים תקינים מתוך {manualEntries.length}.
+                </p>
+              </div>
             )}
           </div>
 
@@ -525,6 +568,7 @@ const AdminBulkMessage = () => {
             className="h-10 rounded-xl"
             dir="rtl"
           />
+
 
 
           {isLoading ? (
