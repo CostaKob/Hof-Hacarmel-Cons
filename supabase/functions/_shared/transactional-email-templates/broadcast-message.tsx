@@ -79,6 +79,17 @@ const sanitizeHtml = (raw: string): string => {
     }
     return `<${name}${kept.length ? ' ' + kept.join(' ') : ''}>`
   })
+  // Remove empty paragraphs/divs (from RTE producing <p><br></p> etc.)
+  out = out.replace(/<(p|div)[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi, '')
+  // Tighten spacing on block elements by injecting margin style
+  out = out.replace(/<(p|h[1-6]|ul|ol|blockquote)(\b[^>]*)>/gi, (_m, tag, attrs) => {
+    const t = String(tag).toLowerCase()
+    const defaultMargin = t.startsWith('h') ? '12px 0 6px' : '0 0 10px'
+    if (/style\s*=/i.test(attrs)) {
+      return `<${t}${attrs.replace(/style\s*=\s*("|')([^"']*)\1/i, (_s, q, v) => `style=${q}margin:${defaultMargin};${v}${q}`)}>`
+    }
+    return `<${t}${attrs} style="margin:${defaultMargin}">`
+  })
   return out
 }
 
