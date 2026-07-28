@@ -60,6 +60,7 @@ const AdminBulkMessage = () => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -176,15 +177,28 @@ const AdminBulkMessage = () => {
   const selectedEmails = uniqueRecipients.filter((r) => effectiveSelected[r.email]);
   const allChecked = selectedEmails.length === uniqueRecipients.length && uniqueRecipients.length > 0;
 
+  const filteredRecipients = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return uniqueRecipients;
+    return uniqueRecipients.filter(
+      (r) =>
+        r.parentName.toLowerCase().includes(q) ||
+        r.studentName.toLowerCase().includes(q) ||
+        r.email.toLowerCase().includes(q),
+    );
+  }, [uniqueRecipients, search]);
+
+  const allFilteredChecked =
+    filteredRecipients.length > 0 &&
+    filteredRecipients.every((r) => effectiveSelected[r.email]);
+
   const toggleAll = () => {
-    const next: Record<string, boolean> = {};
-    if (allChecked) {
-      for (const r of uniqueRecipients) next[r.email] = false;
-    } else {
-      for (const r of uniqueRecipients) next[r.email] = true;
-    }
-    setSelected(next);
+    const base = Object.keys(selected).length === 0 ? { ...allSelectedInitial } : { ...selected };
+    const target = !allFilteredChecked;
+    for (const r of filteredRecipients) base[r.email] = target;
+    setSelected(base);
   };
+
 
   const toggleOne = (email: string) => {
     setSelected((prev) => {
@@ -362,20 +376,30 @@ const AdminBulkMessage = () => {
               <h2 className="text-lg font-semibold">נמענים</h2>
               <Badge variant="outline">{selectedEmails.length} / {uniqueRecipients.length}</Badge>
             </div>
-            <Button variant="outline" size="sm" onClick={toggleAll} disabled={uniqueRecipients.length === 0}>
-              {allChecked ? "בטל בחירה" : "בחר הכול"}
+            <Button variant="outline" size="sm" onClick={toggleAll} disabled={filteredRecipients.length === 0}>
+              {allFilteredChecked ? "בטל בחירה" : search ? "בחר את המסוננים" : "בחר הכול"}
             </Button>
           </div>
+
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="חיפוש לפי שם הורה, שם תלמיד או מייל..."
+            className="h-10 rounded-xl"
+            dir="rtl"
+          />
 
           {isLoading ? (
             <p className="text-sm text-muted-foreground">טוען נמענים...</p>
           ) : uniqueRecipients.length === 0 ? (
             <p className="text-sm text-muted-foreground">לא נמצאו נמענים לפי הפילטרים שנבחרו.</p>
+          ) : filteredRecipients.length === 0 ? (
+            <p className="text-sm text-muted-foreground">לא נמצאו תוצאות לחיפוש.</p>
           ) : (
             <div className="max-h-72 overflow-y-auto rounded-xl border border-border">
               <table className="w-full text-sm">
                 <tbody>
-                  {uniqueRecipients.map((r) => (
+                  {filteredRecipients.map((r) => (
                     <tr key={r.email} className="border-b last:border-b-0 border-border/50">
                       <td className="p-2 w-8">
                         <Checkbox checked={!!effectiveSelected[r.email]} onCheckedChange={() => toggleOne(r.email)} />
