@@ -278,6 +278,7 @@ const AdminBulkMessage = () => {
         email: g.email,
         parentName: g.parentName,
         studentName: joinHe(g.studentNames),
+        siblingCount: g.studentNames.length,
       }))
       .sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
   }, [recipients, manualRecipients]);
