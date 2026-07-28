@@ -275,6 +275,17 @@ Deno.serve(async (req: Request) => {
 
     const docId = String(docData.doc_id ?? docData.docnum ?? "");
     const docNumber = String(docData.docnum ?? docData.doc_number ?? "");
+
+    // Close the negative receipt so it doesn't sit open with a -1 balance
+    try {
+      const closePayload: any = { ...auth, doctype: "receipt" };
+      if (docNumber) closePayload.docnum = Number(docNumber) || docNumber;
+      if (docId) closePayload.doc_id = docId;
+      const { data: closeData } = await icountJson("/doc/close", closePayload);
+      console.log("[icount /doc/close student refund]", JSON.stringify(closeData));
+    } catch (e) {
+      console.warn("[icount /doc/close student refund] failed", e);
+    }
     const docUrl = docData.doc_url || docData.pdf_link || docData.url || null;
 
     const { data: credit, error: insErr } = await supabase
