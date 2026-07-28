@@ -82,14 +82,15 @@ const sanitizeHtml = (raw: string): string => {
   // Remove empty paragraphs/divs (from RTE producing <p><br></p> etc.)
   out = out.replace(/<(p|div)[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi, '')
   // Tighten spacing on block elements by injecting margin style
-  out = out.replace(/<(p|h[1-6]|ul|ol|blockquote)(\b[^>]*)>/gi, (_m, tag, attrs) => {
+  out = out.replace(/<(p|h[1-6]|ul|ol|blockquote|div)(\b[^>]*)>/gi, (_m, tag, attrs) => {
     const t = String(tag).toLowerCase()
-    const defaultMargin = t.startsWith('h') ? '12px 0 6px' : '0 0 10px'
+    const defaultMargin = t.startsWith('h') ? '8px 0 4px' : t === 'div' ? '0' : '0 0 4px'
     if (/style\s*=/i.test(attrs)) {
       return `<${t}${attrs.replace(/style\s*=\s*("|')([^"']*)\1/i, (_s, q, v) => `style=${q}margin:${defaultMargin};${v}${q}`)}>`
     }
     return `<${t}${attrs} style="margin:${defaultMargin}">`
   })
+
   return out
 }
 
@@ -200,9 +201,10 @@ const footer = { fontSize: '14px', color: '#666', margin: 0, textAlign: 'right' 
 const richBody = {
   margin: '8px 0 16px',
   fontSize: '15px',
-  lineHeight: '1.7',
+  lineHeight: '1.5',
   color: '#1f2937',
   textAlign: 'right' as const,
   direction: 'rtl' as const,
   unicodeBidi: 'plaintext' as const,
 }
+

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -26,9 +26,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { Send, Users, Mail, Loader2 } from "lucide-react";
+import { Send, Users, Mail, Loader2, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
 
 type Source = "registrations" | "enrollments" | "school_music";
 
@@ -64,17 +66,48 @@ const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
   const [source, setSource] = useState<Source>("registrations");
   const [regStatus, setRegStatus] = useState<string>("all");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  const [subject, setSubject] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-subject") ?? "";
+  });
+  const [body, setBody] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-body") ?? "";
+  });
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
-  const [testEmail, setTestEmail] = useState("");
+  const [testEmail, setTestEmail] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-test-email") ?? "";
+  });
   const [sendingTest, setSendingTest] = useState(false);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-subject", subject); } catch {}
+  }, [subject]);
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-body", body); } catch {}
+  }, [body]);
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-test-email", testEmail); } catch {}
+  }, [testEmail]);
+
+  const clearDraft = () => {
+    setSubject("");
+    setBody("");
+    try {
+      window.localStorage.removeItem("bulk-message-subject");
+      window.localStorage.removeItem("bulk-message-body");
+    } catch {}
+    toast.success("הטיוטה נוקתה");
+  };
+
 
   const handleSendTest = async () => {
     const email = testEmail.trim().toLowerCase();
@@ -354,10 +387,35 @@ const AdminBulkMessage = () => {
                 minHeight={240}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען.
-            </p>
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען. הטיוטה נשמרת אוטומטית.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewOpen(true)}
+                  className="h-8 rounded-lg gap-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  תצוגה מקדימה
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearDraft}
+                  className="h-8 rounded-lg gap-1 text-muted-foreground"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  נקה טיוטה
+                </Button>
+              </div>
+            </div>
           </div>
+
 
           <div className="pt-3 border-t border-border/50 space-y-1">
             <Label className="text-xs">שליחת מייל בדיקה</Label>
@@ -476,7 +534,51 @@ const AdminBulkMessage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent dir="rtl" className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>תצוגה מקדימה של המייל</DialogTitle>
+          </DialogHeader>
+          <div className="rounded-xl border border-border bg-white p-5 text-right" dir="rtl">
+            <div className="text-center mb-4">
+              <img
+                src="https://mtzzalrmtzfrkrpdjjoy.supabase.co/storage/v1/object/public/app-settings/logo.png"
+                alt="אולפן ומגמת המוסיקה חוף הכרמל"
+                width={120}
+                style={{ display: "inline-block", height: "auto" }}
+              />
+            </div>
+            {subject.trim() && (
+              <p className="text-xs text-muted-foreground mb-2">
+                נושא: <span className="font-medium text-foreground">{renderTemplate(subject, { parentName: "דנה כהן", studentName: "נועם כהן" })}</span>
+              </p>
+            )}
+            <div
+              dir="rtl"
+              className="text-[15px] leading-[1.5] text-neutral-800 [&_p]:my-1 [&_h1]:my-2 [&_h2]:my-2 [&_ul]:my-1 [&_ol]:my-1 [&_ul]:pr-5 [&_ol]:pr-5 [&_a]:text-primary [&_a]:underline"
+              dangerouslySetInnerHTML={{
+                __html: renderTemplate(body || "<p class='text-muted-foreground'>אין תוכן</p>", { parentName: "דנה כהן", studentName: "נועם כהן" }),
+              }}
+            />
+            <hr className="my-4 border-neutral-200" />
+            <div className="text-sm text-right space-y-1">
+              <p className="font-semibold">פרטי קשר</p>
+              <p>מייל: <a href="mailto:musichof@gmail.com" className="text-primary underline">musichof@gmail.com</a></p>
+              <p>טלפון משרד: 04-6299711</p>
+              <p>קורין: 054-7467498</p>
+            </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              בברכה,<br />אולפן ומגמת המוסיקה חוף הכרמל
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            השמות מודגמים עם "דנה כהן" / "נועם כהן". בשליחה בפועל יוחלפו לכל נמען.
+          </p>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
+
   );
 };
 
