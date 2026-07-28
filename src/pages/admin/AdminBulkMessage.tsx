@@ -216,8 +216,8 @@ const AdminBulkMessage = () => {
               replyTo: "musichof@gmail.com",
               idempotencyKey: `broadcast-${stamp}-${r.email}`,
               templateData: {
-                subject: subject.trim(),
-                body,
+                subject: renderTemplate(subject.trim(), r),
+                body: renderTemplate(body, r),
                 parentName: r.parentName || "",
               },
             },
