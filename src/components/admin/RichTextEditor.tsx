@@ -198,6 +198,15 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
 
         <div className="mx-1 h-5 w-px bg-border" />
 
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => setDirection("rtl")} title="כיוון ימין לשמאל (RTL)">
+          <PilcrowRight className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => setDirection("ltr")} title="כיוון שמאל לימין (LTR)">
+          <PilcrowLeft className="h-4 w-4" />
+        </Button>
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
         <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={insertLink} title="קישור">
           <LinkIcon className="h-4 w-4" />
         </Button>
