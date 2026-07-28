@@ -250,6 +250,17 @@ Deno.serve(async (req: Request) => {
     const docNumber = String(docData.docnum ?? docData.doc_number ?? "");
     const docUrl = docData.doc_url || docData.pdf_link || docData.url || null;
 
+    // Close the negative receipt so it doesn't remain open with -1 balance
+    try {
+      const closePayload: any = { ...auth, doctype: "receipt" };
+      if (docNumber) closePayload.docnum = Number(docNumber) || docNumber;
+      if (docId) closePayload.doc_id = docId;
+      const { data: closeData } = await icountJson("/doc/close", closePayload);
+      console.log("[icount /doc/close sm refund]", JSON.stringify(closeData));
+    } catch (e) {
+      console.warn("[icount /doc/close sm refund] failed", e);
+    }
+
     // Step 3: insert balancing credit row
     const { data: credit, error: insErr } = await supabase
       .from("school_music_payments")
