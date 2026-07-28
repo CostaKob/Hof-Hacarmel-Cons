@@ -48,6 +48,43 @@ const AdminBulkMessage = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const [testEmail, setTestEmail] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
+
+  const handleSendTest = async () => {
+    const email = testEmail.trim().toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("יש להזין כתובת מייל תקינה");
+      return;
+    }
+    if (!subject.trim() || !body.trim()) {
+      toast.error("יש למלא נושא ותוכן לפני שליחת בדיקה");
+      return;
+    }
+    setSendingTest(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "broadcast-message",
+          recipientEmail: email,
+          replyTo: "musichof@gmail.com",
+          idempotencyKey: `broadcast-test-${Date.now()}-${email}`,
+          templateData: {
+            subject: `[בדיקה] ${subject.trim()}`,
+            body,
+            parentName: "בדיקה",
+          },
+        },
+      });
+      if (error) throw error;
+      toast.success(`מייל בדיקה נשלח אל ${email}`);
+    } catch (e: any) {
+      console.error("test send failed", e);
+      toast.error(`שליחת הבדיקה נכשלה: ${e?.message ?? e}`);
+    } finally {
+      setSendingTest(false);
+    }
+  };
 
   const yearName = years?.find((y) => y.id === selectedYearId)?.name;
 
@@ -255,6 +292,33 @@ const AdminBulkMessage = () => {
             />
             <p className="text-xs text-muted-foreground">
               המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה — בעיצוב מותג.
+            </p>
+          </div>
+
+          <div className="pt-3 border-t border-border/50 space-y-1">
+            <Label className="text-xs">שליחת מייל בדיקה</Label>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Input
+                type="email"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+                placeholder="example@email.com"
+                className="h-11 rounded-xl flex-1"
+                dir="ltr"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleSendTest}
+                disabled={sendingTest || !subject.trim() || !body.trim()}
+                className="h-11 rounded-xl gap-2"
+              >
+                {sendingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                שלח בדיקה
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              נשלח רק לכתובת שהוזנה, עם הקידומת [בדיקה] בנושא.
             </p>
           </div>
         </div>
