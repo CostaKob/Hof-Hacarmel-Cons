@@ -3,14 +3,16 @@ import {
   Body,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const LOGO_URL = 'https://mtzzalrmtzfrkrpdjjoy.supabase.co/storage/v1/object/public/app-settings/logo.png'
 import type { TemplateEntry } from './registry.ts'
 
 interface Props {
@@ -77,6 +79,17 @@ const sanitizeHtml = (raw: string): string => {
     }
     return `<${name}${kept.length ? ' ' + kept.join(' ') : ''}>`
   })
+  // Remove empty paragraphs/divs (from RTE producing <p><br></p> etc.)
+  out = out.replace(/<(p|div)[^>]*>(\s|&nbsp;|<br\s*\/?>)*<\/\1>/gi, '')
+  // Tighten spacing on block elements by injecting margin style
+  out = out.replace(/<(p|h[1-6]|ul|ol|blockquote)(\b[^>]*)>/gi, (_m, tag, attrs) => {
+    const t = String(tag).toLowerCase()
+    const defaultMargin = t.startsWith('h') ? '12px 0 6px' : '0 0 10px'
+    if (/style\s*=/i.test(attrs)) {
+      return `<${t}${attrs.replace(/style\s*=\s*("|')([^"']*)\1/i, (_s, q, v) => `style=${q}margin:${defaultMargin};${v}${q}`)}>`
+    }
+    return `<${t}${attrs} style="margin:${defaultMargin}">`
+  })
   return out
 }
 
@@ -96,10 +109,9 @@ const Email = ({ subject = 'הודעה', body = '', bodyHtml = '', parentName = 
             <tr>
               <td align="right" dir="rtl" style={{ direction: 'rtl', textAlign: 'right' }}>
                 <Container style={container} dir="rtl">
-                  <Heading style={h1}>אולפן ומגמת המוסיקה חוף הכרמל</Heading>
-                  <Hr style={hr} />
-                  {subject ? <Heading style={h2}>{subject}</Heading> : null}
-                  {parentName ? <Text style={p}>שלום {parentName},</Text> : null}
+                  <Section style={{ textAlign: 'center', margin: '0 0 16px' }}>
+                    <Img src={LOGO_URL} alt="אולפן ומגמת המוסיקה חוף הכרמל" width="120" style={{ display: 'inline-block', height: 'auto' }} />
+                  </Section>
 
                   {hasHtml ? (
                     <div
@@ -131,7 +143,6 @@ const Email = ({ subject = 'הודעה', body = '', bodyHtml = '', parentName = 
                     <Text style={contactLine}>קורין: 054-7467498</Text>
                   </Section>
 
-                  <Hr style={hr} />
                   <Text style={footer}>
                     בברכה,<br />
                     אולפן ומגמת המוסיקה חוף הכרמל
