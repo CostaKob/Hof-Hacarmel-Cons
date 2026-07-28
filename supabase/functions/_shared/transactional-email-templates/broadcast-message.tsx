@@ -201,9 +201,10 @@ const footer = { fontSize: '14px', color: '#666', margin: 0, textAlign: 'right' 
 const richBody = {
   margin: '8px 0 16px',
   fontSize: '15px',
-  lineHeight: '1.7',
+  lineHeight: '1.5',
   color: '#1f2937',
   textAlign: 'right' as const,
   direction: 'rtl' as const,
   unicodeBidi: 'plaintext' as const,
 }
+
