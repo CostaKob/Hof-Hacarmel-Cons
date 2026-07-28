@@ -167,6 +167,7 @@ const App = () => (
               <Route path="/admin/registration-pages/:pageId" element={<AdminRoute><AdminRegistrationPageEditor /></AdminRoute>} />
               <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
               <Route path="/admin/bulk-message" element={<AdminRoute><AdminBulkMessage /></AdminRoute>} />
+              <Route path="/admin/email-dashboard" element={<AdminRoute><AdminEmailDashboard /></AdminRoute>} />
 
               <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
