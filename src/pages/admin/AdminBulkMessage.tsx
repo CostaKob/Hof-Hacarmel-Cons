@@ -239,15 +239,46 @@ const AdminBulkMessage = () => {
   });
 
   const uniqueRecipients = useMemo(() => {
-    const map = new Map<string, Recipient>();
-    for (const r of recipients) {
-      if (!r.email) continue;
-      if (!map.has(r.email)) map.set(r.email, r);
-    }
-    for (const r of manualRecipients) {
-      if (!map.has(r.email)) map.set(r.email, r);
-    }
-    return Array.from(map.values()).sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
+    // Group by email but merge sibling student names so one message per
+    // parent-email covers all their children (e.g. "אדוה ויערה טויטו").
+    const map = new Map<string, { email: string; parentName: string; studentNames: string[] }>();
+    const addAll = (list: Recipient[]) => {
+      for (const r of list) {
+        if (!r.email) continue;
+        const existing = map.get(r.email);
+        if (!existing) {
+          map.set(r.email, {
+            email: r.email,
+            parentName: r.parentName || "",
+            studentNames: r.studentName ? [r.studentName] : [],
+          });
+        } else {
+          if (!existing.parentName && r.parentName) existing.parentName = r.parentName;
+          if (r.studentName && !existing.studentNames.includes(r.studentName)) {
+            existing.studentNames.push(r.studentName);
+          }
+        }
+      }
+    };
+    addAll(recipients);
+    addAll(manualRecipients);
+
+    const joinHe = (names: string[]) => {
+      if (names.length === 0) return "";
+      if (names.length === 1) return names[0];
+      const firsts = names.map((n) => firstNameOf(n));
+      const lastName = names[0].trim().split(/\s+/).slice(1).join(" ");
+      const joined = firsts.slice(0, -1).join(", ") + " ו" + firsts[firsts.length - 1];
+      return lastName ? `${joined} ${lastName}` : joined;
+    };
+
+    return Array.from(map.values())
+      .map<Recipient>((g) => ({
+        email: g.email,
+        parentName: g.parentName,
+        studentName: joinHe(g.studentNames),
+      }))
+      .sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
   }, [recipients, manualRecipients]);
 
   // Default: all selected
