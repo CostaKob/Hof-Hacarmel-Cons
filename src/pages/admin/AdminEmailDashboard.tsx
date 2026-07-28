@@ -84,7 +84,11 @@ export default function AdminEmailDashboard() {
     if (preset === "24h") return { start: subDays(now, 1), end: now };
     if (preset === "7d") return { start: subDays(now, 7), end: now };
     if (preset === "30d") return { start: subDays(now, 30), end: now };
-    return { start: startOfDay(new Date(customStart)), end: endOfDay(new Date(customEnd)) };
+    const s = customStart ? new Date(customStart) : subDays(now, 7);
+    const e = customEnd ? new Date(customEnd) : now;
+    const safeStart = isNaN(s.getTime()) ? subDays(now, 7) : startOfDay(s);
+    const safeEnd = isNaN(e.getTime()) ? now : endOfDay(e);
+    return { start: safeStart, end: safeEnd };
   }, [preset, customStart, customEnd]);
 
   const { data, isLoading } = useQuery({
