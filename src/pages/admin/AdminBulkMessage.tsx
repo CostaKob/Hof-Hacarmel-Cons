@@ -297,14 +297,16 @@ const AdminBulkMessage = () => {
 
   const filteredRecipients = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return uniqueRecipients;
-    return uniqueRecipients.filter(
+    let list = uniqueRecipients;
+    if (siblingsOnly) list = list.filter((r) => (r.siblingCount ?? 0) > 1);
+    if (!q) return list;
+    return list.filter(
       (r) =>
         r.parentName.toLowerCase().includes(q) ||
         r.studentName.toLowerCase().includes(q) ||
         r.email.toLowerCase().includes(q),
     );
-  }, [uniqueRecipients, search]);
+  }, [uniqueRecipients, search, siblingsOnly]);
 
   const allFilteredChecked =
     filteredRecipients.length > 0 &&
