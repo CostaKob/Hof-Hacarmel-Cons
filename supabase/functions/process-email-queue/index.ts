@@ -277,6 +277,13 @@ Deno.serve(async (req) => {
           template_name: payload.label || queue,
           recipient_email: payload.to,
           status: 'sent',
+          metadata: {
+            subject: payload.subject,
+            from: payload.from,
+            reply_to: payload.reply_to,
+            html: typeof payload.html === 'string' ? payload.html.slice(0, 200000) : undefined,
+            text: typeof payload.text === 'string' ? payload.text.slice(0, 50000) : undefined,
+          },
         })
 
         // Delete from queue
