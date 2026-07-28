@@ -77,28 +77,45 @@ const AdminBulkMessage = () => {
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
-  const [manualEmailsInput, setManualEmailsInput] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return window.localStorage.getItem("bulk-message-manual-emails") ?? "";
+  const [manualEntries, setManualEntries] = useState<Recipient[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = window.localStorage.getItem("bulk-message-manual-entries");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed;
+      }
+      const legacy = window.localStorage.getItem("bulk-message-manual-emails");
+      if (legacy) {
+        return legacy
+          .split(/[\s,;]+/)
+          .map((s) => s.trim().toLowerCase())
+          .filter((e) => /^\S+@\S+\.\S+$/.test(e))
+          .map((email) => ({ email, parentName: "", studentName: "" }));
+      }
+    } catch {}
+    return [];
   });
   useEffect(() => {
-    try { window.localStorage.setItem("bulk-message-manual-emails", manualEmailsInput); } catch {}
-  }, [manualEmailsInput]);
+    try { window.localStorage.setItem("bulk-message-manual-entries", JSON.stringify(manualEntries)); } catch {}
+  }, [manualEntries]);
   const manualRecipients = useMemo<Recipient[]>(() => {
-    const parts = manualEmailsInput
-      .split(/[\s,;]+/)
-      .map((s) => s.trim().toLowerCase())
-      .filter(Boolean);
     const seen = new Set<string>();
     const out: Recipient[] = [];
-    for (const email of parts) {
+    for (const r of manualEntries) {
+      const email = (r.email || "").trim().toLowerCase();
       if (!/^\S+@\S+\.\S+$/.test(email)) continue;
       if (seen.has(email)) continue;
       seen.add(email);
-      out.push({ email, parentName: "", studentName: "" });
+      out.push({ email, parentName: (r.parentName || "").trim(), studentName: (r.studentName || "").trim() });
     }
     return out;
-  }, [manualEmailsInput]);
+  }, [manualEntries]);
+  const updateManualEntry = (idx: number, patch: Partial<Recipient>) => {
+    setManualEntries((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
+  };
+  const addManualEntry = () => setManualEntries((prev) => [...prev, { email: "", parentName: "", studentName: "" }]);
+  const removeManualEntry = (idx: number) => setManualEntries((prev) => prev.filter((_, i) => i !== idx));
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
