@@ -3,14 +3,16 @@ import {
   Body,
   Container,
   Head,
-  Heading,
   Hr,
   Html,
+  Img,
   Link,
   Preview,
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+const LOGO_URL = 'https://mtzzalrmtzfrkrpdjjoy.supabase.co/storage/v1/object/public/app-settings/logo.png'
 import type { TemplateEntry } from './registry.ts'
 
 interface Props {
