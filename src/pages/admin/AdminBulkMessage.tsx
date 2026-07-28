@@ -53,6 +53,13 @@ const renderTemplate = (text: string, r: { parentName: string; studentName: stri
   return out;
 };
 
+const stripHtml = (html: string) => {
+  if (typeof window === "undefined") return html;
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return (div.textContent || div.innerText || "").trim();
+};
+
 const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
   const [source, setSource] = useState<Source>("registrations");
