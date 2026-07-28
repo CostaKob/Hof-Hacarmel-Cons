@@ -4,6 +4,7 @@ import { template as registrationConfirmation } from './registration-confirmatio
 import { template as paymentLink } from './payment-link.tsx'
 import { template as plainText } from './plain-text.tsx'
 import { template as adminNewRegistration } from './admin-new-registration.tsx'
+import { template as broadcastMessage } from './broadcast-message.tsx'
 
 export interface TemplateEntry {
   component: React.ComponentType<any>
@@ -18,4 +19,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'payment-link': paymentLink,
   'plain-text': plainText,
   'admin-new-registration': adminNewRegistration,
+  'broadcast-message': broadcastMessage,
 }
