@@ -374,7 +374,7 @@ const AdminBulkMessage = () => {
                 type="button"
                 variant="outline"
                 onClick={handleSendTest}
-                disabled={sendingTest || !subject.trim() || !body.trim()}
+                disabled={sendingTest || !testEmail.trim()}
                 className="h-11 rounded-xl gap-2"
               >
                 {sendingTest ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
