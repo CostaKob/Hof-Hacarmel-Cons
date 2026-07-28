@@ -177,15 +177,28 @@ const AdminBulkMessage = () => {
   const selectedEmails = uniqueRecipients.filter((r) => effectiveSelected[r.email]);
   const allChecked = selectedEmails.length === uniqueRecipients.length && uniqueRecipients.length > 0;
 
+  const filteredRecipients = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return uniqueRecipients;
+    return uniqueRecipients.filter(
+      (r) =>
+        r.parentName.toLowerCase().includes(q) ||
+        r.studentName.toLowerCase().includes(q) ||
+        r.email.toLowerCase().includes(q),
+    );
+  }, [uniqueRecipients, search]);
+
+  const allFilteredChecked =
+    filteredRecipients.length > 0 &&
+    filteredRecipients.every((r) => effectiveSelected[r.email]);
+
   const toggleAll = () => {
-    const next: Record<string, boolean> = {};
-    if (allChecked) {
-      for (const r of uniqueRecipients) next[r.email] = false;
-    } else {
-      for (const r of uniqueRecipients) next[r.email] = true;
-    }
-    setSelected(next);
+    const base = Object.keys(selected).length === 0 ? { ...allSelectedInitial } : { ...selected };
+    const target = !allFilteredChecked;
+    for (const r of filteredRecipients) base[r.email] = target;
+    setSelected(base);
   };
+
 
   const toggleOne = (email: string) => {
     setSelected((prev) => {
