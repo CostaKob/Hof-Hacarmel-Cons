@@ -70,6 +70,26 @@ async function createPaypage(opts: {
   return { url, paypageId };
 }
 
+// Anonymous callers (parents on the public registration form) are only allowed
+// to generate a paylink for a student record that was just created. Anything
+// older than this window requires admin/secretary auth.
+const ANON_FRESH_WINDOW_MS = 30 * 60 * 1000; // 30 minutes
+
+async function isAdminOrSecretary(
+  supabase: ReturnType<typeof createClient>,
+  authHeader: string | null,
+): Promise<boolean> {
+  if (!authHeader?.startsWith("Bearer ")) return false;
+  const token = authHeader.replace("Bearer ", "");
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  if (error || !user) return false;
+  const [{ data: isAdmin }, { data: isSecretary }] = await Promise.all([
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+    supabase.rpc("has_role", { _user_id: user.id, _role: "secretary" }),
+  ]);
+  return !!(isAdmin || isSecretary);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -80,18 +100,22 @@ Deno.serve(async (req: Request) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const overrideAmt = Number(amountOverride);
-    const hasOverride = Number.isFinite(overrideAmt) && overrideAmt > 0;
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    const isPrivileged = await isAdminOrSecretary(supabase, req.headers.get("Authorization"));
+
+    // Only privileged callers may override the tuition amount.
+    const overrideAmt = Number(amountOverride);
+    const hasOverride = isPrivileged && Number.isFinite(overrideAmt) && overrideAmt > 0;
+
     const { data: student, error: stuErr } = await supabase
       .from("school_music_students")
       .select(`
-        id, student_first_name, student_last_name, student_national_id,
+        id, created_at, student_first_name, student_last_name, student_national_id,
         parent_name, parent_national_id, parent_email, parent_phone,
         school_music_schools!school_music_students_school_music_school_id_fkey(school_name)
       `)
@@ -102,6 +126,16 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ error: "student not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Anonymous callers can only fetch links for students who just registered.
+    if (!isPrivileged) {
+      const createdMs = student.created_at ? new Date(student.created_at as string).getTime() : 0;
+      if (!createdMs || Date.now() - createdMs > ANON_FRESH_WINDOW_MS) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Resolve the pending payment row to attach the link to.
