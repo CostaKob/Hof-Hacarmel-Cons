@@ -26,9 +26,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { Send, Users, Mail, Loader2 } from "lucide-react";
+import { Send, Users, Mail, Loader2, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+
 
 type Source = "registrations" | "enrollments" | "school_music";
 
@@ -64,17 +66,48 @@ const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
   const [source, setSource] = useState<Source>("registrations");
   const [regStatus, setRegStatus] = useState<string>("all");
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  const [subject, setSubject] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-subject") ?? "";
+  });
+  const [body, setBody] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-body") ?? "";
+  });
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
-  const [testEmail, setTestEmail] = useState("");
+  const [testEmail, setTestEmail] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-test-email") ?? "";
+  });
   const [sendingTest, setSendingTest] = useState(false);
+
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-subject", subject); } catch {}
+  }, [subject]);
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-body", body); } catch {}
+  }, [body]);
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-test-email", testEmail); } catch {}
+  }, [testEmail]);
+
+  const clearDraft = () => {
+    setSubject("");
+    setBody("");
+    try {
+      window.localStorage.removeItem("bulk-message-subject");
+      window.localStorage.removeItem("bulk-message-body");
+    } catch {}
+    toast.success("הטיוטה נוקתה");
+  };
+
 
   const handleSendTest = async () => {
     const email = testEmail.trim().toLowerCase();
