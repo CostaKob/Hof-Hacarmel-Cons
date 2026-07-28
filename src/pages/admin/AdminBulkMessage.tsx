@@ -38,6 +38,21 @@ interface Recipient {
   studentName: string;
 }
 
+const firstNameOf = (full: string) => (full || "").trim().split(/\s+/)[0] || "";
+
+const TOKENS: { key: string; label: string; sample: string; get: (r: { parentName: string; studentName: string }) => string }[] = [
+  { key: "{{שם_הורה}}", label: "שם הורה (פרטי)", sample: "דנה", get: (r) => firstNameOf(r.parentName) },
+  { key: "{{שם_הורה_מלא}}", label: "שם הורה מלא", sample: "דנה כהן", get: (r) => r.parentName || "" },
+  { key: "{{שם_תלמיד}}", label: "שם תלמיד (פרטי)", sample: "נועם", get: (r) => firstNameOf(r.studentName) },
+  { key: "{{שם_תלמיד_מלא}}", label: "שם תלמיד מלא", sample: "נועם כהן", get: (r) => r.studentName || "" },
+];
+
+const renderTemplate = (text: string, r: { parentName: string; studentName: string }) => {
+  let out = text;
+  for (const t of TOKENS) out = out.split(t.key).join(t.get(r));
+  return out;
+};
+
 const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
   const [source, setSource] = useState<Source>("registrations");
@@ -45,6 +60,7 @@ const AdminBulkMessage = () => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
@@ -70,9 +86,9 @@ const AdminBulkMessage = () => {
           replyTo: "musichof@gmail.com",
           idempotencyKey: `broadcast-test-${Date.now()}-${email}`,
           templateData: {
-            subject: `[בדיקה] ${subject.trim()}`,
-            body,
-            parentName: "בדיקה",
+            subject: `[בדיקה] ${renderTemplate(subject.trim(), { parentName: "דנה כהן", studentName: "נועם כהן" })}`,
+            body: renderTemplate(body, { parentName: "דנה כהן", studentName: "נועם כהן" }),
+            parentName: "דנה כהן",
           },
         },
       });
@@ -200,8 +216,8 @@ const AdminBulkMessage = () => {
               replyTo: "musichof@gmail.com",
               idempotencyKey: `broadcast-${stamp}-${r.email}`,
               templateData: {
-                subject: subject.trim(),
-                body,
+                subject: renderTemplate(subject.trim(), r),
+                body: renderTemplate(body, r),
                 parentName: r.parentName || "",
               },
             },
@@ -281,17 +297,33 @@ const AdminBulkMessage = () => {
           </div>
 
           <div className="space-y-1">
-            <Label className="text-xs">תוכן ההודעה</Label>
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <Label className="text-xs">תוכן ההודעה</Label>
+              <div className="flex flex-wrap gap-1">
+                {TOKENS.map((t) => (
+                  <Button
+                    key={t.key}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 rounded-lg text-xs"
+                    onClick={() => setBody((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${t.key}` : t.key))}
+                  >
+                    + {t.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={10}
-              placeholder="כתבו כאן את תוכן ההודעה. כל שורה חדשה תופיע כפסקה במייל."
+              placeholder={"כתבו כאן את תוכן ההודעה. אפשר לשלב שמות אישיים באמצעות הכפתורים למעלה, למשל: שלום {{שם_הורה}},"}
               className="rounded-xl"
               dir="rtl"
             />
             <p className="text-xs text-muted-foreground">
-              המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה — בעיצוב מותג.
+              המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען.
             </p>
           </div>
 
