@@ -38,6 +38,7 @@ interface Recipient {
   email: string;
   parentName: string;
   studentName: string;
+  siblingCount?: number;
 }
 
 const firstNameOf = (full: string) => (full || "").trim().split(/\s+/)[0] || "";
@@ -77,6 +78,7 @@ const AdminBulkMessage = () => {
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
+  const [siblingsOnly, setSiblingsOnly] = useState(false);
   const [manualEntries, setManualEntries] = useState<Recipient[]>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -277,6 +279,7 @@ const AdminBulkMessage = () => {
         email: g.email,
         parentName: g.parentName,
         studentName: joinHe(g.studentNames),
+        siblingCount: g.studentNames.length,
       }))
       .sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
   }, [recipients, manualRecipients]);
@@ -294,14 +297,16 @@ const AdminBulkMessage = () => {
 
   const filteredRecipients = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return uniqueRecipients;
-    return uniqueRecipients.filter(
+    let list = uniqueRecipients;
+    if (siblingsOnly) list = list.filter((r) => (r.siblingCount ?? 0) > 1);
+    if (!q) return list;
+    return list.filter(
       (r) =>
         r.parentName.toLowerCase().includes(q) ||
         r.studentName.toLowerCase().includes(q) ||
         r.email.toLowerCase().includes(q),
     );
-  }, [uniqueRecipients, search]);
+  }, [uniqueRecipients, search, siblingsOnly]);
 
   const allFilteredChecked =
     filteredRecipients.length > 0 &&
@@ -592,13 +597,38 @@ const AdminBulkMessage = () => {
             )}
           </div>
 
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="חיפוש לפי שם הורה, שם תלמיד או מייל..."
-            className="h-10 rounded-xl"
-            dir="rtl"
-          />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש לפי שם הורה, שם תלמיד או מייל..."
+              className="h-10 rounded-xl flex-1"
+              dir="rtl"
+            />
+            <Button
+              type="button"
+              variant={siblingsOnly ? "default" : "outline"}
+              className="h-10 rounded-xl whitespace-nowrap"
+              onClick={() => {
+                const next = !siblingsOnly;
+                setSiblingsOnly(next);
+                if (next) {
+                  // Auto-select only sibling families for quick resend
+                  const map: Record<string, boolean> = {};
+                  for (const r of uniqueRecipients) {
+                    if ((r.siblingCount ?? 0) > 1) map[r.email] = true;
+                  }
+                  setSelected(map);
+                }
+              }}
+            >
+              {siblingsOnly ? "מציג משפחות עם אחים ✓" : "רק משפחות עם אחים"}
+            </Button>
+          </div>
+
+
+
+
 
 
 
