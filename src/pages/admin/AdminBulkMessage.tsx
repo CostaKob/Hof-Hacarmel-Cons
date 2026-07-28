@@ -60,6 +60,7 @@ const AdminBulkMessage = () => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
