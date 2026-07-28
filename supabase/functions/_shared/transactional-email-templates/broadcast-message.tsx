@@ -186,3 +186,12 @@ const contactLine = { fontSize: '14px', lineHeight: '1.6', margin: '4px 0', text
 const link = { color: '#2563eb', textDecoration: 'underline' }
 const hr = { borderColor: '#eee', margin: '16px 0' }
 const footer = { fontSize: '14px', color: '#666', margin: 0, textAlign: 'right' as const }
+const richBody = {
+  margin: '8px 0 16px',
+  fontSize: '15px',
+  lineHeight: '1.7',
+  color: '#1f2937',
+  textAlign: 'right' as const,
+  direction: 'rtl' as const,
+  unicodeBidi: 'plaintext' as const,
+}
