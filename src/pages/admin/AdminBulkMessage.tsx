@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -6,7 +6,7 @@ import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -53,12 +53,20 @@ const renderTemplate = (text: string, r: { parentName: string; studentName: stri
   return out;
 };
 
+const stripHtml = (html: string) => {
+  if (typeof window === "undefined") return html;
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  return (div.textContent || div.innerText || "").trim();
+};
+
 const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
   const [source, setSource] = useState<Source>("registrations");
   const [regStatus, setRegStatus] = useState<string>("all");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
 
@@ -88,7 +96,8 @@ const AdminBulkMessage = () => {
           idempotencyKey: `broadcast-test-${Date.now()}-${email}`,
           templateData: {
             subject: `[בדיקה] ${renderTemplate(subject.trim(), { parentName: "דנה כהן", studentName: "נועם כהן" })}`,
-            body: renderTemplate(body, { parentName: "דנה כהן", studentName: "נועם כהן" }),
+            bodyHtml: renderTemplate(body, { parentName: "דנה כהן", studentName: "נועם כהן" }),
+            body: renderTemplate(stripHtml(body), { parentName: "דנה כהן", studentName: "נועם כהן" }),
             parentName: "דנה כהן",
           },
         },
@@ -207,7 +216,7 @@ const AdminBulkMessage = () => {
     });
   };
 
-  const canSend = subject.trim().length > 0 && body.trim().length > 0 && selectedEmails.length > 0;
+  const canSend = subject.trim().length > 0 && stripHtml(body).length > 0 && selectedEmails.length > 0;
 
   const handleSend = async () => {
     setSending(true);
@@ -231,7 +240,8 @@ const AdminBulkMessage = () => {
               idempotencyKey: `broadcast-${stamp}-${r.email}`,
               templateData: {
                 subject: renderTemplate(subject.trim(), r),
-                body: renderTemplate(body, r),
+                bodyHtml: renderTemplate(body, r),
+                body: renderTemplate(stripHtml(body), r),
                 parentName: r.parentName || "",
               },
             },
@@ -321,21 +331,29 @@ const AdminBulkMessage = () => {
                     variant="outline"
                     size="sm"
                     className="h-7 rounded-lg text-xs"
-                    onClick={() => setBody((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${t.key}` : t.key))}
+                    onClick={() => {
+                      const host = editorHostRef.current;
+                      const editable = host?.querySelector<HTMLDivElement>('[contenteditable="true"]');
+                      if (editable) {
+                        editable.dispatchEvent(new CustomEvent("rte-insert", { detail: t.key }));
+                      } else {
+                        setBody((prev) => (prev ? `${prev} ${t.key}` : t.key));
+                      }
+                    }}
                   >
                     + {t.label}
                   </Button>
                 ))}
               </div>
             </div>
-            <Textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={10}
-              placeholder={"כתבו כאן את תוכן ההודעה. אפשר לשלב שמות אישיים באמצעות הכפתורים למעלה, למשל: שלום {{שם_הורה}},"}
-              className="rounded-xl"
-              dir="rtl"
-            />
+            <div ref={editorHostRef}>
+              <RichTextEditor
+                value={body}
+                onChange={setBody}
+                placeholder="כתבו כאן את תוכן ההודעה. השתמשו בסרגל הכלים לעיצוב טקסט, קישורים, רשימות ויישור."
+                minHeight={240}
+              />
+            </div>
             <p className="text-xs text-muted-foreground">
               המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען.
             </p>
