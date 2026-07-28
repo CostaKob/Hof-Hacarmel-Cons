@@ -597,13 +597,38 @@ const AdminBulkMessage = () => {
             )}
           </div>
 
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="חיפוש לפי שם הורה, שם תלמיד או מייל..."
-            className="h-10 rounded-xl"
-            dir="rtl"
-          />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="חיפוש לפי שם הורה, שם תלמיד או מייל..."
+              className="h-10 rounded-xl flex-1"
+              dir="rtl"
+            />
+            <Button
+              type="button"
+              variant={siblingsOnly ? "default" : "outline"}
+              className="h-10 rounded-xl whitespace-nowrap"
+              onClick={() => {
+                const next = !siblingsOnly;
+                setSiblingsOnly(next);
+                if (next) {
+                  // Auto-select only sibling families for quick resend
+                  const map: Record<string, boolean> = {};
+                  for (const r of uniqueRecipients) {
+                    if ((r.siblingCount ?? 0) > 1) map[r.email] = true;
+                  }
+                  setSelected(map);
+                }
+              }}
+            >
+              {siblingsOnly ? "מציג משפחות עם אחים ✓" : "רק משפחות עם אחים"}
+            </Button>
+          </div>
+
+
+
+
 
 
 
