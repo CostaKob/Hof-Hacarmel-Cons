@@ -534,7 +534,51 @@ const AdminBulkMessage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
+        <DialogContent dir="rtl" className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>תצוגה מקדימה של המייל</DialogTitle>
+          </DialogHeader>
+          <div className="rounded-xl border border-border bg-white p-5 text-right" dir="rtl">
+            <div className="text-center mb-4">
+              <img
+                src="https://mtzzalrmtzfrkrpdjjoy.supabase.co/storage/v1/object/public/app-settings/logo.png"
+                alt="אולפן ומגמת המוסיקה חוף הכרמל"
+                width={120}
+                style={{ display: "inline-block", height: "auto" }}
+              />
+            </div>
+            {subject.trim() && (
+              <p className="text-xs text-muted-foreground mb-2">
+                נושא: <span className="font-medium text-foreground">{renderTemplate(subject, { parentName: "דנה כהן", studentName: "נועם כהן" })}</span>
+              </p>
+            )}
+            <div
+              dir="rtl"
+              className="text-[15px] leading-[1.5] text-neutral-800 [&_p]:my-1 [&_h1]:my-2 [&_h2]:my-2 [&_ul]:my-1 [&_ol]:my-1 [&_ul]:pr-5 [&_ol]:pr-5 [&_a]:text-primary [&_a]:underline"
+              dangerouslySetInnerHTML={{
+                __html: renderTemplate(body || "<p class='text-muted-foreground'>אין תוכן</p>", { parentName: "דנה כהן", studentName: "נועם כהן" }),
+              }}
+            />
+            <hr className="my-4 border-neutral-200" />
+            <div className="text-sm text-right space-y-1">
+              <p className="font-semibold">פרטי קשר</p>
+              <p>מייל: <a href="mailto:musichof@gmail.com" className="text-primary underline">musichof@gmail.com</a></p>
+              <p>טלפון משרד: 04-6299711</p>
+              <p>קורין: 054-7467498</p>
+            </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              בברכה,<br />אולפן ומגמת המוסיקה חוף הכרמל
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            השמות מודגמים עם "דנה כהן" / "נועם כהן". בשליחה בפועל יוחלפו לכל נמען.
+          </p>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
+
   );
 };
 
