@@ -17,6 +17,8 @@ import {
   RemoveFormatting,
   Undo2,
   Redo2,
+  PilcrowRight,
+  PilcrowLeft,
 } from "lucide-react";
 
 interface Props {
@@ -69,6 +71,54 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
       emit();
     }
   }, [exec, emit]);
+
+  const setDirection = useCallback(
+    (dir: "rtl" | "ltr") => {
+      editorRef.current?.focus();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      let node: Node | null = range.commonAncestorContainer;
+      const root = editorRef.current;
+      const isBlock = (el: Element) =>
+        /^(P|DIV|H1|H2|H3|H4|H5|H6|LI|UL|OL|BLOCKQUOTE|PRE|TD|TH)$/.test(el.tagName);
+      // Collect block elements in selection
+      const blocks = new Set<Element>();
+      const addBlockFor = (n: Node | null) => {
+        let cur: Node | null = n;
+        while (cur && cur !== root) {
+          if (cur.nodeType === 1 && isBlock(cur as Element)) {
+            blocks.add(cur as Element);
+            return;
+          }
+          cur = cur.parentNode;
+        }
+        if (root) blocks.add(root);
+      };
+      if (range.collapsed) {
+        addBlockFor(node);
+      } else {
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, {
+          acceptNode: (el) =>
+            range.intersectsNode(el) && isBlock(el as Element)
+              ? NodeFilter.FILTER_ACCEPT
+              : NodeFilter.FILTER_SKIP,
+        });
+        let found = false;
+        while (walker.nextNode()) {
+          blocks.add(walker.currentNode as Element);
+          found = true;
+        }
+        if (!found) addBlockFor(node);
+      }
+      blocks.forEach((el) => {
+        el.setAttribute("dir", dir);
+        (el as HTMLElement).style.textAlign = dir === "rtl" ? "right" : "left";
+      });
+      emit();
+    },
+    [emit],
+  );
 
   const insertAtCursor = useCallback(
     (text: string) => {
@@ -144,6 +194,15 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
         </Button>
         <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => exec("justifyFull")} title="יישור לשני הצדדים">
           <AlignJustify className="h-4 w-4" />
+        </Button>
+
+        <div className="mx-1 h-5 w-px bg-border" />
+
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => setDirection("rtl")} title="כיוון ימין לשמאל (RTL)">
+          <PilcrowRight className="h-4 w-4" />
+        </Button>
+        <Button type="button" variant="ghost" size="sm" className={btnCls} onClick={() => setDirection("ltr")} title="כיוון שמאל לימין (LTR)">
+          <PilcrowLeft className="h-4 w-4" />
         </Button>
 
         <div className="mx-1 h-5 w-px bg-border" />
