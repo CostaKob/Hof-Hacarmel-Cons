@@ -77,6 +77,28 @@ const AdminBulkMessage = () => {
   const editorHostRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
+  const [manualEmailsInput, setManualEmailsInput] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem("bulk-message-manual-emails") ?? "";
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem("bulk-message-manual-emails", manualEmailsInput); } catch {}
+  }, [manualEmailsInput]);
+  const manualRecipients = useMemo<Recipient[]>(() => {
+    const parts = manualEmailsInput
+      .split(/[\s,;]+/)
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+    const seen = new Set<string>();
+    const out: Recipient[] = [];
+    for (const email of parts) {
+      if (!/^\S+@\S+\.\S+$/.test(email)) continue;
+      if (seen.has(email)) continue;
+      seen.add(email);
+      out.push({ email, parentName: "", studentName: "" });
+    }
+    return out;
+  }, [manualEmailsInput]);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -205,8 +227,11 @@ const AdminBulkMessage = () => {
       if (!r.email) continue;
       if (!map.has(r.email)) map.set(r.email, r);
     }
+    for (const r of manualRecipients) {
+      if (!map.has(r.email)) map.set(r.email, r);
+    }
     return Array.from(map.values()).sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
-  }, [recipients]);
+  }, [recipients, manualRecipients]);
 
   // Default: all selected
   const allSelectedInitial = useMemo(() => {
@@ -462,6 +487,20 @@ const AdminBulkMessage = () => {
             </Button>
           </div>
 
+          <div className="space-y-1">
+            <Label className="text-xs">הוספת כתובות מייל ידנית</Label>
+            <textarea
+              value={manualEmailsInput}
+              onChange={(e) => setManualEmailsInput(e.target.value)}
+              placeholder="ניתן להדביק כתובות מיילים מופרדות בפסיק, רווח או שורה חדשה"
+              className="w-full min-h-[72px] rounded-xl border border-input bg-background p-2 text-sm"
+              dir="ltr"
+            />
+            {manualRecipients.length > 0 && (
+              <p className="text-xs text-muted-foreground">נוספו {manualRecipients.length} כתובות תקינות</p>
+            )}
+          </div>
+
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -469,6 +508,7 @@ const AdminBulkMessage = () => {
             className="h-10 rounded-xl"
             dir="rtl"
           />
+
 
           {isLoading ? (
             <p className="text-sm text-muted-foreground">טוען נמענים...</p>
