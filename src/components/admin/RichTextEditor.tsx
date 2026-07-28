@@ -240,7 +240,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = 240 }: Props
         data-placeholder={placeholder}
         onInput={emit}
         onBlur={emit}
-        className="prose prose-sm max-w-none p-3 text-sm text-foreground focus:outline-none [&_h1]:text-xl [&_h1]:font-bold [&_h2]:text-lg [&_h2]:font-semibold [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pr-5 [&_ol]:pr-5 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
+        className="prose prose-sm max-w-none p-3 text-sm text-foreground focus:outline-none [&_p]:my-1 [&_div]:my-0 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:my-2 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:my-2 [&_ul]:list-disc [&_ol]:list-decimal [&_ul]:pr-5 [&_ol]:pr-5 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0 [&_a]:text-primary [&_a]:underline empty:before:content-[attr(data-placeholder)] empty:before:text-muted-foreground"
         style={{ minHeight, direction: "rtl", textAlign: "right" }}
         suppressContentEditableWarning
       />
