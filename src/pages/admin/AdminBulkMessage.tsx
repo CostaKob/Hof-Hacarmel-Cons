@@ -216,7 +216,7 @@ const AdminBulkMessage = () => {
     });
   };
 
-  const canSend = subject.trim().length > 0 && body.trim().length > 0 && selectedEmails.length > 0;
+  const canSend = subject.trim().length > 0 && stripHtml(body).length > 0 && selectedEmails.length > 0;
 
   const handleSend = async () => {
     setSending(true);
