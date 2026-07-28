@@ -387,10 +387,35 @@ const AdminBulkMessage = () => {
                 minHeight={240}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען.
-            </p>
+            <div className="flex items-center justify-between flex-wrap gap-2 pt-1">
+              <p className="text-xs text-muted-foreground">
+                המייל יישלח עם כותרת האולפן, פרטי הקשר וחתימה. השמות יוחלפו אוטומטית לכל נמען. הטיוטה נשמרת אוטומטית.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setPreviewOpen(true)}
+                  className="h-8 rounded-lg gap-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  תצוגה מקדימה
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearDraft}
+                  className="h-8 rounded-lg gap-1 text-muted-foreground"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  נקה טיוטה
+                </Button>
+              </div>
+            </div>
           </div>
+
 
           <div className="pt-3 border-t border-border/50 space-y-1">
             <Label className="text-xs">שליחת מייל בדיקה</Label>
