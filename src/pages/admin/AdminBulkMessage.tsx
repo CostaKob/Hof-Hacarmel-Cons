@@ -48,6 +48,43 @@ const AdminBulkMessage = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
+  const [testEmail, setTestEmail] = useState("");
+  const [sendingTest, setSendingTest] = useState(false);
+
+  const handleSendTest = async () => {
+    const email = testEmail.trim().toLowerCase();
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+      toast.error("יש להזין כתובת מייל תקינה");
+      return;
+    }
+    if (!subject.trim() || !body.trim()) {
+      toast.error("יש למלא נושא ותוכן לפני שליחת בדיקה");
+      return;
+    }
+    setSendingTest(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "broadcast-message",
+          recipientEmail: email,
+          replyTo: "musichof@gmail.com",
+          idempotencyKey: `broadcast-test-${Date.now()}-${email}`,
+          templateData: {
+            subject: `[בדיקה] ${subject.trim()}`,
+            body,
+            parentName: "בדיקה",
+          },
+        },
+      });
+      if (error) throw error;
+      toast.success(`מייל בדיקה נשלח אל ${email}`);
+    } catch (e: any) {
+      console.error("test send failed", e);
+      toast.error(`שליחת הבדיקה נכשלה: ${e?.message ?? e}`);
+    } finally {
+      setSendingTest(false);
+    }
+  };
 
   const yearName = years?.find((y) => y.id === selectedYearId)?.name;
 
