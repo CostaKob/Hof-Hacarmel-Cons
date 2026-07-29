@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ const UnifyParentDetailsDialog = ({
 }: Props) => {
   const { toast } = useToast();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
   // For each child, figure out which parent slot (1 or 2) matches this national id.
@@ -64,34 +66,60 @@ const UnifyParentDetailsDialog = ({
     [slots],
   );
 
+  const [nationalId, setNationalId] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
 
   useEffect(() => {
     if (open) {
+      setNationalId(parentNationalId);
       setName(nameOptions[0] || "");
       setPhone(phoneOptions[0] || "");
       setEmail(emailOptions[0] || "");
     }
-  }, [open, nameOptions, phoneOptions, emailOptions]);
+  }, [open, parentNationalId, nameOptions, phoneOptions, emailOptions]);
+
+  const idChanged = nationalId.trim() !== parentNationalId;
 
   const handleSave = async () => {
+    const trimmedId = nationalId.trim();
+    if (idChanged && !/^\d{9}$/.test(trimmedId)) {
+      toast({
+        title: "ת.ז. לא תקינה",
+        description: "יש להזין 9 ספרות.",
+        variant: "destructive",
+      });
+      return;
+    }
     setSaving(true);
     try {
       for (const { child, slot } of slots) {
         if (!slot) continue;
         const patch =
           slot === 1
-            ? { parent_name: name, parent_phone: phone, parent_email: email }
-            : { parent_name_2: name, parent_phone_2: phone, parent_email_2: email };
+            ? {
+                parent_national_id: trimmedId,
+                parent_name: name,
+                parent_phone: phone,
+                parent_email: email,
+              }
+            : {
+                parent_national_id_2: trimmedId,
+                parent_name_2: name,
+                parent_phone_2: phone,
+                parent_email_2: email,
+              };
         const { error } = await supabase.from("students").update(patch).eq("id", child.id);
         if (error) throw error;
       }
-      toast({ title: "פרטי ההורה אוחדו בהצלחה" });
+      toast({ title: "פרטי ההורה עודכנו בהצלחה" });
       await qc.invalidateQueries({ queryKey: ["families-list"] });
       await qc.invalidateQueries({ queryKey: ["family-details"] });
       onOpenChange(false);
+      if (idChanged) {
+        navigate(`/admin/families/${encodeURIComponent(trimmedId)}`, { replace: true });
+      }
     } catch (e: any) {
       toast({
         title: "שגיאה בעדכון",
@@ -131,11 +159,27 @@ const UnifyParentDetailsDialog = ({
         <DialogHeader>
           <DialogTitle>עריכת פרטי הורה</DialogTitle>
           <DialogDescription>
-            השינויים יעודכנו אוטומטית בכל רשומות הילדים במשפחה. ת.ז. ההורה נשארת ללא שינוי.
+            השינויים יעודכנו אוטומטית בכל רשומות הילדים במשפחה.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          <div>
+            <Label>ת.ז. הורה</Label>
+            <Input
+              value={nationalId}
+              onChange={(e) => setNationalId(e.target.value.replace(/\D/g, "").slice(0, 9))}
+              dir="ltr"
+              inputMode="numeric"
+              maxLength={9}
+              className="h-11 rounded-xl font-mono"
+            />
+            {idChanged && (
+              <p className="text-xs text-amber-600 mt-1">
+                שינוי ת.ז. יעדכן את כל רשומות הילדים ויעביר אותך לכרטיס המשפחה החדש.
+              </p>
+            )}
+          </div>
           <div>
             <Label>שם ההורה</Label>
             <Input
@@ -176,7 +220,7 @@ const UnifyParentDetailsDialog = ({
             ביטול
           </Button>
           <Button onClick={handleSave} disabled={saving}>
-            {saving ? "מעדכן..." : "אחד ועדכן"}
+            {saving ? "מעדכן..." : "שמור ועדכן"}
           </Button>
         </DialogFooter>
       </DialogContent>
