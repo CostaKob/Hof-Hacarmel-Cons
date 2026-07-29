@@ -759,8 +759,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
       const baseLines = baseEntries.map(({ id, amt, item }) => {
         const amount = Math.round(amt * 100) / 100;
-        if (item?.kind === "special") return { description: `${item.label}${yearSuffix}`, amount };
-        if (item?.kind === "discount") return { description: `${item.label}${yearSuffix}`, amount };
+        const childPrefix = familyContext && item?.studentId
+          ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
+          : "";
+        if (item?.kind === "special") return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
+        if (item?.kind === "discount") return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
         const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
         const descParts = [
           e?.instruments?.name ?? "שכר לימוד",
@@ -768,10 +771,26 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
         ].filter(Boolean).join(" ");
         return {
-          description: `שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
+          description: `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
           amount,
         };
       });
+
+      const familyTitleName = familyContext
+        ? (() => {
+            const seen = new Set<string>();
+            const names: string[] = [];
+            for (const { item } of baseEntries) {
+              const sid = item?.studentId;
+              if (!sid || seen.has(sid)) continue;
+              seen.add(sid);
+              const nm = familyContext.childrenNames[sid];
+              if (nm) names.push(nm);
+            }
+            return names.join(", ");
+          })()
+        : null;
+
 
       const partsCount = parts.length;
       const results: Array<{ label: string; url: string; amount: number; firstName: string; lastName: string; email: string; phone: string }> = [];
