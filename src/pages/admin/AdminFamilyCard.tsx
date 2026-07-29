@@ -123,14 +123,14 @@ const AdminFamilyCard = () => {
                 <Badge variant="default" className="text-sm">
                   {children.length} {children.length === 1 ? "ילד" : "ילדים"}
                 </Badge>
-                {children.length > 1 && (
+                {children.length > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setUnifyOpen(true)}
                     className="rounded-xl"
                   >
-                    אחד פרטי הורה
+                    {children.length > 1 ? "ערוך ואחד פרטי הורה" : "ערוך פרטי הורה"}
                   </Button>
                 )}
               </div>
