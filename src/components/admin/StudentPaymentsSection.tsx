@@ -319,7 +319,7 @@ const StudentPaymentsSection = ({
                     </Button>
                   )}
                   <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                    {isCredit ? "זוכה" : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
+                    ₪{Math.abs(Number(p.amount || 0)).toLocaleString()}
                   </span>
                 </div>
               </div>
