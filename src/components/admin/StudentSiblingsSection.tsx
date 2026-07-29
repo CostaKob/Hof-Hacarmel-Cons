@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { Users, Search, X, ArrowRight, AlertCircle } from "lucide-react";
+import { Users, Search, X, ArrowRight, AlertCircle, UsersRound } from "lucide-react";
 import {
   useConfirmedSiblings,
   useSiblingCandidates,
@@ -27,6 +29,20 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
   const unconfirmedCandidates = candidates.filter((c) => !c.already_linked);
   const suggestionsCount = unconfirmedCandidates.length;
 
+  const { data: parentNationalId } = useQuery({
+    queryKey: ["student-parent-nid", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("students")
+        .select("parent_national_id, parent_national_id_2")
+        .eq("id", studentId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.parent_national_id || data?.parent_national_id_2 || null) as string | null;
+    },
+  });
+
   const handleLink = (c: SiblingCandidate) => {
     linkMut.mutate({
       studentAId: studentId,
@@ -42,19 +58,31 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
         <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
           <Users className="h-4 w-4" /> אחים ואחיות ({siblings.length})
         </h2>
-        <Button
-          variant={suggestionsCount > 0 ? "default" : "outline"}
-          size="sm"
-          className="h-10 rounded-xl relative"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Search className="h-4 w-4" /> איתור אחים
-          {suggestionsCount > 0 && (
-            <Badge variant="secondary" className="ms-1 h-5 px-1.5 text-[10px]">
-              {suggestionsCount}
-            </Badge>
+        <div className="flex items-center gap-2 flex-wrap">
+          {parentNationalId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 rounded-xl"
+              onClick={() => navigate(`/admin/families/${encodeURIComponent(parentNationalId)}`)}
+            >
+              <UsersRound className="h-4 w-4" /> תא משפחתי
+            </Button>
           )}
-        </Button>
+          <Button
+            variant={suggestionsCount > 0 ? "default" : "outline"}
+            size="sm"
+            className="h-10 rounded-xl relative"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Search className="h-4 w-4" /> איתור אחים
+            {suggestionsCount > 0 && (
+              <Badge variant="secondary" className="ms-1 h-5 px-1.5 text-[10px]">
+                {suggestionsCount}
+              </Badge>
+            )}
+          </Button>
+        </div>
       </div>
 
       {suggestionsCount > 0 && (
