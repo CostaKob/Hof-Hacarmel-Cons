@@ -512,13 +512,19 @@ const AdminStudentCard = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button
-                    variant="outline"
-                    className="h-10 rounded-xl text-sm"
-                    onClick={() => navigate(`/admin/students/${studentId}/payment`)}
-                  >
-                    <Calculator className="h-4 w-4" /> חשב/צור תשלום
-                  </Button>
+                  {(student as any).parent_national_id ? (
+                    <Button
+                      variant="outline"
+                      className="h-10 rounded-xl text-sm"
+                      onClick={() => navigate(`/admin/families/${encodeURIComponent((student as any).parent_national_id)}`)}
+                    >
+                      <Calculator className="h-4 w-4" /> נהל תשלומים בכרטיס המשפחה
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">
+                      אין ת.ז. הורה — לא ניתן לפתוח כרטיס משפחה
+                    </span>
+                  )}
                 </div>
               }
             />
