@@ -1329,10 +1329,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       <button
                         type="button"
                         onClick={() =>
-                          setSplitParts((prev) => [
-                            ...prev,
-                            { label: `הורה ${prev.length + 1}`, amount: "", firstName: "", lastName: "", email: "", phone: "" },
-                          ])
+                          setSplitParts((prev) => {
+                            const next = [
+                              ...prev,
+                              { label: `הורה ${prev.length + 1}`, amount: "", firstName: "", lastName: "", email: "", phone: "" },
+                            ];
+                            if (totalSelected > 0) {
+                              const per = Math.round((totalSelected / next.length) * 100) / 100;
+                              const diff = Math.round((totalSelected - per * next.length) * 100) / 100;
+                              return next.map((p, i) => ({
+                                ...p,
+                                amount: String(i === next.length - 1 ? Math.round((per + diff) * 100) / 100 : per),
+                              }));
+                            }
+                            return next;
+                          })
                         }
                         className="text-xs text-primary hover:underline flex items-center gap-1"
                       >
