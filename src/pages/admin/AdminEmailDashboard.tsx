@@ -222,23 +222,48 @@ export default function AdminEmailDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-muted-foreground text-xs"><Mail className="h-4 w-4" />סה״כ</div>
-            <div className="text-2xl font-bold mt-1">{stats.total}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-emerald-700 text-xs"><CheckCircle2 className="h-4 w-4" />נשלחו</div>
-            <div className="text-2xl font-bold mt-1 text-emerald-700">{stats.sent}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-red-700 text-xs"><AlertCircle className="h-4 w-4" />נכשלו</div>
-            <div className="text-2xl font-bold mt-1 text-red-700">{stats.failed}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="flex items-center gap-2 text-amber-700 text-xs"><Ban className="h-4 w-4" />חסומים</div>
-            <div className="text-2xl font-bold mt-1 text-amber-700">{stats.suppressed}</div>
-          </Card>
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("all"); setPage(0); }}
+            className={`text-right ${statusFilter === "all" ? "ring-2 ring-primary rounded-xl" : ""}`}
+          >
+            <Card className="p-4 hover:bg-accent/40 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2 text-muted-foreground text-xs"><Mail className="h-4 w-4" />סה״כ</div>
+              <div className="text-2xl font-bold mt-1">{stats.total}</div>
+            </Card>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("sent"); setPage(0); }}
+            className={`text-right ${statusFilter === "sent" ? "ring-2 ring-emerald-500 rounded-xl" : ""}`}
+          >
+            <Card className="p-4 hover:bg-accent/40 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2 text-emerald-700 text-xs"><CheckCircle2 className="h-4 w-4" />נשלחו</div>
+              <div className="text-2xl font-bold mt-1 text-emerald-700">{stats.sent}</div>
+            </Card>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("failed"); setPage(0); }}
+            className={`text-right ${statusFilter === "failed" ? "ring-2 ring-red-500 rounded-xl" : ""}`}
+          >
+            <Card className="p-4 hover:bg-accent/40 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2 text-red-700 text-xs"><AlertCircle className="h-4 w-4" />נכשלו</div>
+              <div className="text-2xl font-bold mt-1 text-red-700">{stats.failed}</div>
+            </Card>
+          </button>
+          <button
+            type="button"
+            onClick={() => { setStatusFilter("suppressed"); setPage(0); }}
+            className={`text-right ${statusFilter === "suppressed" ? "ring-2 ring-amber-500 rounded-xl" : ""}`}
+          >
+            <Card className="p-4 hover:bg-accent/40 transition-colors cursor-pointer">
+              <div className="flex items-center gap-2 text-amber-700 text-xs"><Ban className="h-4 w-4" />חסומים</div>
+              <div className="text-2xl font-bold mt-1 text-amber-700">{stats.suppressed}</div>
+            </Card>
+          </button>
         </div>
+
 
         {/* Table */}
         <Card className="overflow-hidden">
