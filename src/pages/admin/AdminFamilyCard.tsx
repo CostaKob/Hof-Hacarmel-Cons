@@ -781,7 +781,7 @@ const AdminFamilyCard = () => {
                           </Button>
                         )}
                         <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                          {isCredit ? "זוכה" : fmt(Number(p.amount))}
+                          {fmt(Math.abs(Number(p.amount)))}
                         </span>
                       </div>
                     </div>
