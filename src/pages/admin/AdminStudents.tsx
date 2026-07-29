@@ -46,6 +46,7 @@ const AdminStudents = () => {
   const trackFilter = searchParams.get("track") || "all";
   const instrumentFilter = searchParams.get("instrument") || "all";
   const regTypeFilter = searchParams.get("reg_type") || "all";
+  const siblingsFilter = searchParams.get("siblings") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -139,6 +140,24 @@ const AdminStudents = () => {
     },
     enabled: !!selectedYearId,
   });
+
+  const { data: siblingLinks = [] } = useQuery({
+    queryKey: ["admin-students-sibling-links"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("student_siblings" as any).select("student_a_id, student_b_id");
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const siblingStudentIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const link of siblingLinks as any[]) {
+      if (link.student_a_id) set.add(link.student_a_id);
+      if (link.student_b_id) set.add(link.student_b_id);
+    }
+    return set;
+  }, [siblingLinks]);
 
   const normalizeRegType = (v: any): "new" | "continuing" | null => {
     const s = String(v ?? "").trim().toLowerCase();
@@ -468,6 +487,7 @@ const AdminStudents = () => {
   const registeredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "registered").length;
   const notRegisteredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "not_registered").length;
   const stoppedCount = allStudents.filter((s: any) => !s.is_active || s.student_status === "הפסיק").length;
+  const siblingsCount = allStudents.filter((s: any) => siblingStudentIds.has(s.id)).length;
 
   const filteredAll = allStudents.filter((s: any) => {
     if (search) {
@@ -501,6 +521,7 @@ const AdminStudents = () => {
       const rt = getRegType(s);
       if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
     }
+    if (siblingsFilter === "with" && !siblingStudentIds.has(s.id)) return false;
     return true;
   });
 
@@ -563,6 +584,7 @@ const AdminStudents = () => {
       const rt = getRegType(r.students);
       if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
     }
+    if (siblingsFilter === "with" && !siblingStudentIds.has(r.students?.id)) return false;
     return true;
   });
 
@@ -792,6 +814,23 @@ const AdminStudents = () => {
               </button>
             </>
           )}
+        </div>
+
+        {/* Siblings filter */}
+        <div className="col-span-2 md:col-span-5 flex">
+          <button
+            onClick={() => setFilter("siblings", siblingsFilter === "with" ? "all" : "with")}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial lg:w-auto ${
+              siblingsFilter === "with"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            משפחות עם אחים
+            <Badge variant={siblingsFilter === "with" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
+              {siblingsCount}
+            </Badge>
+          </button>
         </div>
       </div>
 
