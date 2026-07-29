@@ -601,20 +601,12 @@ const AdminFamilyCard = () => {
               <Wallet className="h-4 w-4" /> תשלום / קישור / זיכוי משפחתי
             </h2>
             <p className="text-sm text-muted-foreground">
-              סמן את השיוכים שברצונך לכלול, ובחר את סוג הפעולה בחלון הבא (מזומן, צ׳ק,
-              העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
+              פתח את חלון התשלום כדי לבחור על אילו שיוכים לחייב ולבחור את סוג הפעולה
+              (מזומן, צ׳ק, העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
             </p>
-            <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl bg-muted/40 p-3">
-              <div className="text-sm">
-                <span className="text-muted-foreground">נבחרו: </span>
-                <span className="font-semibold">{selectionSummary.count}</span>
-                <span className="text-muted-foreground"> שיוכים · </span>
-                <span className="text-muted-foreground">סה"כ: </span>
-                <span className="font-bold">{fmt(selectionSummary.amount)}</span>
-              </div>
+            <div className="flex justify-end">
               <Button
                 onClick={openNewPayment}
-                disabled={selectionSummary.count === 0 || selectionSummary.amount <= 0}
                 className="h-11 rounded-xl gap-2"
               >
                 <Plus className="h-4 w-4" /> פתח חלון תשלום משפחתי
@@ -626,6 +618,7 @@ const AdminFamilyCard = () => {
               </p>
             )}
           </div>
+
 
 
 
