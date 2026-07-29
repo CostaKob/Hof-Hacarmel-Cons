@@ -186,6 +186,16 @@ const AdminFamilyCard = () => {
 
   // Selection of enrollments/items now happens inside AddPaymentDialog.
 
+  const pendingPayments = useMemo(
+    () =>
+      payments.filter(
+        (p) => p.payment_status === "pending" && p.transaction_type === "payment",
+      ),
+    [payments],
+  );
+  const hasPendingLinks = pendingPayments.some((p) => !!p.payment_link_url);
+
+
 
 
   // Family financial rollup
