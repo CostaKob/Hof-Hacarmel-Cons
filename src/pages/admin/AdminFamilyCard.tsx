@@ -22,6 +22,7 @@ import {
   Undo2,
   Trash2,
   Plus,
+  Copy,
 } from "lucide-react";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -688,7 +689,32 @@ const AdminFamilyCard = () => {
                             setPaymentDialogOpen(true);
                           }}
                         >
-                          <td className="py-2 pe-3 whitespace-nowrap">{p.payment_date}</td>
+                          <td className="py-2 pe-3 whitespace-nowrap align-top">
+                            <div>{p.payment_date}</div>
+                            {isPending && (() => {
+                              const bd: any = p.enrollment_breakdown ?? {};
+                              const pd = bd && !Array.isArray(bd) ? bd.payerDetails : null;
+                              const pl = bd && !Array.isArray(bd) ? bd.payerLabel : null;
+                              const fullName = pd ? [pd.firstName, pd.lastName].filter(Boolean).join(" ").trim() : "";
+                              const contact = pd ? [pd.phone, pd.email].filter(Boolean).join(" · ") : "";
+                              if (!pl && !fullName && !contact && !p.payment_link_url) return null;
+                              return (
+                                <div className="mt-1 space-y-0.5 text-[11px] font-normal">
+                                  {(pl || fullName) && (
+                                    <div className="text-foreground">
+                                      {pl}
+                                      {pl && fullName ? " · " : ""}
+                                      {fullName && <span className="font-medium">{fullName}</span>}
+                                    </div>
+                                  )}
+                                  {contact && <div className="text-muted-foreground">{contact}</div>}
+                                  {p.payment_link_url && (
+                                    <div className="text-muted-foreground truncate max-w-[220px]" dir="ltr">{p.payment_link_url}</div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </td>
                           <td className="py-2 pe-3">
                             {p.family_payment_group_id ? (
                               <Badge variant="secondary" className="text-[10px]">משפחתי</Badge>
@@ -741,15 +767,22 @@ const AdminFamilyCard = () => {
                               {isPending && p.payment_link_url && (
                                 <>
                                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
-                                    onClick={() => window.open(p.payment_link_url, "_blank")}>
+                                    onClick={() => window.open(p.payment_link_url!, "_blank")}>
                                     <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
+                                    onClick={async () => {
+                                      try { await navigator.clipboard.writeText(p.payment_link_url!); toast.success("הקישור הועתק"); }
+                                      catch { toast.error("לא ניתן להעתיק"); }
+                                    }}>
+                                    <Copy className="h-4 w-4" />
                                   </Button>
                                   <Button variant="outline" size="icon"
                                     className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
                                     title="בטל קישור ומחק שורה"
                                     disabled={deleteLinkMutation.isPending}
                                     onClick={() => {
-                                      if (confirm("לבטל את קישור התשלום ולמחוק את הרישום הממתין?")) {
+                                      if (confirm("לבטל את קישור התשלום? דף הסליקה יימחק מ-iCount.")) {
                                         deleteLinkMutation.mutate(p.id);
                                       }
                                     }}>
