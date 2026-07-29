@@ -566,7 +566,16 @@ const AdminFamilyCard = () => {
               פתח את חלון התשלום כדי לבחור על אילו שיוכים לחייב ולבחור את סוג הפעולה
               (מזומן, צ׳ק, העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
             </p>
-            <div className="flex justify-end">
+            <div className="flex flex-wrap justify-end gap-2">
+              <Button
+                onClick={() => setSendMessageOpen(true)}
+                variant="outline"
+                disabled={!hasPendingLinks}
+                className="h-11 rounded-xl gap-2"
+                title={hasPendingLinks ? undefined : "יש ליצור קישור לתשלום לפני שליחת הודעה"}
+              >
+                <Send className="h-4 w-4" /> שלח הודעה להורה
+              </Button>
               <Button
                 onClick={openNewPayment}
                 className="h-11 rounded-xl gap-2"
@@ -574,6 +583,7 @@ const AdminFamilyCard = () => {
                 <Plus className="h-4 w-4" /> פתח חלון תשלום משפחתי
               </Button>
             </div>
+
             {!family?.parent_email && (
               <p className="text-xs text-amber-700 dark:text-amber-300">
                 שים לב — לא מוגדר אימייל להורה; יש למלא את פרטי המשלם ידנית בחלון.
