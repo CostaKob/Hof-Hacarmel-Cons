@@ -58,7 +58,7 @@ export interface FamilyEnrollmentRecord {
   academic_year_id: string;
   instruments: { name: string } | null;
   schools: { name: string } | null;
-  teachers: { first_name: string; last_name: string } | null;
+  teachers: { first_name: string; last_name: string; phone: string | null } | null;
 }
 
 export interface FamilyPaymentRecord {
