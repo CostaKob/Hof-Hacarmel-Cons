@@ -64,7 +64,10 @@ export interface ChildTotals {
   standardDiscountAmount: number;
   customDiscountAmount: number;
   net: number;
+  /** Per-discount breakdown (standard + custom), amounts are positive. */
+  discountLines: { label: string; amount: number }[];
 }
+
 
 export function computeChildTotals(
   studentId: string,
