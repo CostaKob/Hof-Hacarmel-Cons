@@ -22,6 +22,7 @@ import {
   Undo2,
   Trash2,
   Plus,
+  Copy,
 } from "lucide-react";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
