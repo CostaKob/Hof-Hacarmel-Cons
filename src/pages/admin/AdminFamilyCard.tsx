@@ -418,8 +418,9 @@ const AdminFamilyCard = () => {
             return (
               <div
                 key={c.id}
-                className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm overflow-hidden"
               >
+
                 <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <button
                     onClick={() => navigate(`/admin/students/${c.id}`)}
