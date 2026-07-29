@@ -780,8 +780,8 @@ const AdminFamilyCard = () => {
                             <Undo2 className="h-4 w-4" />
                           </Button>
                         )}
-                        <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                          {fmt(Math.abs(Number(p.amount)))}
+                        <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
+                          {isCredit ? `−${fmt(Math.abs(Number(p.amount)))}` : fmt(Math.abs(Number(p.amount)))}
                         </span>
                       </div>
                     </div>

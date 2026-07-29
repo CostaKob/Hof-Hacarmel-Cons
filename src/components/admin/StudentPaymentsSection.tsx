@@ -318,8 +318,8 @@ const StudentPaymentsSection = ({
                       <Undo2 className="h-4 w-4" />
                     </Button>
                   )}
-                  <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
-                    ₪{Math.abs(Number(p.amount || 0)).toLocaleString()}
+                  <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
+                    {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
                   </span>
                 </div>
               </div>
