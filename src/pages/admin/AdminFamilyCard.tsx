@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import UnifyParentDetailsDialog from "@/components/admin/UnifyParentDetailsDialog";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,8 @@ const AdminFamilyCard = () => {
   const navigate = useNavigate();
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
+
+  const [unifyOpen, setUnifyOpen] = useState(false);
 
   const { data: families = [] } = useFamiliesList(yearId);
   const family = useMemo(
@@ -116,11 +119,31 @@ const AdminFamilyCard = () => {
                   )}
                 </div>
               </div>
-              <Badge variant="default" className="text-sm">
-                {children.length} {children.length === 1 ? "ילד" : "ילדים"}
-              </Badge>
+              <div className="flex flex-col items-end gap-2">
+                <Badge variant="default" className="text-sm">
+                  {children.length} {children.length === 1 ? "ילד" : "ילדים"}
+                </Badge>
+                {children.length > 1 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setUnifyOpen(true)}
+                    className="rounded-xl"
+                  >
+                    אחד פרטי הורה
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
+
+          <UnifyParentDetailsDialog
+            open={unifyOpen}
+            onOpenChange={setUnifyOpen}
+            parentNationalId={parentNationalId}
+            children={children}
+          />
+
 
           {/* Children */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
