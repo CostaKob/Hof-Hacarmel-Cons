@@ -72,10 +72,12 @@ const AdminFamilyCard = () => {
     new Set(),
   );
   const [selectionSeeded, setSelectionSeeded] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<{ url: string; amount: number } | null>(
-    null,
-  );
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
+  const [refundTarget, setRefundTarget] = useState<any>(null);
+  const [refundAmount, setRefundAmount] = useState<string>("");
+
 
   const { data: families = [] } = useFamiliesList(yearId);
   const family = useMemo(
