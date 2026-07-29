@@ -49,9 +49,10 @@ export interface ChildEnrollmentBreakdown {
   lessonsRemaining: number;
   lessonsTotal: number;
   discountPct: number; // sum of standard discount %s
+  discountLabels: string[]; // names of standard discounts applied to this enrollment
   net: number; // prorated * (1 - discountPct/100)
   source: "override" | "global" | "missing";
-}
+
 
 export interface ChildTotals {
   studentId: string;
