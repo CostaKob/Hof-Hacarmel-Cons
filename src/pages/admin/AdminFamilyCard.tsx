@@ -775,6 +775,20 @@ const AdminFamilyCard = () => {
             familyContext={editingPayment ? null : familyCtx}
           />
 
+          <SendFamilyAssignmentMessage
+            open={sendMessageOpen}
+            onOpenChange={setSendMessageOpen}
+            family={{
+              parent_name: family?.parent_name ?? null,
+              parent_phone: family?.parent_phone ?? null,
+              parent_email: family?.parent_email ?? null,
+            }}
+            children={children}
+            enrollments={enrollments as any[]}
+            pendingPayments={pendingPayments.filter((p) => !!p.payment_link_url) as any[]}
+          />
+
+
           {refundTarget && (
             <div
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
