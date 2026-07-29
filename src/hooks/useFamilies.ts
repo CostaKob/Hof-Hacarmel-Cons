@@ -84,28 +84,37 @@ export const useFamilyDetails = (
   yearId?: string | null,
 ) =>
   useQuery({
-    queryKey: ["family-details", parentNationalId, yearId ?? null, (childrenIds || []).join(",")],
+    queryKey: [
+      "family-details",
+      parentNationalId,
+      yearId ?? null,
+      (childrenIds || []).join(","),
+    ],
     enabled: !!parentNationalId && !!childrenIds && childrenIds.length > 0,
     queryFn: async () => {
       const ids = childrenIds!;
+      const studentsQ = supabase.from("students").select("*").in("id", ids);
+
+      let enrollmentsQ: any = supabase
+        .from("enrollments")
+        .select(
+          "*, instruments(name), schools(name), teachers(first_name, last_name)",
+        )
+        .in("student_id", ids)
+        .order("created_at", { ascending: true });
+      if (yearId) enrollmentsQ = enrollmentsQ.eq("academic_year_id", yearId);
+
+      let paymentsQ: any = supabase
+        .from("student_payments")
+        .select("*")
+        .in("student_id", ids)
+        .order("payment_date", { ascending: false });
+      if (yearId) paymentsQ = paymentsQ.eq("academic_year_id", yearId);
+
       const [studentsRes, enrollmentsRes, paymentsRes] = await Promise.all([
-        supabase.from("students").select("*").in("id", ids),
-        supabase
-          .from("enrollments")
-          .select(
-            "*, instruments(name), schools(name), teachers(first_name, last_name)"
-          )
-          .in("student_id", ids)
-          .eq(yearId ? "academic_year_id" : "is_active", yearId ?? true)
-          .order("created_at", { ascending: true }),
-        supabase
-          .from("student_payments")
-          .select("*")
-          .or(
-            `student_id.in.(${ids.join(",")}),family_parent_national_id.eq.${parentNationalId}`
-          )
-          .eq(yearId ? "academic_year_id" : "id", yearId ?? "id")
-          .order("payment_date", { ascending: false }),
+        studentsQ,
+        enrollmentsQ,
+        paymentsQ,
       ]);
 
       if (studentsRes.error) throw studentsRes.error;
