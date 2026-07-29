@@ -448,17 +448,10 @@ const AdminFamilyCard = () => {
             children={children}
           />
 
-          {/* Per-child breakdown with selection */}
+          {/* Per-child breakdown */}
           {children.map((c) => {
             const t = perChild.get(c.id);
             const rows = t?.enrollments ?? [];
-            const activeRows = rows.filter((r) => r.isActive);
-            const allSelected =
-              activeRows.length > 0 &&
-              activeRows.every((r) => selectedEnrollmentIds.has(r.enrollmentId));
-            const selectedChildSum = rows
-              .filter((r) => selectedEnrollmentIds.has(r.enrollmentId))
-              .reduce((s, r) => s + r.net, 0);
 
             return (
               <div
@@ -497,13 +490,6 @@ const AdminFamilyCard = () => {
                       <table className="w-full text-sm">
                         <thead className="text-xs text-muted-foreground">
                           <tr className="border-b border-border">
-                            <th className="text-right py-2 pe-3 w-8">
-                              <Checkbox
-                                checked={allSelected}
-                                onCheckedChange={(v) => toggleChildAll(c.id, !!v)}
-                                aria-label="בחר הכל"
-                              />
-                            </th>
                             <th className="text-right py-2 pe-3">שיוך</th>
                             <th className="text-right py-2 pe-3">שיעורים</th>
                             <th className="text-right py-2 pe-3">הנחה</th>
@@ -516,13 +502,6 @@ const AdminFamilyCard = () => {
                               key={r.enrollmentId}
                               className={`border-b border-border/50 ${!r.isActive ? "opacity-50" : ""}`}
                             >
-                              <td className="py-2 pe-3 align-top">
-                                <Checkbox
-                                  checked={selectedEnrollmentIds.has(r.enrollmentId)}
-                                  onCheckedChange={() => toggleEnrollment(r.enrollmentId)}
-                                  disabled={!r.isActive || r.net <= 0}
-                                />
-                              </td>
                               <td className="py-2 pe-3">
                                 <div className="font-medium text-foreground">
                                   {r.instrumentName}
@@ -570,21 +549,12 @@ const AdminFamilyCard = () => {
                         כולל הנחה מותאמת בסך {fmt(t!.customDiscountAmount)}
                       </p>
                     )}
-                    <div className="mt-2 text-xs text-muted-foreground flex items-center justify-between">
-                      <span>
-                        נבחרו {rows.filter((r) => selectedEnrollmentIds.has(r.enrollmentId)).length}
-                        {" / "}
-                        {activeRows.length} שיוכים
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {fmt(selectedChildSum)}
-                      </span>
-                    </div>
                   </>
                 )}
               </div>
             );
           })}
+
 
           {/* Family financial summary */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
