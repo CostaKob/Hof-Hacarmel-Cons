@@ -141,6 +141,24 @@ const AdminStudents = () => {
     enabled: !!selectedYearId,
   });
 
+  const { data: siblingLinks = [] } = useQuery({
+    queryKey: ["admin-students-sibling-links"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("student_siblings" as any).select("student_a_id, student_b_id");
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const siblingStudentIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const link of siblingLinks as any[]) {
+      if (link.student_a_id) set.add(link.student_a_id);
+      if (link.student_b_id) set.add(link.student_b_id);
+    }
+    return set;
+  }, [siblingLinks]);
+
   const normalizeRegType = (v: any): "new" | "continuing" | null => {
     const s = String(v ?? "").trim().toLowerCase();
     if (s === "new" || s === "חדש") return "new";
