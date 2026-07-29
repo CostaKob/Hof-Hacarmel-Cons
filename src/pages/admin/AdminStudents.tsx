@@ -46,6 +46,7 @@ const AdminStudents = () => {
   const trackFilter = searchParams.get("track") || "all";
   const instrumentFilter = searchParams.get("instrument") || "all";
   const regTypeFilter = searchParams.get("reg_type") || "all";
+  const siblingsFilter = searchParams.get("siblings") || "all";
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
