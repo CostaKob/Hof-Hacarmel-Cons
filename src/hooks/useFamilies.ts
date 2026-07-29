@@ -79,7 +79,12 @@ export interface FamilyPaymentRecord {
   family_payment_group_id: string | null;
   family_parent_national_id: string | null;
   academic_year_id: string | null;
+  academic_years?: { name: string } | null;
   enrollment_breakdown: any;
+  created_at?: string;
+  installments?: number | null;
+  reference_number?: string | null;
+  month_reference?: string | null;
 }
 
 
