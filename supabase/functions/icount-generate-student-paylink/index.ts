@@ -108,7 +108,9 @@ Deno.serve(async (req: Request) => {
       payerDetails,
       splitInfo,
       forceNewPaypage,
+      pageTitleName,
     } = await req.json().catch(() => ({}));
+
 
 
     if (!studentId) {
