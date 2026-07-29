@@ -573,19 +573,35 @@ const AdminFamilyCard = () => {
                 )}
 
                 {childSpecials.length > 0 && (
-                  <div className="mt-3 border-t border-border pt-3">
-                    <div className="text-xs text-muted-foreground mb-2">קורסים מיוחדים</div>
-                    <ul className="space-y-1.5">
-                      {childSpecials.map((s) => (
-                        <li
-                          key={s.key}
-                          className="flex items-center justify-between text-sm"
-                        >
-                          <span className="text-foreground">{s.label}</span>
-                          <span className="font-medium">{fmt(s.price)}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="mt-3">
+                    <table className="w-full text-sm table-fixed">
+                      <colgroup>
+                        <col />
+                        <col className="w-[70px]" />
+                        <col className="w-[90px]" />
+                        <col className="w-[90px]" />
+                      </colgroup>
+                      <thead className="text-xs text-muted-foreground">
+                        <tr className="border-b border-border">
+                          <th className="text-right py-2 pe-3">קורסים מיוחדים</th>
+                          <th className="text-right py-2 pe-3"></th>
+                          <th className="text-right py-2 pe-3"></th>
+                          <th className="text-right py-2"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {childSpecials.map((s) => (
+                          <tr key={s.key} className="border-b border-border/50">
+                            <td className="py-2 pe-3 break-words">
+                              <div className="font-medium text-foreground">{s.label}</div>
+                            </td>
+                            <td className="py-2 pe-3">—</td>
+                            <td className="py-2 pe-3 text-muted-foreground">—</td>
+                            <td className="py-2 font-medium">{fmt(s.price)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </div>
