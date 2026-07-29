@@ -521,6 +521,7 @@ const AdminStudents = () => {
       const rt = getRegType(s);
       if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
     }
+    if (siblingsFilter === "with" && !siblingStudentIds.has(s.id)) return false;
     return true;
   });
 
