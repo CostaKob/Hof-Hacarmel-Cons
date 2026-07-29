@@ -23,12 +23,15 @@ import {
   Trash2,
   Plus,
   Copy,
+  Send,
 } from "lucide-react";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
 import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride } from "@/components/admin/AddPaymentDialog";
+import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignmentMessage";
+
 
 
 const STATUS_LABELS: Record<string, string> = {
