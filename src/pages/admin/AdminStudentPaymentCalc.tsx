@@ -1494,24 +1494,8 @@ const AdminStudentPaymentCalc = () => {
               {savingDraft ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : null}
               {savingDraft ? "שומר..." : "שמור חישוב"}
             </Button>
-            <Button
-              variant="outline"
-              className="h-12 rounded-xl px-5"
-              onClick={() => setShowSendMessageDialog(true)}
-              disabled={generatingLink || !activePaymentLink}
-            >
-              <Send className="h-4 w-4 ml-2" />
-              שלח הודעה להורה
-            </Button>
-            <Button
-              className="h-12 rounded-xl px-6"
-              onClick={handleGenerateLink}
-              disabled={(rows.length === 0 && specialBase <= 0) || balance <= 0 || generatingLink}
-            >
-              {generatingLink ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : <Send className="h-4 w-4 ml-2" />}
-              {generatingLink ? "יוצר קישור..." : "צור קישור לתשלום"}
-            </Button>
           </div>
+
         </div>
 
         {pendingPayments.length > 0 && (
