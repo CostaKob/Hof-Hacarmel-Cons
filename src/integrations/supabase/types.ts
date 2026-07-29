@@ -1955,6 +1955,8 @@ export type Database = {
           created_by_user_id: string | null
           enrollment_breakdown: Json | null
           enrollment_id: string | null
+          family_parent_national_id: string | null
+          family_payment_group_id: string | null
           icount_doc_id: string | null
           icount_doc_number: string | null
           icount_doc_type: string | null
@@ -1983,6 +1985,8 @@ export type Database = {
           created_by_user_id?: string | null
           enrollment_breakdown?: Json | null
           enrollment_id?: string | null
+          family_parent_national_id?: string | null
+          family_payment_group_id?: string | null
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
@@ -2011,6 +2015,8 @@ export type Database = {
           created_by_user_id?: string | null
           enrollment_breakdown?: Json | null
           enrollment_id?: string | null
+          family_parent_national_id?: string | null
+          family_payment_group_id?: string | null
           icount_doc_id?: string | null
           icount_doc_number?: string | null
           icount_doc_type?: string | null
@@ -2597,6 +2603,18 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      list_families: {
+        Args: { _year_id?: string }
+        Returns: {
+          children_count: number
+          children_ids: string[]
+          children_names: string[]
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+        }[]
       }
       list_public_available_inventory: {
         Args: { _instrument_id: string }
