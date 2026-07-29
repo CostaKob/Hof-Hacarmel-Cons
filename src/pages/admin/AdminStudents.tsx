@@ -487,6 +487,7 @@ const AdminStudents = () => {
   const registeredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "registered").length;
   const notRegisteredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "not_registered").length;
   const stoppedCount = allStudents.filter((s: any) => !s.is_active || s.student_status === "הפסיק").length;
+  const siblingsCount = allStudents.filter((s: any) => siblingStudentIds.has(s.id)).length;
 
   const filteredAll = allStudents.filter((s: any) => {
     if (search) {
