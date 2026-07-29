@@ -460,6 +460,9 @@ const AdminFamilyCard = () => {
           {children.map((c) => {
             const t = perChild.get(c.id);
             const rows = t?.enrollments ?? [];
+            const childSpecials = specialsByChild.get(c.id) ?? [];
+            const childSpecialsTotal = childSpecials.reduce((s, x) => s + x.price, 0);
+            const childTotal = (t?.net ?? 0) + childSpecialsTotal;
 
             return (
               <div
@@ -486,7 +489,7 @@ const AdminFamilyCard = () => {
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">סה"כ לילד:</span>
                     <span className="font-bold text-foreground">
-                      {fmt(t?.net ?? 0)}
+                      {fmt(childTotal)}
                     </span>
                   </div>
                 </div>
