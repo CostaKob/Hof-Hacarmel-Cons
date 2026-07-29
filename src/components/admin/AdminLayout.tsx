@@ -1,4 +1,4 @@
-import { ReactNode, useState, useRef } from "react";
+import { ReactNode, useState, useRef, ComponentType } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,20 +10,20 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ArchiveYearBanner from "./ArchiveYearBanner";
-import familyIcon from "@/assets/family-icon.png";
-import studentsIcon from "@/assets/students-icon.png";
+import FamilyIcon from "@/components/icons/FamilyIcon";
+
+type IconComponent = ComponentType<{ className?: string }>;
 
 interface NavItem {
   path: string;
   label: string;
-  icon?: LucideIcon;
-  image?: string;
+  icon?: LucideIcon | IconComponent;
 }
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/admin", label: "ראשי", icon: Home },
-  { path: "/admin/students", label: "תלמידים", image: studentsIcon },
-  { path: "/admin/families", label: "משפחות", image: familyIcon },
+  { path: "/admin/students", label: "תלמידים", icon: Users },
+  { path: "/admin/families", label: "משפחות", icon: FamilyIcon },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
   { path: "/admin/school-music-schools", label: "מנגנים", icon: Music4 },
