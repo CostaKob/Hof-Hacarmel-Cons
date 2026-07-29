@@ -1,0 +1,264 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Mail, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
+
+interface FamilyLike {
+  parent_name?: string | null;
+  parent_phone?: string | null;
+  parent_email?: string | null;
+}
+
+interface ChildLike {
+  id: string;
+  first_name: string;
+  last_name: string;
+}
+
+interface EnrollmentLike {
+  student_id: string;
+  is_active?: boolean;
+  instruments?: { name?: string | null } | null;
+  schools?: { name?: string | null } | null;
+  teachers?: { first_name?: string | null; last_name?: string | null; phone?: string | null } | null;
+  lesson_duration_minutes?: number | null;
+}
+
+interface PendingPaymentLike {
+  id: string;
+  amount: number;
+  payment_link_url: string | null;
+  enrollment_breakdown: any;
+  student_id?: string | null;
+}
+
+interface Props {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  family: FamilyLike;
+  children: ChildLike[];
+  enrollments: EnrollmentLike[];
+  pendingPayments: PendingPaymentLike[];
+}
+
+function normalizeWaPhone(phone?: string | null): string {
+  if (!phone) return "";
+  return String(phone).replace(/\D/g, "").replace(/^0/, "");
+}
+
+function buildMessage(
+  family: FamilyLike,
+  children: ChildLike[],
+  enrollments: EnrollmentLike[],
+  pendingPayments: PendingPaymentLike[],
+  extraNote: string,
+): string {
+  const parentName = family.parent_name || "הורה יקר";
+  const lines: string[] = [];
+  lines.push(`שלום ${parentName},`);
+  lines.push("");
+  lines.push("אנו שמחים לעדכן כי שויכו המורים הבאים:");
+  lines.push("");
+
+  for (const c of children) {
+    const childEnrollments = enrollments.filter(
+      (e) => e.student_id === c.id && e.is_active !== false,
+    );
+    if (childEnrollments.length === 0) continue;
+    lines.push(`— ${c.first_name} ${c.last_name} —`);
+    for (const e of childEnrollments) {
+      const teacherName = `${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim();
+      const teacherPhone = e.teachers?.phone ?? "";
+      const waPhone = normalizeWaPhone(teacherPhone);
+      lines.push(`לשיעורי ${e.instruments?.name ?? ""}`);
+      if (teacherName) lines.push(`מורה: ${teacherName}`);
+      if (teacherPhone) lines.push(`פרטי קשר המורה: ${teacherPhone}`);
+      if (waPhone) lines.push(`https://wa.me/972${waPhone}`);
+      if (e.schools?.name) lines.push(`שלוחה: ${e.schools.name}`);
+      if (e.lesson_duration_minutes) lines.push(`משך שיעור: ${e.lesson_duration_minutes} דקות`);
+      lines.push("");
+    }
+  }
+
+  if (pendingPayments.length > 0) {
+    lines.push("פירוט תשלום:");
+    let totalAll = 0;
+    for (const p of pendingPayments) {
+      const bd: any = p.enrollment_breakdown || {};
+      const payerLabel: string | null = bd?.payerLabel ?? null;
+      const breakdownLines: Array<{ description: string; amount: number }> =
+        Array.isArray(bd.lines) ? bd.lines : [];
+      if (payerLabel) {
+        lines.push(`  ${payerLabel}:`);
+      }
+      for (const l of breakdownLines) {
+        const amt = Number(l.amount) || 0;
+        const formatted = amt >= 0 ? `${amt} ₪` : `${Math.abs(amt)}- ₪`;
+        lines.push(`    ${l.description}: ${formatted}`);
+      }
+      lines.push(`  סה״כ: ${Number(p.amount).toLocaleString("he-IL")} ₪`);
+      if (p.payment_link_url) {
+        lines.push(`  קישור לתשלום:`);
+        lines.push(`  ${p.payment_link_url}`);
+      }
+      lines.push("");
+      totalAll += Number(p.amount) || 0;
+    }
+    if (pendingPayments.length > 1) {
+      lines.push(`סה״כ לתשלום: ${totalAll.toLocaleString("he-IL")} ₪`);
+    }
+    lines.push("ניתן לחלק עד 10 תשלומים ללא ריבית.");
+    lines.push("");
+  }
+
+  if (extraNote.trim()) {
+    lines.push(extraNote.trim());
+    lines.push("");
+  }
+
+  lines.push("לכל שאלה ניתן לפנות:");
+  lines.push("מייל: musichof@gmail.com");
+  lines.push("טלפון משרד: 04-6299711");
+  lines.push("וואטסאפ קורין: https://wa.me/972547467498");
+  lines.push("");
+  lines.push("בברכה,");
+  lines.push("אולפן המוסיקה חוף הכרמל");
+
+  return lines.join("\n");
+}
+
+const SendFamilyAssignmentMessage = ({
+  open,
+  onOpenChange,
+  family,
+  children,
+  enrollments,
+  pendingPayments,
+}: Props) => {
+  const defaultNote = useMemo(() => {
+    return new Date().getMonth() < 8
+      ? "השיעורים יתחילו בספטמבר עם תחילת שנת הלימודים"
+      : "השיעורים יתחילו בהקדם האפשרי";
+  }, []);
+
+  const [extraNote, setExtraNote] = useState(defaultNote);
+  const [message, setMessage] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  useEffect(() => {
+    if (open) setExtraNote(defaultNote);
+  }, [open, defaultNote]);
+
+  useEffect(() => {
+    if (!open) return;
+    setMessage(buildMessage(family, children, enrollments, pendingPayments, extraNote));
+  }, [open, family, children, enrollments, pendingPayments, extraNote]);
+
+  const parentWa = normalizeWaPhone(family.parent_phone);
+
+  const childrenSubject = children.map((c) => `${c.first_name} ${c.last_name}`).join(", ");
+
+  const sendWhatsApp = () => {
+    if (!parentWa) {
+      toast.error("אין מספר טלפון להורה");
+      return;
+    }
+    window.open(`https://wa.me/972${parentWa}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  const sendEmail = async () => {
+    if (!family.parent_email) {
+      toast.error("אין כתובת מייל להורה");
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "plain-text",
+          recipientEmail: family.parent_email,
+          replyTo: "musichof@gmail.com",
+          templateData: {
+            subject: `שיוך מורה — ${childrenSubject}`,
+            body: message,
+          },
+        },
+      });
+      if (error) throw error;
+      toast.success("ההודעה נשלחה למייל ההורה");
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בשליחת המייל");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+        <DialogHeader>
+          <DialogTitle>שליחת הודעת שיוך מורה להורה</DialogTitle>
+          <DialogDescription>ניתן לערוך את ההודעה לפני השליחה.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-xs">הערה לתחילת השיעורים</Label>
+            <Textarea
+              value={extraNote}
+              onChange={(e) => setExtraNote(e.target.value)}
+              rows={2}
+              className="rounded-xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">תוכן ההודעה</Label>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              rows={20}
+              className="rounded-xl font-mono text-xs"
+              dir="rtl"
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 rounded-xl">
+            ביטול
+          </Button>
+          <Button
+            onClick={sendEmail}
+            disabled={sendingEmail || !family.parent_email}
+            className="h-11 rounded-xl"
+            variant="outline"
+          >
+            <Mail className="h-4 w-4" />
+            {sendingEmail ? "שולח..." : "שלח במייל"}
+          </Button>
+          <Button
+            onClick={sendWhatsApp}
+            disabled={!parentWa}
+            className="h-11 rounded-xl bg-green-600 hover:bg-green-700 text-white"
+          >
+            <MessageCircle className="h-4 w-4" />
+            שלח בוואטסאפ
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default SendFamilyAssignmentMessage;
