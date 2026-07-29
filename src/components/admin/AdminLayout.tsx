@@ -22,7 +22,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/admin", label: "ראשי", icon: Home },
-  { path: "/admin/students", label: "תלמידים", icon: Users },
+  { path: "/admin/students", label: "תלמידים", image: studentsIcon },
   { path: "/admin/families", label: "משפחות", image: familyIcon },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
