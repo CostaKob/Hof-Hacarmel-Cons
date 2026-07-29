@@ -284,9 +284,22 @@ const AdminFamilyCard = () => {
           enrollmentId: en.enrollmentId,
           studentId: c.id,
           label: `${childName} — ${parts || "שכר לימוד"}`,
-          subLabel: `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים${en.discountPct > 0 ? ` · הנחה ${en.discountPct}%` : ""}`,
-          defaultAmount: Math.round(en.net * 100) / 100,
+          subLabel: `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים`,
+          defaultAmount: Math.round(en.prorated * 100) / 100,
           kind: "enrollment",
+        });
+      }
+      // Discount lines per child — surface each discount so iCount shows it.
+      for (let i = 0; i < t.discountLines.length; i++) {
+        const d = t.discountLines[i];
+        overrideItems.push({
+          id: `${c.id}:discount:${i}`,
+          enrollmentId: null,
+          studentId: c.id,
+          label: d.label,
+          subLabel: "הנחה",
+          defaultAmount: -Math.round(d.amount * 100) / 100,
+          kind: "discount",
         });
       }
     }
@@ -304,6 +317,7 @@ const AdminFamilyCard = () => {
       invalidateKeys: [["family-details"]],
     };
   };
+
 
   const openNewPayment = () => {
     setEditingPayment(null);
