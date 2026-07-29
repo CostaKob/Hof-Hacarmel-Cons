@@ -8,7 +8,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Users,
   User,
