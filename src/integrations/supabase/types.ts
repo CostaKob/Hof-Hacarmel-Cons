@@ -752,6 +752,36 @@ export type Database = {
         }
         Relationships: []
       }
+      parents: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          national_id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          national_id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          national_id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_settings: {
         Row: {
           created_at: string
@@ -2140,6 +2170,8 @@ export type Database = {
           last_name: string
           last_promoted_year_id: string | null
           national_id: string | null
+          parent_1_id: string | null
+          parent_2_id: string | null
           parent_email: string | null
           parent_email_2: string | null
           parent_name: string | null
@@ -2170,6 +2202,8 @@ export type Database = {
           last_name: string
           last_promoted_year_id?: string | null
           national_id?: string | null
+          parent_1_id?: string | null
+          parent_2_id?: string | null
           parent_email?: string | null
           parent_email_2?: string | null
           parent_name?: string | null
@@ -2200,6 +2234,8 @@ export type Database = {
           last_name?: string
           last_promoted_year_id?: string | null
           national_id?: string | null
+          parent_1_id?: string | null
+          parent_2_id?: string | null
           parent_email?: string | null
           parent_email_2?: string | null
           parent_name?: string | null
@@ -2218,6 +2254,20 @@ export type Database = {
             columns: ["last_promoted_year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_parent_1_id_fkey"
+            columns: ["parent_1_id"]
+            isOneToOne: false
+            referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_parent_2_id_fkey"
+            columns: ["parent_2_id"]
+            isOneToOne: false
+            referencedRelation: "parents"
             referencedColumns: ["id"]
           },
         ]
