@@ -448,8 +448,9 @@ const AdminFamilyCard = () => {
                   <p className="text-sm text-muted-foreground">אין שיוכים בשנה זו.</p>
                 ) : (
                   <>
-                    <div className="overflow-x-auto -mx-5 px-5">
-                      <table className="w-full text-sm">
+                    <div>
+                      <table className="w-full text-sm table-fixed">
+
                         <thead className="text-xs text-muted-foreground">
                           <tr className="border-b border-border">
                             <th className="text-right py-2 pe-3">שיוך</th>
@@ -464,7 +465,8 @@ const AdminFamilyCard = () => {
                               key={r.enrollmentId}
                               className={`border-b border-border/50 ${!r.isActive ? "opacity-50" : ""}`}
                             >
-                              <td className="py-2 pe-3">
+                              <td className="py-2 pe-3 break-words">
+
                                 <div className="font-medium text-foreground">
                                   {r.instrumentName}
                                   {r.schoolName !== "—" && (
