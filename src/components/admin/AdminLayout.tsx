@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ArchiveYearBanner from "./ArchiveYearBanner";
 import familyIcon from "@/assets/family-icon.png";
+import studentsIcon from "@/assets/students-icon.png";
 
 interface NavItem {
   path: string;
