@@ -613,11 +613,11 @@ const AdminFamilyCard = () => {
           {/* Unified receipt action */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
             <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
-              <LinkIcon className="h-4 w-4" /> יצירת קישור תשלום מאוחד
+              <Wallet className="h-4 w-4" /> תשלום / קישור / זיכוי משפחתי
             </h2>
             <p className="text-sm text-muted-foreground">
-              סמן את השיוכים שברצונך לכלול בקבלה. הקישור יישלח על שם ההורה, ויקושר לכל
-              ילדי המשפחה דרך ת.ז. ההורה.
+              סמן את השיוכים שברצונך לכלול, ובחר את סוג הפעולה בחלון הבא (מזומן, צ׳ק,
+              העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
             </p>
             <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl bg-muted/40 p-3">
               <div className="text-sm">
@@ -628,68 +628,21 @@ const AdminFamilyCard = () => {
                 <span className="font-bold">{fmt(selectionSummary.amount)}</span>
               </div>
               <Button
-                onClick={() => {
-                  setGenerating(true);
-                  generateFamilyLink.mutate();
-                }}
-                disabled={
-                  generating ||
-                  selectionSummary.count === 0 ||
-                  selectionSummary.amount <= 0 ||
-                  !family?.parent_email
-                }
-                className="h-11 rounded-xl"
+                onClick={openNewPayment}
+                disabled={selectionSummary.count === 0 || selectionSummary.amount <= 0}
+                className="h-11 rounded-xl gap-2"
               >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin ms-2" />
-                    יוצר קישור...
-                  </>
-                ) : (
-                  <>
-                    <LinkIcon className="h-4 w-4 ms-2" />
-                    צור קישור תשלום מאוחד
-                  </>
-                )}
+                <Plus className="h-4 w-4" /> פתח חלון תשלום משפחתי
               </Button>
             </div>
             {!family?.parent_email && (
-              <p className="text-xs text-destructive">
-                חסר אימייל הורה — עדכן פרטי הורה לפני יצירת קישור.
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                שים לב — לא מוגדר אימייל להורה; יש למלא את פרטי המשלם ידנית בחלון.
               </p>
             )}
-            {generatedLink && (
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 space-y-2">
-                <div className="text-sm text-emerald-800 dark:text-emerald-200 font-medium">
-                  ✓ הקישור נוצר — {fmt(generatedLink.amount)}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    readOnly
-                    value={generatedLink.url}
-                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-xs font-mono"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedLink.url);
-                      toast.success("הועתק");
-                    }}
-                  >
-                    <Copy className="h-4 w-4 ms-1" /> העתק
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(generatedLink.url, "_blank")}
-                  >
-                    <ExternalLink className="h-4 w-4 ms-1" /> פתח
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
+
+
 
           {/* Payments history */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
