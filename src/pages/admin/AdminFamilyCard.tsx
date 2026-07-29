@@ -147,7 +147,7 @@ const AdminFamilyCard = () => {
         .in("student_id", family!.children_ids)
         .eq("academic_year_id", yearId!);
       if (error) throw error;
-      return (data ?? []) as FamilyDraftRow[];
+      return (data ?? []) as unknown as FamilyDraftRow[];
     },
   });
 
