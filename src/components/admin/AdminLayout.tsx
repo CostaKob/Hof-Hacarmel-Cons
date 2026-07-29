@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays } from "lucide-react";
+import { ArrowRight, Home, Users, UsersRound, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -14,11 +14,13 @@ import ArchiveYearBanner from "./ArchiveYearBanner";
 const NAV_ITEMS = [
   { path: "/admin", label: "ראשי", icon: Home },
   { path: "/admin/students", label: "תלמידים", icon: Users },
+  { path: "/admin/families", label: "משפחות", icon: UsersRound },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
   { path: "/admin/school-music-schools", label: "מנגנים", icon: Music4 },
   { path: "/admin/registrations", label: "הרשמות", icon: ClipboardList },
 ];
+
 
 interface AdminLayoutProps {
   children: ReactNode;
