@@ -468,11 +468,8 @@ const AdminFamilyCard = () => {
                                 aria-label="בחר הכל"
                               />
                             </th>
-                            <th className="text-right py-2 pe-3">כלי</th>
-                            <th className="text-right py-2 pe-3">מורה</th>
-                            <th className="text-right py-2 pe-3">שלוחה</th>
+                            <th className="text-right py-2 pe-3">שיוך</th>
                             <th className="text-right py-2 pe-3">שיעורים</th>
-                            <th className="text-right py-2 pe-3">ברוטו</th>
                             <th className="text-right py-2 pe-3">הנחה</th>
                             <th className="text-right py-2">נטו</th>
                           </tr>
@@ -483,7 +480,7 @@ const AdminFamilyCard = () => {
                               key={r.enrollmentId}
                               className={`border-b border-border/50 ${!r.isActive ? "opacity-50" : ""}`}
                             >
-                              <td className="py-2 pe-3">
+                              <td className="py-2 pe-3 align-top">
                                 <Checkbox
                                   checked={selectedEnrollmentIds.has(r.enrollmentId)}
                                   onCheckedChange={() => toggleEnrollment(r.enrollmentId)}
@@ -491,19 +488,25 @@ const AdminFamilyCard = () => {
                                 />
                               </td>
                               <td className="py-2 pe-3">
-                                {r.instrumentName}
-                                {!r.isActive && (
-                                  <Badge variant="secondary" className="text-[10px] ms-2">
-                                    לא פעיל
-                                  </Badge>
-                                )}
+                                <div className="font-medium text-foreground">
+                                  {r.instrumentName}
+                                  {r.schoolName !== "—" && (
+                                    <span className="text-muted-foreground font-normal"> — {r.schoolName}</span>
+                                  )}
+                                  {!r.isActive && (
+                                    <Badge variant="secondary" className="text-[10px] ms-2">
+                                      לא פעיל
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {r.teacherName}
+                                  {r.duration ? ` · ${r.duration} דק׳` : ""}
+                                </div>
                               </td>
-                              <td className="py-2 pe-3">{r.teacherName}</td>
-                              <td className="py-2 pe-3">{r.schoolName}</td>
                               <td className="py-2 pe-3 whitespace-nowrap">
                                 {r.lessonsRemaining}/{r.lessonsTotal}
                               </td>
-                              <td className="py-2 pe-3">{fmt(r.prorated)}</td>
                               <td className="py-2 pe-3">
                                 {r.discountPct > 0 ? (
                                   <Badge variant="secondary" className="text-[10px]">
