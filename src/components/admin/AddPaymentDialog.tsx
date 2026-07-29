@@ -987,8 +987,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg sm:max-w-xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden overscroll-contain [scrollbar-gutter:stable_both-edges]" dir="rtl">
-          <DialogHeader>
+        <DialogContent className="max-w-lg sm:max-w-xl w-[calc(100vw-2rem)] max-h-[90vh] overflow-hidden p-0" dir="rtl">
+          <DialogHeader className="px-6 pb-2 pt-6">
             <DialogTitle>{isEdit ? "עריכת רישום" : "הוסף תשלום / זיכוי"}</DialogTitle>
             <DialogDescription>
               {isEdit
@@ -996,7 +996,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 : "כל שיוך ייווצר כרישום נפרד עם הסכום שלו (וכפריט נפרד בקבלה)."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
+          <div className="max-h-[calc(90vh-5.5rem)] space-y-4 overflow-y-auto overflow-x-hidden overscroll-contain px-6 pb-6 pl-10 pt-2 [scrollbar-gutter:stable]">
             {/* Transaction type */}
             <div>
               <Label>סוג רישום</Label>
@@ -1062,14 +1062,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 {paymentItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">אין שיוכים פעילים</p>
                 ) : (
-                  <div className="mt-2 space-y-2">
+                  <div className="mt-2 w-full space-y-2 overflow-hidden">
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
                       const isDiscount = it.kind === "discount";
                       return (
                         <div
                           key={it.id}
-                          className={`flex items-center gap-2 rounded-lg border p-2 ${
+                            className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2 ${
                             isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
                           }`}
                         >
@@ -1078,13 +1078,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             onCheckedChange={(v) => toggleItem(it, !!v)}
                           />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">
+                            <p className="text-sm font-medium leading-snug break-words">
                               {it.label}
                               {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
                               {isDiscount && <span className="text-[10px] text-emerald-700 mr-1">−</span>}
                             </p>
                             {it.subLabel && (
-                              <p className={`text-xs ${isDiscount ? "text-emerald-700" : "text-muted-foreground"}`}>{it.subLabel}</p>
+                              <p className={`text-xs leading-snug break-words ${isDiscount ? "text-emerald-700" : "text-muted-foreground"}`}>{it.subLabel}</p>
                             )}
                           </div>
                           <Input
@@ -1096,7 +1096,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                               setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
                             placeholder={it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
-                            className="w-28 h-9"
+                            className="h-9 w-24 shrink-0 sm:w-28"
                           />
                         </div>
                       );
