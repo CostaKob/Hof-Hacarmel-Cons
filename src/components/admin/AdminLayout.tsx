@@ -162,7 +162,11 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
                   }`}
                   onClick={() => navigate(item.path)}
                 >
-                  <item.icon className="h-4 w-4" />
+                  {item.image ? (
+                    <img src={item.image} alt={item.label} className="h-4 w-4 object-contain" />
+                  ) : (
+                    <item.icon className="h-4 w-4" />
+                  )}
                   <span className="hidden lg:inline mr-1">{item.label}</span>
                 </Button>
               ))}
