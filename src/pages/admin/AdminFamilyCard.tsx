@@ -210,7 +210,9 @@ const AdminFamilyCard = () => {
   const totalCredit = payments
     .filter((p) => p.transaction_type === "credit")
     .reduce((s, p) => s + Number(p.amount || 0), 0);
-  const balance = Math.round((totalExpected - totalPaid + totalCredit) * 100) / 100;
+  // Credits are stored as negative amounts (e.g. -15). We subtract them so a
+  // refund cancels out the matching paid row instead of being counted twice.
+  const balance = Math.round((totalExpected - totalPaid - totalCredit) * 100) / 100;
 
   const nameById = useMemo(() => {
     const m = new Map<string, string>();
