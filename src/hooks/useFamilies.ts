@@ -71,12 +71,17 @@ export interface FamilyPaymentRecord {
   payment_status: string;
   notes: string | null;
   invoice_url: string | null;
+  icount_doc_id: string | null;
   icount_doc_number: string | null;
+  payment_link_url: string | null;
+  payment_group_id: string | null;
+  refund_of_payment_id: string | null;
   family_payment_group_id: string | null;
   family_parent_national_id: string | null;
   academic_year_id: string | null;
   enrollment_breakdown: any;
 }
+
 
 export const useFamilyDetails = (
   parentNationalId?: string,
