@@ -1,11 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
-import { Users, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail } from "lucide-react";
+import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail } from "lucide-react";
 
 
 const MAIN_SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
+  { path: "/admin/families", label: "משפחות", description: "כרטיס הורה מרכזי — שיוכים ותשלומים לפי משפחה", icon: UsersRound },
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים ומסלולים מיוחדים", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
