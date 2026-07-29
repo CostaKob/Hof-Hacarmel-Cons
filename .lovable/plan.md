@@ -1,74 +1,62 @@
-
-# מעבר לטבלת `parents` — מקור אמת אחד להורים
-
 ## המטרה
-היום פרטי ההורה משוכפלים בכל רשומת תלמיד (8 עמודות `parent_*`). המבנה הזה גורם לסחיפות (אותו הורה עם 3 שמות שונים), עדכונים ידניים ידניים, ו"איחוד" שבור. אנחנו עוברים לישות `parents` נורמלית עם FK, כך שעדכון אחד = כל הילדים מתעדכנים אוטומטית לנצח.
 
-## סכימה חדשה
+בכרטיס משפחה — להציג פירוט כספי אמיתי לכל ילד (כולל הנחות מהטיוטה), ולאפשר לבחור שיוכים ליצירת קבלה משפחתית מאוחדת.
 
-```text
-parents
-├── id (uuid, PK)
-├── national_id (text, UNIQUE, NOT NULL)     ← המפתח הלוגי
-├── full_name (text)
-├── phone (text)
-├── email (text)
-└── created_at / updated_at
+## למה כרגע הכל אפס
 
-students (עמודות חדשות)
-├── parent_1_id (uuid, FK → parents.id, nullable)
-└── parent_2_id (uuid, FK → parents.id, nullable)
+בקוד הנוכחי (`AdminFamilyCard.tsx` שורות 62-67) הסכום השנתי מחושב כ:
+```
+price_per_lesson (מהטבלת enrollments) × total_lessons_allocated
 ```
 
-**מדיניות:** אין CASCADE DELETE — הורה לא נמחק כשילד נמחק, ולהיפך. ניקוי הורים "יתומים" יטופל בנפרד (ראה שלב 4).
+בפועל השדה `price_per_lesson` בטבלת `enrollments` כמעט תמיד ריק (null/0). מקור האמת האמיתי הוא:
+- `payment_settings.lesson_prices` (מחיר שנתי גלובלי לפי משך שיעור)
+- `student_payment_drafts` (הנחות + start-date overrides שנשמרו לכל תלמיד+שנה)
+- `discount_types` (סוגי ההנחות של השנה)
 
-## שלבי הגירה (בטוח, בלי downtime)
+בכרטיס תלמיד (`AdminStudentPaymentCalc.tsx`) יש כבר לוגיקה מלאה שמשלבת את שלושתם דרך `calcEnrollment` + `computeStandardDiscounts`. פשוט לא הפעלנו אותה בכרטיס משפחה.
 
-### שלב 1 — יצירת הטבלה + הגירת נתונים
-מיגרציה אחת:
-1. `CREATE TABLE parents` + GRANTs + RLS (admin/secretary CRUD מלא, teacher SELECT בסיסי).
-2. `ALTER TABLE students ADD COLUMN parent_1_id / parent_2_id`.
-3. שאילתת הגירה: לכל `parent_national_id` ייחודי ב-`students` (מ-8 השדות ב-4 הצירופים) — יוצרים שורה ב-`parents` עם השם/טלפון/מייל **המעודכן ביותר** (לפי `created_at DESC`), ומקשרים חזרה ב-`parent_1_id` / `parent_2_id`.
-4. השדות הישנים (`parent_national_id`, `parent_name`, וכו') **נשארים** כרגע — לתאימות אחורה של קוד קיים.
+## מה נבנה
 
-### שלב 2 — סנכרון אוטומטי
-טריגר על `parents` (AFTER UPDATE) שמעדכן גם את השדות הישנים ב-`students` המקושרים. ככה כל קוד קיים שקורא מ-`parent_name` על תלמיד ממשיך לעבוד בזמן שאני מעדכן את הקומפוננטות אחת אחת.
+### 1. חישוב פר-ילד בכרטיס משפחה
+- להוסיף שאילתות ל: `payment_settings`, `academic_years` (מלא), `discount_types` של השנה, וכל ה-`student_payment_drafts` של ילדי המשפחה (כולם בבת אחת: `.in("student_id", ids)`).
+- לחשב לכל ילד:
+  - שורת שיוך: מחיר לשיעור, שיעורים נותרים (פרו-רייטד), סה"כ ברוטו (לפני הנחה) — דרך `calcEnrollment`.
+  - הנחות סטנדרטיות מהטיוטה — דרך `computeStandardDiscounts`.
+  - הנחות מותאמות (custom) מהטיוטה — בהפחתה אחרי הסטנדרטיות (בדיוק כמו ב-`AdminStudentPaymentCalc`).
+  - סה"כ נטו לילד.
+- להציג תת-כותרת "פירוט כספי לילד" מתחת לכרטיסייה של כל ילד, עם טבלה קטנה: שיוך → ברוטו → אחוז הנחה → נטו. ופס תחתון עם "סה"כ לילד".
 
-טריגר הפוך על `students`: אם `parent_1_id` מוגדר, למלא אוטומטית את `parent_national_id`/`parent_name`/וכו' מהטבלה החדשה.
+### 2. סיכום כספי משפחתי אמיתי
+- להחליף את `totalExpected` המחושב מ-`enrollment.price_per_lesson` בסכום נטו לכל הילדים לאחר הנחות.
+- "שולם" ו-"זיכויים" נשארים כפי שהם היום.
+- "יתרה לגבייה" = סה"כ נטו משפחתי − שולם + זיכויים.
 
-### שלב 3 — עדכון RPCs וקוד
-- `list_families` — לקרוא ישירות מ-`parents` (עם `LEFT JOIN` ל-`students`). הרבה יותר פשוט ומהיר.
-- `get_sibling_candidates` — לזהות אחים לפי `parent_1_id` / `parent_2_id` משותפים במקום השוואת מחרוזות ת.ז.
-- `useFamilies.ts`, `AdminFamilyCard.tsx`, `UnifyParentDetailsDialog.tsx` — לעבוד מול `parents`.
-- טופס תלמיד (`AdminStudentForm.tsx`): כשמזינים ת.ז. הורה — חיפוש אוטומטי ב-`parents`; קיים → קישור אוטומטי; לא קיים → יצירה. אין יותר הקלדה חופשית של אותם פרטים.
-- טופס הרשמה ציבורי (`PublicRegistration.tsx`) + `AdminRegistrationConvert.tsx`: אותה לוגיקה — הת.ז. יוצרת/מוצאת הורה.
+### 3. בחירת שיוכים ליצירת קבלה משפחתית
+- להוסיף עמודת checkbox בטבלת השיוכים של כל ילד (או ליד כל שורה בפירוט הכספי).
+- למעלה בבלוק "פעולות" יופיע:
+  - סיכום דינמי: "נבחרו X שיוכים · סה"כ ₪Y".
+  - כפתור **"צור קישור תשלום מאוחד"** (מחליף את הכפתור המושבת "בקרוב").
+- ברירת מחדל: כל השיוכים הפעילים מסומנים.
 
-### שלב 4 — ניקוי (מיגרציה נפרדת, אחרי אימות)
-אחרי שהכל עובד ב-production כמה ימים:
-- להסיר את הטריגרים של הסנכרון.
-- להסיר את העמודות הישנות `parent_national_id`, `parent_name`, `parent_phone`, `parent_email` (ו-`_2`) מ-`students`.
-- למחוק הורים ללא ילדים.
+### 4. יצירת הקישור המאוחד
+- קריאה ל-edge function הקיימת שמייצרת קישור אייקאונט (זו שכבר בשימוש ב-`AddPaymentDialog`), עם:
+  - `family_parent_national_id` = ת.ז. ההורה.
+  - `family_payment_group_id` = UUID חדש שיקשר את כל השורות שיוצרו.
+  - שורה אחת לכל שיוך שנבחר (עם תיאור עשיר: `שם ילד · כלי · מורה · שלוחה · מס' שיעורים`), ושורות הנחה שליליות אם רלוונטי — אותו פורמט כמו בכרטיס תלמיד.
+  - פרטי הנמען: שם הורה + מייל מהטבלת `parents`.
+- לאחר יצירה: הצגת ה-URL עם copy + פתיחה בטאב חדש, ורענון הרשימה "תשלומים משותפים".
 
-## אזורי קוד שיושפעו (עדכון)
-- `src/hooks/useFamilies.ts`, `src/pages/admin/AdminFamilies.tsx`, `src/pages/admin/AdminFamilyCard.tsx`
-- `src/components/admin/UnifyParentDetailsDialog.tsx` → יהפוך לעריכת שורת `parents` בודדת
-- `src/pages/admin/AdminStudentForm.tsx`, `src/pages/admin/AdminRegistrationConvert.tsx`
-- `src/pages/PublicRegistration.tsx`
-- `src/pages/admin/AdminBulkMessage.tsx` (חילוץ נמענים לפי `parents`)
-- RPCs: `list_families`, `get_sibling_candidates`, `lookup_student_by_national_id`
-- Edge functions ש-ingest'ות טפסים
+## פרטים טכניים
 
-## מה שנשאר זהה
-- טבלת `student_siblings` נשארת (כרגע לזיהוי אחים לא־ביולוגיים / מקרי קצה); אחרי המעבר נוכל להוריד את המנגנון האוטומטי כי אחים מזוהים מיידית דרך FK משותף.
-- כל התשלומים, ההנחות, ההרשמות — בלי שינוי.
+- **תיקים חדשים / משופצים:**
+  - `src/hooks/useFamilies.ts` — להוסיף שדות `is_active` ל-enrollments (כבר מגיע ב-`select("*")`); להחזיר גם payment_settings/year/discountTypes/drafts, או להשאיר את השאילתות ב-`AdminFamilyCard.tsx`.
+  - `src/pages/admin/AdminFamilyCard.tsx` — עיקר השינוי: לוגיקת חישוב + UI לבחירה + כפתור יצירה.
+  - חילוץ פונקציית עזר משותפת `computeStudentTotals(student, enrollments, draft, discountTypes, settings, year)` ל-`src/lib/paymentCalc.ts` (או קובץ חדש `familyCalc.ts`) שגם `AdminStudentPaymentCalc` יוכל לצרוך בהמשך — כדי שלא נשכפל את הלוגיקה.
+- **Edge function ליצירת קישור:** נשתמש באותה פונקציה שכבר קיימת (זו שמייצרת קישור iCount מרשימת פריטים) — היא כבר מקבלת מערך פריטים ותומכת בכמה שורות. נעביר `student_id: null` ברמת התשלום, ונשמור את הקישור בין השורות דרך `family_payment_group_id`.
+- **סכימה:** לא נדרשות מיגרציות — `family_parent_national_id` ו-`family_payment_group_id` כבר קיימים ב-`student_payments`.
 
-## סיכונים ואיך מטפלים
-1. **הגירה של רשומות עם ת.ז. שגוי/חסר** → נשארים ללא `parent_1_id`; מסך אדמין יסמן אותם ("תלמידים ללא הורה מקושר") להשלמה ידנית.
-2. **שני הורים עם אותה ת.ז. בשני ילדים שונים אבל שם/טלפון שונה** → נלקח האחרון; כאמור, מסך האיחוד שכבר בנוי משאיר אפשרות תיקון.
-3. **קוד ישן שלא הוסב** → הטריגרים בשלב 2 שומרים על תאימות עד שהכל מוסב.
+## מה מחוץ לתחום כרגע
 
-## מה אני צריך ממך לפני שאתחיל
-- אישור לגישה הזו (3 שלבים + ניקוי בהמשך).
-- אישור שהורה = ת.ז. ייחודית גלובלית (שני ילדים עם אותה ת.ז. הורה = אותו הורה). אני מניח שכן.
-
-עם אישור, אני מתחיל משלב 1 (מיגרציה + הגירת נתונים) — זה יהיה קול לאישור מיגרציה נפרד.
+- פיצול תשלום בין שני הורים (`Split`) בקבלה המשפחתית — נשאיר לגרסה הבאה. כרגע קישור מאוחד אחד להורה הראשי.
+- עריכת הנחות של ילד מתוך כרטיס המשפחה — עדיין נעשית מכרטיס התלמיד. הכרטיס המשפחתי רק *מציג* את החישוב שנשמר בטיוטה.
