@@ -655,6 +655,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
+      const familyTitleName = familyContext
+        ? (() => {
+            const seen = new Set<string>();
+            const names: string[] = [];
+            for (const { item } of entries) {
+              const sid = item?.studentId;
+              if (!sid || seen.has(sid)) continue;
+              seen.add(sid);
+              const nm = familyContext.childrenNames[sid];
+              if (nm) names.push(nm);
+            }
+            return names.join(", ");
+          })()
+        : null;
+
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
         body: {
           studentId: anchorStudentId,
@@ -670,8 +685,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             // may belong to a non-family link.
             forceNewPaypage: true,
           } : {}),
+          ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
         },
       });
+
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       if (!data?.url) throw new Error("לא התקבל קישור");
