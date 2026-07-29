@@ -418,8 +418,9 @@ const AdminFamilyCard = () => {
             return (
               <div
                 key={c.id}
-                className="rounded-2xl border border-border bg-card p-5 shadow-sm"
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm overflow-hidden"
               >
+
                 <div className="flex items-start justify-between gap-3 flex-wrap mb-3">
                   <button
                     onClick={() => navigate(`/admin/students/${c.id}`)}
@@ -450,7 +451,12 @@ const AdminFamilyCard = () => {
                   <>
                     <div>
                       <table className="w-full text-sm table-fixed">
-
+                        <colgroup>
+                          <col />
+                          <col className="w-[70px]" />
+                          <col className="w-[90px]" />
+                          <col className="w-[90px]" />
+                        </colgroup>
                         <thead className="text-xs text-muted-foreground">
                           <tr className="border-b border-border">
                             <th className="text-right py-2 pe-3">שיוך</th>
@@ -458,6 +464,7 @@ const AdminFamilyCard = () => {
                             <th className="text-right py-2 pe-3">הנחה</th>
                             <th className="text-right py-2">נטו</th>
                           </tr>
+
                         </thead>
                         <tbody>
                           {rows.map((r) => (
