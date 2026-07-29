@@ -815,6 +815,23 @@ const AdminStudents = () => {
             </>
           )}
         </div>
+
+        {/* Siblings filter */}
+        <div className="col-span-2 md:col-span-5 flex">
+          <button
+            onClick={() => setFilter("siblings", siblingsFilter === "with" ? "all" : "with")}
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial lg:w-auto ${
+              siblingsFilter === "with"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            משפחות עם אחים
+            <Badge variant={siblingsFilter === "with" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
+              {siblingsCount}
+            </Badge>
+          </button>
+        </div>
       </div>
 
       {/* Card-based list */}
