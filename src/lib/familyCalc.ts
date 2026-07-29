@@ -107,6 +107,9 @@ export function computeChildTotals(
   const breakdown: ChildEnrollmentBreakdown[] = rows.map(({ e, c }) => {
     const pct = std.perEnrollmentPct.get(c.enrollmentId) ?? 0;
     const net = Math.round(c.prorated * (1 - pct / 100) * 100) / 100;
+    const discountLabels = std.lines
+      .filter((ln) => ln.appliedEnrollmentIds.includes(c.enrollmentId))
+      .map((ln) => ln.label);
     return {
       enrollmentId: c.enrollmentId,
       studentId,
@@ -122,6 +125,7 @@ export function computeChildTotals(
       lessonsRemaining: c.lessonsRemaining,
       lessonsTotal: c.lessonsTotal,
       discountPct: pct,
+      discountLabels,
       net,
       source: c.source,
     };
