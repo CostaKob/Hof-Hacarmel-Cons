@@ -43,14 +43,28 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
           <Users className="h-4 w-4" /> אחים ואחיות ({siblings.length})
         </h2>
         <Button
-          variant="outline"
+          variant={suggestionsCount > 0 ? "default" : "outline"}
           size="sm"
-          className="h-10 rounded-xl"
+          className="h-10 rounded-xl relative"
           onClick={() => setDialogOpen(true)}
         >
           <Search className="h-4 w-4" /> איתור אחים
+          {suggestionsCount > 0 && (
+            <Badge variant="secondary" className="ms-1 h-5 px-1.5 text-[10px]">
+              {suggestionsCount}
+            </Badge>
+          )}
         </Button>
       </div>
+
+      {suggestionsCount > 0 && (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <div className="flex-1">
+            נמצאו {suggestionsCount} התאמות אפשריות לאחים. לחץ "איתור אחים" כדי לבדוק ולאשר.
+          </div>
+        </div>
+      )}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">טוען...</p>
