@@ -465,7 +465,8 @@ const AdminFamilyCard = () => {
                               key={r.enrollmentId}
                               className={`border-b border-border/50 ${!r.isActive ? "opacity-50" : ""}`}
                             >
-                              <td className="py-2 pe-3">
+                              <td className="py-2 pe-3 break-words">
+
                                 <div className="font-medium text-foreground">
                                   {r.instrumentName}
                                   {r.schoolName !== "—" && (
