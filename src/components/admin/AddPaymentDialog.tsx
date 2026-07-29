@@ -834,8 +834,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               sharePct,
             },
             forceNewPaypage: true,
+            ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
           },
         });
+
         if (error) throw error;
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
         if (!data?.url) throw new Error("לא התקבל קישור");
