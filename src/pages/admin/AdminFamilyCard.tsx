@@ -258,6 +258,8 @@ const AdminFamilyCard = () => {
   const buildFamilyContext = (): FamilyPaymentContext | null => {
     if (!family || !yearFull) return null;
     const overrideItems: FamilyPaymentItemOverride[] = [];
+
+    // 1. Enrollments for all children first.
     for (const c of children) {
       const t = perChild.get(c.id);
       if (!t) continue;
@@ -279,7 +281,13 @@ const AdminFamilyCard = () => {
           kind: "enrollment",
         });
       }
-      // Special courses per child (music production / recital track).
+    }
+
+    // 2. Special courses for all children below enrollments.
+    for (const c of children) {
+      const t = perChild.get(c.id);
+      if (!t) continue;
+      const childName = `${c.first_name} ${c.last_name}`.trim();
       const specials = specialsByChild.get(c.id) ?? [];
       for (const s of specials) {
         overrideItems.push({
@@ -292,7 +300,12 @@ const AdminFamilyCard = () => {
           kind: "special",
         });
       }
-      // Discount lines per child — surface each discount so iCount shows it.
+    }
+
+    // 3. Discount lines for all children at the bottom.
+    for (const c of children) {
+      const t = perChild.get(c.id);
+      if (!t) continue;
       for (let i = 0; i < t.discountLines.length; i++) {
         const d = t.discountLines[i];
         overrideItems.push({
