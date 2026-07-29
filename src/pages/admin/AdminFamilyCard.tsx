@@ -16,17 +16,19 @@ import {
   Mail,
   ExternalLink,
   Wallet,
-  Music,
   Receipt,
   ArrowLeft,
-  Loader2,
-  Copy,
-  Link as LinkIcon,
+  FileDown,
+  Undo2,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
+import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride } from "@/components/admin/AddPaymentDialog";
+
 
 const STATUS_LABELS: Record<string, string> = {
   paid: "שולם",
