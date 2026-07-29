@@ -29,6 +29,20 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
   const unconfirmedCandidates = candidates.filter((c) => !c.already_linked);
   const suggestionsCount = unconfirmedCandidates.length;
 
+  const { data: parentNationalId } = useQuery({
+    queryKey: ["student-parent-nid", studentId],
+    enabled: !!studentId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("students")
+        .select("parent_national_id, parent_national_id_2")
+        .eq("id", studentId)
+        .maybeSingle();
+      if (error) throw error;
+      return (data?.parent_national_id || data?.parent_national_id_2 || null) as string | null;
+    },
+  });
+
   const handleLink = (c: SiblingCandidate) => {
     linkMut.mutate({
       studentAId: studentId,
