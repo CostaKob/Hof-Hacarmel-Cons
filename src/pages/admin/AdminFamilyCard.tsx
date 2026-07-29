@@ -40,6 +40,8 @@ const AdminFamilyCard = () => {
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
 
+  const [unifyOpen, setUnifyOpen] = useState(false);
+
   const { data: families = [] } = useFamiliesList(yearId);
   const family = useMemo(
     () => families.find((f) => f.parent_national_id === parentNationalId),
