@@ -167,7 +167,23 @@ export function computeChildTotals(
     if (drift !== 0 && breakdown.length > 0) {
       breakdown[0].net = Math.round((breakdown[0].net + drift) * 100) / 100;
     }
+    // Surface custom discount labels + effective % on every enrollment row.
+    const customLabels = customs
+      .filter((c) => (Number(c.value) || 0) > 0)
+      .map((c) =>
+        c.mode === "pct"
+          ? `${c.label} (${Number(c.value)}%)`
+          : `${c.label} (₪${Number(c.value)})`,
+      );
+    for (const b of breakdown) {
+      if (customLabels.length) b.discountLabels = [...b.discountLabels, ...customLabels];
+      b.discountPct =
+        b.prorated > 0
+          ? Math.round((1 - b.net / b.prorated) * 1000) / 10
+          : b.discountPct;
+    }
   }
+
 
   return {
     studentId,
