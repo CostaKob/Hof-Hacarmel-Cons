@@ -451,7 +451,12 @@ const AdminFamilyCard = () => {
                   <>
                     <div>
                       <table className="w-full text-sm table-fixed">
-
+                        <colgroup>
+                          <col />
+                          <col className="w-[70px]" />
+                          <col className="w-[90px]" />
+                          <col className="w-[90px]" />
+                        </colgroup>
                         <thead className="text-xs text-muted-foreground">
                           <tr className="border-b border-border">
                             <th className="text-right py-2 pe-3">שיוך</th>
@@ -459,6 +464,7 @@ const AdminFamilyCard = () => {
                             <th className="text-right py-2 pe-3">הנחה</th>
                             <th className="text-right py-2">נטו</th>
                           </tr>
+
                         </thead>
                         <tbody>
                           {rows.map((r) => (
