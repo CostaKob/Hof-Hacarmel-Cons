@@ -116,7 +116,7 @@ export const useFamilyDetails = (
 
       let paymentsQ: any = supabase
         .from("student_payments")
-        .select("*")
+        .select("*, academic_years(name)")
         .in("student_id", ids)
         .order("payment_date", { ascending: false });
       if (yearId) paymentsQ = paymentsQ.eq("academic_year_id", yearId);
