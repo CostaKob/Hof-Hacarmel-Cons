@@ -1362,7 +1362,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       {splitLinksMutation.isPending ? (
                         <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישורים...</>
                       ) : (
-                        <><LinkIcon className="h-4 w-4 ml-2" /> צור {splitParts.filter((p) => parseFloat(p.amount) > 0).length || ""} קישורים</>
+                        <><LinkIcon className="h-4 w-4 ml-2" /> צור {splitParts.length} קישורים</>
                       )}
                     </Button>
                     {splitResults.length > 0 && (
