@@ -279,6 +279,19 @@ const AdminFamilyCard = () => {
           kind: "enrollment",
         });
       }
+      // Special courses per child (music production / recital track).
+      const specials = specialsByChild.get(c.id) ?? [];
+      for (const s of specials) {
+        overrideItems.push({
+          id: `${c.id}:special:${s.key}`,
+          enrollmentId: null,
+          studentId: c.id,
+          label: `${childName} — ${s.label}`,
+          subLabel: "קורס מיוחד",
+          defaultAmount: Math.round(s.price * 100) / 100,
+          kind: "special",
+        });
+      }
       // Discount lines per child — surface each discount so iCount shows it.
       for (let i = 0; i < t.discountLines.length; i++) {
         const d = t.discountLines[i];
