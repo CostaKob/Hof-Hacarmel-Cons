@@ -188,6 +188,21 @@ export function computeChildTotals(
   }
 
 
+  const discountLines: { label: string; amount: number }[] = [];
+  for (const ln of std.lines) {
+    if (ln.amount > 0) discountLines.push({ label: `${ln.label} (${ln.percentage}%)`, amount: Math.round(ln.amount * 100) / 100 });
+  }
+  for (const c of customs) {
+    const v = Number(c.value) || 0;
+    if (!v) continue;
+    const amt = c.mode === "pct" ? (afterStd * v) / 100 : v;
+    if (amt <= 0) continue;
+    const label = c?.label
+      ? `${c.label}${c.mode === "pct" ? ` (${v}%)` : ""}`
+      : (c?.mode === "pct" ? `הנחה ${v}%` : "הנחה");
+    discountLines.push({ label, amount: Math.round(amt * 100) / 100 });
+  }
+
   return {
     studentId,
     enrollments: breakdown,
@@ -195,5 +210,7 @@ export function computeChildTotals(
     standardDiscountAmount,
     customDiscountAmount: Math.round(customDiscountAmount * 100) / 100,
     net,
+    discountLines,
   };
 }
+
