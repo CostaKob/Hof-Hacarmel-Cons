@@ -108,7 +108,15 @@ export function computeChildTotals(
     const pct = std.perEnrollmentPct.get(c.enrollmentId) ?? 0;
     const net = Math.round(c.prorated * (1 - pct / 100) * 100) / 100;
     const discountLabels = std.lines
-      .filter((ln) => ln.appliedEnrollmentIds.includes(c.enrollmentId))
+      .filter((ln) => {
+        if (ln.percentage <= 0) return false;
+        // "cheapest_enrollment" sets appliedEnrollmentIds; other scopes
+        // (all / sibling_cheapest) apply to every enrollment.
+        if (ln.applies_to === "cheapest_enrollment") {
+          return ln.appliedEnrollmentIds.includes(c.enrollmentId);
+        }
+        return true;
+      })
       .map((ln) => ln.label);
     return {
       enrollmentId: c.enrollmentId,
