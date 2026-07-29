@@ -509,9 +509,16 @@ const AdminFamilyCard = () => {
                               </td>
                               <td className="py-2 pe-3">
                                 {r.discountPct > 0 ? (
-                                  <Badge variant="secondary" className="text-[10px]">
-                                    {r.discountPct}%
-                                  </Badge>
+                                  <div className="flex flex-col gap-1 items-start">
+                                    <Badge variant="secondary" className="text-[10px]">
+                                      {r.discountPct}%
+                                    </Badge>
+                                    {r.discountLabels.length > 0 && (
+                                      <span className="text-[11px] text-muted-foreground leading-tight">
+                                        {r.discountLabels.join(" · ")}
+                                      </span>
+                                    )}
+                                  </div>
                                 ) : (
                                   <span className="text-muted-foreground">—</span>
                                 )}
