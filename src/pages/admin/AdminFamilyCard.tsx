@@ -70,6 +70,8 @@ const AdminFamilyCard = () => {
 
   const [unifyOpen, setUnifyOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [sendMessageOpen, setSendMessageOpen] = useState(false);
+
 
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
