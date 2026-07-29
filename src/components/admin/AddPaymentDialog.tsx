@@ -778,14 +778,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
         const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
           body: {
-            studentId,
+            studentId: familyContext?.anchorStudentId ?? studentId,
             amount: p.amount,
             academicYearId,
             academicYearName: hebrewYear || activeYear?.name || null,
             lines: finalLines,
-            // Skip the student-record autofill — we send explicit payer details
-            // per part (parent 1 arrives pre-populated in the UI, parent 2+ are
-            // filled by the operator).
             skipPayerPrefill: true,
             payerLabel: p.label,
             payerDetails: {
@@ -800,14 +797,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               grossTotal,
               sharePct,
             },
-            // Force a brand new paypage per part so the URLs don't collide
-            // on the cached pending row.
             forceNewPaypage: true,
           },
         });
         if (error) throw error;
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
         if (!data?.url) throw new Error("לא התקבל קישור");
+        if (familyContext && data?.paymentId) {
+          await supabase
+            .from("student_payments")
+            .update({
+              family_parent_national_id: familyContext.parentNationalId,
+              family_payment_group_id: familyContext.familyGroupId,
+            })
+            .eq("id", data.paymentId);
+        }
         results.push({ label: p.label, url: data.url as string, amount: p.amount, firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone });
       }
       return results;
@@ -818,6 +822,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
       queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] });
+      if (familyContext) {
+        queryClient.invalidateQueries({ queryKey: ["family-details"] });
+        queryClient.invalidateQueries({ queryKey: ["family-pending", familyContext.parentNationalId] });
+        for (const key of familyContext.invalidateKeys ?? []) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+      }
       toast.success(`נוצרו ${results.length} קישורים`);
     },
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הקישורים"),
