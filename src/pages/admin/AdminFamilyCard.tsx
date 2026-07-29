@@ -767,15 +767,22 @@ const AdminFamilyCard = () => {
                               {isPending && p.payment_link_url && (
                                 <>
                                   <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
-                                    onClick={() => window.open(p.payment_link_url, "_blank")}>
+                                    onClick={() => window.open(p.payment_link_url!, "_blank")}>
                                     <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
+                                    onClick={async () => {
+                                      try { await navigator.clipboard.writeText(p.payment_link_url!); toast.success("הקישור הועתק"); }
+                                      catch { toast.error("לא ניתן להעתיק"); }
+                                    }}>
+                                    <Copy className="h-4 w-4" />
                                   </Button>
                                   <Button variant="outline" size="icon"
                                     className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
                                     title="בטל קישור ומחק שורה"
                                     disabled={deleteLinkMutation.isPending}
                                     onClick={() => {
-                                      if (confirm("לבטל את קישור התשלום ולמחוק את הרישום הממתין?")) {
+                                      if (confirm("לבטל את קישור התשלום? דף הסליקה יימחק מ-iCount.")) {
                                         deleteLinkMutation.mutate(p.id);
                                       }
                                     }}>
