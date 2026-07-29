@@ -129,9 +129,9 @@ const UnifyParentDetailsDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md rounded-2xl">
         <DialogHeader>
-          <DialogTitle>איחוד פרטי הורה</DialogTitle>
+          <DialogTitle>עריכת פרטי הורה</DialogTitle>
           <DialogDescription>
-            הערכים שייבחרו יעודכנו בכל רשומות הילדים במשפחה. ת.ז. ההורה נשארת ללא שינוי.
+            השינויים יעודכנו אוטומטית בכל רשומות הילדים במשפחה. ת.ז. ההורה נשארת ללא שינוי.
           </DialogDescription>
         </DialogHeader>
 
