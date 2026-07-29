@@ -210,11 +210,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
                 isActive ? "bg-primary/10 text-primary" : "text-muted-foreground"
               }`}
             >
-              {item.image ? (
-                <img src={item.image} alt={item.label} className="h-5 w-5 object-contain" />
-              ) : (
-                <item.icon className="h-5 w-5" />
-              )}
+              <item.icon className="h-5 w-5" />
               {item.label}
             </button>
           );
