@@ -199,10 +199,35 @@ const AdminFamilyCard = () => {
 
 
 
+  // Special-course items per child (music production / recital track).
+  type SpecialItem = { key: string; label: string; price: number };
+  const specialsByChild = useMemo(() => {
+    const map = new Map<string, SpecialItem[]>();
+    const mpPrice = Number(settings?.music_production_price) || 0;
+    const rtPrice = Number(settings?.recital_track_price) || 0;
+    for (const c of children) {
+      const items: SpecialItem[] = [];
+      if (c.has_music_production_course && mpPrice > 0) {
+        items.push({ key: "music_production", label: "קורס הפקה מוסיקלית", price: mpPrice });
+      }
+      if (c.has_recital_track && rtPrice > 0) {
+        items.push({ key: "recital_track", label: "מסלול לרסיטל", price: rtPrice });
+      }
+      if (items.length) map.set(c.id, items);
+    }
+    return map;
+  }, [children, settings]);
+
+  const specialsTotal = useMemo(() => {
+    let sum = 0;
+    for (const arr of specialsByChild.values()) for (const s of arr) sum += s.price;
+    return sum;
+  }, [specialsByChild]);
+
   // Family financial rollup
   const totalExpected = useMemo(
-    () => Array.from(perChild.values()).reduce((s, t) => s + t.net, 0),
-    [perChild],
+    () => Array.from(perChild.values()).reduce((s, t) => s + t.net, 0) + specialsTotal,
+    [perChild, specialsTotal],
   );
   const totalPaid = payments
     .filter((p) => p.transaction_type === "payment" && p.payment_status === "paid")
@@ -252,6 +277,19 @@ const AdminFamilyCard = () => {
           subLabel: `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים`,
           defaultAmount: Math.round(en.prorated * 100) / 100,
           kind: "enrollment",
+        });
+      }
+      // Special courses per child (music production / recital track).
+      const specials = specialsByChild.get(c.id) ?? [];
+      for (const s of specials) {
+        overrideItems.push({
+          id: `${c.id}:special:${s.key}`,
+          enrollmentId: null,
+          studentId: c.id,
+          label: `${childName} — ${s.label}`,
+          subLabel: "קורס מיוחד",
+          defaultAmount: Math.round(s.price * 100) / 100,
+          kind: "special",
         });
       }
       // Discount lines per child — surface each discount so iCount shows it.
