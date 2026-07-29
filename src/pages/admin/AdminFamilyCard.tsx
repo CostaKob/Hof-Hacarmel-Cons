@@ -699,8 +699,11 @@ const AdminFamilyCard = () => {
                             {(p.payment_method && (METHOD_LABELS[p.payment_method] || p.payment_method)) || "—"}
                           </td>
                           <td className="py-2 pe-3 font-medium">
-                            {isCredit ? "−" : ""}
-                            {fmt(Number(p.amount))}
+                            {isCredit ? (
+                              <span className="text-destructive font-semibold">זוכה</span>
+                            ) : (
+                              fmt(Number(p.amount))
+                            )}
                           </td>
                           <td className="py-2" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center gap-1 flex-wrap">
