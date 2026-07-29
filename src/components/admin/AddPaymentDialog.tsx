@@ -416,6 +416,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             id,
             kind: it?.kind ?? (id.startsWith("special:") ? "special" : id.startsWith("discount:") ? "discount" : "enrollment"),
             enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") || id.startsWith("discount:") ? null : id),
+            studentId: it?.studentId ?? studentId,
             label: it?.label ?? null,
             amt: parseFloat(amt),
           };
@@ -426,7 +427,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const totalNet = entries.reduce((s, x) => s + x.amt, 0);
       if (totalNet <= 0) throw new Error("הסה״כ נטו חייב להיות חיובי");
 
-      const hasDiscounts = entries.some((e) => e.kind === "discount");
       const anchorEnrollmentId = entries.find((e) => e.kind === "enrollment" && e.enrollmentId)?.enrollmentId ?? null;
 
       const bankInfoStr = [
@@ -440,26 +440,42 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         transactionType === "payment" &&
         checks.length > 0;
 
-      const baseFields = {
+      const commonFields = {
         payment_date: paymentDate,
         payment_method: paymentMethod as any,
         installments: parseInt(installments),
         notes: notes || null,
         reference_number: paymentMethod === "check" && !useCheckSpread ? (checkNumber.trim() || null) : null,
         transaction_type: transactionType,
-        student_id: studentId,
         academic_year_id: academicYearId,
       };
 
-      const breakdownFor = (ratio: number) =>
-        entries.map((e) => ({
+      const familyFields = familyContext
+        ? {
+            family_parent_national_id: familyContext.parentNationalId,
+            family_payment_group_id: familyContext.familyGroupId,
+          }
+        : {};
+
+      const breakdownFor = (subEntries: typeof entries, ratio: number) =>
+        subEntries.map((e) => ({
           enrollment_id: e.enrollmentId,
           label: e.label,
           amount: Math.round(e.amt * ratio * 100) / 100,
         }));
 
-      // Always create a single combined row when there are multiple entries
-      const effectiveMode = "combined";
+      // In family mode, group entries by child. In single-student mode, one
+      // group containing all entries under the current student.
+      const groupedByChild = new Map<string, typeof entries>();
+      if (familyContext) {
+        for (const e of entries) {
+          const arr = groupedByChild.get(e.studentId) ?? [];
+          arr.push(e);
+          groupedByChild.set(e.studentId, arr);
+        }
+      } else {
+        groupedByChild.set(studentId, entries);
+      }
 
       let rows: any[];
       if (useCheckSpread) {
@@ -471,45 +487,80 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           (typeof crypto !== "undefined" && "randomUUID" in crypto)
             ? crypto.randomUUID()
             : `${Date.now()}-${Math.random()}`;
-        rows = checks.map((c, i) => {
-          const amt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
-          const ratio = totalNet > 0 ? amt / totalNet : 0;
-          const breakdown = entries.length > 1 ? breakdownFor(ratio) : null;
-          const noteParts = [
-            `צ׳ק ${i + 1}/${checks.length}`,
-            bankInfoStr,
-            notes,
-          ].filter(Boolean);
-          return {
-            ...baseFields,
-            payment_date: c.date,
-            installments: 1,
-            amount: amt,
-            enrollment_id: anchorEnrollmentId,
-            enrollment_breakdown: breakdown,
-            reference_number: c.number?.trim() || null,
-            payment_group_id: groupId,
-            notes: noteParts.join(" · "),
-          };
-        });
-      } else if (entries.length > 1 && effectiveMode === "combined") {
-        rows = [{
-          ...baseFields,
-          amount: totalNet,
-          enrollment_id: anchorEnrollmentId,
-          enrollment_breakdown: breakdownFor(1),
-        }];
+        rows = [];
+        for (const [sid, subEntries] of groupedByChild) {
+          const childTotal = subEntries.reduce((s, x) => s + x.amt, 0);
+          if (childTotal <= 0) continue;
+          const childAnchor = subEntries.find((e) => e.kind === "enrollment" && e.enrollmentId)?.enrollmentId ?? null;
+          checks.forEach((c, i) => {
+            const checkAmt = Math.round((parseFloat(c.amount) || 0) * 100) / 100;
+            const checkRatio = totalNet > 0 ? checkAmt / totalNet : 0;
+            // Split this check across children proportionally to each child's share.
+            const childShare = Math.round(childTotal * checkRatio * 100) / 100;
+            if (childShare <= 0) return;
+            const perEntryRatio = childTotal > 0 ? childShare / childTotal : 0;
+            const breakdown = subEntries.length > 1 ? breakdownFor(subEntries, perEntryRatio) : null;
+            const noteParts = [
+              `צ׳ק ${i + 1}/${checks.length}`,
+              bankInfoStr,
+              notes,
+            ].filter(Boolean);
+            rows.push({
+              ...commonFields,
+              ...familyFields,
+              student_id: sid,
+              payment_date: c.date,
+              installments: 1,
+              amount: childShare,
+              enrollment_id: childAnchor,
+              enrollment_breakdown: breakdown,
+              reference_number: c.number?.trim() || null,
+              payment_group_id: groupId,
+              notes: noteParts.join(" · "),
+            });
+          });
+        }
       } else {
-        rows = entries.map((e) => {
-          const isNonEnrollment = e.kind !== "enrollment";
-          const extraNote = isNonEnrollment && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
-          return {
-            ...baseFields,
-            amount: e.amt,
-            enrollment_id: e.enrollmentId,
-            notes: extraNote,
-          };
-        });
+        rows = [];
+        // In family mode with multiple children we still need one group id so
+        // the rows created together share `payment_group_id` (in addition to
+        // the family_payment_group_id).
+        const groupId =
+          familyContext && groupedByChild.size > 1
+            ? ((typeof crypto !== "undefined" && "randomUUID" in crypto)
+                ? crypto.randomUUID()
+                : `${Date.now()}-${Math.random()}`)
+            : null;
+        for (const [sid, subEntries] of groupedByChild) {
+          const childTotal = subEntries.reduce((s, x) => s + x.amt, 0);
+          if (childTotal <= 0) continue;
+          const childAnchor = subEntries.find((e) => e.kind === "enrollment" && e.enrollmentId)?.enrollmentId ?? null;
+          if (subEntries.length > 1) {
+            rows.push({
+              ...commonFields,
+              ...familyFields,
+              student_id: sid,
+              amount: childTotal,
+              enrollment_id: childAnchor,
+              enrollment_breakdown: breakdownFor(subEntries, 1),
+              ...(groupId ? { payment_group_id: groupId } : {}),
+            });
+          } else {
+            for (const e of subEntries) {
+              const isNonEnrollment = e.kind !== "enrollment";
+              const extraNote = isNonEnrollment && e.label ? [notes, e.label].filter(Boolean).join(" · ") : (notes || null);
+              rows.push({
+                ...commonFields,
+                ...familyFields,
+                student_id: sid,
+                amount: e.amt,
+                enrollment_id: e.enrollmentId,
+                notes: extraNote,
+                ...(groupId ? { payment_group_id: groupId } : {}),
+              });
+            }
+          }
+        }
       }
 
 
@@ -521,12 +572,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
       queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
+      if (familyContext) {
+        queryClient.invalidateQueries({ queryKey: ["family-details"] });
+        queryClient.invalidateQueries({ queryKey: ["family-pending", familyContext.parentNationalId] });
+        for (const key of familyContext.invalidateKeys ?? []) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+      }
       toast.success(isEdit ? "הרישום עודכן בהצלחה" : "הרישום נוסף בהצלחה");
       onOpenChange(false);
       resetForm();
     },
     onError: (err: any) => toast.error(err.message || "שגיאה בשמירת הרישום"),
   });
+
+
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
