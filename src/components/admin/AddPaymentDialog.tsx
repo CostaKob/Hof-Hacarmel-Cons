@@ -609,9 +609,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const generateLinkMutation = useMutation({
     mutationFn: async () => {
       const itemById = new Map(paymentItems.map((it) => [it.id, it] as const));
-      // Include ALL selected entries — enrollments, specials, and discount lines
-      // (negative amounts). The link total is the net of everything the user
-      // sees in the dialog, matching the main calc-page link exactly.
       const entries = Object.entries(selectedAmounts)
         .map(([id, amt]) => ({ id, amt: parseFloat(amt), item: itemById.get(id) }))
         .filter((x) => !Number.isNaN(x.amt) && x.amt !== 0);
@@ -624,12 +621,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
       const lines = entries.map(({ id, amt, item }) => {
         const amount = Math.round(amt * 100) / 100;
+        const childPrefix = familyContext && item?.studentId
+          ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
+          : "";
         if (item?.kind === "special") {
-          return { description: `${item.label}${yearSuffix}`, amount };
+          return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
         }
         if (item?.kind === "discount") {
-          // item.label already includes the discount name (and % if applicable).
-          return { description: `${item.label}${yearSuffix}`, amount };
+          return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
         }
         const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
         const descParts = [
@@ -638,23 +637,56 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
         ].filter(Boolean).join(" ");
         return {
-          description: `שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
+          description: `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
           amount,
         };
       });
 
+      const anchorStudentId = familyContext?.anchorStudentId ?? studentId;
+      const payer = familyContext
+        ? (() => {
+            const parts = (familyContext.parentName ?? "").trim().split(/\s+/);
+            return {
+              firstName: parts[0] ?? "",
+              lastName: parts.slice(1).join(" "),
+              email: familyContext.parentEmail,
+              phone: familyContext.parentPhone,
+            };
+          })()
+        : null;
+
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
         body: {
-          studentId,
+          studentId: anchorStudentId,
           amount: total,
           academicYearId,
           academicYearName: hebrewYear || activeYear?.name || null,
           lines,
+          ...(payer ? {
+            skipPayerPrefill: true,
+            payerLabel: `משפחה - ${familyContext!.parentName}`,
+            payerDetails: payer,
+            // Force a new paypage — the anchor student's cached pending row
+            // may belong to a non-family link.
+            forceNewPaypage: true,
+          } : {}),
         },
       });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
       if (!data?.url) throw new Error("לא התקבל קישור");
+
+      // Family mode: tag the pending row with family fields so it shows up in
+      // the family card's pending list and unifies with the group.
+      if (familyContext && data?.paymentId) {
+        await supabase
+          .from("student_payments")
+          .update({
+            family_parent_national_id: familyContext.parentNationalId,
+            family_payment_group_id: familyContext.familyGroupId,
+          })
+          .eq("id", data.paymentId);
+      }
       return data as { url: string };
     },
     onSuccess: async (data) => {
@@ -664,12 +696,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
       queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
       queryClient.invalidateQueries({ queryKey: ["calc-pending-payments-all-years", studentId] });
+      if (familyContext) {
+        queryClient.invalidateQueries({ queryKey: ["family-details"] });
+        queryClient.invalidateQueries({ queryKey: ["family-pending", familyContext.parentNationalId] });
+        for (const key of familyContext.invalidateKeys ?? []) {
+          queryClient.invalidateQueries({ queryKey: key });
+        }
+      }
       toast.success("קישור התשלום נוצר והועתק ללוח");
       onOpenChange(false);
       resetForm();
     },
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת קישור"),
   });
+
+
 
   const splitLinksMutation = useMutation({
     mutationFn: async () => {
