@@ -58,19 +58,31 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
         <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
           <Users className="h-4 w-4" /> אחים ואחיות ({siblings.length})
         </h2>
-        <Button
-          variant={suggestionsCount > 0 ? "default" : "outline"}
-          size="sm"
-          className="h-10 rounded-xl relative"
-          onClick={() => setDialogOpen(true)}
-        >
-          <Search className="h-4 w-4" /> איתור אחים
-          {suggestionsCount > 0 && (
-            <Badge variant="secondary" className="ms-1 h-5 px-1.5 text-[10px]">
-              {suggestionsCount}
-            </Badge>
+        <div className="flex items-center gap-2 flex-wrap">
+          {parentNationalId && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-10 rounded-xl"
+              onClick={() => navigate(`/admin/families/${encodeURIComponent(parentNationalId)}`)}
+            >
+              <UsersRound className="h-4 w-4" /> תא משפחתי
+            </Button>
           )}
-        </Button>
+          <Button
+            variant={suggestionsCount > 0 ? "default" : "outline"}
+            size="sm"
+            className="h-10 rounded-xl relative"
+            onClick={() => setDialogOpen(true)}
+          >
+            <Search className="h-4 w-4" /> איתור אחים
+            {suggestionsCount > 0 && (
+              <Badge variant="secondary" className="ms-1 h-5 px-1.5 text-[10px]">
+                {suggestionsCount}
+              </Badge>
+            )}
+          </Button>
+        </div>
       </div>
 
       {suggestionsCount > 0 && (
