@@ -571,6 +571,23 @@ const AdminFamilyCard = () => {
                     )}
                   </>
                 )}
+
+                {childSpecials.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <div className="text-xs text-muted-foreground mb-2">קורסים מיוחדים</div>
+                    <ul className="space-y-1.5">
+                      {childSpecials.map((s) => (
+                        <li
+                          key={s.key}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-foreground">{s.label}</span>
+                          <span className="font-medium">{fmt(s.price)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             );
           })}
