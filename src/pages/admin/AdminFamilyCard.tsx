@@ -259,11 +259,12 @@ const AdminFamilyCard = () => {
     if (!family || !yearFull) return null;
     const overrideItems: FamilyPaymentItemOverride[] = [];
 
-    // 1. Enrollments for all children first.
     for (const c of children) {
       const t = perChild.get(c.id);
       if (!t) continue;
       const childName = `${c.first_name} ${c.last_name}`.trim();
+
+      // Enrollments for this child.
       for (const en of t.enrollments) {
         if (!en.isActive) continue;
         const parts = [
@@ -281,13 +282,8 @@ const AdminFamilyCard = () => {
           kind: "enrollment",
         });
       }
-    }
 
-    // 2. Special courses for all children below enrollments.
-    for (const c of children) {
-      const t = perChild.get(c.id);
-      if (!t) continue;
-      const childName = `${c.first_name} ${c.last_name}`.trim();
+      // Special courses for this child, right below their enrollments.
       const specials = specialsByChild.get(c.id) ?? [];
       for (const s of specials) {
         overrideItems.push({
@@ -300,12 +296,8 @@ const AdminFamilyCard = () => {
           kind: "special",
         });
       }
-    }
 
-    // 3. Discount lines for all children at the bottom.
-    for (const c of children) {
-      const t = perChild.get(c.id);
-      if (!t) continue;
+      // Discount lines for this child.
       for (let i = 0; i < t.discountLines.length; i++) {
         const d = t.discountLines[i];
         overrideItems.push({
@@ -468,6 +460,9 @@ const AdminFamilyCard = () => {
           {children.map((c) => {
             const t = perChild.get(c.id);
             const rows = t?.enrollments ?? [];
+            const childSpecials = specialsByChild.get(c.id) ?? [];
+            const childSpecialsTotal = childSpecials.reduce((s, x) => s + x.price, 0);
+            const childTotal = (t?.net ?? 0) + childSpecialsTotal;
 
             return (
               <div
@@ -494,7 +489,7 @@ const AdminFamilyCard = () => {
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">סה"כ לילד:</span>
                     <span className="font-bold text-foreground">
-                      {fmt(t?.net ?? 0)}
+                      {fmt(childTotal)}
                     </span>
                   </div>
                 </div>
@@ -575,6 +570,23 @@ const AdminFamilyCard = () => {
                       </p>
                     )}
                   </>
+                )}
+
+                {childSpecials.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <div className="text-xs text-muted-foreground mb-2">קורסים מיוחדים</div>
+                    <ul className="space-y-1.5">
+                      {childSpecials.map((s) => (
+                        <li
+                          key={s.key}
+                          className="flex items-center justify-between text-sm"
+                        >
+                          <span className="text-foreground">{s.label}</span>
+                          <span className="font-medium">{fmt(s.price)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             );
