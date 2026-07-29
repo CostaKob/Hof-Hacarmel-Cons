@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ArchiveYearBanner from "./ArchiveYearBanner";
 import familyIcon from "@/assets/family-icon.png";
+import studentsIcon from "@/assets/students-icon.png";
 
 interface NavItem {
   path: string;
@@ -21,7 +22,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { path: "/admin", label: "ראשי", icon: Home },
-  { path: "/admin/students", label: "תלמידים", icon: Users },
+  { path: "/admin/students", label: "תלמידים", image: studentsIcon },
   { path: "/admin/families", label: "משפחות", image: familyIcon },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
