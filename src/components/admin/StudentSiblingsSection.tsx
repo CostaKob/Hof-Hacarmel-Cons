@@ -20,11 +20,12 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data: siblings = [], isLoading } = useConfirmedSiblings(studentId);
-  const { data: candidates = [], isFetching: loadingCandidates } = useSiblingCandidates(studentId, dialogOpen);
+  const { data: candidates = [], isFetching: loadingCandidates } = useSiblingCandidates(studentId, true);
   const linkMut = useLinkSiblings();
   const unlinkMut = useUnlinkSiblings();
 
   const unconfirmedCandidates = candidates.filter((c) => !c.already_linked);
+  const suggestionsCount = unconfirmedCandidates.length;
 
   const handleLink = (c: SiblingCandidate) => {
     linkMut.mutate({
