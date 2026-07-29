@@ -182,59 +182,9 @@ const AdminFamilyCard = () => {
     return out;
   }, [children, enrollments, drafts, settings, yearFull, discountTypes]);
 
-  // Seed default selection: all active enrollments checked once data loads.
-  useEffect(() => {
-    if (selectionSeeded) return;
-    if (children.length === 0 || perChild.size === 0) return;
-    const s = new Set<string>();
-    for (const c of children) {
-      const t = perChild.get(c.id);
-      if (!t) continue;
-      for (const en of t.enrollments) {
-        if (en.isActive && en.net > 0) s.add(en.enrollmentId);
-      }
-    }
-    setSelectedEnrollmentIds(s);
-    setSelectionSeeded(true);
-  }, [children, perChild, selectionSeeded]);
+  // Selection of enrollments/items now happens inside AddPaymentDialog.
 
-  const toggleEnrollment = (id: string) => {
-    setSelectedEnrollmentIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
-  const toggleChildAll = (childId: string, on: boolean) => {
-    const t = perChild.get(childId);
-    if (!t) return;
-    setSelectedEnrollmentIds((prev) => {
-      const next = new Set(prev);
-      for (const en of t.enrollments) {
-        if (!en.isActive) continue;
-        if (on) next.add(en.enrollmentId);
-        else next.delete(en.enrollmentId);
-      }
-      return next;
-    });
-  };
-
-  // Selected total amount
-  const selectionSummary = useMemo(() => {
-    let amount = 0;
-    let count = 0;
-    for (const t of perChild.values()) {
-      for (const en of t.enrollments) {
-        if (selectedEnrollmentIds.has(en.enrollmentId)) {
-          amount += en.net;
-          count += 1;
-        }
-      }
-    }
-    return { amount: Math.round(amount * 100) / 100, count };
-  }, [perChild, selectedEnrollmentIds]);
 
   // Family financial rollup
   const totalExpected = useMemo(
