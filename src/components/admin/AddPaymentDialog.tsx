@@ -42,6 +42,28 @@ interface PaymentData {
   enrollment_id?: string;
 }
 
+export interface FamilyPaymentItemOverride {
+  id: string;                 // unique key
+  enrollmentId: string | null;
+  studentId: string;          // which child this item belongs to
+  label: string;              // includes child name for family mode
+  subLabel?: string;
+  defaultAmount: number;
+  kind: "enrollment" | "special" | "discount";
+}
+
+export interface FamilyPaymentContext {
+  parentNationalId: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone: string;
+  familyGroupId: string;      // pre-generated UUID for this dialog session
+  anchorStudentId: string;    // student_id used for edge fn / anchor row
+  overrideItems: FamilyPaymentItemOverride[];
+  childrenNames: Record<string, string>; // studentId → "First Last"
+  invalidateKeys?: (string | undefined)[][];
+}
+
 interface AddPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,9 +71,11 @@ interface AddPaymentDialogProps {
   enrollments: any[];
   editPayment?: PaymentData | null;
   defaultType?: "payment" | "credit";
+  familyContext?: FamilyPaymentContext | null;
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext }: AddPaymentDialogProps) => {
+
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
   const today = format(new Date(), "yyyy-MM-dd");
