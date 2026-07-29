@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { format } from "date-fns";
 import UnifyParentDetailsDialog from "@/components/admin/UnifyParentDetailsDialog";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
@@ -611,166 +612,181 @@ const AdminFamilyCard = () => {
             {payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">אין תשלומים בשנה זו.</p>
             ) : (
-              <div className="overflow-x-auto -mx-5 px-5">
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-muted-foreground">
-                    <tr className="border-b border-border">
-                      <th className="text-right py-2 pe-3">תאריך</th>
-                      <th className="text-right py-2 pe-3">ילד</th>
-                      <th className="text-right py-2 pe-3">סוג</th>
-                      <th className="text-right py-2 pe-3">סטטוס</th>
-                      <th className="text-right py-2 pe-3">שיטה</th>
-                      <th className="text-right py-2 pe-3">סכום</th>
-                      <th className="text-right py-2">פעולות</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((p) => {
-                      const isCredit = p.transaction_type === "credit";
-                      const isPending = p.payment_status === "pending";
-                      const hasInvoice = !!p.invoice_url;
-                      const hasDoc = !!p.icount_doc_id;
-                      const refunded = payments
-                        .filter((x: any) => x.refund_of_payment_id === p.id)
-                        .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-                      const remaining = Math.max(0, Number(p.amount || 0) - refunded);
-                      const canRefund = !isCredit && hasDoc && remaining > 0;
-                      const isCombined =
-                        Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
-                      return (
-                        <tr
-                          key={p.id}
-                          className="border-b border-border/50 hover:bg-muted/40 cursor-pointer"
-                          onClick={() => {
-                            setEditingPayment(p);
-                            setFamilyCtx(null);
-                            setPaymentDialogOpen(true);
-                          }}
-                        >
-                          <td className="py-2 pe-3 whitespace-nowrap align-top">
-                            <div>{p.payment_date}</div>
-                            {isPending && (() => {
-                              const bd: any = p.enrollment_breakdown ?? {};
-                              const pd = bd && !Array.isArray(bd) ? bd.payerDetails : null;
-                              const pl = bd && !Array.isArray(bd) ? bd.payerLabel : null;
-                              const fullName = pd ? [pd.firstName, pd.lastName].filter(Boolean).join(" ").trim() : "";
-                              const contact = pd ? [pd.phone, pd.email].filter(Boolean).join(" · ") : "";
-                              if (!pl && !fullName && !contact && !p.payment_link_url) return null;
-                              return (
-                                <div className="mt-1 space-y-0.5 text-[11px] font-normal">
-                                  {(pl || fullName) && (
-                                    <div className="text-foreground">
-                                      {pl}
-                                      {pl && fullName ? " · " : ""}
-                                      {fullName && <span className="font-medium">{fullName}</span>}
-                                    </div>
-                                  )}
-                                  {contact && <div className="text-muted-foreground">{contact}</div>}
-                                  {p.payment_link_url && (
-                                    <div className="text-muted-foreground truncate max-w-[220px]" dir="ltr">{p.payment_link_url}</div>
-                                  )}
+              <div className="space-y-2">
+                {[...payments].sort((a: any, b: any) =>
+                  new Date(b.created_at || b.payment_date).getTime() - new Date(a.created_at || a.payment_date).getTime()
+                ).map((p) => {
+                  const isCredit = p.transaction_type === "credit";
+                  const isPending = p.payment_status === "pending";
+                  const hasInvoice = !!p.invoice_url;
+                  const hasDoc = !!p.icount_doc_id;
+                  const refundedSoFar = payments
+                    .filter((x: any) => x.refund_of_payment_id === p.id)
+                    .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+                  const remaining = Math.max(0, Number(p.amount || 0) - refundedSoFar);
+                  const canRefund = !isCredit && hasDoc && remaining > 0;
+                  const isCombined =
+                    Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
+
+                  let statusLabel = "";
+                  let statusClass = "";
+                  if (isCredit) {
+                    statusLabel = "זיכוי";
+                    statusClass = "bg-destructive/10 text-destructive border-destructive/30";
+                  } else if (p.payment_status === "failed") {
+                    statusLabel = "נכשל";
+                    statusClass = "bg-destructive/10 text-destructive border-destructive/30";
+                  } else if (p.payment_status === "pending") {
+                    statusLabel = "ממתין לתשלום";
+                    statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
+                  } else if (refundedSoFar >= Number(p.amount || 0) - 0.005 && refundedSoFar > 0) {
+                    statusLabel = "זוכה במלואו";
+                    statusClass = "bg-muted text-muted-foreground border-border";
+                  } else if (refundedSoFar > 0) {
+                    statusLabel = "זוכה חלקית";
+                    statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
+                  } else {
+                    statusLabel = "שולם";
+                    statusClass = "bg-green-500/10 text-green-700 border-green-500/30";
+                  }
+
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => {
+                        setEditingPayment(p);
+                        setFamilyCtx(null);
+                        setPaymentDialogOpen(true);
+                      }}
+                      className="flex items-start justify-between rounded-xl border border-border p-3 gap-2 cursor-pointer hover:bg-muted/50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-foreground text-sm">
+                            {format(new Date(p.payment_date), "dd/MM/yyyy")}
+                            {p.academic_years?.name && (
+                              <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
+                            )}
+                          </p>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${statusClass}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {isCredit ? "זיכוי" : "תשלום"}
+                          {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] || p.payment_method}`}
+                          {p.installments > 1 && ` · ${p.installments} תשלומים`}
+                          {p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                          {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
+                          {p.month_reference && ` · ${p.month_reference}`}
+                          {p.family_payment_group_id
+                            ? " · משפחתי"
+                            : (p.student_id && ` · ${nameById.get(p.student_id)}`) || ""}
+                        </p>
+                        {isPending && (() => {
+                          const bd: any = p.enrollment_breakdown ?? {};
+                          const pd = bd && !Array.isArray(bd) ? bd.payerDetails : null;
+                          const pl = bd && !Array.isArray(bd) ? bd.payerLabel : null;
+                          const fullName = pd ? [pd.firstName, pd.lastName].filter(Boolean).join(" ").trim() : "";
+                          const contact = pd ? [pd.phone, pd.email].filter(Boolean).join(" · ") : "";
+                          if (!pl && !fullName && !contact && !p.payment_link_url) return null;
+                          return (
+                            <div className="mt-1 space-y-0.5 text-[11px] font-normal">
+                              {(pl || fullName) && (
+                                <div className="text-foreground">
+                                  {pl}
+                                  {pl && fullName ? " · " : ""}
+                                  {fullName && <span className="font-medium">{fullName}</span>}
                                 </div>
-                              );
-                            })()}
-                          </td>
-                          <td className="py-2 pe-3">
-                            {p.family_payment_group_id ? (
-                              <Badge variant="secondary" className="text-[10px]">משפחתי</Badge>
-                            ) : (
-                              (p.student_id && nameById.get(p.student_id)) || "—"
-                            )}
-                          </td>
-                          <td className="py-2 pe-3">{isCredit ? "זיכוי" : "תשלום"}</td>
-                          <td className="py-2 pe-3">
-                            <Badge
-                              variant={
-                                p.payment_status === "paid"
-                                  ? "default"
-                                  : p.payment_status === "failed"
-                                    ? "destructive"
-                                    : "secondary"
-                              }
-                              className="text-[10px]"
-                            >
-                              {STATUS_LABELS[p.payment_status] || p.payment_status}
-                            </Badge>
-                          </td>
-                          <td className="py-2 pe-3">
-                            {(p.payment_method && (METHOD_LABELS[p.payment_method] || p.payment_method)) || "—"}
-                          </td>
-                          <td className="py-2 pe-3 font-medium">
-                            {isCredit ? (
-                              <span className="text-destructive font-semibold">זוכה</span>
-                            ) : (
-                              fmt(Number(p.amount))
-                            )}
-                          </td>
-                          <td className="py-2" onClick={(e) => e.stopPropagation()}>
-                            <div className="flex items-center gap-1 flex-wrap">
-                              {hasInvoice && (
-                                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
-                                  onClick={() => window.open(p.invoice_url, "_blank")}>
-                                  <FileDown className="h-4 w-4" />
-                                </Button>
                               )}
-                              {!hasDoc && !isPending && !isCredit && (
-                                <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                                  disabled={createInvoiceMutation.isPending}
-                                  onClick={() =>
-                                    createInvoiceMutation.mutate(
-                                      p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
-                                    )
-                                  }>
-                                  <FileDown className="h-3.5 w-3.5 ms-1" />
-                                  {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
-                                </Button>
-                              )}
-                              {isPending && p.payment_link_url && (
-                                <>
-                                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
-                                    onClick={() => window.open(p.payment_link_url!, "_blank")}>
-                                    <ExternalLink className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
-                                    onClick={async () => {
-                                      try { await navigator.clipboard.writeText(p.payment_link_url!); toast.success("הקישור הועתק"); }
-                                      catch { toast.error("לא ניתן להעתיק"); }
-                                    }}>
-                                    <Copy className="h-4 w-4" />
-                                  </Button>
-                                  <Button variant="outline" size="icon"
-                                    className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                                    title="בטל קישור ומחק שורה"
-                                    disabled={deleteLinkMutation.isPending}
-                                    onClick={() => {
-                                      if (confirm("לבטל את קישור התשלום? דף הסליקה יימחק מ-iCount.")) {
-                                        deleteLinkMutation.mutate(p.id);
-                                      }
-                                    }}>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </>
-                              )}
-                              {canRefund && (
-                                <Button variant="outline" size="icon"
-                                  className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                                  title={p.payment_method === "credit_card"
-                                    ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
-                                    : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
-                                  onClick={() => {
-                                    setRefundTarget({ ...p, _remaining: remaining, _cc: p.payment_method === "credit_card" });
-                                    setRefundAmount(String(remaining));
-                                  }}>
-                                  <Undo2 className="h-4 w-4" />
-                                </Button>
+                              {contact && <div className="text-muted-foreground">{contact}</div>}
+                              {p.payment_link_url && (
+                                <div className="text-muted-foreground truncate max-w-[220px]" dir="ltr">{p.payment_link_url}</div>
                               )}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          );
+                        })()}
+                        {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
+                        {!isCredit && hasInvoice && (
+                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
+                            onClick={() => window.open(p.invoice_url, "_blank")}>
+                            <FileDown className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {!hasDoc && !isPending && !isCredit && (
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
+                            disabled={createInvoiceMutation.isPending}
+                            onClick={() =>
+                              createInvoiceMutation.mutate(
+                                p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
+                              )
+                            }>
+                            <FileDown className="h-3.5 w-3.5 ms-1" />
+                            {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
+                          </Button>
+                        )}
+                        {isCredit && hasInvoice && (
+                          <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלת זיכוי"
+                            onClick={() => window.open(p.invoice_url, "_blank")}>
+                            <FileDown className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {isCredit && !hasDoc && (
+                          <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
+                            disabled={createInvoiceMutation.isPending}
+                            onClick={() => createInvoiceMutation.mutate({ paymentId: p.id })}>
+                            <FileDown className="h-3.5 w-3.5 ms-1" />
+                            קבלת זיכוי
+                          </Button>
+                        )}
+                        {isPending && p.payment_link_url && (
+                          <>
+                            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
+                              onClick={() => window.open(p.payment_link_url!, "_blank")}>
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
+                              onClick={async () => {
+                                try { await navigator.clipboard.writeText(p.payment_link_url!); toast.success("הקישור הועתק"); }
+                                catch { toast.error("לא ניתן להעתיק"); }
+                              }}>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            <Button variant="outline" size="icon"
+                              className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                              title="בטל קישור ומחק שורה"
+                              disabled={deleteLinkMutation.isPending}
+                              onClick={() => {
+                                if (confirm("לבטל את קישור התשלום? דף הסליקה יימחק מ-iCount.")) {
+                                  deleteLinkMutation.mutate(p.id);
+                                }
+                              }}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )}
+                        {canRefund && (
+                          <Button variant="outline" size="icon"
+                            className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                            title={p.payment_method === "credit_card"
+                              ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
+                              : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
+                            onClick={() => {
+                              setRefundTarget({ ...p, _remaining: remaining, _cc: p.payment_method === "credit_card" });
+                              setRefundAmount(String(remaining));
+                            }}>
+                            <Undo2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`}>
+                          {isCredit ? "זוכה" : fmt(Number(p.amount))}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
