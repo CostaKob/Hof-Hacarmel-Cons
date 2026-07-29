@@ -69,11 +69,8 @@ const AdminFamilyCard = () => {
   const yearId = selectedYearId ?? activeYear?.id ?? null;
 
   const [unifyOpen, setUnifyOpen] = useState(false);
-  const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectionSeeded, setSelectionSeeded] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
