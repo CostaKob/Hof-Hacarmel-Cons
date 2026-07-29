@@ -662,70 +662,178 @@ const AdminFamilyCard = () => {
                       <th className="text-right py-2 pe-3">סטטוס</th>
                       <th className="text-right py-2 pe-3">שיטה</th>
                       <th className="text-right py-2 pe-3">סכום</th>
-                      <th className="text-right py-2">קבלה</th>
+                      <th className="text-right py-2">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((p) => (
-                      <tr key={p.id} className="border-b border-border/50">
-                        <td className="py-2 pe-3 whitespace-nowrap">{p.payment_date}</td>
-                        <td className="py-2 pe-3">
-                          {p.family_payment_group_id ? (
-                            <Badge variant="secondary" className="text-[10px]">
-                              משפחתי
-                            </Badge>
-                          ) : (
-                            (p.student_id && nameById.get(p.student_id)) || "—"
-                          )}
-                        </td>
-                        <td className="py-2 pe-3">
-                          {p.transaction_type === "credit" ? "זיכוי" : "תשלום"}
-                        </td>
-                        <td className="py-2 pe-3">
-                          <Badge
-                            variant={
-                              p.payment_status === "paid"
-                                ? "default"
-                                : p.payment_status === "failed"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                            className="text-[10px]"
-                          >
-                            {STATUS_LABELS[p.payment_status] || p.payment_status}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pe-3">
-                          {(p.payment_method &&
-                            (METHOD_LABELS[p.payment_method] || p.payment_method)) ||
-                            "—"}
-                        </td>
-                        <td className="py-2 pe-3 font-medium">
-                          {p.transaction_type === "credit" ? "−" : ""}
-                          {fmt(Number(p.amount))}
-                        </td>
-                        <td className="py-2">
-                          {p.invoice_url ? (
-                            <a
-                              href={p.invoice_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline inline-flex items-center gap-1"
+                    {payments.map((p) => {
+                      const isCredit = p.transaction_type === "credit";
+                      const isPending = p.payment_status === "pending";
+                      const hasInvoice = !!p.invoice_url;
+                      const hasDoc = !!p.icount_doc_id;
+                      const refunded = payments
+                        .filter((x: any) => x.refund_of_payment_id === p.id)
+                        .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+                      const remaining = Math.max(0, Number(p.amount || 0) - refunded);
+                      const canRefund = !isCredit && hasDoc && remaining > 0;
+                      const isCombined =
+                        Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
+                      return (
+                        <tr
+                          key={p.id}
+                          className="border-b border-border/50 hover:bg-muted/40 cursor-pointer"
+                          onClick={() => {
+                            setEditingPayment(p);
+                            setFamilyCtx(null);
+                            setPaymentDialogOpen(true);
+                          }}
+                        >
+                          <td className="py-2 pe-3 whitespace-nowrap">{p.payment_date}</td>
+                          <td className="py-2 pe-3">
+                            {p.family_payment_group_id ? (
+                              <Badge variant="secondary" className="text-[10px]">משפחתי</Badge>
+                            ) : (
+                              (p.student_id && nameById.get(p.student_id)) || "—"
+                            )}
+                          </td>
+                          <td className="py-2 pe-3">{isCredit ? "זיכוי" : "תשלום"}</td>
+                          <td className="py-2 pe-3">
+                            <Badge
+                              variant={
+                                p.payment_status === "paid"
+                                  ? "default"
+                                  : p.payment_status === "failed"
+                                    ? "destructive"
+                                    : "secondary"
+                              }
+                              className="text-[10px]"
                             >
-                              {p.icount_doc_number || "צפייה"}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                              {STATUS_LABELS[p.payment_status] || p.payment_status}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pe-3">
+                            {(p.payment_method && (METHOD_LABELS[p.payment_method] || p.payment_method)) || "—"}
+                          </td>
+                          <td className="py-2 pe-3 font-medium">
+                            {isCredit ? "−" : ""}
+                            {fmt(Number(p.amount))}
+                          </td>
+                          <td className="py-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {hasInvoice && (
+                                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
+                                  onClick={() => window.open(p.invoice_url, "_blank")}>
+                                  <FileDown className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {!hasDoc && !isPending && !isCredit && (
+                                <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
+                                  disabled={createInvoiceMutation.isPending}
+                                  onClick={() =>
+                                    createInvoiceMutation.mutate(
+                                      p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
+                                    )
+                                  }>
+                                  <FileDown className="h-3.5 w-3.5 ms-1" />
+                                  {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
+                                </Button>
+                              )}
+                              {isPending && p.payment_link_url && (
+                                <>
+                                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
+                                    onClick={() => window.open(p.payment_link_url, "_blank")}>
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="outline" size="icon"
+                                    className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                                    title="בטל קישור ומחק שורה"
+                                    disabled={deleteLinkMutation.isPending}
+                                    onClick={() => {
+                                      if (confirm("לבטל את קישור התשלום ולמחוק את הרישום הממתין?")) {
+                                        deleteLinkMutation.mutate(p.id);
+                                      }
+                                    }}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              {canRefund && (
+                                <Button variant="outline" size="icon"
+                                  className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                                  title={p.payment_method === "credit_card"
+                                    ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
+                                    : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
+                                  onClick={() => {
+                                    setRefundTarget({ ...p, _remaining: remaining, _cc: p.payment_method === "credit_card" });
+                                    setRefundAmount(String(remaining));
+                                  }}>
+                                  <Undo2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
           </div>
+
+          <AddPaymentDialog
+            open={paymentDialogOpen}
+            onOpenChange={(o) => {
+              setPaymentDialogOpen(o);
+              if (!o) { setEditingPayment(null); setFamilyCtx(null); }
+            }}
+            studentId={editingPayment?.student_id ?? family?.children_ids?.[0] ?? ""}
+            enrollments={mergedEnrollments}
+            editPayment={editingPayment}
+            familyContext={editingPayment ? null : familyCtx}
+          />
+
+          {refundTarget && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setRefundTarget(null)}
+            >
+              <div className="bg-card rounded-2xl border border-border p-5 max-w-md w-full space-y-3"
+                onClick={(e) => e.stopPropagation()}>
+                <h3 className="font-semibold">
+                  {refundTarget._cc ? "החזר אשראי" : "זיכוי"} · קבלה {refundTarget.icount_doc_number ?? ""}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  סכום מקורי: {fmt(Number(refundTarget.amount || 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
+                </p>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">סכום לזיכוי</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={refundAmount}
+                    onChange={(e) => setRefundAmount(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-border bg-background px-3"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button variant="outline" onClick={() => setRefundTarget(null)}>ביטול</Button>
+                  <Button
+                    disabled={refundMutation.isPending}
+                    onClick={() => {
+                      const amt = parseFloat(refundAmount);
+                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
+                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
+                      refundMutation.mutate({ paymentId: refundTarget.id, amount: amt, isCc: refundTarget._cc });
+                    }}
+                  >
+                    בצע
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </AdminLayout>
