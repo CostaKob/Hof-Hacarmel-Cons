@@ -37,6 +37,7 @@ async function createPaypage(opts: {
   lines: LineInput[];
   yearName?: string | null;
   splitInfo?: { partIndex: number; partsCount: number; grossTotal: number; sharePct: number } | null;
+  pageTitleName?: string | null;
 }): Promise<{ url: string; paypageId: string | null }> {
   const items = opts.lines
     .filter((l) => Number(l.amount) !== 0)
@@ -50,11 +51,13 @@ async function createPaypage(opts: {
   const splitSuffix = opts.splitInfo
     ? ` — חלק ${opts.splitInfo.partIndex}/${opts.splitInfo.partsCount} (${opts.splitInfo.sharePct}% מתוך ₪${opts.splitInfo.grossTotal.toLocaleString()})`
     : "";
+  const titleName = (opts.pageTitleName && opts.pageTitleName.trim()) || opts.studentName;
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
     pass: Deno.env.get("ICOUNT_PASSWORD"),
-    page_name: `תשלום שכר לימוד${yearSuffix} - ${opts.studentName}${splitSuffix}`,
+    page_name: `תשלום שכר לימוד${yearSuffix} - ${titleName}${splitSuffix}`,
+
     doctype: "receipt",
     currency_id: 5,
     language: "he",
