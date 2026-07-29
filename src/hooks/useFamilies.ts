@@ -103,7 +103,7 @@ export const useFamilyDetails = (
       let enrollmentsQ: any = supabase
         .from("enrollments")
         .select(
-          "*, instruments(name), schools(name), teachers(first_name, last_name)",
+          "*, instruments(name), schools(name), teachers(first_name, last_name, phone)",
         )
         .in("student_id", ids)
         .order("created_at", { ascending: true });
