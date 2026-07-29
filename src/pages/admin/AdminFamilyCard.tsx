@@ -8,7 +8,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Users,
   User,
@@ -69,11 +69,8 @@ const AdminFamilyCard = () => {
   const yearId = selectedYearId ?? activeYear?.id ?? null;
 
   const [unifyOpen, setUnifyOpen] = useState(false);
-  const [selectedEnrollmentIds, setSelectedEnrollmentIds] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectionSeeded, setSelectionSeeded] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
@@ -182,59 +179,9 @@ const AdminFamilyCard = () => {
     return out;
   }, [children, enrollments, drafts, settings, yearFull, discountTypes]);
 
-  // Seed default selection: all active enrollments checked once data loads.
-  useEffect(() => {
-    if (selectionSeeded) return;
-    if (children.length === 0 || perChild.size === 0) return;
-    const s = new Set<string>();
-    for (const c of children) {
-      const t = perChild.get(c.id);
-      if (!t) continue;
-      for (const en of t.enrollments) {
-        if (en.isActive && en.net > 0) s.add(en.enrollmentId);
-      }
-    }
-    setSelectedEnrollmentIds(s);
-    setSelectionSeeded(true);
-  }, [children, perChild, selectionSeeded]);
+  // Selection of enrollments/items now happens inside AddPaymentDialog.
 
-  const toggleEnrollment = (id: string) => {
-    setSelectedEnrollmentIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
-  const toggleChildAll = (childId: string, on: boolean) => {
-    const t = perChild.get(childId);
-    if (!t) return;
-    setSelectedEnrollmentIds((prev) => {
-      const next = new Set(prev);
-      for (const en of t.enrollments) {
-        if (!en.isActive) continue;
-        if (on) next.add(en.enrollmentId);
-        else next.delete(en.enrollmentId);
-      }
-      return next;
-    });
-  };
-
-  // Selected total amount
-  const selectionSummary = useMemo(() => {
-    let amount = 0;
-    let count = 0;
-    for (const t of perChild.values()) {
-      for (const en of t.enrollments) {
-        if (selectedEnrollmentIds.has(en.enrollmentId)) {
-          amount += en.net;
-          count += 1;
-        }
-      }
-    }
-    return { amount: Math.round(amount * 100) / 100, count };
-  }, [perChild, selectedEnrollmentIds]);
 
   // Family financial rollup
   const totalExpected = useMemo(
@@ -448,17 +395,10 @@ const AdminFamilyCard = () => {
             children={children}
           />
 
-          {/* Per-child breakdown with selection */}
+          {/* Per-child breakdown */}
           {children.map((c) => {
             const t = perChild.get(c.id);
             const rows = t?.enrollments ?? [];
-            const activeRows = rows.filter((r) => r.isActive);
-            const allSelected =
-              activeRows.length > 0 &&
-              activeRows.every((r) => selectedEnrollmentIds.has(r.enrollmentId));
-            const selectedChildSum = rows
-              .filter((r) => selectedEnrollmentIds.has(r.enrollmentId))
-              .reduce((s, r) => s + r.net, 0);
 
             return (
               <div
@@ -497,13 +437,6 @@ const AdminFamilyCard = () => {
                       <table className="w-full text-sm">
                         <thead className="text-xs text-muted-foreground">
                           <tr className="border-b border-border">
-                            <th className="text-right py-2 pe-3 w-8">
-                              <Checkbox
-                                checked={allSelected}
-                                onCheckedChange={(v) => toggleChildAll(c.id, !!v)}
-                                aria-label="בחר הכל"
-                              />
-                            </th>
                             <th className="text-right py-2 pe-3">שיוך</th>
                             <th className="text-right py-2 pe-3">שיעורים</th>
                             <th className="text-right py-2 pe-3">הנחה</th>
@@ -516,13 +449,6 @@ const AdminFamilyCard = () => {
                               key={r.enrollmentId}
                               className={`border-b border-border/50 ${!r.isActive ? "opacity-50" : ""}`}
                             >
-                              <td className="py-2 pe-3 align-top">
-                                <Checkbox
-                                  checked={selectedEnrollmentIds.has(r.enrollmentId)}
-                                  onCheckedChange={() => toggleEnrollment(r.enrollmentId)}
-                                  disabled={!r.isActive || r.net <= 0}
-                                />
-                              </td>
                               <td className="py-2 pe-3">
                                 <div className="font-medium text-foreground">
                                   {r.instrumentName}
@@ -570,21 +496,12 @@ const AdminFamilyCard = () => {
                         כולל הנחה מותאמת בסך {fmt(t!.customDiscountAmount)}
                       </p>
                     )}
-                    <div className="mt-2 text-xs text-muted-foreground flex items-center justify-between">
-                      <span>
-                        נבחרו {rows.filter((r) => selectedEnrollmentIds.has(r.enrollmentId)).length}
-                        {" / "}
-                        {activeRows.length} שיוכים
-                      </span>
-                      <span className="font-medium text-foreground">
-                        {fmt(selectedChildSum)}
-                      </span>
-                    </div>
                   </>
                 )}
               </div>
             );
           })}
+
 
           {/* Family financial summary */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -631,20 +548,12 @@ const AdminFamilyCard = () => {
               <Wallet className="h-4 w-4" /> תשלום / קישור / זיכוי משפחתי
             </h2>
             <p className="text-sm text-muted-foreground">
-              סמן את השיוכים שברצונך לכלול, ובחר את סוג הפעולה בחלון הבא (מזומן, צ׳ק,
-              העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
+              פתח את חלון התשלום כדי לבחור על אילו שיוכים לחייב ולבחור את סוג הפעולה
+              (מזומן, צ׳ק, העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
             </p>
-            <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl bg-muted/40 p-3">
-              <div className="text-sm">
-                <span className="text-muted-foreground">נבחרו: </span>
-                <span className="font-semibold">{selectionSummary.count}</span>
-                <span className="text-muted-foreground"> שיוכים · </span>
-                <span className="text-muted-foreground">סה"כ: </span>
-                <span className="font-bold">{fmt(selectionSummary.amount)}</span>
-              </div>
+            <div className="flex justify-end">
               <Button
                 onClick={openNewPayment}
-                disabled={selectionSummary.count === 0 || selectionSummary.amount <= 0}
                 className="h-11 rounded-xl gap-2"
               >
                 <Plus className="h-4 w-4" /> פתח חלון תשלום משפחתי
@@ -656,6 +565,7 @@ const AdminFamilyCard = () => {
               </p>
             )}
           </div>
+
 
 
 
