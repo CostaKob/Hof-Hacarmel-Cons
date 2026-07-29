@@ -254,102 +254,119 @@ const AdminFamilyCard = () => {
     return m;
   }, [children]);
 
-  // ── Generate unified family payment link ──
-  const generateFamilyLink = useMutation({
-    mutationFn: async () => {
-      if (!family || !yearFull || selectionSummary.count === 0) {
-        throw new Error("לא נבחרו שיוכים");
+  // Merged active enrollments across all children — used by AddPaymentDialog
+  // so its link/split flows can look up instrument/school/duration.
+  const mergedEnrollments = useMemo(
+    () => enrollments.filter((e: any) => e.is_active !== false),
+    [enrollments],
+  );
+
+  // Build override items for AddPaymentDialog family mode. Each active
+  // enrollment becomes one item with `studentId = child.id` and a label that
+  // includes the child name, so the dialog can group rows per child.
+  const buildFamilyContext = (): FamilyPaymentContext | null => {
+    if (!family || !yearFull) return null;
+    const overrideItems: FamilyPaymentItemOverride[] = [];
+    for (const c of children) {
+      const t = perChild.get(c.id);
+      if (!t) continue;
+      const childName = `${c.first_name} ${c.last_name}`.trim();
+      for (const en of t.enrollments) {
+        if (!en.isActive) continue;
+        const parts = [
+          en.instrumentName,
+          en.teacherName !== "—" ? en.teacherName : "",
+          en.schoolName !== "—" ? en.schoolName : "",
+        ].filter(Boolean).join(" · ");
+        overrideItems.push({
+          id: `${c.id}:${en.enrollmentId}`,
+          enrollmentId: en.enrollmentId,
+          studentId: c.id,
+          label: `${childName} — ${parts || "שכר לימוד"}`,
+          subLabel: `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים${en.discountPct > 0 ? ` · הנחה ${en.discountPct}%` : ""}`,
+          defaultAmount: Math.round(en.net * 100) / 100,
+          kind: "enrollment",
+        });
       }
-      const anchorChildId = family.children_ids[0];
-      const yearName = toHebrewYear(yearFull.name);
-      const yearSuffix = yearName ? ` ${yearName}` : "";
-      const familyGroupId = crypto.randomUUID();
+    }
+    return {
+      parentNationalId,
+      parentName: family.parent_name ?? "",
+      parentEmail: family.parent_email ?? "",
+      parentPhone: family.parent_phone ?? "",
+      familyGroupId: crypto.randomUUID(),
+      anchorStudentId: family.children_ids[0],
+      overrideItems,
+      childrenNames: Object.fromEntries(
+        children.map((c) => [c.id, `${c.first_name} ${c.last_name}`.trim()]),
+      ),
+      invalidateKeys: [["family-details"]],
+    };
+  };
 
-      // Build human-readable lines for iCount — one per selected enrollment.
-      const lines: { description: string; amount: number }[] = [];
-      for (const c of children) {
-        const t = perChild.get(c.id);
-        if (!t) continue;
-        for (const en of t.enrollments) {
-          if (!selectedEnrollmentIds.has(en.enrollmentId)) continue;
-          if (en.net <= 0) continue;
-          const parts = [
-            `${c.first_name} ${c.last_name}`.trim(),
-            en.instrumentName,
-            en.teacherName !== "—" ? en.teacherName : "",
-            en.schoolName !== "—" ? en.schoolName : "",
-            `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים`,
-          ].filter(Boolean);
-          const suffix = en.discountPct > 0 ? ` (כולל הנחה ${en.discountPct}%)` : "";
-          lines.push({
-            description: `שכר לימוד${yearSuffix} — ${parts.join(" · ")}${suffix}`,
-            amount: en.net,
-          });
-        }
-      }
+  const openNewPayment = () => {
+    setEditingPayment(null);
+    setFamilyCtx(buildFamilyContext());
+    setPaymentDialogOpen(true);
+  };
 
-      // Create a family-linked pending payment row on the anchor child.
-      const { data: pending, error: insErr } = await supabase
-        .from("student_payments")
-        .insert({
-          student_id: anchorChildId,
-          academic_year_id: yearFull.id,
-          transaction_type: "payment",
-          amount: selectionSummary.amount,
-          payment_date: new Date().toISOString().slice(0, 10),
-          payment_status: "pending",
-          family_payment_group_id: familyGroupId,
-          family_parent_national_id: parentNationalId,
-          notes: "תשלום משפחתי מאוחד — ממתין לתשלום",
-          enrollment_breakdown: { lines, family: true },
-        })
-        .select("id")
-        .single();
-      if (insErr || !pending) throw new Error(insErr?.message || "יצירת שורה נכשלה");
+  const invalidateFamily = () => {
+    queryClient.invalidateQueries({ queryKey: ["family-details"] });
+  };
 
-      // Ask the iCount edge function to build the paypage. It preserves our
-      // family_* fields because it only touches amount / link URL / breakdown.
+  // Row-level actions on the payments table.
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (params: { paymentId?: string; groupId?: string }) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateFamily();
+      if (data?.url) {
+        toast.success(`קבלה ${data.doc_number ?? ""} נוצרה`);
+        window.open(data.url, "_blank");
+      } else toast.success("קבלה נוצרה");
+    },
+    onError: (e: any) => toast.error(`שגיאה ביצירת קבלה: ${e?.message ?? ""}`),
+  });
+
+  const deleteLinkMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
       const { data, error } = await supabase.functions.invoke(
-        "icount-generate-student-paylink",
-        {
-          body: {
-            studentId: anchorChildId,
-            paymentId: pending.id,
-            amount: selectionSummary.amount,
-            academicYearId: yearFull.id,
-            academicYearName: yearName || null,
-            lines,
-            payerDetails: {
-              firstName: (family.parent_name ?? "").split(/\s+/)[0] ?? "",
-              lastName: (family.parent_name ?? "").split(/\s+/).slice(1).join(" "),
-              email: family.parent_email ?? "",
-              phone: family.parent_phone ?? "",
-            },
-            payerLabel: `משפחה - ${family.parent_name ?? ""}`,
-          },
-        },
+        "icount-delete-student-paypage",
+        { body: { paymentId } },
       );
       if (error) throw error;
       if (data?.error) throw new Error(String(data.error));
-      if (!data?.url) throw new Error("לא התקבל קישור מ-iCount");
-      return data as { url: string; amount: number; paymentId: string };
+      // Also delete the pending row itself.
+      await supabase.from("student_payments").delete().eq("id", paymentId);
     },
-    onSuccess: (data) => {
-      setGeneratedLink({ url: data.url, amount: data.amount });
-      try {
-        navigator.clipboard.writeText(data.url);
-      } catch {
-        /* clipboard may be unavailable */
-      }
-      window.open(data.url, "_blank");
-      toast.success("קישור תשלום משפחתי נוצר והועתק");
-      queryClient.invalidateQueries({ queryKey: ["family-details"] });
-    },
-    onError: (e: any) => {
-      toast.error(`שגיאה ביצירת קישור: ${e?.message ?? e}`);
-    },
-    onSettled: () => setGenerating(false),
+    onSuccess: () => { invalidateFamily(); toast.success("הקישור וההזמנה נמחקו"); },
+    onError: (e: any) => toast.error(`שגיאה במחיקת קישור: ${e?.message ?? ""}`),
   });
+
+  const refundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount, isCc }: { paymentId: string; amount: number; isCc: boolean }) => {
+      const fn = isCc ? "icount-student-refund-api" : "icount-create-refund";
+      const body = isCc ? { paymentId, refundAmount: amount } : { paymentId, amount };
+      const { data, error } = await supabase.functions.invoke(fn, { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any, vars) => {
+      invalidateFamily();
+      setRefundTarget(null);
+      setRefundAmount("");
+      toast.success(`זיכוי בסך ₪${(data?.refund_amount ?? vars.amount).toLocaleString()} בוצע`);
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בזיכוי: ${e?.message ?? ""}`),
+  });
+
+
 
   return (
     <AdminLayout title="כרטיס משפחה" backPath="/admin/families">
