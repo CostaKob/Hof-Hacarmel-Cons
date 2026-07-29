@@ -205,17 +205,32 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const activeEnrollments = useMemo(() => enrollments.filter((e: any) => e.is_active), [enrollments]);
 
-  // ---- Compute default amounts, mirroring AdminStudentPaymentCalc ----
+  // Item.studentId is only meaningful in family mode; for single-student mode
+  // it is always the current studentId.
   type PaymentItem = {
-    id: string; // enrollment uuid OR `special:<key>` OR `discount:<key>`
+    id: string;
     enrollmentId: string | null;
+    studentId: string;
     label: string;
     subLabel?: string;
-    defaultAmount: number; // can be negative for discounts
+    defaultAmount: number;
     kind: "enrollment" | "special" | "discount";
   };
 
   const paymentItems: PaymentItem[] = useMemo(() => {
+    // Family mode: use pre-computed items (one per child enrollment / discount).
+    if (familyContext) {
+      return familyContext.overrideItems.map((it) => ({
+        id: it.id,
+        enrollmentId: it.enrollmentId,
+        studentId: it.studentId,
+        label: it.label,
+        subLabel: it.subLabel,
+        defaultAmount: it.defaultAmount,
+        kind: it.kind,
+      }));
+    }
+
     const items: PaymentItem[] = [];
     if (!yearFull || !settings) {
       for (const e of activeEnrollments) {
@@ -223,6 +238,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         items.push({
           id: e.id,
           enrollmentId: e.id,
+          studentId,
           label: getEnrollmentLabel(e),
           subLabel: e.price_per_lesson
             ? `₪${Number(e.price_per_lesson).toLocaleString()} × ${e.total_lessons_allocated || 0} שיעורים`
@@ -268,12 +284,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       specials.push({ key: "recital_track", label: "מסלול לרסיטל", price: Number(settings.recital_track_price) || 0 });
     }
 
-    // Enrollments at gross prorated (no discounts baked in)
     for (const r of rows) {
       const e = activeEnrollments.find((x: any) => x.id === r.enrollmentId);
       items.push({
         id: r.enrollmentId,
         enrollmentId: r.enrollmentId,
+        studentId,
         label: e ? getEnrollmentLabel(e) : "—",
         subLabel: `${r.lessonsRemaining}/${r.lessonsTotal} שיעורים`,
         defaultAmount: Math.round(r.prorated * 100) / 100,
@@ -284,25 +300,25 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       items.push({
         id: `special:${s.key}`,
         enrollmentId: null,
+        studentId,
         label: s.label,
         subLabel: "קורס מיוחד",
         defaultAmount: Math.round(s.price * 100) / 100,
         kind: "special",
       });
     }
-    // Standard discounts — one negative line per applied discount
     for (const line of stdCompute.lines) {
       if (line.amount <= 0) continue;
       items.push({
         id: `discount:${line.discountTypeId}`,
         enrollmentId: null,
+        studentId,
         label: `${line.label} (${line.percentage}%)`,
         subLabel: "הנחה",
         defaultAmount: -Math.round(line.amount * 100) / 100,
         kind: "discount",
       });
     }
-    // Custom discounts (draft): each as its own negative line
     const customDiscounts = Array.isArray(draft?.custom_discounts) ? (draft!.custom_discounts as any[]) : [];
     const afterStdTotal =
       stdCompute.afterStdDiscount + specials.reduce((s, x) => s + x.price, 0);
@@ -315,6 +331,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       items.push({
         id: `discount:custom-${i}`,
         enrollmentId: null,
+        studentId,
         label: c?.label ? `${c.label}${c.mode === "pct" ? ` (${v}%)` : ""}` : (c?.mode === "pct" ? `הנחה ${v}%` : "הנחה"),
         subLabel: "הנחה מותאמת",
         defaultAmount: -Math.round(amt * 100) / 100,
@@ -322,7 +339,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       });
     }
     return items;
-  }, [activeEnrollments, yearFull, settings, discountTypes, draft, student]);
+  }, [familyContext, activeEnrollments, yearFull, settings, discountTypes, draft, student, studentId]);
 
   // Auto-fill selectedAmounts with defaults on open (new mode only, and once per open).
   const [defaultsApplied, setDefaultsApplied] = useState(false);
@@ -331,15 +348,18 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     if (isEdit) return;
     if (defaultsApplied) return;
     if (paymentItems.length === 0) return;
-    // Wait for calc-based defaults before applying (avoid overriding with fallback)
-    if (!yearFull || !settings) return;
+    // Wait for calc-based defaults before applying, unless we're in family mode
+    // where items are pre-computed by the caller.
+    if (!familyContext && (!yearFull || !settings)) return;
     const next: Record<string, string> = {};
     for (const it of paymentItems) {
       if (it.defaultAmount !== 0) next[it.id] = String(it.defaultAmount);
     }
     setSelectedAmounts(next);
     setDefaultsApplied(true);
-  }, [open, isEdit, paymentItems, yearFull, settings, defaultsApplied]);
+  }, [open, isEdit, paymentItems, yearFull, settings, defaultsApplied, familyContext]);
+
+
 
   const totalSelected = useMemo(() => {
     return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
