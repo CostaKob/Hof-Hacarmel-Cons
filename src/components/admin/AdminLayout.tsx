@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, UsersRound, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, LucideIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -10,11 +10,19 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ArchiveYearBanner from "./ArchiveYearBanner";
+import familyIcon from "@/assets/family-icon.png";
 
-const NAV_ITEMS = [
+interface NavItem {
+  path: string;
+  label: string;
+  icon?: LucideIcon;
+  image?: string;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { path: "/admin", label: "ראשי", icon: Home },
   { path: "/admin/students", label: "תלמידים", icon: Users },
-  { path: "/admin/families", label: "משפחות", icon: UsersRound },
+  { path: "/admin/families", label: "משפחות", image: familyIcon },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
   { path: "/admin/school-music-schools", label: "מנגנים", icon: Music4 },
