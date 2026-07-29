@@ -16,17 +16,19 @@ import {
   Mail,
   ExternalLink,
   Wallet,
-  Music,
   Receipt,
   ArrowLeft,
-  Loader2,
-  Copy,
-  Link as LinkIcon,
+  FileDown,
+  Undo2,
+  Trash2,
+  Plus,
 } from "lucide-react";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
+import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride } from "@/components/admin/AddPaymentDialog";
+
 
 const STATUS_LABELS: Record<string, string> = {
   paid: "שולם",
@@ -70,10 +72,12 @@ const AdminFamilyCard = () => {
     new Set(),
   );
   const [selectionSeeded, setSelectionSeeded] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<{ url: string; amount: number } | null>(
-    null,
-  );
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState<any>(null);
+  const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
+  const [refundTarget, setRefundTarget] = useState<any>(null);
+  const [refundAmount, setRefundAmount] = useState<string>("");
+
 
   const { data: families = [] } = useFamiliesList(yearId);
   const family = useMemo(
@@ -250,102 +254,119 @@ const AdminFamilyCard = () => {
     return m;
   }, [children]);
 
-  // ── Generate unified family payment link ──
-  const generateFamilyLink = useMutation({
-    mutationFn: async () => {
-      if (!family || !yearFull || selectionSummary.count === 0) {
-        throw new Error("לא נבחרו שיוכים");
+  // Merged active enrollments across all children — used by AddPaymentDialog
+  // so its link/split flows can look up instrument/school/duration.
+  const mergedEnrollments = useMemo(
+    () => enrollments.filter((e: any) => e.is_active !== false),
+    [enrollments],
+  );
+
+  // Build override items for AddPaymentDialog family mode. Each active
+  // enrollment becomes one item with `studentId = child.id` and a label that
+  // includes the child name, so the dialog can group rows per child.
+  const buildFamilyContext = (): FamilyPaymentContext | null => {
+    if (!family || !yearFull) return null;
+    const overrideItems: FamilyPaymentItemOverride[] = [];
+    for (const c of children) {
+      const t = perChild.get(c.id);
+      if (!t) continue;
+      const childName = `${c.first_name} ${c.last_name}`.trim();
+      for (const en of t.enrollments) {
+        if (!en.isActive) continue;
+        const parts = [
+          en.instrumentName,
+          en.teacherName !== "—" ? en.teacherName : "",
+          en.schoolName !== "—" ? en.schoolName : "",
+        ].filter(Boolean).join(" · ");
+        overrideItems.push({
+          id: `${c.id}:${en.enrollmentId}`,
+          enrollmentId: en.enrollmentId,
+          studentId: c.id,
+          label: `${childName} — ${parts || "שכר לימוד"}`,
+          subLabel: `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים${en.discountPct > 0 ? ` · הנחה ${en.discountPct}%` : ""}`,
+          defaultAmount: Math.round(en.net * 100) / 100,
+          kind: "enrollment",
+        });
       }
-      const anchorChildId = family.children_ids[0];
-      const yearName = toHebrewYear(yearFull.name);
-      const yearSuffix = yearName ? ` ${yearName}` : "";
-      const familyGroupId = crypto.randomUUID();
+    }
+    return {
+      parentNationalId,
+      parentName: family.parent_name ?? "",
+      parentEmail: family.parent_email ?? "",
+      parentPhone: family.parent_phone ?? "",
+      familyGroupId: crypto.randomUUID(),
+      anchorStudentId: family.children_ids[0],
+      overrideItems,
+      childrenNames: Object.fromEntries(
+        children.map((c) => [c.id, `${c.first_name} ${c.last_name}`.trim()]),
+      ),
+      invalidateKeys: [["family-details"]],
+    };
+  };
 
-      // Build human-readable lines for iCount — one per selected enrollment.
-      const lines: { description: string; amount: number }[] = [];
-      for (const c of children) {
-        const t = perChild.get(c.id);
-        if (!t) continue;
-        for (const en of t.enrollments) {
-          if (!selectedEnrollmentIds.has(en.enrollmentId)) continue;
-          if (en.net <= 0) continue;
-          const parts = [
-            `${c.first_name} ${c.last_name}`.trim(),
-            en.instrumentName,
-            en.teacherName !== "—" ? en.teacherName : "",
-            en.schoolName !== "—" ? en.schoolName : "",
-            `${en.lessonsRemaining}/${en.lessonsTotal} שיעורים`,
-          ].filter(Boolean);
-          const suffix = en.discountPct > 0 ? ` (כולל הנחה ${en.discountPct}%)` : "";
-          lines.push({
-            description: `שכר לימוד${yearSuffix} — ${parts.join(" · ")}${suffix}`,
-            amount: en.net,
-          });
-        }
-      }
+  const openNewPayment = () => {
+    setEditingPayment(null);
+    setFamilyCtx(buildFamilyContext());
+    setPaymentDialogOpen(true);
+  };
 
-      // Create a family-linked pending payment row on the anchor child.
-      const { data: pending, error: insErr } = await supabase
-        .from("student_payments")
-        .insert({
-          student_id: anchorChildId,
-          academic_year_id: yearFull.id,
-          transaction_type: "payment",
-          amount: selectionSummary.amount,
-          payment_date: new Date().toISOString().slice(0, 10),
-          payment_status: "pending",
-          family_payment_group_id: familyGroupId,
-          family_parent_national_id: parentNationalId,
-          notes: "תשלום משפחתי מאוחד — ממתין לתשלום",
-          enrollment_breakdown: { lines, family: true },
-        })
-        .select("id")
-        .single();
-      if (insErr || !pending) throw new Error(insErr?.message || "יצירת שורה נכשלה");
+  const invalidateFamily = () => {
+    queryClient.invalidateQueries({ queryKey: ["family-details"] });
+  };
 
-      // Ask the iCount edge function to build the paypage. It preserves our
-      // family_* fields because it only touches amount / link URL / breakdown.
+  // Row-level actions on the payments table.
+  const createInvoiceMutation = useMutation({
+    mutationFn: async (params: { paymentId?: string; groupId?: string }) => {
+      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateFamily();
+      if (data?.url) {
+        toast.success(`קבלה ${data.doc_number ?? ""} נוצרה`);
+        window.open(data.url, "_blank");
+      } else toast.success("קבלה נוצרה");
+    },
+    onError: (e: any) => toast.error(`שגיאה ביצירת קבלה: ${e?.message ?? ""}`),
+  });
+
+  const deleteLinkMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
       const { data, error } = await supabase.functions.invoke(
-        "icount-generate-student-paylink",
-        {
-          body: {
-            studentId: anchorChildId,
-            paymentId: pending.id,
-            amount: selectionSummary.amount,
-            academicYearId: yearFull.id,
-            academicYearName: yearName || null,
-            lines,
-            payerDetails: {
-              firstName: (family.parent_name ?? "").split(/\s+/)[0] ?? "",
-              lastName: (family.parent_name ?? "").split(/\s+/).slice(1).join(" "),
-              email: family.parent_email ?? "",
-              phone: family.parent_phone ?? "",
-            },
-            payerLabel: `משפחה - ${family.parent_name ?? ""}`,
-          },
-        },
+        "icount-delete-student-paypage",
+        { body: { paymentId } },
       );
       if (error) throw error;
       if (data?.error) throw new Error(String(data.error));
-      if (!data?.url) throw new Error("לא התקבל קישור מ-iCount");
-      return data as { url: string; amount: number; paymentId: string };
+      // Also delete the pending row itself.
+      await supabase.from("student_payments").delete().eq("id", paymentId);
     },
-    onSuccess: (data) => {
-      setGeneratedLink({ url: data.url, amount: data.amount });
-      try {
-        navigator.clipboard.writeText(data.url);
-      } catch {
-        /* clipboard may be unavailable */
-      }
-      window.open(data.url, "_blank");
-      toast.success("קישור תשלום משפחתי נוצר והועתק");
-      queryClient.invalidateQueries({ queryKey: ["family-details"] });
-    },
-    onError: (e: any) => {
-      toast.error(`שגיאה ביצירת קישור: ${e?.message ?? e}`);
-    },
-    onSettled: () => setGenerating(false),
+    onSuccess: () => { invalidateFamily(); toast.success("הקישור וההזמנה נמחקו"); },
+    onError: (e: any) => toast.error(`שגיאה במחיקת קישור: ${e?.message ?? ""}`),
   });
+
+  const refundMutation = useMutation({
+    mutationFn: async ({ paymentId, amount, isCc }: { paymentId: string; amount: number; isCc: boolean }) => {
+      const fn = isCc ? "icount-student-refund-api" : "icount-create-refund";
+      const body = isCc ? { paymentId, refundAmount: amount } : { paymentId, amount };
+      const { data, error } = await supabase.functions.invoke(fn, { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any, vars) => {
+      invalidateFamily();
+      setRefundTarget(null);
+      setRefundAmount("");
+      toast.success(`זיכוי בסך ₪${(data?.refund_amount ?? vars.amount).toLocaleString()} בוצע`);
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בזיכוי: ${e?.message ?? ""}`),
+  });
+
+
 
   return (
     <AdminLayout title="כרטיס משפחה" backPath="/admin/families">
@@ -592,11 +613,11 @@ const AdminFamilyCard = () => {
           {/* Unified receipt action */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
             <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
-              <LinkIcon className="h-4 w-4" /> יצירת קישור תשלום מאוחד
+              <Wallet className="h-4 w-4" /> תשלום / קישור / זיכוי משפחתי
             </h2>
             <p className="text-sm text-muted-foreground">
-              סמן את השיוכים שברצונך לכלול בקבלה. הקישור יישלח על שם ההורה, ויקושר לכל
-              ילדי המשפחה דרך ת.ז. ההורה.
+              סמן את השיוכים שברצונך לכלול, ובחר את סוג הפעולה בחלון הבא (מזומן, צ׳ק,
+              העברה, אשראי, קישור לתשלום, או פיצול בין הורים).
             </p>
             <div className="flex items-center justify-between flex-wrap gap-3 rounded-xl bg-muted/40 p-3">
               <div className="text-sm">
@@ -607,68 +628,21 @@ const AdminFamilyCard = () => {
                 <span className="font-bold">{fmt(selectionSummary.amount)}</span>
               </div>
               <Button
-                onClick={() => {
-                  setGenerating(true);
-                  generateFamilyLink.mutate();
-                }}
-                disabled={
-                  generating ||
-                  selectionSummary.count === 0 ||
-                  selectionSummary.amount <= 0 ||
-                  !family?.parent_email
-                }
-                className="h-11 rounded-xl"
+                onClick={openNewPayment}
+                disabled={selectionSummary.count === 0 || selectionSummary.amount <= 0}
+                className="h-11 rounded-xl gap-2"
               >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin ms-2" />
-                    יוצר קישור...
-                  </>
-                ) : (
-                  <>
-                    <LinkIcon className="h-4 w-4 ms-2" />
-                    צור קישור תשלום מאוחד
-                  </>
-                )}
+                <Plus className="h-4 w-4" /> פתח חלון תשלום משפחתי
               </Button>
             </div>
             {!family?.parent_email && (
-              <p className="text-xs text-destructive">
-                חסר אימייל הורה — עדכן פרטי הורה לפני יצירת קישור.
+              <p className="text-xs text-amber-700 dark:text-amber-300">
+                שים לב — לא מוגדר אימייל להורה; יש למלא את פרטי המשלם ידנית בחלון.
               </p>
             )}
-            {generatedLink && (
-              <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 space-y-2">
-                <div className="text-sm text-emerald-800 dark:text-emerald-200 font-medium">
-                  ✓ הקישור נוצר — {fmt(generatedLink.amount)}
-                </div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <input
-                    readOnly
-                    value={generatedLink.url}
-                    className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-xs font-mono"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedLink.url);
-                      toast.success("הועתק");
-                    }}
-                  >
-                    <Copy className="h-4 w-4 ms-1" /> העתק
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(generatedLink.url, "_blank")}
-                  >
-                    <ExternalLink className="h-4 w-4 ms-1" /> פתח
-                  </Button>
-                </div>
-              </div>
-            )}
           </div>
+
+
 
           {/* Payments history */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -688,70 +662,178 @@ const AdminFamilyCard = () => {
                       <th className="text-right py-2 pe-3">סטטוס</th>
                       <th className="text-right py-2 pe-3">שיטה</th>
                       <th className="text-right py-2 pe-3">סכום</th>
-                      <th className="text-right py-2">קבלה</th>
+                      <th className="text-right py-2">פעולות</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((p) => (
-                      <tr key={p.id} className="border-b border-border/50">
-                        <td className="py-2 pe-3 whitespace-nowrap">{p.payment_date}</td>
-                        <td className="py-2 pe-3">
-                          {p.family_payment_group_id ? (
-                            <Badge variant="secondary" className="text-[10px]">
-                              משפחתי
-                            </Badge>
-                          ) : (
-                            (p.student_id && nameById.get(p.student_id)) || "—"
-                          )}
-                        </td>
-                        <td className="py-2 pe-3">
-                          {p.transaction_type === "credit" ? "זיכוי" : "תשלום"}
-                        </td>
-                        <td className="py-2 pe-3">
-                          <Badge
-                            variant={
-                              p.payment_status === "paid"
-                                ? "default"
-                                : p.payment_status === "failed"
-                                  ? "destructive"
-                                  : "secondary"
-                            }
-                            className="text-[10px]"
-                          >
-                            {STATUS_LABELS[p.payment_status] || p.payment_status}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pe-3">
-                          {(p.payment_method &&
-                            (METHOD_LABELS[p.payment_method] || p.payment_method)) ||
-                            "—"}
-                        </td>
-                        <td className="py-2 pe-3 font-medium">
-                          {p.transaction_type === "credit" ? "−" : ""}
-                          {fmt(Number(p.amount))}
-                        </td>
-                        <td className="py-2">
-                          {p.invoice_url ? (
-                            <a
-                              href={p.invoice_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline inline-flex items-center gap-1"
+                    {payments.map((p) => {
+                      const isCredit = p.transaction_type === "credit";
+                      const isPending = p.payment_status === "pending";
+                      const hasInvoice = !!p.invoice_url;
+                      const hasDoc = !!p.icount_doc_id;
+                      const refunded = payments
+                        .filter((x: any) => x.refund_of_payment_id === p.id)
+                        .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+                      const remaining = Math.max(0, Number(p.amount || 0) - refunded);
+                      const canRefund = !isCredit && hasDoc && remaining > 0;
+                      const isCombined =
+                        Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
+                      return (
+                        <tr
+                          key={p.id}
+                          className="border-b border-border/50 hover:bg-muted/40 cursor-pointer"
+                          onClick={() => {
+                            setEditingPayment(p);
+                            setFamilyCtx(null);
+                            setPaymentDialogOpen(true);
+                          }}
+                        >
+                          <td className="py-2 pe-3 whitespace-nowrap">{p.payment_date}</td>
+                          <td className="py-2 pe-3">
+                            {p.family_payment_group_id ? (
+                              <Badge variant="secondary" className="text-[10px]">משפחתי</Badge>
+                            ) : (
+                              (p.student_id && nameById.get(p.student_id)) || "—"
+                            )}
+                          </td>
+                          <td className="py-2 pe-3">{isCredit ? "זיכוי" : "תשלום"}</td>
+                          <td className="py-2 pe-3">
+                            <Badge
+                              variant={
+                                p.payment_status === "paid"
+                                  ? "default"
+                                  : p.payment_status === "failed"
+                                    ? "destructive"
+                                    : "secondary"
+                              }
+                              className="text-[10px]"
                             >
-                              {p.icount_doc_number || "צפייה"}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          ) : (
-                            "—"
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                              {STATUS_LABELS[p.payment_status] || p.payment_status}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pe-3">
+                            {(p.payment_method && (METHOD_LABELS[p.payment_method] || p.payment_method)) || "—"}
+                          </td>
+                          <td className="py-2 pe-3 font-medium">
+                            {isCredit ? "−" : ""}
+                            {fmt(Number(p.amount))}
+                          </td>
+                          <td className="py-2" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {hasInvoice && (
+                                <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
+                                  onClick={() => window.open(p.invoice_url, "_blank")}>
+                                  <FileDown className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {!hasDoc && !isPending && !isCredit && (
+                                <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
+                                  disabled={createInvoiceMutation.isPending}
+                                  onClick={() =>
+                                    createInvoiceMutation.mutate(
+                                      p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
+                                    )
+                                  }>
+                                  <FileDown className="h-3.5 w-3.5 ms-1" />
+                                  {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
+                                </Button>
+                              )}
+                              {isPending && p.payment_link_url && (
+                                <>
+                                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
+                                    onClick={() => window.open(p.payment_link_url, "_blank")}>
+                                    <ExternalLink className="h-4 w-4" />
+                                  </Button>
+                                  <Button variant="outline" size="icon"
+                                    className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                                    title="בטל קישור ומחק שורה"
+                                    disabled={deleteLinkMutation.isPending}
+                                    onClick={() => {
+                                      if (confirm("לבטל את קישור התשלום ולמחוק את הרישום הממתין?")) {
+                                        deleteLinkMutation.mutate(p.id);
+                                      }
+                                    }}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
+                              {canRefund && (
+                                <Button variant="outline" size="icon"
+                                  className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                                  title={p.payment_method === "credit_card"
+                                    ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
+                                    : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
+                                  onClick={() => {
+                                    setRefundTarget({ ...p, _remaining: remaining, _cc: p.payment_method === "credit_card" });
+                                    setRefundAmount(String(remaining));
+                                  }}>
+                                  <Undo2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             )}
           </div>
+
+          <AddPaymentDialog
+            open={paymentDialogOpen}
+            onOpenChange={(o) => {
+              setPaymentDialogOpen(o);
+              if (!o) { setEditingPayment(null); setFamilyCtx(null); }
+            }}
+            studentId={editingPayment?.student_id ?? family?.children_ids?.[0] ?? ""}
+            enrollments={mergedEnrollments}
+            editPayment={editingPayment}
+            familyContext={editingPayment ? null : familyCtx}
+          />
+
+          {refundTarget && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setRefundTarget(null)}
+            >
+              <div className="bg-card rounded-2xl border border-border p-5 max-w-md w-full space-y-3"
+                onClick={(e) => e.stopPropagation()}>
+                <h3 className="font-semibold">
+                  {refundTarget._cc ? "החזר אשראי" : "זיכוי"} · קבלה {refundTarget.icount_doc_number ?? ""}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  סכום מקורי: {fmt(Number(refundTarget.amount || 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
+                </p>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">סכום לזיכוי</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={refundAmount}
+                    onChange={(e) => setRefundAmount(e.target.value)}
+                    className="w-full h-11 rounded-xl border border-border bg-background px-3"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button variant="outline" onClick={() => setRefundTarget(null)}>ביטול</Button>
+                  <Button
+                    disabled={refundMutation.isPending}
+                    onClick={() => {
+                      const amt = parseFloat(refundAmount);
+                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
+                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
+                      refundMutation.mutate({ paymentId: refundTarget.id, amount: amt, isCc: refundTarget._cc });
+                    }}
+                  >
+                    בצע
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </AdminLayout>
