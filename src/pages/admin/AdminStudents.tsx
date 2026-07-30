@@ -12,8 +12,8 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music } from "lucide-react";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -34,19 +34,26 @@ const AdminStudents = () => {
 
   const search = searchParams.get("q") || "";
   const view = searchParams.get("view") || "enrollments"; // enrollments | all
-  const teacherFilter = searchParams.get("teacher") || "all";
-  const schoolFilter = searchParams.get("school") || "all";
-  const eduSchoolFilter = searchParams.get("edu_school") || "all";
-  const durationFilter = searchParams.get("duration") || "all";
-  const cityFilter = searchParams.get("city") || "all";
   const statusFilter = searchParams.get("status") || "active";
-  const gradeFilter = searchParams.get("grade") || "all";
-  const levelFilter = searchParams.get("level") || "all";
-  const paymentFilter = searchParams.get("payment") || "all";
-  const trackFilter = searchParams.get("track") || "all";
-  const instrumentFilter = searchParams.get("instrument") || "all";
-  const regTypeFilter = searchParams.get("reg_type") || "all";
   const siblingsFilter = searchParams.get("siblings") || "all";
+
+  const getMultiFilter = useCallback((key: string): string[] => {
+    const raw = searchParams.get(key);
+    if (!raw) return [];
+    return raw.split(",").filter(Boolean);
+  }, [searchParams]);
+
+  const teacherFilter = getMultiFilter("teacher");
+  const schoolFilter = getMultiFilter("school");
+  const eduSchoolFilter = getMultiFilter("edu_school");
+  const durationFilter = getMultiFilter("duration");
+  const cityFilter = getMultiFilter("city");
+  const gradeFilter = getMultiFilter("grade");
+  const levelFilter = getMultiFilter("level");
+  const paymentFilter = getMultiFilter("payment");
+  const trackFilter = getMultiFilter("track");
+  const instrumentFilter = getMultiFilter("instrument");
+  const regTypeFilter = getMultiFilter("reg_type");
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -56,6 +63,36 @@ const AdminStudents = () => {
       else if (key === "view" && value === "enrollments") next.delete(key);
       else if (key !== "status" && key !== "view" && value === "all") next.delete(key);
       else next.set(key, value);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const setMultiFilter = useCallback((key: string, values: string[]) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (values.length === 0) next.delete(key);
+      else next.set(key, values.join(","));
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const clearFilters = useCallback(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete("q");
+      next.delete("teacher");
+      next.delete("school");
+      next.delete("edu_school");
+      next.delete("duration");
+      next.delete("city");
+      next.delete("grade");
+      next.delete("level");
+      next.delete("payment");
+      next.delete("track");
+      next.delete("instrument");
+      next.delete("reg_type");
+      next.delete("siblings");
+      next.set("status", "active");
       return next;
     }, { replace: true });
   }, [setSearchParams]);
@@ -496,10 +533,10 @@ const AdminStudents = () => {
       const haystack = normalize(`${s.first_name ?? ""} ${s.last_name ?? ""} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.parent_phone ?? ""} ${s.phone ?? ""} ${s.city ?? ""} ${s.grade ?? ""}`);
       if (!haystack.includes(q)) return false;
     }
-    if (cityFilter !== "all" && s.city !== cityFilter) return false;
-    if (gradeFilter !== "all") {
+    if (cityFilter.length > 0 && !cityFilter.includes(s.city)) return false;
+    if (gradeFilter.length > 0) {
       const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
-      if (stripMarks(s.grade ?? "") !== stripMarks(gradeFilter)) return false;
+      if (!gradeFilter.includes(stripMarks(s.grade ?? ""))) return false;
     }
     const stopped = !s.is_active || s.student_status === "הפסיק";
     const regStatus = getRegStatus(s);
@@ -507,19 +544,21 @@ const AdminStudents = () => {
     if (statusFilter === "registered" && (stopped || regStatus !== "registered")) return false;
     if (statusFilter === "not_registered" && (stopped || regStatus !== "not_registered")) return false;
     if (statusFilter === "stopped" && !stopped) return false;
-    if (trackFilter !== "all") {
+    if (trackFilter.length > 0) {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
         recital: "has_recital_track",
         major: "is_major_student",
         junior: "is_junior_track",
       };
-      const f = map[trackFilter];
-      if (f && !s[f]) return false;
+      if (!trackFilter.some((t) => {
+        const f = map[t];
+        return f && s[f];
+      })) return false;
     }
-    if (regTypeFilter !== "all") {
+    if (regTypeFilter.length > 0) {
       const rt = getRegType(s);
-      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+      if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(s.id)) return false;
     return true;
@@ -555,34 +594,36 @@ const AdminStudents = () => {
       const searchStr = normalize(`${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""} ${r.students?.national_id ?? ""} ${r.students?.parent_name ?? ""} ${r.students?.parent_phone ?? ""} ${r.students?.phone ?? ""} ${r.grade ?? ""} ${r.students?.grade ?? ""} ${r.students?.city ?? ""} ${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""} ${r.schools?.name ?? ""} ${r.instruments?.name ?? ""} ${r.students?.playing_level ?? ""} ${r.lesson_duration_minutes ?? ""}`);
       if (!searchStr.includes(q)) return false;
     }
-    if (teacherFilter !== "all" && r.teachers?.id !== teacherFilter) return false;
-    if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
-    if (eduSchoolFilter !== "all" && r.students?.educational_school !== eduSchoolFilter) return false;
-    if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
-    if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (gradeFilter !== "all") {
+    if (teacherFilter.length > 0 && !teacherFilter.includes(r.teachers?.id)) return false;
+    if (schoolFilter.length > 0 && !schoolFilter.includes(r.schools?.id)) return false;
+    if (eduSchoolFilter.length > 0 && !eduSchoolFilter.includes(r.students?.educational_school)) return false;
+    if (durationFilter.length > 0 && !durationFilter.includes(String(r.lesson_duration_minutes))) return false;
+    if (cityFilter.length > 0 && !cityFilter.includes(r.students?.city)) return false;
+    if (gradeFilter.length > 0) {
       const stripMarks = (s: string) => (s ?? "").replace(/['"׳״']/g, "").trim();
       const rowGrade = stripMarks(r.students?.grade ?? "");
-      if (rowGrade !== stripMarks(gradeFilter)) return false;
+      if (!gradeFilter.includes(rowGrade)) return false;
     }
-    if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
+    if (levelFilter.length > 0 && !levelFilter.includes(r.students?.playing_level)) return false;
     if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
-    if (paymentFilter !== "all" && getPaymentStatus(r) !== paymentFilter) return false;
-    if (trackFilter !== "all") {
+    if (paymentFilter.length > 0 && !paymentFilter.includes(getPaymentStatus(r))) return false;
+    if (trackFilter.length > 0) {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
         recital: "has_recital_track",
         major: "is_major_student",
         junior: "is_junior_track",
       };
-      const f = map[trackFilter];
-      if (f && !r.students?.[f]) return false;
+      if (!trackFilter.some((t) => {
+        const f = map[t];
+        return f && r.students?.[f];
+      })) return false;
     }
-    if (instrumentFilter !== "all" && r.instruments?.name !== instrumentFilter) return false;
-    if (regTypeFilter !== "all") {
+    if (instrumentFilter.length > 0 && !instrumentFilter.includes(r.instruments?.name)) return false;
+    if (regTypeFilter.length > 0) {
       const rt = getRegType(r.students);
-      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+      if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(r.students?.id)) return false;
     return true;
@@ -640,122 +681,119 @@ const AdminStudents = () => {
       <div className="mb-4 grid grid-cols-2 md:grid-cols-5 lg:flex lg:flex-wrap gap-2">
         {view === "enrollments" && (
           <>
-            <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
-              <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="מורים" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">מורים</SelectItem>
-                {(teachers as any[]).map((t: any) => (
-                  <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="מורים"
+              options={teachers.map((t: any) => t.id)}
+              renderLabel={(id) => {
+                const t = teachers.find((x: any) => x.id === id);
+                return t ? `${t.first_name} ${t.last_name}` : id;
+              }}
+              value={teacherFilter}
+              onChange={(v) => setMultiFilter("teacher", v)}
+            />
 
-            <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
-              <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="שלוחה" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">שלוחה</SelectItem>
-                {(schools as any[]).map((s: any) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="שלוחה"
+              options={schools.map((s: any) => s.id)}
+              renderLabel={(id) => schools.find((s: any) => s.id === id)?.name ?? id}
+              value={schoolFilter}
+              onChange={(v) => setMultiFilter("school", v)}
+            />
 
-            <Select value={eduSchoolFilter} onValueChange={(v) => setFilter("edu_school", v)}>
-              <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">בית ספר</SelectItem>
-                {(eduSchools as string[]).map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="בית ספר"
+              options={eduSchools as string[]}
+              value={eduSchoolFilter}
+              onChange={(v) => setMultiFilter("edu_school", v)}
+            />
 
-            <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
-              <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">משך שיעור</SelectItem>
-                {durations.map((d) => (
-                  <SelectItem key={d} value={String(d)}>{d} דק׳</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-36"
+              allLabel="משך שיעור"
+              options={durations.map(String)}
+              renderLabel={(d) => `${d} דק׳`}
+              value={durationFilter}
+              onChange={(v) => setMultiFilter("duration", v)}
+            />
 
-            <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
-              <SelectTrigger className="w-full lg:w-32 h-11 rounded-xl"><SelectValue placeholder="רמת לימוד" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">רמת לימוד</SelectItem>
-                {["א","ב","ג"].map((l) => (
-                  <SelectItem key={l} value={l}>{l}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-32"
+              allLabel="רמת לימוד"
+              options={["א","ב","ג"]}
+              renderLabel={(l) => `רמה ${l}`}
+              value={levelFilter}
+              onChange={(v) => setMultiFilter("level", v)}
+            />
 
-            <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
-              <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">תשלומים</SelectItem>
-                <SelectItem value="full">שולם במלואו</SelectItem>
-                <SelectItem value="partial">שולם חלקית</SelectItem>
-                <SelectItem value="unpaid">לא שולם</SelectItem>
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-36"
+              allLabel="תשלומים"
+              options={["full", "partial", "unpaid"]}
+              renderLabel={(k) => ({ full: "שולם במלואו", partial: "שולם חלקית", unpaid: "לא שולם" })[k]}
+              value={paymentFilter}
+              onChange={(v) => setMultiFilter("payment", v)}
+            />
           </>
         )}
 
-        <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-          <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="ישוב מגורים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ישוב מגורים</SelectItem>
-            {cities.map((c) => (
-              <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-36"
+          allLabel="ישוב מגורים"
+          options={cities as string[]}
+          value={cityFilter}
+          onChange={(v) => setMultiFilter("city", v)}
+        />
 
-        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-          <SelectTrigger className="w-full lg:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כיתה</SelectItem>
-            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-32"
+          allLabel="כיתה"
+          options={["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"]}
+          renderLabel={(g) => `כיתה ${g}`}
+          value={gradeFilter}
+          onChange={(v) => setMultiFilter("grade", v)}
+        />
 
-        <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-          <SelectTrigger className="w-full col-span-2 md:col-span-1 lg:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">קורסים ומסלולים</SelectItem>
-            <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
-            <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
-            <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
-            <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full col-span-2 md:col-span-1 lg:w-44"
+          allLabel="קורסים ומסלולים"
+          options={["music_production", "recital", "major", "junior"]}
+          renderLabel={(k) => ({ music_production: "🎚️ הפקה מוסיקלית", recital: "🎼 רסיטל י״ב", major: "🎓 מגמת המוסיקה", junior: "📘 מסלול חטיבה" })[k]}
+          value={trackFilter}
+          onChange={(v) => setMultiFilter("track", v)}
+        />
 
-        <Select value={instrumentFilter} onValueChange={(v) => setFilter("instrument", v)}>
-          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כלי נגינה</SelectItem>
-            {(instrumentOptions as string[]).map((i) => (
-              <SelectItem key={i} value={i}>{i}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-40"
+          allLabel="כלי נגינה"
+          options={instrumentOptions as string[]}
+          value={instrumentFilter}
+          onChange={(v) => setMultiFilter("instrument", v)}
+        />
 
-        <Select value={regTypeFilter} onValueChange={(v) => setFilter("reg_type", v)}>
-          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="סוג רישום" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">סוג רישום</SelectItem>
-            <SelectItem value="new">🆕 חדש</SelectItem>
-            <SelectItem value="continuing">🔄 ממשיך</SelectItem>
-            <SelectItem value="unknown">ללא סימון</SelectItem>
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-40"
+          allLabel="סוג רישום"
+          options={["new", "continuing", "unknown"]}
+          renderLabel={(k) => ({ new: "🆕 חדש", continuing: "🔄 ממשיך", unknown: "ללא סימון" })[k]}
+          value={regTypeFilter}
+          onChange={(v) => setMultiFilter("reg_type", v)}
+        />
 
-
-
-
+        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-11 rounded-xl gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+            נקה סינון
+          </Button>
+        )}
 
         {/* Status filter buttons */}
         <div className={`col-span-2 md:col-span-5 grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:flex-wrap lg:items-center ${view === "all" ? "md:grid-cols-4" : "md:grid-cols-2"}`}>
