@@ -247,20 +247,22 @@ const AdminFamilies = () => {
               </div>
 
               <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 rounded-xl w-full sm:w-auto"
-                  onClick={() =>
-                    setMergeTarget({
-                      id: f.parent_national_id,
-                      name: f.parent_name,
-                    })
-                  }
-                >
-                  <Merge className="h-4 w-4 ms-2" />
-                  מזג משפחות
-                </Button>
+                {dupIds.has(f.parent_national_id) && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 rounded-xl w-full sm:w-auto"
+                    onClick={() =>
+                      setMergeTarget({
+                        id: f.parent_national_id,
+                        name: f.parent_name,
+                      })
+                    }
+                  >
+                    <Merge className="h-4 w-4 ms-2" />
+                    מזג משפחות
+                  </Button>
+                )}
                 <Button
                   type="button"
                   className="h-11 rounded-xl w-full sm:flex-1"
@@ -271,6 +273,7 @@ const AdminFamilies = () => {
                   פתח כרטיס <ArrowLeft className="h-4 w-4 ms-1" />
                 </Button>
               </div>
+
             </div>
           ))}
           {!isLoading && filtered.length === 0 && (
