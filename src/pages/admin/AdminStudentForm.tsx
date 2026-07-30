@@ -81,6 +81,10 @@ const AdminStudentForm = () => {
     enabled: isEdit,
   });
 
+  const linkedParent1Id: string | null = ((student as any)?.parent_1_id as string) ?? null;
+  const linkedParent2Id: string | null = ((student as any)?.parent_2_id as string) ?? null;
+
+
   const { data: educationalSchools = [], isLoading: schoolsLoading } = useQuery({
     queryKey: ["educational-schools-active"],
     queryFn: async () => {
