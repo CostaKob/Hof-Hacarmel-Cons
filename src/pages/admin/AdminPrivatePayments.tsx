@@ -373,6 +373,11 @@ const AdminPrivatePayments = () => {
     });
   }, [familyRows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
 
+  const statRows = useMemo(
+    () => (viewMode === "families" ? filteredFamilies.flatMap((f: any) => f.members) : filtered),
+    [viewMode, filteredFamilies, filtered],
+  );
+
   const totals = useMemo(() => {
     let potential = 0, paid = 0, refunds = 0, discounts = 0, enrollmentsCount = 0;
     let specialRevenue = 0, specialCount = 0;
@@ -380,7 +385,7 @@ const AdminPrivatePayments = () => {
     let paidStudents = 0, partialStudents = 0, unpaidStudents = 0, refundedStudents = 0, activeLinks = 0;
     const musicProdPrice = Number(settings?.music_production_price || 0);
     const recitalPrice = Number(settings?.recital_track_price || 0);
-    for (const r of filtered) {
+    for (const r of statRows) {
       enrollmentsCount += r.enrollments.length;
       if (r.hasSpecialCourse) specialCount += 1;
       if (r.student.has_music_production_course) { productionCount += 1; productionRevenue += musicProdPrice; }
