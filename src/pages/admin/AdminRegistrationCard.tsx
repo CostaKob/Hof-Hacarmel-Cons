@@ -561,7 +561,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
                   className="h-8 rounded-lg text-xs"
                   onClick={() => setDec("keep")}
                 >
-                  השאר קיים
+                  {d.isMissing ? "השאר ריק" : "השאר קיים"}
                 </Button>
                 <Button
                   type="button"
@@ -570,9 +570,9 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
                   className="h-8 rounded-lg text-xs"
                   onClick={() => setDec("replace")}
                 >
-                  החלף בחדש
+                  {d.isMissing ? "מלא מהטופס" : "החלף בחדש"}
                 </Button>
-                {d.secondary && (
+                {d.secondary && !d.isMissing && (
                   <Button
                     type="button"
                     size="sm"
