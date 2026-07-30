@@ -246,13 +246,13 @@ const TeacherNewReport = () => {
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-sm">הצג בית ספר</Label>
+                <Label className="text-sm">הצג שלוחה</Label>
                 <Select value={schoolId} onValueChange={setSchoolId}>
                   <SelectTrigger className="h-12 rounded-xl">
                     <SelectValue placeholder="הכל" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">כל בתי הספר</SelectItem>
+                    <SelectItem value="all">כל השלוחות</SelectItem>
                     {enrollmentSchools.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.name}
