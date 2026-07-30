@@ -9,7 +9,7 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Search, Settings, AlertTriangle, Phone, Music } from "lucide-react";
+import { Search, Settings, AlertTriangle, Phone, Music, X } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
@@ -174,6 +174,24 @@ const AdminRegistrations = () => {
             value={instrumentFilter}
             onChange={setInstrumentFilter}
           />
+          {(statusFilter.length > 0 || schoolFilter.length > 0 || gradeFilter.length > 0 || instrumentFilter.length > 0 || search) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setStatusFilter([]);
+                setSchoolFilter([]);
+                setGradeFilter([]);
+                setInstrumentFilter([]);
+                setSearch("");
+              }}
+              className="h-11 rounded-xl gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+              נקה סינון
+            </Button>
+          )}
         </div>
 
         {/* Compact summary: total + per-school chips */}
