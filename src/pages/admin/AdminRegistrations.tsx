@@ -142,52 +142,38 @@ const AdminRegistrations = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters — multi-select */}
         <div className="flex flex-wrap gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44 h-11 rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הסטטוסים</SelectItem>
-              {Object.entries(REGISTRATION_STATUSES).map(([key, { label }]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-            <SelectTrigger className="w-44 h-11 rounded-xl">
-              <SelectValue placeholder="שלוחה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל השלוחות</SelectItem>
-              {schoolCounts.map(([name]) => (
-                <SelectItem key={name} value={name}>{name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={gradeFilter} onValueChange={setGradeFilter}>
-            <SelectTrigger className="w-40 h-11 rounded-xl">
-              <SelectValue placeholder="כיתה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הכיתות</SelectItem>
-              {gradeOptions.map((g) => (
-                <SelectItem key={g} value={g}>כיתה {g}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
-            <SelectTrigger className="w-48 h-11 rounded-xl">
-              <SelectValue placeholder="כלי נגינה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הכלים</SelectItem>
-              {instrumentOptions.map((i) => (
-                <SelectItem key={i} value={i}>{i}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל הסטטוסים"
+            options={Object.keys(REGISTRATION_STATUSES)}
+            renderLabel={(k) => (REGISTRATION_STATUSES as any)[k]?.label ?? k}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל השלוחות"
+            options={schoolCounts.map(([name]) => name)}
+            value={schoolFilter}
+            onChange={setSchoolFilter}
+          />
+          <MultiSelectFilter
+            className="w-40"
+            allLabel="כל הכיתות"
+            options={gradeOptions}
+            renderLabel={(g) => `כיתה ${g}`}
+            value={gradeFilter}
+            onChange={setGradeFilter}
+          />
+          <MultiSelectFilter
+            className="w-48"
+            allLabel="כל הכלים"
+            options={instrumentOptions}
+            value={instrumentFilter}
+            onChange={setInstrumentFilter}
+          />
         </div>
 
         {/* Compact summary: total + per-school chips */}
@@ -196,10 +182,10 @@ const AdminRegistrations = () => {
             <button
               type="button"
               onClick={() => {
-                setStatusFilter("all");
-                setSchoolFilter("all");
-                setGradeFilter("all");
-                setInstrumentFilter("all");
+                setStatusFilter([]);
+                setSchoolFilter([]);
+                setGradeFilter([]);
+                setInstrumentFilter([]);
                 setSearch("");
               }}
               className="text-[11px] px-2.5 py-1 rounded-full border bg-muted border-border hover:bg-muted/70 transition-colors"
@@ -213,9 +199,11 @@ const AdminRegistrations = () => {
             {schoolCounts.map(([name, count]) => (
               <button
                 key={name}
-                onClick={() => setSchoolFilter(schoolFilter === name ? "all" : name)}
+                onClick={() =>
+                  setSchoolFilter(schoolFilter.includes(name) ? schoolFilter.filter((s) => s !== name) : [...schoolFilter, name])
+                }
                 className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
-                  schoolFilter === name ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                  schoolFilter.includes(name) ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
                 }`}
               >
                 {name} · {count}
@@ -232,9 +220,11 @@ const AdminRegistrations = () => {
             return (
               <button
                 key={key}
-                onClick={() => setStatusFilter(statusFilter === key ? "all" : key)}
+                onClick={() =>
+                  setStatusFilter(statusFilter.includes(key) ? statusFilter.filter((s) => s !== key) : [...statusFilter, key])
+                }
                 className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                  statusFilter === key ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                  statusFilter.includes(key) ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
                 }`}
               >
                 {label} ({count})
@@ -242,6 +232,7 @@ const AdminRegistrations = () => {
             );
           })}
         </div>
+
 
         {/* List */}
         {isLoading ? (
