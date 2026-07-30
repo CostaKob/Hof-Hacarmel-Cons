@@ -5,6 +5,8 @@ import {
   FAMILY_ASSIGNMENT_TEMPLATE_KEY,
   fetchMessageTemplate,
   renderTemplate,
+  markdownLinksToPlain,
+  parseInlineLinks,
 } from "@/lib/messageTemplates";
 import { Button } from "@/components/ui/button";
 import {
@@ -104,8 +106,7 @@ function buildPaymentsBlock(pendingPayments: PendingPaymentLike[]): string {
     }
     lines.push(`  סה״כ: ${Number(p.amount).toLocaleString("he-IL")} ₪`);
     if (p.payment_link_url) {
-      lines.push(`  קישור לתשלום:`);
-      lines.push(`  ${p.payment_link_url}`);
+      lines.push(`  [לחצו כאן לתשלום](${p.payment_link_url})`);
     }
     lines.push("");
     totalAll += Number(p.amount) || 0;
@@ -171,7 +172,10 @@ const SendFamilyAssignmentMessage = ({
       toast.error("אין מספר טלפון להורה");
       return;
     }
-    window.open(`https://wa.me/972${parentWa}?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(
+      `https://wa.me/972${parentWa}?text=${encodeURIComponent(markdownLinksToPlain(message))}`,
+      "_blank",
+    );
   };
 
   const sendEmail = async () => {
@@ -228,6 +232,30 @@ const SendFamilyAssignmentMessage = ({
               className="rounded-xl font-mono text-xs"
               dir="rtl"
             />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">תצוגה מקדימה (כפי שיתקבל במייל)</Label>
+            <div className="rounded-xl border bg-background p-4 text-sm leading-6" dir="rtl">
+              {message.split("\n").map((line, i) => (
+                <p key={i} className="min-h-[1.25rem]">
+                  {parseInlineLinks(line).map((part, j) =>
+                    part.type === "link" ? (
+                      <a
+                        key={j}
+                        href={part.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-bold text-primary underline"
+                      >
+                        {part.text}
+                      </a>
+                    ) : (
+                      <span key={j}>{part.text}</span>
+                    ),
+                  )}
+                </p>
+              ))}
+            </div>
           </div>
         </div>
 
