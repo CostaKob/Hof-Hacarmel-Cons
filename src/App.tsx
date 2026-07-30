@@ -61,6 +61,8 @@ import AdminBulkMessage from "./pages/admin/AdminBulkMessage";
 import AdminEmailDashboard from "./pages/admin/AdminEmailDashboard";
 import AdminMessaging from "./pages/admin/AdminMessaging";
 import AdminMessageTemplates from "./pages/admin/AdminMessageTemplates";
+import AdminBroadcastArchive from "./pages/admin/AdminBroadcastArchive";
+
 import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
