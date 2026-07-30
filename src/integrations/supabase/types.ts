@@ -2670,8 +2670,10 @@ export type Database = {
       list_families: {
         Args: { _year_id?: string }
         Returns: {
+          children_cities: string[]
           children_count: number
           children_ids: string[]
+          children_last_names: string[]
           children_names: string[]
           parent_email: string
           parent_name: string
