@@ -419,6 +419,13 @@ const TeacherStudents = () => {
                               <><span>·</span><span>כיתה {r.previousGrade}</span></>
                             )}
                           </div>
+                          {(r.parentName || r.parentPhone || r.city) && (
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                              {r.parentName && <span>{r.parentName}</span>}
+                              {r.parentPhone && <><span>·</span><span>{r.parentPhone}</span></>}
+                              {r.city && <><span>·</span><span>{r.city}</span></>}
+                            </div>
+                          )}
                         </div>
                         <Badge
                           variant="outline"
