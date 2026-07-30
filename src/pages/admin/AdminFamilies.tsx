@@ -182,15 +182,56 @@ const AdminFamilies = () => {
                   </Badge>
                   {dupIds.has(f.parent_national_id) && (
                     <Badge variant="destructive" className="gap-1">
-                      <AlertTriangle className="h-3 w-3" /> כפילות אפשרית
+                      <AlertTriangle className="h-3 w-3" />
+                      {dupInfo.get(f.parent_national_id)?.reason === "ילד משותף"
+                        ? "ילד משותף"
+                        : "אותה משפחה?"}
                     </Badge>
                   )}
                 </div>
               </div>
 
+              {dupIds.has(f.parent_national_id) && (
+                <div className="mt-2 rounded-xl border border-destructive/30 bg-destructive/5 p-2 text-xs">
+                  <div className="text-muted-foreground mb-2">
+                    נמצאה התאמה לפי {dupInfo.get(f.parent_national_id)?.reason} —
+                    האם זו אותה משפחה?
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-9 rounded-lg"
+                      onClick={() =>
+                        setMergeTarget({
+                          id: f.parent_national_id,
+                          name: f.parent_name,
+                        })
+                      }
+                    >
+                      כן, מזג
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-lg"
+                      onClick={() =>
+                        (dupInfo.get(f.parent_national_id)?.partners || []).forEach((p) =>
+                          dismissPair(f.parent_national_id, p),
+                        )
+                      }
+                    >
+                      לא, משפחות שונות
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="text-sm text-muted-foreground mt-2 truncate">
                 {(f.children_names || []).join(" · ")}
               </div>
+
 
               <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground flex-wrap">
                 {f.parent_phone && (
