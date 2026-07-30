@@ -83,10 +83,12 @@ const AdminBulkMessage = () => {
 
   const [regStatus, setRegStatus] = useState<string>("all");
   const [subject, setSubject] = useState<string>(() => {
+    if (duplicated?.subject) return duplicated.subject;
     if (typeof window === "undefined") return "";
     return window.localStorage.getItem("bulk-message-subject") ?? "";
   });
   const [body, setBody] = useState<string>(() => {
+    if (duplicated?.body) return duplicated.body;
     if (typeof window === "undefined") return "";
     return window.localStorage.getItem("bulk-message-body") ?? "";
   });
