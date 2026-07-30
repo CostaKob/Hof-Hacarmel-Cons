@@ -14,7 +14,10 @@ import {
   DEFAULT_TEMPLATES,
   FAMILY_ASSIGNMENT_TEMPLATE_KEY,
   TEMPLATE_VARIABLES,
+  SAMPLE_VARIABLE_VALUES,
   fetchMessageTemplate,
+  renderTemplate,
+  parseInlineLinks,
 } from "@/lib/messageTemplates";
 
 const KEY = FAMILY_ASSIGNMENT_TEMPLATE_KEY;
@@ -79,14 +82,25 @@ const AdminMessageTemplates = () => {
             <div className="rounded-xl bg-accent/60 p-4 text-sm">
               <p className="font-medium mb-2">משתנים זמינים (יוחלפו אוטומטית בעת השליחה):</p>
               <ul className="space-y-1">
-                {TEMPLATE_VARIABLES[KEY].map((v) => (
-                  <li key={v.token} className="flex flex-wrap gap-2">
-                    <code className="rounded bg-background px-1.5 py-0.5 text-xs" dir="ltr">
-                      {v.token}
-                    </code>
-                    <span className="text-muted-foreground">{v.description}</span>
-                  </li>
-                ))}
+                {TEMPLATE_VARIABLES[KEY].map((v) => {
+                  const name = v.token.replace(/[{}]/g, "");
+                  const sample = SAMPLE_VARIABLE_VALUES[KEY]?.[name] ?? "";
+                  return (
+                    <li key={v.token} className="rounded-lg bg-background/70 p-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <code className="rounded bg-background px-1.5 py-0.5 text-xs" dir="ltr">
+                          {v.token}
+                        </code>
+                        <span className="text-muted-foreground">{v.description}</span>
+                      </div>
+                      {sample && (
+                        <pre className="mt-1 whitespace-pre-wrap text-xs text-muted-foreground/90 font-sans">
+                          {sample}
+                        </pre>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
 
@@ -110,6 +124,36 @@ const AdminMessageTemplates = () => {
                 className="rounded-xl font-mono text-xs"
                 disabled={isLoading}
               />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs">תצוגה מקדימה (עם נתוני דוגמה)</Label>
+              <div className="rounded-xl border bg-background p-4 text-sm leading-6" dir="rtl">
+                {renderTemplate(body, SAMPLE_VARIABLE_VALUES[KEY] || {})
+                  .split("\n")
+                  .map((line, i) => (
+                    <p key={i} className="min-h-[1.25rem]">
+                      {parseInlineLinks(line).map((part, j) =>
+                        part.type === "link" ? (
+                          <a
+                            key={j}
+                            href={part.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-bold text-primary underline"
+                          >
+                            {part.text}
+                          </a>
+                        ) : (
+                          <span key={j}>{part.text}</span>
+                        ),
+                      )}
+                    </p>
+                  ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                טיפ: קישור מעוצב נכתב כך — [לחצו כאן לתשלום](https://כתובת-הקישור)
+              </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2">
