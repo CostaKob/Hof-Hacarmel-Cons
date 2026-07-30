@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
 import PageTitle from "@/components/PageTitle";
+import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
