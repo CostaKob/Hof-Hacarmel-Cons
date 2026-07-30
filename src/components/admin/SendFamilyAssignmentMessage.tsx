@@ -129,18 +129,36 @@ const SendFamilyAssignmentMessage = ({
   const [message, setMessage] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  const { data: template } = useQuery({
+    queryKey: ["message-template", FAMILY_ASSIGNMENT_TEMPLATE_KEY],
+    queryFn: () => fetchMessageTemplate(FAMILY_ASSIGNMENT_TEMPLATE_KEY),
+  });
+
   useEffect(() => {
     if (open) setExtraNote(defaultNote);
   }, [open, defaultNote]);
 
+  const childrenSubject = children.map((c) => `${c.first_name} ${c.last_name}`).join(", ");
+
   useEffect(() => {
-    if (!open) return;
-    setMessage(buildMessage(family, children, enrollments, pendingPayments, extraNote));
-  }, [open, family, children, enrollments, pendingPayments, extraNote]);
+    if (!open || !template) return;
+    setMessage(
+      renderTemplate(template.body, {
+        parent_name: family.parent_name || "הורה יקר",
+        children: childrenSubject,
+        assignments: buildAssignmentsBlock(children, enrollments),
+        payments: buildPaymentsBlock(pendingPayments),
+        note: extraNote.trim(),
+      }),
+    );
+  }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject]);
 
   const parentWa = normalizeWaPhone(family.parent_phone);
 
-  const childrenSubject = children.map((c) => `${c.first_name} ${c.last_name}`).join(", ");
+  const emailSubject = renderTemplate(template?.subject || "שיוך מורה — {{children}}", {
+    children: childrenSubject,
+    parent_name: family.parent_name || "",
+  });
 
   const sendWhatsApp = () => {
     if (!parentWa) {
