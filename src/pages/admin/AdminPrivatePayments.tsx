@@ -329,16 +329,21 @@ const AdminPrivatePayments = () => {
     return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1], "he"));
   }, [enrollments]);
 
+  const matchesCommon = (r: any) => {
+    if (schoolFilter !== ALL && !r.enrollments.some((e: any) => e.schools?.id === schoolFilter)) return false;
+    if (teacherFilter !== ALL && !r.enrollments.some((e: any) => e.teachers?.id === teacherFilter)) return false;
+    if (instrumentFilter !== ALL && !r.enrollments.some((e: any) => e.instruments?.id === instrumentFilter)) return false;
+    return true;
+  };
+
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
+    return rowsWithFamily.filter((r) => {
       if (statusFilter === "refunded") {
         if (!(r.refunds > 0.01)) return false;
       } else if (statusFilter === "active_links") {
-        if (!(r.activeLinks > 0)) return false;
+        if (!(r.familyActiveLinks > 0)) return false;
       } else if (statusFilter !== "all" && r.status !== statusFilter) return false;
-      if (schoolFilter !== ALL && !r.enrollments.some((e: any) => e.schools?.id === schoolFilter)) return false;
-      if (teacherFilter !== ALL && !r.enrollments.some((e: any) => e.teachers?.id === teacherFilter)) return false;
-      if (instrumentFilter !== ALL && !r.enrollments.some((e: any) => e.instruments?.id === instrumentFilter)) return false;
+      if (!matchesCommon(r)) return false;
       if (search) {
         const q = search.toLowerCase().trim();
         const hay = `${r.student.first_name} ${r.student.last_name} ${r.student.parent_name ?? ""} ${r.student.parent_phone ?? ""} ${r.student.grade ?? ""}`.toLowerCase();
@@ -346,7 +351,27 @@ const AdminPrivatePayments = () => {
       }
       return true;
     });
-  }, [rows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
+  }, [rowsWithFamily, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
+
+  const filteredFamilies = useMemo(() => {
+    return familyRows.filter((f) => {
+      if (statusFilter === "refunded") {
+        if (!(f.refunds > 0.01)) return false;
+      } else if (statusFilter === "active_links") {
+        if (!(f.activeLinks > 0)) return false;
+      } else if (statusFilter !== "all" && f.status !== statusFilter) return false;
+      if (!matchesCommon(f)) return false;
+      if (search) {
+        const q = search.toLowerCase().trim();
+        const hay = [
+          f.parentName ?? "", f.parentPhone ?? "",
+          ...f.members.map((m: any) => `${m.student.first_name} ${m.student.last_name}`),
+        ].join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [familyRows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
 
   const totals = useMemo(() => {
     let potential = 0, paid = 0, refunds = 0, discounts = 0, enrollmentsCount = 0;
