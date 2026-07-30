@@ -55,35 +55,54 @@ const MergeFamiliesDialog = ({
 }: Props) => {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
+  const [mode, setMode] = useState<"same_parent" | "spouse">("same_parent");
   const { data: candidates = [], isLoading } = useMergeCandidates(
     parentNationalId,
     open,
   );
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["families-list"] });
+    qc.invalidateQueries({ queryKey: ["family-details"] });
+    qc.invalidateQueries({ queryKey: ["family-merge-candidates"] });
+    qc.invalidateQueries({ queryKey: ["students"] });
+  };
+
   const mergeMutation = useMutation({
     mutationFn: async (sourceId: string) => {
+      if (mode === "same_parent") {
+        const { data, error } = await (supabase as any).rpc(
+          "merge_duplicate_parents",
+          {
+            _keep_national_id: parentNationalId,
+            _remove_national_id: sourceId,
+          },
+        );
+        if (error) throw error;
+        return { kind: "same_parent" as const, data };
+      }
       const { data, error } = await (supabase as any).rpc("merge_families", {
         _target_national_id: parentNationalId,
         _source_national_id: sourceId,
       });
       if (error) throw error;
-      return data as {
-        children_count: number;
-        links_added: number;
-        siblings_added: number;
-      };
+      return { kind: "spouse" as const, data };
     },
-    onSuccess: (res) => {
-      toast.success(
-        `המשפחות מוזגו — ${res.children_count} ילדים בתא, ${res.siblings_added} קישורי אחים נוספו`,
-      );
-      qc.invalidateQueries({ queryKey: ["families-list"] });
-      qc.invalidateQueries({ queryKey: ["family-details"] });
-      qc.invalidateQueries({ queryKey: ["family-merge-candidates"] });
+    onSuccess: (res: any) => {
+      if (res.kind === "same_parent") {
+        toast.success(
+          `רשומות ההורה אוחדו — ${res.data?.moved ?? 0} ילדים הועברו`,
+        );
+      } else {
+        toast.success(
+          `המשפחות מוזגו — ${res.data?.children_count ?? 0} ילדים בתא, ${res.data?.siblings_added ?? 0} קישורי אחים נוספו`,
+        );
+      }
+      invalidate();
       setSelected(null);
       onOpenChange(false);
     },
-    onError: (e: any) => toast.error(e?.message || "המיזוג נכשל"),
+    onError: (e: any) => toast.error(e?.message || "הפעולה נכשלה"),
   });
 
   return (
@@ -92,10 +111,11 @@ const MergeFamiliesDialog = ({
         <DialogHeader className="text-right">
           <DialogTitle className="text-right">מיזוג משפחות</DialogTitle>
           <DialogDescription className="text-right">
-            צירוף תא משפחתי אחר אל {parentName || "משפחה זו"} — כל הילדים יקושרו
-            לשני ההורים ויסומנו כאחים.
+            בחר תא משפחתי אחר לחיבור אל {parentName || "משפחה זו"}, ואז בחר את
+            סוג הקשר.
           </DialogDescription>
         </DialogHeader>
+
 
         {isLoading ? (
           <div className="flex justify-center py-8">
