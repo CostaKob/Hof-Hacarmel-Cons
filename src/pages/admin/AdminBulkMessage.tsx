@@ -430,6 +430,7 @@ const AdminBulkMessage = () => {
                   <SelectItem value="registrations">הורים שנרשמו (טופס הרשמה)</SelectItem>
                   <SelectItem value="enrollments">הורים של תלמידים עם שיוך פעיל</SelectItem>
                   <SelectItem value="school_music">הורים בבית ספר מנגן</SelectItem>
+                  <SelectItem value="unregistered_students">תלמידים שלא נרשמו לשנה הנוכחית</SelectItem>
                 </SelectContent>
               </Select>
               {yearName && <p className="text-xs text-muted-foreground">שנה נבחרת: {yearName}</p>}
