@@ -5,10 +5,14 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Search, ArrowLeft, Phone, Mail } from "lucide-react";
+import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle } from "lucide-react";
 import { useFamiliesList } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
+import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
+
+const normPhone = (p?: string | null) =>
+  (p || "").replace(/\D/g, "").slice(-10) || null;
 
 const AdminFamilies = () => {
   const navigate = useNavigate();
@@ -17,11 +21,36 @@ const AdminFamilies = () => {
   const { data: families = [], isLoading } = useFamiliesList(yearId);
   const [q, setQ] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(false);
+  const [onlyDup, setOnlyDup] = useState(false);
+  const [mergeTarget, setMergeTarget] = useState<{
+    id: string;
+    name: string | null;
+  } | null>(null);
+
+  // Detect possible duplicate family cells: shared parent phone or shared children
+  const dupIds = useMemo(() => {
+    const byPhone = new Map<string, string[]>();
+    const byChild = new Map<string, string[]>();
+    families.forEach((f) => {
+      const ph = normPhone(f.parent_phone);
+      if (ph) byPhone.set(ph, [...(byPhone.get(ph) || []), f.parent_national_id]);
+      (f.children_ids || []).forEach((c) =>
+        byChild.set(c, [...(byChild.get(c) || []), f.parent_national_id]),
+      );
+    });
+    const set = new Set<string>();
+    [...byPhone.values(), ...byChild.values()].forEach((ids) => {
+      const uniq = Array.from(new Set(ids));
+      if (uniq.length > 1) uniq.forEach((id) => set.add(id));
+    });
+    return set;
+  }, [families]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     let list = [...families];
     if (onlyMulti) list = list.filter((f) => f.children_count > 1);
+    if (onlyDup) list = list.filter((f) => dupIds.has(f.parent_national_id));
     if (term) {
       list = list.filter((f) => {
         return (
@@ -37,9 +66,10 @@ const AdminFamilies = () => {
       if (b.children_count !== a.children_count) return b.children_count - a.children_count;
       return cmpHe(a.parent_name || "", b.parent_name || "");
     });
-  }, [families, q, onlyMulti]);
+  }, [families, q, onlyMulti, onlyDup, dupIds]);
 
   const multiCount = families.filter((f) => f.children_count > 1).length;
+
 
   return (
     <AdminLayout title="משפחות" backPath="/admin">
