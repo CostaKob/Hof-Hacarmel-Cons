@@ -261,7 +261,7 @@ const SendFamilyAssignmentMessage = ({
                         href={part.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-bold text-primary underline"
+                        className="font-bold text-primary underline text-lg"
                       >
                         {part.text}
                       </a>
