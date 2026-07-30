@@ -141,6 +141,14 @@ const TeacherStudentCard = () => {
           </div>
         </div>
 
+        {/* Homeroom teacher */}
+        <StudentHomeroomSection
+          studentId={enrollment.student_id}
+          name={(student as any).homeroom_teacher_name}
+          phone={(student as any).homeroom_teacher_phone}
+          homeroomClass={(student as any).homeroom_class}
+        />
+
         {/* Enrollment summary counts */}
         <EnrollmentSummary lines={reportLines ?? []} startDate={enrollment.start_date} />
 
