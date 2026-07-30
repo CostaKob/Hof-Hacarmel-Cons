@@ -139,15 +139,19 @@ export default function AdminEmailDashboard() {
   }, [deduped, templateFilter, statusFilter]);
 
   const stats = useMemo(() => {
-    const s = { total: filtered.length, sent: 0, failed: 0, suppressed: 0, pending: 0 };
-    for (const r of filtered) {
+    const base = deduped.filter((r) => {
+      if (templateFilter !== "all" && r.template_name !== templateFilter) return false;
+      return true;
+    });
+    const s = { total: base.length, sent: 0, failed: 0, suppressed: 0, pending: 0 };
+    for (const r of base) {
       if (r.status === "sent") s.sent++;
       else if (["dlq", "failed", "bounced"].includes(r.status)) s.failed++;
       else if (["suppressed", "complained"].includes(r.status)) s.suppressed++;
       else if (r.status === "pending") s.pending++;
     }
     return s;
-  }, [filtered]);
+  }, [deduped, templateFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
