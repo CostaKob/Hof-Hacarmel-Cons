@@ -9,6 +9,8 @@ export interface FamilyListItem {
   children_count: number;
   children_ids: string[];
   children_names: string[];
+  children_last_names?: string[];
+  children_cities?: string[];
 }
 
 export const useFamiliesList = (yearId?: string | null) =>
