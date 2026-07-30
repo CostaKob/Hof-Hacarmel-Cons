@@ -823,6 +823,45 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
             })}
           </CardContent>
         </Card>
+
+        {/* Coordinator: all students of the school */}
+        {isCoordinatorView && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-4 w-4" /> תלמידים ({schoolStudents.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5">
+              {schoolStudents.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-3">אין תלמידים רשומים</p>
+              )}
+              {[...schoolStudents]
+                .sort((a: any, b: any) =>
+                  `${a.student_last_name ?? ""} ${a.student_first_name ?? ""}`.localeCompare(
+                    `${b.student_last_name ?? ""} ${b.student_first_name ?? ""}`, "he"
+                  )
+                )
+                .map((st: any) => (
+                  <button
+                    key={st.id}
+                    type="button"
+                    onClick={() => setEditStudent(st)}
+                    className="w-full flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2 text-sm text-right hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                      <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
+                      {st.class_name && <Badge variant="outline" className="text-[10px]">{st.class_name}</Badge>}
+                      {!st.school_music_class_group_id && (
+                        <Badge variant="secondary" className="text-[10px]">לא משויך לקבוצה</Badge>
+                      )}
+                    </div>
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Delete school dialog */}
