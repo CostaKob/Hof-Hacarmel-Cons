@@ -404,12 +404,37 @@ const AdminBulkMessage = () => {
 
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, selectedEmails.length) }, worker));
     setSending(false);
+
+    // Archive the broadcast
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      await supabase.from("broadcast_messages").insert({
+        subject: subject.trim(),
+        body_html: body,
+        audience: source,
+        audience_label: SOURCE_LABELS[source],
+        academic_year_id: selectedYearId,
+        recipients_count: done,
+        failed_count: failed,
+        recipients: selectedEmails.map((r) => ({
+          email: r.email,
+          parentName: r.parentName,
+          studentName: r.studentName,
+        })) as any,
+        sent_by: auth?.user?.id ?? null,
+        sent_by_name: auth?.user?.email ?? null,
+      });
+    } catch (e) {
+      console.error("archive broadcast failed", e);
+    }
+
     if (failed === 0) {
       toast.success(`נשלחו ${done} הודעות בהצלחה`);
     } else {
       toast.warning(`נשלחו ${done - failed} הודעות. ${failed} נכשלו — ראה קונסול.`);
     }
   };
+
 
   return (
     <AdminLayout title="שליחת הודעות להורים" backPath="/admin">
