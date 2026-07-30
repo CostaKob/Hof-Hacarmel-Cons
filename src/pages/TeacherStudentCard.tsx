@@ -3,7 +3,7 @@ import { useEnrollmentDetails } from "@/hooks/useTeacherData";
 import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
-import { calcYearsOfPlaying } from "@/lib/constants";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, User, Phone, Mail, MapPin, Music, School, Calendar } from "lucide-react";
@@ -133,7 +133,7 @@ const TeacherStudentCard = () => {
             )}
             <InfoRow icon={Calendar} label="תאריך התחלה" value={enrollment.start_date} />
             {enrollment.end_date && <InfoRow icon={Calendar} label="תאריך סיום" value={enrollment.end_date} />}
-            {(() => { const yrs = calcYearsOfPlaying((enrollment as any).instrument_start_date); return yrs !== null ? <InfoRow icon={Music} label="שנות נגינה" value={String(yrs)} /> : null; })()}
+            
             <div className="flex items-center gap-2 pt-1">
               <Badge variant={enrollment.is_active ? "default" : "secondary"} className="rounded-lg">
                 {enrollment.is_active ? "פעיל" : "לא פעיל"}
