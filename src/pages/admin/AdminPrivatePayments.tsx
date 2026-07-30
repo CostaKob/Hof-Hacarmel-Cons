@@ -471,13 +471,34 @@ const AdminPrivatePayments = () => {
       <PageTitle title="דוח תשלומים פרטני" />
       <div className="space-y-4">
 
+        {/* View toggle */}
+        <div className="inline-flex rounded-xl border border-border bg-card p-1 w-full sm:w-auto">
+          <Button
+            variant={viewMode === "families" ? "default" : "ghost"}
+            size="sm"
+            className="h-9 rounded-lg gap-1 flex-1 sm:flex-none"
+            onClick={() => setViewMode("families")}
+          >
+            <Users className="h-3.5 w-3.5" /> לפי משפחה
+          </Button>
+          <Button
+            variant={viewMode === "students" ? "default" : "ghost"}
+            size="sm"
+            className="h-9 rounded-lg gap-1 flex-1 sm:flex-none"
+            onClick={() => setViewMode("students")}
+          >
+            <User className="h-3.5 w-3.5" /> לפי תלמיד
+          </Button>
+        </div>
+
         {/* Counts */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
+          <span><span className="font-semibold text-foreground">{totals.familiesCount}</span> תאים משפחתיים</span>
           <span><span className="font-semibold text-foreground">{totals.studentsCount}</span> תלמידים</span>
           <span><span className="font-semibold text-foreground">{totals.enrollmentsCount}</span> שיוכים</span>
           <span><span className="font-semibold text-foreground">{totals.specialCount}</span> במסלולים מיוחדים</span>
           {totals.activeLinks > 0 && (
-            <span><span className="font-semibold text-foreground">{totals.activeLinks}</span> לינקים פעילים</span>
+            <span><span className="font-semibold text-foreground">{totals.activeLinks}</span> קישורי תשלום פעילים</span>
           )}
         </div>
 
