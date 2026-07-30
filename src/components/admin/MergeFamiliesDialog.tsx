@@ -240,7 +240,7 @@ const MergeFamiliesDialog = ({
             ) : (
               <Merge className="h-4 w-4 ms-2" />
             )}
-            מזג משפחות
+            {mode === "same_parent" ? "אחד רשומות הורה" : "מזג משפחות"}
           </Button>
         </DialogFooter>
       </DialogContent>
