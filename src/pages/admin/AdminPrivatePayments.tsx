@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Undo2, Link2 } from "lucide-react";
+import { Search, Download, Undo2, Link2, Users, User } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -18,6 +18,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 const ALL = "__all__";
 
 type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "refunded" | "active_links";
+type ViewMode = "students" | "families";
 
 const AdminPrivatePayments = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const AdminPrivatePayments = () => {
   const [teacherFilter, setTeacherFilter] = useState<string>(ALL);
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("families");
 
   const { data: year } = useQuery({
     queryKey: ["priv-payments-year", yearId],
