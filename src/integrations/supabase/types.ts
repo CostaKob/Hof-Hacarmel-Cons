@@ -2246,6 +2246,9 @@ export type Database = {
           grade: string | null
           has_music_production_course: boolean
           has_recital_track: boolean
+          homeroom_class: string | null
+          homeroom_teacher_name: string | null
+          homeroom_teacher_phone: string | null
           id: string
           is_active: boolean
           is_junior_track: boolean
@@ -2278,6 +2281,9 @@ export type Database = {
           grade?: string | null
           has_music_production_course?: boolean
           has_recital_track?: boolean
+          homeroom_class?: string | null
+          homeroom_teacher_name?: string | null
+          homeroom_teacher_phone?: string | null
           id?: string
           is_active?: boolean
           is_junior_track?: boolean
@@ -2310,6 +2316,9 @@ export type Database = {
           grade?: string | null
           has_music_production_course?: boolean
           has_recital_track?: boolean
+          homeroom_class?: string | null
+          homeroom_teacher_name?: string | null
+          homeroom_teacher_phone?: string | null
           id?: string
           is_active?: boolean
           is_junior_track?: boolean
@@ -2846,6 +2855,15 @@ export type Database = {
       register_school_music_student_with_loan: {
         Args: { _inventory_instrument_id?: string; _payload: Json }
         Returns: Json
+      }
+      set_student_homeroom: {
+        Args: {
+          _class: string
+          _name: string
+          _phone: string
+          _student_id: string
+        }
+        Returns: undefined
       }
       teacher_can_view_school_music_class: {
         Args: { _class_id: string; _user_id: string }

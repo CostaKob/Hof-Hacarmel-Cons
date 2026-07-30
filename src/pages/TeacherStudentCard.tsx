@@ -3,6 +3,7 @@ import { useEnrollmentDetails } from "@/hooks/useTeacherData";
 import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
+import StudentHomeroomSection from "@/components/teacher/StudentHomeroomSection";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -140,6 +141,14 @@ const TeacherStudentCard = () => {
             </div>
           </div>
         </div>
+
+        {/* Homeroom teacher */}
+        <StudentHomeroomSection
+          studentId={enrollment.student_id}
+          name={(student as any).homeroom_teacher_name}
+          phone={(student as any).homeroom_teacher_phone}
+          homeroomClass={(student as any).homeroom_class}
+        />
 
         {/* Enrollment summary counts */}
         <EnrollmentSummary lines={reportLines ?? []} startDate={enrollment.start_date} />
