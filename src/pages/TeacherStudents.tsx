@@ -299,10 +299,13 @@ const TeacherStudents = () => {
             ) : (
               <div className="space-y-3">
                 {filtered.map((enrollment, index) => (
-                  <button
+                  <div
                     key={enrollment.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
-                    className={`flex w-full items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "border-destructive/30" : "border-primary/30"}`}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/teacher/students/${enrollment.id}`); }}
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "border-destructive/30" : "border-primary/30"}`}
                   >
                     <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "bg-destructive/10" : "bg-primary/10"}`}>
                       <span className={`text-sm font-bold ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "text-destructive" : "text-primary"}`}>{index + 1}</span>
@@ -322,10 +325,22 @@ const TeacherStudents = () => {
                         <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
                           {enrollment.students?.parent_name && <span>{enrollment.students.parent_name}</span>}
                           {enrollment.students?.parent_phone && (
-                            <><span>·</span><span>{enrollment.students.parent_phone}</span></>
+                            <><span>·</span><PhoneDisplay phone={enrollment.students.parent_phone} stopPropagation showIcon textClassName="text-xs" /></>
                           )}
                           {enrollment.students?.city && (
                             <><span>·</span><span>{enrollment.students.city}</span></>
+                          )}
+                        </div>
+                      )}
+                      {((enrollment.students as any)?.homeroom_teacher_name || (enrollment.students as any)?.homeroom_teacher_phone || (enrollment.students as any)?.homeroom_class) && (
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <span className="font-medium">מחנכת:</span>
+                          {(enrollment.students as any)?.homeroom_teacher_name && <span>{(enrollment.students as any).homeroom_teacher_name}</span>}
+                          {(enrollment.students as any)?.homeroom_class && (
+                            <><span>·</span><span>כיתת אם {(enrollment.students as any).homeroom_class}</span></>
+                          )}
+                          {(enrollment.students as any)?.homeroom_teacher_phone && (
+                            <><span>·</span><PhoneDisplay phone={(enrollment.students as any).homeroom_teacher_phone} stopPropagation showIcon textClassName="text-xs" /></>
                           )}
                         </div>
                       )}
@@ -334,7 +349,7 @@ const TeacherStudents = () => {
                       <Badge variant="outline" className="rounded-lg text-destructive border-destructive shrink-0">לא פעיל</Badge>
                     )}
                     <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
-                  </button>
+                  </div>
                 ))}
               </div>
             )}
