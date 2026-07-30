@@ -59,6 +59,8 @@ import AdminRegistrationEdit from "./pages/admin/AdminRegistrationEdit";
 import AdminExports from "./pages/admin/AdminExports";
 import AdminBulkMessage from "./pages/admin/AdminBulkMessage";
 import AdminEmailDashboard from "./pages/admin/AdminEmailDashboard";
+import AdminMessaging from "./pages/admin/AdminMessaging";
+import AdminMessageTemplates from "./pages/admin/AdminMessageTemplates";
 import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
