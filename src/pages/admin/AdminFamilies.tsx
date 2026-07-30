@@ -11,8 +11,17 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
 
-const normPhone = (p?: string | null) =>
-  (p || "").replace(/\D/g, "").slice(-10) || null;
+const norm = (s?: string | null) => (s || "").trim().toLowerCase();
+const pairKey = (a: string, b: string) => [a, b].sort().join("|");
+const DISMISS_KEY = "family-dup-dismissed";
+
+const loadDismissed = (): Set<string> => {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+};
 
 const AdminFamilies = () => {
   const navigate = useNavigate();
@@ -22,29 +31,67 @@ const AdminFamilies = () => {
   const [q, setQ] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(false);
   const [onlyDup, setOnlyDup] = useState(false);
+  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
   const [mergeTarget, setMergeTarget] = useState<{
     id: string;
     name: string | null;
   } | null>(null);
 
-  // Detect possible duplicate family cells: shared parent phone or shared children
-  const dupIds = useMemo(() => {
-    const byPhone = new Map<string, string[]>();
+  const dismissPair = (a: string, b: string) => {
+    setDismissed((prev) => {
+      const next = new Set(prev);
+      next.add(pairKey(a, b));
+      localStorage.setItem(DISMISS_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  // Possible duplicate family cells: shared child, or same children last name
+  // (+ same city when known). Phone is intentionally NOT used — two parents of
+  // the same family legitimately have different phones.
+  const dupInfo = useMemo(() => {
     const byChild = new Map<string, string[]>();
+    const byName = new Map<string, string[]>();
     families.forEach((f) => {
-      const ph = normPhone(f.parent_phone);
-      if (ph) byPhone.set(ph, [...(byPhone.get(ph) || []), f.parent_national_id]);
       (f.children_ids || []).forEach((c) =>
         byChild.set(c, [...(byChild.get(c) || []), f.parent_national_id]),
       );
+      const lastNames = new Set((f.children_last_names || []).map(norm).filter(Boolean));
+      const cities = new Set((f.children_cities || []).map(norm).filter(Boolean));
+      lastNames.forEach((ln) => {
+        const keys = cities.size ? [...cities].map((c) => `${ln}@@${c}`) : [`${ln}@@`];
+        keys.forEach((k) => byName.set(k, [...(byName.get(k) || []), f.parent_national_id]));
+      });
     });
+
+    const map = new Map<string, { partners: Set<string>; reason: string }>();
+    const add = (a: string, b: string, reason: string) => {
+      if (a === b) return;
+      const cur = map.get(a) || { partners: new Set<string>(), reason };
+      cur.partners.add(b);
+      if (reason === "ילד משותף") cur.reason = reason;
+      map.set(a, cur);
+    };
+    [...byChild.values()].forEach((ids) => {
+      const uniq = [...new Set(ids)];
+      uniq.forEach((a) => uniq.forEach((b) => add(a, b, "ילד משותף")));
+    });
+    [...byName.values()].forEach((ids) => {
+      const uniq = [...new Set(ids)];
+      uniq.forEach((a) => uniq.forEach((b) => add(a, b, "שם משפחה + עיר")));
+    });
+    return map;
+  }, [families]);
+
+  const dupIds = useMemo(() => {
     const set = new Set<string>();
-    [...byPhone.values(), ...byChild.values()].forEach((ids) => {
-      const uniq = Array.from(new Set(ids));
-      if (uniq.length > 1) uniq.forEach((id) => set.add(id));
+    dupInfo.forEach((info, id) => {
+      const active = [...info.partners].some((p) => !dismissed.has(pairKey(id, p)));
+      if (active) set.add(id);
     });
     return set;
-  }, [families]);
+  }, [dupInfo, dismissed]);
+
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
