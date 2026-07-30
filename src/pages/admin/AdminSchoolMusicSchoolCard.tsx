@@ -187,7 +187,7 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_students")
-        .select("id, student_first_name, student_last_name, school_music_class_group_id, school_music_class_id, class_name")
+        .select("*")
         .eq("school_music_school_id", id!);
       if (error) throw error;
       return data as any[];
