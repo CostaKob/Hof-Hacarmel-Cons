@@ -71,7 +71,7 @@ const AdminPrivatePayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, instruments(id,name), schools(id,name), teachers(id, first_name, last_name), students!inner(id, first_name, last_name, grade, parent_name, parent_phone, has_music_production_course, has_recital_track, student_status, is_active)")
+        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, instruments(id,name), schools(id,name), teachers(id, first_name, last_name), students!inner(id, first_name, last_name, grade, parent_name, parent_phone, parent_national_id, parent_national_id_2, parent_1_id, parent_2_id, has_music_production_course, has_recital_track, student_status, is_active)")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       return data as any[];
