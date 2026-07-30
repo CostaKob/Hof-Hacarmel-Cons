@@ -454,17 +454,21 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
         <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {person && !isEditing ? (
+        {person && (!isEditing || isCoordinatorView) ? (
           <div className="flex items-center justify-between rounded-xl border p-3">
             <div>
               <p className="font-medium">{person.first_name} {person.last_name}</p>
               <PhoneLink phone={person.phone} />
             </div>
-            <div className="flex gap-1">
-              <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}><Pencil className="h-3.5 w-3.5" /></Button>
-              <Button size="icon" variant="ghost" onClick={() => onSet(null)}><X className="h-4 w-4 text-destructive" /></Button>
-            </div>
+            {!isCoordinatorView && (
+              <div className="flex gap-1">
+                <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" onClick={() => onSet(null)}><X className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            )}
           </div>
+        ) : isCoordinatorView ? (
+          <p className="text-sm text-muted-foreground">לא הוגדר</p>
         ) : (
           <div className="flex flex-col sm:flex-row gap-2">
             <Select onValueChange={(v) => { onSet(v); setIsEditing(false); }}>
@@ -478,7 +482,7 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
             {isEditing && <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>ביטול</Button>}
           </div>
         )}
-        {person && (
+        {person && !isCoordinatorView && (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">שעות {title === "רכז" ? "ריכוז" : "ניצוח"}:</span>
             {isEditingHours ? (
@@ -501,8 +505,7 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
   );
 
   return (
-    <AdminLayout title={school.school_name} backPath="/admin/school-music-schools">
-      <PageTitle title={`בית ספר מנגן — ${school.school_name}`} />
+    <Shell title={school.school_name}>
       <div className="space-y-5">
 
         {/* School Details */}
@@ -510,10 +513,16 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">פרטי בית הספר</CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteSchool(true)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/school-music-schools/${id}/edit`)}>
+              {!isCoordinatorView && (
+                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteSchool(true)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl"
+                onClick={() => (isCoordinatorView ? setEditingSchoolDetails(true) : navigate(`/admin/school-music-schools/${id}/edit`))}
+              >
                 <Pencil className="h-4 w-4" /> עריכה
               </Button>
             </div>
