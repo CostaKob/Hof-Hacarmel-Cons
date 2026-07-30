@@ -430,7 +430,7 @@ const AdminPrivatePayments = () => {
       all: "", unpaid: "לא שולם", partial: "שולם חלקית", paid: "שולם", refunded: "הוחזר", active_links: "לינק פעיל",
     };
     const lines = [headers.join(",")];
-    filtered.forEach((r, idx) => {
+    statRows.forEach((r, idx) => {
       const schools = Array.from(new Set(r.enrollments.map((e: any) => e.schools?.name).filter(Boolean))).join(" · ");
       const teachers = Array.from(new Set(r.enrollments.map((e: any) => e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : null).filter(Boolean))).join(" · ");
       const instrs = Array.from(new Set(r.enrollments.map((e: any) => e.instruments?.name).filter(Boolean))).join(" · ");
