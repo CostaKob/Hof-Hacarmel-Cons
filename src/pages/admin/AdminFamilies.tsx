@@ -5,10 +5,14 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Search, ArrowLeft, Phone, Mail } from "lucide-react";
+import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle } from "lucide-react";
 import { useFamiliesList } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
+import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
+
+const normPhone = (p?: string | null) =>
+  (p || "").replace(/\D/g, "").slice(-10) || null;
 
 const AdminFamilies = () => {
   const navigate = useNavigate();
@@ -17,11 +21,36 @@ const AdminFamilies = () => {
   const { data: families = [], isLoading } = useFamiliesList(yearId);
   const [q, setQ] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(false);
+  const [onlyDup, setOnlyDup] = useState(false);
+  const [mergeTarget, setMergeTarget] = useState<{
+    id: string;
+    name: string | null;
+  } | null>(null);
+
+  // Detect possible duplicate family cells: shared parent phone or shared children
+  const dupIds = useMemo(() => {
+    const byPhone = new Map<string, string[]>();
+    const byChild = new Map<string, string[]>();
+    families.forEach((f) => {
+      const ph = normPhone(f.parent_phone);
+      if (ph) byPhone.set(ph, [...(byPhone.get(ph) || []), f.parent_national_id]);
+      (f.children_ids || []).forEach((c) =>
+        byChild.set(c, [...(byChild.get(c) || []), f.parent_national_id]),
+      );
+    });
+    const set = new Set<string>();
+    [...byPhone.values(), ...byChild.values()].forEach((ids) => {
+      const uniq = Array.from(new Set(ids));
+      if (uniq.length > 1) uniq.forEach((id) => set.add(id));
+    });
+    return set;
+  }, [families]);
 
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     let list = [...families];
     if (onlyMulti) list = list.filter((f) => f.children_count > 1);
+    if (onlyDup) list = list.filter((f) => dupIds.has(f.parent_national_id));
     if (term) {
       list = list.filter((f) => {
         return (
@@ -37,9 +66,10 @@ const AdminFamilies = () => {
       if (b.children_count !== a.children_count) return b.children_count - a.children_count;
       return cmpHe(a.parent_name || "", b.parent_name || "");
     });
-  }, [families, q, onlyMulti]);
+  }, [families, q, onlyMulti, onlyDup, dupIds]);
 
   const multiCount = families.filter((f) => f.children_count > 1).length;
+
 
   return (
     <AdminLayout title="משפחות" backPath="/admin">
@@ -60,10 +90,20 @@ const AdminFamilies = () => {
             type="button"
             variant={onlyMulti ? "default" : "outline"}
             onClick={() => setOnlyMulti((v) => !v)}
-            className="h-12 rounded-xl"
+            className="h-12 rounded-xl w-full sm:w-auto"
           >
             משפחות עם 2+ ילדים
             <Badge variant="secondary" className="ms-2">{multiCount}</Badge>
+          </Button>
+          <Button
+            type="button"
+            variant={onlyDup ? "default" : "outline"}
+            onClick={() => setOnlyDup((v) => !v)}
+            className="h-12 rounded-xl w-full sm:w-auto"
+          >
+            <AlertTriangle className="h-4 w-4 ms-2" />
+            כפילויות אפשריות
+            <Badge variant="secondary" className="ms-2">{dupIds.size}</Badge>
           </Button>
         </div>
 
@@ -73,12 +113,9 @@ const AdminFamilies = () => {
 
         <div className="grid gap-3 sm:grid-cols-2">
           {filtered.map((f) => (
-            <button
+            <div
               key={f.parent_national_id}
-              onClick={() =>
-                navigate(`/admin/families/${encodeURIComponent(f.parent_national_id)}`)
-              }
-              className="text-right rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md active:scale-[0.98] transition-all"
+              className="text-right rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-all"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
@@ -92,9 +129,16 @@ const AdminFamilies = () => {
                     ת.ז. {f.parent_national_id}
                   </div>
                 </div>
-                <Badge variant={f.children_count > 1 ? "default" : "secondary"}>
-                  {f.children_count} {f.children_count === 1 ? "ילד" : "ילדים"}
-                </Badge>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <Badge variant={f.children_count > 1 ? "default" : "secondary"}>
+                    {f.children_count} {f.children_count === 1 ? "ילד" : "ילדים"}
+                  </Badge>
+                  {dupIds.has(f.parent_national_id) && (
+                    <Badge variant="destructive" className="gap-1">
+                      <AlertTriangle className="h-3 w-3" /> כפילות אפשרית
+                    </Badge>
+                  )}
+                </div>
               </div>
 
               <div className="text-sm text-muted-foreground mt-2 truncate">
@@ -114,10 +158,32 @@ const AdminFamilies = () => {
                 )}
               </div>
 
-              <div className="mt-2 flex items-center justify-end text-primary text-sm">
-                פתח כרטיס <ArrowLeft className="h-4 w-4 ms-1" />
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 rounded-xl w-full sm:w-auto"
+                  onClick={() =>
+                    setMergeTarget({
+                      id: f.parent_national_id,
+                      name: f.parent_name,
+                    })
+                  }
+                >
+                  <Merge className="h-4 w-4 ms-2" />
+                  מזג משפחות
+                </Button>
+                <Button
+                  type="button"
+                  className="h-11 rounded-xl w-full sm:flex-1"
+                  onClick={() =>
+                    navigate(`/admin/families/${encodeURIComponent(f.parent_national_id)}`)
+                  }
+                >
+                  פתח כרטיס <ArrowLeft className="h-4 w-4 ms-1" />
+                </Button>
               </div>
-            </button>
+            </div>
           ))}
           {!isLoading && filtered.length === 0 && (
             <div className="col-span-full text-center text-muted-foreground py-12">
@@ -126,8 +192,18 @@ const AdminFamilies = () => {
           )}
         </div>
       </div>
+
+      {mergeTarget && (
+        <MergeFamiliesDialog
+          open={!!mergeTarget}
+          onOpenChange={(v) => !v && setMergeTarget(null)}
+          parentNationalId={mergeTarget.id}
+          parentName={mergeTarget.name}
+        />
+      )}
     </AdminLayout>
   );
 };
+
 
 export default AdminFamilies;
