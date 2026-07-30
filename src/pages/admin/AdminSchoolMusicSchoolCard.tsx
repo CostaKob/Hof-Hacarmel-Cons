@@ -523,64 +523,9 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
   const getGroupsForClass = (classId: string) => classGroups.filter((g: any) => g.school_music_class_id === classId);
   const getStudentsForGroup = (groupId: string) => schoolStudents.filter((s: any) => s.school_music_class_group_id === groupId);
 
-  const RoleSection = ({ title, person, isEditing, setIsEditing, onSet, hours, effectiveHours, hoursField, isEditingHours, setIsEditingHours, hoursInput, setHoursInput }: any) => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between pb-3">
-        <CardTitle className="text-lg">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {person && (!isEditing || isCoordinatorView) ? (
-          <div className="flex items-center justify-between rounded-xl border p-3">
-            <div>
-              <p className="font-medium">{person.first_name} {person.last_name}</p>
-              <PhoneLink phone={person.phone} />
-            </div>
-            {!isCoordinatorView && (
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" onClick={() => onSet(null)}><X className="h-4 w-4 text-destructive" /></Button>
-              </div>
-            )}
-          </div>
-        ) : isCoordinatorView ? (
-          <p className="text-sm text-muted-foreground">לא הוגדר</p>
-        ) : (
-          <div className="flex flex-col sm:flex-row gap-2">
-            <Select onValueChange={(v) => { onSet(v); setIsEditing(false); }}>
-              <SelectTrigger className="flex-1"><SelectValue placeholder={`בחר ${title}`} /></SelectTrigger>
-              <SelectContent>
-                {allTeachers.map((t: any) => (
-                  <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {isEditing && <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>ביטול</Button>}
-          </div>
-        )}
-        {person && !isCoordinatorView && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">שעות {title === "רכז" ? "ריכוז" : "ניצוח"}:</span>
-            {isEditingHours ? (
-              <div className="flex items-center gap-1">
-                <Input type="number" min={0} className="w-20 h-7 text-xs rounded-lg text-center" value={hoursInput} onChange={(e: any) => setHoursInput(e.target.value)} placeholder={String(classesCount)} />
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => updateRoleHours.mutate({ field: hoursField, value: hoursInput === "" ? null : Number(hoursInput) })}><Check className="h-3.5 w-3.5" /></Button>
-                <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setIsEditingHours(false)}><X className="h-3.5 w-3.5" /></Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <Badge variant={hours != null ? "default" : "secondary"}>{effectiveHours}</Badge>
-                {hours != null && <span className="text-xs text-muted-foreground">(ידני)</span>}
-                <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => { setHoursInput(hours != null ? String(hours) : ""); setIsEditingHours(true); }}><Pencil className="h-3 w-3" /></Button>
-              </div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   return (
-    <Shell title={school.school_name}>
+    <Shell title={school.school_name} {...shellProps}>
       <div className="space-y-5">
 
         {/* School Details */}
@@ -632,6 +577,7 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
           hours={coordinatorHours} effectiveHours={effectiveCoordHours} hoursField="coordinator_hours"
           isEditingHours={editingCoordinatorHours} setIsEditingHours={setEditingCoordinatorHours}
           hoursInput={coordHoursInput} setHoursInput={setCoordHoursInput}
+          {...roleProps}
         />
 
         {/* Conductor */}
@@ -641,6 +587,7 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
           hours={conductorHours} effectiveHours={effectiveConductHours} hoursField="conductor_hours"
           isEditingHours={editingConductorHours} setIsEditingHours={setEditingConductorHours}
           hoursInput={conductHoursInput} setHoursInput={setConductHoursInput}
+          {...roleProps}
         />
 
         {/* ═══ CLASSES ═══ */}
