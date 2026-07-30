@@ -57,20 +57,8 @@ function normalizeWaPhone(phone?: string | null): string {
   return String(phone).replace(/\D/g, "").replace(/^0/, "");
 }
 
-function buildMessage(
-  family: FamilyLike,
-  children: ChildLike[],
-  enrollments: EnrollmentLike[],
-  pendingPayments: PendingPaymentLike[],
-  extraNote: string,
-): string {
-  const parentName = family.parent_name || "הורה יקר";
+function buildAssignmentsBlock(children: ChildLike[], enrollments: EnrollmentLike[]): string {
   const lines: string[] = [];
-  lines.push(`שלום ${parentName},`);
-  lines.push("");
-  lines.push("אנו שמחים לעדכן כי שויכו המורים הבאים:");
-  lines.push("");
-
   for (const c of children) {
     const childEnrollments = enrollments.filter(
       (e) => e.student_id === c.id && e.is_active !== false,
@@ -90,52 +78,37 @@ function buildMessage(
       lines.push("");
     }
   }
+  return lines.join("\n").trim();
+}
 
-  if (pendingPayments.length > 0) {
-    lines.push("פירוט תשלום:");
-    let totalAll = 0;
-    for (const p of pendingPayments) {
-      const bd: any = p.enrollment_breakdown || {};
-      const payerLabel: string | null = bd?.payerLabel ?? null;
-      const breakdownLines: Array<{ description: string; amount: number }> =
-        Array.isArray(bd.lines) ? bd.lines : [];
-      if (payerLabel) {
-        lines.push(`  ${payerLabel}:`);
-      }
-      for (const l of breakdownLines) {
-        const amt = Number(l.amount) || 0;
-        const formatted = amt >= 0 ? `${amt} ₪` : `${Math.abs(amt)}- ₪`;
-        lines.push(`    ${l.description}: ${formatted}`);
-      }
-      lines.push(`  סה״כ: ${Number(p.amount).toLocaleString("he-IL")} ₪`);
-      if (p.payment_link_url) {
-        lines.push(`  קישור לתשלום:`);
-        lines.push(`  ${p.payment_link_url}`);
-      }
-      lines.push("");
-      totalAll += Number(p.amount) || 0;
+function buildPaymentsBlock(pendingPayments: PendingPaymentLike[]): string {
+  if (pendingPayments.length === 0) return "";
+  const lines: string[] = ["פירוט תשלום:"];
+  let totalAll = 0;
+  for (const p of pendingPayments) {
+    const bd: any = p.enrollment_breakdown || {};
+    const payerLabel: string | null = bd?.payerLabel ?? null;
+    const breakdownLines: Array<{ description: string; amount: number }> =
+      Array.isArray(bd.lines) ? bd.lines : [];
+    if (payerLabel) lines.push(`  ${payerLabel}:`);
+    for (const l of breakdownLines) {
+      const amt = Number(l.amount) || 0;
+      const formatted = amt >= 0 ? `${amt} ₪` : `${Math.abs(amt)}- ₪`;
+      lines.push(`    ${l.description}: ${formatted}`);
     }
-    if (pendingPayments.length > 1) {
-      lines.push(`סה״כ לתשלום: ${totalAll.toLocaleString("he-IL")} ₪`);
+    lines.push(`  סה״כ: ${Number(p.amount).toLocaleString("he-IL")} ₪`);
+    if (p.payment_link_url) {
+      lines.push(`  קישור לתשלום:`);
+      lines.push(`  ${p.payment_link_url}`);
     }
-    lines.push("ניתן לחלק עד 10 תשלומים ללא ריבית.");
     lines.push("");
+    totalAll += Number(p.amount) || 0;
   }
-
-  if (extraNote.trim()) {
-    lines.push(extraNote.trim());
-    lines.push("");
+  if (pendingPayments.length > 1) {
+    lines.push(`סה״כ לתשלום: ${totalAll.toLocaleString("he-IL")} ₪`);
   }
-
-  lines.push("לכל שאלה ניתן לפנות:");
-  lines.push("מייל: musichof@gmail.com");
-  lines.push("טלפון משרד: 04-6299711");
-  lines.push("וואטסאפ קורין: https://wa.me/972547467498");
-  lines.push("");
-  lines.push("בברכה,");
-  lines.push("אולפן המוסיקה חוף הכרמל");
-
-  return lines.join("\n");
+  lines.push("ניתן לחלק עד 10 תשלומים ללא ריבית.");
+  return lines.join("\n").trim();
 }
 
 const SendFamilyAssignmentMessage = ({
