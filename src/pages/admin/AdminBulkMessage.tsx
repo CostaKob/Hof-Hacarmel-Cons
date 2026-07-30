@@ -32,7 +32,7 @@ import { Send, Users, Mail, Loader2, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 
-type Source = "registrations" | "enrollments" | "school_music";
+type Source = "registrations" | "enrollments" | "school_music" | "unregistered_students";
 
 interface Recipient {
   email: string;
