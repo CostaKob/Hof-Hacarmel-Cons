@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
@@ -34,6 +36,14 @@ import { toast } from "sonner";
 
 type Source = "registrations" | "enrollments" | "school_music" | "unregistered_students";
 
+const SOURCE_LABELS: Record<Source, string> = {
+  registrations: "הורים שנרשמו (טופס הרשמה)",
+  enrollments: "הורים של תלמידים עם שיוך פעיל",
+  school_music: "הורים בבית ספר מנגן",
+  unregistered_students: "תלמידים שלא נרשמו לשנה הנוכחית",
+};
+
+
 interface Recipient {
   email: string;
   parentName: string;
@@ -65,13 +75,20 @@ const stripHtml = (html: string) => {
 
 const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
-  const [source, setSource] = useState<Source>("registrations");
+  const location = useLocation();
+  const duplicated = (location.state as any)?.duplicate as
+    | { subject?: string; body?: string; audience?: Source }
+    | undefined;
+  const [source, setSource] = useState<Source>(duplicated?.audience ?? "registrations");
+
   const [regStatus, setRegStatus] = useState<string>("all");
   const [subject, setSubject] = useState<string>(() => {
+    if (duplicated?.subject) return duplicated.subject;
     if (typeof window === "undefined") return "";
     return window.localStorage.getItem("bulk-message-subject") ?? "";
   });
   const [body, setBody] = useState<string>(() => {
+    if (duplicated?.body) return duplicated.body;
     if (typeof window === "undefined") return "";
     return window.localStorage.getItem("bulk-message-body") ?? "";
   });
@@ -404,12 +421,37 @@ const AdminBulkMessage = () => {
 
     await Promise.all(Array.from({ length: Math.min(CONCURRENCY, selectedEmails.length) }, worker));
     setSending(false);
+
+    // Archive the broadcast
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      await supabase.from("broadcast_messages").insert({
+        subject: subject.trim(),
+        body_html: body,
+        audience: source,
+        audience_label: SOURCE_LABELS[source],
+        academic_year_id: selectedYearId,
+        recipients_count: done,
+        failed_count: failed,
+        recipients: selectedEmails.map((r) => ({
+          email: r.email,
+          parentName: r.parentName,
+          studentName: r.studentName,
+        })) as any,
+        sent_by: auth?.user?.id ?? null,
+        sent_by_name: auth?.user?.email ?? null,
+      });
+    } catch (e) {
+      console.error("archive broadcast failed", e);
+    }
+
     if (failed === 0) {
       toast.success(`נשלחו ${done} הודעות בהצלחה`);
     } else {
       toast.warning(`נשלחו ${done - failed} הודעות. ${failed} נכשלו — ראה קונסול.`);
     }
   };
+
 
   return (
     <AdminLayout title="שליחת הודעות להורים" backPath="/admin">

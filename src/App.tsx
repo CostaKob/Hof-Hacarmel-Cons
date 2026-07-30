@@ -61,6 +61,8 @@ import AdminBulkMessage from "./pages/admin/AdminBulkMessage";
 import AdminEmailDashboard from "./pages/admin/AdminEmailDashboard";
 import AdminMessaging from "./pages/admin/AdminMessaging";
 import AdminMessageTemplates from "./pages/admin/AdminMessageTemplates";
+import AdminBroadcastArchive from "./pages/admin/AdminBroadcastArchive";
+
 import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
@@ -176,6 +178,8 @@ const App = () => (
               <Route path="/admin/email-dashboard" element={<AdminRoute><AdminEmailDashboard /></AdminRoute>} />
               <Route path="/admin/messaging" element={<AdminRoute><AdminMessaging /></AdminRoute>} />
               <Route path="/admin/message-templates" element={<AdminRoute><AdminMessageTemplates /></AdminRoute>} />
+              <Route path="/admin/broadcast-archive" element={<AdminRoute><AdminBroadcastArchive /></AdminRoute>} />
+
 
               <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />

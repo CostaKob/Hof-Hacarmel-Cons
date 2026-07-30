@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
-import { Mail, Users, FileText, BarChart3 } from "lucide-react";
+import { Mail, Users, FileText, BarChart3, Archive } from "lucide-react";
 
 const SECTIONS = [
   {
@@ -9,6 +9,12 @@ const SECTIONS = [
     label: "רשימת תפוצה — שליחת מייל מרוכז",
     description: "בחירת קהל יעד, עריכת מייל מותג ושליחה להורים",
     icon: Users,
+  },
+  {
+    path: "/admin/broadcast-archive",
+    label: "ארכיון דיוורים",
+    description: "כל ההודעות שנשלחו בתפוצה — צפייה בתוכן, נמענים ושכפול לדיוור חדש",
+    icon: Archive,
   },
   {
     path: "/admin/message-templates",
@@ -23,6 +29,7 @@ const SECTIONS = [
     icon: BarChart3,
   },
 ];
+
 
 const AdminMessaging = () => {
   const navigate = useNavigate();

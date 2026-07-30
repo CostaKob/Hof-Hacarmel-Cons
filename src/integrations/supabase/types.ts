@@ -95,6 +95,59 @@ export type Database = {
           },
         ]
       }
+      broadcast_messages: {
+        Row: {
+          academic_year_id: string | null
+          audience: string | null
+          audience_label: string | null
+          body_html: string
+          created_at: string
+          failed_count: number
+          id: string
+          recipients: Json
+          recipients_count: number
+          sent_by: string | null
+          sent_by_name: string | null
+          subject: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          audience?: string | null
+          audience_label?: string | null
+          body_html: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          recipients?: Json
+          recipients_count?: number
+          sent_by?: string | null
+          sent_by_name?: string | null
+          subject: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          audience?: string | null
+          audience_label?: string | null
+          body_html?: string
+          created_at?: string
+          failed_count?: number
+          id?: string
+          recipients?: Json
+          recipients_count?: number
+          sent_by?: string | null
+          sent_by_name?: string | null
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broadcast_messages_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cities: {
         Row: {
           created_at: string
