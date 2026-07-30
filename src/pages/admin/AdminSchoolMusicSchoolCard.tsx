@@ -772,7 +772,7 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
                                     <button
                                       key={st.id}
                                       type="button"
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/school-music-students/${st.id}`); }}
+                                      onClick={(e) => { e.stopPropagation(); if (isCoordinatorView) { setEditStudent(st); } else { navigate(`/admin/school-music-students/${st.id}`); } }}
                                       className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary w-full text-right"
                                     >
                                       <Users className="h-3 w-3 shrink-0" />
