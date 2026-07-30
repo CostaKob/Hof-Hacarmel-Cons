@@ -459,17 +459,75 @@ const AdminStudentForm = () => {
         </div>
 
         {/* Parent details */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-5">
           <h2 className="font-semibold text-foreground text-base">פרטי הורים</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {PARENT_FIELDS.map((f) => (
-              <div key={f.name} className="space-y-1.5">
-                <Label className="text-sm">{f.label}</Label>
-                <Input type={f.type ?? "text"} {...register(f.name)} className="h-12 rounded-xl" />
+
+          {([1, 2] as const).map((slot) => {
+            const linkedId = slot === 1 ? linkedParent1Id : linkedParent2Id;
+            const fields = slot === 1 ? PARENT_FIELDS_1 : PARENT_FIELDS_2;
+            return (
+              <div key={slot} className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-muted-foreground">הורה {slot}</p>
+                  {linkedId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 rounded-xl gap-1.5"
+                      onClick={() => setEditParentId(linkedId)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> ערוך הורה
+                    </Button>
+                  )}
+                </div>
+
+                {linkedId ? (
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {fields.map((f) => (
+                        <div key={f.name} className="space-y-1.5">
+                          <Label className="text-sm">{f.label}</Label>
+                          <Input
+                            type={f.type ?? "text"}
+                            value={(watch(f.name) as string) || ""}
+                            readOnly
+                            disabled
+                            className="h-12 rounded-xl bg-muted/50"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      ההורה מקושר כיישות עצמאית. עריכה מתבצעת בכרטיס ההורה ומתעדכנת אצל כל האחים.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {fields.map((f) => (
+                        <div key={f.name} className="space-y-1.5">
+                          <Label className="text-sm">{f.label}</Label>
+                          <Input type={f.type ?? "text"} {...register(f.name)} className="h-12 rounded-xl" />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      עדיין לא מקושר להורה במערכת — הזנת ת.ז. הורה תיצור/תקשר את יישות ההורה בשמירה.
+                    </p>
+                  </>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
+
+        <ParentEditDialog
+          open={!!editParentId}
+          onOpenChange={(o) => !o && setEditParentId(null)}
+          parentId={editParentId}
+        />
+
 
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
