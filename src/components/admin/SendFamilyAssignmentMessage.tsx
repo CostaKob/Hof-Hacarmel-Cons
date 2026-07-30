@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Mail, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -134,6 +135,7 @@ const SendFamilyAssignmentMessage = ({
 
   const [extraNote, setExtraNote] = useState(defaultNote);
   const [message, setMessage] = useState("");
+  const [subject, setSubject] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
   const { data: template } = useQuery({
@@ -162,10 +164,15 @@ const SendFamilyAssignmentMessage = ({
 
   const parentWa = normalizeWaPhone(family.parent_phone);
 
-  const emailSubject = renderTemplate(template?.subject || "שיוך מורה — {{children}}", {
-    children: childrenSubject,
-    parent_name: family.parent_name || "",
-  });
+  useEffect(() => {
+    if (!open) return;
+    setSubject(
+      renderTemplate(template?.subject || "שיוך מורה — {{children}}", {
+        children: childrenSubject,
+        parent_name: family.parent_name || "",
+      }),
+    );
+  }, [open, template, childrenSubject, family.parent_name]);
 
   const sendWhatsApp = () => {
     if (!parentWa) {
@@ -191,7 +198,7 @@ const SendFamilyAssignmentMessage = ({
           recipientEmail: family.parent_email,
           replyTo: "musichof@gmail.com",
           templateData: {
-            subject: emailSubject,
+            subject: subject.trim() || "שיוך מורה",
             body: message,
           },
         },
@@ -221,6 +228,15 @@ const SendFamilyAssignmentMessage = ({
               onChange={(e) => setExtraNote(e.target.value)}
               rows={2}
               className="rounded-xl"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">נושא המייל</Label>
+            <Input
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="h-11 rounded-xl"
+              dir="rtl"
             />
           </div>
           <div className="space-y-1">
