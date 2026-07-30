@@ -292,8 +292,8 @@ const AdminEnrollmentForm = () => {
     },
     onError: (err: any) => {
       const msg = String(err?.message || "");
-      if (msg.includes("enrollments_student_instrument_year_unique") || (err?.code === "23505" && msg.includes("enrollments"))) {
-        toast.error("לתלמיד כבר קיים שיוך לכלי הנגינה הזה בשנה הנוכחית. ערוך את השיוך הקיים במקום ליצור חדש.");
+      if (msg.includes("enrollments_student_instrument_teacher_year_unique") || msg.includes("enrollments_student_instrument_year_unique") || (err?.code === "23505" && msg.includes("enrollments"))) {
+        toast.error("לתלמיד כבר קיים שיוך לכלי הנגינה הזה עם אותו מורה בשנה הנוכחית. ערוך את השיוך הקיים או בחר מורה אחר.");
       } else {
         toast.error(msg || "שגיאה בשמירת הנתונים");
       }
