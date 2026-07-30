@@ -263,7 +263,18 @@ const TeacherSchoolMusicSchoolCard = () => {
     isCoordinatorOrConductor
   );
 
+  const isCoordinator = !!(
+    schoolMeta?.teacherRoles?.includes("רכז") ||
+    (teacher?.id && school?.coordinator_teacher_id === teacher.id)
+  );
+
   const isLoading = schoolLoading || classesLoading;
+
+  // Coordinators get the full editable school card (same as admin, minus admin-only fields)
+  if (isCoordinator) {
+    return <AdminSchoolMusicSchoolCard variant="coordinator" />;
+  }
+
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
