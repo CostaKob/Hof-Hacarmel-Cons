@@ -187,7 +187,7 @@ const SendFamilyAssignmentMessage = ({
           recipientEmail: family.parent_email,
           replyTo: "musichof@gmail.com",
           templateData: {
-            subject: `שיוך מורה — ${childrenSubject}`,
+            subject: emailSubject,
             body: message,
           },
         },
