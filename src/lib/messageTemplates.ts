@@ -59,6 +59,59 @@ export async function fetchMessageTemplate(key: string): Promise<MessageTemplate
   };
 }
 
+export const SAMPLE_VARIABLE_VALUES: Record<string, Record<string, string>> = {
+  [FAMILY_ASSIGNMENT_TEMPLATE_KEY]: {
+    parent_name: "יעל כהן",
+    children: "נועם כהן, מאיה כהן",
+    assignments: [
+      "— נועם כהן —",
+      "לשיעורי גיטרה",
+      "מורה: דני לוי",
+      "פרטי קשר המורה: 0541234567",
+      "https://wa.me/972541234567",
+      "שלוחה: כרם מהר״ל",
+      "משך שיעור: 30 דקות",
+    ].join("\n"),
+    payments: [
+      "פירוט תשלום:",
+      "    גיטרה — נועם כהן: 4,200 ₪",
+      "    הנחת כלי שני: 210- ₪",
+      "  סה״כ: 3,990 ₪",
+      "  [לחצו כאן לתשלום](https://pay.example.com/abc123)",
+      "ניתן לחלק עד 10 תשלומים ללא ריבית.",
+    ].join("\n"),
+    note: "השיעורים יתחילו בספטמבר עם תחילת שנת הלימודים",
+  },
+};
+
+/** Converts markdown links to a WhatsApp/plain-text friendly form: "טקסט: url" */
+export function markdownLinksToPlain(text: string): string {
+  return text.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1:\n$2");
+}
+
+/** Splits a line into text/link segments for preview rendering */
+export function parseInlineLinks(
+  line: string,
+): Array<{ type: "text" | "link"; text: string; href?: string }> {
+  const re = /(\[[^\]\n]+\]\(https?:\/\/[^\s)]+\))|(https?:\/\/[^\s]+)/g;
+  const out: Array<{ type: "text" | "link"; text: string; href?: string }> = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(line)) !== null) {
+    if (m.index > last) out.push({ type: "text", text: line.slice(last, m.index) });
+    if (m[1]) {
+      const inner = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(m[1]);
+      if (inner) out.push({ type: "link", text: inner[1], href: inner[2] });
+      else out.push({ type: "text", text: m[1] });
+    } else if (m[2]) {
+      out.push({ type: "link", text: m[2], href: m[2] });
+    }
+    last = m.index + m[0].length;
+  }
+  if (last < line.length) out.push({ type: "text", text: line.slice(last) });
+  return out;
+}
+
 export function renderTemplate(template: string, vars: Record<string, string>): string {
   let out = template;
   for (const [k, v] of Object.entries(vars)) {
