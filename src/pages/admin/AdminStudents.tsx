@@ -916,6 +916,7 @@ const AdminStudents = () => {
                           {s.national_id && <span>ת.ז {s.national_id}</span>}
                           {s.grade && (<><span>·</span><span>כיתה {s.grade}</span></>)}
                           {s.city && (<><span>·</span><span>{s.city}</span></>)}
+                          {s.parent_name && (<><span>·</span><span>{s.parent_name}</span></>)}
                           {s.parent_phone && (<><span>·</span><PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
                         </div>
                       </div>
@@ -1037,6 +1038,21 @@ const AdminStudents = () => {
                           <>
                             <span>·</span>
                             <span>רמה {r.students.playing_level}</span>
+                          </>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
+                        {r.students?.parent_name && <span>{r.students.parent_name}</span>}
+                        {r.students?.parent_phone && (
+                          <>
+                            <span>·</span>
+                            <PhoneDisplay phone={r.students.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" />
+                          </>
+                        )}
+                        {r.students?.city && (
+                          <>
+                            <span>·</span>
+                            <span>{r.students.city}</span>
                           </>
                         )}
                       </div>
