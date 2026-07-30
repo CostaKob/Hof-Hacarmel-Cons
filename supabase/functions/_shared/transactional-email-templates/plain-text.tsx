@@ -71,4 +71,5 @@ export const template = {
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', direction: 'rtl' as const, textAlign: 'right' as const }
 const container = { padding: '20px 25px', direction: 'rtl' as const, textAlign: 'right' as const, maxWidth: '600px', margin: '0 auto' }
 const lineStyle = { margin: '0', fontSize: '14px', lineHeight: '22px', color: '#1f2937', textAlign: 'right' as const, direction: 'rtl' as const, unicodeBidi: 'plaintext' as const }
-const linkStyle = { color: '#0f766e', fontWeight: 'bold' as const, textDecoration: 'underline', fontSize: '18px' }
+const linkStyle = { color: '#0f766e', fontWeight: 'bold' as const, textDecoration: 'underline', fontSize: '14px' }
+const paymentLinkStyle = { color: '#0f766e', fontWeight: 'bold' as const, textDecoration: 'underline', fontSize: '18px' }
