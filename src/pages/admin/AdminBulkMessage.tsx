@@ -224,19 +224,19 @@ const AdminBulkMessage = () => {
         }
         return rows;
       }
-      // school_music
-      const { data, error } = await supabase
-        .from("school_music_students")
-        .select("parent_email, parent_name, student_first_name, student_last_name")
-        .eq("academic_year_id", selectedYearId!);
-      if (error) throw error;
-      return (data ?? [])
-        .filter((r: any) => r.parent_email)
-        .map((r: any) => ({
-          email: String(r.parent_email).trim().toLowerCase(),
-          parentName: r.parent_name ?? "",
-          studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
-        }));
+      if (source === "school_music") {
+        const { data, error } = await supabase
+          .from("school_music_students")
+          .select("parent_email, parent_name, student_first_name, student_last_name")
+          .eq("academic_year_id", selectedYearId!);
+        if (error) throw error;
+        return (data ?? [])
+          .filter((r: any) => r.parent_email)
+          .map((r: any) => ({
+            email: String(r.parent_email).trim().toLowerCase(),
+            parentName: r.parent_name ?? "",
+            studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
+          }));
       }
       // unregistered_students: active students with no registration and no active enrollment for the selected year
       const [{ data: allStudents, error: studentsError }, { data: registered, error: regError }, { data: enrolled, error: enrError }] = await Promise.all([
