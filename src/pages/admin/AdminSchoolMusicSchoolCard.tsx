@@ -517,9 +517,8 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
     ? (school as any).operating_days
     : (dayOfWeek != null ? [dayOfWeek] : []);
 
-  const PhoneLink = ({ phone }: { phone?: string | null }) => (
-    <PhoneDisplay phone={phone} showIcon textClassName="text-xs" />
-  );
+  const roleProps = { isCoordinatorView, allTeachers, classesCount, updateRoleHours };
+
 
   const getGroupsForClass = (classId: string) => classGroups.filter((g: any) => g.school_music_class_id === classId);
   const getStudentsForGroup = (groupId: string) => schoolStudents.filter((s: any) => s.school_music_class_group_id === groupId);
