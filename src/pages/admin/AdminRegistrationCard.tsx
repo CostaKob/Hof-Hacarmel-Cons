@@ -453,7 +453,8 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
     return DIFF_FIELDS.filter((f) => {
       const regVal = normalizeDiff(registration[f.regKey]);
       const studentVal = normalizeDiff(student[f.studentKey]);
-      if (!regVal || !studentVal || regVal === studentVal) return false;
+      // Show also when the student card is missing the value entirely
+      if (!regVal || regVal === studentVal) return false;
       return !resolved[`${registration.id}:${f.studentKey}:${regVal}`];
     }).map((f) => ({
       label: f.label,
@@ -461,16 +462,17 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
       resolveKey: `${registration.id}:${f.studentKey}:${normalizeDiff(registration[f.regKey])}`,
       secondary: !!f.secondary,
       secondaryValue: f.secondary ? (student[`${f.studentKey}_2`] || "") : "",
+      isMissing: !normalizeDiff(student[f.studentKey]),
       oldValue: student[f.studentKey] || "—",
       newValue: registration[f.regKey] || "—",
     }));
   }, [registration, student, resolved]);
 
-  // Default: keep existing (safer — no data lost without explicit choice)
+  // Default: keep existing (safer). Missing fields default to filling from the form.
   const [decisions, setDecisions] = useState<Record<string, DiffDecision>>({});
   useEffect(() => {
     const init: Record<string, DiffDecision> = {};
-    diffs.forEach((d) => { init[d.studentKey] = "keep"; });
+    diffs.forEach((d) => { init[d.studentKey] = d.isMissing ? "replace" : "keep"; });
     setDecisions(init);
   }, [diffs.length]);
 
@@ -520,7 +522,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           שינויים שזוהו ({diffs.length})
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          לכל שדה: השאר את הקיים, החלף בחדש, או — בשדות הורה — שמור את שניהם
+          לכל שדה: השאר את הקיים, החלף בחדש, או — בשדות הורה — שמור את שניהם. שדות שחסרים בכרטיס התלמיד מסומנים וימולאו כברירת מחדל.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -531,11 +533,14 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           const bothDisabled = d.secondary && d.secondaryValue && String(d.secondaryValue).trim() !== "";
           return (
             <div key={i} className="rounded-lg border border-border p-3 space-y-2.5">
-              <p className="text-xs font-medium text-muted-foreground">{d.label}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {d.label}
+                {d.isMissing && <span className="ms-2 text-[11px] text-amber-700 dark:text-amber-400">חסר בכרטיס התלמיד</span>}
+              </p>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <p className="text-[11px] text-muted-foreground">ערך קיים</p>
-                  <p className={`text-sm ${dec === "replace" ? "line-through text-muted-foreground" : "text-foreground"}`}>{d.oldValue}</p>
+                  <p className={`text-sm ${dec === "replace" && !d.isMissing ? "line-through text-muted-foreground" : "text-foreground"}`}>{d.oldValue}</p>
                   {d.secondary && d.secondaryValue && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">משני: {d.secondaryValue}</p>
                   )}
@@ -556,7 +561,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
                   className="h-8 rounded-lg text-xs"
                   onClick={() => setDec("keep")}
                 >
-                  השאר קיים
+                  {d.isMissing ? "השאר ריק" : "השאר קיים"}
                 </Button>
                 <Button
                   type="button"
@@ -565,9 +570,9 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
                   className="h-8 rounded-lg text-xs"
                   onClick={() => setDec("replace")}
                 >
-                  החלף בחדש
+                  {d.isMissing ? "מלא מהטופס" : "החלף בחדש"}
                 </Button>
-                {d.secondary && (
+                {d.secondary && !d.isMissing && (
                   <Button
                     type="button"
                     size="sm"
