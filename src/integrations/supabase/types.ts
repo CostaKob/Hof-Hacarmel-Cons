@@ -2733,6 +2733,10 @@ export type Database = {
         Args: { _national_id: string }
         Returns: Json
       }
+      merge_duplicate_parents: {
+        Args: { _keep_national_id: string; _remove_national_id: string }
+        Returns: Json
+      }
       merge_families: {
         Args: { _source_national_id: string; _target_national_id: string }
         Returns: Json
