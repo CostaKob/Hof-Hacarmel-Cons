@@ -681,122 +681,119 @@ const AdminStudents = () => {
       <div className="mb-4 grid grid-cols-2 md:grid-cols-5 lg:flex lg:flex-wrap gap-2">
         {view === "enrollments" && (
           <>
-            <Select value={teacherFilter} onValueChange={(v) => setFilter("teacher", v)}>
-              <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="מורים" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">מורים</SelectItem>
-                {(teachers as any[]).map((t: any) => (
-                  <SelectItem key={t.id} value={t.id}>{t.first_name} {t.last_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="מורים"
+              options={teachers.map((t: any) => t.id)}
+              renderLabel={(id) => {
+                const t = teachers.find((x: any) => x.id === id);
+                return t ? `${t.first_name} ${t.last_name}` : id;
+              }}
+              value={teacherFilter}
+              onChange={(v) => setMultiFilter("teacher", v)}
+            />
 
-            <Select value={schoolFilter} onValueChange={(v) => setFilter("school", v)}>
-              <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="שלוחה" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">שלוחה</SelectItem>
-                {(schools as any[]).map((s: any) => (
-                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="שלוחה"
+              options={schools.map((s: any) => s.id)}
+              renderLabel={(id) => schools.find((s: any) => s.id === id)?.name ?? id}
+              value={schoolFilter}
+              onChange={(v) => setMultiFilter("school", v)}
+            />
 
-            <Select value={eduSchoolFilter} onValueChange={(v) => setFilter("edu_school", v)}>
-              <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="בית ספר" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">בית ספר</SelectItem>
-                {(eduSchools as string[]).map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="בית ספר"
+              options={eduSchools as string[]}
+              value={eduSchoolFilter}
+              onChange={(v) => setMultiFilter("edu_school", v)}
+            />
 
-            <Select value={durationFilter} onValueChange={(v) => setFilter("duration", v)}>
-              <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="משך שיעור" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">משך שיעור</SelectItem>
-                {durations.map((d) => (
-                  <SelectItem key={d} value={String(d)}>{d} דק׳</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-36"
+              allLabel="משך שיעור"
+              options={durations.map(String)}
+              renderLabel={(d) => `${d} דק׳`}
+              value={durationFilter}
+              onChange={(v) => setMultiFilter("duration", v)}
+            />
 
-            <Select value={levelFilter} onValueChange={(v) => setFilter("level", v)}>
-              <SelectTrigger className="w-full lg:w-32 h-11 rounded-xl"><SelectValue placeholder="רמת לימוד" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">רמת לימוד</SelectItem>
-                {["א","ב","ג"].map((l) => (
-                  <SelectItem key={l} value={l}>{l}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-32"
+              allLabel="רמת לימוד"
+              options={["א","ב","ג"]}
+              renderLabel={(l) => `רמה ${l}`}
+              value={levelFilter}
+              onChange={(v) => setMultiFilter("level", v)}
+            />
 
-            <Select value={paymentFilter} onValueChange={(v) => setFilter("payment", v)}>
-              <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="תשלומים" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">תשלומים</SelectItem>
-                <SelectItem value="full">שולם במלואו</SelectItem>
-                <SelectItem value="partial">שולם חלקית</SelectItem>
-                <SelectItem value="unpaid">לא שולם</SelectItem>
-              </SelectContent>
-            </Select>
+            <MultiSelectFilter
+              className="w-full lg:w-36"
+              allLabel="תשלומים"
+              options={["full", "partial", "unpaid"]}
+              renderLabel={(k) => ({ full: "שולם במלואו", partial: "שולם חלקית", unpaid: "לא שולם" })[k]}
+              value={paymentFilter}
+              onChange={(v) => setMultiFilter("payment", v)}
+            />
           </>
         )}
 
-        <Select value={cityFilter} onValueChange={(v) => setFilter("city", v)}>
-          <SelectTrigger className="w-full lg:w-36 h-11 rounded-xl"><SelectValue placeholder="ישוב מגורים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">ישוב מגורים</SelectItem>
-            {cities.map((c) => (
-              <SelectItem key={c as string} value={c as string}>{c as string}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-36"
+          allLabel="ישוב מגורים"
+          options={cities as string[]}
+          value={cityFilter}
+          onChange={(v) => setMultiFilter("city", v)}
+        />
 
-        <Select value={gradeFilter} onValueChange={(v) => setFilter("grade", v)}>
-          <SelectTrigger className="w-full lg:w-32 h-11 rounded-xl"><SelectValue placeholder="כיתה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כיתה</SelectItem>
-            {["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"].map((g) => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-32"
+          allLabel="כיתה"
+          options={["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"]}
+          renderLabel={(g) => `כיתה ${g}`}
+          value={gradeFilter}
+          onChange={(v) => setMultiFilter("grade", v)}
+        />
 
-        <Select value={trackFilter} onValueChange={(v) => setFilter("track", v)}>
-          <SelectTrigger className="w-full col-span-2 md:col-span-1 lg:w-44 h-11 rounded-xl"><SelectValue placeholder="קורסים ומסלולים" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">קורסים ומסלולים</SelectItem>
-            <SelectItem value="music_production">🎚️ הפקה מוסיקלית</SelectItem>
-            <SelectItem value="recital">🎼 רסיטל י״ב</SelectItem>
-            <SelectItem value="major">🎓 מגמת המוסיקה</SelectItem>
-            <SelectItem value="junior">📘 מסלול חטיבה</SelectItem>
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full col-span-2 md:col-span-1 lg:w-44"
+          allLabel="קורסים ומסלולים"
+          options={["music_production", "recital", "major", "junior"]}
+          renderLabel={(k) => ({ music_production: "🎚️ הפקה מוסיקלית", recital: "🎼 רסיטל י״ב", major: "🎓 מגמת המוסיקה", junior: "📘 מסלול חטיבה" })[k]}
+          value={trackFilter}
+          onChange={(v) => setMultiFilter("track", v)}
+        />
 
-        <Select value={instrumentFilter} onValueChange={(v) => setFilter("instrument", v)}>
-          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="כלי נגינה" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">כלי נגינה</SelectItem>
-            {(instrumentOptions as string[]).map((i) => (
-              <SelectItem key={i} value={i}>{i}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-40"
+          allLabel="כלי נגינה"
+          options={instrumentOptions as string[]}
+          value={instrumentFilter}
+          onChange={(v) => setMultiFilter("instrument", v)}
+        />
 
-        <Select value={regTypeFilter} onValueChange={(v) => setFilter("reg_type", v)}>
-          <SelectTrigger className="w-full lg:w-40 h-11 rounded-xl"><SelectValue placeholder="סוג רישום" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">סוג רישום</SelectItem>
-            <SelectItem value="new">🆕 חדש</SelectItem>
-            <SelectItem value="continuing">🔄 ממשיך</SelectItem>
-            <SelectItem value="unknown">ללא סימון</SelectItem>
-          </SelectContent>
-        </Select>
+        <MultiSelectFilter
+          className="w-full lg:w-40"
+          allLabel="סוג רישום"
+          options={["new", "continuing", "unknown"]}
+          renderLabel={(k) => ({ new: "🆕 חדש", continuing: "🔄 ממשיך", unknown: "ללא סימון" })[k]}
+          value={regTypeFilter}
+          onChange={(v) => setMultiFilter("reg_type", v)}
+        />
 
-
-
-
+        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={clearFilters}
+            className="h-11 rounded-xl gap-1 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-4 w-4" />
+            נקה סינון
+          </Button>
+        )}
 
         {/* Status filter buttons */}
         <div className={`col-span-2 md:col-span-5 grid grid-cols-2 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:flex-wrap lg:items-center ${view === "all" ? "md:grid-cols-4" : "md:grid-cols-2"}`}>
