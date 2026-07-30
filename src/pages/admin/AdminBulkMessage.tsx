@@ -32,7 +32,7 @@ import { Send, Users, Mail, Loader2, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 
-type Source = "registrations" | "enrollments" | "school_music";
+type Source = "registrations" | "enrollments" | "school_music" | "unregistered_students";
 
 interface Recipient {
   email: string;
@@ -224,19 +224,54 @@ const AdminBulkMessage = () => {
         }
         return rows;
       }
-      // school_music
-      const { data, error } = await supabase
-        .from("school_music_students")
-        .select("parent_email, parent_name, student_first_name, student_last_name")
-        .eq("academic_year_id", selectedYearId!);
-      if (error) throw error;
-      return (data ?? [])
-        .filter((r: any) => r.parent_email)
-        .map((r: any) => ({
-          email: String(r.parent_email).trim().toLowerCase(),
-          parentName: r.parent_name ?? "",
-          studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
-        }));
+      if (source === "school_music") {
+        const { data, error } = await supabase
+          .from("school_music_students")
+          .select("parent_email, parent_name, student_first_name, student_last_name")
+          .eq("academic_year_id", selectedYearId!);
+        if (error) throw error;
+        return (data ?? [])
+          .filter((r: any) => r.parent_email)
+          .map((r: any) => ({
+            email: String(r.parent_email).trim().toLowerCase(),
+            parentName: r.parent_name ?? "",
+            studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
+          }));
+      }
+      // unregistered_students: active students with no registration and no active enrollment for the selected year
+      const [{ data: allStudents, error: studentsError }, { data: registered, error: regError }, { data: enrolled, error: enrError }] = await Promise.all([
+        supabase
+          .from("students")
+          .select("id, national_id, parent_email, parent_name, parent_email_2, parent_name_2, first_name, last_name")
+          .eq("is_active", true),
+        supabase
+          .from("registrations")
+          .select("student_national_id")
+          .eq("academic_year_id", selectedYearId!)
+          .not("student_national_id", "is", null),
+        supabase
+          .from("enrollments")
+          .select("student_id")
+          .eq("academic_year_id", selectedYearId!)
+          .eq("is_active", true),
+      ]);
+      if (studentsError) throw studentsError;
+      if (regError) throw regError;
+      if (enrError) throw enrError;
+
+      const registeredIds = new Set((registered ?? []).map((r: any) => String(r.student_national_id).trim()));
+      const enrolledStudentIds = new Set((enrolled ?? []).map((e: any) => e.student_id));
+
+      const rows: Recipient[] = [];
+      for (const s of (allStudents as any[]) ?? []) {
+        const nid = s.national_id ? String(s.national_id).trim() : "";
+        if (nid && registeredIds.has(nid)) continue;
+        if (enrolledStudentIds.has(s.id)) continue;
+        const name = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
+        if (s?.parent_email) rows.push({ email: String(s.parent_email).trim().toLowerCase(), parentName: s.parent_name ?? "", studentName: name });
+        if (s?.parent_email_2) rows.push({ email: String(s.parent_email_2).trim().toLowerCase(), parentName: s.parent_name_2 ?? "", studentName: name });
+      }
+      return rows;
     },
   });
 
@@ -395,6 +430,7 @@ const AdminBulkMessage = () => {
                   <SelectItem value="registrations">הורים שנרשמו (טופס הרשמה)</SelectItem>
                   <SelectItem value="enrollments">הורים של תלמידים עם שיוך פעיל</SelectItem>
                   <SelectItem value="school_music">הורים בבית ספר מנגן</SelectItem>
+                  <SelectItem value="unregistered_students">תלמידים שלא נרשמו לשנה הנוכחית</SelectItem>
                 </SelectContent>
               </Select>
               {yearName && <p className="text-xs text-muted-foreground">שנה נבחרת: {yearName}</p>}
