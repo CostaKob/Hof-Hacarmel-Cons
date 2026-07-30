@@ -159,7 +159,8 @@ const AdminStudentCard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       toast.success("התלמיד נמחק בהצלחה");
-      navigate("/admin/students");
+      const returnTo = (location.state as { returnTo?: string } | null)?.returnTo;
+      navigate(returnTo || "/admin/students", { replace: true });
     },
     onError: (err: any) => {
       toast.error(err.message || "שגיאה במחיקת התלמיד");
