@@ -1,0 +1,2 @@
+ALTER TABLE public.enrollments DROP CONSTRAINT IF EXISTS enrollments_student_instrument_year_unique;
+ALTER TABLE public.enrollments ADD CONSTRAINT enrollments_student_instrument_teacher_year_unique UNIQUE (student_id, instrument_id, teacher_id, academic_year_id);
