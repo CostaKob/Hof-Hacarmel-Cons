@@ -8,7 +8,7 @@ import PageTitle from "@/components/PageTitle";
 
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { Search, Settings, AlertTriangle, Phone, Music } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
@@ -51,10 +51,10 @@ const AdminRegistrations = () => {
   const { selectedYearId, years } = useAcademicYear();
   const selectedYear = years.find((y) => y.id === selectedYearId);
   useListStatePreservation("/admin/registrations");
-  const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
-  const [schoolFilter, setSchoolFilter] = usePersistedState<string>("/admin/registrations", "school", "all");
-  const [gradeFilter, setGradeFilter] = usePersistedState<string>("/admin/registrations", "grade", "all");
-  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string>("/admin/registrations", "instrument", "all");
+  const [statusFilter, setStatusFilter] = usePersistedState<string[]>("/admin/registrations", "statusMulti", []);
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string[]>("/admin/registrations", "schoolMulti", []);
+  const [gradeFilter, setGradeFilter] = usePersistedState<string[]>("/admin/registrations", "gradeMulti", []);
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string[]>("/admin/registrations", "instrumentMulti", []);
   const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
@@ -72,12 +72,12 @@ const AdminRegistrations = () => {
   });
 
   const filtered = registrations.filter((r) => {
-    if (statusFilter !== "all" && r.status !== statusFilter) return false;
-    if (schoolFilter !== "all" && (r.branch_school_name || "ללא שלוחה") !== schoolFilter) return false;
-    if (gradeFilter !== "all" && (r.grade || "") !== gradeFilter) return false;
-    if (instrumentFilter !== "all") {
+    if (statusFilter.length > 0 && !statusFilter.includes(r.status)) return false;
+    if (schoolFilter.length > 0 && !schoolFilter.includes(r.branch_school_name || "ללא שלוחה")) return false;
+    if (gradeFilter.length > 0 && !gradeFilter.includes(r.grade || "")) return false;
+    if (instrumentFilter.length > 0) {
       const insts = (r.requested_instruments as string[] | null) || [];
-      if (!insts.some((i) => (i || "").trim() === instrumentFilter)) return false;
+      if (!insts.some((i) => instrumentFilter.includes((i || "").trim()))) return false;
     }
     if (search) {
       const q = search.toLowerCase();
@@ -86,6 +86,7 @@ const AdminRegistrations = () => {
     }
     return true;
   });
+
 
   const schoolCounts = (() => {
     const counts = new Map<string, number>();
@@ -141,52 +142,38 @@ const AdminRegistrations = () => {
           </div>
         </div>
 
-        {/* Filters */}
+        {/* Filters — multi-select */}
         <div className="flex flex-wrap gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-44 h-11 rounded-xl">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הסטטוסים</SelectItem>
-              {Object.entries(REGISTRATION_STATUSES).map(([key, { label }]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={schoolFilter} onValueChange={setSchoolFilter}>
-            <SelectTrigger className="w-44 h-11 rounded-xl">
-              <SelectValue placeholder="שלוחה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל השלוחות</SelectItem>
-              {schoolCounts.map(([name]) => (
-                <SelectItem key={name} value={name}>{name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={gradeFilter} onValueChange={setGradeFilter}>
-            <SelectTrigger className="w-40 h-11 rounded-xl">
-              <SelectValue placeholder="כיתה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הכיתות</SelectItem>
-              {gradeOptions.map((g) => (
-                <SelectItem key={g} value={g}>כיתה {g}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={instrumentFilter} onValueChange={setInstrumentFilter}>
-            <SelectTrigger className="w-48 h-11 rounded-xl">
-              <SelectValue placeholder="כלי נגינה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הכלים</SelectItem>
-              {instrumentOptions.map((i) => (
-                <SelectItem key={i} value={i}>{i}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל הסטטוסים"
+            options={Object.keys(REGISTRATION_STATUSES)}
+            renderLabel={(k) => (REGISTRATION_STATUSES as any)[k]?.label ?? k}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל השלוחות"
+            options={schoolCounts.map(([name]) => name)}
+            value={schoolFilter}
+            onChange={setSchoolFilter}
+          />
+          <MultiSelectFilter
+            className="w-40"
+            allLabel="כל הכיתות"
+            options={gradeOptions}
+            renderLabel={(g) => `כיתה ${g}`}
+            value={gradeFilter}
+            onChange={setGradeFilter}
+          />
+          <MultiSelectFilter
+            className="w-48"
+            allLabel="כל הכלים"
+            options={instrumentOptions}
+            value={instrumentFilter}
+            onChange={setInstrumentFilter}
+          />
         </div>
 
         {/* Compact summary: total + per-school chips */}
@@ -195,10 +182,10 @@ const AdminRegistrations = () => {
             <button
               type="button"
               onClick={() => {
-                setStatusFilter("all");
-                setSchoolFilter("all");
-                setGradeFilter("all");
-                setInstrumentFilter("all");
+                setStatusFilter([]);
+                setSchoolFilter([]);
+                setGradeFilter([]);
+                setInstrumentFilter([]);
                 setSearch("");
               }}
               className="text-[11px] px-2.5 py-1 rounded-full border bg-muted border-border hover:bg-muted/70 transition-colors"
@@ -212,9 +199,11 @@ const AdminRegistrations = () => {
             {schoolCounts.map(([name, count]) => (
               <button
                 key={name}
-                onClick={() => setSchoolFilter(schoolFilter === name ? "all" : name)}
+                onClick={() =>
+                  setSchoolFilter(schoolFilter.includes(name) ? schoolFilter.filter((s) => s !== name) : [...schoolFilter, name])
+                }
                 className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
-                  schoolFilter === name ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                  schoolFilter.includes(name) ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
                 }`}
               >
                 {name} · {count}
@@ -231,9 +220,11 @@ const AdminRegistrations = () => {
             return (
               <button
                 key={key}
-                onClick={() => setStatusFilter(statusFilter === key ? "all" : key)}
+                onClick={() =>
+                  setStatusFilter(statusFilter.includes(key) ? statusFilter.filter((s) => s !== key) : [...statusFilter, key])
+                }
                 className={`text-xs px-3 py-1 rounded-full border transition-colors ${
-                  statusFilter === key ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
+                  statusFilter.includes(key) ? "bg-primary text-primary-foreground border-primary" : "bg-muted border-border"
                 }`}
               >
                 {label} ({count})
@@ -241,6 +232,7 @@ const AdminRegistrations = () => {
             );
           })}
         </div>
+
 
         {/* List */}
         {isLoading ? (
