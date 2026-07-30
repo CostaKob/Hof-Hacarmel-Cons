@@ -127,7 +127,10 @@ const TeacherStudentCard = () => {
           <div className="grid grid-cols-1 gap-3 text-sm">
             <InfoRow icon={Music} label="כלי" value={enrollment.instruments?.name} />
             <InfoRow icon={Calendar} label="משך שיעור" value={enrollment.lesson_duration_minutes ? `${enrollment.lesson_duration_minutes} דקות` : null} />
-            <InfoRow icon={School} label="בית ספר" value={enrollment.schools?.name} />
+            <InfoRow icon={School} label="שלוחה" value={enrollment.schools?.name} />
+            {(student as any).educational_school && (
+              <InfoRow icon={School} label="בית ספר" value={(student as any).educational_school} />
+            )}
             <InfoRow icon={Calendar} label="תאריך התחלה" value={enrollment.start_date} />
             {enrollment.end_date && <InfoRow icon={Calendar} label="תאריך סיום" value={enrollment.end_date} />}
             {(() => { const yrs = calcYearsOfPlaying((enrollment as any).instrument_start_date); return yrs !== null ? <InfoRow icon={Music} label="שנות נגינה" value={String(yrs)} /> : null; })()}
