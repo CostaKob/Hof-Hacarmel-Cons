@@ -588,10 +588,10 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           type="button"
           size="sm"
           onClick={() => applyMutation.mutate()}
-          disabled={changesCount === 0 || applyMutation.isPending}
+          disabled={applyMutation.isPending}
           className="w-full sm:w-auto h-11 rounded-xl"
         >
-          {applyMutation.isPending ? "מעדכן..." : changesCount === 0 ? "לא נבחרו שינויים" : `החל ${changesCount} שינויים`}
+          {applyMutation.isPending ? "שומר..." : changesCount === 0 ? "אשר — השאר את הקיים" : `החל ${changesCount} שינויים`}
         </Button>
       </CardContent>
     </Card>
