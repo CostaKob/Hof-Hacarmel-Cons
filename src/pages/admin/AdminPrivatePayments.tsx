@@ -604,7 +604,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
               <SelectItem value="refunded">עם החזרים</SelectItem>
-              <SelectItem value="active_links">עם לינק פעיל</SelectItem>
+              <SelectItem value="active_links">עם קישור תשלום פעיל (משפחתי)</SelectItem>
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
@@ -648,7 +648,7 @@ const AdminPrivatePayments = () => {
             onClick={() => setStatusFilter(statusFilter === "active_links" ? "all" : "active_links")}
           >
             <Link2 className="h-3.5 w-3.5" />
-            {statusFilter === "active_links" ? "בטל סינון לינקים" : "לינקים פעילים בלבד"}
+            {statusFilter === "active_links" ? "בטל סינון קישורים" : "קישורי תשלום פעילים (משפחה)"}
           </Button>
           <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={exportCsv}>
             <Download className="h-3.5 w-3.5" />
