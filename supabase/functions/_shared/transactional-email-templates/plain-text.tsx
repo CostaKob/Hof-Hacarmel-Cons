@@ -21,8 +21,9 @@ const renderLine = (line: string) => {
     if (match[1]) {
       const inner = /^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/.exec(match[1])
       if (inner) {
+        const isPaymentLink = inner[1] === 'לחצו כאן לתשלום'
         parts.push(
-          <Link key={`l${key++}`} href={inner[2]} style={linkStyle}>
+          <Link key={`l${key++}`} href={inner[2]} style={isPaymentLink ? paymentLinkStyle : linkStyle}>
             {inner[1]}
           </Link>
         )
