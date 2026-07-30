@@ -67,6 +67,36 @@ const AdminStudents = () => {
     }, { replace: true });
   }, [setSearchParams]);
 
+  const setMultiFilter = useCallback((key: string, values: string[]) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (values.length === 0) next.delete(key);
+      else next.set(key, values.join(","));
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const clearFilters = useCallback(() => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete("q");
+      next.delete("teacher");
+      next.delete("school");
+      next.delete("edu_school");
+      next.delete("duration");
+      next.delete("city");
+      next.delete("grade");
+      next.delete("level");
+      next.delete("payment");
+      next.delete("track");
+      next.delete("instrument");
+      next.delete("reg_type");
+      next.delete("siblings");
+      next.set("status", "active");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["admin-students-enrollments", selectedYearId],
     queryFn: async () => {
