@@ -395,8 +395,38 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
     onError: () => toast.error("שגיאה בשכפול"),
   });
 
-  if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><PageTitle title="בית ספר מנגן" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
-  if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><PageTitle title="בית ספר מנגן" /><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
+  const Shell = ({ title, children }: { title: string; children: React.ReactNode }) => {
+    if (!isCoordinatorView) {
+      return (
+        <AdminLayout title={title} backPath="/admin/school-music-schools">
+          <PageTitle title={`בית ספר מנגן — ${title}`} />
+          {children}
+        </AdminLayout>
+      );
+    }
+    return (
+      <div dir="rtl" className="min-h-screen bg-background">
+        <PageTitle title={`בית ספר מנגן — ${title}`} />
+        <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary-foreground shrink-0"
+              onClick={() => navigate("/teacher/school-music-schools")}
+            >
+              <ChevronLeft className="h-5 w-5 rotate-180" />
+            </Button>
+            <h1 className="text-lg font-bold truncate">{title}</h1>
+          </div>
+        </header>
+        <main className="mx-auto max-w-lg px-5 pt-5 pb-24">{children}</main>
+      </div>
+    );
+  };
+
+  if (isLoading) return <Shell title="טוען..."><p className="text-center text-muted-foreground py-8">טוען...</p></Shell>;
+  if (!school) return <Shell title="לא נמצא"><p className="text-center text-muted-foreground py-8">לא נמצא</p></Shell>;
 
 
   const coordinator = (school as any).coordinator;
