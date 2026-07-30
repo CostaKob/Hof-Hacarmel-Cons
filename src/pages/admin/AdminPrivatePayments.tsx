@@ -764,8 +764,10 @@ const AdminPrivatePayments = () => {
                         {r.refunds > 0.01 && (
                           <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(r.refunds)} ₪</Badge>
                         )}
-                        {r.activeLinks > 0 && (
-                          <Badge variant="outline" className="text-blue-600 border-blue-300">🔗 {r.activeLinks} לינק פעיל</Badge>
+                        {r.familyActiveLinks > 0 && (
+                          <Badge variant="outline" className="text-blue-600 border-blue-300">
+                            🔗 {r.familyActiveLinks} קישור פעיל{r.familySize > 1 ? " (משפחתי)" : ""}
+                          </Badge>
                         )}
                         {r.student.grade && <span className="text-xs text-muted-foreground">כיתה {r.student.grade}</span>}
                       </div>
@@ -827,7 +829,9 @@ const AdminPrivatePayments = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pt-2">
-          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
+          {viewMode === "families"
+            ? `מציג ${filteredFamilies.length} תאים משפחתיים (${totals.studentsCount} תלמידים)`
+            : `מציג ${filtered.length} תלמידים`} · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
         </p>
       </div>
     </AdminLayout>
