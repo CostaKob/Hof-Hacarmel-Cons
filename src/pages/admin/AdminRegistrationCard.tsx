@@ -453,7 +453,8 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
     return DIFF_FIELDS.filter((f) => {
       const regVal = normalizeDiff(registration[f.regKey]);
       const studentVal = normalizeDiff(student[f.studentKey]);
-      if (!regVal || !studentVal || regVal === studentVal) return false;
+      // Show also when the student card is missing the value entirely
+      if (!regVal || regVal === studentVal) return false;
       return !resolved[`${registration.id}:${f.studentKey}:${regVal}`];
     }).map((f) => ({
       label: f.label,
@@ -461,16 +462,17 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
       resolveKey: `${registration.id}:${f.studentKey}:${normalizeDiff(registration[f.regKey])}`,
       secondary: !!f.secondary,
       secondaryValue: f.secondary ? (student[`${f.studentKey}_2`] || "") : "",
+      isMissing: !normalizeDiff(student[f.studentKey]),
       oldValue: student[f.studentKey] || "—",
       newValue: registration[f.regKey] || "—",
     }));
   }, [registration, student, resolved]);
 
-  // Default: keep existing (safer — no data lost without explicit choice)
+  // Default: keep existing (safer). Missing fields default to filling from the form.
   const [decisions, setDecisions] = useState<Record<string, DiffDecision>>({});
   useEffect(() => {
     const init: Record<string, DiffDecision> = {};
-    diffs.forEach((d) => { init[d.studentKey] = "keep"; });
+    diffs.forEach((d) => { init[d.studentKey] = d.isMissing ? "replace" : "keep"; });
     setDecisions(init);
   }, [diffs.length]);
 
