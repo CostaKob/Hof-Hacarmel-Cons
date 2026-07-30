@@ -256,6 +256,61 @@ const AdminPrivatePayments = () => {
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
   }, [enrollments, payments, drafts, year, settings, discountTypes]);
 
+  // Family grouping — payments are managed at the family level
+  const { rowsWithFamily, familyRows } = useMemo(() => {
+    const keyOf = (s: any) =>
+      s.parent_1_id ?? s.parent_2_id ?? (s.parent_national_id || s.parent_national_id_2) ?? `solo:${s.id}`;
+
+    const groups = new Map<string, any[]>();
+    for (const r of rows) {
+      const k = keyOf(r.student);
+      const arr = groups.get(k) ?? [];
+      arr.push(r);
+      groups.set(k, arr);
+    }
+
+    const linksByKey = new Map<string, number>();
+    for (const [k, members] of groups.entries()) {
+      linksByKey.set(k, members.reduce((s, m) => s + m.activeLinks, 0));
+    }
+
+    const withFamily = rows.map((r) => {
+      const k = keyOf(r.student);
+      return {
+        ...r,
+        familyKey: k,
+        familySize: groups.get(k)?.length ?? 1,
+        familyActiveLinks: linksByKey.get(k) ?? 0,
+      };
+    });
+
+    const fams: any[] = [];
+    for (const [k, members] of groups.entries()) {
+      const totalDue = members.reduce((s, m) => s + m.totalDue, 0);
+      const grossPotential = members.reduce((s, m) => s + m.grossPotential, 0);
+      const discountsAmount = members.reduce((s, m) => s + m.discountsAmount, 0);
+      const paid = members.reduce((s, m) => s + m.paid, 0);
+      const refunds = members.reduce((s, m) => s + m.refunds, 0);
+      const activeLinks = linksByKey.get(k) ?? 0;
+      const net = paid - refunds;
+      const balance = Math.round((totalDue - net) * 100) / 100;
+      const status: StatusFilter =
+        totalDue > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
+      const first = members[0].student;
+      fams.push({
+        familyKey: k,
+        parentNationalId: first.parent_national_id || first.parent_national_id_2 || null,
+        parentName: first.parent_name,
+        parentPhone: first.parent_phone,
+        members,
+        enrollments: members.flatMap((m) => m.enrollments),
+        totalDue, grossPotential, discountsAmount, paid, refunds, net, balance, status, activeLinks,
+      });
+    }
+    fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
+    return { rowsWithFamily: withFamily, familyRows: fams };
+  }, [rows]);
+
   const schoolOptions = useMemo(() => {
     const m = new Map<string, string>();
     for (const e of enrollments) if (e.schools?.id) m.set(e.schools.id, e.schools.name);
