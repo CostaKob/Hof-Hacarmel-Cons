@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Undo2, Link2 } from "lucide-react";
+import { Search, Download, Undo2, Link2, Users, User } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -18,6 +18,7 @@ import { PhoneDisplay } from "@/components/PhoneDisplay";
 const ALL = "__all__";
 
 type StatusFilter = "all" | "unpaid" | "partial" | "paid" | "refunded" | "active_links";
+type ViewMode = "students" | "families";
 
 const AdminPrivatePayments = () => {
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const AdminPrivatePayments = () => {
   const [teacherFilter, setTeacherFilter] = useState<string>(ALL);
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [viewMode, setViewMode] = useState<ViewMode>("families");
 
   const { data: year } = useQuery({
     queryKey: ["priv-payments-year", yearId],
@@ -69,7 +71,7 @@ const AdminPrivatePayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, instruments(id,name), schools(id,name), teachers(id, first_name, last_name), students!inner(id, first_name, last_name, grade, parent_name, parent_phone, has_music_production_course, has_recital_track, student_status, is_active)")
+        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, instruments(id,name), schools(id,name), teachers(id, first_name, last_name), students!inner(id, first_name, last_name, grade, parent_name, parent_phone, parent_national_id, parent_national_id_2, parent_1_id, parent_2_id, has_music_production_course, has_recital_track, student_status, is_active)")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       return data as any[];
@@ -254,6 +256,61 @@ const AdminPrivatePayments = () => {
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
   }, [enrollments, payments, drafts, year, settings, discountTypes]);
 
+  // Family grouping — payments are managed at the family level
+  const { rowsWithFamily, familyRows } = useMemo(() => {
+    const keyOf = (s: any) =>
+      s.parent_1_id ?? s.parent_2_id ?? (s.parent_national_id || s.parent_national_id_2) ?? `solo:${s.id}`;
+
+    const groups = new Map<string, any[]>();
+    for (const r of rows) {
+      const k = keyOf(r.student);
+      const arr = groups.get(k) ?? [];
+      arr.push(r);
+      groups.set(k, arr);
+    }
+
+    const linksByKey = new Map<string, number>();
+    for (const [k, members] of groups.entries()) {
+      linksByKey.set(k, members.reduce((s, m) => s + m.activeLinks, 0));
+    }
+
+    const withFamily = rows.map((r) => {
+      const k = keyOf(r.student);
+      return {
+        ...r,
+        familyKey: k,
+        familySize: groups.get(k)?.length ?? 1,
+        familyActiveLinks: linksByKey.get(k) ?? 0,
+      };
+    });
+
+    const fams: any[] = [];
+    for (const [k, members] of groups.entries()) {
+      const totalDue = members.reduce((s, m) => s + m.totalDue, 0);
+      const grossPotential = members.reduce((s, m) => s + m.grossPotential, 0);
+      const discountsAmount = members.reduce((s, m) => s + m.discountsAmount, 0);
+      const paid = members.reduce((s, m) => s + m.paid, 0);
+      const refunds = members.reduce((s, m) => s + m.refunds, 0);
+      const activeLinks = linksByKey.get(k) ?? 0;
+      const net = paid - refunds;
+      const balance = Math.round((totalDue - net) * 100) / 100;
+      const status: StatusFilter =
+        totalDue > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
+      const first = members[0].student;
+      fams.push({
+        familyKey: k,
+        parentNationalId: first.parent_national_id || first.parent_national_id_2 || null,
+        parentName: first.parent_name,
+        parentPhone: first.parent_phone,
+        members,
+        enrollments: members.flatMap((m) => m.enrollments),
+        totalDue, grossPotential, discountsAmount, paid, refunds, net, balance, status, activeLinks,
+      });
+    }
+    fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
+    return { rowsWithFamily: withFamily, familyRows: fams };
+  }, [rows]);
+
   const schoolOptions = useMemo(() => {
     const m = new Map<string, string>();
     for (const e of enrollments) if (e.schools?.id) m.set(e.schools.id, e.schools.name);
@@ -272,16 +329,21 @@ const AdminPrivatePayments = () => {
     return Array.from(m.entries()).sort((a, b) => a[1].localeCompare(b[1], "he"));
   }, [enrollments]);
 
+  const matchesCommon = (r: any) => {
+    if (schoolFilter !== ALL && !r.enrollments.some((e: any) => e.schools?.id === schoolFilter)) return false;
+    if (teacherFilter !== ALL && !r.enrollments.some((e: any) => e.teachers?.id === teacherFilter)) return false;
+    if (instrumentFilter !== ALL && !r.enrollments.some((e: any) => e.instruments?.id === instrumentFilter)) return false;
+    return true;
+  };
+
   const filtered = useMemo(() => {
-    return rows.filter((r) => {
+    return rowsWithFamily.filter((r) => {
       if (statusFilter === "refunded") {
         if (!(r.refunds > 0.01)) return false;
       } else if (statusFilter === "active_links") {
-        if (!(r.activeLinks > 0)) return false;
+        if (!(r.familyActiveLinks > 0)) return false;
       } else if (statusFilter !== "all" && r.status !== statusFilter) return false;
-      if (schoolFilter !== ALL && !r.enrollments.some((e: any) => e.schools?.id === schoolFilter)) return false;
-      if (teacherFilter !== ALL && !r.enrollments.some((e: any) => e.teachers?.id === teacherFilter)) return false;
-      if (instrumentFilter !== ALL && !r.enrollments.some((e: any) => e.instruments?.id === instrumentFilter)) return false;
+      if (!matchesCommon(r)) return false;
       if (search) {
         const q = search.toLowerCase().trim();
         const hay = `${r.student.first_name} ${r.student.last_name} ${r.student.parent_name ?? ""} ${r.student.parent_phone ?? ""} ${r.student.grade ?? ""}`.toLowerCase();
@@ -289,7 +351,32 @@ const AdminPrivatePayments = () => {
       }
       return true;
     });
-  }, [rows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
+  }, [rowsWithFamily, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
+
+  const filteredFamilies = useMemo(() => {
+    return familyRows.filter((f) => {
+      if (statusFilter === "refunded") {
+        if (!(f.refunds > 0.01)) return false;
+      } else if (statusFilter === "active_links") {
+        if (!(f.activeLinks > 0)) return false;
+      } else if (statusFilter !== "all" && f.status !== statusFilter) return false;
+      if (!matchesCommon(f)) return false;
+      if (search) {
+        const q = search.toLowerCase().trim();
+        const hay = [
+          f.parentName ?? "", f.parentPhone ?? "",
+          ...f.members.map((m: any) => `${m.student.first_name} ${m.student.last_name}`),
+        ].join(" ").toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [familyRows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
+
+  const statRows = useMemo(
+    () => (viewMode === "families" ? filteredFamilies.flatMap((f: any) => f.members) : filtered),
+    [viewMode, filteredFamilies, filtered],
+  );
 
   const totals = useMemo(() => {
     let potential = 0, paid = 0, refunds = 0, discounts = 0, enrollmentsCount = 0;
@@ -298,7 +385,7 @@ const AdminPrivatePayments = () => {
     let paidStudents = 0, partialStudents = 0, unpaidStudents = 0, refundedStudents = 0, activeLinks = 0;
     const musicProdPrice = Number(settings?.music_production_price || 0);
     const recitalPrice = Number(settings?.recital_track_price || 0);
-    for (const r of filtered) {
+    for (const r of statRows) {
       enrollmentsCount += r.enrollments.length;
       if (r.hasSpecialCourse) specialCount += 1;
       if (r.student.has_music_production_course) { productionCount += 1; productionRevenue += musicProdPrice; }
@@ -321,11 +408,11 @@ const AdminPrivatePayments = () => {
     const collectionPct = potential > 0 ? Math.round((net / potential) * 100) : 0;
     return {
       potential, paid, refunds, net, balance, discounts,
-      studentsCount: filtered.length, enrollmentsCount,
+      studentsCount: statRows.length, familiesCount: filteredFamilies.length, enrollmentsCount,
       specialRevenue, specialCount, productionRevenue, recitalRevenue, productionCount, recitalCount,
       paidStudents, partialStudents, unpaidStudents, refundedStudents, activeLinks, collectionPct,
     };
-  }, [filtered, settings]);
+  }, [statRows, filteredFamilies, settings]);
 
   const fmt = (n: number) => Math.round(n).toLocaleString("he-IL");
 
@@ -343,7 +430,7 @@ const AdminPrivatePayments = () => {
       all: "", unpaid: "לא שולם", partial: "שולם חלקית", paid: "שולם", refunded: "הוחזר", active_links: "לינק פעיל",
     };
     const lines = [headers.join(",")];
-    filtered.forEach((r, idx) => {
+    statRows.forEach((r, idx) => {
       const schools = Array.from(new Set(r.enrollments.map((e: any) => e.schools?.name).filter(Boolean))).join(" · ");
       const teachers = Array.from(new Set(r.enrollments.map((e: any) => e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : null).filter(Boolean))).join(" · ");
       const instrs = Array.from(new Set(r.enrollments.map((e: any) => e.instruments?.name).filter(Boolean))).join(" · ");
@@ -384,13 +471,34 @@ const AdminPrivatePayments = () => {
       <PageTitle title="דוח תשלומים פרטני" />
       <div className="space-y-4">
 
+        {/* View toggle */}
+        <div className="inline-flex rounded-xl border border-border bg-card p-1 w-full sm:w-auto">
+          <Button
+            variant={viewMode === "families" ? "default" : "ghost"}
+            size="sm"
+            className="h-9 rounded-lg gap-1 flex-1 sm:flex-none"
+            onClick={() => setViewMode("families")}
+          >
+            <Users className="h-3.5 w-3.5" /> לפי משפחה
+          </Button>
+          <Button
+            variant={viewMode === "students" ? "default" : "ghost"}
+            size="sm"
+            className="h-9 rounded-lg gap-1 flex-1 sm:flex-none"
+            onClick={() => setViewMode("students")}
+          >
+            <User className="h-3.5 w-3.5" /> לפי תלמיד
+          </Button>
+        </div>
+
         {/* Counts */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm text-muted-foreground">
+          <span><span className="font-semibold text-foreground">{totals.familiesCount}</span> תאים משפחתיים</span>
           <span><span className="font-semibold text-foreground">{totals.studentsCount}</span> תלמידים</span>
           <span><span className="font-semibold text-foreground">{totals.enrollmentsCount}</span> שיוכים</span>
           <span><span className="font-semibold text-foreground">{totals.specialCount}</span> במסלולים מיוחדים</span>
           {totals.activeLinks > 0 && (
-            <span><span className="font-semibold text-foreground">{totals.activeLinks}</span> לינקים פעילים</span>
+            <span><span className="font-semibold text-foreground">{totals.activeLinks}</span> קישורי תשלום פעילים</span>
           )}
         </div>
 
@@ -496,7 +604,7 @@ const AdminPrivatePayments = () => {
               <SelectItem value="partial">שולם חלקית</SelectItem>
               <SelectItem value="paid">שולם במלואו</SelectItem>
               <SelectItem value="refunded">עם החזרים</SelectItem>
-              <SelectItem value="active_links">עם לינק פעיל</SelectItem>
+              <SelectItem value="active_links">עם קישור תשלום פעיל (משפחתי)</SelectItem>
             </SelectContent>
           </Select>
           <Select value={schoolFilter} onValueChange={setSchoolFilter}>
@@ -540,7 +648,7 @@ const AdminPrivatePayments = () => {
             onClick={() => setStatusFilter(statusFilter === "active_links" ? "all" : "active_links")}
           >
             <Link2 className="h-3.5 w-3.5" />
-            {statusFilter === "active_links" ? "בטל סינון לינקים" : "לינקים פעילים בלבד"}
+            {statusFilter === "active_links" ? "בטל סינון קישורים" : "קישורי תשלום פעילים (משפחה)"}
           </Button>
           <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={exportCsv}>
             <Download className="h-3.5 w-3.5" />
@@ -551,6 +659,87 @@ const AdminPrivatePayments = () => {
         {/* List */}
         {loadingEnr ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : viewMode === "families" ? (
+          filteredFamilies.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">לא נמצאו משפחות</p>
+          ) : (
+            <div className="space-y-2">
+              {filteredFamilies.map((f: any, idx: number) => {
+                const statusBadge =
+                  f.status === "paid" ? { label: "שולם", variant: "default" as const } :
+                  f.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
+                  { label: "לא שולם", variant: "outline" as const };
+                return (
+                  <div
+                    key={f.familyKey}
+                    className={`rounded-xl border border-border bg-card p-4 shadow-sm transition-colors ${f.parentNationalId ? "cursor-pointer hover:bg-accent/50" : ""}`}
+                    onClick={() => f.parentNationalId && navigate(`/admin/families/${f.parentNationalId}`)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
+                          <p className="font-semibold text-foreground">
+                            {f.parentName ? `משפחת ${f.parentName}` : "ללא הורה מקושר"}
+                          </p>
+                          <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
+                          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                          {f.refunds > 0.01 && (
+                            <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
+                          )}
+                          {f.activeLinks > 0 && (
+                            <Badge variant="outline" className="text-blue-600 border-blue-300">🔗 {f.activeLinks} קישור פעיל</Badge>
+                          )}
+                        </div>
+                        {f.parentPhone && (
+                          <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
+                        )}
+                        <div className="mt-2 flex flex-col gap-0.5">
+                          {f.members.map((m: any) => (
+                            <div key={m.studentId} className="text-sm text-foreground flex flex-wrap items-baseline gap-x-2">
+                              <span className="text-muted-foreground">•</span>
+                              <span className="font-medium">{m.student.first_name} {m.student.last_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {Array.from(new Set(m.enrollments.map((e: any) => e.instruments?.name).filter(Boolean))).join(" · ")}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {fmt(m.totalDue)} ₪ · שולם {fmt(m.paid)} ₪
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-left shrink-0 space-y-0.5">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">לתשלום (משפחה)</p>
+                          <p className="text-lg font-bold text-foreground leading-tight">{fmt(f.totalDue)} ₪</p>
+                          {f.discountsAmount > 0.01 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              <span className="line-through">{fmt(f.grossPotential)}</span> −{fmt(f.discountsAmount)}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">שולם</p>
+                          <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(f.paid)} ₪</p>
+                        </div>
+                        {f.refunds > 0.01 && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">הוחזר</p>
+                            <p className="text-sm font-semibold text-red-600 leading-tight">−{fmt(f.refunds)} ₪</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">יתרה</p>
+                          <p className={`text-sm font-semibold leading-tight ${f.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, f.balance))} ₪</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
         ) : (
@@ -575,8 +764,10 @@ const AdminPrivatePayments = () => {
                         {r.refunds > 0.01 && (
                           <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(r.refunds)} ₪</Badge>
                         )}
-                        {r.activeLinks > 0 && (
-                          <Badge variant="outline" className="text-blue-600 border-blue-300">🔗 {r.activeLinks} לינק פעיל</Badge>
+                        {r.familyActiveLinks > 0 && (
+                          <Badge variant="outline" className="text-blue-600 border-blue-300">
+                            🔗 {r.familyActiveLinks} קישור פעיל{r.familySize > 1 ? " (משפחתי)" : ""}
+                          </Badge>
                         )}
                         {r.student.grade && <span className="text-xs text-muted-foreground">כיתה {r.student.grade}</span>}
                       </div>
@@ -638,7 +829,9 @@ const AdminPrivatePayments = () => {
         )}
 
         <p className="text-xs text-muted-foreground text-center pt-2">
-          מציג {filtered.length} תלמידים · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
+          {viewMode === "families"
+            ? `מציג ${filteredFamilies.length} תאים משפחתיים (${totals.studentsCount} תלמידים)`
+            : `מציג ${filtered.length} תלמידים`} · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
         </p>
       </div>
     </AdminLayout>
