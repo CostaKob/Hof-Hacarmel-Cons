@@ -34,19 +34,26 @@ const AdminStudents = () => {
 
   const search = searchParams.get("q") || "";
   const view = searchParams.get("view") || "enrollments"; // enrollments | all
-  const teacherFilter = searchParams.get("teacher") || "all";
-  const schoolFilter = searchParams.get("school") || "all";
-  const eduSchoolFilter = searchParams.get("edu_school") || "all";
-  const durationFilter = searchParams.get("duration") || "all";
-  const cityFilter = searchParams.get("city") || "all";
   const statusFilter = searchParams.get("status") || "active";
-  const gradeFilter = searchParams.get("grade") || "all";
-  const levelFilter = searchParams.get("level") || "all";
-  const paymentFilter = searchParams.get("payment") || "all";
-  const trackFilter = searchParams.get("track") || "all";
-  const instrumentFilter = searchParams.get("instrument") || "all";
-  const regTypeFilter = searchParams.get("reg_type") || "all";
   const siblingsFilter = searchParams.get("siblings") || "all";
+
+  const getMultiFilter = useCallback((key: string): string[] => {
+    const raw = searchParams.get(key);
+    if (!raw) return [];
+    return raw.split(",").filter(Boolean);
+  }, [searchParams]);
+
+  const teacherFilter = getMultiFilter("teacher");
+  const schoolFilter = getMultiFilter("school");
+  const eduSchoolFilter = getMultiFilter("edu_school");
+  const durationFilter = getMultiFilter("duration");
+  const cityFilter = getMultiFilter("city");
+  const gradeFilter = getMultiFilter("grade");
+  const levelFilter = getMultiFilter("level");
+  const paymentFilter = getMultiFilter("payment");
+  const trackFilter = getMultiFilter("track");
+  const instrumentFilter = getMultiFilter("instrument");
+  const regTypeFilter = getMultiFilter("reg_type");
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
