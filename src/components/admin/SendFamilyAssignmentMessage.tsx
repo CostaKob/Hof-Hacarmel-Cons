@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  FAMILY_ASSIGNMENT_TEMPLATE_KEY,
+  fetchMessageTemplate,
+  renderTemplate,
+} from "@/lib/messageTemplates";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
