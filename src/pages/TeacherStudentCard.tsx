@@ -133,7 +133,6 @@ const TeacherStudentCard = () => {
             )}
             <InfoRow icon={Calendar} label="תאריך התחלה" value={enrollment.start_date} />
             {enrollment.end_date && <InfoRow icon={Calendar} label="תאריך סיום" value={enrollment.end_date} />}
-            
             <div className="flex items-center gap-2 pt-1">
               <Badge variant={enrollment.is_active ? "default" : "secondary"} className="rounded-lg">
                 {enrollment.is_active ? "פעיל" : "לא פעיל"}
