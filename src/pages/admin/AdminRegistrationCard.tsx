@@ -436,23 +436,35 @@ const normalizeDiff = (v: any) => {
 
 type DiffDecision = "keep" | "replace" | "both";
 
+const DIFF_DISMISS_KEY = "registration_diff_resolved";
+const readResolved = (): Record<string, true> => {
+  try { return JSON.parse(localStorage.getItem(DIFF_DISMISS_KEY) || "{}"); } catch { return {}; }
+};
+const writeResolved = (keys: string[]) => {
+  const cur = readResolved();
+  keys.forEach((k) => { cur[k] = true; });
+  try { localStorage.setItem(DIFF_DISMISS_KEY, JSON.stringify(cur)); } catch { /* ignore */ }
+};
+
 const DiffCard = ({ registration, student, onApplied }: { registration: any; student: any; onApplied?: () => void }) => {
+  const [resolved, setResolved] = useState<Record<string, true>>(() => readResolved());
+
   const diffs = useMemo(() => {
     return DIFF_FIELDS.filter((f) => {
       const regVal = normalizeDiff(registration[f.regKey]);
       const studentVal = normalizeDiff(student[f.studentKey]);
-      return regVal && studentVal && regVal !== studentVal;
+      if (!regVal || !studentVal || regVal === studentVal) return false;
+      return !resolved[`${registration.id}:${f.studentKey}:${regVal}`];
     }).map((f) => ({
-
-
       label: f.label,
       studentKey: f.studentKey,
+      resolveKey: `${registration.id}:${f.studentKey}:${normalizeDiff(registration[f.regKey])}`,
       secondary: !!f.secondary,
       secondaryValue: f.secondary ? (student[`${f.studentKey}_2`] || "") : "",
       oldValue: student[f.studentKey] || "—",
       newValue: registration[f.regKey] || "—",
     }));
-  }, [registration, student]);
+  }, [registration, student, resolved]);
 
   // Default: keep existing (safer — no data lost without explicit choice)
   const [decisions, setDecisions] = useState<Record<string, DiffDecision>>({});
@@ -477,15 +489,20 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
         }
         // 'keep' → do nothing
       });
-      if (Object.keys(updates).length === 0) return;
-      const { error } = await supabase
-        .from("students")
-        .update(updates as any)
-        .eq("id", student.id);
-      if (error) throw error;
+      if (Object.keys(updates).length > 0) {
+        const { error } = await supabase
+          .from("students")
+          .update(updates as any)
+          .eq("id", student.id);
+        if (error) throw error;
+      }
+      return Object.keys(updates).length;
     },
-    onSuccess: () => {
-      toast.success("הנתונים עודכנו בכרטיס התלמיד");
+    onSuccess: (changed) => {
+      const keys = diffs.map((d) => d.resolveKey);
+      writeResolved(keys);
+      setResolved(readResolved());
+      toast.success(changed ? "הנתונים עודכנו בכרטיס התלמיד" : "הבחירה נשמרה — הנתונים הקיימים נשארו");
       onApplied?.();
     },
     onError: (err: any) => toast.error(err?.message || "שגיאה בעדכון"),
@@ -493,6 +510,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
 
   if (diffs.length === 0) return null;
   const changesCount = Object.values(decisions).filter((d) => d === "replace" || d === "both").length;
+
 
   return (
     <Card className="border-amber-200 dark:border-amber-800">
@@ -570,10 +588,10 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           type="button"
           size="sm"
           onClick={() => applyMutation.mutate()}
-          disabled={changesCount === 0 || applyMutation.isPending}
+          disabled={applyMutation.isPending}
           className="w-full sm:w-auto h-11 rounded-xl"
         >
-          {applyMutation.isPending ? "מעדכן..." : changesCount === 0 ? "לא נבחרו שינויים" : `החל ${changesCount} שינויים`}
+          {applyMutation.isPending ? "שומר..." : changesCount === 0 ? "אשר — השאר את הקיים" : `החל ${changesCount} שינויים`}
         </Button>
       </CardContent>
     </Card>
