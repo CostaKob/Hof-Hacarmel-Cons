@@ -3,6 +3,7 @@ import { useEnrollmentDetails } from "@/hooks/useTeacherData";
 import { useEnrollmentReportLines } from "@/hooks/useEnrollmentReportLines";
 import EnrollmentSummary from "@/components/teacher/EnrollmentSummary";
 import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
+import StudentHomeroomSection from "@/components/teacher/StudentHomeroomSection";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
