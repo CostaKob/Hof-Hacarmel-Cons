@@ -9,7 +9,7 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Search, Settings, AlertTriangle, Phone, Music } from "lucide-react";
+import { Search, Settings, AlertTriangle, Phone, Music, X } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { REGISTRATION_STATUSES, daysAgoLabel, daysAgo } from "@/lib/registrationStatuses";
