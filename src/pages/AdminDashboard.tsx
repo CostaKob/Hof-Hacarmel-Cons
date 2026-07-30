@@ -32,8 +32,7 @@ const TOOLS_SECTIONS = [
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
   { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
   { path: "/admin/exports", label: "דוחות וייצוא", description: "ייצוא תלמידים, מורים, דיווחים וסיכומים לאקסל", icon: FileDown },
-  { path: "/admin/bulk-message", label: "שליחת הודעות להורים", description: "שליחת מייל מותג מרוכז לפי קהל יעד וסטטוס", icon: Mail },
-  { path: "/admin/email-dashboard", label: "לוח בקרת מיילים", description: "מעקב אחר מיילים שנשלחו, כשלים וחסימות", icon: Mail },
+  { path: "/admin/messaging", label: "שליחת הודעות להורים", description: "רשימת תפוצה, נוסח הודעת השיוך ולוח בקרת מיילים", icon: Mail },
 ];
 
 const FORM_LINKS = [
