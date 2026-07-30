@@ -872,7 +872,23 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+      {/* Coordinator-only dialogs */}
+      {isCoordinatorView && (
+        <>
+          <SchoolMusicSchoolDetailsDialog
+            open={editingSchoolDetails}
+            onOpenChange={setEditingSchoolDetails}
+            school={school}
+            onSaved={invalidate}
+          />
+          <SchoolMusicStudentEditDialog
+            open={!!editStudent}
+            onOpenChange={(o) => !o && setEditStudent(null)}
+            student={editStudent}
+          />
+        </>
+      )}
+    </Shell>
   );
 };
 
