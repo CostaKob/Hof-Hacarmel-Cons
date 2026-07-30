@@ -184,15 +184,25 @@ const AdminStudentForm = () => {
         grade: data.grade === "__none__" ? null : data.grade || null,
         playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
         student_status: data.student_status,
-        parent_name: data.parent_name || null,
-        parent_phone: data.parent_phone || null,
-        parent_email: data.parent_email || null,
-        parent_national_id: data.parent_national_id || null,
-        parent_name_2: data.parent_name_2 || null,
-        parent_phone_2: data.parent_phone_2 || null,
-        parent_email_2: data.parent_email_2 || null,
-        parent_national_id_2: data.parent_national_id_2 || null,
+        // Linked parents are edited via the parent entity itself (synced by trigger)
+        ...(linkedParent1Id
+          ? {}
+          : {
+              parent_name: data.parent_name || null,
+              parent_phone: data.parent_phone || null,
+              parent_email: data.parent_email || null,
+              parent_national_id: data.parent_national_id || null,
+            }),
+        ...(linkedParent2Id
+          ? {}
+          : {
+              parent_name_2: data.parent_name_2 || null,
+              parent_phone_2: data.parent_phone_2 || null,
+              parent_email_2: data.parent_email_2 || null,
+              parent_national_id_2: data.parent_national_id_2 || null,
+            }),
         is_active: data.is_active,
+
       };
 
       let resultId: string;
