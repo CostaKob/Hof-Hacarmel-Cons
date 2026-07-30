@@ -175,14 +175,50 @@ const MergeFamiliesDialog = ({
         )}
 
         {selected && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-right">
-              המיזוג יקשר את כל הילדים לשני ההורים ויוסיף קישורי אחים. הפעולה
-              משפיעה על חישובי הנחות ועל התא המשפחתי — לא ניתן לבטל אוטומטית.
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-2">
+            <div className="text-sm font-medium">סוג הקשר:</div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setMode("same_parent")}
+                className={`text-right rounded-xl border p-3 text-sm transition-all ${
+                  mode === "same_parent"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="font-medium">אותו הורה (כפילות)</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  אותה אישה/אותו גבר נשמר פעמיים (ת.ז. שגויה, מייל שונה). הרשומה
+                  השנייה תימחק וכל הילדים יעברו לרשומה זו.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("spouse")}
+                className={`text-right rounded-xl border p-3 text-sm transition-all ${
+                  mode === "spouse"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="font-medium">בן/בת זוג</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  שני הורים שונים באותה משפחה. הילדים יקושרו לשני ההורים ויסומנו
+                  כאחים.
+                </div>
+              </button>
+            </div>
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-right">
+                הפעולה משפיעה על התא המשפחתי ועל חישובי ההנחות — לא ניתן לבטל
+                אוטומטית.
+              </AlertDescription>
+            </Alert>
+          </div>
         )}
+
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
