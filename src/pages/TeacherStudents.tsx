@@ -438,7 +438,7 @@ const TeacherStudents = () => {
                           {(r.parentName || r.parentPhone || r.city) && (
                             <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
                               {r.parentName && <span>{r.parentName}</span>}
-                              {r.parentPhone && <><span>·</span><span>{r.parentPhone}</span></>}
+                              {r.parentPhone && <><span>·</span><PhoneDisplay phone={r.parentPhone} showIcon textClassName="text-xs" /></>}
                               {r.city && <><span>·</span><span>{r.city}</span></>}
                             </div>
                           )}
