@@ -5,7 +5,7 @@ import {
   FAMILY_ASSIGNMENT_TEMPLATE_KEY,
   fetchMessageTemplate,
   renderTemplate,
-  markdownLinksToPlain,
+  prepareWhatsAppText,
   parseInlineLinks,
 } from "@/lib/messageTemplates";
 import { Button } from "@/components/ui/button";
@@ -173,7 +173,7 @@ const SendFamilyAssignmentMessage = ({
       return;
     }
     window.open(
-      `https://wa.me/972${parentWa}?text=${encodeURIComponent(markdownLinksToPlain(message))}`,
+      `https://wa.me/972${parentWa}?text=${encodeURIComponent(prepareWhatsAppText(message))}`,
       "_blank",
     );
   };
