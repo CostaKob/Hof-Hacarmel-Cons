@@ -34,6 +34,14 @@ import { toast } from "sonner";
 
 type Source = "registrations" | "enrollments" | "school_music" | "unregistered_students";
 
+const SOURCE_LABELS: Record<Source, string> = {
+  registrations: "הורים שנרשמו (טופס הרשמה)",
+  enrollments: "הורים של תלמידים עם שיוך פעיל",
+  school_music: "הורים בבית ספר מנגן",
+  unregistered_students: "תלמידים שלא נרשמו לשנה הנוכחית",
+};
+
+
 interface Recipient {
   email: string;
   parentName: string;
