@@ -110,12 +110,25 @@ const AdminPrivatePayments = () => {
     const musicProdPrice = Number(settings.music_production_price) || 0;
     const recitalPrice = Number(settings.recital_track_price) || 0;
 
+    // Ignore inactive enrollments / inactive students unless money was actually moved on them
+    const enrollmentIdsWithPayments = new Set<string>(
+      (payments as any[]).map((p) => p.enrollment_id).filter(Boolean),
+    );
+    const studentIdsWithPayments = new Set<string>(
+      (payments as any[]).map((p) => p.student_id).filter(Boolean),
+    );
+    const relevantEnrollments = (enrollments as any[]).filter((e) => {
+      if (enrollmentIdsWithPayments.has(e.id) || studentIdsWithPayments.has(e.student_id)) return true;
+      return e.is_active !== false && e.students?.is_active !== false;
+    });
+
     const byStudent = new Map<string, any[]>();
-    for (const e of enrollments) {
+    for (const e of relevantEnrollments) {
       const arr = byStudent.get(e.student_id) ?? [];
       arr.push(e);
       byStudent.set(e.student_id, arr);
     }
+
 
     const enrollmentToStudent = new Map<string, string>();
     for (const e of enrollments) enrollmentToStudent.set(e.id, e.student_id);
