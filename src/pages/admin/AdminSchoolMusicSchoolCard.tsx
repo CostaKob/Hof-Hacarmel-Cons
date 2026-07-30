@@ -11,11 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, Music, Copy, Users } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, ChevronLeft, Music, Copy, Users } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { TimeInput24 } from "@/components/ui/time-input-24";
+import SchoolMusicSchoolDetailsDialog from "@/components/admin/SchoolMusicSchoolDetailsDialog";
+import SchoolMusicStudentEditDialog from "@/components/admin/SchoolMusicStudentEditDialog";
 
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
@@ -57,10 +59,14 @@ const buildClassPayload = (form: any) => ({
   notes: form.notes?.trim() || null,
 });
 
-const AdminSchoolMusicSchoolCard = () => {
+const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" | "coordinator" }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const isCoordinatorView = variant === "coordinator";
+  const [editingSchoolDetails, setEditingSchoolDetails] = useState(false);
+  const [editStudent, setEditStudent] = useState<any>(null);
 
   const [showDeleteSchool, setShowDeleteSchool] = useState(false);
   const [editingCoordinator, setEditingCoordinator] = useState(false);
@@ -181,7 +187,7 @@ const AdminSchoolMusicSchoolCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_music_students")
-        .select("id, student_first_name, student_last_name, school_music_class_group_id, school_music_class_id, class_name")
+        .select("*")
         .eq("school_music_school_id", id!);
       if (error) throw error;
       return data as any[];
@@ -389,8 +395,38 @@ const AdminSchoolMusicSchoolCard = () => {
     onError: () => toast.error("שגיאה בשכפול"),
   });
 
-  if (isLoading) return <AdminLayout title="טוען..." backPath="/admin/school-music-schools"><PageTitle title="בית ספר מנגן" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
-  if (!school) return <AdminLayout title="לא נמצא" backPath="/admin/school-music-schools"><PageTitle title="בית ספר מנגן" /><p className="text-center text-muted-foreground py-8">לא נמצא</p></AdminLayout>;
+  const Shell = ({ title, children }: { title: string; children: React.ReactNode }) => {
+    if (!isCoordinatorView) {
+      return (
+        <AdminLayout title={title} backPath="/admin/school-music-schools">
+          <PageTitle title={`בית ספר מנגן — ${title}`} />
+          {children}
+        </AdminLayout>
+      );
+    }
+    return (
+      <div dir="rtl" className="min-h-screen bg-background">
+        <PageTitle title={`בית ספר מנגן — ${title}`} />
+        <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
+          <div className="mx-auto flex max-w-lg items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary-foreground shrink-0"
+              onClick={() => navigate("/teacher/school-music-schools")}
+            >
+              <ChevronLeft className="h-5 w-5 rotate-180" />
+            </Button>
+            <h1 className="text-lg font-bold truncate">{title}</h1>
+          </div>
+        </header>
+        <main className="mx-auto max-w-lg px-5 pt-5 pb-24">{children}</main>
+      </div>
+    );
+  };
+
+  if (isLoading) return <Shell title="טוען..."><p className="text-center text-muted-foreground py-8">טוען...</p></Shell>;
+  if (!school) return <Shell title="לא נמצא"><p className="text-center text-muted-foreground py-8">לא נמצא</p></Shell>;
 
 
   const coordinator = (school as any).coordinator;
@@ -418,17 +454,21 @@ const AdminSchoolMusicSchoolCard = () => {
         <CardTitle className="text-lg">{title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        {person && !isEditing ? (
+        {person && (!isEditing || isCoordinatorView) ? (
           <div className="flex items-center justify-between rounded-xl border p-3">
             <div>
               <p className="font-medium">{person.first_name} {person.last_name}</p>
               <PhoneLink phone={person.phone} />
             </div>
-            <div className="flex gap-1">
-              <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}><Pencil className="h-3.5 w-3.5" /></Button>
-              <Button size="icon" variant="ghost" onClick={() => onSet(null)}><X className="h-4 w-4 text-destructive" /></Button>
-            </div>
+            {!isCoordinatorView && (
+              <div className="flex gap-1">
+                <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="icon" variant="ghost" onClick={() => onSet(null)}><X className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            )}
           </div>
+        ) : isCoordinatorView ? (
+          <p className="text-sm text-muted-foreground">לא הוגדר</p>
         ) : (
           <div className="flex flex-col sm:flex-row gap-2">
             <Select onValueChange={(v) => { onSet(v); setIsEditing(false); }}>
@@ -442,7 +482,7 @@ const AdminSchoolMusicSchoolCard = () => {
             {isEditing && <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>ביטול</Button>}
           </div>
         )}
-        {person && (
+        {person && !isCoordinatorView && (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">שעות {title === "רכז" ? "ריכוז" : "ניצוח"}:</span>
             {isEditingHours ? (
@@ -465,8 +505,7 @@ const AdminSchoolMusicSchoolCard = () => {
   );
 
   return (
-    <AdminLayout title={school.school_name} backPath="/admin/school-music-schools">
-      <PageTitle title={`בית ספר מנגן — ${school.school_name}`} />
+    <Shell title={school.school_name}>
       <div className="space-y-5">
 
         {/* School Details */}
@@ -474,10 +513,16 @@ const AdminSchoolMusicSchoolCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">פרטי בית הספר</CardTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteSchool(true)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/school-music-schools/${id}/edit`)}>
+              {!isCoordinatorView && (
+                <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteSchool(true)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl"
+                onClick={() => (isCoordinatorView ? setEditingSchoolDetails(true) : navigate(`/admin/school-music-schools/${id}/edit`))}
+              >
                 <Pencil className="h-4 w-4" /> עריכה
               </Button>
             </div>
@@ -727,7 +772,7 @@ const AdminSchoolMusicSchoolCard = () => {
                                     <button
                                       key={st.id}
                                       type="button"
-                                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/school-music-students/${st.id}`); }}
+                                      onClick={(e) => { e.stopPropagation(); if (isCoordinatorView) { setEditStudent(st); } else { navigate(`/admin/school-music-students/${st.id}`); } }}
                                       className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary w-full text-right"
                                     >
                                       <Users className="h-3 w-3 shrink-0" />
@@ -778,6 +823,45 @@ const AdminSchoolMusicSchoolCard = () => {
             })}
           </CardContent>
         </Card>
+
+        {/* Coordinator: all students of the school */}
+        {isCoordinatorView && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-4 w-4" /> תלמידים ({schoolStudents.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1.5">
+              {schoolStudents.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-3">אין תלמידים רשומים</p>
+              )}
+              {[...schoolStudents]
+                .sort((a: any, b: any) =>
+                  `${a.student_last_name ?? ""} ${a.student_first_name ?? ""}`.localeCompare(
+                    `${b.student_last_name ?? ""} ${b.student_first_name ?? ""}`, "he"
+                  )
+                )
+                .map((st: any) => (
+                  <button
+                    key={st.id}
+                    type="button"
+                    onClick={() => setEditStudent(st)}
+                    className="w-full flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2 text-sm text-right hover:bg-muted/40 transition-colors"
+                  >
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                      <span className="font-medium">{st.student_first_name} {st.student_last_name}</span>
+                      {st.class_name && <Badge variant="outline" className="text-[10px]">{st.class_name}</Badge>}
+                      {!st.school_music_class_group_id && (
+                        <Badge variant="secondary" className="text-[10px]">לא משויך לקבוצה</Badge>
+                      )}
+                    </div>
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       {/* Delete school dialog */}
@@ -827,7 +911,23 @@ const AdminSchoolMusicSchoolCard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
+      {/* Coordinator-only dialogs */}
+      {isCoordinatorView && (
+        <>
+          <SchoolMusicSchoolDetailsDialog
+            open={editingSchoolDetails}
+            onOpenChange={setEditingSchoolDetails}
+            school={school}
+            onSaved={invalidate}
+          />
+          <SchoolMusicStudentEditDialog
+            open={!!editStudent}
+            onOpenChange={(o) => !o && setEditStudent(null)}
+            student={editStudent}
+          />
+        </>
+      )}
+    </Shell>
   );
 };
 
