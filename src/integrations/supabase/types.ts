@@ -2759,6 +2759,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_sm_coordinator: {
+        Args: { _school_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_sm_coordinator_of_class: {
+        Args: { _class_id: string; _user_id: string }
+        Returns: boolean
+      }
       list_families: {
         Args: { _year_id?: string }
         Returns: {
