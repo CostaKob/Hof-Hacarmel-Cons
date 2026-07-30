@@ -408,11 +408,11 @@ const AdminPrivatePayments = () => {
     const collectionPct = potential > 0 ? Math.round((net / potential) * 100) : 0;
     return {
       potential, paid, refunds, net, balance, discounts,
-      studentsCount: filtered.length, enrollmentsCount,
+      studentsCount: statRows.length, familiesCount: filteredFamilies.length, enrollmentsCount,
       specialRevenue, specialCount, productionRevenue, recitalRevenue, productionCount, recitalCount,
       paidStudents, partialStudents, unpaidStudents, refundedStudents, activeLinks, collectionPct,
     };
-  }, [filtered, settings]);
+  }, [statRows, filteredFamilies, settings]);
 
   const fmt = (n: number) => Math.round(n).toLocaleString("he-IL");
 
