@@ -95,6 +95,7 @@ const SchoolMusicStudentEditDialog = ({ open, onOpenChange, student }: Props) =>
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["school-music-student", student.id] });
       queryClient.invalidateQueries({ queryKey: ["school-music-students-all"] });
+      queryClient.invalidateQueries({ queryKey: ["school-music-students-for-school"] });
       toast.success("הפרטים עודכנו בהצלחה");
       onOpenChange(false);
     },
