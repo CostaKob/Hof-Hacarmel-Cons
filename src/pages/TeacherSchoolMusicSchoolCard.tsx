@@ -13,6 +13,7 @@ import { ChevronLeft, School, User, Users, Music } from "lucide-react";
 import { useMemo } from "react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import PageTitle from "@/components/PageTitle";
+import AdminSchoolMusicSchoolCard from "@/pages/admin/AdminSchoolMusicSchoolCard";
 
 /* ─── helpers ─── */
 
