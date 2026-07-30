@@ -174,6 +174,8 @@ const App = () => (
               <Route path="/admin/exports" element={<AdminRoute><AdminExports /></AdminRoute>} />
               <Route path="/admin/bulk-message" element={<AdminRoute><AdminBulkMessage /></AdminRoute>} />
               <Route path="/admin/email-dashboard" element={<AdminRoute><AdminEmailDashboard /></AdminRoute>} />
+              <Route path="/admin/messaging" element={<AdminRoute><AdminMessaging /></AdminRoute>} />
+              <Route path="/admin/message-templates" element={<AdminRoute><AdminMessageTemplates /></AdminRoute>} />
 
               <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
