@@ -659,6 +659,87 @@ const AdminPrivatePayments = () => {
         {/* List */}
         {loadingEnr ? (
           <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : viewMode === "families" ? (
+          filteredFamilies.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">לא נמצאו משפחות</p>
+          ) : (
+            <div className="space-y-2">
+              {filteredFamilies.map((f: any, idx: number) => {
+                const statusBadge =
+                  f.status === "paid" ? { label: "שולם", variant: "default" as const } :
+                  f.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
+                  { label: "לא שולם", variant: "outline" as const };
+                return (
+                  <div
+                    key={f.familyKey}
+                    className={`rounded-xl border border-border bg-card p-4 shadow-sm transition-colors ${f.parentNationalId ? "cursor-pointer hover:bg-accent/50" : ""}`}
+                    onClick={() => f.parentNationalId && navigate(`/admin/families/${f.parentNationalId}`)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
+                          <p className="font-semibold text-foreground">
+                            {f.parentName ? `משפחת ${f.parentName}` : "ללא הורה מקושר"}
+                          </p>
+                          <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
+                          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                          {f.refunds > 0.01 && (
+                            <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
+                          )}
+                          {f.activeLinks > 0 && (
+                            <Badge variant="outline" className="text-blue-600 border-blue-300">🔗 {f.activeLinks} קישור פעיל</Badge>
+                          )}
+                        </div>
+                        {f.parentPhone && (
+                          <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
+                        )}
+                        <div className="mt-2 flex flex-col gap-0.5">
+                          {f.members.map((m: any) => (
+                            <div key={m.studentId} className="text-sm text-foreground flex flex-wrap items-baseline gap-x-2">
+                              <span className="text-muted-foreground">•</span>
+                              <span className="font-medium">{m.student.first_name} {m.student.last_name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {Array.from(new Set(m.enrollments.map((e: any) => e.instruments?.name).filter(Boolean))).join(" · ")}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {fmt(m.totalDue)} ₪ · שולם {fmt(m.paid)} ₪
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-left shrink-0 space-y-0.5">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">לתשלום (משפחה)</p>
+                          <p className="text-lg font-bold text-foreground leading-tight">{fmt(f.totalDue)} ₪</p>
+                          {f.discountsAmount > 0.01 && (
+                            <p className="text-[10px] text-muted-foreground">
+                              <span className="line-through">{fmt(f.grossPotential)}</span> −{fmt(f.discountsAmount)}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">שולם</p>
+                          <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(f.paid)} ₪</p>
+                        </div>
+                        {f.refunds > 0.01 && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">הוחזר</p>
+                            <p className="text-sm font-semibold text-red-600 leading-tight">−{fmt(f.refunds)} ₪</p>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[10px] text-muted-foreground">יתרה</p>
+                          <p className={`text-sm font-semibold leading-tight ${f.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, f.balance))} ₪</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
         ) : filtered.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">לא נמצאו תלמידים</p>
         ) : (
