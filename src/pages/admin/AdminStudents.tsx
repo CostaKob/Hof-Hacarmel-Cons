@@ -594,34 +594,36 @@ const AdminStudents = () => {
       const searchStr = normalize(`${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""} ${r.students?.national_id ?? ""} ${r.students?.parent_name ?? ""} ${r.students?.parent_phone ?? ""} ${r.students?.phone ?? ""} ${r.grade ?? ""} ${r.students?.grade ?? ""} ${r.students?.city ?? ""} ${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""} ${r.schools?.name ?? ""} ${r.instruments?.name ?? ""} ${r.students?.playing_level ?? ""} ${r.lesson_duration_minutes ?? ""}`);
       if (!searchStr.includes(q)) return false;
     }
-    if (teacherFilter !== "all" && r.teachers?.id !== teacherFilter) return false;
-    if (schoolFilter !== "all" && r.schools?.id !== schoolFilter) return false;
-    if (eduSchoolFilter !== "all" && r.students?.educational_school !== eduSchoolFilter) return false;
-    if (durationFilter !== "all" && String(r.lesson_duration_minutes) !== durationFilter) return false;
-    if (cityFilter !== "all" && r.students?.city !== cityFilter) return false;
-    if (gradeFilter !== "all") {
+    if (teacherFilter.length > 0 && !teacherFilter.includes(r.teachers?.id)) return false;
+    if (schoolFilter.length > 0 && !schoolFilter.includes(r.schools?.id)) return false;
+    if (eduSchoolFilter.length > 0 && !eduSchoolFilter.includes(r.students?.educational_school)) return false;
+    if (durationFilter.length > 0 && !durationFilter.includes(String(r.lesson_duration_minutes))) return false;
+    if (cityFilter.length > 0 && !cityFilter.includes(r.students?.city)) return false;
+    if (gradeFilter.length > 0) {
       const stripMarks = (s: string) => (s ?? "").replace(/['"׳״']/g, "").trim();
       const rowGrade = stripMarks(r.students?.grade ?? "");
-      if (rowGrade !== stripMarks(gradeFilter)) return false;
+      if (!gradeFilter.includes(rowGrade)) return false;
     }
-    if (levelFilter !== "all" && r.students?.playing_level !== levelFilter) return false;
+    if (levelFilter.length > 0 && !levelFilter.includes(r.students?.playing_level)) return false;
     if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
     if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
-    if (paymentFilter !== "all" && getPaymentStatus(r) !== paymentFilter) return false;
-    if (trackFilter !== "all") {
+    if (paymentFilter.length > 0 && !paymentFilter.includes(getPaymentStatus(r))) return false;
+    if (trackFilter.length > 0) {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
         recital: "has_recital_track",
         major: "is_major_student",
         junior: "is_junior_track",
       };
-      const f = map[trackFilter];
-      if (f && !r.students?.[f]) return false;
+      if (!trackFilter.some((t) => {
+        const f = map[t];
+        return f && r.students?.[f];
+      })) return false;
     }
-    if (instrumentFilter !== "all" && r.instruments?.name !== instrumentFilter) return false;
-    if (regTypeFilter !== "all") {
+    if (instrumentFilter.length > 0 && !instrumentFilter.includes(r.instruments?.name)) return false;
+    if (regTypeFilter.length > 0) {
       const rt = getRegType(r.students);
-      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+      if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(r.students?.id)) return false;
     return true;
