@@ -1,4 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
+import ParentEditDialog from "@/components/admin/ParentEditDialog";
+
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -64,6 +67,9 @@ const AdminStudentForm = () => {
 
 
   const isActive = watch("is_active");
+  const [editParentId, setEditParentId] = useState<string | null>(null);
+
+
 
   const { data: student, isLoading: studentLoading } = useQuery({
     queryKey: ["admin-student", studentId],
@@ -74,6 +80,10 @@ const AdminStudentForm = () => {
     },
     enabled: isEdit,
   });
+
+  const linkedParent1Id: string | null = ((student as any)?.parent_1_id as string) ?? null;
+  const linkedParent2Id: string | null = ((student as any)?.parent_2_id as string) ?? null;
+
 
   const { data: educationalSchools = [], isLoading: schoolsLoading } = useQuery({
     queryKey: ["educational-schools-active"],
@@ -179,15 +189,25 @@ const AdminStudentForm = () => {
         grade: data.grade === "__none__" ? null : data.grade || null,
         playing_level: data.playing_level === "__none__" ? null : data.playing_level || null,
         student_status: data.student_status,
-        parent_name: data.parent_name || null,
-        parent_phone: data.parent_phone || null,
-        parent_email: data.parent_email || null,
-        parent_national_id: data.parent_national_id || null,
-        parent_name_2: data.parent_name_2 || null,
-        parent_phone_2: data.parent_phone_2 || null,
-        parent_email_2: data.parent_email_2 || null,
-        parent_national_id_2: data.parent_national_id_2 || null,
+        // Linked parents are edited via the parent entity itself (synced by trigger)
+        ...(linkedParent1Id
+          ? {}
+          : {
+              parent_name: data.parent_name || null,
+              parent_phone: data.parent_phone || null,
+              parent_email: data.parent_email || null,
+              parent_national_id: data.parent_national_id || null,
+            }),
+        ...(linkedParent2Id
+          ? {}
+          : {
+              parent_name_2: data.parent_name_2 || null,
+              parent_phone_2: data.parent_phone_2 || null,
+              parent_email_2: data.parent_email_2 || null,
+              parent_national_id_2: data.parent_national_id_2 || null,
+            }),
         is_active: data.is_active,
+
       };
 
       let resultId: string;
@@ -237,16 +257,20 @@ const AdminStudentForm = () => {
     { name: "address", label: "כתובת" },
   ];
 
-  const PARENT_FIELDS: { name: keyof StudentFormData; label: string; type?: string }[] = [
+  const PARENT_FIELDS_1: { name: keyof StudentFormData; label: string; type?: string }[] = [
     { name: "parent_name", label: "שם הורה 1" },
     { name: "parent_national_id", label: "ת.ז. הורה 1" },
     { name: "parent_phone", label: "טלפון הורה 1", type: "tel" },
     { name: "parent_email", label: "אימייל הורה 1", type: "email" },
+  ];
+
+  const PARENT_FIELDS_2: { name: keyof StudentFormData; label: string; type?: string }[] = [
     { name: "parent_name_2", label: "שם הורה 2" },
     { name: "parent_national_id_2", label: "ת.ז. הורה 2" },
     { name: "parent_phone_2", label: "טלפון הורה 2", type: "tel" },
     { name: "parent_email_2", label: "אימייל הורה 2", type: "email" },
   ];
+
 
   const isLoadingData = isEdit && (studentLoading || schoolsLoading);
 
@@ -459,17 +483,75 @@ const AdminStudentForm = () => {
         </div>
 
         {/* Parent details */}
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+        <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-5">
           <h2 className="font-semibold text-foreground text-base">פרטי הורים</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {PARENT_FIELDS.map((f) => (
-              <div key={f.name} className="space-y-1.5">
-                <Label className="text-sm">{f.label}</Label>
-                <Input type={f.type ?? "text"} {...register(f.name)} className="h-12 rounded-xl" />
+
+          {([1, 2] as const).map((slot) => {
+            const linkedId = slot === 1 ? linkedParent1Id : linkedParent2Id;
+            const fields = slot === 1 ? PARENT_FIELDS_1 : PARENT_FIELDS_2;
+            return (
+              <div key={slot} className="space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-muted-foreground">הורה {slot}</p>
+                  {linkedId && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-9 rounded-xl gap-1.5"
+                      onClick={() => setEditParentId(linkedId)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> ערוך הורה
+                    </Button>
+                  )}
+                </div>
+
+                {linkedId ? (
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {fields.map((f) => (
+                        <div key={f.name} className="space-y-1.5">
+                          <Label className="text-sm">{f.label}</Label>
+                          <Input
+                            type={f.type ?? "text"}
+                            value={(watch(f.name) as string) || ""}
+                            readOnly
+                            disabled
+                            className="h-12 rounded-xl bg-muted/50"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      ההורה מקושר כיישות עצמאית. עריכה מתבצעת בכרטיס ההורה ומתעדכנת אצל כל האחים.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {fields.map((f) => (
+                        <div key={f.name} className="space-y-1.5">
+                          <Label className="text-sm">{f.label}</Label>
+                          <Input type={f.type ?? "text"} {...register(f.name)} className="h-12 rounded-xl" />
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      עדיין לא מקושר להורה במערכת — הזנת ת.ז. הורה תיצור/תקשר את יישות ההורה בשמירה.
+                    </p>
+                  </>
+                )}
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
+
+        <ParentEditDialog
+          open={!!editParentId}
+          onOpenChange={(o) => !o && setEditParentId(null)}
+          parentId={editParentId}
+        />
+
 
         <div className="flex gap-3 sticky bottom-20 md:bottom-4 z-10">
           <Button type="submit" disabled={mutation.isPending} className="flex-1 h-14 text-base font-semibold rounded-2xl shadow-lg">
