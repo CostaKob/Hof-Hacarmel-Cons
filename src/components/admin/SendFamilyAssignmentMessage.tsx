@@ -252,7 +252,7 @@ const SendFamilyAssignmentMessage = ({
           <div className="space-y-1">
             <Label className="text-xs">תצוגה מקדימה (כפי שיתקבל במייל)</Label>
             <div className="rounded-xl border bg-background p-4 text-sm leading-6" dir="rtl">
-              {message.split("\n").map((line, i) => (
+                {message.split("\n").map((line, i) => (
                 <p key={i} className="min-h-[1.25rem]">
                   {parseInlineLinks(line).map((part, j) =>
                     part.type === "link" ? (
@@ -261,7 +261,11 @@ const SendFamilyAssignmentMessage = ({
                         href={part.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="font-bold text-primary underline text-lg"
+                        className={
+                          part.text === "לחצו כאן לתשלום"
+                            ? "font-bold text-primary underline text-lg"
+                            : "font-bold text-primary underline"
+                        }
                       >
                         {part.text}
                       </a>
