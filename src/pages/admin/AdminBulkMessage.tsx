@@ -73,7 +73,12 @@ const stripHtml = (html: string) => {
 
 const AdminBulkMessage = () => {
   const { selectedYearId, years } = useAcademicYear();
-  const [source, setSource] = useState<Source>("registrations");
+  const location = useLocation();
+  const duplicated = (location.state as any)?.duplicate as
+    | { subject?: string; body?: string; audience?: Source }
+    | undefined;
+  const [source, setSource] = useState<Source>(duplicated?.audience ?? "registrations");
+
   const [regStatus, setRegStatus] = useState<string>("all");
   const [subject, setSubject] = useState<string>(() => {
     if (typeof window === "undefined") return "";
