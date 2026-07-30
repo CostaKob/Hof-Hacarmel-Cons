@@ -317,6 +317,17 @@ const TeacherStudents = () => {
                         <span>·</span>
                         <span>{enrollment.schools?.name}</span>
                       </div>
+                      {(enrollment.students?.parent_name || enrollment.students?.parent_phone || enrollment.students?.city) && (
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          {enrollment.students?.parent_name && <span>{enrollment.students.parent_name}</span>}
+                          {enrollment.students?.parent_phone && (
+                            <><span>·</span><span>{enrollment.students.parent_phone}</span></>
+                          )}
+                          {enrollment.students?.city && (
+                            <><span>·</span><span>{enrollment.students.city}</span></>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {(!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק") && (
                       <Badge variant="outline" className="rounded-lg text-destructive border-destructive shrink-0">לא פעיל</Badge>
