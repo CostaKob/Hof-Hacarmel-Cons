@@ -533,10 +533,10 @@ const AdminStudents = () => {
       const haystack = normalize(`${s.first_name ?? ""} ${s.last_name ?? ""} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.parent_phone ?? ""} ${s.phone ?? ""} ${s.city ?? ""} ${s.grade ?? ""}`);
       if (!haystack.includes(q)) return false;
     }
-    if (cityFilter !== "all" && s.city !== cityFilter) return false;
-    if (gradeFilter !== "all") {
+    if (cityFilter.length > 0 && !cityFilter.includes(s.city)) return false;
+    if (gradeFilter.length > 0) {
       const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
-      if (stripMarks(s.grade ?? "") !== stripMarks(gradeFilter)) return false;
+      if (!gradeFilter.includes(stripMarks(s.grade ?? ""))) return false;
     }
     const stopped = !s.is_active || s.student_status === "הפסיק";
     const regStatus = getRegStatus(s);
@@ -544,19 +544,21 @@ const AdminStudents = () => {
     if (statusFilter === "registered" && (stopped || regStatus !== "registered")) return false;
     if (statusFilter === "not_registered" && (stopped || regStatus !== "not_registered")) return false;
     if (statusFilter === "stopped" && !stopped) return false;
-    if (trackFilter !== "all") {
+    if (trackFilter.length > 0) {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
         recital: "has_recital_track",
         major: "is_major_student",
         junior: "is_junior_track",
       };
-      const f = map[trackFilter];
-      if (f && !s[f]) return false;
+      if (!trackFilter.some((t) => {
+        const f = map[t];
+        return f && s[f];
+      })) return false;
     }
-    if (regTypeFilter !== "all") {
+    if (regTypeFilter.length > 0) {
       const rt = getRegType(s);
-      if (regTypeFilter === "unknown" ? rt !== null : rt !== regTypeFilter) return false;
+      if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(s.id)) return false;
     return true;
