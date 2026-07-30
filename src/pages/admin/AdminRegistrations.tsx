@@ -51,10 +51,10 @@ const AdminRegistrations = () => {
   const { selectedYearId, years } = useAcademicYear();
   const selectedYear = years.find((y) => y.id === selectedYearId);
   useListStatePreservation("/admin/registrations");
-  const [statusFilter, setStatusFilter] = usePersistedState<string>("/admin/registrations", "status", "all");
-  const [schoolFilter, setSchoolFilter] = usePersistedState<string>("/admin/registrations", "school", "all");
-  const [gradeFilter, setGradeFilter] = usePersistedState<string>("/admin/registrations", "grade", "all");
-  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string>("/admin/registrations", "instrument", "all");
+  const [statusFilter, setStatusFilter] = usePersistedState<string[]>("/admin/registrations", "statusMulti", []);
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string[]>("/admin/registrations", "schoolMulti", []);
+  const [gradeFilter, setGradeFilter] = usePersistedState<string[]>("/admin/registrations", "gradeMulti", []);
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string[]>("/admin/registrations", "instrumentMulti", []);
   const [search, setSearch] = usePersistedState<string>("/admin/registrations", "search", "");
 
   const { data: registrations = [], isLoading } = useQuery({
@@ -72,12 +72,12 @@ const AdminRegistrations = () => {
   });
 
   const filtered = registrations.filter((r) => {
-    if (statusFilter !== "all" && r.status !== statusFilter) return false;
-    if (schoolFilter !== "all" && (r.branch_school_name || "ללא שלוחה") !== schoolFilter) return false;
-    if (gradeFilter !== "all" && (r.grade || "") !== gradeFilter) return false;
-    if (instrumentFilter !== "all") {
+    if (statusFilter.length > 0 && !statusFilter.includes(r.status)) return false;
+    if (schoolFilter.length > 0 && !schoolFilter.includes(r.branch_school_name || "ללא שלוחה")) return false;
+    if (gradeFilter.length > 0 && !gradeFilter.includes(r.grade || "")) return false;
+    if (instrumentFilter.length > 0) {
       const insts = (r.requested_instruments as string[] | null) || [];
-      if (!insts.some((i) => (i || "").trim() === instrumentFilter)) return false;
+      if (!insts.some((i) => instrumentFilter.includes((i || "").trim()))) return false;
     }
     if (search) {
       const q = search.toLowerCase();
@@ -86,6 +86,7 @@ const AdminRegistrations = () => {
     }
     return true;
   });
+
 
   const schoolCounts = (() => {
     const counts = new Map<string, number>();
