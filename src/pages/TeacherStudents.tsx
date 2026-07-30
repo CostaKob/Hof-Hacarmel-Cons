@@ -106,7 +106,9 @@ const TeacherStudents = () => {
           firstName: s.first_name,
           lastName: s.last_name,
           nationalId: (s.national_id ?? "").trim(),
+          parentName: s.parent_name,
           parentPhone: s.parent_phone,
+          city: s.city,
           instrumentName: e.instruments?.name,
           schoolName: e.schools?.name,
           previousGrade: e.grade ?? null,
@@ -315,6 +317,17 @@ const TeacherStudents = () => {
                         <span>·</span>
                         <span>{enrollment.schools?.name}</span>
                       </div>
+                      {(enrollment.students?.parent_name || enrollment.students?.parent_phone || enrollment.students?.city) && (
+                        <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          {enrollment.students?.parent_name && <span>{enrollment.students.parent_name}</span>}
+                          {enrollment.students?.parent_phone && (
+                            <><span>·</span><span>{enrollment.students.parent_phone}</span></>
+                          )}
+                          {enrollment.students?.city && (
+                            <><span>·</span><span>{enrollment.students.city}</span></>
+                          )}
+                        </div>
+                      )}
                     </div>
                     {(!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק") && (
                       <Badge variant="outline" className="rounded-lg text-destructive border-destructive shrink-0">לא פעיל</Badge>
@@ -406,6 +419,13 @@ const TeacherStudents = () => {
                               <><span>·</span><span>כיתה {r.previousGrade}</span></>
                             )}
                           </div>
+                          {(r.parentName || r.parentPhone || r.city) && (
+                            <div className="flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                              {r.parentName && <span>{r.parentName}</span>}
+                              {r.parentPhone && <><span>·</span><span>{r.parentPhone}</span></>}
+                              {r.city && <><span>·</span><span>{r.city}</span></>}
+                            </div>
+                          )}
                         </div>
                         <Badge
                           variant="outline"
