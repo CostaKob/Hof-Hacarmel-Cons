@@ -522,7 +522,7 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           שינויים שזוהו ({diffs.length})
         </CardTitle>
         <p className="text-xs text-muted-foreground">
-          לכל שדה: השאר את הקיים, החלף בחדש, או — בשדות הורה — שמור את שניהם
+          לכל שדה: השאר את הקיים, החלף בחדש, או — בשדות הורה — שמור את שניהם. שדות שחסרים בכרטיס התלמיד מסומנים וימולאו כברירת מחדל.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">
