@@ -533,11 +533,14 @@ const DiffCard = ({ registration, student, onApplied }: { registration: any; stu
           const bothDisabled = d.secondary && d.secondaryValue && String(d.secondaryValue).trim() !== "";
           return (
             <div key={i} className="rounded-lg border border-border p-3 space-y-2.5">
-              <p className="text-xs font-medium text-muted-foreground">{d.label}</p>
+              <p className="text-xs font-medium text-muted-foreground">
+                {d.label}
+                {d.isMissing && <span className="ms-2 text-[11px] text-amber-700 dark:text-amber-400">חסר בכרטיס התלמיד</span>}
+              </p>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
                   <p className="text-[11px] text-muted-foreground">ערך קיים</p>
-                  <p className={`text-sm ${dec === "replace" ? "line-through text-muted-foreground" : "text-foreground"}`}>{d.oldValue}</p>
+                  <p className={`text-sm ${dec === "replace" && !d.isMissing ? "line-through text-muted-foreground" : "text-foreground"}`}>{d.oldValue}</p>
                   {d.secondary && d.secondaryValue && (
                     <p className="text-[11px] text-muted-foreground mt-0.5">משני: {d.secondaryValue}</p>
                   )}
