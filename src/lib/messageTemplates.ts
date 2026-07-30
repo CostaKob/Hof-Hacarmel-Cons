@@ -89,6 +89,22 @@ export function markdownLinksToPlain(text: string): string {
   return text.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1:\n$2");
 }
 
+/**
+ * Prepares text for WhatsApp:
+ * - drops bare wa.me links of teachers/office (the phone number is already shown as text),
+ *   so the only remaining link is the payment link — this prevents WhatsApp from
+ *   generating a preview/tap-target for the first link in the message.
+ * - converts markdown links to "text:\nurl"
+ */
+export function prepareWhatsAppText(text: string): string {
+  const cleaned = text
+    .split("\n")
+    .filter((line) => !/^\s*https?:\/\/wa\.me\/\S*\s*$/.test(line))
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+  return markdownLinksToPlain(cleaned).trim();
+}
+
 /** Splits a line into text/link segments for preview rendering */
 export function parseInlineLinks(
   line: string,
