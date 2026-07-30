@@ -59,10 +59,14 @@ const buildClassPayload = (form: any) => ({
   notes: form.notes?.trim() || null,
 });
 
-const AdminSchoolMusicSchoolCard = () => {
+const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" | "coordinator" }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  const isCoordinatorView = variant === "coordinator";
+  const [editingSchoolDetails, setEditingSchoolDetails] = useState(false);
+  const [editStudent, setEditStudent] = useState<any>(null);
 
   const [showDeleteSchool, setShowDeleteSchool] = useState(false);
   const [editingCoordinator, setEditingCoordinator] = useState(false);
