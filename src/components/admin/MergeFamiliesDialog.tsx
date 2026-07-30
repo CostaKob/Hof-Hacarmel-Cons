@@ -55,35 +55,54 @@ const MergeFamiliesDialog = ({
 }: Props) => {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
+  const [mode, setMode] = useState<"same_parent" | "spouse">("same_parent");
   const { data: candidates = [], isLoading } = useMergeCandidates(
     parentNationalId,
     open,
   );
 
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["families-list"] });
+    qc.invalidateQueries({ queryKey: ["family-details"] });
+    qc.invalidateQueries({ queryKey: ["family-merge-candidates"] });
+    qc.invalidateQueries({ queryKey: ["students"] });
+  };
+
   const mergeMutation = useMutation({
     mutationFn: async (sourceId: string) => {
+      if (mode === "same_parent") {
+        const { data, error } = await (supabase as any).rpc(
+          "merge_duplicate_parents",
+          {
+            _keep_national_id: parentNationalId,
+            _remove_national_id: sourceId,
+          },
+        );
+        if (error) throw error;
+        return { kind: "same_parent" as const, data };
+      }
       const { data, error } = await (supabase as any).rpc("merge_families", {
         _target_national_id: parentNationalId,
         _source_national_id: sourceId,
       });
       if (error) throw error;
-      return data as {
-        children_count: number;
-        links_added: number;
-        siblings_added: number;
-      };
+      return { kind: "spouse" as const, data };
     },
-    onSuccess: (res) => {
-      toast.success(
-        `המשפחות מוזגו — ${res.children_count} ילדים בתא, ${res.siblings_added} קישורי אחים נוספו`,
-      );
-      qc.invalidateQueries({ queryKey: ["families-list"] });
-      qc.invalidateQueries({ queryKey: ["family-details"] });
-      qc.invalidateQueries({ queryKey: ["family-merge-candidates"] });
+    onSuccess: (res: any) => {
+      if (res.kind === "same_parent") {
+        toast.success(
+          `רשומות ההורה אוחדו — ${res.data?.moved ?? 0} ילדים הועברו`,
+        );
+      } else {
+        toast.success(
+          `המשפחות מוזגו — ${res.data?.children_count ?? 0} ילדים בתא, ${res.data?.siblings_added ?? 0} קישורי אחים נוספו`,
+        );
+      }
+      invalidate();
       setSelected(null);
       onOpenChange(false);
     },
-    onError: (e: any) => toast.error(e?.message || "המיזוג נכשל"),
+    onError: (e: any) => toast.error(e?.message || "הפעולה נכשלה"),
   });
 
   return (
@@ -92,10 +111,11 @@ const MergeFamiliesDialog = ({
         <DialogHeader className="text-right">
           <DialogTitle className="text-right">מיזוג משפחות</DialogTitle>
           <DialogDescription className="text-right">
-            צירוף תא משפחתי אחר אל {parentName || "משפחה זו"} — כל הילדים יקושרו
-            לשני ההורים ויסומנו כאחים.
+            בחר תא משפחתי אחר לחיבור אל {parentName || "משפחה זו"}, ואז בחר את
+            סוג הקשר.
           </DialogDescription>
         </DialogHeader>
+
 
         {isLoading ? (
           <div className="flex justify-center py-8">
@@ -155,14 +175,50 @@ const MergeFamiliesDialog = ({
         )}
 
         {selected && (
-          <Alert>
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription className="text-right">
-              המיזוג יקשר את כל הילדים לשני ההורים ויוסיף קישורי אחים. הפעולה
-              משפיעה על חישובי הנחות ועל התא המשפחתי — לא ניתן לבטל אוטומטית.
-            </AlertDescription>
-          </Alert>
+          <div className="space-y-2">
+            <div className="text-sm font-medium">סוג הקשר:</div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setMode("same_parent")}
+                className={`text-right rounded-xl border p-3 text-sm transition-all ${
+                  mode === "same_parent"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="font-medium">אותו הורה (כפילות)</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  אותה אישה/אותו גבר נשמר פעמיים (ת.ז. שגויה, מייל שונה). הרשומה
+                  השנייה תימחק וכל הילדים יעברו לרשומה זו.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("spouse")}
+                className={`text-right rounded-xl border p-3 text-sm transition-all ${
+                  mode === "spouse"
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="font-medium">בן/בת זוג</div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  שני הורים שונים באותה משפחה. הילדים יקושרו לשני ההורים ויסומנו
+                  כאחים.
+                </div>
+              </button>
+            </div>
+            <Alert>
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-right">
+                הפעולה משפיעה על התא המשפחתי ועל חישובי ההנחות — לא ניתן לבטל
+                אוטומטית.
+              </AlertDescription>
+            </Alert>
+          </div>
         )}
+
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button
@@ -184,7 +240,7 @@ const MergeFamiliesDialog = ({
             ) : (
               <Merge className="h-4 w-4 ms-2" />
             )}
-            מזג משפחות
+            {mode === "same_parent" ? "אחד רשומות הורה" : "מזג משפחות"}
           </Button>
         </DialogFooter>
       </DialogContent>
