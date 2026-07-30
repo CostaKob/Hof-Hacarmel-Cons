@@ -2512,6 +2512,19 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      find_family_merge_candidates: {
+        Args: { _national_id: string }
+        Returns: {
+          children_count: number
+          children_names: string[]
+          match_reason: string
+          parent_email: string
+          parent_name: string
+          parent_national_id: string
+          parent_phone: string
+          score: number
+        }[]
+      }
       get_confirmed_siblings: {
         Args: { _student_id: string }
         Returns: {
@@ -2718,6 +2731,10 @@ export type Database = {
       }
       lookup_student_by_national_id: {
         Args: { _national_id: string }
+        Returns: Json
+      }
+      merge_families: {
+        Args: { _source_national_id: string; _target_national_id: string }
         Returns: Json
       }
       move_to_dlq: {
