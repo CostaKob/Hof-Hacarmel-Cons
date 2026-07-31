@@ -357,6 +357,26 @@ const AdminRegistrations = () => {
                         </div>
                       )}
 
+                      {/* Row 4b: Last year's teachers */}
+                      {(() => {
+                        const prev = r.existing_student_id ? (prevByStudent as any)[r.existing_student_id] : null;
+                        if (!prev || prev.length === 0) return null;
+                        return (
+                          <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                            <span className="shrink-0">🕘</span>
+                            <span className="break-words">
+                              בשנה שעברה:{" "}
+                              {prev
+                                .map((e: any) =>
+                                  `${e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "ללא מורה"}${e.instruments?.name ? ` (${e.instruments.name})` : ""}`
+                                )
+                                .join(" · ")}
+                            </span>
+                          </div>
+                        );
+                      })()}
+
+
                       {/* Row 5: Meta chips */}
                       <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                         <span className={`text-[11px] ${isUrgent ? "text-destructive font-medium" : "text-muted-foreground"}`}>
