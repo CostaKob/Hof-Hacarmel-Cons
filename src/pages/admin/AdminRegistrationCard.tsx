@@ -262,6 +262,11 @@ const AdminRegistrationCard = () => {
               <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
                 <p className="text-sm font-medium">
                   למד בשנה שעברה ({(prevEnrollments[0] as any).academic_years?.name})
+                  {prevEnrollments.length > 1 && (
+                    <span className="mr-1 text-xs font-normal text-muted-foreground">
+                      · {prevEnrollments.length} שיוכים
+                    </span>
+                  )}
                 </p>
                 <div className="space-y-1.5">
                   {prevEnrollments.map((e: any) => (
