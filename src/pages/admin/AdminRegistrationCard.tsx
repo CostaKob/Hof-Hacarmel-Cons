@@ -53,6 +53,29 @@ const AdminRegistrationCard = () => {
     enabled: !!registration?.existing_student_id,
   });
 
+  // Previous-year enrollments (who the student studied with last year)
+  const { data: prevEnrollments } = useQuery({
+    queryKey: ["registration-prev-enrollments", registration?.existing_student_id, registration?.academic_year_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, is_active, lesson_duration_minutes, academic_year_id, teachers(first_name, last_name), instruments(name), schools(name), academic_years(name, start_date)")
+        .eq("student_id", registration.existing_student_id);
+      if (error) return [];
+      const rows = (data ?? []) as any[];
+      const current = registration.academic_year_id;
+      const past = rows.filter((e) => e.academic_year_id !== current && e.academic_years?.start_date);
+      if (past.length === 0) return [];
+      const latest = past
+        .map((e) => e.academic_years.start_date as string)
+        .sort()
+        .reverse()[0];
+      return past.filter((e) => e.academic_years.start_date === latest);
+    },
+    enabled: !!registration?.existing_student_id,
+  });
+
+
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
       const { error } = await supabase
@@ -224,6 +247,33 @@ const AdminRegistrationCard = () => {
                     <UserPlus className="h-4 w-4 ml-1" />
                     תלמיד אחר — צור חדש
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Last year's teachers */}
+            {hasExistingStudent && prevEnrollments && prevEnrollments.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+                <p className="text-sm font-medium">
+                  למד בשנה שעברה ({(prevEnrollments[0] as any).academic_years?.name})
+                </p>
+                <div className="space-y-1.5">
+                  {prevEnrollments.map((e: any) => (
+                    <div key={e.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                      <span className="font-medium">
+                        {e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "ללא מורה"}
+                      </span>
+                      {e.instruments?.name && (
+                        <Badge variant="secondary" className="text-[11px]">{e.instruments.name}</Badge>
+                      )}
+                      {e.lesson_duration_minutes && (
+                        <span className="text-xs text-muted-foreground">{e.lesson_duration_minutes} דק׳</span>
+                      )}
+                      {e.schools?.name && (
+                        <span className="text-xs text-muted-foreground">· {e.schools.name}</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
