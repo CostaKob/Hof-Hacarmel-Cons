@@ -199,9 +199,12 @@ const AdminFamilies = () => {
                       size="sm"
                       variant="outline"
                       className="h-9 rounded-lg"
+                      disabled={dismissPairs.isPending}
                       onClick={() =>
-                        (dupInfo.get(f.parent_national_id)?.partners || []).forEach((p) =>
-                          dismissPair(f.parent_national_id, p),
+                        dismissPairs.mutate(
+                          [...(dupInfo.get(f.parent_national_id)?.partners || [])].map(
+                            (p) => [f.parent_national_id, p] as [string, string],
+                          ),
                         )
                       }
                     >
