@@ -70,7 +70,13 @@ const AdminRegistrationCard = () => {
         .map((e) => e.academic_years.start_date as string)
         .sort()
         .reverse()[0];
-      return past.filter((e) => e.academic_years.start_date === latest);
+      return past
+        .filter((e) => e.academic_years.start_date === latest)
+        .sort((a, b) =>
+          `${a.teachers?.first_name ?? ""}${a.teachers?.last_name ?? ""}`.localeCompare(
+            `${b.teachers?.first_name ?? ""}${b.teachers?.last_name ?? ""}`, "he"
+          )
+        );
     },
     enabled: !!registration?.existing_student_id,
   });
@@ -256,6 +262,11 @@ const AdminRegistrationCard = () => {
               <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
                 <p className="text-sm font-medium">
                   למד בשנה שעברה ({(prevEnrollments[0] as any).academic_years?.name})
+                  {prevEnrollments.length > 1 && (
+                    <span className="mr-1 text-xs font-normal text-muted-foreground">
+                      · {prevEnrollments.length} שיוכים
+                    </span>
+                  )}
                 </p>
                 <div className="space-y-1.5">
                   {prevEnrollments.map((e: any) => (

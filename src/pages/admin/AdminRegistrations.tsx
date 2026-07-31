@@ -364,14 +364,17 @@ const AdminRegistrations = () => {
                         return (
                           <div className="flex items-start gap-1.5 text-xs text-muted-foreground">
                             <span className="shrink-0">🕘</span>
-                            <span className="break-words">
-                              בשנה שעברה:{" "}
-                              {prev
-                                .map((e: any) =>
-                                  `${e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "ללא מורה"}${e.instruments?.name ? ` (${e.instruments.name})` : ""}`
-                                )
-                                .join(" · ")}
-                            </span>
+                            <div className="break-words">
+                              <span>בשנה שעברה{prev.length > 1 ? ` (${prev.length} שיוכים)` : ""}:</span>
+                              <div className="flex flex-col">
+                                {prev.map((e: any, i: number) => (
+                                  <span key={i}>
+                                    {e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "ללא מורה"}
+                                    {e.instruments?.name ? ` (${e.instruments.name})` : ""}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         );
                       })()}
