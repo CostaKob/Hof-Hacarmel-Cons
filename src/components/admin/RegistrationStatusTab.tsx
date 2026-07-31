@@ -295,10 +295,13 @@ const RegistrationStatusTab = () => {
           {filtered.map((s) => {
             const isGraduated = s.previousGrade === "יב";
             return (
-              <button
+              <div
                 key={s.studentId}
+                role="button"
+                tabIndex={0}
                 onClick={() => navigate(`/admin/students/${s.studentId}`)}
-                className={`w-full flex items-start gap-3 rounded-2xl p-3.5 shadow-sm border text-right transition hover:shadow-md ${
+                onKeyDown={(ev) => { if (ev.key === "Enter") navigate(`/admin/students/${s.studentId}`); }}
+                className={`w-full flex items-start gap-3 rounded-2xl p-3.5 shadow-sm border text-right transition hover:shadow-md cursor-pointer ${
                   isGraduated
                     ? "bg-muted/40 border-border opacity-75"
                     : `bg-card ${s.isRegistered ? "border-emerald-300/60" : "border-amber-300/60"}`
@@ -340,6 +343,21 @@ const RegistrationStatusTab = () => {
                       <PhoneDisplay phone={s.parentPhone} stopPropagation textClassName="text-xs text-muted-foreground" />
                     </div>
                   )}
+                  {!s.isRegistered && (
+                    <div className="pt-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={markingId === s.studentId}
+                        onClick={(ev) => { ev.stopPropagation(); markWontContinue(s.studentId, `${s.firstName} ${s.lastName}`); }}
+                        className="h-9 rounded-xl text-xs gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10"
+                      >
+                        <UserX className="h-3.5 w-3.5" />
+                        {markingId === s.studentId ? "מעדכן..." : "לא יירשם"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full shrink-0 ${
                   isGraduated
@@ -351,7 +369,7 @@ const RegistrationStatusTab = () => {
                   {isGraduated ? "סיים לימודים" : s.isRegistered ? "נרשם" : "טרם נרשם"}
                 </span>
 
-              </button>
+              </div>
             );
           })}
         </div>
