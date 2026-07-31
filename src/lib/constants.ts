@@ -22,7 +22,14 @@ export const GRADE_PROMOTION: Record<string, string | null> = {
 
 export const PLAYING_LEVELS = ["א", "ב", "ג"] as const;
 
-export const STUDENT_STATUSES = ["פעיל", "הפסיק"] as const;
+export const STUDENT_STATUSES = ["פעיל", "הפסיק", "לא ימשיך"] as const;
+
+/** Statuses that take a student out of the active / "not yet registered" lists */
+export const INACTIVE_STUDENT_STATUSES = ["הפסיק", "לא ימשיך"] as const;
+
+export function isInactiveStudentStatus(status?: string | null): boolean {
+  return (INACTIVE_STUDENT_STATUSES as readonly string[]).includes(status ?? "");
+}
 
 export function calcYearsOfPlaying(instrumentStartDate: string | null | undefined): number | null {
   if (!instrumentStartDate) return null;

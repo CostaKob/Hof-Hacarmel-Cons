@@ -17,6 +17,7 @@ import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X } from "luci
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
+import { isInactiveStudentStatus } from "@/lib/constants";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
@@ -520,10 +521,10 @@ const AdminStudents = () => {
     return "not_registered";
   };
 
-  const activeStudentsCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "enrolled").length;
-  const registeredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "registered").length;
-  const notRegisteredCount = allStudents.filter((s: any) => s.is_active && s.student_status !== "הפסיק" && getRegStatus(s) === "not_registered").length;
-  const stoppedCount = allStudents.filter((s: any) => !s.is_active || s.student_status === "הפסיק").length;
+  const activeStudentsCount = allStudents.filter((s: any) => s.is_active && !isInactiveStudentStatus(s.student_status) && getRegStatus(s) === "enrolled").length;
+  const registeredCount = allStudents.filter((s: any) => s.is_active && !isInactiveStudentStatus(s.student_status) && getRegStatus(s) === "registered").length;
+  const notRegisteredCount = allStudents.filter((s: any) => s.is_active && !isInactiveStudentStatus(s.student_status) && getRegStatus(s) === "not_registered").length;
+  const stoppedCount = allStudents.filter((s: any) => !s.is_active || isInactiveStudentStatus(s.student_status)).length;
   const siblingsCount = allStudents.filter((s: any) => siblingStudentIds.has(s.id)).length;
 
   const filteredAll = allStudents.filter((s: any) => {
@@ -538,7 +539,7 @@ const AdminStudents = () => {
       const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
       if (!gradeFilter.includes(stripMarks(s.grade ?? ""))) return false;
     }
-    const stopped = !s.is_active || s.student_status === "הפסיק";
+    const stopped = !s.is_active || isInactiveStudentStatus(s.student_status);
     const regStatus = getRegStatus(s);
     if (statusFilter === "active" && (stopped || regStatus !== "enrolled")) return false;
     if (statusFilter === "registered" && (stopped || regStatus !== "registered")) return false;
@@ -605,8 +606,8 @@ const AdminStudents = () => {
       if (!gradeFilter.includes(rowGrade)) return false;
     }
     if (levelFilter.length > 0 && !levelFilter.includes(r.students?.playing_level)) return false;
-    if (statusFilter === "active" && (!r.is_active || r.students?.student_status === "הפסיק")) return false;
-    if (statusFilter === "stopped" && (r.is_active && r.students?.student_status !== "הפסיק")) return false;
+    if (statusFilter === "active" && (!r.is_active || isInactiveStudentStatus(r.students?.student_status))) return false;
+    if (statusFilter === "stopped" && (r.is_active && !isInactiveStudentStatus(r.students?.student_status))) return false;
     if (paymentFilter.length > 0 && !paymentFilter.includes(getPaymentStatus(r))) return false;
     if (trackFilter.length > 0) {
       const map: Record<string, string> = {
@@ -830,7 +831,7 @@ const AdminStudents = () => {
                 onClick={() => setFilter("status", "stopped")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
-                הפסיקו
+                הפסיקו / לא ימשיכו
                 <Badge variant={statusFilter === "stopped" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
                   {stoppedCount}
                 </Badge>
@@ -848,7 +849,7 @@ const AdminStudents = () => {
                 onClick={() => setFilter("status", "stopped")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
-                הפסיקו
+                הפסיקו / לא ימשיכו
               </button>
             </>
           )}
@@ -885,7 +886,7 @@ const AdminStudents = () => {
             </p>
             <div className="space-y-2">
               {filteredAll.map((s: any, index: number) => {
-                const stopped = !s.is_active || s.student_status === "הפסיק";
+                const stopped = !s.is_active || isInactiveStudentStatus(s.student_status);
                 const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
                 const isRegistered = hasActiveEnrollment || registeredStudentIds.has(s.id) || (s.national_id && registeredNationalIds.has(String(s.national_id).trim()));
                 return (
@@ -936,8 +937,8 @@ const AdminStudents = () => {
                         </div>
                         <div className="flex flex-wrap items-start justify-start sm:justify-end content-start gap-1.5 w-full">
                           {(() => {
-                            if (s.student_status === "הפסיק") {
-                              return <Badge variant="outline" className="rounded-lg text-destructive border-destructive">הפסיק</Badge>;
+                            if (isInactiveStudentStatus(s.student_status)) {
+                              return <Badge variant="outline" className="rounded-lg text-destructive border-destructive">{s.student_status}</Badge>;
                             }
                             if (!s.is_active) {
                               return <Badge variant="outline" className="rounded-lg">לא פעיל</Badge>;
@@ -1077,8 +1078,8 @@ const AdminStudents = () => {
                         <Badge variant="outline" className={`rounded-lg text-xs ${payClass}`}>
                           {payLabel}
                         </Badge>
-                        <Badge variant={(!r.is_active || r.students?.student_status === "הפסיק") ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || r.students?.student_status === "הפסיק") ? "text-destructive border-destructive" : ""}`}>
-                          {!r.is_active ? "רישום לא פעיל" : r.students?.student_status === "הפסיק" ? "הפסיק" : "פעיל"}
+                        <Badge variant={(!r.is_active || isInactiveStudentStatus(r.students?.student_status)) ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || isInactiveStudentStatus(r.students?.student_status)) ? "text-destructive border-destructive" : ""}`}>
+                          {!r.is_active ? "רישום לא פעיל" : isInactiveStudentStatus(r.students?.student_status) ? r.students?.student_status : "פעיל"}
                         </Badge>
                       </div>
                     </div>
