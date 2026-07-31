@@ -53,6 +53,29 @@ const AdminRegistrationCard = () => {
     enabled: !!registration?.existing_student_id,
   });
 
+  // Previous-year enrollments (who the student studied with last year)
+  const { data: prevEnrollments } = useQuery({
+    queryKey: ["registration-prev-enrollments", registration?.existing_student_id, registration?.academic_year_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, is_active, lesson_duration_minutes, academic_year_id, teachers(first_name, last_name), instruments(name), schools(name), academic_years(name, start_date)")
+        .eq("student_id", registration.existing_student_id);
+      if (error) return [];
+      const rows = (data ?? []) as any[];
+      const current = registration.academic_year_id;
+      const past = rows.filter((e) => e.academic_year_id !== current && e.academic_years?.start_date);
+      if (past.length === 0) return [];
+      const latest = past
+        .map((e) => e.academic_years.start_date as string)
+        .sort()
+        .reverse()[0];
+      return past.filter((e) => e.academic_years.start_date === latest);
+    },
+    enabled: !!registration?.existing_student_id,
+  });
+
+
   const updateStatus = useMutation({
     mutationFn: async (newStatus: string) => {
       const { error } = await supabase
