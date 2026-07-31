@@ -10,18 +10,10 @@ import { useFamiliesList } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
+import { useFamilyDupDismissals, dupPairKey } from "@/hooks/useFamilyDupDismissals";
 
 const norm = (s?: string | null) => (s || "").trim().toLowerCase();
-const pairKey = (a: string, b: string) => [a, b].sort().join("|");
-const DISMISS_KEY = "family-dup-dismissed";
-
-const loadDismissed = (): Set<string> => {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) || "[]"));
-  } catch {
-    return new Set();
-  }
-};
+const pairKey = dupPairKey;
 
 const AdminFamilies = () => {
   const navigate = useNavigate();
@@ -31,20 +23,11 @@ const AdminFamilies = () => {
   const [q, setQ] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(false);
   const [onlyDup, setOnlyDup] = useState(false);
-  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
+  const { dismissed, dismissPairs } = useFamilyDupDismissals();
   const [mergeTarget, setMergeTarget] = useState<{
     id: string;
     name: string | null;
   } | null>(null);
-
-  const dismissPair = (a: string, b: string) => {
-    setDismissed((prev) => {
-      const next = new Set(prev);
-      next.add(pairKey(a, b));
-      localStorage.setItem(DISMISS_KEY, JSON.stringify([...next]));
-      return next;
-    });
-  };
 
   // Possible duplicate family cells: shared child, or same children last name
   // (+ same city when known). Phone is intentionally NOT used — two parents of
@@ -216,9 +199,12 @@ const AdminFamilies = () => {
                       size="sm"
                       variant="outline"
                       className="h-9 rounded-lg"
+                      disabled={dismissPairs.isPending}
                       onClick={() =>
-                        (dupInfo.get(f.parent_national_id)?.partners || []).forEach((p) =>
-                          dismissPair(f.parent_national_id, p),
+                        dismissPairs.mutate(
+                          [...(dupInfo.get(f.parent_national_id)?.partners || [])].map(
+                            (p) => [f.parent_national_id, p] as [string, string],
+                          ),
                         )
                       }
                     >

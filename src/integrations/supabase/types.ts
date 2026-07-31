@@ -577,6 +577,30 @@ export type Database = {
           },
         ]
       }
+      family_dup_dismissals: {
+        Row: {
+          created_at: string
+          dismissed_by: string | null
+          id: string
+          parent_a_national_id: string
+          parent_b_national_id: string
+        }
+        Insert: {
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          parent_a_national_id: string
+          parent_b_national_id: string
+        }
+        Update: {
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          parent_a_national_id?: string
+          parent_b_national_id?: string
+        }
+        Relationships: []
+      }
       instrument_loans: {
         Row: {
           created_at: string
