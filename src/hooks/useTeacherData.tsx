@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { isInactiveStudentStatus } from "@/lib/constants";
 
 // ─── Teacher Profile ───
 export function useTeacherProfile() {
@@ -51,7 +52,7 @@ export function useTeacherEnrollments(teacherId: string | undefined, yearId?: st
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       // Filter out students who stopped studying
-      return (data ?? []).filter((e: any) => e.students?.student_status !== "הפסיק");
+      return (data ?? []).filter((e: any) => !isInactiveStudentStatus(e.students?.student_status));
     },
   });
 }
@@ -86,7 +87,7 @@ export function useTeacherEnrollmentsBySchool(teacherId: string | undefined, sch
         .eq("school_id", schoolId!)
         .eq("is_active", true);
       if (error) throw error;
-      return (data ?? []).filter((e: any) => e.students?.student_status !== "הפסיק");
+      return (data ?? []).filter((e: any) => !isInactiveStudentStatus(e.students?.student_status));
     },
   });
 }

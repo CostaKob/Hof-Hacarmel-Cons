@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, CheckCircle2, Clock, Phone, GraduationCap } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { isInactiveStudentStatus } from "@/lib/constants";
 
 const RegistrationStatusTab = () => {
   const navigate = useNavigate();
@@ -93,7 +94,7 @@ const RegistrationStatusTab = () => {
       if (!e.is_active) continue;
       const s = e.students;
       if (!s) continue;
-      if (s.student_status === "הפסיק") continue;
+      if (isInactiveStudentStatus(s.student_status)) continue;
       const existing = map.get(s.id);
       const teacherName = `${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim();
       const item = {

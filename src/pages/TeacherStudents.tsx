@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
 import PageTitle from "@/components/PageTitle";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { isInactiveStudentStatus } from "@/lib/constants";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ const TeacherStudents = () => {
     const map = new Map<string, any>();
     previousYearEnrollments.forEach((e: any) => {
       if (!e.is_active) return;
-      if ((e.students as any)?.student_status === "הפסיק") return;
+      if (isInactiveStudentStatus((e.students as any)?.student_status)) return;
       const s = e.students;
       if (!s) return;
       if (!map.has(s.id)) {
@@ -172,8 +173,8 @@ const TeacherStudents = () => {
         if (search && !studentName.includes(search)) return false;
         if (schoolFilter !== "all" && e.school_id !== schoolFilter) return false;
         if (instrumentFilter !== "all" && e.instrument_id !== instrumentFilter) return false;
-        if (activeFilter === "active" && (!e.is_active || (e.students as any)?.student_status === "הפסיק")) return false;
-        if (activeFilter === "inactive" && (e.is_active && (e.students as any)?.student_status !== "הפסיק")) return false;
+        if (activeFilter === "active" && (!e.is_active || isInactiveStudentStatus((e.students as any)?.student_status))) return false;
+        if (activeFilter === "inactive" && (e.is_active && !isInactiveStudentStatus((e.students as any)?.student_status))) return false;
         return true;
       })
       .sort((a, b) => {
@@ -305,10 +306,10 @@ const TeacherStudents = () => {
                     tabIndex={0}
                     onClick={() => navigate(`/teacher/students/${enrollment.id}`)}
                     onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") navigate(`/teacher/students/${enrollment.id}`); }}
-                    className={`flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "border-destructive/30" : "border-primary/30"}`}
+                    className={`flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-card p-4 shadow-sm border text-right transition-all active:scale-[0.98] hover:shadow-md ${!enrollment.is_active || isInactiveStudentStatus((enrollment.students as any)?.student_status) ? "border-destructive/30" : "border-primary/30"}`}
                   >
-                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "bg-destructive/10" : "bg-primary/10"}`}>
-                      <span className={`text-sm font-bold ${!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק" ? "text-destructive" : "text-primary"}`}>{index + 1}</span>
+                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${!enrollment.is_active || isInactiveStudentStatus((enrollment.students as any)?.student_status) ? "bg-destructive/10" : "bg-primary/10"}`}>
+                      <span className={`text-sm font-bold ${!enrollment.is_active || isInactiveStudentStatus((enrollment.students as any)?.student_status) ? "text-destructive" : "text-primary"}`}>{index + 1}</span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground truncate">
@@ -345,7 +346,7 @@ const TeacherStudents = () => {
                         </div>
                       )}
                     </div>
-                    {(!enrollment.is_active || (enrollment.students as any)?.student_status === "הפסיק") && (
+                    {(!enrollment.is_active || isInactiveStudentStatus((enrollment.students as any)?.student_status)) && (
                       <Badge variant="outline" className="rounded-lg text-destructive border-destructive shrink-0">לא פעיל</Badge>
                     )}
                     <ChevronLeft className="h-5 w-5 text-muted-foreground shrink-0" />
