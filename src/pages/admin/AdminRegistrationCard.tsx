@@ -70,7 +70,13 @@ const AdminRegistrationCard = () => {
         .map((e) => e.academic_years.start_date as string)
         .sort()
         .reverse()[0];
-      return past.filter((e) => e.academic_years.start_date === latest);
+      return past
+        .filter((e) => e.academic_years.start_date === latest)
+        .sort((a, b) =>
+          `${a.teachers?.first_name ?? ""}${a.teachers?.last_name ?? ""}`.localeCompare(
+            `${b.teachers?.first_name ?? ""}${b.teachers?.last_name ?? ""}`, "he"
+          )
+        );
     },
     enabled: !!registration?.existing_student_id,
   });
