@@ -831,7 +831,7 @@ const AdminStudents = () => {
                 onClick={() => setFilter("status", "stopped")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
-                הפסיקו
+                הפסיקו / לא ימשיכו
                 <Badge variant={statusFilter === "stopped" ? "secondary" : "outline"} className="rounded-md text-[10px] px-1.5 py-0">
                   {stoppedCount}
                 </Badge>
@@ -849,7 +849,7 @@ const AdminStudents = () => {
                 onClick={() => setFilter("status", "stopped")}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${statusFilter === "stopped" ? "bg-destructive text-destructive-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
-                הפסיקו
+                הפסיקו / לא ימשיכו
               </button>
             </>
           )}
@@ -938,7 +938,7 @@ const AdminStudents = () => {
                         <div className="flex flex-wrap items-start justify-start sm:justify-end content-start gap-1.5 w-full">
                           {(() => {
                             if (isInactiveStudentStatus(s.student_status)) {
-                              return <Badge variant="outline" className="rounded-lg text-destructive border-destructive">הפסיק</Badge>;
+                              return <Badge variant="outline" className="rounded-lg text-destructive border-destructive">{s.student_status}</Badge>;
                             }
                             if (!s.is_active) {
                               return <Badge variant="outline" className="rounded-lg">לא פעיל</Badge>;
@@ -1079,7 +1079,7 @@ const AdminStudents = () => {
                           {payLabel}
                         </Badge>
                         <Badge variant={(!r.is_active || isInactiveStudentStatus(r.students?.student_status)) ? "outline" : "default"} className={`rounded-lg ${(!r.is_active || isInactiveStudentStatus(r.students?.student_status)) ? "text-destructive border-destructive" : ""}`}>
-                          {!r.is_active ? "רישום לא פעיל" : isInactiveStudentStatus(r.students?.student_status) ? "הפסיק" : "פעיל"}
+                          {!r.is_active ? "רישום לא פעיל" : isInactiveStudentStatus(r.students?.student_status) ? r.students?.student_status : "פעיל"}
                         </Badge>
                       </div>
                     </div>
