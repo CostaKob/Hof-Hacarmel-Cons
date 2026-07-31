@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, CheckCircle2, Clock, Phone, GraduationCap } from "lucide-react";
+import { Search, CheckCircle2, Clock, Phone, GraduationCap, UserX } from "lucide-react";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { toast } from "sonner";
 import { isInactiveStudentStatus } from "@/lib/constants";
 
 const RegistrationStatusTab = () => {
