@@ -13,7 +13,25 @@ import { isInactiveStudentStatus } from "@/lib/constants";
 
 const RegistrationStatusTab = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { years, activeYear } = useAcademicYear();
+  const [markingId, setMarkingId] = useState<string | null>(null);
+
+  const markWontContinue = async (studentId: string, name: string) => {
+    setMarkingId(studentId);
+    const { error } = await supabase
+      .from("students")
+      .update({ student_status: "לא ימשיך" })
+      .eq("id", studentId);
+    setMarkingId(null);
+    if (error) {
+      toast.error("שגיאה בעדכון הסטטוס");
+      return;
+    }
+    toast.success(`${name} סומן כ"לא ימשיך"`);
+    queryClient.invalidateQueries({ queryKey: ["admin-prev-year-enrollments-all"] });
+  };
+
 
   const previousYear = useMemo(() => {
     if (!years?.length || !activeYear) return null;
