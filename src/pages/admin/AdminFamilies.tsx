@@ -12,16 +12,7 @@ import { cmpHe } from "@/lib/sortHebrew";
 import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
 
 const norm = (s?: string | null) => (s || "").trim().toLowerCase();
-const pairKey = (a: string, b: string) => [a, b].sort().join("|");
-const DISMISS_KEY = "family-dup-dismissed";
-
-const loadDismissed = (): Set<string> => {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(DISMISS_KEY) || "[]"));
-  } catch {
-    return new Set();
-  }
-};
+const pairKey = dupPairKey;
 
 const AdminFamilies = () => {
   const navigate = useNavigate();
@@ -31,20 +22,11 @@ const AdminFamilies = () => {
   const [q, setQ] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(false);
   const [onlyDup, setOnlyDup] = useState(false);
-  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
+  const { dismissed, dismissPairs } = useFamilyDupDismissals();
   const [mergeTarget, setMergeTarget] = useState<{
     id: string;
     name: string | null;
   } | null>(null);
-
-  const dismissPair = (a: string, b: string) => {
-    setDismissed((prev) => {
-      const next = new Set(prev);
-      next.add(pairKey(a, b));
-      localStorage.setItem(DISMISS_KEY, JSON.stringify([...next]));
-      return next;
-    });
-  };
 
   // Possible duplicate family cells: shared child, or same children last name
   // (+ same city when known). Phone is intentionally NOT used — two parents of
