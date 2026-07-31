@@ -10,6 +10,7 @@ import { useFamiliesList } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
+import { useFamilyDupDismissals, dupPairKey } from "@/hooks/useFamilyDupDismissals";
 
 const norm = (s?: string | null) => (s || "").trim().toLowerCase();
 const pairKey = dupPairKey;
