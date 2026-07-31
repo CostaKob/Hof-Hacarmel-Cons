@@ -251,6 +251,33 @@ const AdminRegistrationCard = () => {
               </div>
             )}
 
+            {/* Last year's teachers */}
+            {hasExistingStudent && prevEnrollments && prevEnrollments.length > 0 && (
+              <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-2">
+                <p className="text-sm font-medium">
+                  למד בשנה שעברה ({(prevEnrollments[0] as any).academic_years?.name})
+                </p>
+                <div className="space-y-1.5">
+                  {prevEnrollments.map((e: any) => (
+                    <div key={e.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+                      <span className="font-medium">
+                        {e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "ללא מורה"}
+                      </span>
+                      {e.instruments?.name && (
+                        <Badge variant="secondary" className="text-[11px]">{e.instruments.name}</Badge>
+                      )}
+                      {e.lesson_duration_minutes && (
+                        <span className="text-xs text-muted-foreground">{e.lesson_duration_minutes} דק׳</span>
+                      )}
+                      {e.schools?.name && (
+                        <span className="text-xs text-muted-foreground">· {e.schools.name}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Separator />
 
             {/* Single main action */}
