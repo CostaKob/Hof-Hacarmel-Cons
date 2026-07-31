@@ -71,6 +71,38 @@ const AdminRegistrations = () => {
     },
   });
 
+  // Previous-year enrollments for all existing students in the list
+  const existingIds = Array.from(
+    new Set(registrations.map((r) => r.existing_student_id).filter(Boolean))
+  ) as string[];
+
+  const { data: prevByStudent = {} } = useQuery({
+    queryKey: ["registrations-prev-enrollments", selectedYearId, existingIds.sort().join(",")],
+    enabled: existingIds.length > 0 && !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("student_id, academic_year_id, teachers(first_name, last_name), instruments(name), academic_years(start_date)")
+        .in("student_id", existingIds);
+      if (error) return {} as Record<string, any[]>;
+      const rows = ((data ?? []) as any[]).filter(
+        (e) => e.academic_year_id !== selectedYearId && e.academic_years?.start_date
+      );
+      const map: Record<string, any[]> = {};
+      for (const e of rows) {
+        (map[e.student_id] ||= []).push(e);
+      }
+      for (const sid of Object.keys(map)) {
+        const latest = map[sid]
+          .map((e) => e.academic_years.start_date as string)
+          .sort()
+          .reverse()[0];
+        map[sid] = map[sid].filter((e) => e.academic_years.start_date === latest);
+      }
+      return map;
+    },
+  });
+
   const filtered = registrations.filter((r) => {
     if (statusFilter.length > 0 && !statusFilter.includes(r.status)) return false;
     if (schoolFilter.length > 0 && !schoolFilter.includes(r.branch_school_name || "ללא שלוחה")) return false;
