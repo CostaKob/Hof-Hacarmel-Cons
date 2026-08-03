@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
 
     // Additional notification to branch coordinator (Avi Sharabani) for his branches.
     try {
-      const coordinatorBranches = ["כרם מהר", "עין איילה", "עין אילה", "גבע כרמל", "העוגן", "העמר"];
+      const coordinatorBranches = ["כרם מהר", "עין איילה", "עין אילה", "גבע כרמל", "העוגן"];
       const branchNorm = (branch || "").trim();
       if (branchNorm && coordinatorBranches.some((b) => branchNorm.includes(b))) {
         const coordIdempotencyKey = `coord-avi-new-registration-${registrationId}`;
