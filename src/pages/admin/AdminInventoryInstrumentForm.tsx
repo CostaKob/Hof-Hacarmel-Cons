@@ -147,6 +147,17 @@ const AdminInventoryInstrumentForm = () => {
       if (isEdit) {
         const { error } = await supabase.from("inventory_instruments").update(payload).eq("id", id!);
         if (error) throw error;
+
+        // Moving away from "loaned" closes any open loan with today's date (editable later)
+        if (item?.condition === "loaned" && data.condition !== "loaned") {
+          const today = format(new Date(), "yyyy-MM-dd");
+          const { error: loanErr } = await supabase
+            .from("instrument_loans")
+            .update({ return_date: today })
+            .eq("inventory_instrument_id", id!)
+            .is("return_date", null);
+          if (loanErr) throw loanErr;
+        }
       } else {
         const { error } = await supabase.from("inventory_instruments").insert(payload);
         if (error) throw error;
@@ -154,6 +165,9 @@ const AdminInventoryInstrumentForm = () => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+      qc.invalidateQueries({ queryKey: ["instrument-loans", id] });
+      qc.invalidateQueries({ queryKey: ["student-instrument-loans"] });
       toast.success(isEdit ? "הכלי עודכן" : "הכלי נוצר");
       navigate("/admin/inventory-instruments");
     },
