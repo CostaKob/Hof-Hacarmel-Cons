@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm, Controller } from "react-hook-form";
@@ -38,6 +38,7 @@ const AdminInventoryInstrumentForm = () => {
   const [editLoanDate, setEditLoanDate] = useState("");
   const [editReturnDate, setEditReturnDate] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const initializedItemIdRef = useRef<string | null>(null);
 
   const updateLoanMutation = useMutation({
     mutationFn: async ({ loanId, loan_date, return_date }: { loanId: string; loan_date: string; return_date: string | null }) => {
@@ -115,7 +116,7 @@ const AdminInventoryInstrumentForm = () => {
   });
 
   useEffect(() => {
-    if (item) {
+    if (item && initializedItemIdRef.current !== item.id) {
       reset({
         instrument_id: item.instrument_id,
         serial_number: item.serial_number,
@@ -128,6 +129,7 @@ const AdminInventoryInstrumentForm = () => {
         notes: item.notes || "",
       });
       setVerifyNotes(((item as any).last_verified_notes as string) || "");
+      initializedItemIdRef.current = item.id;
     }
   }, [item, reset]);
 
@@ -145,8 +147,15 @@ const AdminInventoryInstrumentForm = () => {
         notes: data.notes.trim() || null,
       };
       if (isEdit) {
-        const { error } = await supabase.from("inventory_instruments").update(payload).eq("id", id!);
+        if (!id) throw new Error("כלי לא נמצא");
+        const { data: savedItem, error } = await supabase
+          .from("inventory_instruments")
+          .update(payload)
+          .eq("id", id)
+          .select("id, condition")
+          .single();
         if (error) throw error;
+        if (savedItem.condition !== data.condition) throw new Error("מצב הכלי לא נשמר, יש לנסות שוב");
 
         // Moving away from "loaned" closes any open loan with today's date (editable later)
         if (item?.condition === "loaned" && data.condition !== "loaned") {
@@ -154,7 +163,7 @@ const AdminInventoryInstrumentForm = () => {
           const { error: loanErr } = await supabase
             .from("instrument_loans")
             .update({ return_date: today })
-            .eq("inventory_instrument_id", id!)
+            .eq("inventory_instrument_id", id)
             .is("return_date", null);
           if (loanErr) throw loanErr;
         }
