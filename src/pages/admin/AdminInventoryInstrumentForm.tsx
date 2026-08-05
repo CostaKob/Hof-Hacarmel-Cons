@@ -273,7 +273,7 @@ const AdminInventoryInstrumentForm = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm">מצב *</Label>
+              <Label className="text-sm">מיקום הכלי *</Label>
               <Controller
                 name="condition"
                 control={control}
@@ -283,7 +283,7 @@ const AdminInventoryInstrumentForm = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CONDITION_OPTIONS.map((o) => (
+                      {LOCATION_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -291,6 +291,27 @@ const AdminInventoryInstrumentForm = () => {
                 )}
               />
             </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-sm">תקינות *</Label>
+              <Controller
+                name="repair_state"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || "ok"} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REPAIR_STATE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
 
             <div className="space-y-1.5">
               <Label className="text-sm">מיקום אחסון</Label>
