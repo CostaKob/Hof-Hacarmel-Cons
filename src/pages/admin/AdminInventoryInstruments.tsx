@@ -459,10 +459,10 @@ const AdminInventoryInstruments = () => {
           </Select>
           <Select value={filterCondition} onValueChange={setFilterCondition}>
             <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="מיקום הכלי" />
+              <SelectValue placeholder="זמינות הכלי" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">כל סטטוסי המיקום</SelectItem>
+              <SelectItem value="all">כל סטטוסי הזמינות</SelectItem>
               {LOCATION_OPTIONS.map((o) => (
                 <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
               ))}

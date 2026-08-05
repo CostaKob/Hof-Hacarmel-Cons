@@ -382,7 +382,7 @@ const AdminInventoryInstrumentForm = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm">מיקום הכלי *</Label>
+              <Label className="text-sm">זמינות הכלי *</Label>
               <Controller
                 name="condition"
                 control={control}
