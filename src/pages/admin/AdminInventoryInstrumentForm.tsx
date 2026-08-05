@@ -81,8 +81,10 @@ const AdminInventoryInstrumentForm = () => {
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       condition: "available",
+      repair_state: "ok",
       storage_location_id: null,
     },
+
   });
 
   const { data: item } = useQuery({
