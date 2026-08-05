@@ -146,7 +146,7 @@ const InstrumentRepairsSection = ({ inventoryInstrumentId }: Props) => {
         </h2>
         {!showAdd && (
           <Button type="button" size="sm" variant="outline" className="rounded-xl" onClick={() => setShowAdd(true)}>
-            <Plus className="h-4 w-4" /> תיקון חדש
+            <Plus className="h-4 w-4" /> תיקון חדש (שליחה לטכנאי)
           </Button>
         )}
       </div>

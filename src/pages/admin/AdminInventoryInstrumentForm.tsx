@@ -441,7 +441,7 @@ const AdminInventoryInstrumentForm = () => {
                       disabled={quickRepairMutation.isPending}
                       onClick={() => quickRepairMutation.mutate("in_repair")}
                     >
-                      נשלח לתיקון
+                      שלח לתיקון
                     </Button>
                   )}
                   {watch("repair_state") === "ok" && (
