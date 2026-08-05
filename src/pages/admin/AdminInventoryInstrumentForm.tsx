@@ -78,7 +78,7 @@ const AdminInventoryInstrumentForm = () => {
     onError: (e: any) => toast.error(e.message || "שגיאה בעדכון"),
   });
 
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       condition: "available",
       repair_state: "ok",
@@ -155,6 +155,38 @@ const AdminInventoryInstrumentForm = () => {
       initializedItemIdRef.current = item.id;
     }
   }, [item, reset]);
+
+  // ── Quick repair-state actions (manual, always available) ──
+  const quickRepairMutation = useMutation({
+    mutationFn: async (next: InstrumentRepairState) => {
+      if (!id) throw new Error("כלי לא נמצא");
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { error } = await supabase
+        .from("inventory_instruments")
+        .update({ repair_state: next })
+        .eq("id", id);
+      if (error) throw error;
+
+      // Returning to "ok" closes any open repair record with today's date
+      if (next === "ok") {
+        await supabase
+          .from("instrument_repairs")
+          .update({ return_date: today })
+          .eq("inventory_instrument_id", id)
+          .is("return_date", null);
+      }
+    },
+    onSuccess: (_d, next) => {
+      setValue("repair_state", next, { shouldDirty: false });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      qc.invalidateQueries({ queryKey: ["instrument-repairs", id] });
+      toast.success(
+        next === "ok" ? "הכלי סומן כתקין והתיקון נסגר" : `עודכן ל"${REPAIR_STATE_LABELS[next]}"`
+      );
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה"),
+  });
 
   // ── Annual physical checks ──────────────────────────────
   const { data: checks = [] } = useQuery({
@@ -387,7 +419,50 @@ const AdminInventoryInstrumentForm = () => {
                   </Select>
                 )}
               />
+              {isEdit && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {watch("repair_state") !== "ok" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-9 rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("ok")}
+                    >
+                      <Check className="h-4 w-4" /> תוקן — סמן כתקין
+                    </Button>
+                  )}
+                  {watch("repair_state") === "needs_repair" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-xl"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("in_repair")}
+                    >
+                      נשלח לתיקון
+                    </Button>
+                  )}
+                  {watch("repair_state") === "ok" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-xl"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("needs_repair")}
+                    >
+                      סמן כדרוש תיקון
+                    </Button>
+                  )}
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                ניתן תמיד לשנות ידנית בבחירה למעלה ולשמור.
+              </p>
             </div>
+
 
 
             <div className="space-y-1.5">
