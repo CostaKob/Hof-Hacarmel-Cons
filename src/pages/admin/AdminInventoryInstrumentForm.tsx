@@ -78,7 +78,7 @@ const AdminInventoryInstrumentForm = () => {
     onError: (e: any) => toast.error(e.message || "שגיאה בעדכון"),
   });
 
-  const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       condition: "available",
       repair_state: "ok",
