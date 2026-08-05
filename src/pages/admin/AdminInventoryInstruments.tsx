@@ -304,7 +304,7 @@ const AdminInventoryInstruments = () => {
     <AdminLayout title="מאגר כלי נגינה" backPath="/admin">
       <PageTitle title="מלאי כלים" />
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-3">
         {LOCATION_OPTIONS.map((opt) => {
           const active = filterCondition === opt.value;
           return (
