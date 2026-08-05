@@ -54,7 +54,11 @@ const AdminInventoryInstrumentForm = () => {
   const [editLoanDate, setEditLoanDate] = useState("");
   const [editReturnDate, setEditReturnDate] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [checkResult, setCheckResult] = useState<InstrumentCheckResult>("ok");
+  const { selectedYearId, years } = useAcademicYear();
+  const yearName = years.find((y) => y.id === selectedYearId)?.name || "";
   const initializedItemIdRef = useRef<string | null>(null);
+
 
   const updateLoanMutation = useMutation({
     mutationFn: async ({ loanId, loan_date, return_date }: { loanId: string; loan_date: string; return_date: string | null }) => {
