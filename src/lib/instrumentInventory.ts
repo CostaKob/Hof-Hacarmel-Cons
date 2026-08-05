@@ -24,6 +24,60 @@ export const CONDITION_OPTIONS: { value: InstrumentCondition; label: string }[] 
   { value: "missing", label: "לא מאותר" },
 ];
 
+/* ── Axis 1: location / possession ───────────────────────────── */
+export type InstrumentLocationStatus = "available" | "loaned" | "missing";
+
+export const LOCATION_OPTIONS: { value: InstrumentLocationStatus; label: string }[] = [
+  { value: "available", label: "זמין" },
+  { value: "loaned", label: "מושאל" },
+  { value: "missing", label: "לא מאותר" },
+];
+
+export const LOCATION_LABELS: Record<InstrumentLocationStatus, string> = {
+  available: "זמין",
+  loaned: "מושאל",
+  missing: "לא מאותר",
+};
+
+/* ── Axis 2: repair state ────────────────────────────────────── */
+export type InstrumentRepairState = "ok" | "needs_repair" | "in_repair";
+
+export const REPAIR_STATE_LABELS: Record<InstrumentRepairState, string> = {
+  ok: "תקין",
+  needs_repair: "דרוש תיקון / השלמה",
+  in_repair: "בתיקון",
+};
+
+export const REPAIR_STATE_COLORS: Record<InstrumentRepairState, string> = {
+  ok: "bg-green-100 text-green-800 border-green-200",
+  needs_repair: "bg-destructive/10 text-destructive border-destructive/20",
+  in_repair: "bg-amber-100 text-amber-800 border-amber-200",
+};
+
+export const REPAIR_STATE_OPTIONS: { value: InstrumentRepairState; label: string }[] = [
+  { value: "ok", label: "תקין" },
+  { value: "needs_repair", label: "דרוש תיקון / השלמה" },
+  { value: "in_repair", label: "בתיקון" },
+];
+
+/* ── Annual physical check ───────────────────────────────────── */
+export type InstrumentCheckResult = "ok" | "needs_repair" | "needs_completion" | "missing";
+
+export const CHECK_RESULT_LABELS: Record<InstrumentCheckResult, string> = {
+  ok: "תקין",
+  needs_repair: "דרוש תיקון",
+  needs_completion: "דרוש השלמה",
+  missing: "לא נמצא",
+};
+
+export const CHECK_RESULT_COLORS: Record<InstrumentCheckResult, string> = {
+  ok: "bg-green-100 text-green-800 border-green-200",
+  needs_repair: "bg-destructive/10 text-destructive border-destructive/20",
+  needs_completion: "bg-amber-100 text-amber-800 border-amber-200",
+  missing: "bg-muted text-muted-foreground border-border",
+};
+
+
 // Global instrument size list
 export const INSTRUMENT_SIZES = ["1/8", "1/4", "1/2", "3/4", "4/4"] as const;
 export type InstrumentSize = typeof INSTRUMENT_SIZES[number];
