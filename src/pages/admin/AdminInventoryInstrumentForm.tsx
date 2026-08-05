@@ -144,11 +144,12 @@ const AdminInventoryInstrumentForm = () => {
         model: item.model || "",
         size: item.size || null,
         condition: item.condition,
+        repair_state: ((item as any).repair_state || "ok") as InstrumentRepairState,
         storage_location_id: item.storage_location_id,
         purchase_date: item.purchase_date || "",
         notes: item.notes || "",
       });
-      setVerifyNotes(((item as any).last_verified_notes as string) || "");
+
       initializedItemIdRef.current = item.id;
     }
   }, [item, reset]);
