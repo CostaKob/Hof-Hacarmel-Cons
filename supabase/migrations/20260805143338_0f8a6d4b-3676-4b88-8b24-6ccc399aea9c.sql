@@ -1,0 +1,1 @@
+ALTER TYPE public.instrument_repair_state ADD VALUE IF NOT EXISTS 'unusable';
