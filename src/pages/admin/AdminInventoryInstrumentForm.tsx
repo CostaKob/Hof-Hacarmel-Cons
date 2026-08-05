@@ -456,7 +456,20 @@ const AdminInventoryInstrumentForm = () => {
                       סמן כדרוש תיקון
                     </Button>
                   )}
+                  {watch("repair_state") !== "unusable" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-xl border-neutral-400 text-neutral-800"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("unusable")}
+                    >
+                      סמן כלא שמיש
+                    </Button>
+                  )}
                 </div>
+
               )}
               <p className="text-[11px] text-muted-foreground">
                 ניתן תמיד לשנות ידנית בבחירה למעלה ולשמור.

@@ -3019,7 +3019,7 @@ export type Database = {
         | "in_repair"
         | "needs_repair"
         | "missing"
-      instrument_repair_state: "ok" | "needs_repair" | "in_repair"
+      instrument_repair_state: "ok" | "needs_repair" | "in_repair" | "unusable"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
       registration_status:
@@ -3221,7 +3221,7 @@ export const Constants = {
         "needs_repair",
         "missing",
       ],
-      instrument_repair_state: ["ok", "needs_repair", "in_repair"],
+      instrument_repair_state: ["ok", "needs_repair", "in_repair", "unusable"],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],
       registration_status: [

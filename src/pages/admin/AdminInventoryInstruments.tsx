@@ -304,7 +304,7 @@ const AdminInventoryInstruments = () => {
     <AdminLayout title="מאגר כלי נגינה" backPath="/admin">
       <PageTitle title="מלאי כלים" />
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-3">
         {LOCATION_OPTIONS.map((opt) => {
           const active = filterCondition === opt.value;
           return (
@@ -345,7 +345,20 @@ const AdminInventoryInstruments = () => {
           <p className="text-xs text-muted-foreground">בתיקון</p>
           <p className="text-2xl font-bold text-amber-700">{stats.in_repair || 0}</p>
         </button>
+        <button
+          type="button"
+          onClick={() => setFilterRepair(filterRepair === "unusable" ? "all" : "unusable")}
+          className={`rounded-xl border p-3 text-center transition-colors ${
+            filterRepair === "unusable"
+              ? "border-neutral-700 bg-neutral-200 ring-1 ring-neutral-700"
+              : "border-neutral-300 bg-neutral-100 hover:bg-neutral-200"
+          }`}
+        >
+          <p className="text-xs text-muted-foreground">לא שמיש</p>
+          <p className="text-2xl font-bold text-neutral-800">{stats.unusable || 0}</p>
+        </button>
       </div>
+
 
       {/* Annual check progress */}
       <button
