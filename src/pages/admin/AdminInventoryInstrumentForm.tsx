@@ -156,6 +156,38 @@ const AdminInventoryInstrumentForm = () => {
     }
   }, [item, reset]);
 
+  // ── Quick repair-state actions (manual, always available) ──
+  const quickRepairMutation = useMutation({
+    mutationFn: async (next: InstrumentRepairState) => {
+      if (!id) throw new Error("כלי לא נמצא");
+      const today = format(new Date(), "yyyy-MM-dd");
+      const { error } = await supabase
+        .from("inventory_instruments")
+        .update({ repair_state: next })
+        .eq("id", id);
+      if (error) throw error;
+
+      // Returning to "ok" closes any open repair record with today's date
+      if (next === "ok") {
+        await supabase
+          .from("instrument_repairs")
+          .update({ return_date: today })
+          .eq("inventory_instrument_id", id)
+          .is("return_date", null);
+      }
+    },
+    onSuccess: (_d, next) => {
+      setValue("repair_state", next, { shouldDirty: false });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      qc.invalidateQueries({ queryKey: ["instrument-repairs", id] });
+      toast.success(
+        next === "ok" ? "הכלי סומן כתקין והתיקון נסגר" : `עודכן ל"${REPAIR_STATE_LABELS[next]}"`
+      );
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה"),
+  });
+
   // ── Annual physical checks ──────────────────────────────
   const { data: checks = [] } = useQuery({
     queryKey: ["instrument-checks", id],
