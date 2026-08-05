@@ -12,7 +12,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
+import {
+  CONDITION_LABELS,
+  CONDITION_COLORS,
+  InstrumentCondition,
+  INSTRUMENT_SIZES,
+  LOCATION_OPTIONS,
+  REPAIR_STATE_OPTIONS,
+  REPAIR_STATE_LABELS,
+  REPAIR_STATE_COLORS,
+  InstrumentRepairState,
+  CHECK_RESULT_LABELS,
+  CHECK_RESULT_COLORS,
+  InstrumentCheckResult,
+} from "@/lib/instrumentInventory";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 import PageTitle from "@/components/PageTitle";
@@ -24,10 +38,12 @@ interface FormData {
   model: string;
   size: string | null;
   condition: InstrumentCondition;
+  repair_state: InstrumentRepairState;
   storage_location_id: string | null;
   purchase_date: string;
   notes: string;
 }
+
 
 const AdminInventoryInstrumentForm = () => {
   const { id } = useParams();
@@ -38,7 +54,11 @@ const AdminInventoryInstrumentForm = () => {
   const [editLoanDate, setEditLoanDate] = useState("");
   const [editReturnDate, setEditReturnDate] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
+  const [checkResult, setCheckResult] = useState<InstrumentCheckResult>("ok");
+  const { selectedYearId, years } = useAcademicYear();
+  const yearName = years.find((y) => y.id === selectedYearId)?.name || "";
   const initializedItemIdRef = useRef<string | null>(null);
+
 
   const updateLoanMutation = useMutation({
     mutationFn: async ({ loanId, loan_date, return_date }: { loanId: string; loan_date: string; return_date: string | null }) => {
@@ -61,8 +81,10 @@ const AdminInventoryInstrumentForm = () => {
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       condition: "available",
+      repair_state: "ok",
       storage_location_id: null,
     },
+
   });
 
   const { data: item } = useQuery({
@@ -124,14 +146,83 @@ const AdminInventoryInstrumentForm = () => {
         model: item.model || "",
         size: item.size || null,
         condition: item.condition,
+        repair_state: ((item as any).repair_state || "ok") as InstrumentRepairState,
         storage_location_id: item.storage_location_id,
         purchase_date: item.purchase_date || "",
         notes: item.notes || "",
       });
-      setVerifyNotes(((item as any).last_verified_notes as string) || "");
+
       initializedItemIdRef.current = item.id;
     }
   }, [item, reset]);
+
+  // ── Annual physical checks ──────────────────────────────
+  const { data: checks = [] } = useQuery({
+    queryKey: ["instrument-checks", id],
+    enabled: isEdit,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("instrument_checks")
+        .select("*, academic_years(name)")
+        .eq("inventory_instrument_id", id!)
+        .order("checked_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const currentCheck = (checks as any[]).find((c) => c.academic_year_id === selectedYearId) || null;
+
+  useEffect(() => {
+    if (currentCheck) {
+      setCheckResult(currentCheck.result as InstrumentCheckResult);
+      setVerifyNotes(currentCheck.notes || "");
+    }
+  }, [currentCheck?.id]);
+
+  const saveCheckMutation = useMutation({
+    mutationFn: async ({ remove }: { remove: boolean }) => {
+      if (!selectedYearId) throw new Error("לא נבחרה שנת לימודים");
+      const { error: delErr } = await supabase
+        .from("instrument_checks")
+        .delete()
+        .eq("inventory_instrument_id", id!)
+        .eq("academic_year_id", selectedYearId);
+      if (delErr) throw delErr;
+      if (remove) return;
+
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase.from("instrument_checks").insert({
+        inventory_instrument_id: id!,
+        academic_year_id: selectedYearId,
+        checked_by: userRes.user?.id ?? null,
+        result: checkResult,
+        notes: verifyNotes.trim() || null,
+      });
+      if (error) throw error;
+
+      if (checkResult === "needs_repair" || checkResult === "needs_completion") {
+        if ((item as any)?.repair_state !== "in_repair") {
+          await supabase.from("inventory_instruments").update({ repair_state: "needs_repair" }).eq("id", id!);
+        }
+      } else if (checkResult === "ok") {
+        if ((item as any)?.repair_state === "needs_repair") {
+          await supabase.from("inventory_instruments").update({ repair_state: "ok" }).eq("id", id!);
+        }
+      } else if (checkResult === "missing") {
+        await supabase.from("inventory_instruments").update({ condition: "missing" }).eq("id", id!);
+      }
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
+      qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      if (vars.remove) setVerifyNotes("");
+      toast.success(vars.remove ? "הוסר סימון" : "הבדיקה נשמרה");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה"),
+  });
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -142,10 +233,12 @@ const AdminInventoryInstrumentForm = () => {
         model: data.model.trim() || null,
         size: data.size || null,
         condition: data.condition,
+        repair_state: data.repair_state || "ok",
         storage_location_id: data.storage_location_id || null,
         purchase_date: data.purchase_date || null,
         notes: data.notes.trim() || null,
       };
+
       if (isEdit) {
         if (!id) throw new Error("כלי לא נמצא");
         const { data: savedItem, error } = await supabase
@@ -257,7 +350,7 @@ const AdminInventoryInstrumentForm = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-sm">מצב *</Label>
+              <Label className="text-sm">מיקום הכלי *</Label>
               <Controller
                 name="condition"
                 control={control}
@@ -267,7 +360,7 @@ const AdminInventoryInstrumentForm = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CONDITION_OPTIONS.map((o) => (
+                      {LOCATION_OPTIONS.map((o) => (
                         <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -275,6 +368,27 @@ const AdminInventoryInstrumentForm = () => {
                 )}
               />
             </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-sm">תקינות *</Label>
+              <Controller
+                name="repair_state"
+                control={control}
+                render={({ field }) => (
+                  <Select value={field.value || "ok"} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-11 rounded-xl">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {REPAIR_STATE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
 
             <div className="space-y-1.5">
               <Label className="text-sm">מיקום אחסון</Label>
@@ -309,74 +423,49 @@ const AdminInventoryInstrumentForm = () => {
           </div>
         </div>
 
-        {isEdit && item && (() => {
-          const verifiedAt = (item as any).last_verified_at as string | null;
-          const status = (item as any).last_verified_status as string | null;
-          const savedNotes = (item as any).last_verified_notes as string | null;
-          const STATUS_META: Record<string, { label: string; cls: string }> = {
-            ok: { label: "תקין", cls: "bg-green-100 text-green-800 border-green-200" },
-            needs_attention: { label: "צריך תיקון/השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
-            needs_repair: { label: "צריך תיקון/השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
-            needs_completion: { label: "צריך תיקון/השלמות", cls: "bg-amber-100 text-amber-800 border-amber-200" },
-          };
-          const markVerified = async (newStatus: "ok" | "needs_attention") => {
-            const { data: userRes } = await supabase.auth.getUser();
-            const { error } = await supabase.from("inventory_instruments").update({
-              last_verified_at: new Date().toISOString(),
-              last_verified_by: userRes.user?.id ?? null,
-              last_verified_status: newStatus,
-              last_verified_notes: verifyNotes || null,
-            }).eq("id", id!);
-            if (error) { toast.error(error.message); return; }
-            qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
-            qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-            toast.success("סומן כנבדק");
-          };
-          const clearVerified = async () => {
-            const { error } = await supabase.from("inventory_instruments").update({
-              last_verified_at: null,
-              last_verified_by: null,
-              last_verified_status: null,
-              last_verified_notes: null,
-            }).eq("id", id!);
-            if (error) { toast.error(error.message); return; }
-            setVerifyNotes("");
-            qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
-            qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-            toast.success("הוסר סימון");
-          };
-          return (
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
-              <h2 className="font-semibold text-foreground text-base">בדיקה פיזית</h2>
-              <div className="flex flex-wrap items-center gap-2">
-                {verifiedAt ? (
-                  <>
-                    <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 gap-1">
-                      <CheckCircle2 className="h-3.5 w-3.5" /> נבדק
-                    </Badge>
-                    {status && STATUS_META[status] && (
-                      <Badge variant="outline" className={`${STATUS_META[status].cls} gap-1`}>
-                        {STATUS_META[status].label}
-                      </Badge>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(verifiedAt), "dd/MM/yyyy HH:mm")}
-                    </span>
-                  </>
-                ) : (
-                  <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 gap-1">
-                    <Circle className="h-3.5 w-3.5" /> טרם נבדק
+        {isEdit && item && (
+          <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-semibold text-foreground text-base">בדיקה שנתית</h2>
+              <span className="text-xs text-muted-foreground">{yearName}</span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {currentCheck ? (
+                <>
+                  <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 gap-1">
+                    <CheckCircle2 className="h-3.5 w-3.5" /> נבדק
                   </Badge>
-                )}
-              </div>
-
-              {verifiedAt && savedNotes && (
-                <div className="text-sm text-muted-foreground whitespace-pre-wrap rounded-lg bg-muted/40 p-3">
-                  {savedNotes}
-                </div>
+                  <Badge variant="outline" className={CHECK_RESULT_COLORS[currentCheck.result as InstrumentCheckResult]}>
+                    {CHECK_RESULT_LABELS[currentCheck.result as InstrumentCheckResult]}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {format(new Date(currentCheck.checked_at), "dd/MM/yyyy HH:mm")}
+                  </span>
+                </>
+              ) : (
+                <Badge variant="outline" className="bg-amber-50 text-amber-800 border-amber-200 gap-1">
+                  <Circle className="h-3.5 w-3.5" /> טרם נבדק בשנה זו
+                </Badge>
               )}
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
+                <Label className="text-sm">תוצאת בדיקה</Label>
+                <Select value={checkResult} onValueChange={(v) => setCheckResult(v as InstrumentCheckResult)}>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ok">תקין</SelectItem>
+                    <SelectItem value="needs_repair">דרוש תיקון</SelectItem>
+                    <SelectItem value="needs_completion">דרוש השלמה</SelectItem>
+                    <SelectItem value="missing">לא נמצא</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
                 <Label className="text-sm">הערות בדיקה (אופציונלי)</Label>
                 <Textarea
                   value={verifyNotes}
@@ -385,23 +474,48 @@ const AdminInventoryInstrumentForm = () => {
                   className="rounded-xl min-h-16"
                 />
               </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Button type="button" className="h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white" onClick={() => markVerified("ok")}>
-                  תקין
-                </Button>
-                <Button type="button" variant="outline" className="h-10 rounded-xl border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => markVerified("needs_attention")}>
-                  צריך תיקון/השלמות
-                </Button>
-                {verifiedAt && (
-                  <Button type="button" variant="ghost" className="h-10 rounded-xl" onClick={clearVerified}>
-                    בטל סימון
-                  </Button>
-                )}
-              </div>
             </div>
-          );
-        })()}
+
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                className="h-10 rounded-xl"
+                disabled={saveCheckMutation.isPending || !selectedYearId}
+                onClick={() => saveCheckMutation.mutate({ remove: false })}
+              >
+                {currentCheck ? "עדכון בדיקה" : "שמירת בדיקה"}
+              </Button>
+              {currentCheck && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-10 rounded-xl"
+                  disabled={saveCheckMutation.isPending}
+                  onClick={() => saveCheckMutation.mutate({ remove: true })}
+                >
+                  בטל סימון
+                </Button>
+              )}
+            </div>
+
+            {checks.length > 0 && (
+              <div className="space-y-1.5 pt-1">
+                <p className="text-sm font-medium text-foreground">היסטוריית בדיקות</p>
+                {checks.map((c: any) => (
+                  <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-2.5 text-xs">
+                    <span className="font-medium">{c.academic_years?.name || ""}</span>
+                    <Badge variant="outline" className={`${CHECK_RESULT_COLORS[c.result as InstrumentCheckResult]} text-[10px]`}>
+                      {CHECK_RESULT_LABELS[c.result as InstrumentCheckResult]}
+                    </Badge>
+                    <span className="text-muted-foreground">{format(new Date(c.checked_at), "dd/MM/yyyy")}</span>
+                    {c.notes && <span className="w-full text-muted-foreground">📝 {c.notes}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
 
 
         {isEdit && (

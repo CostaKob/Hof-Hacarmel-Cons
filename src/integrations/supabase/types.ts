@@ -601,6 +601,57 @@ export type Database = {
         }
         Relationships: []
       }
+      instrument_checks: {
+        Row: {
+          academic_year_id: string
+          checked_at: string
+          checked_by: string | null
+          created_at: string
+          id: string
+          inventory_instrument_id: string
+          notes: string | null
+          result: string
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id: string
+          checked_at?: string
+          checked_by?: string | null
+          created_at?: string
+          id?: string
+          inventory_instrument_id: string
+          notes?: string | null
+          result: string
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string
+          checked_at?: string
+          checked_by?: string | null
+          created_at?: string
+          id?: string
+          inventory_instrument_id?: string
+          notes?: string | null
+          result?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instrument_checks_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "instrument_checks_inventory_instrument_id_fkey"
+            columns: ["inventory_instrument_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_instruments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instrument_loans: {
         Row: {
           created_at: string
@@ -753,6 +804,7 @@ export type Database = {
           model: string | null
           notes: string | null
           purchase_date: string | null
+          repair_state: Database["public"]["Enums"]["instrument_repair_state"]
           serial_number: string
           size: string | null
           storage_location_id: string | null
@@ -771,6 +823,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           purchase_date?: string | null
+          repair_state?: Database["public"]["Enums"]["instrument_repair_state"]
           serial_number: string
           size?: string | null
           storage_location_id?: string | null
@@ -789,6 +842,7 @@ export type Database = {
           model?: string | null
           notes?: string | null
           purchase_date?: string | null
+          repair_state?: Database["public"]["Enums"]["instrument_repair_state"]
           serial_number?: string
           size?: string | null
           storage_location_id?: string | null
@@ -2965,6 +3019,7 @@ export type Database = {
         | "in_repair"
         | "needs_repair"
         | "missing"
+      instrument_repair_state: "ok" | "needs_repair" | "in_repair"
       lesson_type: "individual" | "group"
       payment_method: "cash" | "check" | "transfer" | "credit_card" | "other"
       registration_status:
@@ -3166,6 +3221,7 @@ export const Constants = {
         "needs_repair",
         "missing",
       ],
+      instrument_repair_state: ["ok", "needs_repair", "in_repair"],
       lesson_type: ["individual", "group"],
       payment_method: ["cash", "check", "transfer", "credit_card", "other"],
       registration_status: [
