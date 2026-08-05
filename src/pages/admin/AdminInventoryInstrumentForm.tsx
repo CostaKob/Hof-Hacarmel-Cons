@@ -12,7 +12,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { CONDITION_OPTIONS, CONDITION_LABELS, CONDITION_COLORS, InstrumentCondition, INSTRUMENT_SIZES } from "@/lib/instrumentInventory";
+import {
+  CONDITION_LABELS,
+  CONDITION_COLORS,
+  InstrumentCondition,
+  INSTRUMENT_SIZES,
+  LOCATION_OPTIONS,
+  REPAIR_STATE_OPTIONS,
+  REPAIR_STATE_LABELS,
+  REPAIR_STATE_COLORS,
+  InstrumentRepairState,
+  CHECK_RESULT_LABELS,
+  CHECK_RESULT_COLORS,
+  InstrumentCheckResult,
+} from "@/lib/instrumentInventory";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 import PageTitle from "@/components/PageTitle";
@@ -24,10 +38,12 @@ interface FormData {
   model: string;
   size: string | null;
   condition: InstrumentCondition;
+  repair_state: InstrumentRepairState;
   storage_location_id: string | null;
   purchase_date: string;
   notes: string;
 }
+
 
 const AdminInventoryInstrumentForm = () => {
   const { id } = useParams();
