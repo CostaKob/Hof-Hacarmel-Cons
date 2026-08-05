@@ -305,24 +305,58 @@ const AdminInventoryInstruments = () => {
       <PageTitle title="מלאי כלים" />
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-3">
-        {LOCATION_OPTIONS.map((opt) => (
-          <div key={opt.value} className="rounded-xl border border-border bg-card p-3 text-center">
-            <p className="text-xs text-muted-foreground">{opt.label}</p>
-            <p className="text-2xl font-bold text-foreground">{stats[opt.value] || 0}</p>
-          </div>
-        ))}
-        <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-center">
+        {LOCATION_OPTIONS.map((opt) => {
+          const active = filterCondition === opt.value;
+          return (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => setFilterCondition(active ? "all" : opt.value)}
+              className={`rounded-xl border p-3 text-center transition-colors ${
+                active ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border bg-card hover:bg-muted/50"
+              }`}
+            >
+              <p className="text-xs text-muted-foreground">{opt.label}</p>
+              <p className="text-2xl font-bold text-foreground">{stats[opt.value] || 0}</p>
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setFilterRepair(filterRepair === "needs_repair" ? "all" : "needs_repair")}
+          className={`rounded-xl border p-3 text-center transition-colors ${
+            filterRepair === "needs_repair"
+              ? "border-destructive bg-destructive/15 ring-1 ring-destructive"
+              : "border-destructive/20 bg-destructive/5 hover:bg-destructive/10"
+          }`}
+        >
           <p className="text-xs text-muted-foreground">דרוש תיקון / השלמה</p>
           <p className="text-2xl font-bold text-destructive">{stats.needs_repair || 0}</p>
-        </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-center">
+        </button>
+        <button
+          type="button"
+          onClick={() => setFilterRepair(filterRepair === "in_repair" ? "all" : "in_repair")}
+          className={`rounded-xl border p-3 text-center transition-colors ${
+            filterRepair === "in_repair"
+              ? "border-amber-400 bg-amber-100 ring-1 ring-amber-400"
+              : "border-amber-200 bg-amber-50 hover:bg-amber-100"
+          }`}
+        >
           <p className="text-xs text-muted-foreground">בתיקון</p>
           <p className="text-2xl font-bold text-amber-700">{stats.in_repair || 0}</p>
-        </div>
+        </button>
       </div>
 
       {/* Annual check progress */}
-      <div className="mb-4 rounded-xl border border-border bg-card p-3">
+      <button
+        type="button"
+        onClick={() => setFilterVerified(filterVerified === "not_verified" ? "all" : "not_verified")}
+        className={`mb-4 w-full text-right rounded-xl border p-3 transition-colors ${
+          filterVerified === "not_verified"
+            ? "border-primary bg-primary/10 ring-1 ring-primary"
+            : "border-border bg-card hover:bg-muted/50"
+        }`}
+      >
         <div className="flex items-center justify-between text-sm">
           <span className="font-medium text-foreground">בדיקה שנתית {yearName}</span>
           <span className="text-muted-foreground">
@@ -335,7 +369,8 @@ const AdminInventoryInstruments = () => {
             style={{ width: `${items.length ? (checkedCount / items.length) * 100 : 0}%` }}
           />
         </div>
-      </div>
+      </button>
+
 
       <div className="mb-4 flex flex-col gap-2">
         <div className="flex flex-col sm:flex-row gap-2">
