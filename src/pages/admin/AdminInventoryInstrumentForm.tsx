@@ -149,6 +149,74 @@ const AdminInventoryInstrumentForm = () => {
     }
   }, [item, reset]);
 
+  // ── Annual physical checks ──────────────────────────────
+  const { data: checks = [] } = useQuery({
+    queryKey: ["instrument-checks", id],
+    enabled: isEdit,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("instrument_checks")
+        .select("*, academic_years(name)")
+        .eq("inventory_instrument_id", id!)
+        .order("checked_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const currentCheck = (checks as any[]).find((c) => c.academic_year_id === selectedYearId) || null;
+
+  useEffect(() => {
+    if (currentCheck) {
+      setCheckResult(currentCheck.result as InstrumentCheckResult);
+      setVerifyNotes(currentCheck.notes || "");
+    }
+  }, [currentCheck?.id]);
+
+  const saveCheckMutation = useMutation({
+    mutationFn: async ({ remove }: { remove: boolean }) => {
+      if (!selectedYearId) throw new Error("לא נבחרה שנת לימודים");
+      const { error: delErr } = await supabase
+        .from("instrument_checks")
+        .delete()
+        .eq("inventory_instrument_id", id!)
+        .eq("academic_year_id", selectedYearId);
+      if (delErr) throw delErr;
+      if (remove) return;
+
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error } = await supabase.from("instrument_checks").insert({
+        inventory_instrument_id: id!,
+        academic_year_id: selectedYearId,
+        checked_by: userRes.user?.id ?? null,
+        result: checkResult,
+        notes: verifyNotes.trim() || null,
+      });
+      if (error) throw error;
+
+      if (checkResult === "needs_repair" || checkResult === "needs_completion") {
+        if ((item as any)?.repair_state !== "in_repair") {
+          await supabase.from("inventory_instruments").update({ repair_state: "needs_repair" }).eq("id", id!);
+        }
+      } else if (checkResult === "ok") {
+        if ((item as any)?.repair_state === "needs_repair") {
+          await supabase.from("inventory_instruments").update({ repair_state: "ok" }).eq("id", id!);
+        }
+      } else if (checkResult === "missing") {
+        await supabase.from("inventory_instruments").update({ condition: "missing" }).eq("id", id!);
+      }
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
+      qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      if (vars.remove) setVerifyNotes("");
+      toast.success(vars.remove ? "הוסר סימון" : "הבדיקה נשמרה");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה"),
+  });
+
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
       const payload = {
@@ -158,10 +226,12 @@ const AdminInventoryInstrumentForm = () => {
         model: data.model.trim() || null,
         size: data.size || null,
         condition: data.condition,
+        repair_state: data.repair_state || "ok",
         storage_location_id: data.storage_location_id || null,
         purchase_date: data.purchase_date || null,
         notes: data.notes.trim() || null,
       };
+
       if (isEdit) {
         if (!id) throw new Error("כלי לא נמצא");
         const { data: savedItem, error } = await supabase
