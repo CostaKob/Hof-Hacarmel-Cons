@@ -419,7 +419,50 @@ const AdminInventoryInstrumentForm = () => {
                   </Select>
                 )}
               />
+              {isEdit && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {watch("repair_state") !== "ok" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-9 rounded-xl bg-green-600 hover:bg-green-700 text-white"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("ok")}
+                    >
+                      <Check className="h-4 w-4" /> תוקן — סמן כתקין
+                    </Button>
+                  )}
+                  {watch("repair_state") === "needs_repair" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-xl"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("in_repair")}
+                    >
+                      נשלח לתיקון
+                    </Button>
+                  )}
+                  {watch("repair_state") === "ok" && (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-9 rounded-xl"
+                      disabled={quickRepairMutation.isPending}
+                      onClick={() => quickRepairMutation.mutate("needs_repair")}
+                    >
+                      סמן כדרוש תיקון
+                    </Button>
+                  )}
+                </div>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                ניתן תמיד לשנות ידנית בבחירה למעלה ולשמור.
+              </p>
             </div>
+
 
 
             <div className="space-y-1.5">
