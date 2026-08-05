@@ -40,24 +40,27 @@ export const LOCATION_LABELS: Record<InstrumentLocationStatus, string> = {
 };
 
 /* ── Axis 2: repair state ────────────────────────────────────── */
-export type InstrumentRepairState = "ok" | "needs_repair" | "in_repair";
+export type InstrumentRepairState = "ok" | "needs_repair" | "in_repair" | "unusable";
 
 export const REPAIR_STATE_LABELS: Record<InstrumentRepairState, string> = {
   ok: "תקין",
   needs_repair: "דרוש תיקון / השלמה",
   in_repair: "בתיקון",
+  unusable: "לא שמיש",
 };
 
 export const REPAIR_STATE_COLORS: Record<InstrumentRepairState, string> = {
   ok: "bg-green-100 text-green-800 border-green-200",
   needs_repair: "bg-destructive/10 text-destructive border-destructive/20",
   in_repair: "bg-amber-100 text-amber-800 border-amber-200",
+  unusable: "bg-neutral-800 text-neutral-100 border-neutral-700",
 };
 
 export const REPAIR_STATE_OPTIONS: { value: InstrumentRepairState; label: string }[] = [
   { value: "ok", label: "תקין" },
   { value: "needs_repair", label: "דרוש תיקון / השלמה" },
   { value: "in_repair", label: "בתיקון" },
+  { value: "unusable", label: "לא שמיש" },
 ];
 
 /* ── Annual physical check ───────────────────────────────────── */
