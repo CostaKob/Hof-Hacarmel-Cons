@@ -74,6 +74,28 @@ const AdminTeachers = () => {
     },
   });
 
+  // Last login info — only returned for the allowed admin accounts
+  const { data: lastLogins } = useQuery({
+    queryKey: ["teacher-last-logins"],
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("get-teacher-last-login");
+      if (error) return null;
+      return ((data as any)?.logins ?? null) as Record<string, string | null> | null;
+    },
+  });
+
+  const formatLastLogin = (iso: string | null | undefined) => {
+    if (!iso) return "מעולם לא התחבר";
+    const d = new Date(iso);
+    const date = d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
+    const time = d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
+    return `כניסה אחרונה: ${date} ${time}`;
+  };
+
+
+
 
   const filtered = teachers.filter((t) => {
     if (search) {
@@ -170,7 +192,13 @@ const AdminTeachers = () => {
                         </div>
                       );
                     })()}
+                    {lastLogins && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t.user_id ? formatLastLogin(lastLogins[t.user_id]) : "אין חשבון התחברות"}
+                      </p>
+                    )}
                   </div>
+
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {t.is_freelance && <Badge variant="outline" className="rounded-lg">עצמאי</Badge>}
