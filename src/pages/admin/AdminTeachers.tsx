@@ -192,7 +192,13 @@ const AdminTeachers = () => {
                         </div>
                       );
                     })()}
+                    {lastLogins && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t.user_id ? formatLastLogin(lastLogins[t.user_id]) : "אין חשבון התחברות"}
+                      </p>
+                    )}
                   </div>
+
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {t.is_freelance && <Badge variant="outline" className="rounded-lg">עצמאי</Badge>}
