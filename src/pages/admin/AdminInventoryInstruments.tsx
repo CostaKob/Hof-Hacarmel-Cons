@@ -638,7 +638,7 @@ const AdminInventoryInstruments = () => {
                       title="נבדק - דרוש תיקון / השלמה"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setAttentionResult((check?.result as InstrumentCheckResult) === "needs_completion" ? "needs_completion" : "needs_repair");
+                        setAttentionResult(["needs_completion", "unusable", "missing"].includes(check?.result as string) ? (check!.result as InstrumentCheckResult) : "needs_repair");
                         setAttentionNotes(check?.notes || "");
                         setAttentionFor({ id: it.id, serial: it.serial_number });
                       }}
