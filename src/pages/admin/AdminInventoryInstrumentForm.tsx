@@ -27,7 +27,7 @@ import {
   InstrumentCheckResult,
 } from "@/lib/instrumentInventory";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle } from "lucide-react";
+import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle, Trash2 } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 import PageTitle from "@/components/PageTitle";
 
