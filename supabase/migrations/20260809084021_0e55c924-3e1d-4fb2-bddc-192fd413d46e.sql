@@ -1,0 +1,2 @@
+ALTER TABLE public.instrument_checks DROP CONSTRAINT IF EXISTS instrument_checks_result_check;
+ALTER TABLE public.instrument_checks ADD CONSTRAINT instrument_checks_result_check CHECK (result = ANY (ARRAY['ok'::text,'needs_repair'::text,'needs_completion'::text,'missing'::text,'unusable'::text]));
