@@ -213,7 +213,13 @@ const AdminInventoryInstruments = () => {
       if (insErr) throw insErr;
 
       // sync the instrument's own statuses with the check result
-      if (res === "needs_repair" || res === "needs_completion") {
+      if (res === "unusable") {
+        const { error } = await supabase
+          .from("inventory_instruments")
+          .update({ repair_state: "unusable" })
+          .in("id", ids);
+        if (error) throw error;
+      } else if (res === "needs_repair" || res === "needs_completion") {
         const { error } = await supabase
           .from("inventory_instruments")
           .update({ repair_state: "needs_repair" })
@@ -225,7 +231,7 @@ const AdminInventoryInstruments = () => {
           .from("inventory_instruments")
           .update({ repair_state: "ok" })
           .in("id", ids)
-          .eq("repair_state", "needs_repair");
+          .in("repair_state", ["needs_repair", "unusable"]);
         if (error) throw error;
       } else if (res === "missing") {
         const { error } = await supabase
