@@ -656,38 +656,40 @@ const AdminInventoryInstrumentForm = () => {
                 type="button"
                 className="h-10 rounded-xl"
                 disabled={saveCheckMutation.isPending || !selectedYearId}
-                onClick={() => saveCheckMutation.mutate({ remove: false })}
+                onClick={() => saveCheckMutation.mutate()}
               >
-                {currentCheck ? "עדכון בדיקה" : "שמירת בדיקה"}
+                הוספת בדיקה
               </Button>
-              {currentCheck && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-10 rounded-xl"
-                  disabled={saveCheckMutation.isPending}
-                  onClick={() => saveCheckMutation.mutate({ remove: true })}
-                >
-                  בטל סימון
-                </Button>
-              )}
             </div>
 
             {checks.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-sm font-medium text-foreground">היסטוריית בדיקות</p>
+                <p className="text-sm font-medium text-foreground">היסטוריית בדיקות ({checks.length})</p>
                 {checks.map((c: any) => (
                   <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-2.5 text-xs">
                     <span className="font-medium">{c.academic_years?.name || ""}</span>
                     <Badge variant="outline" className={`${CHECK_RESULT_COLORS[c.result as InstrumentCheckResult]} text-[10px]`}>
                       {CHECK_RESULT_LABELS[c.result as InstrumentCheckResult]}
                     </Badge>
-                    <span className="text-muted-foreground">{format(new Date(c.checked_at), "dd/MM/yyyy")}</span>
+                    <span className="text-muted-foreground">{format(new Date(c.checked_at), "dd/MM/yyyy HH:mm")}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 mr-auto text-destructive"
+                      disabled={deleteCheckMutation.isPending}
+                      onClick={() => {
+                        if (confirm("למחוק את הבדיקה?")) deleteCheckMutation.mutate(c.id);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                     {c.notes && <span className="w-full text-muted-foreground">📝 {c.notes}</span>}
                   </div>
                 ))}
               </div>
             )}
+
           </div>
         )}
 
