@@ -55,6 +55,13 @@ const AdminInventoryInstrumentForm = () => {
   const [editReturnDate, setEditReturnDate] = useState("");
   const [verifyNotes, setVerifyNotes] = useState("");
   const [checkResult, setCheckResult] = useState<InstrumentCheckResult>("ok");
+  const [showAddLoan, setShowAddLoan] = useState(false);
+  const [loanSearch, setLoanSearch] = useState("");
+  const [selectedLoanStudent, setSelectedLoanStudent] = useState<
+    { id: string; name: string; kind: "private" | "school_music" } | null
+  >(null);
+  const [newLoanDate, setNewLoanDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [newReturnDate, setNewReturnDate] = useState("");
   const { selectedYearId, years } = useAcademicYear();
   const yearName = years.find((y) => y.id === selectedYearId)?.name || "";
   const initializedItemIdRef = useRef<string | null>(null);
@@ -77,6 +84,75 @@ const AdminInventoryInstrumentForm = () => {
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בעדכון"),
   });
+
+  const { data: loanStudentResults = [] } = useQuery({
+    queryKey: ["loan-student-search", loanSearch],
+    enabled: loanSearch.trim().length >= 2 && showAddLoan,
+    queryFn: async () => {
+      const term = `%${loanSearch.trim()}%`;
+      const [priv, sm] = await Promise.all([
+        supabase
+          .from("students")
+          .select("id, first_name, last_name, national_id")
+          .or(`first_name.ilike.${term},last_name.ilike.${term},national_id.ilike.${term}`)
+          .limit(10),
+        supabase
+          .from("school_music_students")
+          .select("id, student_first_name, student_last_name, student_national_id")
+          .or(
+            `student_first_name.ilike.${term},student_last_name.ilike.${term},student_national_id.ilike.${term}`,
+          )
+          .limit(10),
+      ]);
+      const list: { id: string; name: string; kind: "private" | "school_music" }[] = [];
+      (priv.data || []).forEach((s: any) =>
+        list.push({ id: s.id, name: `${s.first_name || ""} ${s.last_name || ""}`.trim(), kind: "private" }),
+      );
+      (sm.data || []).forEach((s: any) =>
+        list.push({
+          id: s.id,
+          name: `${s.student_first_name || ""} ${s.student_last_name || ""}`.trim(),
+          kind: "school_music",
+        }),
+      );
+      return list;
+    },
+  });
+
+  const addLoanMutation = useMutation({
+    mutationFn: async () => {
+      if (!selectedLoanStudent) throw new Error("יש לבחור תלמיד");
+      const { error } = await supabase.from("instrument_loans").insert({
+        inventory_instrument_id: id!,
+        student_id: selectedLoanStudent.kind === "private" ? selectedLoanStudent.id : null,
+        school_music_student_id: selectedLoanStudent.kind === "school_music" ? selectedLoanStudent.id : null,
+        loan_date: newLoanDate,
+        return_date: newReturnDate || null,
+      });
+      if (error) throw error;
+      if (!newReturnDate) {
+        const { error: updErr } = await supabase
+          .from("inventory_instruments")
+          .update({ condition: "loaned" })
+          .eq("id", id!);
+        if (updErr) throw updErr;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["instrument-loans", id] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
+      qc.invalidateQueries({ queryKey: ["student-instrument-loans"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      setShowAddLoan(false);
+      setSelectedLoanStudent(null);
+      setLoanSearch("");
+      setNewLoanDate(format(new Date(), "yyyy-MM-dd"));
+      setNewReturnDate("");
+      toast.success("ההשאלה נוספה");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה בהוספה"),
+  });
+
 
   const { register, handleSubmit, control, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
     defaultValues: {
