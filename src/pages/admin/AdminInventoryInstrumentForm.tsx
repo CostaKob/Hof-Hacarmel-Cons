@@ -233,12 +233,14 @@ const AdminInventoryInstrumentForm = () => {
       });
       if (error) throw error;
 
-      if (checkResult === "needs_repair" || checkResult === "needs_completion") {
+      if (checkResult === "unusable") {
+        await supabase.from("inventory_instruments").update({ repair_state: "unusable" }).eq("id", id!);
+      } else if (checkResult === "needs_repair" || checkResult === "needs_completion") {
         if ((item as any)?.repair_state !== "in_repair") {
           await supabase.from("inventory_instruments").update({ repair_state: "needs_repair" }).eq("id", id!);
         }
       } else if (checkResult === "ok") {
-        if ((item as any)?.repair_state === "needs_repair") {
+        if ((item as any)?.repair_state === "needs_repair" || (item as any)?.repair_state === "unusable") {
           await supabase.from("inventory_instruments").update({ repair_state: "ok" }).eq("id", id!);
         }
       } else if (checkResult === "missing") {
@@ -549,6 +551,7 @@ const AdminInventoryInstrumentForm = () => {
                     <SelectItem value="ok">תקין</SelectItem>
                     <SelectItem value="needs_repair">דרוש תיקון</SelectItem>
                     <SelectItem value="needs_completion">דרוש השלמה</SelectItem>
+                    <SelectItem value="unusable">לא שמיש</SelectItem>
                     <SelectItem value="missing">לא נמצא</SelectItem>
                   </SelectContent>
                 </Select>

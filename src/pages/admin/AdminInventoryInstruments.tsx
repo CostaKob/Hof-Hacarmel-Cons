@@ -213,7 +213,13 @@ const AdminInventoryInstruments = () => {
       if (insErr) throw insErr;
 
       // sync the instrument's own statuses with the check result
-      if (res === "needs_repair" || res === "needs_completion") {
+      if (res === "unusable") {
+        const { error } = await supabase
+          .from("inventory_instruments")
+          .update({ repair_state: "unusable" })
+          .in("id", ids);
+        if (error) throw error;
+      } else if (res === "needs_repair" || res === "needs_completion") {
         const { error } = await supabase
           .from("inventory_instruments")
           .update({ repair_state: "needs_repair" })
@@ -225,7 +231,7 @@ const AdminInventoryInstruments = () => {
           .from("inventory_instruments")
           .update({ repair_state: "ok" })
           .in("id", ids)
-          .eq("repair_state", "needs_repair");
+          .in("repair_state", ["needs_repair", "unusable"]);
         if (error) throw error;
       } else if (res === "missing") {
         const { error } = await supabase
@@ -632,7 +638,7 @@ const AdminInventoryInstruments = () => {
                       title="נבדק - דרוש תיקון / השלמה"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setAttentionResult((check?.result as InstrumentCheckResult) === "needs_completion" ? "needs_completion" : "needs_repair");
+                        setAttentionResult(["needs_completion", "unusable", "missing"].includes(check?.result as string) ? (check!.result as InstrumentCheckResult) : "needs_repair");
                         setAttentionNotes(check?.notes || "");
                         setAttentionFor({ id: it.id, serial: it.serial_number });
                       }}
@@ -724,6 +730,7 @@ const AdminInventoryInstruments = () => {
                 <SelectContent>
                   <SelectItem value="needs_repair">דרוש תיקון</SelectItem>
                   <SelectItem value="needs_completion">דרוש השלמה</SelectItem>
+                  <SelectItem value="unusable">לא שמיש</SelectItem>
                   <SelectItem value="missing">לא נמצא</SelectItem>
                 </SelectContent>
               </Select>

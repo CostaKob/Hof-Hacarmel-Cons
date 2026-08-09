@@ -64,13 +64,14 @@ export const REPAIR_STATE_OPTIONS: { value: InstrumentRepairState; label: string
 ];
 
 /* ── Annual physical check ───────────────────────────────────── */
-export type InstrumentCheckResult = "ok" | "needs_repair" | "needs_completion" | "missing";
+export type InstrumentCheckResult = "ok" | "needs_repair" | "needs_completion" | "missing" | "unusable";
 
 export const CHECK_RESULT_LABELS: Record<InstrumentCheckResult, string> = {
   ok: "תקין",
   needs_repair: "דרוש תיקון",
   needs_completion: "דרוש השלמה",
   missing: "לא נמצא",
+  unusable: "לא שמיש",
 };
 
 export const CHECK_RESULT_COLORS: Record<InstrumentCheckResult, string> = {
@@ -78,6 +79,7 @@ export const CHECK_RESULT_COLORS: Record<InstrumentCheckResult, string> = {
   needs_repair: "bg-destructive/10 text-destructive border-destructive/20",
   needs_completion: "bg-amber-100 text-amber-800 border-amber-200",
   missing: "bg-muted text-muted-foreground border-border",
+  unusable: "bg-neutral-800 text-neutral-100 border-neutral-700",
 };
 
 
