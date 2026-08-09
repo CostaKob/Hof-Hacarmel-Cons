@@ -27,7 +27,7 @@ import {
   InstrumentCheckResult,
 } from "@/lib/instrumentInventory";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
-import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle } from "lucide-react";
+import { User, ExternalLink, Pencil, Check, X, CheckCircle2, Circle, Trash2 } from "lucide-react";
 import InstrumentRepairsSection from "@/components/admin/InstrumentRepairsSection";
 import PageTitle from "@/components/PageTitle";
 
@@ -289,15 +289,8 @@ const AdminInventoryInstrumentForm = () => {
   }, [currentCheck?.id]);
 
   const saveCheckMutation = useMutation({
-    mutationFn: async ({ remove }: { remove: boolean }) => {
+    mutationFn: async () => {
       if (!selectedYearId) throw new Error("לא נבחרה שנת לימודים");
-      const { error: delErr } = await supabase
-        .from("instrument_checks")
-        .delete()
-        .eq("inventory_instrument_id", id!)
-        .eq("academic_year_id", selectedYearId);
-      if (delErr) throw delErr;
-      if (remove) return;
 
       const { data: userRes } = await supabase.auth.getUser();
       const { error } = await supabase.from("instrument_checks").insert({
@@ -323,16 +316,31 @@ const AdminInventoryInstrumentForm = () => {
         await supabase.from("inventory_instruments").update({ condition: "missing" }).eq("id", id!);
       }
     },
-    onSuccess: (_d, vars) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
       qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
       qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
       qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-      if (vars.remove) setVerifyNotes("");
-      toast.success(vars.remove ? "הוסר סימון" : "הבדיקה נשמרה");
+      setVerifyNotes("");
+      toast.success("הבדיקה נוספה");
     },
     onError: (e: any) => toast.error(e.message || "שגיאה"),
   });
+
+  const deleteCheckMutation = useMutation({
+    mutationFn: async (checkId: string) => {
+      const { error } = await supabase.from("instrument_checks").delete().eq("id", checkId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
+      qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      toast.success("הבדיקה נמחקה");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה"),
+  });
+
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
@@ -648,38 +656,40 @@ const AdminInventoryInstrumentForm = () => {
                 type="button"
                 className="h-10 rounded-xl"
                 disabled={saveCheckMutation.isPending || !selectedYearId}
-                onClick={() => saveCheckMutation.mutate({ remove: false })}
+                onClick={() => saveCheckMutation.mutate()}
               >
-                {currentCheck ? "עדכון בדיקה" : "שמירת בדיקה"}
+                הוספת בדיקה
               </Button>
-              {currentCheck && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-10 rounded-xl"
-                  disabled={saveCheckMutation.isPending}
-                  onClick={() => saveCheckMutation.mutate({ remove: true })}
-                >
-                  בטל סימון
-                </Button>
-              )}
             </div>
 
             {checks.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <p className="text-sm font-medium text-foreground">היסטוריית בדיקות</p>
+                <p className="text-sm font-medium text-foreground">היסטוריית בדיקות ({checks.length})</p>
                 {checks.map((c: any) => (
                   <div key={c.id} className="flex flex-wrap items-center gap-2 rounded-xl border border-border p-2.5 text-xs">
                     <span className="font-medium">{c.academic_years?.name || ""}</span>
                     <Badge variant="outline" className={`${CHECK_RESULT_COLORS[c.result as InstrumentCheckResult]} text-[10px]`}>
                       {CHECK_RESULT_LABELS[c.result as InstrumentCheckResult]}
                     </Badge>
-                    <span className="text-muted-foreground">{format(new Date(c.checked_at), "dd/MM/yyyy")}</span>
+                    <span className="text-muted-foreground">{format(new Date(c.checked_at), "dd/MM/yyyy HH:mm")}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 mr-auto text-destructive"
+                      disabled={deleteCheckMutation.isPending}
+                      onClick={() => {
+                        if (confirm("למחוק את הבדיקה?")) deleteCheckMutation.mutate(c.id);
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                     {c.notes && <span className="w-full text-muted-foreground">📝 {c.notes}</span>}
                   </div>
                 ))}
               </div>
             )}
+
           </div>
         )}
 
