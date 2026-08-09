@@ -687,9 +687,119 @@ const AdminInventoryInstrumentForm = () => {
 
         {isEdit && (
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <h2 className="font-semibold text-foreground text-base">היסטוריית השאלות ({loans.length})</h2>
+              {!showAddLoan && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="rounded-xl"
+                  onClick={() => setShowAddLoan(true)}
+                >
+                  הוספה ידנית
+                </Button>
+              )}
             </div>
+
+            {showAddLoan && (
+              <div className="rounded-xl border border-border p-4 bg-background space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">חיפוש תלמיד (שם או ת"ז)</Label>
+                  {selectedLoanStudent ? (
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {selectedLoanStudent.name} · {selectedLoanStudent.kind === "private" ? "פרטני" : "ביס מנגן"}
+                      </Badge>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 rounded-lg"
+                        onClick={() => setSelectedLoanStudent(null)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Input
+                        value={loanSearch}
+                        onChange={(e) => setLoanSearch(e.target.value)}
+                        placeholder="הקלד לפחות 2 תווים"
+                        className="h-11 rounded-xl"
+                      />
+                      {loanSearch.trim().length >= 2 && (
+                        <div className="max-h-48 overflow-y-auto rounded-xl border border-border divide-y">
+                          {loanStudentResults.length === 0 ? (
+                            <p className="p-3 text-sm text-muted-foreground">לא נמצאו תלמידים</p>
+                          ) : (
+                            loanStudentResults.map((s) => (
+                              <button
+                                key={`${s.kind}-${s.id}`}
+                                type="button"
+                                className="w-full text-right p-2.5 text-sm hover:bg-muted flex items-center justify-between gap-2"
+                                onClick={() => setSelectedLoanStudent(s)}
+                              >
+                                <span>{s.name || "ללא שם"}</span>
+                                <Badge variant="outline" className="text-[10px]">
+                                  {s.kind === "private" ? "פרטני" : "ביס מנגן"}
+                                </Badge>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">תאריך השאלה *</Label>
+                    <Input
+                      type="date"
+                      value={newLoanDate}
+                      onChange={(e) => setNewLoanDate(e.target.value)}
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm">תאריך החזרה</Label>
+                    <Input
+                      type="date"
+                      value={newReturnDate}
+                      onChange={(e) => setNewReturnDate(e.target.value)}
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="rounded-xl"
+                    disabled={!selectedLoanStudent || !newLoanDate || addLoanMutation.isPending}
+                    onClick={() => addLoanMutation.mutate()}
+                  >
+                    {addLoanMutation.isPending ? "שומר..." : "הוספה"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="rounded-xl"
+                    onClick={() => {
+                      setShowAddLoan(false);
+                      setSelectedLoanStudent(null);
+                      setLoanSearch("");
+                    }}
+                  >
+                    ביטול
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {loans.length === 0 ? (
               <p className="text-sm text-muted-foreground">לא הושאל לאף תלמיד</p>
             ) : (
