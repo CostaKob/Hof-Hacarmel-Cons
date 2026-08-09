@@ -551,6 +551,7 @@ const AdminInventoryInstrumentForm = () => {
                     <SelectItem value="ok">תקין</SelectItem>
                     <SelectItem value="needs_repair">דרוש תיקון</SelectItem>
                     <SelectItem value="needs_completion">דרוש השלמה</SelectItem>
+                    <SelectItem value="unusable">לא שמיש</SelectItem>
                     <SelectItem value="missing">לא נמצא</SelectItem>
                   </SelectContent>
                 </Select>
