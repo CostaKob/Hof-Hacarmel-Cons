@@ -289,15 +289,8 @@ const AdminInventoryInstrumentForm = () => {
   }, [currentCheck?.id]);
 
   const saveCheckMutation = useMutation({
-    mutationFn: async ({ remove }: { remove: boolean }) => {
+    mutationFn: async () => {
       if (!selectedYearId) throw new Error("לא נבחרה שנת לימודים");
-      const { error: delErr } = await supabase
-        .from("instrument_checks")
-        .delete()
-        .eq("inventory_instrument_id", id!)
-        .eq("academic_year_id", selectedYearId);
-      if (delErr) throw delErr;
-      if (remove) return;
 
       const { data: userRes } = await supabase.auth.getUser();
       const { error } = await supabase.from("instrument_checks").insert({
@@ -323,16 +316,31 @@ const AdminInventoryInstrumentForm = () => {
         await supabase.from("inventory_instruments").update({ condition: "missing" }).eq("id", id!);
       }
     },
-    onSuccess: (_d, vars) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
       qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
       qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
       qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
-      if (vars.remove) setVerifyNotes("");
-      toast.success(vars.remove ? "הוסר סימון" : "הבדיקה נשמרה");
+      setVerifyNotes("");
+      toast.success("הבדיקה נוספה");
     },
     onError: (e: any) => toast.error(e.message || "שגיאה"),
   });
+
+  const deleteCheckMutation = useMutation({
+    mutationFn: async (checkId: string) => {
+      const { error } = await supabase.from("instrument_checks").delete().eq("id", checkId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
+      qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
+      toast.success("הבדיקה נמחקה");
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה"),
+  });
+
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
