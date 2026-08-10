@@ -34,7 +34,6 @@ import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
 import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride, type RefundSource } from "@/components/admin/AddPaymentDialog";
 import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignmentMessage";
-import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
 
 
@@ -85,7 +84,6 @@ const AdminFamilyCard = () => {
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
-  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
 
 
   const { data: families = [] } = useFamiliesList(yearId);
@@ -979,6 +977,18 @@ const AdminFamilyCard = () => {
                                     <Undo2 className="h-3.5 w-3.5" />
                                   </Button>
                                 )}
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                                  title={rIsCheck ? "בטל צ׳ק זה" : "בטל שורה זו"}
+                                  disabled={deleteRowMutation.isPending}
+                                  onClick={() => {
+                                    if (confirm(rIsCheck
+                                      ? `לבטל את הצ׳ק ${r.reference_number ?? ""} על סך ${fmt(Number(r.amount || 0))}? השורה תימחק.`
+                                      : `לבטל שורה זו על סך ${fmt(Number(r.amount || 0))}?`)) {
+                                      deleteRowMutation.mutate(r.id);
+                                    }
+                                  }}>
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
                                 <span className="font-semibold text-foreground whitespace-nowrap" dir="ltr">
                                   {fmt(Math.abs(Number(r.amount || 0)))}
                                 </span>
@@ -1063,18 +1073,6 @@ const AdminFamilyCard = () => {
             </div>
           )}
 
-          <BankTransferRefundDialog
-            open={!!bankRefund}
-            onOpenChange={(o) => { if (!o) setBankRefund(null); }}
-            defaults={bankRefund}
-            invalidate={invalidateFamily}
-            onDone={(info) => {
-              setBankRefund(null);
-              invalidateFamily();
-              toast.success(`קבלת זיכוי בסך ₪${Number(info.amount || 0).toLocaleString()} הופקה`);
-              if (info.url) window.open(info.url, "_blank");
-            }}
-          />
 
 
 
