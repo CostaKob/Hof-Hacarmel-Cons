@@ -790,7 +790,7 @@ const AdminFamilyCard = () => {
                           {isCredit ? "זיכוי" : "תשלום"}
                           {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] || p.payment_method}`}
                           {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
-                          {!isGroup && p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                          {!isGroup && p.reference_number && ` · ${p.payment_method === "check" ? "צ׳ק מס׳" : "אסמכתא"} ${p.reference_number}`}
                           {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                           {p.month_reference && ` · ${p.month_reference}`}
                           {p.family_payment_group_id
@@ -820,7 +820,7 @@ const AdminFamilyCard = () => {
                             </div>
                           );
                         })()}
-                        {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
+                        {!isGroup && p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
                         {isGroup && (
@@ -914,17 +914,21 @@ const AdminFamilyCard = () => {
                             .filter((x: any) => x.refund_of_payment_id === r.id)
                             .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                           const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
+                          const rIsCheck = r.payment_method === "check";
                           return (
                             <div
                               key={r.id}
                               onClick={() => { setEditingPayment(r); setFamilyCtx(null); setPaymentDialogOpen(true); }}
                               className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-muted/50"
                             >
-                              <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
-                                <span className="text-muted-foreground">{idx + 1}.</span>
-                                <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
-                                {r.reference_number && <span className="text-muted-foreground">אסמכתא {r.reference_number}</span>}
-                                {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-muted-foreground">{idx + 1}.</span>
+                                  <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
+                                  {r.reference_number && <span className="text-muted-foreground">{rIsCheck ? "צ׳ק מס׳" : "אסמכתא"} {r.reference_number}</span>}
+                                  {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                                </div>
+                                {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                               </div>
                               <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                                 {!isCredit && hasDoc && rRemaining > 0 && (
