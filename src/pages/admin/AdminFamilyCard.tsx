@@ -84,6 +84,8 @@ const AdminFamilyCard = () => {
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [selectedCheques, setSelectedCheques] = useState<Record<string, boolean>>({});
+
 
 
   const { data: families = [] } = useFamiliesList(yearId);
