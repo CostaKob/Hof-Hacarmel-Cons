@@ -99,13 +99,14 @@ Deno.serve(async (req: Request) => {
     const negSum = -Math.abs(cancelTotal);
 
     const chequeList = rows
-      .map((r: any) => `צ׳ק ${r.reference_number ?? ""} · ${fmtDate(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()}`)
-      .join(" | ");
+      .map((r: any) => `• צ׳ק ${r.reference_number ?? ""} · ${fmtDate(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()}`)
+      .join("\n");
 
     const description =
       `ביטול צ׳קים עתידיים — ${studentFullName}${reason ? ` (${reason})` : ""} — ` +
       `קבלה מקור ${head.icount_doc_number ?? head.icount_doc_id} ` +
-      `(סכום העסקה ₪${transactionTotal.toLocaleString()}, בוטלו ${rows.length} צ׳קים בסך ₪${cancelTotal.toLocaleString()}) — ${chequeList}`;
+      `(סכום העסקה ₪${transactionTotal.toLocaleString()}, בוטלו ${rows.length} צ׳קים בסך ₪${cancelTotal.toLocaleString()})\n` +
+      `פירוט צ׳קים:\n${chequeList}`;
 
     const payload: any = {
       ...auth,

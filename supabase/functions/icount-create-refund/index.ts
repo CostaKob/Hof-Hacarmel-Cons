@@ -89,9 +89,9 @@ Deno.serve(async (req: Request) => {
       : "";
     const STATUS_HE: Record<string, string> = { cleared: "נפרע", cancelled: "בוטל", pending: "טרם נפרע" };
     const chequeDetail = groupRows.length > 1 || groupRows[0]?.payment_method === "check"
-      ? ` — פירוט צ׳קים: ${groupRows
-          .map((r) => `צ׳ק ${r.reference_number ?? ""} · ${fmtD(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()} · ${STATUS_HE[r.cheque_status ?? "pending"] ?? "טרם נפרע"}`)
-          .join(" | ")}`
+      ? `\nפירוט צ׳קים:\n${groupRows
+          .map((r) => `• צ׳ק ${r.reference_number ?? ""} · ${fmtD(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()} · ${STATUS_HE[r.cheque_status ?? "pending"] ?? "טרם נפרע"}`)
+          .join("\n")}`
       : "";
     const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})${bankSuffix}${chequeDetail}`;
 
