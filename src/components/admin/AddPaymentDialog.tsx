@@ -64,6 +64,13 @@ export interface FamilyPaymentContext {
   invalidateKeys?: (string | undefined)[][];
 }
 
+export interface RefundSource {
+  id: string;            // payment row id that carries the iCount receipt
+  label: string;         // e.g. "קבלה 1090 · 10/08/2026 · פריסת צ׳קים"
+  amount: number;        // full receipt amount (group total)
+  remaining: number;     // still refundable
+}
+
 interface AddPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -72,9 +79,11 @@ interface AddPaymentDialogProps {
   editPayment?: PaymentData | null;
   defaultType?: "payment" | "credit";
   familyContext?: FamilyPaymentContext | null;
+  refundSources?: RefundSource[];
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext, refundSources = [] }: AddPaymentDialogProps) => {
+
 
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
