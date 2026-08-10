@@ -229,7 +229,15 @@ Deno.serve(async (req: Request) => {
     if (pm.type === 1) {
       payload.cash = { sum: signedTotal };
     } else if (pm.type === 3) {
-      payload.cheques = [{ sum: signedTotal, bank: "", branch: "", account: "", num: head.reference_number || "" }];
+      // Cheques — one line per payment row (split cheques), each with its own date/number/amount.
+      payload.cheques = payments.map((p: any) => ({
+        sum: sign * Math.abs(Number(p.amount || 0)),
+        date: p.payment_date || undefined,
+        bank: "",
+        branch: "",
+        account: "",
+        num: p.reference_number || "",
+      }));
     } else if (pm.type === 4) {
       payload.banktransfer = { sum: signedTotal, account: head.reference_number || "" };
     } else if (pm.type === 5) {
@@ -237,6 +245,7 @@ Deno.serve(async (req: Request) => {
     } else {
       payload.other = { sum: signedTotal, info: pm.label };
     }
+
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
       method: "POST",
