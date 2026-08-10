@@ -274,6 +274,21 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                 <Input className="h-11 rounded-xl" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="לדוגמה: הורים גרושים, יתבצעו שני החזרים" />
               </div>
 
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label>הודעה ראשית</Label>
+                  <Button type="button" variant="ghost" className="h-7 px-2 text-xs"
+                    onClick={() => { setMainMessage(DEFAULT_MAIN_MESSAGE); localStorage.removeItem(MAIN_MSG_KEY); }}>
+                    איפוס
+                  </Button>
+                </div>
+                <Textarea className="rounded-xl min-h-[80px] text-sm" value={mainMessage}
+                  onChange={(e) => setMainMessage(e.target.value)} />
+                <p className="text-[11px] text-muted-foreground">
+                  ניתן להשתמש במשתנים: {"{{סוג_ביטול}} {{שם_ההורה}} {{סכום_הזיכוי}}"}
+                </p>
+              </div>
+
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <p className="text-sm font-semibold">פרטי חשבון להעברה</p>
                 <div className="grid grid-cols-2 gap-3">
