@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Undo2, Loader2 } from "lucide-react";
+import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
@@ -51,6 +51,7 @@ const StudentPaymentsSection = ({
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
