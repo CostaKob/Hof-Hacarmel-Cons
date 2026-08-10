@@ -384,7 +384,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                     ) : (
                       <Select
                         value={bankNumber || undefined}
-                        onValueChange={(v) => { setBankNumber(v); setBankName(findBankByCode(v)?.name || ""); }}
+                        onValueChange={(v) => { setBankNumber(v); setBankName(findBankByCode(v)?.name || ""); setBranch(""); setManualBranch(false); }}
                       >
                         <SelectTrigger className="h-11 rounded-xl">
                           <SelectValue placeholder="בחר בנק" />
