@@ -84,6 +84,13 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const [bankNumber, setBankNumber] = useState("");
   const [manualBank, setManualBank] = useState(false);
   const [branch, setBranch] = useState("");
+  const [manualBranch, setManualBranch] = useState(false);
+  const [branchOpen, setBranchOpen] = useState(false);
+  const branchOptions = useMemo(() => getBranches(bankNumber), [bankNumber]);
+  const selectedBranch = useMemo(
+    () => branchOptions.find((b) => b.code === branch),
+    [branchOptions, branch]
+  );
   const [accountNumber, setAccountNumber] = useState("");
   const [signer, setSigner] = useState(() => localStorage.getItem("bank-refund-signer") || "קורין פאר");
   const [orgName, setOrgName] = useState(() => localStorage.getItem("bank-refund-org") || "אולפן המוסיקה משותף חוף הכרמל");
