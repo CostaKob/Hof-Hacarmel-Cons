@@ -144,8 +144,10 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
       "שם_הארגון": orgName,
       "פרטי_קשר": contact,
     };
-    return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_m, k: string) => map[k.trim()] ?? "");
-  }, [template, cancelKind, parentName, paidAmount, refundAmount, notes, accountOwner, ownerNationalId,
+    const apply = (s: string) => s.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_m, k: string) => map[k.trim()] ?? "");
+    map["הודעה_ראשית"] = apply(mainMessage);
+    return apply(template);
+  }, [template, mainMessage, cancelKind, parentName, paidAmount, refundAmount, notes, accountOwner, ownerNationalId,
       bankName, bankNumber, branch, accountNumber, signer, orgName, contact]);
 
   const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
