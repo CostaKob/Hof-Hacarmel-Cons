@@ -283,13 +283,34 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                     <Label>ת״ז בעל החשבון</Label>
                     <Input className="h-11 rounded-xl" inputMode="numeric" value={ownerNationalId} onChange={(e) => setOwnerNationalId(e.target.value)} />
                   </div>
-                  <div className="space-y-1">
-                    <Label>שם הבנק</Label>
-                    <Input className="h-11 rounded-xl" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="בנק הבינלאומי" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>מספר בנק</Label>
-                    <Input className="h-11 rounded-xl" inputMode="numeric" value={bankNumber} onChange={(e) => setBankNumber(e.target.value)} placeholder="31" />
+                  <div className="space-y-1 col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label>בנק</Label>
+                      <Button type="button" variant="ghost" className="h-7 px-2 text-xs"
+                        onClick={() => setManualBank((m) => !m)}>
+                        {manualBank ? "בחירה מרשימה" : "הזנה ידנית"}
+                      </Button>
+                    </div>
+                    {manualBank ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input className="h-11 rounded-xl" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="שם הבנק" />
+                        <Input className="h-11 rounded-xl" inputMode="numeric" value={bankNumber} onChange={(e) => setBankNumber(e.target.value)} placeholder="מספר בנק" />
+                      </div>
+                    ) : (
+                      <Select
+                        value={bankNumber || undefined}
+                        onValueChange={(v) => { setBankNumber(v); setBankName(findBankByCode(v)?.name || ""); }}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <SelectValue placeholder="בחר בנק" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {ISRAELI_BANKS.map((b) => (
+                            <SelectItem key={b.code} value={b.code}>{b.name} ({b.code})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <Label>סניף</Label>
