@@ -1142,14 +1142,82 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             <div>
               <Label htmlFor="payment-method">אופן תשלום</Label>
               <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={selectClass}>
-                {PAYMENT_METHODS.map((m) => (
+                {(transactionType === "credit" ? CREDIT_PAYMENT_METHODS : PAYMENT_METHODS).map((m) => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
               </select>
             </div>
-            {paymentMethod !== "check" && paymentMethod !== "credit_card" && paymentMethod !== "cash" && (
+
+            {/* Credit executed as an outgoing bank transfer — one refund for the
+                whole receipt (including cheque spreads), not per cheque. */}
+            {!isEdit && transactionType === "credit" && paymentMethod === "transfer" && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+                <p className="text-sm font-medium text-foreground">החזר בהעברה בנקאית</p>
+                <div>
+                  <Label htmlFor="refund-source">קבלה לזיכוי</Label>
+                  <select
+                    id="refund-source"
+                    value={refundSourceId}
+                    onChange={(e) => {
+                      setRefundSourceId(e.target.value);
+                      const s = refundSources.find((x) => x.id === e.target.value);
+                      if (s) setBankRefundAmount(String(s.remaining));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">בחר קבלה...</option>
+                    {refundSources.map((s) => (
+                      <option key={s.id} value={s.id}>{s.label}</option>
+                    ))}
+                  </select>
+                  {refundSources.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">אין קבלות שניתן לזכות.</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="refund-total">סכום הזיכוי (₪)</Label>
+                  <Input
+                    id="refund-total"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={bankRefundAmount}
+                    onChange={(e) => setBankRefundAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    זיכוי אחד לכל הקבלה — לא לכל צ׳ק בנפרד.
+                  </p>
+                </div>
+                <Button
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => {
+                    const src = refundSources.find((x) => x.id === refundSourceId);
+                    if (!src) { toast.error("נא לבחור קבלה"); return; }
+                    const amt = Number(bankRefundAmount);
+                    if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                    if (amt > src.remaining + 0.005) {
+                      toast.error(`הסכום חורג מהנותר לזיכוי (₪${src.remaining.toLocaleString()})`);
+                      return;
+                    }
+                    setBankRefund({
+                      studentId: familyContext?.anchorStudentId ?? studentId,
+                      parentName: familyContext?.parentName ?? "",
+                      paymentId: src.id,
+                      paidAmount: src.amount,
+                      refundAmount: amt,
+                    });
+                  }}
+                >
+                  המשך — מכתב להנהלת החשבונות
+                </Button>
+              </div>
+            )}
+
+            {paymentMethod !== "check" && paymentMethod !== "credit_card" && paymentMethod !== "cash" && paymentMethod !== "transfer" && (
               <div>
                 <Label htmlFor="installments">מספר תשלומים</Label>
+
                 <select id="installments" value={installments} onChange={(e) => setInstallments(e.target.value)} className={selectClass}>
                   {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                     <option key={n} value={String(n)}>{n}</option>
