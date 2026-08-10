@@ -116,7 +116,17 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_free: 1,
-      based_on: [payment.icount_doc_id],
+      // Link the credit document to the ORIGINAL charge document in iCount.
+      // iCount expects an object descriptor (doctype + docnum/doc_id) — a bare id is ignored.
+      based_on: [{
+        doctype: payment.icount_doc_type || "receipt",
+        ...(payment.icount_doc_number ? { docnum: Number(payment.icount_doc_number) || payment.icount_doc_number } : {}),
+        ...(payment.icount_doc_id ? { doc_id: payment.icount_doc_id } : {}),
+      }],
+      based_on_docs: [{
+        doctype: payment.icount_doc_type || "receipt",
+        docnum: Number(payment.icount_doc_number) || payment.icount_doc_number || payment.icount_doc_id,
+      }],
       origin_doc_id: payment.icount_doc_id,
       items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
