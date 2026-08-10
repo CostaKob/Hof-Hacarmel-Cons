@@ -402,6 +402,42 @@ const AdminFamilyCard = () => {
     onError: (e: any) => toast.error(`שגיאה בביטול: ${e?.message ?? ""}`),
   });
 
+  // Mark a cheque as cleared / not cleared (manual override on top of the date-based hint).
+  const chequeStatusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: "pending" | "cleared" }) => {
+      const { error } = await supabase
+        .from("student_payments")
+        .update({
+          cheque_status: status,
+          cheque_cleared_at: status === "cleared" ? new Date().toISOString().slice(0, 10) : null,
+        } as any)
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => invalidateFamily(),
+    onError: (e: any) => toast.error(`שגיאה בעדכון: ${e?.message ?? ""}`),
+  });
+
+  // Cancel selected future cheques — one consolidated negative receipt in iCount.
+  const cancelChequesMutation = useMutation({
+    mutationFn: async (paymentIds: string[]) => {
+      const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
+        body: { paymentIds },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      return data;
+    },
+    onSuccess: (data: any) => {
+      invalidateFamily();
+      setSelectedCheques({});
+      toast.success(`בוטלו ${data?.cancelled_count ?? 0} צ׳קים · זיכוי ${fmt(Number(data?.cancelled_amount ?? 0))}`);
+      if (data?.url) window.open(data.url, "_blank");
+    },
+    onError: (e: any) => toast.error(`שגיאה בביטול הצ׳קים: ${e?.message ?? ""}`),
+  });
+
+
   // Receipts that can still be credited — one entry per receipt (a cheque
   // spread counts as a single receipt, never per cheque).
   const refundSources: RefundSource[] = useMemo(() => {
