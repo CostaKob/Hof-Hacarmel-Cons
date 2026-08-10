@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ const DEFAULT_TEMPLATE = `שלום רב,
 {{פרטי_קשר}}`;
 
 export interface BankRefundDefaults {
+  studentId?: string;
   parentName?: string;
   studentName?: string;
   subject?: string;
@@ -85,6 +86,28 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const [reference, setReference] = useState("");
   const [transferDate, setTransferDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { data: student } = useQuery({
+    queryKey: ["bank-refund-student", defaults?.studentId],
+    enabled: open && !!defaults?.studentId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("students")
+        .select("first_name,last_name,parent_name,parent_national_id")
+        .eq("id", defaults!.studentId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!open || !student) return;
+    setParentName((v) => v || student.parent_name || "");
+    setAccountOwner((v) => v || student.parent_name || "");
+    setOwnerNationalId((v) => v || student.parent_national_id || "");
+    setSubject((v) => v || `שיעורי מוסיקה — ${student.first_name} ${student.last_name}`);
+  }, [open, student]);
 
   useEffect(() => {
     if (!open || !defaults) return;
