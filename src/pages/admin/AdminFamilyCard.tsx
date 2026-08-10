@@ -981,7 +981,15 @@ const AdminFamilyCard = () => {
                       </div>
                     </div>
 
-                    {isGroup && isExpanded && (
+                    {isGroup && isExpanded && (() => {
+                      const today = new Date().toISOString().slice(0, 10);
+                      const selectedIds = rows
+                        .filter((r: any) => selectedCheques[r.id])
+                        .map((r: any) => r.id);
+                      const selectedSum = rows
+                        .filter((r: any) => selectedCheques[r.id])
+                        .reduce((s: number, r: any) => s + Math.abs(Number(r.amount || 0)), 0);
+                      return (
                       <div className="border-t border-border px-3 py-2 space-y-1">
                         {rows.map((r: any, idx: number) => {
                           const rRefunded = payments
@@ -989,23 +997,67 @@ const AdminFamilyCard = () => {
                             .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                           const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
                           const rIsCheck = r.payment_method === "check";
+                          const cStatus: string = r.cheque_status ?? "pending";
+                          const isCancelled = cStatus === "cancelled";
+                          const isCleared = cStatus === "cleared";
+                          const isDue = !isCleared && !isCancelled && String(r.payment_date) <= today;
+                          const canSelect = rIsCheck && !isCredit && hasDoc && !isCancelled && !isCleared;
                           return (
                             <div
                               key={r.id}
                               onClick={() => { setEditingPayment(r); setFamilyCtx(null); setPaymentDialogOpen(true); }}
-                              className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-muted/50"
+                              className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-muted/50 ${isCancelled ? "opacity-60" : ""}`}
                             >
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-muted-foreground">{idx + 1}.</span>
-                                  <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
-                                  {r.reference_number && <span className="text-muted-foreground">{rIsCheck ? "צ׳ק מס׳" : "אסמכתא"} {r.reference_number}</span>}
-                                  {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                              <div className="min-w-0 flex-1 flex items-start gap-2">
+                                {canSelect && (
+                                  <span onClick={(e) => e.stopPropagation()} className="pt-0.5">
+                                    <Checkbox
+                                      checked={!!selectedCheques[r.id]}
+                                      onCheckedChange={(v) =>
+                                        setSelectedCheques((s) => ({ ...s, [r.id]: !!v }))
+                                      }
+                                    />
+                                  </span>
+                                )}
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-muted-foreground">{idx + 1}.</span>
+                                    <span className={`font-medium text-foreground ${isCancelled ? "line-through" : ""}`}>
+                                      {format(new Date(r.payment_date), "dd/MM/yyyy")}
+                                    </span>
+                                    {r.reference_number && <span className="text-muted-foreground">{rIsCheck ? "צ׳ק מס׳" : "אסמכתא"} {r.reference_number}</span>}
+                                    {rIsCheck && (
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-md border font-medium ${
+                                        isCancelled
+                                          ? "bg-destructive/10 text-destructive border-destructive/30"
+                                          : isCleared
+                                            ? "bg-green-500/10 text-green-700 border-green-500/30"
+                                            : isDue
+                                              ? "bg-amber-500/10 text-amber-700 border-amber-500/30"
+                                              : "bg-muted text-muted-foreground border-border"
+                                      }`}>
+                                        {isCancelled ? "בוטל" : isCleared ? "נפרע" : isDue ? "אמור להיפרע" : "עתידי"}
+                                      </span>
+                                    )}
+                                    {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                                  </div>
+                                  {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                                 </div>
-                                {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                               </div>
                               <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
-                                {!isCredit && hasDoc && rRemaining > 0 && (
+                                {rIsCheck && !isCancelled && (
+                                  <Button variant="ghost" size="icon"
+                                    className={`h-7 w-7 rounded-lg ${isCleared ? "text-green-700 hover:bg-green-500/10" : "text-muted-foreground hover:bg-muted"}`}
+                                    title={isCleared ? "בטל סימון פירעון" : "סמן כנפרע"}
+                                    disabled={chequeStatusMutation.isPending}
+                                    onClick={() => chequeStatusMutation.mutate({
+                                      id: r.id,
+                                      status: isCleared ? "pending" : "cleared",
+                                    })}>
+                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                                {!isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
@@ -1016,11 +1068,11 @@ const AdminFamilyCard = () => {
                                   </Button>
                                 )}
                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
-                                  title={rIsCheck ? "בטל צ׳ק זה" : "בטל שורה זו"}
+                                  title={rIsCheck ? "מחק שורת צ׳ק (ללא מסמך חשבונאי)" : "מחק שורה זו"}
                                   disabled={deleteRowMutation.isPending}
                                   onClick={() => {
                                     if (confirm(rIsCheck
-                                      ? `לבטל את הצ׳ק ${r.reference_number ?? ""} על סך ${fmt(Number(r.amount || 0))}? השורה תימחק.`
+                                      ? `למחוק את שורת הצ׳ק ${r.reference_number ?? ""} על סך ${fmt(Number(r.amount || 0))}? לא ייווצר מסמך זיכוי. לביטול חשבונאי תקין יש לסמן את הצ׳ק ולהשתמש ב"בטל צ׳קים שנבחרו".`
                                       : `לבטל שורה זו על סך ${fmt(Number(r.amount || 0))}?`)) {
                                       deleteRowMutation.mutate(r.id);
                                     }
@@ -1034,8 +1086,51 @@ const AdminFamilyCard = () => {
                             </div>
                           );
                         })}
+
+                        {(() => {
+                          const cleared = rows.filter((r: any) => r.cheque_status === "cleared");
+                          const cancelled = rows.filter((r: any) => r.cheque_status === "cancelled");
+                          const open = rows.filter((r: any) => (r.cheque_status ?? "pending") === "pending");
+                          const sum = (a: any[]) => a.reduce((s, r) => s + Math.abs(Number(r.amount || 0)), 0);
+                          return (
+                            <div className="pt-2 mt-1 border-t border-border flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+                              <span>סה״כ עסקה <b className="text-foreground">{fmt(groupTotal)}</b></span>
+                              <span>נפרע <b className="text-green-700">{fmt(sum(cleared))}</b> ({cleared.length})</span>
+                              <span>טרם נפרע <b className="text-foreground">{fmt(sum(open))}</b> ({open.length})</span>
+                              {cancelled.length > 0 && (
+                                <span>בוטל <b className="text-destructive">{fmt(sum(cancelled))}</b> ({cancelled.length})</span>
+                              )}
+                            </div>
+                          );
+                        })()}
+
+                        {selectedIds.length > 0 && (
+                          <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg bg-muted/60 p-2">
+                            <span className="text-[11px] text-muted-foreground flex-1">
+                              נבחרו {selectedIds.length} צ׳קים · {fmt(selectedSum)} — יופק זיכוי אחד מאוחד עם פירוט הצ׳קים
+                            </span>
+                            <div className="flex gap-2">
+                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs"
+                                onClick={() => setSelectedCheques({})}>
+                                נקה בחירה
+                              </Button>
+                              <Button variant="destructive" size="sm" className="h-8 rounded-lg text-xs"
+                                disabled={cancelChequesMutation.isPending}
+                                onClick={() => {
+                                  if (confirm(`לבטל ${selectedIds.length} צ׳קים בסך ${fmt(selectedSum)}?\nתופק קבלת זיכוי אחת ב-iCount עם פירוט הצ׳קים שבוטלו.`)) {
+                                    cancelChequesMutation.mutate(selectedIds);
+                                  }
+                                }}>
+                                <Ban className="h-3.5 w-3.5 ms-1" />
+                                בטל צ׳קים שנבחרו
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
+                      );
+                    })()}
+
                     </div>
                   );
                 })}
