@@ -251,10 +251,16 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
     if (!filePath) return;
     const { data, error } = await supabase.storage
       .from("refund-documents")
-      .createSignedUrl(filePath, 3600);
-    if (error || !data?.signedUrl) { toast.error("לא ניתן לפתוח את המסמך"); return; }
-    window.open(data.signedUrl, "_blank");
+      .download(filePath);
+    if (error || !data) { toast.error("לא ניתן לפתוח את המסמך"); return; }
+    // Storage serves HTML as plain text, so re-open it locally as UTF-8 HTML
+    const html = new TextDecoder("utf-8").decode(await data.arrayBuffer());
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    const w = window.open(url, "_blank");
+    if (!w) { toast.error("החלון נחסם על ידי הדפדפן"); URL.revokeObjectURL(url); return; }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
+
 
 
   const refundMutation = useMutation({
