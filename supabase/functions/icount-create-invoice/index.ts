@@ -236,15 +236,29 @@ Deno.serve(async (req: Request) => {
     if (pm.type === 1) {
       payload.cash = { sum: signedTotal };
     } else if (pm.type === 3) {
-      // Cheques — one line per payment row (split cheques), each with its own date/number/amount.
-      payload.cheques = payments.map((p: any) => ({
-        sum: sign * Math.abs(Number(p.amount || 0)),
-        date: p.payment_date || undefined,
-        bank: "",
-        branch: "",
-        account: "",
-        num: p.reference_number || "",
-      }));
+      // Cheques — one line per payment row (split cheques), each with its own date/number/bank details.
+      const parseChequeMeta = (notes: string | null) => {
+        const t = notes || "";
+        const bank = t.match(/בנק:\s*([^\s·]+)/)?.[1] || "";
+        const branch = t.match(/סניף:\s*([^\s·]+)/)?.[1] || "";
+        const account = t.match(/ח-ן:\s*([^\s·]+)/)?.[1] || "";
+        return { bank, branch, account };
+      };
+      payload.cheques = payments.map((p: any) => {
+        const meta = parseChequeMeta(p.notes);
+        const num = String(p.reference_number || "");
+        return {
+          sum: sign * Math.abs(Number(p.amount || 0)),
+          date: p.payment_date || undefined,
+          bank: meta.bank,
+          branch: meta.branch,
+          account: meta.account,
+          num,
+          number: num,
+          cheque_num: num,
+        };
+      });
+
     } else if (pm.type === 4) {
       payload.banktransfer = { sum: signedTotal, account: head.reference_number || "" };
     } else if (pm.type === 5) {
