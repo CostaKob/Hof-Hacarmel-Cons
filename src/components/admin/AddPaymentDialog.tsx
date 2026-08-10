@@ -1558,6 +1558,22 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BankTransferRefundDialog
+        open={!!bankRefund}
+        onOpenChange={(o) => { if (!o) setBankRefund(null); }}
+        defaults={bankRefund}
+        invalidate={() => {
+          queryClient.invalidateQueries({ queryKey: ["family-details"] });
+          queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+        }}
+        onDone={(info) => {
+          setBankRefund(null);
+          toast.success(`קבלת זיכוי בסך ₪${Number(info.amount || 0).toLocaleString()} הופקה`);
+          if (info.url) window.open(info.url, "_blank");
+          onOpenChange(false);
+        }}
+      />
     </>
   );
 };
