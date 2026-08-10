@@ -7,6 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ISRAELI_BANKS, findBankByCode } from "@/lib/israeliBanks";
+import { getBranches } from "@/lib/israeliBankBranches";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -14,7 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -81,6 +84,13 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const [bankNumber, setBankNumber] = useState("");
   const [manualBank, setManualBank] = useState(false);
   const [branch, setBranch] = useState("");
+  const [manualBranch, setManualBranch] = useState(false);
+  const [branchOpen, setBranchOpen] = useState(false);
+  const branchOptions = useMemo(() => getBranches(bankNumber), [bankNumber]);
+  const selectedBranch = useMemo(
+    () => branchOptions.find((b) => b.code === branch),
+    [branchOptions, branch]
+  );
   const [accountNumber, setAccountNumber] = useState("");
   const [signer, setSigner] = useState(() => localStorage.getItem("bank-refund-signer") || "קורין פאר");
   const [orgName, setOrgName] = useState(() => localStorage.getItem("bank-refund-org") || "אולפן המוסיקה משותף חוף הכרמל");
@@ -374,7 +384,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                     ) : (
                       <Select
                         value={bankNumber || undefined}
-                        onValueChange={(v) => { setBankNumber(v); setBankName(findBankByCode(v)?.name || ""); }}
+                        onValueChange={(v) => { setBankNumber(v); setBankName(findBankByCode(v)?.name || ""); setBranch(""); setManualBranch(false); }}
                       >
                         <SelectTrigger className="h-11 rounded-xl">
                           <SelectValue placeholder="בחר בנק" />
@@ -388,9 +398,57 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                     )}
                   </div>
                   <div className="space-y-1">
-                    <Label>סניף</Label>
-                    <Input className="h-11 rounded-xl" inputMode="numeric" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="7" />
+                    <div className="flex items-center justify-between">
+                      <Label>סניף</Label>
+                      {branchOptions.length > 0 && (
+                        <Button type="button" variant="ghost" className="h-7 px-2 text-xs"
+                          onClick={() => setManualBranch((m) => !m)}>
+                          {manualBranch ? "בחירה מרשימה" : "הזנה ידנית"}
+                        </Button>
+                      )}
+                    </div>
+                    {manualBranch || branchOptions.length === 0 ? (
+                      <Input className="h-11 rounded-xl" inputMode="numeric" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="7" />
+                    ) : (
+                      <Popover open={branchOpen} onOpenChange={setBranchOpen}>
+                        <PopoverTrigger asChild>
+                          <Button type="button" variant="outline" className="h-11 w-full rounded-xl justify-between font-normal">
+                            <span className="truncate">
+                              {branch
+                                ? `${branch}${selectedBranch ? ` - ${selectedBranch.name}` : ""}`
+                                : "בחר סניף"}
+                            </span>
+                            <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[260px]" align="start">
+                          <Command
+                            filter={(value, search) => (value.includes(search) ? 1 : 0)}
+                          >
+                            <CommandInput placeholder="חיפוש סניף / עיר / מספר" />
+                            <CommandList className="max-h-64">
+                              <CommandEmpty>לא נמצא סניף</CommandEmpty>
+                              <CommandGroup>
+                                {branchOptions.map((b) => (
+                                  <CommandItem
+                                    key={b.code}
+                                    value={`${b.code} ${b.name} ${b.city}`}
+                                    onSelect={() => { setBranch(b.code); setBranchOpen(false); }}
+                                  >
+                                    <span className="font-medium">{b.code}</span>
+                                    <span className="mx-1">-</span>
+                                    <span className="truncate">{b.name}</span>
+                                    {b.city && <span className="text-muted-foreground text-xs mr-auto">{b.city}</span>}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   </div>
+
                   <div className="space-y-1">
                     <Label>מס׳ חשבון</Label>
                     <Input className="h-11 rounded-xl" inputMode="numeric" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="910767" />
