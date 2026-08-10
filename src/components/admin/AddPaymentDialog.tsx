@@ -14,12 +14,20 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
+import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
 const PAYMENT_METHODS = [
   { value: "credit_card", label: "אשראי" },
   { value: "cash", label: "מזומן" },
   { value: "check", label: "צ׳ק" },
 ];
+
+// Credit (זיכוי) can also be executed as an outgoing bank transfer.
+const CREDIT_PAYMENT_METHODS = [
+  ...PAYMENT_METHODS,
+  { value: "transfer", label: "העברה בנקאית" },
+];
+
 
 const HEBREW_YEAR_MAP: Record<string, string> = {
   "2024-2025": "תשפ״ה",
@@ -64,6 +72,13 @@ export interface FamilyPaymentContext {
   invalidateKeys?: (string | undefined)[][];
 }
 
+export interface RefundSource {
+  id: string;            // payment row id that carries the iCount receipt
+  label: string;         // e.g. "קבלה 1090 · 10/08/2026 · פריסת צ׳קים"
+  amount: number;        // full receipt amount (group total)
+  remaining: number;     // still refundable
+}
+
 interface AddPaymentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -72,9 +87,11 @@ interface AddPaymentDialogProps {
   editPayment?: PaymentData | null;
   defaultType?: "payment" | "credit";
   familyContext?: FamilyPaymentContext | null;
+  refundSources?: RefundSource[];
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext, refundSources = [] }: AddPaymentDialogProps) => {
+
 
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
@@ -99,6 +116,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     { label: "הורה 2", amount: "", firstName: "", lastName: "", email: "", phone: "" },
   ]);
   const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string; amount: number; firstName: string; lastName: string; email: string; phone: string }>>([]);
+
+  // ---- Bank-transfer credit (refund) state ----
+  const [refundSourceId, setRefundSourceId] = useState("");
+  const [bankRefundAmount, setBankRefundAmount] = useState("");
+  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
 
   // ---- Check spread state ----
   const [checksOpen, setChecksOpen] = useState(false);
@@ -1120,14 +1142,82 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             <div>
               <Label htmlFor="payment-method">אופן תשלום</Label>
               <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={selectClass}>
-                {PAYMENT_METHODS.map((m) => (
+                {(transactionType === "credit" ? CREDIT_PAYMENT_METHODS : PAYMENT_METHODS).map((m) => (
                   <option key={m.value} value={m.value}>{m.label}</option>
                 ))}
               </select>
             </div>
-            {paymentMethod !== "check" && paymentMethod !== "credit_card" && paymentMethod !== "cash" && (
+
+            {/* Credit executed as an outgoing bank transfer — one refund for the
+                whole receipt (including cheque spreads), not per cheque. */}
+            {!isEdit && transactionType === "credit" && paymentMethod === "transfer" && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 space-y-3">
+                <p className="text-sm font-medium text-foreground">החזר בהעברה בנקאית</p>
+                <div>
+                  <Label htmlFor="refund-source">קבלה לזיכוי</Label>
+                  <select
+                    id="refund-source"
+                    value={refundSourceId}
+                    onChange={(e) => {
+                      setRefundSourceId(e.target.value);
+                      const s = refundSources.find((x) => x.id === e.target.value);
+                      if (s) setBankRefundAmount(String(s.remaining));
+                    }}
+                    className={selectClass}
+                  >
+                    <option value="">בחר קבלה...</option>
+                    {refundSources.map((s) => (
+                      <option key={s.id} value={s.id}>{s.label}</option>
+                    ))}
+                  </select>
+                  {refundSources.length === 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">אין קבלות שניתן לזכות.</p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="refund-total">סכום הזיכוי (₪)</Label>
+                  <Input
+                    id="refund-total"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={bankRefundAmount}
+                    onChange={(e) => setBankRefundAmount(e.target.value)}
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    זיכוי אחד לכל הקבלה — לא לכל צ׳ק בנפרד.
+                  </p>
+                </div>
+                <Button
+                  className="w-full h-11 rounded-xl"
+                  onClick={() => {
+                    const src = refundSources.find((x) => x.id === refundSourceId);
+                    if (!src) { toast.error("נא לבחור קבלה"); return; }
+                    const amt = Number(bankRefundAmount);
+                    if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                    if (amt > src.remaining + 0.005) {
+                      toast.error(`הסכום חורג מהנותר לזיכוי (₪${src.remaining.toLocaleString()})`);
+                      return;
+                    }
+                    setBankRefund({
+                      studentId: familyContext?.anchorStudentId ?? studentId,
+                      parentName: familyContext?.parentName ?? "",
+                      paymentId: src.id,
+                      paidAmount: src.amount,
+                      refundAmount: amt,
+                    });
+                  }}
+                >
+                  המשך — מכתב להנהלת החשבונות
+                </Button>
+              </div>
+            )}
+
+            {paymentMethod !== "check" && paymentMethod !== "credit_card" && paymentMethod !== "cash" && paymentMethod !== "transfer" && (
               <div>
                 <Label htmlFor="installments">מספר תשלומים</Label>
+
                 <select id="installments" value={installments} onChange={(e) => setInstallments(e.target.value)} className={selectClass}>
                   {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                     <option key={n} value={String(n)}>{n}</option>
@@ -1468,6 +1558,22 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <BankTransferRefundDialog
+        open={!!bankRefund}
+        onOpenChange={(o) => { if (!o) setBankRefund(null); }}
+        defaults={bankRefund}
+        invalidate={() => {
+          queryClient.invalidateQueries({ queryKey: ["family-details"] });
+          queryClient.invalidateQueries({ queryKey: ["student-payments", studentId] });
+        }}
+        onDone={(info) => {
+          setBankRefund(null);
+          toast.success(`קבלת זיכוי בסך ₪${Number(info.amount || 0).toLocaleString()} הופקה`);
+          if (info.url) window.open(info.url, "_blank");
+          onOpenChange(false);
+        }}
+      />
     </>
   );
 };
