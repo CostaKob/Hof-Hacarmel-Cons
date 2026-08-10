@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, AlertCircle, UserCheck } from "lucide-react";
+import { CheckCircle2, AlertCircle, UserCheck, AlertTriangle } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import { KNOWN_KEYS_SET } from "@/lib/registrationFieldKeys";
 import PageTitle from "@/components/PageTitle";
@@ -99,6 +99,8 @@ const PublicRegistration = () => {
   const [tokenRegistration, setTokenRegistration] = useState<any>(null);
   const [branchOtherMode, setBranchOtherMode] = useState(false);
   const [eduSchoolOtherMode, setEduSchoolOtherMode] = useState(false);
+  const [duplicateRegistration, setDuplicateRegistration] = useState<any>(null);
+  const [duplicateAcknowledged, setDuplicateAcknowledged] = useState(false);
   const approvalRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -290,6 +292,27 @@ const PublicRegistration = () => {
       setHasEnrollmentHistory(false);
     }
   }, [fetchLastEnrollmentBranch]);
+
+  // Check whether this student already has a registration for the selected year
+  const checkDuplicateRegistration = useCallback(async (nationalId: string) => {
+    const trimmed = (nationalId || "").trim();
+    if (!activeYear?.id || trimmed.length < 9) {
+      setDuplicateRegistration(null);
+      setDuplicateAcknowledged(false);
+      return;
+    }
+    const { data } = await supabase.rpc("check_existing_registration", {
+      _national_id: trimmed,
+      _year_id: activeYear.id,
+    });
+    const res = data as any;
+    if (res?.exists) {
+      setDuplicateRegistration(res);
+    } else {
+      setDuplicateRegistration(null);
+      setDuplicateAcknowledged(false);
+    }
+  }, [activeYear?.id]);
 
   // Pre-fill form from token registration
   useEffect(() => {
@@ -505,6 +528,7 @@ const PublicRegistration = () => {
       debounceRef.current = setTimeout(() => {
         lookupStudent(value || "");
         checkEnrollmentHistory(value || "");
+        checkDuplicateRegistration(value || "");
       }, 600);
     }
 
@@ -571,6 +595,10 @@ const PublicRegistration = () => {
 
     if (!approvalChecked) {
       errors["__approval"] = "יש לאשר את תנאי ההרשמה";
+    }
+
+    if (duplicateRegistration && !duplicateAcknowledged) {
+      errors["__duplicate"] = "כבר קיימת הרשמה לתלמיד/ה זה לשנה זו";
     }
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
@@ -713,6 +741,8 @@ const PublicRegistration = () => {
                 setApprovalChecked(false);
                 setExistingStudent(null);
                 setLookupDone(false);
+                setDuplicateRegistration(null);
+                setDuplicateAcknowledged(false);
                 setBranchOtherMode(false);
                 setEduSchoolOtherMode(false);
               }}
@@ -1077,6 +1107,55 @@ const PublicRegistration = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Duplicate registration banner */}
+          {duplicateRegistration && (
+            <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800">
+              <CardContent className="pt-5 pb-5 space-y-3">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold text-amber-900 dark:text-amber-300 text-sm">
+                      נמצאה הרשמה קיימת לתלמיד/ה זה לשנת הלימודים {yearDisplayLabel}
+                    </p>
+                    <p className="text-amber-800 dark:text-amber-400 text-xs leading-relaxed">
+                      {duplicateRegistration.created_at && (
+                        <>ההרשמה הוגשה בתאריך {new Date(duplicateRegistration.created_at).toLocaleDateString("he-IL")}
+                          {duplicateRegistration.branch_school_name ? ` · שלוחה: ${duplicateRegistration.branch_school_name}` : ""}
+                          {Array.isArray(duplicateRegistration.requested_instruments) && duplicateRegistration.requested_instruments.length > 0
+                            ? ` · כלים: ${duplicateRegistration.requested_instruments.join(", ")}`
+                            : ""}
+                          .{" "}
+                        </>
+                      )}
+                      אין צורך למלא את הטופס פעם נוספת — נחזור אליכם עם פרטי השיבוץ. אם יש צורך בעדכון, ניתן ליצור קשר עם המזכירות.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 rounded-xl bg-background/60 border border-amber-200 dark:border-amber-800 p-3">
+                  <Checkbox
+                    id="dup-ack"
+                    checked={duplicateAcknowledged}
+                    onCheckedChange={(v) => {
+                      setDuplicateAcknowledged(!!v);
+                      setValidationErrors((prev) => {
+                        const next = { ...prev };
+                        delete next["__duplicate"];
+                        return next;
+                      });
+                    }}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="dup-ack" className="text-xs font-medium cursor-pointer leading-snug">
+                    ידוע לי שקיימת הרשמה, וברצוני לשלוח טופס נוסף (למשל הוספת כלי נוסף)
+                  </Label>
+                </div>
+                {validationErrors["__duplicate"] && (
+                  <p className="text-sm text-destructive">{validationErrors["__duplicate"]}</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* Existing student banner */}
           {existingStudent && lookupDone && (
