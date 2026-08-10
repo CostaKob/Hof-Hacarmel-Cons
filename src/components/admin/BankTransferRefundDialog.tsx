@@ -77,11 +77,13 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const [ownerNationalId, setOwnerNationalId] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankNumber, setBankNumber] = useState("");
+  const [manualBank, setManualBank] = useState(false);
   const [branch, setBranch] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
-  const [signer, setSigner] = useState(() => localStorage.getItem("bank-refund-signer") || "");
+  const [signer, setSigner] = useState(() => localStorage.getItem("bank-refund-signer") || "קורין פאר");
   const [orgName, setOrgName] = useState(() => localStorage.getItem("bank-refund-org") || "אולפן המוסיקה משותף חוף הכרמל");
   const [contact, setContact] = useState(() => localStorage.getItem("bank-refund-contact") || "");
+  const [mainMessage, setMainMessage] = useState(() => localStorage.getItem(MAIN_MSG_KEY) || DEFAULT_MAIN_MESSAGE);
   const [template, setTemplate] = useState(() => localStorage.getItem(TEMPLATE_KEY) || DEFAULT_TEMPLATE);
   const [showTemplate, setShowTemplate] = useState(false);
 
