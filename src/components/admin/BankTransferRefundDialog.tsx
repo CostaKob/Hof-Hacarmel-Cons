@@ -447,6 +447,26 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                 <FileDown className="h-4 w-4 ml-2" /> צור קובץ להנהלת החשבונות
               </Button>
 
+              {savedDocs.length > 0 && (
+                <div className="rounded-xl border border-border p-3 space-y-2">
+                  <p className="text-sm font-semibold">מסמכים שנשמרו</p>
+                  {savedDocs.map((d: any) => (
+                    <div key={d.id} className="flex items-center justify-between gap-2 text-xs">
+                      <span className="truncate">
+                        {format(new Date(d.created_at), "dd/MM/yyyy HH:mm")}
+                        {d.refund_amount ? ` · ₪${Number(d.refund_amount).toLocaleString()}` : ""}
+                      </span>
+                      <Button type="button" variant="outline" className="h-8 rounded-lg text-xs"
+                        onClick={() => openSavedDoc(d.file_path)}>
+                        פתח
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+
+
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <p className="text-sm font-semibold">שלב ב׳ — לאחר ביצוע ההעברה</p>
                 <div className="grid grid-cols-2 gap-3">
