@@ -174,9 +174,19 @@ Deno.serve(async (req: Request) => {
         academic_year_id: payment.academic_year_id,
         amount: negSum,
         transaction_type: "credit",
-        payment_method: payment.payment_method,
-        payment_date: new Date().toISOString().slice(0, 10),
-        notes: reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim(),
+        payment_method: isBankRefund ? "transfer" : payment.payment_method,
+        reference_number: isBankRefund ? (bankReference || null) : null,
+        payment_date: (isBankRefund && bankTransferDate) ? bankTransferDate : new Date().toISOString().slice(0, 10),
+        notes: isBankRefund
+          ? [
+              reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim(),
+              "העברה בנקאית",
+              bankReference ? `אסמכתא: ${bankReference}` : "",
+              bankDetails?.bankName ? `בנק: ${bankDetails.bankName}${bankDetails?.bankNumber ? ` ${bankDetails.bankNumber}` : ""}` : "",
+              bankDetails?.branch ? `סניף: ${bankDetails.branch}` : "",
+              bankDetails?.accountNumber ? `ח-ן: ${bankDetails.accountNumber}` : "",
+            ].filter(Boolean).join(" · ")
+          : (reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim()),
         refund_of_payment_id: payment.id,
         icount_doc_id: docId,
         icount_doc_number: docNumber,
