@@ -185,17 +185,38 @@ const StudentPaymentsSection = ({
         <p className="text-sm text-muted-foreground">לא בוצעו תשלומים עדיין</p>
       ) : (
         <div className="space-y-2">
-          {[...payments].sort((a: any, b: any) =>
-            new Date(b.created_at || b.payment_date).getTime() - new Date(a.created_at || a.payment_date).getTime()
-          ).map((p: any) => {
+          {(() => {
+            // Group split payments (e.g. cheque splits) that share a payment_group_id into one row
+            const groups = new Map<string, any[]>();
+            for (const p of payments) {
+              const key = p.payment_group_id ? `g:${p.payment_group_id}` : `p:${p.id}`;
+              const arr = groups.get(key);
+              if (arr) arr.push(p); else groups.set(key, [p]);
+            }
+            const entries = [...groups.entries()].map(([key, rows]) => {
+              const sorted = [...rows].sort((a, b) =>
+                new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime()
+              );
+              return { key, head: sorted[0], rows: sorted };
+            });
+            entries.sort((a, b) =>
+              new Date(b.head.created_at || b.head.payment_date).getTime() -
+              new Date(a.head.created_at || a.head.payment_date).getTime()
+            );
+            return entries;
+          })().map(({ key, head, rows }) => {
+            const p = head;
+            const isGroup = rows.length > 1;
+            const groupTotal = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+            const isExpanded = !!expanded[key];
             const isCredit = p.transaction_type !== "payment";
             const hasInvoice = !!p.invoice_url;
             const hasDoc = !!p.icount_doc_id;
             const refundedSoFar = payments
-              .filter((x: any) => x.refund_of_payment_id === p.id)
+              .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
               .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-            const remaining = Math.max(0, Number(p.amount || 0) - refundedSoFar);
-            const canRefund = !isCredit && hasDoc && remaining > 0;
+            const remaining = Math.max(0, groupTotal - refundedSoFar);
+            const canRefund = !isCredit && hasDoc && remaining > 0 && !isGroup;
             const isCombined = Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
 
             // Status pill: derived from payment_status / refunds / transaction type
@@ -210,7 +231,7 @@ const StudentPaymentsSection = ({
             } else if (p.payment_status === "pending") {
               statusLabel = "ממתין לתשלום";
               statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
-            } else if (refundedSoFar >= Number(p.amount || 0) - 0.005 && refundedSoFar > 0) {
+            } else if (refundedSoFar >= groupTotal - 0.005 && refundedSoFar > 0) {
               statusLabel = "זוכה במלואו";
               statusClass = "bg-muted text-muted-foreground border-border";
             } else if (refundedSoFar > 0) {
@@ -221,16 +242,26 @@ const StudentPaymentsSection = ({
               statusClass = "bg-green-500/10 text-green-700 border-green-500/30";
             }
 
+            const lastRow = rows[rows.length - 1];
+
             return (
-              <div
-                key={p.id}
-                onClick={readOnly ? undefined : () => { setEditingPayment(p); setPaymentDialogOpen(true); }}
-                className={`flex items-center justify-between rounded-xl border border-border p-3 gap-2 transition-colors ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
-              >
+              <div key={key} className="rounded-xl border border-border transition-colors">
+                <div
+                  onClick={
+                    readOnly
+                      ? undefined
+                      : isGroup
+                        ? () => setExpanded((s) => ({ ...s, [key]: !s[key] }))
+                        : () => { setEditingPayment(p); setPaymentDialogOpen(true); }
+                  }
+                  className={`flex items-center justify-between p-3 gap-2 ${readOnly ? "" : "cursor-pointer hover:bg-muted/50 rounded-xl"}`}
+                >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-foreground text-sm">
-                      {format(new Date(p.payment_date), "dd/MM/yyyy")}
+                      {isGroup
+                        ? `${format(new Date(p.payment_date), "dd/MM/yyyy")} – ${format(new Date(lastRow.payment_date), "dd/MM/yyyy")}`
+                        : format(new Date(p.payment_date), "dd/MM/yyyy")}
                       {showYear && p.academic_years?.name && (
                         <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
                       )}
@@ -238,12 +269,17 @@ const StudentPaymentsSection = ({
                     <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${statusClass}`}>
                       {statusLabel}
                     </span>
+                    {isGroup && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground font-medium">
+                        פריסה · {rows.length} תשלומים
+                      </span>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {isCredit ? "זיכוי" : "תשלום"}
                     {p.payment_method && ` · ${p.payment_method}`}
-                    {p.installments > 1 && ` · ${p.installments} תשלומים`}
-                    {p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                    {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
+                    {!isGroup && p.reference_number && ` · אסמכתא ${p.reference_number}`}
                     {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
                   </p>
@@ -267,6 +303,13 @@ const StudentPaymentsSection = ({
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  {isGroup && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
+                      title={isExpanded ? "הסתר פירוט" : "הצג פירוט"}
+                      onClick={(e) => { e.stopPropagation(); setExpanded((s) => ({ ...s, [key]: !s[key] })); }}>
+                      {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </Button>
+                  )}
                   {!isCredit && hasInvoice && (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
@@ -275,14 +318,14 @@ const StudentPaymentsSection = ({
                   )}
                   {!readOnly && !isCredit && !hasDoc && (
                     <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                      title={isCombined ? "הפק קבלה מאוחדת לכל השיוכים" : "הפק קבלה ב-iCount"}
+                      title={isGroup || isCombined ? "הפק קבלה מאוחדת אחת לכל התשלומים" : "הפק קבלה ב-iCount"}
                       disabled={createInvoiceMutation.isPending}
                       onClick={(e) => {
                         e.stopPropagation();
                         setPendingInvoiceParams(p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id });
                       }}>
                       <FileDown className="h-3.5 w-3.5" />
-                      {createInvoiceMutation.isPending ? "..." : (isCombined ? "הפק קבלה מאוחדת" : "הפק קבלה")}
+                      {createInvoiceMutation.isPending ? "..." : (isGroup || isCombined ? "הפק קבלה מאוחדת" : "הפק קבלה")}
                     </Button>
                   )}
                   {isCredit && hasInvoice && (
@@ -319,14 +362,58 @@ const StudentPaymentsSection = ({
                     </Button>
                   )}
                   <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
-                    {isCredit ? `−₪${Math.abs(Number(p.amount || 0)).toLocaleString()}` : `₪${Math.abs(Number(p.amount || 0)).toLocaleString()}`}
+                    {isCredit ? `−₪${Math.abs(groupTotal).toLocaleString()}` : `₪${Math.abs(groupTotal).toLocaleString()}`}
                   </span>
                 </div>
+                </div>
+
+                {isGroup && isExpanded && (
+                  <div className="border-t border-border px-3 py-2 space-y-1">
+                    {rows.map((r: any, idx: number) => {
+                      const rRefunded = payments
+                        .filter((x: any) => x.refund_of_payment_id === r.id)
+                        .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+                      const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
+                      return (
+                        <div
+                          key={r.id}
+                          onClick={readOnly ? undefined : () => { setEditingPayment(r); setPaymentDialogOpen(true); }}
+                          className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
+                        >
+                          <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
+                            <span className="text-muted-foreground">{idx + 1}.</span>
+                            <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
+                            {r.reference_number && <span className="text-muted-foreground">אסמכתא {r.reference_number}</span>}
+                            {rRefunded > 0 && <span className="text-amber-700">זוכה ₪{rRefunded.toLocaleString()}</span>}
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {!readOnly && !isCredit && hasDoc && rRemaining > 0 && (
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                                title={`בצע זיכוי לתשלום זה (נותר ₪${rRemaining.toLocaleString()})`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const isCc = r.payment_method === "credit_card";
+                                  setRefundTarget({ ...r, _remaining: rRemaining, _cc: isCc });
+                                  setRefundAmount(String(rRemaining));
+                                }}>
+                                <Undo2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
+                            <span className="font-semibold text-foreground whitespace-nowrap" dir="ltr">
+                              ₪{Math.abs(Number(r.amount || 0)).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
+
 
 
       <AddPaymentDialog
