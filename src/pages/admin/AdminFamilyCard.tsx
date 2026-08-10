@@ -805,7 +805,10 @@ const AdminFamilyCard = () => {
                     .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
                     .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                   const remaining = Math.max(0, groupTotal - refundedSoFar);
-                  const canRefund = !isCredit && hasDoc && remaining > 0 && !isGroup;
+                  // A cheque spread is one transaction: refunds always apply to the whole
+                  // receipt, never to a single cheque row.
+                  const canRefund = !isCredit && hasDoc && remaining > 0;
+
                   const isCombined =
                     Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
 
@@ -973,7 +976,7 @@ const AdminFamilyCard = () => {
                               ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
                               : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
                             onClick={() => {
-                              setRefundTarget({ ...p, _remaining: remaining, _cc: p.payment_method === "credit_card" });
+                              setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
                               setRefundAmount(String(remaining));
                             }}>
                             <Undo2 className="h-4 w-4" />
@@ -1043,7 +1046,7 @@ const AdminFamilyCard = () => {
                                         {isCancelled ? "בוטל" : isCleared ? "נפרע" : isDue ? "אמור להיפרע" : "עתידי"}
                                       </span>
                                     )}
-                                    {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                                    {!isGroup && rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
                                   </div>
                                   {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                                 </div>
@@ -1061,7 +1064,7 @@ const AdminFamilyCard = () => {
                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                   </Button>
                                 )}
-                                {!isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
+                                {!isGroup && !isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
@@ -1103,6 +1106,9 @@ const AdminFamilyCard = () => {
                               <span>טרם נפרע <b className="text-foreground">{fmt(sum(open))}</b> ({open.length})</span>
                               {cancelled.length > 0 && (
                                 <span>בוטל <b className="text-destructive">{fmt(sum(cancelled))}</b> ({cancelled.length})</span>
+                              )}
+                              {refundedSoFar > 0 && (
+                                <span>זוכה בעסקה <b className="text-amber-700">{fmt(refundedSoFar)}</b> · נותר לזיכוי <b className="text-foreground">{fmt(remaining)}</b></span>
                               )}
                             </div>
                           );
@@ -1180,7 +1186,7 @@ const AdminFamilyCard = () => {
                   {refundTarget._cc ? "החזר אשראי" : "זיכוי"} · קבלה {refundTarget.icount_doc_number ?? ""}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  סכום מקורי: {fmt(Number(refundTarget.amount || 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
+                  סכום מקורי: {fmt(Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
                 </p>
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">סכום לזיכוי</label>
