@@ -172,7 +172,33 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
 <pre>${esc(filled)}</pre>
 </body></html>`;
 
-  const generateFile = () => {
+  const saveDocument = async (html: string) => {
+    const path = `${defaults?.studentId || "general"}/${Date.now()}-refund-letter.html`;
+    const { error: upErr } = await supabase.storage
+      .from("refund-documents")
+      .upload(path, new Blob([html], { type: "text/html;charset=utf-8" }), {
+        contentType: "text/html;charset=utf-8",
+      });
+    if (upErr) throw upErr;
+    const { data: userRes } = await supabase.auth.getUser();
+    const { error: insErr } = await supabase.from("refund_documents").insert({
+      payment_id: defaults?.paymentId ?? null,
+      student_id: defaults?.studentId ?? null,
+      doc_type: "bank_transfer_letter",
+      title: `מכתב להנהלת חשבונות — ${parentName || accountOwner || ""}${defaults?.docNumber ? ` (קבלה ${defaults.docNumber})` : ""}`,
+      parent_name: parentName || accountOwner || null,
+      refund_amount: Number(refundAmount) || null,
+      bank_reference: reference || null,
+      content_text: filled,
+      content_html: html,
+      file_path: path,
+      created_by: userRes?.user?.id ?? null,
+    });
+    if (insErr) throw insErr;
+    queryClient.invalidateQueries({ queryKey: ["refund-documents", defaults?.paymentId] });
+  };
+
+  const generateFile = async () => {
     if (!accountNumber || !bankName || !branch) {
       toast.error("נא למלא בנק, סניף ומספר חשבון");
       return;
@@ -182,13 +208,44 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
     localStorage.setItem("bank-refund-signer", signer);
     localStorage.setItem("bank-refund-org", orgName);
     localStorage.setItem("bank-refund-contact", contact);
+    const html = buildHtml();
     const w = window.open("", "_blank");
     if (!w) { toast.error("החלון נחסם על ידי הדפדפן"); return; }
-    w.document.write(buildHtml());
+    w.document.write(html);
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 500);
+    try {
+      await saveDocument(html);
+      toast.success("המסמך נשמר בארכיון המסמכים");
+    } catch (e: any) {
+      toast.error(`המסמך נוצר אך לא נשמר: ${e?.message ?? ""}`);
+    }
   };
+
+  const { data: savedDocs = [] } = useQuery({
+    queryKey: ["refund-documents", defaults?.paymentId],
+    enabled: open && !!defaults?.paymentId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("refund_documents")
+        .select("id,title,created_at,file_path,refund_amount")
+        .eq("payment_id", defaults!.paymentId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const openSavedDoc = async (filePath: string | null) => {
+    if (!filePath) return;
+    const { data, error } = await supabase.storage
+      .from("refund-documents")
+      .createSignedUrl(filePath, 3600);
+    if (error || !data?.signedUrl) { toast.error("לא ניתן לפתוח את המסמך"); return; }
+    window.open(data.signedUrl, "_blank");
+  };
+
 
   const refundMutation = useMutation({
     mutationFn: async () => {
