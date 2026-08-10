@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ISRAELI_BANKS, findBankByCode } from "@/lib/israeliBanks";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -18,11 +20,14 @@ import { format } from "date-fns";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import type { RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
-const TEMPLATE_KEY = "bank-refund-letter-template-v1";
+const TEMPLATE_KEY = "bank-refund-letter-template-v2";
+const MAIN_MSG_KEY = "bank-refund-main-message-v1";
+
+export const DEFAULT_MAIN_MESSAGE = `אבקש לבטל {{סוג_ביטול}} עסקת אשראי ע"י העברה בנקאית עבור {{שם_ההורה}}.`;
 
 const DEFAULT_TEMPLATE = `שלום רב,
 
-אבקש לבטל {{סוג_ביטול}} עסקת אשראי ע"י העברה בנקאית עבור {{שם_ההורה}}.
+{{הודעה_ראשית}}
 
 {{שם_ההורה}} שילם/ה: {{סכום_ששולם}} ₪
 יש לזכות את הנ"ל בסך של: {{סכום_הזיכוי}} ₪
@@ -74,11 +79,13 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const [ownerNationalId, setOwnerNationalId] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankNumber, setBankNumber] = useState("");
+  const [manualBank, setManualBank] = useState(false);
   const [branch, setBranch] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
-  const [signer, setSigner] = useState(() => localStorage.getItem("bank-refund-signer") || "");
+  const [signer, setSigner] = useState(() => localStorage.getItem("bank-refund-signer") || "קורין פאר");
   const [orgName, setOrgName] = useState(() => localStorage.getItem("bank-refund-org") || "אולפן המוסיקה משותף חוף הכרמל");
   const [contact, setContact] = useState(() => localStorage.getItem("bank-refund-contact") || "");
+  const [mainMessage, setMainMessage] = useState(() => localStorage.getItem(MAIN_MSG_KEY) || DEFAULT_MAIN_MESSAGE);
   const [template, setTemplate] = useState(() => localStorage.getItem(TEMPLATE_KEY) || DEFAULT_TEMPLATE);
   const [showTemplate, setShowTemplate] = useState(false);
 
@@ -139,8 +146,10 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
       "שם_הארגון": orgName,
       "פרטי_קשר": contact,
     };
-    return template.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_m, k: string) => map[k.trim()] ?? "");
-  }, [template, cancelKind, parentName, paidAmount, refundAmount, notes, accountOwner, ownerNationalId,
+    const apply = (s: string) => s.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_m, k: string) => map[k.trim()] ?? "");
+    map["הודעה_ראשית"] = apply(mainMessage);
+    return apply(template);
+  }, [template, mainMessage, cancelKind, parentName, paidAmount, refundAmount, notes, accountOwner, ownerNationalId,
       bankName, bankNumber, branch, accountNumber, signer, orgName, contact]);
 
   const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
@@ -169,6 +178,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
       return;
     }
     localStorage.setItem(TEMPLATE_KEY, template);
+    localStorage.setItem(MAIN_MSG_KEY, mainMessage);
     localStorage.setItem("bank-refund-signer", signer);
     localStorage.setItem("bank-refund-org", orgName);
     localStorage.setItem("bank-refund-contact", contact);
@@ -265,6 +275,21 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                 <Input className="h-11 rounded-xl" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="לדוגמה: הורים גרושים, יתבצעו שני החזרים" />
               </div>
 
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label>הודעה ראשית</Label>
+                  <Button type="button" variant="ghost" className="h-7 px-2 text-xs"
+                    onClick={() => { setMainMessage(DEFAULT_MAIN_MESSAGE); localStorage.removeItem(MAIN_MSG_KEY); }}>
+                    איפוס
+                  </Button>
+                </div>
+                <Textarea className="rounded-xl min-h-[80px] text-sm" value={mainMessage}
+                  onChange={(e) => setMainMessage(e.target.value)} />
+                <p className="text-[11px] text-muted-foreground">
+                  ניתן להשתמש במשתנים: {"{{סוג_ביטול}} {{שם_ההורה}} {{סכום_הזיכוי}}"}
+                </p>
+              </div>
+
               <div className="rounded-xl border border-border p-3 space-y-3">
                 <p className="text-sm font-semibold">פרטי חשבון להעברה</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -276,13 +301,34 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                     <Label>ת״ז בעל החשבון</Label>
                     <Input className="h-11 rounded-xl" inputMode="numeric" value={ownerNationalId} onChange={(e) => setOwnerNationalId(e.target.value)} />
                   </div>
-                  <div className="space-y-1">
-                    <Label>שם הבנק</Label>
-                    <Input className="h-11 rounded-xl" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="בנק הבינלאומי" />
-                  </div>
-                  <div className="space-y-1">
-                    <Label>מספר בנק</Label>
-                    <Input className="h-11 rounded-xl" inputMode="numeric" value={bankNumber} onChange={(e) => setBankNumber(e.target.value)} placeholder="31" />
+                  <div className="space-y-1 col-span-2">
+                    <div className="flex items-center justify-between">
+                      <Label>בנק</Label>
+                      <Button type="button" variant="ghost" className="h-7 px-2 text-xs"
+                        onClick={() => setManualBank((m) => !m)}>
+                        {manualBank ? "בחירה מרשימה" : "הזנה ידנית"}
+                      </Button>
+                    </div>
+                    {manualBank ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <Input className="h-11 rounded-xl" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="שם הבנק" />
+                        <Input className="h-11 rounded-xl" inputMode="numeric" value={bankNumber} onChange={(e) => setBankNumber(e.target.value)} placeholder="מספר בנק" />
+                      </div>
+                    ) : (
+                      <Select
+                        value={bankNumber || undefined}
+                        onValueChange={(v) => { setBankNumber(v); setBankName(findBankByCode(v)?.name || ""); }}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl">
+                          <SelectValue placeholder="בחר בנק" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-72">
+                          {ISRAELI_BANKS.map((b) => (
+                            <SelectItem key={b.code} value={b.code}>{b.name} ({b.code})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                   <div className="space-y-1">
                     <Label>סניף</Label>
@@ -318,7 +364,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                   <>
                     <Textarea className="rounded-xl min-h-[220px] text-xs font-mono" value={template} onChange={(e) => setTemplate(e.target.value)} />
                     <p className="text-[11px] text-muted-foreground leading-5">
-                      משתנים זמינים: {"{{שם_ההורה}} {{סוג_ביטול}} {{סכום_ששולם}} {{סכום_הזיכוי}} {{הערות}} {{שם_בעל_החשבון}} {{תז_בעל_החשבון}} {{שם_הבנק}} {{מספר_בנק}} {{סניף}} {{מספר_חשבון}} {{שם_החותם}} {{שם_הארגון}} {{פרטי_קשר}}"}
+                      משתנים זמינים: {"{{הודעה_ראשית}} {{שם_ההורה}} {{סוג_ביטול}} {{סכום_ששולם}} {{סכום_הזיכוי}} {{הערות}} {{שם_בעל_החשבון}} {{תז_בעל_החשבון}} {{שם_הבנק}} {{מספר_בנק}} {{סניף}} {{מספר_חשבון}} {{שם_החותם}} {{שם_הארגון}} {{פרטי_קשר}}"}
                     </p>
                     <Button type="button" variant="outline" className="h-9 rounded-xl text-xs"
                       onClick={() => { setTemplate(DEFAULT_TEMPLATE); localStorage.removeItem(TEMPLATE_KEY); }}>
