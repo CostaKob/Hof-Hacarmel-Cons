@@ -32,7 +32,7 @@ import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
-import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride } from "@/components/admin/AddPaymentDialog";
+import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride, type RefundSource } from "@/components/admin/AddPaymentDialog";
 import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignmentMessage";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
@@ -393,6 +393,42 @@ const AdminFamilyCard = () => {
     },
     onError: (e: any) => toast.error(`שגיאה בזיכוי: ${e?.message ?? ""}`),
   });
+
+  // Delete a single row (e.g. cancel one cheque out of a spread).
+  const deleteRowMutation = useMutation({
+    mutationFn: async (paymentId: string) => {
+      const { error } = await supabase.from("student_payments").delete().eq("id", paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => { invalidateFamily(); toast.success("השורה בוטלה"); },
+    onError: (e: any) => toast.error(`שגיאה בביטול: ${e?.message ?? ""}`),
+  });
+
+  // Receipts that can still be credited — one entry per receipt (a cheque
+  // spread counts as a single receipt, never per cheque).
+  const refundSources: RefundSource[] = useMemo(() => {
+    const groups = new Map<string, any[]>();
+    for (const p of payments as any[]) {
+      if (p.transaction_type === "credit") continue;
+      const k = p.payment_group_id ? `g:${p.payment_group_id}` : `p:${p.id}`;
+      const arr = groups.get(k);
+      if (arr) arr.push(p); else groups.set(k, [p]);
+    }
+    const out: RefundSource[] = [];
+    for (const rows of groups.values()) {
+      const head = rows.find((r: any) => r.icount_doc_id) ?? rows[0];
+      if (!head?.icount_doc_id) continue;
+      const total = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+      const refunded = (payments as any[])
+        .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
+        .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+      const remaining = Math.max(0, total - refunded);
+      if (remaining <= 0.005) continue;
+      const label = `קבלה ${head.icount_doc_number ?? ""} · ${format(new Date(head.payment_date), "dd/MM/yyyy")} · ${fmt(total)}${rows.length > 1 ? ` · פריסה (${rows.length})` : ""}`;
+      out.push({ id: head.id, label, amount: total, remaining });
+    }
+    return out;
+  }, [payments]);
 
 
 
@@ -969,6 +1005,7 @@ const AdminFamilyCard = () => {
             enrollments={mergedEnrollments}
             editPayment={editingPayment}
             familyContext={editingPayment ? null : familyCtx}
+            refundSources={refundSources}
           />
 
           <SendFamilyAssignmentMessage
@@ -1010,27 +1047,6 @@ const AdminFamilyCard = () => {
                 </div>
                 <div className="flex flex-wrap gap-2 justify-end pt-2">
                   <Button variant="outline" onClick={() => setRefundTarget(null)}>ביטול</Button>
-                  <Button
-                    variant="secondary"
-                    disabled={refundMutation.isPending}
-                    onClick={() => {
-                      const amt = parseFloat(refundAmount);
-                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
-                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
-                      setBankRefund({
-                        studentId: refundTarget.student_id ?? undefined,
-                        parentName: family?.parent_name ?? "",
-                        paymentId: refundTarget.id,
-                        docNumber: refundTarget.icount_doc_number,
-                        paidAmount: Number(refundTarget.amount || 0),
-                        refundAmount: amt,
-                      });
-                      setRefundTarget(null);
-                      setRefundAmount("");
-                    }}
-                  >
-                    החזר בהעברה בנקאית
-                  </Button>
                   <Button
                     disabled={refundMutation.isPending}
                     onClick={() => {
