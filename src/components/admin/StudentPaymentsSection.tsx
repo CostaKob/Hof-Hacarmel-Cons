@@ -303,7 +303,7 @@ const StudentPaymentsSection = ({
                       </p>
                     );
                   })()}
-                  {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
+                  {!isGroup && p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   {isGroup && (
@@ -377,17 +377,22 @@ const StudentPaymentsSection = ({
                         .filter((x: any) => x.refund_of_payment_id === r.id)
                         .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                       const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
+                      const rIsCheck = r.payment_method === "check" || r.payment_method === "צ׳ק" || r.payment_method === "צ'ק";
+                      const rRefLabel = rIsCheck ? "צ׳ק מס׳" : "אסמכתא";
                       return (
                         <div
                           key={r.id}
                           onClick={readOnly ? undefined : () => { setEditingPayment(r); setPaymentDialogOpen(true); }}
                           className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
                         >
-                          <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
-                            <span className="text-muted-foreground">{idx + 1}.</span>
-                            <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
-                            {r.reference_number && <span className="text-muted-foreground">{refLabel} {r.reference_number}</span>}
-                            {rRefunded > 0 && <span className="text-amber-700">זוכה ₪{rRefunded.toLocaleString()}</span>}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-muted-foreground">{idx + 1}.</span>
+                              <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
+                              {r.reference_number && <span className="text-muted-foreground">{rRefLabel} {r.reference_number}</span>}
+                              {rRefunded > 0 && <span className="text-amber-700">זוכה ₪{rRefunded.toLocaleString()}</span>}
+                            </div>
+                            {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             {!readOnly && !isCredit && hasDoc && rRemaining > 0 && (
