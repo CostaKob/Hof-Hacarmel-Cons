@@ -126,8 +126,42 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
     setSubject((v) => v || `שיעורי מוסיקה — ${student.first_name} ${student.last_name}`);
   }, [open, student]);
 
+  const draftKey = defaults?.paymentId ? `bank-refund-draft-${defaults.paymentId}` : null;
+  const [hasDraft, setHasDraft] = useState(false);
+
   useEffect(() => {
     if (!open || !defaults) return;
+    // Restore a previously saved draft for this payment (e.g. the user closed the
+    // dialog while waiting for the bank transfer to be executed).
+    let draft: any = null;
+    try {
+      const raw = draftKey ? localStorage.getItem(draftKey) : null;
+      if (raw) draft = JSON.parse(raw);
+    } catch { /* ignore */ }
+
+    if (draft) {
+      setHasDraft(true);
+      setLetterDate(draft.letterDate ?? format(new Date(), "dd/MM/yyyy"));
+      setSubject(draft.subject ?? "");
+      setCancelKind(draft.cancelKind ?? "חלקית");
+      setParentName(draft.parentName ?? "");
+      setPaidAmount(draft.paidAmount ?? "");
+      setRefundAmount(draft.refundAmount ?? "");
+      setNotes(draft.notes ?? "");
+      setAccountOwner(draft.accountOwner ?? "");
+      setOwnerNationalId(draft.ownerNationalId ?? "");
+      setBankName(draft.bankName ?? "");
+      setBankNumber(draft.bankNumber ?? "");
+      setManualBank(!!draft.manualBank);
+      setBranch(draft.branch ?? "");
+      setManualBranch(!!draft.manualBranch);
+      setAccountNumber(draft.accountNumber ?? "");
+      setReference(draft.reference ?? "");
+      setTransferDate(draft.transferDate ?? format(new Date(), "yyyy-MM-dd"));
+      return;
+    }
+
+    setHasDraft(false);
     setLetterDate(format(new Date(), "dd/MM/yyyy"));
     setSubject(defaults.subject || (defaults.studentName ? `שיעורי מוסיקה — ${defaults.studentName}` : ""));
     setParentName(defaults.parentName || "");
@@ -135,9 +169,32 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
     setPaidAmount(defaults.paidAmount != null ? String(defaults.paidAmount) : "");
     setRefundAmount(defaults.refundAmount != null ? String(defaults.refundAmount) : "");
     setNotes("");
+    setBankName("");
+    setBankNumber("");
+    setBranch("");
+    setAccountNumber("");
     setReference("");
     setTransferDate(format(new Date(), "yyyy-MM-dd"));
-  }, [open, defaults]);
+  }, [open, defaults, draftKey]);
+
+  // Persist the draft continuously while the dialog is open.
+  useEffect(() => {
+    if (!open || !draftKey) return;
+    const payload = {
+      letterDate, subject, cancelKind, parentName, paidAmount, refundAmount, notes,
+      accountOwner, ownerNationalId, bankName, bankNumber, manualBank, branch, manualBranch,
+      accountNumber, reference, transferDate,
+    };
+    try { localStorage.setItem(draftKey, JSON.stringify(payload)); } catch { /* ignore */ }
+  }, [open, draftKey, letterDate, subject, cancelKind, parentName, paidAmount, refundAmount, notes,
+      accountOwner, ownerNationalId, bankName, bankNumber, manualBank, branch, manualBranch,
+      accountNumber, reference, transferDate]);
+
+  const clearDraft = () => {
+    if (draftKey) localStorage.removeItem(draftKey);
+    setHasDraft(false);
+  };
+
 
   const filled = useMemo(() => {
     const map: Record<string, string> = {
