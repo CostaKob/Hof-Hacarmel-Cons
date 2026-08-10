@@ -1186,7 +1186,7 @@ const AdminFamilyCard = () => {
                   {refundTarget._cc ? "החזר אשראי" : "זיכוי"} · קבלה {refundTarget.icount_doc_number ?? ""}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  סכום מקורי: {fmt(Number(refundTarget.amount || 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
+                  סכום מקורי: {fmt(Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
                 </p>
                 <div className="space-y-1">
                   <label className="text-xs text-muted-foreground">סכום לזיכוי</label>
