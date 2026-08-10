@@ -178,6 +178,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
       return;
     }
     localStorage.setItem(TEMPLATE_KEY, template);
+    localStorage.setItem(MAIN_MSG_KEY, mainMessage);
     localStorage.setItem("bank-refund-signer", signer);
     localStorage.setItem("bank-refund-org", orgName);
     localStorage.setItem("bank-refund-contact", contact);
@@ -363,7 +364,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                   <>
                     <Textarea className="rounded-xl min-h-[220px] text-xs font-mono" value={template} onChange={(e) => setTemplate(e.target.value)} />
                     <p className="text-[11px] text-muted-foreground leading-5">
-                      משתנים זמינים: {"{{שם_ההורה}} {{סוג_ביטול}} {{סכום_ששולם}} {{סכום_הזיכוי}} {{הערות}} {{שם_בעל_החשבון}} {{תז_בעל_החשבון}} {{שם_הבנק}} {{מספר_בנק}} {{סניף}} {{מספר_חשבון}} {{שם_החותם}} {{שם_הארגון}} {{פרטי_קשר}}"}
+                      משתנים זמינים: {"{{הודעה_ראשית}} {{שם_ההורה}} {{סוג_ביטול}} {{סכום_ששולם}} {{סכום_הזיכוי}} {{הערות}} {{שם_בעל_החשבון}} {{תז_בעל_החשבון}} {{שם_הבנק}} {{מספר_בנק}} {{סניף}} {{מספר_חשבון}} {{שם_החותם}} {{שם_הארגון}} {{פרטי_קשר}}"}
                     </p>
                     <Button type="button" variant="outline" className="h-9 rounded-xl text-xs"
                       onClick={() => { setTemplate(DEFAULT_TEMPLATE); localStorage.removeItem(TEMPLATE_KEY); }}>
