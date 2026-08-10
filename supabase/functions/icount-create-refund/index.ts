@@ -67,13 +67,34 @@ Deno.serve(async (req: Request) => {
     const auth = getAuth();
     const student: any = payment.students || {};
     const studentFullName = `${student.first_name} ${student.last_name}`.trim();
-    const originalAmount = Number(payment.amount ?? 0);
+
+    // The "original amount" must reflect the WHOLE transaction (all cheques of a spread),
+    // not just the single row the refund was triggered from.
+    let groupRows: any[] = [payment];
+    if (payment.payment_group_id) {
+      const { data: g } = await supabase
+        .from("student_payments")
+        .select("id, amount, payment_date, reference_number, payment_method, cheque_status")
+        .eq("payment_group_id", payment.payment_group_id)
+        .eq("transaction_type", "payment")
+        .order("payment_date", { ascending: true });
+      if (g?.length) groupRows = g;
+    }
+    const fmtD = (d?: string | null) => (d ? String(d).split("T")[0].split("-").reverse().join("/") : "");
+    const originalAmount = groupRows.reduce((s, r) => s + Math.abs(Number(r.amount || 0)), 0);
     const refundAmount = Number(amountOverride ?? originalAmount);
     const isPartial = Math.abs(refundAmount) < Math.abs(originalAmount);
     const bankSuffix = refundMethod === "bank_transfer"
       ? ` — בוצע בהעברה בנקאית${bankReference ? ` (אסמכתא ${bankReference})` : ""}`
       : "";
-    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})${bankSuffix}`;
+    const STATUS_HE: Record<string, string> = { cleared: "נפרע", cancelled: "בוטל", pending: "טרם נפרע" };
+    const chequeDetail = groupRows.length > 1 || groupRows[0]?.payment_method === "check"
+      ? ` — פירוט צ׳קים: ${groupRows
+          .map((r) => `צ׳ק ${r.reference_number ?? ""} · ${fmtD(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()} · ${STATUS_HE[r.cheque_status ?? "pending"] ?? "טרם נפרע"}`)
+          .join(" | ")}`
+      : "";
+    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})${bankSuffix}${chequeDetail}`;
+
     const phone = student.parent_phone || student.parent_phone_2 || undefined;
     const email = student.parent_email || student.parent_email_2 || undefined;
     const negSum = -Math.abs(refundAmount);
