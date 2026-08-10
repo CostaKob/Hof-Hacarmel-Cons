@@ -1046,7 +1046,7 @@ const AdminFamilyCard = () => {
                                         {isCancelled ? "בוטל" : isCleared ? "נפרע" : isDue ? "אמור להיפרע" : "עתידי"}
                                       </span>
                                     )}
-                                    {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                                    {!isGroup && rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
                                   </div>
                                   {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                                 </div>
