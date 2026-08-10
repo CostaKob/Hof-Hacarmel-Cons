@@ -27,7 +27,15 @@ Deno.serve(async (req: Request) => {
 
 
   try {
-    const { paymentId, amount: amountOverride, reason } = await req.json();
+    const {
+      paymentId,
+      amount: amountOverride,
+      reason,
+      refundMethod,
+      bankReference,
+      bankTransferDate,
+      bankDetails,
+    } = await req.json();
     if (!paymentId) {
       return new Response(JSON.stringify({ error: "paymentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
