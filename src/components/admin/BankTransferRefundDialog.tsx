@@ -18,11 +18,14 @@ import { format } from "date-fns";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import type { RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
-const TEMPLATE_KEY = "bank-refund-letter-template-v1";
+const TEMPLATE_KEY = "bank-refund-letter-template-v2";
+const MAIN_MSG_KEY = "bank-refund-main-message-v1";
+
+export const DEFAULT_MAIN_MESSAGE = `אבקש לבטל {{סוג_ביטול}} עסקת אשראי ע"י העברה בנקאית עבור {{שם_ההורה}}.`;
 
 const DEFAULT_TEMPLATE = `שלום רב,
 
-אבקש לבטל {{סוג_ביטול}} עסקת אשראי ע"י העברה בנקאית עבור {{שם_ההורה}}.
+{{הודעה_ראשית}}
 
 {{שם_ההורה}} שילם/ה: {{סכום_ששולם}} ₪
 יש לזכות את הנ"ל בסך של: {{סכום_הזיכוי}} ₪
