@@ -363,8 +363,26 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
             <DialogTitle>החזר בהעברה בנקאית{defaults?.docNumber ? ` — קבלה ${defaults.docNumber}` : ""}</DialogTitle>
             <DialogDescription>
               שלב א׳: מילוי פרטי ההעברה והפקת מסמך להנהלת החשבונות. שלב ב׳: לאחר ביצוע ההעברה — הזנת אסמכתא והפקת קבלת זיכוי להורה.
+              הפרטים נשמרים אוטומטית — ניתן לסגור את החלון ולחזור להשלים את האסמכתא בהמשך.
             </DialogDescription>
           </DialogHeader>
+
+          {hasDraft && (
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm">
+              <span>שוחזרו הפרטים שמילאת קודם (בנק, סניף, חשבון וסכומים).</span>
+              <Button type="button" variant="ghost" className="h-8 px-2 text-xs"
+                onClick={() => {
+                  clearDraft();
+                  setBankName(""); setBankNumber(""); setBranch(""); setAccountNumber("");
+                  setReference(""); setNotes("");
+                  setPaidAmount(defaults?.paidAmount != null ? String(defaults.paidAmount) : "");
+                  setRefundAmount(defaults?.refundAmount != null ? String(defaults.refundAmount) : "");
+                }}>
+                התחל מחדש
+              </Button>
+            </div>
+          )}
+
 
           <div className="grid gap-4 md:grid-cols-2">
             {/* Form */}
