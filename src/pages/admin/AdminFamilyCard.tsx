@@ -25,6 +25,8 @@ import {
   Plus,
   Copy,
   Send,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -81,6 +83,7 @@ const AdminFamilyCard = () => {
   const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
 
   const { data: families = [] } = useFamiliesList(yearId);
@@ -694,18 +697,37 @@ const AdminFamilyCard = () => {
               <p className="text-sm text-muted-foreground">אין תשלומים בשנה זו.</p>
             ) : (
               <div className="space-y-2">
-                {[...payments].sort((a: any, b: any) =>
-                  new Date(b.created_at || b.payment_date).getTime() - new Date(a.created_at || a.payment_date).getTime()
-                ).map((p) => {
+                {(() => {
+                  // Group split payments (cheque splits / installments) sharing a payment_group_id
+                  const groups = new Map<string, any[]>();
+                  for (const p of payments as any[]) {
+                    const k = p.payment_group_id ? `g:${p.payment_group_id}` : `p:${p.id}`;
+                    const arr = groups.get(k);
+                    if (arr) arr.push(p); else groups.set(k, [p]);
+                  }
+                  const entries = [...groups.entries()].map(([key, rows]) => {
+                    const sorted = [...rows].sort((a: any, b: any) =>
+                      new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime());
+                    return { key, head: sorted[0], rows: sorted };
+                  });
+                  entries.sort((a, b) =>
+                    new Date(b.head.created_at || b.head.payment_date).getTime() -
+                    new Date(a.head.created_at || a.head.payment_date).getTime());
+                  return entries;
+                })().map(({ key: groupKey, head: p, rows }) => {
+                  const isGroup = rows.length > 1;
+                  const groupTotal = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+                  const isExpanded = !!expandedGroups[groupKey];
+                  const lastRow = rows[rows.length - 1];
                   const isCredit = p.transaction_type === "credit";
                   const isPending = p.payment_status === "pending";
                   const hasInvoice = !!p.invoice_url;
                   const hasDoc = !!p.icount_doc_id;
                   const refundedSoFar = payments
-                    .filter((x: any) => x.refund_of_payment_id === p.id)
+                    .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
                     .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-                  const remaining = Math.max(0, Number(p.amount || 0) - refundedSoFar);
-                  const canRefund = !isCredit && hasDoc && remaining > 0;
+                  const remaining = Math.max(0, groupTotal - refundedSoFar);
+                  const canRefund = !isCredit && hasDoc && remaining > 0 && !isGroup;
                   const isCombined =
                     Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
 
@@ -720,7 +742,7 @@ const AdminFamilyCard = () => {
                   } else if (p.payment_status === "pending") {
                     statusLabel = "ממתין לתשלום";
                     statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
-                  } else if (refundedSoFar >= Number(p.amount || 0) - 0.005 && refundedSoFar > 0) {
+                  } else if (refundedSoFar >= groupTotal - 0.005 && refundedSoFar > 0) {
                     statusLabel = "זוכה במלואו";
                     statusClass = "bg-muted text-muted-foreground border-border";
                   } else if (refundedSoFar > 0) {
@@ -732,19 +754,25 @@ const AdminFamilyCard = () => {
                   }
 
                   return (
+                    <div key={groupKey} className="rounded-xl border border-border">
                     <div
-                      key={p.id}
                       onClick={() => {
+                        if (isGroup) {
+                          setExpandedGroups((s) => ({ ...s, [groupKey]: !s[groupKey] }));
+                          return;
+                        }
                         setEditingPayment(p);
                         setFamilyCtx(null);
                         setPaymentDialogOpen(true);
                       }}
-                      className="flex items-start justify-between rounded-xl border border-border p-3 gap-2 cursor-pointer hover:bg-muted/50"
+                      className="flex items-start justify-between rounded-xl p-3 gap-2 cursor-pointer hover:bg-muted/50"
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <p className="font-medium text-foreground text-sm">
-                            {format(new Date(p.payment_date), "dd/MM/yyyy")}
+                            {isGroup
+                              ? `${format(new Date(p.payment_date), "dd/MM/yyyy")} – ${format(new Date(lastRow.payment_date), "dd/MM/yyyy")}`
+                              : format(new Date(p.payment_date), "dd/MM/yyyy")}
                             {p.academic_years?.name && (
                               <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
                             )}
@@ -752,12 +780,17 @@ const AdminFamilyCard = () => {
                           <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${statusClass}`}>
                             {statusLabel}
                           </span>
+                          {isGroup && (
+                            <span className="text-[11px] px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground font-medium">
+                              פריסה · {rows.length} תשלומים
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {isCredit ? "זיכוי" : "תשלום"}
                           {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] || p.payment_method}`}
-                          {p.installments > 1 && ` · ${p.installments} תשלומים`}
-                          {p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                          {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
+                          {!isGroup && p.reference_number && ` · אסמכתא ${p.reference_number}`}
                           {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                           {p.month_reference && ` · ${p.month_reference}`}
                           {p.family_payment_group_id
@@ -790,6 +823,13 @@ const AdminFamilyCard = () => {
                         {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
+                        {isGroup && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg"
+                            title={isExpanded ? "הסתר פירוט" : "הצג פירוט"}
+                            onClick={() => setExpandedGroups((s) => ({ ...s, [groupKey]: !s[groupKey] }))}>
+                            {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        )}
                         {!isCredit && hasInvoice && (
                           <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
                             onClick={() => window.open(p.invoice_url, "_blank")}>
@@ -862,9 +902,50 @@ const AdminFamilyCard = () => {
                           </Button>
                         )}
                         <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
-                          {isCredit ? `−${fmt(Math.abs(Number(p.amount)))}` : fmt(Math.abs(Number(p.amount)))}
+                          {isCredit ? `−${fmt(Math.abs(groupTotal))}` : fmt(Math.abs(groupTotal))}
                         </span>
                       </div>
+                    </div>
+
+                    {isGroup && isExpanded && (
+                      <div className="border-t border-border px-3 py-2 space-y-1">
+                        {rows.map((r: any, idx: number) => {
+                          const rRefunded = payments
+                            .filter((x: any) => x.refund_of_payment_id === r.id)
+                            .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
+                          const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
+                          return (
+                            <div
+                              key={r.id}
+                              onClick={() => { setEditingPayment(r); setFamilyCtx(null); setPaymentDialogOpen(true); }}
+                              className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-muted/50"
+                            >
+                              <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
+                                <span className="text-muted-foreground">{idx + 1}.</span>
+                                <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
+                                {r.reference_number && <span className="text-muted-foreground">אסמכתא {r.reference_number}</span>}
+                                {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                {!isCredit && hasDoc && rRemaining > 0 && (
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
+                                    title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
+                                    onClick={() => {
+                                      setRefundTarget({ ...r, _remaining: rRemaining, _cc: r.payment_method === "credit_card" });
+                                      setRefundAmount(String(rRemaining));
+                                    }}>
+                                    <Undo2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                )}
+                                <span className="font-semibold text-foreground whitespace-nowrap" dir="ltr">
+                                  {fmt(Math.abs(Number(r.amount || 0)))}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     </div>
                   );
                 })}
