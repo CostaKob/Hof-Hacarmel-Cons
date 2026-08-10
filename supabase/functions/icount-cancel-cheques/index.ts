@@ -122,7 +122,16 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_free: 1,
-      based_on: [head.icount_doc_id],
+      // Link the credit document to the ORIGINAL charge document in iCount.
+      based_on: [{
+        doctype: head.icount_doc_type || "receipt",
+        ...(head.icount_doc_number ? { docnum: Number(head.icount_doc_number) || head.icount_doc_number } : {}),
+        ...(head.icount_doc_id ? { doc_id: head.icount_doc_id } : {}),
+      }],
+      based_on_docs: [{
+        doctype: head.icount_doc_type || "receipt",
+        docnum: Number(head.icount_doc_number) || head.icount_doc_number || head.icount_doc_id,
+      }],
       origin_doc_id: head.icount_doc_id,
       items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
       cheques: rows.map((r: any) => {
