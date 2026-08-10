@@ -116,6 +116,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   ]);
   const [splitResults, setSplitResults] = useState<Array<{ label: string; url: string; amount: number; firstName: string; lastName: string; email: string; phone: string }>>([]);
 
+  // ---- Bank-transfer credit (refund) state ----
+  const [refundSourceId, setRefundSourceId] = useState("");
+  const [bankRefundAmount, setBankRefundAmount] = useState("");
+  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
+
   // ---- Check spread state ----
   const [checksOpen, setChecksOpen] = useState(false);
   const [numChecks, setNumChecks] = useState("1");
