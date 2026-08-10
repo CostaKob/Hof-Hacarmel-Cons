@@ -97,23 +97,38 @@ Deno.serve(async (req: Request) => {
       items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
 
-    // Mirror the original payment method on the refund side with a negative sum
-    // so the negative invoice is balanced by a negative receipt line.
-    switch (payment.payment_method) {
-      case "cash":
-        payload.cash = { sum: negSum };
-        break;
-      case "cheque":
-        payload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
-        break;
-      case "bank_transfer":
-        payload.banktransfer = { sum: negSum, account: payment.reference_number || "" };
-        break;
-      case "credit_card":
-        payload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 };
-        break;
-      default:
-        payload.other = { sum: negSum, info: "החזר" };
+    const isBankRefund = refundMethod === "bank_transfer";
+
+    if (isBankRefund) {
+      // Refund executed by bank transfer (regardless of the original payment method).
+      payload.banktransfer = {
+        sum: negSum,
+        account: bankDetails?.accountNumber || bankReference || "",
+        bank: bankDetails?.bankNumber || bankDetails?.bankName || "",
+        branch: bankDetails?.branch || "",
+        ref: bankReference || "",
+        num: bankReference || "",
+        date: bankTransferDate || undefined,
+      };
+    } else {
+      // Mirror the original payment method on the refund side with a negative sum
+      // so the negative invoice is balanced by a negative receipt line.
+      switch (payment.payment_method) {
+        case "cash":
+          payload.cash = { sum: negSum };
+          break;
+        case "cheque":
+          payload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
+          break;
+        case "bank_transfer":
+          payload.banktransfer = { sum: negSum, account: payment.reference_number || "" };
+          break;
+        case "credit_card":
+          payload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 };
+          break;
+        default:
+          payload.other = { sum: negSum, info: "החזר" };
+      }
     }
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
