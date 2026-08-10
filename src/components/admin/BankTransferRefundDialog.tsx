@@ -388,9 +388,57 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                     )}
                   </div>
                   <div className="space-y-1">
-                    <Label>סניף</Label>
-                    <Input className="h-11 rounded-xl" inputMode="numeric" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="7" />
+                    <div className="flex items-center justify-between">
+                      <Label>סניף</Label>
+                      {branchOptions.length > 0 && (
+                        <Button type="button" variant="ghost" className="h-7 px-2 text-xs"
+                          onClick={() => setManualBranch((m) => !m)}>
+                          {manualBranch ? "בחירה מרשימה" : "הזנה ידנית"}
+                        </Button>
+                      )}
+                    </div>
+                    {manualBranch || branchOptions.length === 0 ? (
+                      <Input className="h-11 rounded-xl" inputMode="numeric" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="7" />
+                    ) : (
+                      <Popover open={branchOpen} onOpenChange={setBranchOpen}>
+                        <PopoverTrigger asChild>
+                          <Button type="button" variant="outline" className="h-11 w-full rounded-xl justify-between font-normal">
+                            <span className="truncate">
+                              {branch
+                                ? `${branch}${selectedBranch ? ` - ${selectedBranch.name}` : ""}`
+                                : "בחר סניף"}
+                            </span>
+                            <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[260px]" align="start">
+                          <Command
+                            filter={(value, search) => (value.includes(search) ? 1 : 0)}
+                          >
+                            <CommandInput placeholder="חיפוש סניף / עיר / מספר" />
+                            <CommandList className="max-h-64">
+                              <CommandEmpty>לא נמצא סניף</CommandEmpty>
+                              <CommandGroup>
+                                {branchOptions.map((b) => (
+                                  <CommandItem
+                                    key={b.code}
+                                    value={`${b.code} ${b.name} ${b.city}`}
+                                    onSelect={() => { setBranch(b.code); setBranchOpen(false); }}
+                                  >
+                                    <span className="font-medium">{b.code}</span>
+                                    <span className="mx-1">-</span>
+                                    <span className="truncate">{b.name}</span>
+                                    {b.city && <span className="text-muted-foreground text-xs mr-auto">{b.city}</span>}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                    )}
                   </div>
+
                   <div className="space-y-1">
                     <Label>מס׳ חשבון</Label>
                     <Input className="h-11 rounded-xl" inputMode="numeric" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="910767" />
