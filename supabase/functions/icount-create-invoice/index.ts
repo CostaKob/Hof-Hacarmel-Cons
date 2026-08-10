@@ -198,11 +198,18 @@ Deno.serve(async (req: Request) => {
       return `${headerLine}\n• ${parts.join(" | ")}`;
     };
 
-    const items = lineRefs.map((ref) => ({
-      description: buildItemDescription(ref),
-      unitprice_incvat: sign * Math.abs(ref.amount),
+    // Merge identical descriptions (e.g. a cheque split repeats the same tuition line per cheque)
+    const mergedItems = new Map<string, number>();
+    for (const ref of lineRefs) {
+      const desc = buildItemDescription(ref);
+      mergedItems.set(desc, (mergedItems.get(desc) ?? 0) + Math.abs(Number(ref.amount || 0)));
+    }
+    const items = [...mergedItems.entries()].map(([description, amount]) => ({
+      description,
+      unitprice_incvat: sign * amount,
       quantity: 1,
     }));
+
 
     // iCount doc/create payload — RECEIPT (קבלה) only. For credits — קבלה במינוס.
     // Malkar (Non-Profit) cannot issue Tax Invoices. No VAT calculation.
