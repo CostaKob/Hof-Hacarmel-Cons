@@ -997,6 +997,79 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_documents: {
+        Row: {
+          academic_year_id: string | null
+          bank_reference: string | null
+          content_html: string | null
+          content_text: string | null
+          created_at: string
+          created_by: string | null
+          doc_type: string
+          file_path: string | null
+          id: string
+          parent_name: string | null
+          payment_id: string | null
+          refund_amount: number | null
+          student_id: string | null
+          title: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          bank_reference?: string | null
+          content_html?: string | null
+          content_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string
+          file_path?: string | null
+          id?: string
+          parent_name?: string | null
+          payment_id?: string | null
+          refund_amount?: number | null
+          student_id?: string | null
+          title: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          bank_reference?: string | null
+          content_html?: string | null
+          content_text?: string | null
+          created_at?: string
+          created_by?: string | null
+          doc_type?: string
+          file_path?: string | null
+          id?: string
+          parent_name?: string | null
+          payment_id?: string | null
+          refund_amount?: number | null
+          student_id?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_documents_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_documents_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "student_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registration_form_settings: {
         Row: {
           academic_year_id: string | null
