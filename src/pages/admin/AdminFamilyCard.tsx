@@ -1064,7 +1064,7 @@ const AdminFamilyCard = () => {
                                     <CheckCircle2 className="h-3.5 w-3.5" />
                                   </Button>
                                 )}
-                                {!isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
+                                {!isGroup && !isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
