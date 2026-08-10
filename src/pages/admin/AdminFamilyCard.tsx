@@ -1107,6 +1107,9 @@ const AdminFamilyCard = () => {
                               {cancelled.length > 0 && (
                                 <span>בוטל <b className="text-destructive">{fmt(sum(cancelled))}</b> ({cancelled.length})</span>
                               )}
+                              {refundedSoFar > 0 && (
+                                <span>זוכה בעסקה <b className="text-amber-700">{fmt(refundedSoFar)}</b> · נותר לזיכוי <b className="text-foreground">{fmt(remaining)}</b></span>
+                              )}
                             </div>
                           );
                         })()}
