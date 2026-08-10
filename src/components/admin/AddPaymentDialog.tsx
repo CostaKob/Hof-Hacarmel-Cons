@@ -21,6 +21,13 @@ const PAYMENT_METHODS = [
   { value: "check", label: "צ׳ק" },
 ];
 
+// Credit (זיכוי) can also be executed as an outgoing bank transfer.
+const CREDIT_PAYMENT_METHODS = [
+  ...PAYMENT_METHODS,
+  { value: "transfer", label: "העברה בנקאית" },
+];
+
+
 const HEBREW_YEAR_MAP: Record<string, string> = {
   "2024-2025": "תשפ״ה",
   "2025-2026": "תשפ״ו",
