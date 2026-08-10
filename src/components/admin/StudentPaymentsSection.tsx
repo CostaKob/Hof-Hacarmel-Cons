@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
+import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
 interface StudentPaymentsSectionProps {
   studentId: string;
@@ -52,6 +53,7 @@ const StudentPaymentsSection = ({
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
@@ -492,6 +494,28 @@ const StudentPaymentsSection = ({
               ביטול
             </Button>
             <Button
+              variant="secondary"
+              className="h-11 rounded-xl"
+              disabled={refundMutation.isPending || ccRefundMutation.isPending}
+              onClick={() => {
+                const amt = Number(refundAmount);
+                const max = Number(refundTarget?._remaining || 0);
+                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
+                if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר לזיכוי (₪${max.toLocaleString()})`); return; }
+                setBankRefund({
+                  studentId,
+                  paymentId: refundTarget.id,
+                  docNumber: refundTarget.icount_doc_number,
+                  paidAmount: Number(refundTarget.amount || 0),
+                  refundAmount: amt,
+                });
+                setRefundTarget(null);
+                setRefundAmount("");
+              }}
+            >
+              החזר בהעברה בנקאית
+            </Button>
+            <Button
               className="h-11 rounded-xl"
               disabled={refundMutation.isPending || ccRefundMutation.isPending}
               onClick={() => {
@@ -563,6 +587,14 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <BankTransferRefundDialog
+        open={!!bankRefund}
+        onOpenChange={(o) => { if (!o) setBankRefund(null); }}
+        defaults={bankRefund}
+        invalidate={invalidateAll}
+        onDone={(info) => { setBankRefund(null); setRefundSuccess(info); }}
+      />
+
       <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
 
     </div>

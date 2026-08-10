@@ -27,7 +27,15 @@ Deno.serve(async (req: Request) => {
 
 
   try {
-    const { paymentId, amount: amountOverride, reason } = await req.json();
+    const {
+      paymentId,
+      amount: amountOverride,
+      reason,
+      refundMethod,
+      bankReference,
+      bankTransferDate,
+      bankDetails,
+    } = await req.json();
     if (!paymentId) {
       return new Response(JSON.stringify({ error: "paymentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -62,7 +70,10 @@ Deno.serve(async (req: Request) => {
     const originalAmount = Number(payment.amount ?? 0);
     const refundAmount = Number(amountOverride ?? originalAmount);
     const isPartial = Math.abs(refundAmount) < Math.abs(originalAmount);
-    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})`;
+    const bankSuffix = refundMethod === "bank_transfer"
+      ? ` — בוצע בהעברה בנקאית${bankReference ? ` (אסמכתא ${bankReference})` : ""}`
+      : "";
+    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})${bankSuffix}`;
     const phone = student.parent_phone || student.parent_phone_2 || undefined;
     const email = student.parent_email || student.parent_email_2 || undefined;
     const negSum = -Math.abs(refundAmount);
@@ -89,23 +100,38 @@ Deno.serve(async (req: Request) => {
       items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
 
-    // Mirror the original payment method on the refund side with a negative sum
-    // so the negative invoice is balanced by a negative receipt line.
-    switch (payment.payment_method) {
-      case "cash":
-        payload.cash = { sum: negSum };
-        break;
-      case "cheque":
-        payload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
-        break;
-      case "bank_transfer":
-        payload.banktransfer = { sum: negSum, account: payment.reference_number || "" };
-        break;
-      case "credit_card":
-        payload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 };
-        break;
-      default:
-        payload.other = { sum: negSum, info: "החזר" };
+    const isBankRefund = refundMethod === "bank_transfer";
+
+    if (isBankRefund) {
+      // Refund executed by bank transfer (regardless of the original payment method).
+      payload.banktransfer = {
+        sum: negSum,
+        account: bankDetails?.accountNumber || bankReference || "",
+        bank: bankDetails?.bankNumber || bankDetails?.bankName || "",
+        branch: bankDetails?.branch || "",
+        ref: bankReference || "",
+        num: bankReference || "",
+        date: bankTransferDate || undefined,
+      };
+    } else {
+      // Mirror the original payment method on the refund side with a negative sum
+      // so the negative invoice is balanced by a negative receipt line.
+      switch (payment.payment_method) {
+        case "cash":
+          payload.cash = { sum: negSum };
+          break;
+        case "cheque":
+          payload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
+          break;
+        case "bank_transfer":
+          payload.banktransfer = { sum: negSum, account: payment.reference_number || "" };
+          break;
+        case "credit_card":
+          payload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 };
+          break;
+        default:
+          payload.other = { sum: negSum, info: "החזר" };
+      }
     }
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
@@ -151,9 +177,19 @@ Deno.serve(async (req: Request) => {
         academic_year_id: payment.academic_year_id,
         amount: negSum,
         transaction_type: "credit",
-        payment_method: payment.payment_method,
-        payment_date: new Date().toISOString().slice(0, 10),
-        notes: reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim(),
+        payment_method: isBankRefund ? "transfer" : payment.payment_method,
+        reference_number: isBankRefund ? (bankReference || null) : null,
+        payment_date: (isBankRefund && bankTransferDate) ? bankTransferDate : new Date().toISOString().slice(0, 10),
+        notes: isBankRefund
+          ? [
+              reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim(),
+              "העברה בנקאית",
+              bankReference ? `אסמכתא: ${bankReference}` : "",
+              bankDetails?.bankName ? `בנק: ${bankDetails.bankName}${bankDetails?.bankNumber ? ` ${bankDetails.bankNumber}` : ""}` : "",
+              bankDetails?.branch ? `סניף: ${bankDetails.branch}` : "",
+              bankDetails?.accountNumber ? `ח-ן: ${bankDetails.accountNumber}` : "",
+            ].filter(Boolean).join(" · ")
+          : (reason || `החזר לקבלה ${payment.icount_doc_number ?? ""}`.trim()),
         refund_of_payment_id: payment.id,
         icount_doc_id: docId,
         icount_doc_number: docNumber,
