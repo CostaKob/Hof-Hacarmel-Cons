@@ -2215,6 +2215,10 @@ export type Database = {
         Row: {
           academic_year_id: string | null
           amount: number
+          cheque_cancel_credit_id: string | null
+          cheque_cancelled_at: string | null
+          cheque_cleared_at: string | null
+          cheque_status: string
           created_at: string
           created_by_user_id: string | null
           enrollment_breakdown: Json | null
@@ -2245,6 +2249,10 @@ export type Database = {
         Insert: {
           academic_year_id?: string | null
           amount: number
+          cheque_cancel_credit_id?: string | null
+          cheque_cancelled_at?: string | null
+          cheque_cleared_at?: string | null
+          cheque_status?: string
           created_at?: string
           created_by_user_id?: string | null
           enrollment_breakdown?: Json | null
@@ -2275,6 +2283,10 @@ export type Database = {
         Update: {
           academic_year_id?: string | null
           amount?: number
+          cheque_cancel_credit_id?: string | null
+          cheque_cancelled_at?: string | null
+          cheque_cleared_at?: string | null
+          cheque_status?: string
           created_at?: string
           created_by_user_id?: string | null
           enrollment_breakdown?: Json | null
@@ -2308,6 +2320,13 @@ export type Database = {
             columns: ["academic_year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payments_cheque_cancel_credit_id_fkey"
+            columns: ["cheque_cancel_credit_id"]
+            isOneToOne: false
+            referencedRelation: "student_payments"
             referencedColumns: ["id"]
           },
           {
