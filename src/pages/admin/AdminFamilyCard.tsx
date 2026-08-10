@@ -34,6 +34,7 @@ import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
 import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride } from "@/components/admin/AddPaymentDialog";
 import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignmentMessage";
+import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
 
 
@@ -84,6 +85,7 @@ const AdminFamilyCard = () => {
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
 
 
   const { data: families = [] } = useFamiliesList(yearId);
@@ -1006,8 +1008,29 @@ const AdminFamilyCard = () => {
                     className="w-full h-11 rounded-xl border border-border bg-background px-3"
                   />
                 </div>
-                <div className="flex gap-2 justify-end pt-2">
+                <div className="flex flex-wrap gap-2 justify-end pt-2">
                   <Button variant="outline" onClick={() => setRefundTarget(null)}>ביטול</Button>
+                  <Button
+                    variant="secondary"
+                    disabled={refundMutation.isPending}
+                    onClick={() => {
+                      const amt = parseFloat(refundAmount);
+                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
+                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
+                      setBankRefund({
+                        studentId: refundTarget.student_id ?? undefined,
+                        parentName: family?.parent_name ?? "",
+                        paymentId: refundTarget.id,
+                        docNumber: refundTarget.icount_doc_number,
+                        paidAmount: Number(refundTarget.amount || 0),
+                        refundAmount: amt,
+                      });
+                      setRefundTarget(null);
+                      setRefundAmount("");
+                    }}
+                  >
+                    החזר בהעברה בנקאית
+                  </Button>
                   <Button
                     disabled={refundMutation.isPending}
                     onClick={() => {
@@ -1023,6 +1046,21 @@ const AdminFamilyCard = () => {
               </div>
             </div>
           )}
+
+          <BankTransferRefundDialog
+            open={!!bankRefund}
+            onOpenChange={(o) => { if (!o) setBankRefund(null); }}
+            defaults={bankRefund}
+            invalidate={invalidateFamily}
+            onDone={(info) => {
+              setBankRefund(null);
+              invalidateFamily();
+              toast.success(`קבלת זיכוי בסך ₪${Number(info.amount || 0).toLocaleString()} הופקה`);
+              if (info.url) window.open(info.url, "_blank");
+            }}
+          />
+
+
 
         </div>
       )}
