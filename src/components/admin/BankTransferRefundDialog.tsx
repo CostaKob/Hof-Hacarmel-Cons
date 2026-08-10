@@ -340,6 +340,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
       return data;
     },
     onSuccess: (data: any) => {
+      clearDraft();
       invalidate();
       queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
       onOpenChange(false);
