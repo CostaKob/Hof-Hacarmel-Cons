@@ -244,6 +244,8 @@ const StudentPaymentsSection = ({
             }
 
             const lastRow = rows[rows.length - 1];
+            const isCheck = p.payment_method === "check" || p.payment_method === "צ׳ק" || p.payment_method === "צ'ק";
+            const refLabel = isCheck ? "צ׳ק מס׳" : "אסמכתא";
 
             return (
               <div key={key} className="rounded-xl border border-border transition-colors">
@@ -280,7 +282,7 @@ const StudentPaymentsSection = ({
                     {isCredit ? "זיכוי" : "תשלום"}
                     {p.payment_method && ` · ${p.payment_method}`}
                     {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
-                    {!isGroup && p.reference_number && ` · אסמכתא ${p.reference_number}`}
+                    {!isGroup && p.reference_number && ` · ${refLabel} ${p.reference_number}`}
                     {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
                   </p>
@@ -384,7 +386,7 @@ const StudentPaymentsSection = ({
                           <div className="min-w-0 flex-1 flex items-center gap-2 flex-wrap">
                             <span className="text-muted-foreground">{idx + 1}.</span>
                             <span className="font-medium text-foreground">{format(new Date(r.payment_date), "dd/MM/yyyy")}</span>
-                            {r.reference_number && <span className="text-muted-foreground">אסמכתא {r.reference_number}</span>}
+                            {r.reference_number && <span className="text-muted-foreground">{refLabel} {r.reference_number}</span>}
                             {rRefunded > 0 && <span className="text-amber-700">זוכה ₪{rRefunded.toLocaleString()}</span>}
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
