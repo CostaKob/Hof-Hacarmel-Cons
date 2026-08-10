@@ -17,7 +17,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileDown, Loader2, ChevronsUpDown } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAppLogo } from "@/hooks/useAppLogo";
