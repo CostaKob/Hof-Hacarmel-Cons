@@ -129,6 +129,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [numChecks, setNumChecks] = useState("1");
   const [firstCheckDate, setFirstCheckDate] = useState(today);
   const [firstCheckNumber, setFirstCheckNumber] = useState("");
+  const [firstCheckAmount, setFirstCheckAmount] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankCode, setBankCode] = useState("");
   const [bankBranch, setBankBranch] = useState("");
