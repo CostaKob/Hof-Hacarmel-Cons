@@ -3,6 +3,7 @@
 //   https://<project-ref>.functions.supabase.co/icount-sm-payment-webhook
 //
 // Marks the matching school_music_payments row as paid and stores the iCount doc info.
+import { notifyAdminPayment } from "../_shared/notifyAdminPayment.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -154,6 +155,36 @@ Deno.serve(async (req: Request) => {
       return new Response(JSON.stringify({ ok: false, error: updErr.message }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Notify the studio admin inbox that a payment came in.
+    try {
+      const { data: smStudent } = await supabase
+        .from("school_music_students")
+        .select("student_first_name, student_last_name, student_national_id, parent_name, parent_phone, parent_email, class_name, school_music_schools(school_name), academic_years(name)")
+        .eq("id", payment.school_music_student_id)
+        .maybeSingle();
+      const s: any = smStudent ?? {};
+      await notifyAdminPayment(
+        {
+          moduleLabel: "מוסיקה בבתי הספר",
+          studentName: `${s.student_first_name ?? ""} ${s.student_last_name ?? ""}`.trim(),
+          studentNationalId: s.student_national_id ?? "",
+          parentName: s.parent_name ?? "",
+          parentPhone: s.parent_phone ?? "",
+          parentEmail: s.parent_email ?? "",
+          yearName: s.academic_years?.name ?? "",
+          schoolName: [s.school_music_schools?.school_name, s.class_name].filter(Boolean).join(" · "),
+          amount: payment.amount,
+          paymentMethod: "כרטיס אשראי",
+          docNumber: docNumber || payment.icount_doc_number || "",
+          invoiceUrl: docUrl || payment.invoice_url || "",
+          transactionId: String(ccDealId || txRef || ""),
+        },
+        `admin-payment-sm-${payment.id}`,
+      );
+    } catch (notifyErr) {
+      console.error("[icount-sm-payment-webhook] admin notify failed", notifyErr);
     }
 
     // Cleanup: delete the dynamic paypage from iCount so the list only
