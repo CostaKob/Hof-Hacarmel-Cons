@@ -959,11 +959,13 @@ const AdminFamilyCard = () => {
                         {!hasDoc && !isPending && !isCredit && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
-                            onClick={() =>
-                              createInvoiceMutation.mutate(
+                            onClick={() => {
+                              setInvoiceNote("");
+                              setPendingInvoiceParams(
                                 p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
-                              )
-                            }>
+                              );
+                            }}>
+
                             <FileDown className="h-3.5 w-3.5 ms-1" />
                             {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
                           </Button>
