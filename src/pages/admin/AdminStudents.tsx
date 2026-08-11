@@ -472,6 +472,23 @@ const AdminStudents = () => {
     return "unpaid";
   }, [paidByStudent, balanceByStudent]);
 
+  // Students with an active (pending) payment link that was generated for them
+  const activeLinkByStudent = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of yearPayments as any[]) {
+      if (!p.student_id) continue;
+      if (p.payment_status !== "pending") continue;
+      if (!p.payment_link_url) continue;
+      set.add(p.student_id);
+    }
+    return set;
+  }, [yearPayments]);
+
+  const hasActiveLink = useCallback((r: any) => {
+    const sid = r?.students?.id;
+    return !!sid && activeLinkByStudent.has(sid);
+  }, [activeLinkByStudent]);
+
   const getPaymentBalance = useCallback((r: any) => {
     const sid = r?.students?.id;
     const balance = sid ? balanceByStudent.get(sid) : null;
