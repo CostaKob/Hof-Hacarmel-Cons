@@ -1044,23 +1044,20 @@ const AdminStudentPaymentCalc = () => {
                         <TableCell>{e?.schools?.name ?? "—"}</TableCell>
                         <TableCell>{e?.lesson_duration_minutes} דק׳</TableCell>
                         <TableCell>
-                          <Input
-                            type="date"
+                          <DateInput
                             value={startDateOverrides[r.enrollmentId] ?? e?.start_date ?? ""}
-                            onChange={(ev) => setStartDateOverrides({ ...startDateOverrides, [r.enrollmentId]: ev.target.value })}
+                            onChange={(v) => setStartDateOverrides({ ...startDateOverrides, [r.enrollmentId]: v })}
                             className="h-9 rounded-lg w-36"
                           />
                         </TableCell>
                         <TableCell>
-                          <Input
-                            type="date"
+                          <DateInput
                             value={e?.end_date ?? yearFull?.end_date ?? ""}
                             min={e?.start_date ?? undefined}
                             max={yearFull?.end_date ?? undefined}
                             disabled={endDateMutation.isPending}
-                            onChange={(ev) => {
-                              const v = ev.target.value || null;
-                              endDateMutation.mutate({ enrollmentId: r.enrollmentId, endDate: v });
+                            onChange={(v) => {
+                              endDateMutation.mutate({ enrollmentId: r.enrollmentId, endDate: v || null });
                             }}
                             className="h-9 rounded-lg w-36"
                           />
