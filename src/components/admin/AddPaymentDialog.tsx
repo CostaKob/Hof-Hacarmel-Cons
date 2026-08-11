@@ -990,16 +990,35 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     const n = Math.max(1, parseInt(numChecks) || 1);
     const total = Math.round(totalSelected * 100) / 100;
     if (total <= 0) { toast.error("סה״כ הסכום חייב להיות גדול מ-0"); return; }
-    const baseWhole = Math.floor(total / n);
-    const remainder = Math.round((total - baseWhole * n) * 100) / 100;
-    const firstAmt = Math.round((baseWhole + remainder) * 100) / 100;
+    const manualFirst = parseFloat(firstCheckAmount);
+    const hasManualFirst = !Number.isNaN(manualFirst) && manualFirst > 0;
+    if (hasManualFirst && manualFirst > total) {
+      toast.error("סכום הצ׳ק הראשון לא יכול לעבור את סה״כ הפריסה");
+      return;
+    }
+    const remaining = hasManualFirst ? Math.round((total - manualFirst) * 100) / 100 : 0;
+    const restCount = hasManualFirst ? n - 1 : n;
+    if (hasManualFirst && restCount < 0) {
+      toast.error("מספר הצ׳קים קטן מדי לסכום הראשון שהוזן");
+      return;
+    }
+    const baseWhole = restCount > 0 ? Math.floor(remaining / restCount) : 0;
+    const remainder = restCount > 0 ? Math.round((remaining - baseWhole * restCount) * 100) / 100 : 0;
+    const firstAmt = hasManualFirst ? manualFirst : Math.round((baseWhole + remainder) * 100) / 100;
     const startNum = parseInt(firstCheckNumber);
     const rows: Array<{ date: string; number: string; amount: string }> = [];
     for (let i = 0; i < n; i++) {
+      const isFirst = i === 0;
+      const isSecond = i === 1 && hasManualFirst;
+      const amt = isFirst
+        ? firstAmt
+        : (hasManualFirst
+            ? (isSecond ? Math.round((baseWhole + remainder) * 100) / 100 : baseWhole)
+            : baseWhole);
       rows.push({
         date: addMonthsIso(firstCheckDate, i),
         number: Number.isFinite(startNum) ? String(startNum + i) : "",
-        amount: String(i === 0 ? firstAmt : baseWhole),
+        amount: String(amt),
       });
     }
     setChecks(rows);
