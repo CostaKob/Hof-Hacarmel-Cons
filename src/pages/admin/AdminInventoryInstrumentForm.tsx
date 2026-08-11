@@ -588,7 +588,13 @@ const AdminInventoryInstrumentForm = () => {
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-sm">תאריך רכישה</Label>
-              <Input type="date" {...register("purchase_date")} className="h-12 rounded-xl" />
+              <Controller
+                name="purchase_date"
+                control={control}
+                render={({ field }) => (
+                  <DateInput value={field.value} onChange={(v) => field.onChange(v)} className="h-12 rounded-xl" />
+                )}
+              />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
