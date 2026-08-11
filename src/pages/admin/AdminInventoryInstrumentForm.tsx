@@ -773,19 +773,17 @@ const AdminInventoryInstrumentForm = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-sm">תאריך השאלה *</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={newLoanDate}
-                      onChange={(e) => setNewLoanDate(e.target.value)}
+                      onChange={(v) => setNewLoanDate(v)}
                       className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-sm">תאריך החזרה</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={newReturnDate}
-                      onChange={(e) => setNewReturnDate(e.target.value)}
+                      onChange={(v) => setNewReturnDate(v)}
                       className="h-11 rounded-xl"
                     />
                   </div>
