@@ -498,7 +498,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       {waPhone && (
                         <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg text-green-600 hover:bg-green-50"
                           title="שלח קישור בוואטסאפ"
-                          onClick={async () => window.open(buildWaUrl(await shortenUrl(p.payment_link_url)), "_blank")}>
+                          onClick={async () => window.open(buildWaUrl(await shortenUrl(p.payment_link_url)), "musichof_whatsapp")}>
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}

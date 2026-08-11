@@ -233,7 +233,7 @@ const SendFamilyAssignmentMessage = ({
     }
     window.open(
       `https://wa.me/972${parentWa}?text=${encodeURIComponent(prepareWhatsAppText(message))}`,
-      "_blank",
+      "musichof_whatsapp",
     );
   };
 
