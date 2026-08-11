@@ -90,6 +90,7 @@ const AdminStudents = () => {
       next.delete("grade");
       next.delete("level");
       next.delete("payment");
+      next.delete("link");
       next.delete("track");
       next.delete("instrument");
       next.delete("reg_type");
