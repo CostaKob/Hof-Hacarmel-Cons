@@ -556,7 +556,8 @@ const AdminStudents = () => {
     if (cityFilter.length > 0 && !cityFilter.includes(s.city)) return false;
     if (gradeFilter.length > 0) {
       const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
-      if (!gradeFilter.includes(stripMarks(s.grade ?? ""))) return false;
+      const wanted = gradeFilter.map(stripMarks);
+      if (!wanted.includes(stripMarks(s.grade ?? ""))) return false;
     }
     const stopped = !s.is_active || isInactiveStudentStatus(s.student_status);
     const regStatus = getRegStatus(s);
