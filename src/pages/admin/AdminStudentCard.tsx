@@ -514,7 +514,7 @@ const AdminStudentCard = () => {
                     </SelectContent>
                   </Select>
                   <Button
-                    variant="outline"
+                    variant="destructive"
                     className="h-10 rounded-xl text-sm"
                     onClick={() => navigate(`/admin/students/${studentId}/payment`)}
                   >
