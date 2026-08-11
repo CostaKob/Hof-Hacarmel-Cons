@@ -186,13 +186,13 @@ export default function AdminEmailDashboard() {
           </div>
           {preset === "custom" && (
             <div className="flex flex-wrap gap-3">
-              <div className="flex-1 min-w-[160px]">
+            <div className="flex-1 min-w-[160px]">
                 <Label>מתאריך</Label>
-                <Input type="date" value={customStart} onChange={(e) => { setCustomStart(e.target.value); setPage(0); }} className="h-11" />
+                <DateInput value={customStart} onChange={(v) => { setCustomStart(v); setPage(0); }} className="h-11" />
               </div>
               <div className="flex-1 min-w-[160px]">
                 <Label>עד תאריך</Label>
-                <Input type="date" value={customEnd} onChange={(e) => { setCustomEnd(e.target.value); setPage(0); }} className="h-11" />
+                <DateInput value={customEnd} onChange={(v) => { setCustomEnd(v); setPage(0); }} className="h-11" />
               </div>
             </div>
           )}
