@@ -55,7 +55,7 @@ const MergeFamiliesDialog = ({
 }: Props) => {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
-  const [mode, setMode] = useState<"same_parent" | "spouse">("same_parent");
+  const [mode, setMode] = useState<"same_parent" | "spouse" | null>(null);
   const { data: candidates = [], isLoading } = useMergeCandidates(
     parentNationalId,
     open,
@@ -176,23 +176,8 @@ const MergeFamiliesDialog = ({
 
         {selected && (
           <div className="space-y-2">
-            <div className="text-sm font-medium">סוג הקשר:</div>
+            <div className="text-sm font-medium">בחר סוג הקשר (חובה):</div>
             <div className="grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setMode("same_parent")}
-                className={`text-right rounded-xl border p-3 text-sm transition-all ${
-                  mode === "same_parent"
-                    ? "border-primary bg-primary/5"
-                    : "border-border bg-card"
-                }`}
-              >
-                <div className="font-medium">אותו הורה (כפילות)</div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  אותה אישה/אותו גבר נשמר פעמיים (ת.ז. שגויה, מייל שונה). הרשומה
-                  השנייה תימחק וכל הילדים יעברו לרשומה זו.
-                </div>
-              </button>
               <button
                 type="button"
                 onClick={() => setMode("spouse")}
@@ -202,22 +187,43 @@ const MergeFamiliesDialog = ({
                     : "border-border bg-card"
                 }`}
               >
-                <div className="font-medium">בן/בת זוג</div>
+                <div className="font-medium">בן/בת זוג (מומלץ)</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  שני הורים שונים באותה משפחה. הילדים יקושרו לשני ההורים ויסומנו
-                  כאחים.
+                  שני הורים שונים באותה משפחה (אבא ואמא). שני ההורים יישמרו,
+                  הילדים יקושרו לשניהם ויסומנו כאחים.
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode("same_parent")}
+                className={`text-right rounded-xl border p-3 text-sm transition-all ${
+                  mode === "same_parent"
+                    ? "border-destructive bg-destructive/5"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="font-medium text-destructive">
+                  אותו הורה (כפילות) — מוחק רשומה
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  רק אם מדובר באותו אדם שנשמר פעמיים (ת.ז. שגויה). הרשומה
+                  השנייה תימחק לצמיתות וכל הילדים יעברו לרשומה זו.
                 </div>
               </button>
             </div>
-            <Alert>
-              <AlertTriangle className="h-4 w-4" />
-              <AlertDescription className="text-right">
-                הפעולה משפיעה על התא המשפחתי ועל חישובי ההנחות — לא ניתן לבטל
-                אוטומטית.
-              </AlertDescription>
-            </Alert>
+            {mode && (
+              <Alert variant={mode === "same_parent" ? "destructive" : "default"}>
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-right">
+                  {mode === "same_parent"
+                    ? "שים לב: רשומת ההורה השנייה תימחק ולא ניתן לשחזר אותה אוטומטית."
+                    : "הפעולה משפיעה על התא המשפחתי ועל חישובי ההנחות — לא ניתן לבטל אוטומטית."}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         )}
+
 
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -231,16 +237,19 @@ const MergeFamiliesDialog = ({
           </Button>
           <Button
             type="button"
+            variant={mode === "same_parent" ? "destructive" : "default"}
             className="h-12 rounded-xl w-full sm:w-auto"
-            disabled={!selected || mergeMutation.isPending}
-            onClick={() => selected && mergeMutation.mutate(selected)}
+            disabled={!selected || !mode || mergeMutation.isPending}
+            onClick={() => selected && mode && mergeMutation.mutate(selected)}
           >
             {mergeMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin ms-2" />
             ) : (
               <Merge className="h-4 w-4 ms-2" />
             )}
-            {mode === "same_parent" ? "אחד רשומות הורה" : "מזג משפחות"}
+            {mode === "same_parent"
+              ? "אחד רשומות הורה (מחיקה)"
+              : "מזג משפחות"}
           </Button>
         </DialogFooter>
       </DialogContent>
