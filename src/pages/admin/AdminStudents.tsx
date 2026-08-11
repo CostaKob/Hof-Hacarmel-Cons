@@ -556,7 +556,8 @@ const AdminStudents = () => {
     if (cityFilter.length > 0 && !cityFilter.includes(s.city)) return false;
     if (gradeFilter.length > 0) {
       const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
-      if (!gradeFilter.includes(stripMarks(s.grade ?? ""))) return false;
+      const wanted = gradeFilter.map(stripMarks);
+      if (!wanted.includes(stripMarks(s.grade ?? ""))) return false;
     }
     const stopped = !s.is_active || isInactiveStudentStatus(s.student_status);
     const regStatus = getRegStatus(s);
@@ -621,8 +622,9 @@ const AdminStudents = () => {
     if (cityFilter.length > 0 && !cityFilter.includes(r.students?.city)) return false;
     if (gradeFilter.length > 0) {
       const stripMarks = (s: string) => (s ?? "").replace(/['"׳״']/g, "").trim();
+      const wanted = gradeFilter.map(stripMarks);
       const rowGrade = stripMarks(r.students?.grade ?? "");
-      if (!gradeFilter.includes(rowGrade)) return false;
+      if (!wanted.includes(rowGrade)) return false;
     }
     if (levelFilter.length > 0 && !levelFilter.includes(r.students?.playing_level)) return false;
     if (statusFilter === "active" && (!r.is_active || isInactiveStudentStatus(r.students?.student_status))) return false;
@@ -780,7 +782,7 @@ const AdminStudents = () => {
         <MultiSelectFilter
           className="w-full lg:w-32"
           allLabel="כיתה"
-          options={["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"]}
+          options={["א","ב","ג","ד","ה","ו","ז","ח","ט","י","יא","יב","בוגר"]}
           renderLabel={(g) => `כיתה ${g}`}
           value={gradeFilter}
           onChange={(v) => setMultiFilter("grade", v)}
