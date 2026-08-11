@@ -1173,8 +1173,10 @@ const AdminFamilyCard = () => {
                                     cancelChequesMutation.mutate(selectedIds);
                                   }
                                 }}>
-                                <Ban className="h-3.5 w-3.5 ms-1" />
-                                בטל צ׳קים שנבחרו
+                                {cancelChequesMutation.isPending
+                                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin ms-1" />מבטל צ׳קים, אנא המתן...</>
+                                  : <><Ban className="h-3.5 w-3.5 ms-1" />בטל צ׳קים שנבחרו</>}
+
                               </Button>
                             </div>
                           </div>
