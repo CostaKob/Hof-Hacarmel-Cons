@@ -146,24 +146,36 @@ Deno.serve(async (req: Request) => {
       };
     } else {
       // Mirror the original payment method on the refund side with a negative sum
-      // so the negative invoice is balanced by a negative receipt line.
+      // so the negative receipt is balanced. NOTE: the DB enum values are
+      // cash | check | transfer | credit_card | other.
+      const today = new Date().toISOString().slice(0, 10);
       switch (payment.payment_method) {
         case "cash":
           payload.cash = { sum: negSum };
           break;
+        case "check":
         case "cheque":
-          payload.cheques = [{ sum: negSum, bank: "", branch: "", account: "", num: payment.reference_number || "" }];
+          payload.cheques = [{
+            sum: negSum,
+            date: today,
+            num: payment.reference_number || "",
+            bank: "",
+            branch: "",
+            account: "",
+          }];
           break;
+        case "transfer":
         case "bank_transfer":
-          payload.banktransfer = { sum: negSum, account: payment.reference_number || "" };
+          payload.banktransfer = { sum: negSum, date: today, account: payment.reference_number || "" };
           break;
         case "credit_card":
           payload.cc = { sum: negSum, num: payment.reference_number || "", payments_count: payment.installments || 1 };
           break;
         default:
-          payload.other = { sum: negSum, info: "החזר" };
+          payload.cash = { sum: negSum };
       }
     }
+
 
     const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
       method: "POST",
