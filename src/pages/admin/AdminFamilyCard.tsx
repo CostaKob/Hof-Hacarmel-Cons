@@ -10,6 +10,9 @@ import PageTitle from "@/components/PageTitle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 import {
   Users,
@@ -89,6 +92,8 @@ const AdminFamilyCard = () => {
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [selectedCheques, setSelectedCheques] = useState<Record<string, boolean>>({});
+  const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
+  const [invoiceNote, setInvoiceNote] = useState("");
 
 
 
@@ -348,7 +353,7 @@ const AdminFamilyCard = () => {
 
   // Row-level actions on the payments table.
   const createInvoiceMutation = useMutation({
-    mutationFn: async (params: { paymentId?: string; groupId?: string }) => {
+    mutationFn: async (params: { paymentId?: string; groupId?: string; note?: string }) => {
       const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
@@ -954,11 +959,13 @@ const AdminFamilyCard = () => {
                         {!hasDoc && !isPending && !isCredit && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
-                            onClick={() =>
-                              createInvoiceMutation.mutate(
+                            onClick={() => {
+                              setInvoiceNote("");
+                              setPendingInvoiceParams(
                                 p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
-                              )
-                            }>
+                              );
+                            }}>
+
                             <FileDown className="h-3.5 w-3.5 ms-1" />
                             {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
                           </Button>
@@ -972,7 +979,7 @@ const AdminFamilyCard = () => {
                         {isCredit && !hasDoc && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
-                            onClick={() => createInvoiceMutation.mutate({ paymentId: p.id })}>
+                            onClick={() => { setInvoiceNote(""); setPendingInvoiceParams({ paymentId: p.id, isCredit: true }); }}>
                             <FileDown className="h-3.5 w-3.5 ms-1" />
                             קבלת זיכוי
                           </Button>
@@ -1207,6 +1214,49 @@ const AdminFamilyCard = () => {
             enrollments={enrollments as any[]}
             pendingPayments={pendingPayments.filter((p) => !!p.payment_link_url) as any[]}
           />
+
+          <AlertDialog
+            open={!!pendingInvoiceParams}
+            onOpenChange={(o) => { if (!o) { setPendingInvoiceParams(null); setInvoiceNote(""); } }}
+          >
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {pendingInvoiceParams?.isCredit ? "אישור הפקת קבלת זיכוי" : "אישור הפקת קבלה"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  ⚠️ הפקת מסמך ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>. המסמך יישלח באופן מיידי. האם להמשיך?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-1.5">
+                <Label className="text-sm">הערה לקבלה (אופציונלי)</Label>
+                <Textarea
+                  value={invoiceNote}
+                  onChange={(e) => setInvoiceNote(e.target.value)}
+                  placeholder="הערה שתופיע על גבי הקבלה"
+                  rows={3}
+                  maxLength={500}
+                  className="rounded-xl"
+                />
+              </div>
+              <AlertDialogFooter className="flex-row-reverse gap-2">
+                <AlertDialogAction
+                  onClick={() => {
+                    if (pendingInvoiceParams) {
+                      const { isCredit, ...params } = pendingInvoiceParams;
+                      createInvoiceMutation.mutate({ ...params, note: invoiceNote.trim() || undefined });
+                    }
+                    setPendingInvoiceParams(null);
+                    setInvoiceNote("");
+                  }}
+                >
+                  כן, הפק
+                </AlertDialogAction>
+                <AlertDialogCancel>ביטול</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
 
 
           {refundTarget && (

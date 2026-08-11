@@ -75,7 +75,8 @@ Deno.serve(async (req: Request) => {
 
 
   try {
-    const { paymentId, groupId } = await req.json();
+    const { paymentId, groupId, note } = await req.json();
+    const docNote = typeof note === "string" ? note.trim().slice(0, 500) : "";
     if (!paymentId && !groupId) {
       return new Response(JSON.stringify({ error: "paymentId or groupId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -228,6 +229,7 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_free: 1, // Malkar — no VAT charged
+      ...(docNote ? { comments: docNote, doc_comment: docNote } : {}),
       items,
     };
 

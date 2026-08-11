@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
@@ -50,6 +51,7 @@ const StudentPaymentsSection = ({
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
+  const [invoiceNote, setInvoiceNote] = useState("");
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -63,7 +65,7 @@ const StudentPaymentsSection = ({
   };
 
   const createInvoiceMutation = useMutation({
-    mutationFn: async (params: { paymentId?: string; groupId?: string }) => {
+    mutationFn: async (params: { paymentId?: string; groupId?: string; note?: string }) => {
       const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
@@ -535,7 +537,7 @@ const StudentPaymentsSection = ({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) setPendingInvoiceParams(null); }}>
+      <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) { setPendingInvoiceParams(null); setInvoiceNote(""); } }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle>אישור הפקת קבלה</AlertDialogTitle>
@@ -544,11 +546,23 @@ const StudentPaymentsSection = ({
               הקבלה תישלח באופן מיידי. האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-1.5">
+            <Label className="text-sm">הערה לקבלה (אופציונלי)</Label>
+            <Textarea
+              value={invoiceNote}
+              onChange={(e) => setInvoiceNote(e.target.value)}
+              placeholder="הערה שתופיע על גבי הקבלה"
+              rows={3}
+              maxLength={500}
+              className="rounded-xl"
+            />
+          </div>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction
               onClick={() => {
-                if (pendingInvoiceParams) createInvoiceMutation.mutate(pendingInvoiceParams);
+                if (pendingInvoiceParams) createInvoiceMutation.mutate({ ...pendingInvoiceParams, note: invoiceNote.trim() || undefined });
                 setPendingInvoiceParams(null);
+                setInvoiceNote("");
               }}
             >
               כן, הפק קבלה
@@ -557,6 +571,7 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
       <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
         <AlertDialogContent dir="rtl">
