@@ -229,6 +229,7 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_free: 1, // Malkar — no VAT charged
+      ...(docNote ? { comments: docNote, doc_comment: docNote, hwc: docNote } : {}),
       items,
     };
 
