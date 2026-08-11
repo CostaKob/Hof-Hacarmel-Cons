@@ -214,7 +214,7 @@ const SendFamilyAssignmentMessage = ({
     );
   }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject, shortLinks]);
 
-  const parentWa = normalizeWaPhone(family.parent_phone);
+  const parentWa = normalizeWaPhone(recipient?.phone);
 
   useEffect(() => {
     if (!open) return;
@@ -238,7 +238,7 @@ const SendFamilyAssignmentMessage = ({
   };
 
   const sendEmail = async () => {
-    if (!family.parent_email) {
+    if (!recipient?.email) {
       toast.error("אין כתובת מייל להורה");
       return;
     }
@@ -247,7 +247,7 @@ const SendFamilyAssignmentMessage = ({
       const { error } = await supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "plain-text",
-          recipientEmail: family.parent_email,
+          recipientEmail: recipient.email,
           replyTo: "musichof@gmail.com",
           templateData: {
             subject: subject.trim() || "שיוך מורה",
