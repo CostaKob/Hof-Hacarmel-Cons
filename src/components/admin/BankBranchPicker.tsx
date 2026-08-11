@@ -62,26 +62,41 @@ const BankBranchPicker = ({
             className={h}
           />
         ) : (
-          <Select
-            value={bankCode || undefined}
-            onValueChange={(v) => {
-              setBankCode(v);
-              setBankName(findBankByCode(v)?.name || "");
-              setBranch("");
-              setManualBranch(false);
-            }}
-          >
-            <SelectTrigger className={h}>
-              <SelectValue placeholder="בחר בנק" />
-            </SelectTrigger>
-            <SelectContent className="max-h-72">
-              {ISRAELI_BANKS.map((b) => (
-                <SelectItem key={b.code} value={b.code}>
-                  {b.name} ({b.code})
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Input
+              inputMode="numeric"
+              value={bankCode}
+              onChange={(e) => {
+                const v = e.target.value.replace(/\D/g, "");
+                setBankCode(v);
+                setBankName(findBankByCode(v)?.name || "");
+                setBranch("");
+                setManualBranch(false);
+              }}
+              placeholder="קוד"
+              className={`${h} w-16 text-center`}
+            />
+            <Select
+              value={bankCode && findBankByCode(bankCode) ? bankCode : undefined}
+              onValueChange={(v) => {
+                setBankCode(v);
+                setBankName(findBankByCode(v)?.name || "");
+                setBranch("");
+                setManualBranch(false);
+              }}
+            >
+              <SelectTrigger className={`${h} flex-1`}>
+                <SelectValue placeholder="בחר בנק" />
+              </SelectTrigger>
+              <SelectContent className="max-h-72">
+                {ISRAELI_BANKS.map((b) => (
+                  <SelectItem key={b.code} value={b.code}>
+                    {b.name} ({b.code})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
       </div>
 
@@ -108,7 +123,17 @@ const BankBranchPicker = ({
             className={h}
           />
         ) : (
-          <Popover open={branchOpen} onOpenChange={setBranchOpen}>
+          <div className="flex gap-2">
+            <Input
+              inputMode="numeric"
+              value={branch}
+              onChange={(e) => setBranch(e.target.value.replace(/\D/g, ""))}
+              placeholder="מס׳"
+              className={`${h} w-20 text-center`}
+            />
+            <div className="flex-1 min-w-0">
+              <Popover open={branchOpen} onOpenChange={setBranchOpen}>
+
             <PopoverTrigger asChild>
               <Button
                 type="button"
@@ -116,8 +141,9 @@ const BankBranchPicker = ({
                 className={`${h} w-full justify-between font-normal`}
               >
                 <span className="truncate">
-                  {branch ? `${branch}${selectedBranch ? ` - ${selectedBranch.name}` : ""}` : "בחר סניף"}
+                  {selectedBranch ? `${selectedBranch.name}${selectedBranch.city ? ` - ${selectedBranch.city}` : ""}` : "בחר סניף"}
                 </span>
+
                 <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
               </Button>
             </PopoverTrigger>
@@ -146,8 +172,11 @@ const BankBranchPicker = ({
                 </CommandList>
               </Command>
             </PopoverContent>
-          </Popover>
+              </Popover>
+            </div>
+          </div>
         )}
+
       </div>
     </>
   );
