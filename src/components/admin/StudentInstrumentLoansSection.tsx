@@ -184,7 +184,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
 
               <div className="space-y-1.5">
                 <Label className="text-sm">תאריך השאלה</Label>
-                <Input type="date" value={loanDate} onChange={(e) => setLoanDate(e.target.value)} className="h-12 rounded-xl" />
+                <DateInput value={loanDate} onChange={(v) => setLoanDate(v)} className="h-12 rounded-xl" />
               </div>
 
               <div className="flex flex-col gap-2 sticky bottom-0 bg-card pt-2">
