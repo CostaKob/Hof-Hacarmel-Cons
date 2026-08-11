@@ -966,6 +966,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setNumChecks("1");
     setFirstCheckDate(today);
     setFirstCheckNumber("");
+    setFirstCheckAmount("");
     setBankName("");
     setBankBranch("");
     setBankAccount("");
