@@ -622,8 +622,9 @@ const AdminStudents = () => {
     if (cityFilter.length > 0 && !cityFilter.includes(r.students?.city)) return false;
     if (gradeFilter.length > 0) {
       const stripMarks = (s: string) => (s ?? "").replace(/['"׳״']/g, "").trim();
+      const wanted = gradeFilter.map(stripMarks);
       const rowGrade = stripMarks(r.students?.grade ?? "");
-      if (!gradeFilter.includes(rowGrade)) return false;
+      if (!wanted.includes(rowGrade)) return false;
     }
     if (levelFilter.length > 0 && !levelFilter.includes(r.students?.playing_level)) return false;
     if (statusFilter === "active" && (!r.is_active || isInactiveStudentStatus(r.students?.student_status))) return false;
