@@ -90,7 +90,10 @@ function buildAssignmentsBlock(children: ChildLike[], enrollments: EnrollmentLik
   return lines.join("\n").trim();
 }
 
-function buildPaymentsBlock(pendingPayments: PendingPaymentLike[]): string {
+function buildPaymentsBlock(
+  pendingPayments: PendingPaymentLike[],
+  shortLinks: Record<string, string> = {},
+): string {
   if (pendingPayments.length === 0) return "";
   const lines: string[] = ["פירוט תשלום:"];
   let totalAll = 0;
@@ -107,7 +110,8 @@ function buildPaymentsBlock(pendingPayments: PendingPaymentLike[]): string {
     }
     lines.push(`  סה״כ: ${Number(p.amount).toLocaleString("he-IL")} ₪`);
     if (p.payment_link_url) {
-      lines.push(`  [לחצו כאן לתשלום](${p.payment_link_url})`);
+      const url = shortLinks[p.payment_link_url] || p.payment_link_url;
+      lines.push(`  [לחצו כאן לתשלום](${url})`);
     }
     lines.push("");
     totalAll += Number(p.amount) || 0;
