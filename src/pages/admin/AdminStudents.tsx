@@ -757,6 +757,15 @@ const AdminStudents = () => {
               value={paymentFilter}
               onChange={(v) => setMultiFilter("payment", v)}
             />
+
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="לינק לתשלום"
+              options={["sent", "not_sent"]}
+              renderLabel={(k) => ({ sent: "🔗 נוצר לינק", not_sent: "ללא לינק" })[k]}
+              value={linkFilter}
+              onChange={(v) => setMultiFilter("link", v)}
+            />
           </>
         )}
 
