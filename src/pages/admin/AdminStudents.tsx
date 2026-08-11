@@ -780,7 +780,7 @@ const AdminStudents = () => {
         <MultiSelectFilter
           className="w-full lg:w-32"
           allLabel="כיתה"
-          options={["א'","ב'","ג'","ד'","ה'","ו'","ז'","ח'","ט'","י'","י\"א","י\"ב","בוגר"]}
+          options={["א","ב","ג","ד","ה","ו","ז","ח","ט","י","יא","יב","בוגר"]}
           renderLabel={(g) => `כיתה ${g}`}
           value={gradeFilter}
           onChange={(v) => setMultiFilter("grade", v)}
