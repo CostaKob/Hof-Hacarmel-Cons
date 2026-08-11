@@ -537,7 +537,7 @@ const StudentPaymentsSection = ({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) setPendingInvoiceParams(null); }}>
+      <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) { setPendingInvoiceParams(null); setInvoiceNote(""); } }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle>אישור הפקת קבלה</AlertDialogTitle>
@@ -546,11 +546,23 @@ const StudentPaymentsSection = ({
               הקבלה תישלח באופן מיידי. האם להמשיך?
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-1.5">
+            <Label className="text-sm">הערה לקבלה (אופציונלי)</Label>
+            <Textarea
+              value={invoiceNote}
+              onChange={(e) => setInvoiceNote(e.target.value)}
+              placeholder="הערה שתופיע על גבי הקבלה"
+              rows={3}
+              maxLength={500}
+              className="rounded-xl"
+            />
+          </div>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction
               onClick={() => {
-                if (pendingInvoiceParams) createInvoiceMutation.mutate(pendingInvoiceParams);
+                if (pendingInvoiceParams) createInvoiceMutation.mutate({ ...pendingInvoiceParams, note: invoiceNote.trim() || undefined });
                 setPendingInvoiceParams(null);
+                setInvoiceNote("");
               }}
             >
               כן, הפק קבלה
@@ -559,6 +571,7 @@ const StudentPaymentsSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
 
       <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
         <AlertDialogContent dir="rtl">
