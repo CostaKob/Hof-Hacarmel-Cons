@@ -8,6 +8,7 @@ import {
   prepareWhatsAppText,
   parseInlineLinks,
 } from "@/lib/messageTemplates";
+import { shortenUrls } from "@/lib/shortLink";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -153,6 +154,23 @@ const SendFamilyAssignmentMessage = ({
 
   const childrenSubject = children.map((c) => `${c.first_name} ${c.last_name}`).join(", ");
 
+  const [shortLinks, setShortLinks] = useState<Record<string, string>>({});
+  const payLinkKey = pendingPayments.map((p) => p.payment_link_url || "").join("|");
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!open) {
+      setShortLinks({});
+      return;
+    }
+    shortenUrls(pendingPayments.map((p) => p.payment_link_url)).then((map) => {
+      if (!cancelled) setShortLinks(map);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, payLinkKey]);
+
   useEffect(() => {
     if (!open || !template) return;
     setMessage(
@@ -160,11 +178,11 @@ const SendFamilyAssignmentMessage = ({
         parent_name: family.parent_name || "הורה יקר",
         children: childrenSubject,
         assignments: buildAssignmentsBlock(children, enrollments),
-        payments: buildPaymentsBlock(pendingPayments),
+        payments: buildPaymentsBlock(pendingPayments, shortLinks),
         note: extraNote.trim(),
       }),
     );
-  }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject]);
+  }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject, shortLinks]);
 
   const parentWa = normalizeWaPhone(family.parent_phone);
 
