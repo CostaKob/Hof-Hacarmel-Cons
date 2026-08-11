@@ -171,15 +171,25 @@ Deno.serve(async (req: Request) => {
           break;
         case "check":
         case "cheque":
-          payload.cheques = [{
-            sum: negSum,
-            date: today,
-            num: payment.reference_number || "",
-            bank: "",
-            branch: "",
-            account: "",
-          }];
+          payload.cheques = perChequeItems
+            ? groupRows.map((r) => ({
+                sum: -Math.abs(Number(r.amount || 0)),
+                date: r.payment_date || today,
+                num: r.reference_number || "",
+                bank: "",
+                branch: "",
+                account: "",
+              }))
+            : [{
+                sum: negSum,
+                date: today,
+                num: payment.reference_number || "",
+                bank: "",
+                branch: "",
+                account: "",
+              }];
           break;
+
         case "transfer":
         case "bank_transfer":
           payload.banktransfer = { sum: negSum, date: today, account: payment.reference_number || "" };
