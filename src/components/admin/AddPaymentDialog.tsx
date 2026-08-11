@@ -513,6 +513,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             ? crypto.randomUUID()
             : `${Date.now()}-${Math.random()}`;
         rows = [];
+        const checkSpreadRows: any[] = [];
         for (const [sid, subEntries] of groupedByChild) {
           const childTotal = subEntries.reduce((s, x) => s + x.amt, 0);
           if (childTotal <= 0) continue;
@@ -528,9 +529,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             const noteParts = [
               `צ׳ק ${i + 1}/${checks.length}`,
               bankInfoStr,
-              notes,
             ].filter(Boolean);
-            rows.push({
+            checkSpreadRows.push({
               ...commonFields,
               ...familyFields,
               student_id: sid,
@@ -545,6 +545,15 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             });
           });
         }
+        // Place the user's general note on the chronologically first (main) row only,
+        // so it appears on the group summary and is not duplicated on every cheque.
+        if (checkSpreadRows.length > 0 && notes.trim()) {
+          const mainRow = [...checkSpreadRows].sort(
+            (a, b) => new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime()
+          )[0];
+          mainRow.notes = [notes.trim(), mainRow.notes].filter(Boolean).join(" · ");
+        }
+        rows.push(...checkSpreadRows);
       } else {
         rows = [];
         // In family mode with multiple children we still need one group id so
