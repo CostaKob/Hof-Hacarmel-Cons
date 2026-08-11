@@ -979,7 +979,7 @@ const AdminFamilyCard = () => {
                         {isCredit && !hasDoc && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
-                            onClick={() => createInvoiceMutation.mutate({ paymentId: p.id })}>
+                            onClick={() => { setInvoiceNote(""); setPendingInvoiceParams({ paymentId: p.id, isCredit: true }); }}>
                             <FileDown className="h-3.5 w-3.5 ms-1" />
                             קבלת זיכוי
                           </Button>
