@@ -33,6 +33,7 @@ import {
   ChevronUp,
   CheckCircle2,
   Ban,
+  Loader2,
 } from "lucide-react";
 
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
@@ -1172,8 +1173,10 @@ const AdminFamilyCard = () => {
                                     cancelChequesMutation.mutate(selectedIds);
                                   }
                                 }}>
-                                <Ban className="h-3.5 w-3.5 ms-1" />
-                                בטל צ׳קים שנבחרו
+                                {cancelChequesMutation.isPending
+                                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin ms-1" />מבטל צ׳קים, אנא המתן...</>
+                                  : <><Ban className="h-3.5 w-3.5 ms-1" />בטל צ׳קים שנבחרו</>}
+
                               </Button>
                             </div>
                           </div>
@@ -1262,28 +1265,42 @@ const AdminFamilyCard = () => {
           {refundTarget && (
             <div
               className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-              onClick={() => setRefundTarget(null)}
+              onClick={() => { if (!refundMutation.isPending) setRefundTarget(null); }}
             >
               <div className="bg-card rounded-2xl border border-border p-5 max-w-md w-full space-y-3"
                 onClick={(e) => e.stopPropagation()}>
                 <h3 className="font-semibold">
                   {refundTarget._cc ? "החזר אשראי" : "זיכוי"} · קבלה {refundTarget.icount_doc_number ?? ""}
                 </h3>
-                <p className="text-sm text-muted-foreground">
-                  סכום מקורי: {fmt(Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
-                </p>
-                <div className="space-y-1">
-                  <label className="text-xs text-muted-foreground">סכום לזיכוי</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={refundAmount}
-                    onChange={(e) => setRefundAmount(e.target.value)}
-                    className="w-full h-11 rounded-xl border border-border bg-background px-3"
-                  />
-                </div>
+                {refundMutation.isPending ? (
+                  <div className="flex flex-col items-center justify-center gap-3 py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm font-medium text-foreground">
+                      {refundTarget._cc ? "מבצע החזר לכרטיס אשראי..." : "מתבצע זיכוי, אנא המתן..."}
+                    </p>
+                    <p className="text-xs text-muted-foreground text-center">
+                      הפעולה עשויה לקחת מספר שניות — אין לסגור את החלון
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      סכום מקורי: {fmt(Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0))} · נותר לזיכוי: {fmt(refundTarget._remaining)}
+                    </p>
+                    <div className="space-y-1">
+                      <label className="text-xs text-muted-foreground">סכום לזיכוי</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={refundAmount}
+                        onChange={(e) => setRefundAmount(e.target.value)}
+                        className="w-full h-11 rounded-xl border border-border bg-background px-3"
+                      />
+                    </div>
+                  </>
+                )}
                 <div className="flex flex-wrap gap-2 justify-end pt-2">
-                  <Button variant="outline" onClick={() => setRefundTarget(null)}>ביטול</Button>
+                  <Button variant="outline" disabled={refundMutation.isPending} onClick={() => setRefundTarget(null)}>ביטול</Button>
                   <Button
                     disabled={refundMutation.isPending}
                     onClick={() => {
@@ -1293,12 +1310,15 @@ const AdminFamilyCard = () => {
                       refundMutation.mutate({ paymentId: refundTarget.id, amount: amt, isCc: refundTarget._cc });
                     }}
                   >
-                    בצע
+                    {refundMutation.isPending
+                      ? <><Loader2 className="h-4 w-4 animate-spin ml-2" />מבצע זיכוי...</>
+                      : "בצע"}
                   </Button>
                 </div>
               </div>
             </div>
           )}
+
 
 
 

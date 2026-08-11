@@ -88,12 +88,25 @@ Deno.serve(async (req: Request) => {
       ? ` — בוצע בהעברה בנקאית${bankReference ? ` (אסמכתא ${bankReference})` : ""}`
       : "";
     const STATUS_HE: Record<string, string> = { cleared: "נפרע", cancelled: "בוטל", pending: "טרם נפרע" };
-    const chequeDetail = groupRows.length > 1 || groupRows[0]?.payment_method === "check"
-      ? `\nפירוט צ׳קים:\n${groupRows
-          .map((r) => `• צ׳ק ${r.reference_number ?? ""} · ${fmtD(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()} · ${STATUS_HE[r.cheque_status ?? "pending"] ?? "טרם נפרע"}`)
-          .join("\n")}`
-      : "";
-    const description = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})${bankSuffix}${chequeDetail}`;
+    const isChequeSpread = groupRows.length > 1 && groupRows.every((r) => r.payment_method === "check" || r.payment_method === "cheque");
+    const headerLine = `החזר ${isPartial ? "חלקי " : ""}— ${studentFullName}${reason ? ` (${reason})` : ""} — קבלה מקור ${payment.icount_doc_number ?? payment.icount_doc_id} (סכום מקורי ₪${Math.abs(originalAmount).toLocaleString()}, החזר ₪${Math.abs(refundAmount).toLocaleString()})${bankSuffix}`;
+    // Full refund of a cheque spread → one document line per cheque (clearer to read).
+    const perChequeItems = (!isPartial && isChequeSpread)
+      ? groupRows.map((r) => ({
+          description: `צ׳ק ${r.reference_number ?? ""} · ${fmtD(r.payment_date)} · ${STATUS_HE[r.cheque_status ?? "pending"] ?? "טרם נפרע"}`,
+          unitprice_incvat: -Math.abs(Number(r.amount || 0)),
+          quantity: 1,
+        }))
+      : null;
+    const chequeDetail = perChequeItems
+      ? ""
+      : (groupRows.length > 1 || groupRows[0]?.payment_method === "check"
+        ? `\nפירוט צ׳קים:\n${groupRows
+            .map((r) => `• צ׳ק ${r.reference_number ?? ""} · ${fmtD(r.payment_date)} · ₪${Math.abs(Number(r.amount || 0)).toLocaleString()} · ${STATUS_HE[r.cheque_status ?? "pending"] ?? "טרם נפרע"}`)
+            .join("\n")}`
+        : "");
+    const description = `${headerLine}${chequeDetail}`;
+
 
     const phone = student.parent_phone || student.parent_phone_2 || undefined;
     const email = student.parent_email || student.parent_email_2 || undefined;
@@ -128,8 +141,11 @@ Deno.serve(async (req: Request) => {
         docnum: Number(payment.icount_doc_number) || payment.icount_doc_number || payment.icount_doc_id,
       }],
       origin_doc_id: payment.icount_doc_id,
-      items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
+      comments: perChequeItems ? headerLine : undefined,
+      doc_comment: perChequeItems ? headerLine : undefined,
+      items: perChequeItems ?? [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
+
 
     const isBankRefund = refundMethod === "bank_transfer";
 
@@ -155,15 +171,25 @@ Deno.serve(async (req: Request) => {
           break;
         case "check":
         case "cheque":
-          payload.cheques = [{
-            sum: negSum,
-            date: today,
-            num: payment.reference_number || "",
-            bank: "",
-            branch: "",
-            account: "",
-          }];
+          payload.cheques = perChequeItems
+            ? groupRows.map((r) => ({
+                sum: -Math.abs(Number(r.amount || 0)),
+                date: r.payment_date || today,
+                num: r.reference_number || "",
+                bank: "",
+                branch: "",
+                account: "",
+              }))
+            : [{
+                sum: negSum,
+                date: today,
+                num: payment.reference_number || "",
+                bank: "",
+                branch: "",
+                account: "",
+              }];
           break;
+
         case "transfer":
         case "bank_transfer":
           payload.banktransfer = { sum: negSum, date: today, account: payment.reference_number || "" };
