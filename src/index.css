@@ -218,3 +218,120 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
+
+/* ============================================================
+   "נקי" (Clean) theme — high contrast, no glass, bold buttons.
+   Activated by adding .theme-clean on <html>.
+   ============================================================ */
+
+.theme-clean {
+  --background: 0 0% 100%;
+  --foreground: 0 0% 8%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 8%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 8%;
+
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 96%;
+  --secondary-foreground: 0 0% 9%;
+
+  --muted: 0 0% 96%;
+  --muted-foreground: 0 0% 34%;
+
+  --accent: 0 0% 92%;
+  --accent-foreground: 0 0% 9%;
+
+  --destructive: 0 72% 42%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 0 0% 82%;
+  --input: 0 0% 72%;
+  --ring: 0 0% 9%;
+
+  --radius: 0.5rem;
+
+  --sidebar-background: 0 0% 100%;
+  --sidebar-foreground: 0 0% 12%;
+  --sidebar-primary: 0 0% 9%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 0 0% 94%;
+  --sidebar-accent-foreground: 0 0% 9%;
+  --sidebar-border: 0 0% 82%;
+  --sidebar-ring: 0 0% 9%;
+}
+
+/* Flat background — no gradients */
+.theme-clean body,
+.theme-clean.dark body {
+  background-image: none;
+  background-color: hsl(var(--background));
+}
+
+/* Kill all glass/blur surfaces */
+.theme-clean .bg-card,
+.theme-clean nav.bg-card,
+.theme-clean .bg-popover,
+.theme-clean .bg-primary,
+.theme-clean .bg-secondary,
+.theme-clean .bg-muted,
+.theme-clean .bg-accent,
+.theme-clean .bg-background {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.theme-clean .bg-card {
+  background-color: hsl(var(--card));
+  border-color: hsl(var(--border));
+  box-shadow: none;
+}
+.theme-clean .bg-popover { background-color: hsl(var(--popover)); border-color: hsl(var(--border)); }
+.theme-clean .bg-primary { background-color: hsl(var(--primary)); }
+.theme-clean .bg-secondary { background-color: hsl(var(--secondary)); }
+.theme-clean .bg-muted { background-color: hsl(var(--muted)); }
+.theme-clean .bg-accent { background-color: hsl(var(--accent)); }
+
+/* Cards: crisp 1px outline instead of soft shadows */
+.theme-clean [class*="rounded-"].bg-card {
+  border-width: 1px;
+  border-style: solid;
+}
+
+/* Prominent buttons */
+.theme-clean button,
+.theme-clean [role="button"] {
+  font-weight: 600;
+}
+.theme-clean button:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+}
+.theme-clean .bg-primary:not(header):not(nav) {
+  box-shadow: none;
+}
+/* Outline-style buttons get a real, visible border */
+.theme-clean .border-input {
+  border-color: hsl(var(--input));
+  border-width: 1px;
+}
+
+/* Inputs: clear boxes */
+.theme-clean input,
+.theme-clean textarea,
+.theme-clean [role="combobox"] {
+  background-color: hsl(0 0% 100%);
+  border-color: hsl(var(--input));
+}
+
+/* Slightly larger, calmer text */
+.theme-clean {
+  font-size: 16px;
+}
+.theme-clean .text-muted-foreground {
+  color: hsl(var(--muted-foreground));
+}
