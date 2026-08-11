@@ -51,6 +51,7 @@ const StudentPaymentsSection = ({
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
+  const [invoiceNote, setInvoiceNote] = useState("");
   const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
