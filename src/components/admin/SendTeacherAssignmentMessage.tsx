@@ -169,7 +169,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
       toast.error("אין מספר טלפון להורה");
       return;
     }
-    window.open(`https://wa.me/972${parentWa}?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(`https://wa.me/972${parentWa}?text=${encodeURIComponent(message)}`, "musichof_whatsapp");
   };
 
   const sendEmail = async () => {
