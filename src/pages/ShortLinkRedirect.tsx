@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import AppLogo from "@/components/AppLogo";
 
 const ShortLinkRedirect = () => {
   const { code } = useParams<{ code: string }>();
@@ -29,6 +30,7 @@ const ShortLinkRedirect = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center" dir="rtl">
+      <AppLogo size="lg" />
       {notFound ? (
         <>
           <h1 className="text-xl font-semibold">הקישור לא נמצא</h1>
