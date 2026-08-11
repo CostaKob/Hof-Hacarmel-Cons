@@ -109,6 +109,33 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
   const [message, setMessage] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  const recipients = useMemo(
+    () =>
+      [
+        {
+          key: "parent",
+          label: student?.parent_name || "הורה 1",
+          phone: student?.parent_phone || null,
+          email: student?.parent_email || null,
+        },
+        {
+          key: "parent2",
+          label: student?.parent_name_2 || "הורה 2",
+          phone: student?.parent_phone_2 || null,
+          email: student?.parent_email_2 || null,
+        },
+      ].filter((r) => r.phone || r.email),
+    [student],
+  );
+
+  const [recipientKey, setRecipientKey] = useState<string>("parent");
+
+  useEffect(() => {
+    if (open) setRecipientKey(recipients[0]?.key ?? "parent");
+  }, [open, recipients]);
+
+  const recipient = recipients.find((r) => r.key === recipientKey) ?? recipients[0];
+
   useEffect(() => {
     if (open) setExtraNote(defaultNote);
   }, [open, defaultNote]);
