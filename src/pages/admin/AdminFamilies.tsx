@@ -232,6 +232,19 @@ const AdminFamilies = () => {
                 )}
               </div>
 
+              <div className="mt-2 rounded-xl border border-border bg-muted/40 p-2 text-xs">
+                <span className="text-muted-foreground">הורה שני: </span>
+                {f.partner_national_id ? (
+                  <span className="text-foreground">
+                    {f.partner_name || "ללא שם"}
+                    {f.partner_phone ? ` · ${f.partner_phone}` : ""}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">לא משויך</span>
+                )}
+              </div>
+
+
               <div className="mt-3 flex flex-col sm:flex-row gap-2">
                 {dupIds.has(f.parent_national_id) && (
                   <Button
