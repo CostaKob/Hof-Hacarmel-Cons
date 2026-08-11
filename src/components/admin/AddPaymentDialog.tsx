@@ -1286,7 +1286,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 {checksOpen && (
                   <div className="space-y-3 pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground">
-                      פריסה אוטומטית: הצ׳ק הראשון סופג את השארית ושאר הצ׳קים בסכומים שלמים ושווים. ניתן לערוך כל שורה ידנית.
+                      ניתן להזין סכום לצ׳ק הראשון; אם השדה ריק, הסכום יתחלק שווה בשווה והראשון יספוג את השארית. ניתן לערוך כל שורה ידנית.
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
