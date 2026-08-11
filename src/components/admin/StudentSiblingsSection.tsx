@@ -55,7 +55,7 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
+        <h2 className="font-semibold text-red-600 text-base flex items-center gap-2">
           <Users className="h-4 w-4" /> אחים ואחיות ({siblings.length})
         </h2>
         <div className="flex items-center gap-2 flex-wrap">
