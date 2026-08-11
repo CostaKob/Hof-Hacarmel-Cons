@@ -3,6 +3,7 @@
 // with fallbacks to icount_payment_page_id / docnum. Always returns 200 OK
 // so iCount doesn't retry on unmatchable events.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { notifyAdminPayment } from "../_shared/notifyAdminPayment.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -157,6 +158,58 @@ Deno.serve(async (req: Request) => {
       .eq("id", paymentId);
     if (updErr) console.error("[icount-student-ipn] update error", updErr);
     else console.log("[icount-student-ipn] updated", paymentId);
+
+    // Notify the studio admin inbox that a payment came in.
+    try {
+      const { data: pay } = await supabase
+        .from("student_payments")
+        .select("id, amount, installments, notes, invoice_url, icount_doc_number, icount_transaction_id, family_payment_group_id, academic_year_id, student_id, students(first_name, last_name, national_id, parent_name, parent_phone, parent_email), academic_years(name)")
+        .eq("id", paymentId)
+        .maybeSingle();
+
+      const st: any = (pay as any)?.students ?? null;
+      let items: { label: string; amount?: number }[] = [];
+      let totalAmount = Number((pay as any)?.amount ?? amount) || 0;
+      let studentName = st ? `${st.first_name ?? ""} ${st.last_name ?? ""}`.trim() : "";
+
+      const groupId = (pay as any)?.family_payment_group_id;
+      if (groupId) {
+        const { data: siblings } = await supabase
+          .from("student_payments")
+          .select("amount, students(first_name, last_name)")
+          .eq("family_payment_group_id", groupId);
+        if (siblings && siblings.length > 1) {
+          items = siblings.map((r: any) => ({
+            label: `${r.students?.first_name ?? ""} ${r.students?.last_name ?? ""}`.trim() || "תשלום",
+            amount: Number(r.amount) || 0,
+          }));
+          totalAmount = siblings.reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+          studentName = `משפחת ${st?.last_name ?? ""}`.trim();
+        }
+      }
+
+      await notifyAdminPayment(
+        {
+          moduleLabel: "תלמידי מוסיקה (פרטני)",
+          studentName,
+          studentNationalId: st?.national_id ?? "",
+          parentName: st?.parent_name ?? params.full_name ?? "",
+          parentPhone: st?.parent_phone ?? "",
+          parentEmail: st?.parent_email ?? "",
+          yearName: (pay as any)?.academic_years?.name ?? "",
+          amount: totalAmount,
+          paymentMethod: "כרטיס אשראי",
+          installments: (pay as any)?.installments ?? 1,
+          docNumber: docNumber ?? (pay as any)?.icount_doc_number ?? "",
+          invoiceUrl: docUrl ?? (pay as any)?.invoice_url ?? "",
+          transactionId: txnId ?? "",
+          items,
+        },
+        `admin-payment-${groupId || paymentId}`,
+      );
+    } catch (notifyErr) {
+      console.error("[icount-student-ipn] admin notify failed", notifyErr);
+    }
 
     // Cleanup: delete the dynamic paypage from iCount. Non-fatal on failure.
     try {
