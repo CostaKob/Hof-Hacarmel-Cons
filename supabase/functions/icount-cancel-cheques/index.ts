@@ -105,8 +105,15 @@ Deno.serve(async (req: Request) => {
     const description =
       `ביטול צ׳קים עתידיים — ${studentFullName}${reason ? ` (${reason})` : ""} — ` +
       `קבלה מקור ${head.icount_doc_number ?? head.icount_doc_id} ` +
-      `(סכום העסקה ₪${transactionTotal.toLocaleString()}, בוטלו ${rows.length} צ׳קים בסך ₪${cancelTotal.toLocaleString()})\n` +
-      `פירוט צ׳קים:\n${chequeList}`;
+      `(סכום העסקה ₪${transactionTotal.toLocaleString()}, בוטלו ${rows.length} צ׳קים בסך ₪${cancelTotal.toLocaleString()})`;
+
+    // One document line per cancelled cheque (clearer than one long paragraph)
+    const chequeItems = rows.map((r: any) => ({
+      description: `צ׳ק ${r.reference_number ?? ""} · ${fmtDate(r.payment_date)} · בוטל`,
+      unitprice_incvat: -Math.abs(Number(r.amount || 0)),
+      quantity: 1,
+    }));
+
 
     const payload: any = {
       ...auth,
