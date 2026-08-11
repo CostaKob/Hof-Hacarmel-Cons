@@ -83,16 +83,16 @@ const MergeFamiliesDialog = ({
           },
         );
         if (error) throw error;
-        return { kind: "same_parent" as const, data };
+        return { kind: "same_parent" as const, data, sourceId };
       }
       const { data, error } = await (supabase as any).rpc("merge_families", {
         _target_national_id: parentNationalId,
         _source_national_id: sourceId,
       });
       if (error) throw error;
-      return { kind: "spouse" as const, data };
+      return { kind: "spouse" as const, data, sourceId };
     },
-    onSuccess: (res: any) => {
+    onSuccess: async (res: any) => {
       if (res.kind === "same_parent") {
         toast.success(
           `רשומות ההורה אוחדו — ${res.data?.moved ?? 0} ילדים הועברו`,
@@ -102,10 +102,18 @@ const MergeFamiliesDialog = ({
           `המשפחות מוזגו — ${res.data?.children_count ?? 0} ילדים בתא, ${res.data?.siblings_added ?? 0} קישורי אחים נוספו`,
         );
       }
+      // After a merge the two cells are known-related — stop flagging them as
+      // possible duplicates.
+      try {
+        await dismissPairs.mutateAsync([[parentNationalId, res.sourceId]]);
+      } catch {
+        /* non-fatal */
+      }
       invalidate();
       setSelected(null);
       onOpenChange(false);
     },
+
     onError: (e: any) => toast.error(e?.message || "הפעולה נכשלה"),
   });
 
