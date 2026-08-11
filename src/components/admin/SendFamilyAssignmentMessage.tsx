@@ -273,6 +273,33 @@ const SendFamilyAssignmentMessage = ({
         </DialogHeader>
 
         <div className="space-y-3">
+          {recipients.length > 1 && (
+            <div className="space-y-1">
+              <Label className="text-xs">שליחה אל</Label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {recipients.map((r) => (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => setRecipientKey(r.key)}
+                    className={`rounded-xl border p-3 text-right transition ${
+                      recipientKey === r.key
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-xs text-muted-foreground" dir="ltr">
+                      {r.phone || "—"}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate" dir="ltr">
+                      {r.email || "—"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <Label className="text-xs">הערה לתחילת השיעורים</Label>
             <Textarea
