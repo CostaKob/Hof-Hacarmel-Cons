@@ -1213,6 +1213,9 @@ const AdminFamilyCard = () => {
               parent_name: family?.parent_name ?? null,
               parent_phone: family?.parent_phone ?? null,
               parent_email: family?.parent_email ?? null,
+              partner_name: family?.partner_name ?? null,
+              partner_phone: family?.partner_phone ?? null,
+              partner_email: family?.partner_email ?? null,
             }}
             children={children}
             enrollments={enrollments as any[]}
