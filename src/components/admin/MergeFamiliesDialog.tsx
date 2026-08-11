@@ -57,6 +57,7 @@ const MergeFamiliesDialog = ({
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<"same_parent" | "spouse" | null>(null);
+  const { dismissPairs } = useFamilyDupDismissals();
   const { data: candidates = [], isLoading } = useMergeCandidates(
     parentNationalId,
     open,
@@ -66,8 +67,10 @@ const MergeFamiliesDialog = ({
     qc.invalidateQueries({ queryKey: ["families-list"] });
     qc.invalidateQueries({ queryKey: ["family-details"] });
     qc.invalidateQueries({ queryKey: ["family-merge-candidates"] });
+    qc.invalidateQueries({ queryKey: ["family-dup-dismissals"] });
     qc.invalidateQueries({ queryKey: ["students"] });
   };
+
 
   const mergeMutation = useMutation({
     mutationFn: async (sourceId: string) => {
