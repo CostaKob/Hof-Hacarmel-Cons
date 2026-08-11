@@ -511,7 +511,41 @@ const AdminFamilyCard = () => {
                     </a>
                   )}
                 </div>
+                {family?.partner_national_id ? (
+                  <div className="mt-3 rounded-xl border border-border bg-muted/40 p-3">
+                    <div className="text-xs text-muted-foreground mb-1">הורה שני</div>
+                    <div className="text-sm font-medium text-foreground">
+                      {family.partner_name || "ללא שם"}
+                      <span className="text-xs text-muted-foreground font-mono ms-2">
+                        ת.ז. {family.partner_national_id}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground flex-wrap">
+                      {family.partner_phone && (
+                        <a
+                          href={`tel:${family.partner_phone}`}
+                          className="inline-flex items-center gap-1 hover:text-primary"
+                        >
+                          <Phone className="h-4 w-4" /> {family.partner_phone}
+                        </a>
+                      )}
+                      {family.partner_email && (
+                        <a
+                          href={`mailto:${family.partner_email}`}
+                          className="inline-flex items-center gap-1 hover:text-primary"
+                        >
+                          <Mail className="h-4 w-4" /> {family.partner_email}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 text-xs text-muted-foreground">
+                    אין הורה שני משויך — ניתן להוסיף מכרטיס התלמיד (הורה 2)
+                  </div>
+                )}
               </div>
+
               <div className="flex flex-col items-end gap-2">
                 <Badge variant="default" className="text-sm">
                   {children.length} {children.length === 1 ? "ילד" : "ילדים"}

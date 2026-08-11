@@ -11,6 +11,10 @@ export interface FamilyListItem {
   children_names: string[];
   children_last_names?: string[];
   children_cities?: string[];
+  partner_national_id?: string | null;
+  partner_name?: string | null;
+  partner_phone?: string | null;
+  partner_email?: string | null;
 }
 
 export const useFamiliesList = (yearId?: string | null) =>
