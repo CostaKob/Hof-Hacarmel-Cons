@@ -132,9 +132,8 @@ const BankBranchPicker = ({
               className={`${h} w-20 text-center`}
             />
             <div className="flex-1 min-w-0">
+              <Popover open={branchOpen} onOpenChange={setBranchOpen}>
 
-        ) : (
-          <Popover open={branchOpen} onOpenChange={setBranchOpen}>
             <PopoverTrigger asChild>
               <Button
                 type="button"
