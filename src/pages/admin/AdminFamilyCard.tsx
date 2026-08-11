@@ -33,6 +33,7 @@ import {
   ChevronUp,
   CheckCircle2,
   Ban,
+  Loader2,
 } from "lucide-react";
 
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
