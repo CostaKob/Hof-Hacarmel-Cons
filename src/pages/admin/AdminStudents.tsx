@@ -812,7 +812,7 @@ const AdminStudents = () => {
           onChange={(v) => setMultiFilter("reg_type", v)}
         />
 
-        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
+        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || linkFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
           <Button
             type="button"
             variant="ghost"
