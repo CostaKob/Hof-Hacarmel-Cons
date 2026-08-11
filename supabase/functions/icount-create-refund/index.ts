@@ -141,8 +141,11 @@ Deno.serve(async (req: Request) => {
         docnum: Number(payment.icount_doc_number) || payment.icount_doc_number || payment.icount_doc_id,
       }],
       origin_doc_id: payment.icount_doc_id,
-      items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
+      comments: perChequeItems ? headerLine : undefined,
+      doc_comment: perChequeItems ? headerLine : undefined,
+      items: perChequeItems ?? [{ description, unitprice_incvat: negSum, quantity: 1 }],
     };
+
 
     const isBankRefund = refundMethod === "bank_transfer";
 
