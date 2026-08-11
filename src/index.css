@@ -234,7 +234,7 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
   --popover: 0 0% 100%;
   --popover-foreground: 0 0% 8%;
 
-  --primary: 0 0% 9%;
+  --primary: 0 78% 45%;
   --primary-foreground: 0 0% 100%;
 
   --secondary: 0 0% 96%;
@@ -243,26 +243,26 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
   --muted: 0 0% 96%;
   --muted-foreground: 0 0% 34%;
 
-  --accent: 0 0% 92%;
-  --accent-foreground: 0 0% 9%;
+  --accent: 0 70% 96%;
+  --accent-foreground: 0 78% 35%;
 
   --destructive: 0 72% 42%;
   --destructive-foreground: 0 0% 100%;
 
   --border: 0 0% 82%;
   --input: 0 0% 72%;
-  --ring: 0 0% 9%;
+  --ring: 0 78% 45%;
 
   --radius: 0.5rem;
 
   --sidebar-background: 0 0% 100%;
   --sidebar-foreground: 0 0% 12%;
-  --sidebar-primary: 0 0% 9%;
+  --sidebar-primary: 0 78% 45%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 0 0% 94%;
-  --sidebar-accent-foreground: 0 0% 9%;
+  --sidebar-accent: 0 70% 96%;
+  --sidebar-accent-foreground: 0 78% 35%;
   --sidebar-border: 0 0% 82%;
-  --sidebar-ring: 0 0% 9%;
+  --sidebar-ring: 0 78% 45%;
 }
 
 /* Flat background — no gradients */
@@ -344,4 +344,11 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
 }
 .theme-clean .text-muted-foreground {
   color: hsl(var(--muted-foreground));
+}
+
+/* Clean theme: red selection highlight inside menus/lists */
+.theme-clean [data-state="checked"],
+.theme-clean [data-highlighted],
+.theme-clean [aria-selected="true"] {
+  color: hsl(0 78% 35%);
 }
