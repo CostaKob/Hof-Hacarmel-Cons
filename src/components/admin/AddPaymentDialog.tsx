@@ -1273,15 +1273,15 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         <Input value={`₪${totalSelected.toLocaleString()}`} disabled className="h-9" />
                       </div>
                     </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <Label className="text-xs">בנק</Label>
-                        <Input value={bankName} onChange={(e) => setBankName(e.target.value)} className="h-9" />
-                      </div>
-                      <div>
-                        <Label className="text-xs">סניף</Label>
-                        <Input value={bankBranch} onChange={(e) => setBankBranch(e.target.value)} className="h-9" />
-                      </div>
+                    <div className="grid grid-cols-3 gap-2 items-end">
+                      <BankBranchPicker
+                        bankName={bankName}
+                        setBankName={setBankName}
+                        bankCode={bankCode}
+                        setBankCode={setBankCode}
+                        branch={bankBranch}
+                        setBranch={setBankBranch}
+                      />
                       <div>
                         <Label className="text-xs">מס׳ חשבון</Label>
                         <Input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} className="h-9" />
