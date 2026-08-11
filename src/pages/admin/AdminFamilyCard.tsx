@@ -935,7 +935,7 @@ const AdminFamilyCard = () => {
                             </div>
                           );
                         })()}
-                        {!isGroup && p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
+                        {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
                       </div>
                       <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end" onClick={(e) => e.stopPropagation()}>
                         {isGroup && (
