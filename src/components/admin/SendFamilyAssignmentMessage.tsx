@@ -28,6 +28,9 @@ interface FamilyLike {
   parent_name?: string | null;
   parent_phone?: string | null;
   parent_email?: string | null;
+  partner_name?: string | null;
+  partner_phone?: string | null;
+  partner_email?: string | null;
 }
 
 interface ChildLike {
