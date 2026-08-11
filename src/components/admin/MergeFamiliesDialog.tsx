@@ -237,16 +237,19 @@ const MergeFamiliesDialog = ({
           </Button>
           <Button
             type="button"
+            variant={mode === "same_parent" ? "destructive" : "default"}
             className="h-12 rounded-xl w-full sm:w-auto"
-            disabled={!selected || mergeMutation.isPending}
-            onClick={() => selected && mergeMutation.mutate(selected)}
+            disabled={!selected || !mode || mergeMutation.isPending}
+            onClick={() => selected && mode && mergeMutation.mutate(selected)}
           >
             {mergeMutation.isPending ? (
               <Loader2 className="h-4 w-4 animate-spin ms-2" />
             ) : (
               <Merge className="h-4 w-4 ms-2" />
             )}
-            {mode === "same_parent" ? "אחד רשומות הורה" : "מזג משפחות"}
+            {mode === "same_parent"
+              ? "אחד רשומות הורה (מחיקה)"
+              : "מזג משפחות"}
           </Button>
         </DialogFooter>
       </DialogContent>
