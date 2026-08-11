@@ -1288,7 +1288,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     <p className="text-xs text-muted-foreground">
                       פריסה אוטומטית: הצ׳ק הראשון סופג את השארית ושאר הצ׳קים בסכומים שלמים ושווים. ניתן לערוך כל שורה ידנית.
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <div>
                         <Label className="text-xs">מספר צ׳קים</Label>
                         <Input type="number" min="1" max="24" value={numChecks} onChange={(e) => setNumChecks(e.target.value)} className="h-9" />
@@ -1302,6 +1302,18 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         <Input value={firstCheckNumber} onChange={(e) => setFirstCheckNumber(e.target.value)} placeholder="לדוגמה: 1001" className="h-9" />
                       </div>
                       <div>
+                        <Label className="text-xs">סכום צ׳ק ראשון (₪)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={firstCheckAmount}
+                          onChange={(e) => setFirstCheckAmount(e.target.value)}
+                          placeholder="ריק = חלוקה שווה"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="col-span-2">
                         <Label className="text-xs">סה״כ לפריסה</Label>
                         <Input value={`₪${totalSelected.toLocaleString()}`} disabled className="h-9" />
                       </div>
