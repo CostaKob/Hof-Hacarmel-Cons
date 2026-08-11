@@ -859,19 +859,17 @@ const AdminInventoryInstrumentForm = () => {
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                           <div className="flex items-center gap-1">
                             <Label className="text-[11px] text-muted-foreground">השאלה:</Label>
-                            <Input
-                              type="date"
+                            <DateInput
                               value={editLoanDate}
-                              onChange={(e) => setEditLoanDate(e.target.value)}
+                              onChange={(v) => setEditLoanDate(v)}
                               className="h-9 rounded-lg w-36 text-xs"
                             />
                           </div>
                           <div className="flex items-center gap-1">
                             <Label className="text-[11px] text-muted-foreground">החזרה:</Label>
-                            <Input
-                              type="date"
+                            <DateInput
                               value={editReturnDate}
-                              onChange={(e) => setEditReturnDate(e.target.value)}
+                              onChange={(v) => setEditReturnDate(v)}
                               className="h-9 rounded-lg w-36 text-xs"
                             />
                           </div>
