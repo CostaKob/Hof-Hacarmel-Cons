@@ -2943,7 +2943,7 @@ export type Database = {
         Returns: boolean
       }
       list_families: {
-        Args: { _year_id?: string }
+        Args: { _year_id: string }
         Returns: {
           children_cities: string[]
           children_count: number
@@ -2954,6 +2954,10 @@ export type Database = {
           parent_name: string
           parent_national_id: string
           parent_phone: string
+          partner_email: string
+          partner_name: string
+          partner_national_id: string
+          partner_phone: string
         }[]
       }
       list_public_available_inventory: {
