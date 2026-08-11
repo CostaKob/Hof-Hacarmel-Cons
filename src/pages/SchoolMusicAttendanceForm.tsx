@@ -6,6 +6,7 @@ import { useSchoolMusicTeachers } from "@/hooks/useSchoolMusicTeachers";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -161,7 +162,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3">
           <div className="space-y-1.5">
             <Label className="text-sm">תאריך הדיווח</Label>
-            <Input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} className="h-12 rounded-xl" />
+            <DateInput value={date} max={today} onChange={(v) => setDate(v)} className="h-12 rounded-xl" />
           </div>
           <Button type="button" variant="outline" onClick={markAllPresent} disabled={loadingTeachers || teachers.length === 0 || dayCancelled} className="w-full h-11 rounded-xl">
             <CheckCheck className="h-4 w-4 ml-1" />

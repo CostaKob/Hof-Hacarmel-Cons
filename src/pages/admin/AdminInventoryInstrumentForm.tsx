@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -587,7 +588,13 @@ const AdminInventoryInstrumentForm = () => {
 
             <div className="space-y-1.5 sm:col-span-2">
               <Label className="text-sm">תאריך רכישה</Label>
-              <Input type="date" {...register("purchase_date")} className="h-12 rounded-xl" />
+              <Controller
+                name="purchase_date"
+                control={control}
+                render={({ field }) => (
+                  <DateInput value={field.value} onChange={(v) => field.onChange(v)} className="h-12 rounded-xl" />
+                )}
+              />
             </div>
 
             <div className="space-y-1.5 sm:col-span-2">
@@ -766,19 +773,17 @@ const AdminInventoryInstrumentForm = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <Label className="text-sm">תאריך השאלה *</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={newLoanDate}
-                      onChange={(e) => setNewLoanDate(e.target.value)}
+                      onChange={(v) => setNewLoanDate(v)}
                       className="h-11 rounded-xl"
                     />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-sm">תאריך החזרה</Label>
-                    <Input
-                      type="date"
+                    <DateInput
                       value={newReturnDate}
-                      onChange={(e) => setNewReturnDate(e.target.value)}
+                      onChange={(v) => setNewReturnDate(v)}
                       className="h-11 rounded-xl"
                     />
                   </div>
@@ -854,19 +859,17 @@ const AdminInventoryInstrumentForm = () => {
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                           <div className="flex items-center gap-1">
                             <Label className="text-[11px] text-muted-foreground">השאלה:</Label>
-                            <Input
-                              type="date"
+                            <DateInput
                               value={editLoanDate}
-                              onChange={(e) => setEditLoanDate(e.target.value)}
+                              onChange={(v) => setEditLoanDate(v)}
                               className="h-9 rounded-lg w-36 text-xs"
                             />
                           </div>
                           <div className="flex items-center gap-1">
                             <Label className="text-[11px] text-muted-foreground">החזרה:</Label>
-                            <Input
-                              type="date"
+                            <DateInput
                               value={editReturnDate}
-                              onChange={(e) => setEditReturnDate(e.target.value)}
+                              onChange={(v) => setEditReturnDate(v)}
                               className="h-9 rounded-lg w-36 text-xs"
                             />
                           </div>

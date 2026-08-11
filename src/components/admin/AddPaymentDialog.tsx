@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -1138,7 +1139,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             {(isEdit || paymentMethod !== "credit_card") && (
               <div>
                 <Label>תאריך תשלום</Label>
-                <Input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+                <DateInput value={paymentDate} onChange={(v) => setPaymentDate(v)} />
               </div>
             )}
             <div>
@@ -1264,7 +1265,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       </div>
                       <div>
                         <Label className="text-xs">תאריך צ׳ק ראשון</Label>
-                        <Input type="date" value={firstCheckDate} onChange={(e) => setFirstCheckDate(e.target.value)} className="h-9" />
+                        <DateInput value={firstCheckDate} onChange={(v) => setFirstCheckDate(v)} className="h-9" />
                       </div>
                       <div>
                         <Label className="text-xs">מספר צ׳ק ראשון</Label>
@@ -1307,8 +1308,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         {checks.map((c, i) => (
                           <div key={i} className="grid grid-cols-[24px_1fr_90px_90px_24px] gap-2 items-center">
                             <span className="text-xs text-muted-foreground text-center">{i + 1}</span>
-                            <Input type="date" value={c.date}
-                              onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, date: e.target.value } : x))} className="h-9" />
+                            <DateInput value={c.date}
+                              onChange={(v) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, date: v } : x))} className="h-9" />
                             <Input value={c.number}
                               onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, number: e.target.value } : x))} placeholder="מס׳" className="h-9" />
                             <Input type="number" step="0.01" value={c.amount}

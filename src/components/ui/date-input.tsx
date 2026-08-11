@@ -12,17 +12,23 @@ interface DateInputProps {
   placeholder?: string;
   className?: string;
   disabled?: boolean;
+  min?: string; // ISO date string yyyy-MM-dd
+  max?: string; // ISO date string yyyy-MM-dd
+}
+
+function parseIsoDate(value?: string) {
+  if (!value) return undefined;
+  const d = parse(value, "yyyy-MM-dd", new Date());
+  return isValid(d) ? d : undefined;
 }
 
 const DateInput = React.forwardRef<HTMLButtonElement, DateInputProps>(
-  ({ value, onChange, placeholder = "DD/MM/YYYY", className, disabled }, ref) => {
+  ({ value, onChange, placeholder = "DD/MM/YYYY", className, disabled, min, max }, ref) => {
     const [open, setOpen] = React.useState(false);
 
-    const dateValue = React.useMemo(() => {
-      if (!value) return undefined;
-      const d = parse(value, "yyyy-MM-dd", new Date());
-      return isValid(d) ? d : undefined;
-    }, [value]);
+    const dateValue = React.useMemo(() => parseIsoDate(value), [value]);
+    const minDate = React.useMemo(() => parseIsoDate(min), [min]);
+    const maxDate = React.useMemo(() => parseIsoDate(max), [max]);
 
     const handleSelect = (date: Date | undefined) => {
       if (date) {
@@ -32,6 +38,11 @@ const DateInput = React.forwardRef<HTMLButtonElement, DateInputProps>(
       }
       setOpen(false);
     };
+
+    const disabledDays = React.useMemo(() => {
+      if (!minDate && !maxDate) return undefined;
+      return { before: minDate, after: maxDate };
+    }, [minDate, maxDate]);
 
     return (
       <Popover open={open} onOpenChange={setOpen}>
@@ -59,6 +70,7 @@ const DateInput = React.forwardRef<HTMLButtonElement, DateInputProps>(
             captionLayout="dropdown-buttons"
             fromYear={1950}
             toYear={new Date().getFullYear() + 5}
+            disabled={disabledDays}
             initialFocus
             className={cn("p-3 pointer-events-auto")}
           />

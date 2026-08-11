@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -156,19 +157,17 @@ const InstrumentRepairsSection = ({ inventoryInstrumentId }: Props) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-sm">תאריך שליחה *</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={form.sent_date}
-                onChange={(e) => setForm({ ...form, sent_date: e.target.value })}
+                onChange={(v) => setForm({ ...form, sent_date: v })}
                 className="h-11 rounded-xl"
               />
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm">תאריך חזרה</Label>
-              <Input
-                type="date"
+              <DateInput
                 value={form.return_date}
-                onChange={(e) => setForm({ ...form, return_date: e.target.value })}
+                onChange={(v) => setForm({ ...form, return_date: v })}
                 className="h-11 rounded-xl"
               />
             </div>

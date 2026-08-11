@@ -6,6 +6,7 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useSchoolMusicTeachers } from "@/hooks/useSchoolMusicTeachers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -136,11 +137,11 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-4">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-11 rounded-xl" />
+            <DateInput value={startDate} onChange={(v) => setStartDate(v)} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">עד תאריך</Label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-11 rounded-xl" />
+            <DateInput value={endDate} onChange={(v) => setEndDate(v)} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">מורה</Label>

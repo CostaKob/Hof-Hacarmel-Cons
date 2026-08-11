@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -183,7 +184,7 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
 
               <div className="space-y-1.5">
                 <Label className="text-sm">תאריך השאלה</Label>
-                <Input type="date" value={loanDate} onChange={(e) => setLoanDate(e.target.value)} className="h-12 rounded-xl" />
+                <DateInput value={loanDate} onChange={(v) => setLoanDate(v)} className="h-12 rounded-xl" />
               </div>
 
               <div className="flex flex-col gap-2 sticky bottom-0 bg-card pt-2">
@@ -231,10 +232,9 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
                   </button>
                   {returningId === loan.id ? (
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="date"
+                      <DateInput
                         value={returnDate}
-                        onChange={(e) => setReturnDate(e.target.value)}
+                        onChange={(v) => setReturnDate(v)}
                         className="h-9 rounded-lg w-36"
                       />
                       <Button

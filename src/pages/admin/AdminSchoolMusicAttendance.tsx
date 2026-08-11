@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Input } from "@/components/ui/input";
+import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -162,7 +163,7 @@ const AdminSchoolMusicAttendance = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm">תאריך</Label>
-                  <Input type="date" max={today} value={manualDate} onChange={(e) => setManualDate(e.target.value)} className="h-11 rounded-xl" />
+                  <DateInput max={today} value={manualDate} onChange={(v) => setManualDate(v)} className="h-11 rounded-xl" />
                 </div>
               </div>
               <DialogFooter>
@@ -175,11 +176,11 @@ const AdminSchoolMusicAttendance = () => {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-11 rounded-xl" />
+            <DateInput value={startDate} onChange={(v) => setStartDate(v)} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">עד תאריך</Label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-11 rounded-xl" />
+            <DateInput value={endDate} onChange={(v) => setEndDate(v)} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">בית ספר</Label>
