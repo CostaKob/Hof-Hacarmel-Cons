@@ -364,7 +364,7 @@ const SendFamilyAssignmentMessage = ({
           </Button>
           <Button
             onClick={sendEmail}
-            disabled={sendingEmail || !family.parent_email}
+            disabled={sendingEmail || !recipient?.email}
             className="h-11 rounded-xl"
             variant="outline"
           >
