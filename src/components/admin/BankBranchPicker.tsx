@@ -171,8 +171,11 @@ const BankBranchPicker = ({
                 </CommandList>
               </Command>
             </PopoverContent>
-          </Popover>
+              </Popover>
+            </div>
+          </div>
         )}
+
       </div>
     </>
   );
