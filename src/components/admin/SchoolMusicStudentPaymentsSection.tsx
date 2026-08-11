@@ -487,7 +487,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   {p.payment_status === "pending" && !isRefund && p.payment_link_url && (
                     <>
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="העתק קישור תשלום"
-                        onClick={() => { navigator.clipboard.writeText(p.payment_link_url); toast.success("הקישור הועתק"); }}>
+                        onClick={async () => { await navigator.clipboard.writeText(await shortenUrl(p.payment_link_url)); toast.success("הקישור הועתק"); }}>
                         <Copy className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg" title="פתח קישור תשלום"
@@ -497,7 +497,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       {waPhone && (
                         <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg text-green-600 hover:bg-green-50"
                           title="שלח קישור בוואטסאפ"
-                          onClick={() => window.open(buildWaUrl(p.payment_link_url), "_blank")}>
+                          onClick={async () => window.open(buildWaUrl(await shortenUrl(p.payment_link_url)), "_blank")}>
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}
