@@ -1598,6 +1598,7 @@ const AdminStudentPaymentCalc = () => {
           enrollments={enrollments ?? []}
           totalDue={totalIncVat}
           balanceDue={balance}
+          readOnly
         />
 
         <SendTeacherAssignmentMessage
