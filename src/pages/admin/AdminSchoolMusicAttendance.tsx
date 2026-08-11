@@ -163,7 +163,7 @@ const AdminSchoolMusicAttendance = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm">תאריך</Label>
-                  <Input type="date" max={today} value={manualDate} onChange={(e) => setManualDate(e.target.value)} className="h-11 rounded-xl" />
+                  <DateInput max={today} value={manualDate} onChange={(v) => setManualDate(v)} className="h-11 rounded-xl" />
                 </div>
               </div>
               <DialogFooter>
