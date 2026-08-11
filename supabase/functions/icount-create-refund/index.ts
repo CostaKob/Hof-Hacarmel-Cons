@@ -186,10 +186,12 @@ Deno.serve(async (req: Request) => {
     console.log("[icount negative receipt]", JSON.stringify(data));
 
     if (!data.status) {
-      return new Response(JSON.stringify({ error: "icount failed", details: data }), {
+      const reason = data.error_description || data.reason || data.message || data.status_description || "שגיאה לא ידועה מ-iCount";
+      return new Response(JSON.stringify({ error: `iCount: ${reason}`, details: data }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const docId = String(data.doc_id ?? data.docnum ?? "");
     const docNumber = String(data.docnum ?? data.doc_number ?? "");
