@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Users, AlertTriangle, Merge } from "lucide-react";
 import { toast } from "sonner";
+import { useFamilyDupDismissals } from "@/hooks/useFamilyDupDismissals";
 
 export interface MergeCandidate {
   parent_national_id: string;
