@@ -2105,6 +2105,33 @@ export type Database = {
         }
         Relationships: []
       }
+      short_links: {
+        Row: {
+          click_count: number
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          target_url: string
+        }
+        Insert: {
+          click_count?: number
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          target_url: string
+        }
+        Update: {
+          click_count?: number
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          target_url?: string
+        }
+        Relationships: []
+      }
       student_notes: {
         Row: {
           author_user_id: string | null
@@ -2769,6 +2796,7 @@ export type Database = {
         Args: { _national_id: string; _year_id: string }
         Returns: Json
       }
+      create_short_link: { Args: { _url: string }; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -3043,6 +3071,7 @@ export type Database = {
         Args: { _inventory_instrument_id?: string; _payload: Json }
         Returns: Json
       }
+      resolve_short_link: { Args: { _code: string }; Returns: string }
       set_student_homeroom: {
         Args: {
           _class: string
