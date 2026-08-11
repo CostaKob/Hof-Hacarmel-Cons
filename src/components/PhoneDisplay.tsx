@@ -50,7 +50,7 @@ export const PhoneDisplay = ({
       {wa && (
         <a
           href={`https://wa.me/${wa}`}
-          target="_blank"
+          target="musichof_whatsapp"
           rel="noopener noreferrer"
           onClick={handleClick}
           aria-label="פתח צ'אט בוואטסאפ"
