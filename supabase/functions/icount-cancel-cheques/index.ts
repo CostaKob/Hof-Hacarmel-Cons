@@ -141,7 +141,10 @@ Deno.serve(async (req: Request) => {
         docnum: Number(head.icount_doc_number) || head.icount_doc_number || head.icount_doc_id,
       }],
       origin_doc_id: head.icount_doc_id,
-      items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
+      comments: description,
+      doc_comment: description,
+      items: chequeItems.length ? chequeItems : [{ description, unitprice_incvat: negSum, quantity: 1 }],
+
       cheques: rows.map((r: any) => {
         const meta = parseChequeMeta(r.notes);
         const num = String(r.reference_number || "");
