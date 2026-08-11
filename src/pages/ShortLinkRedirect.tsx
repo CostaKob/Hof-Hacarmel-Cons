@@ -29,6 +29,7 @@ const ShortLinkRedirect = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 text-center" dir="rtl">
+      <AppLogo size="lg" />
       {notFound ? (
         <>
           <h1 className="text-xl font-semibold">הקישור לא נמצא</h1>
