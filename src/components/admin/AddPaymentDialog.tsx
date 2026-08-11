@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
+import BankBranchPicker from "@/components/admin/BankBranchPicker";
 
 const PAYMENT_METHODS = [
   { value: "credit_card", label: "אשראי" },
