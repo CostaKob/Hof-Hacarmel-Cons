@@ -8,6 +8,7 @@ import { AcademicYearProvider } from "@/hooks/useAcademicYear";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import Index from "./pages/Index";
+import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -122,6 +123,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Landing />} />
               <Route path="/teachers" element={<PublicTeachers />} />
+              <Route path="/p/:code" element={<ShortLinkRedirect />} />
               <Route path="/dashboard" element={<Index />} />
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

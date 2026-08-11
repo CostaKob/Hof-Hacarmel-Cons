@@ -1,3 +1,4 @@
+import { shortenUrl } from "@/lib/shortLink";
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -993,7 +994,7 @@ const AdminFamilyCard = () => {
                             </Button>
                             <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="העתק קישור"
                               onClick={async () => {
-                                try { await navigator.clipboard.writeText(p.payment_link_url!); toast.success("הקישור הועתק"); }
+                                try { await navigator.clipboard.writeText(await shortenUrl(p.payment_link_url!)); toast.success("הקישור הועתק"); }
                                 catch { toast.error("לא ניתן להעתיק"); }
                               }}>
                               <Copy className="h-4 w-4" />
