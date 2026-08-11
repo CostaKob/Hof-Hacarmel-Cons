@@ -1215,6 +1215,49 @@ const AdminFamilyCard = () => {
             pendingPayments={pendingPayments.filter((p) => !!p.payment_link_url) as any[]}
           />
 
+          <AlertDialog
+            open={!!pendingInvoiceParams}
+            onOpenChange={(o) => { if (!o) { setPendingInvoiceParams(null); setInvoiceNote(""); } }}
+          >
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  {pendingInvoiceParams?.isCredit ? "אישור הפקת קבלת זיכוי" : "אישור הפקת קבלה"}
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  ⚠️ הפקת מסמך ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>. המסמך יישלח באופן מיידי. האם להמשיך?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="space-y-1.5">
+                <Label className="text-sm">הערה לקבלה (אופציונלי)</Label>
+                <Textarea
+                  value={invoiceNote}
+                  onChange={(e) => setInvoiceNote(e.target.value)}
+                  placeholder="הערה שתופיע על גבי הקבלה"
+                  rows={3}
+                  maxLength={500}
+                  className="rounded-xl"
+                />
+              </div>
+              <AlertDialogFooter className="flex-row-reverse gap-2">
+                <AlertDialogAction
+                  onClick={() => {
+                    if (pendingInvoiceParams) {
+                      const { isCredit, ...params } = pendingInvoiceParams;
+                      createInvoiceMutation.mutate({ ...params, note: invoiceNote.trim() || undefined });
+                    }
+                    setPendingInvoiceParams(null);
+                    setInvoiceNote("");
+                  }}
+                >
+                  כן, הפק
+                </AlertDialogAction>
+                <AlertDialogCancel>ביטול</AlertDialogCancel>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+
 
           {refundTarget && (
             <div
