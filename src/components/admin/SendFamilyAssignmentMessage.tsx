@@ -146,6 +146,33 @@ const SendFamilyAssignmentMessage = ({
   const [subject, setSubject] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  const recipients = useMemo(
+    () =>
+      [
+        {
+          key: "parent",
+          label: family.parent_name || "הורה 1",
+          phone: family.parent_phone || null,
+          email: family.parent_email || null,
+        },
+        {
+          key: "partner",
+          label: family.partner_name || "הורה 2",
+          phone: family.partner_phone || null,
+          email: family.partner_email || null,
+        },
+      ].filter((r) => r.phone || r.email),
+    [family],
+  );
+
+  const [recipientKey, setRecipientKey] = useState<string>("parent");
+
+  useEffect(() => {
+    if (open) setRecipientKey(recipients[0]?.key ?? "parent");
+  }, [open, recipients]);
+
+  const recipient = recipients.find((r) => r.key === recipientKey) ?? recipients[0];
+
   const { data: template } = useQuery({
     queryKey: ["message-template", FAMILY_ASSIGNMENT_TEMPLATE_KEY],
     queryFn: () => fetchMessageTemplate(FAMILY_ASSIGNMENT_TEMPLATE_KEY),
