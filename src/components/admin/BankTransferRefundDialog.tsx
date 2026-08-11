@@ -617,7 +617,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                   </div>
                   <div className="space-y-1">
                     <Label>תאריך ההעברה</Label>
-                    <Input type="date" className="h-11 rounded-xl" value={transferDate} onChange={(e) => setTransferDate(e.target.value)} />
+                    <DateInput className="h-11 rounded-xl" value={transferDate} onChange={(v) => setTransferDate(v)} />
                   </div>
                 </div>
                 <Button
