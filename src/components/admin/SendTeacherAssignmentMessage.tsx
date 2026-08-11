@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { shortenUrl } from "@/lib/shortLink";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 interface Props {
   open: boolean;
@@ -169,7 +170,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
       toast.error("אין מספר טלפון להורה");
       return;
     }
-    window.open(`https://wa.me/972${parentWa}?text=${encodeURIComponent(message)}`, "musichof_whatsapp");
+    openWhatsApp(`972${parentWa}`, message);
   };
 
   const sendEmail = async () => {

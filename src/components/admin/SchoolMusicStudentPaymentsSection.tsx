@@ -1,4 +1,5 @@
 import { shortenUrl } from "@/lib/shortLink";
+import { openWhatsApp } from "@/lib/whatsapp";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -498,7 +499,10 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       {waPhone && (
                         <Button size="icon" variant="outline" className="h-8 w-8 rounded-lg text-green-600 hover:bg-green-50"
                           title="שלח קישור בוואטסאפ"
-                          onClick={async () => window.open(buildWaUrl(await shortenUrl(p.payment_link_url)), "musichof_whatsapp")}>
+                          onClick={async () => {
+                            const shortUrl = await shortenUrl(p.payment_link_url);
+                            openWhatsApp(waPhone, `שלום, מצורף קישור לתשלום: ${shortUrl}`);
+                          }}>
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}

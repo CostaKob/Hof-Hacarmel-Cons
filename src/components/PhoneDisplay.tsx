@@ -1,5 +1,6 @@
 import { Phone, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { openWhatsApp } from "@/lib/whatsapp";
 
 const formatWhatsApp = (phone: string) => {
   const digits = phone.replace(/\D/g, "");
@@ -49,10 +50,12 @@ export const PhoneDisplay = ({
       </a>
       {wa && (
         <a
-          href={`https://wa.me/${wa}`}
-          target="musichof_whatsapp"
-          rel="noopener noreferrer"
-          onClick={handleClick}
+          href={`https://web.whatsapp.com/send?phone=${wa}`}
+          onClick={(e) => {
+            e.preventDefault();
+            handleClick(e);
+            openWhatsApp(wa);
+          }}
           aria-label="פתח צ'אט בוואטסאפ"
           title="פתח צ'אט בוואטסאפ"
           className="text-green-600 hover:text-green-700 inline-flex items-center"

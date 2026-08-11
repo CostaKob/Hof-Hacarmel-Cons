@@ -9,6 +9,7 @@ import {
   parseInlineLinks,
 } from "@/lib/messageTemplates";
 import { shortenUrls } from "@/lib/shortLink";
+import { openWhatsApp } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -231,10 +232,7 @@ const SendFamilyAssignmentMessage = ({
       toast.error("אין מספר טלפון להורה");
       return;
     }
-    window.open(
-      `https://wa.me/972${parentWa}?text=${encodeURIComponent(prepareWhatsAppText(message))}`,
-      "musichof_whatsapp",
-    );
+    openWhatsApp(`972${parentWa}`, prepareWhatsAppText(message));
   };
 
   const sendEmail = async () => {
