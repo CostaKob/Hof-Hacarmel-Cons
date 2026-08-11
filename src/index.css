@@ -321,11 +321,21 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
 }
 
 /* Inputs: clear boxes */
-.theme-clean input,
-.theme-clean textarea,
-.theme-clean [role="combobox"] {
+.theme-clean input:not([type="checkbox"]):not([type="radio"]),
+.theme-clean textarea {
   background-color: hsl(0 0% 100%);
   border-color: hsl(var(--input));
+}
+
+/* Select triggers: keep their own background (header triggers sit on dark bar) */
+.theme-clean [role="combobox"] {
+  border-color: hsl(var(--input));
+}
+.theme-clean .bg-primary [role="combobox"],
+.theme-clean header [role="combobox"] {
+  background-color: hsl(0 0% 100% / 0.12);
+  border-color: hsl(0 0% 100% / 0.3);
+  color: hsl(var(--primary-foreground));
 }
 
 /* Slightly larger, calmer text */
