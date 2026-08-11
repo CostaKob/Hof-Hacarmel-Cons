@@ -1308,8 +1308,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         {checks.map((c, i) => (
                           <div key={i} className="grid grid-cols-[24px_1fr_90px_90px_24px] gap-2 items-center">
                             <span className="text-xs text-muted-foreground text-center">{i + 1}</span>
-                            <Input type="date" value={c.date}
-                              onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, date: e.target.value } : x))} className="h-9" />
+                            <DateInput value={c.date}
+                              onChange={(v) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, date: v } : x))} className="h-9" />
                             <Input value={c.number}
                               onChange={(e) => setChecks((prev) => prev.map((x, idx) => idx === i ? { ...x, number: e.target.value } : x))} placeholder="מס׳" className="h-9" />
                             <Input type="number" step="0.01" value={c.amount}
