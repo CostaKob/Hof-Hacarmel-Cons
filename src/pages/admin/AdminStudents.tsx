@@ -628,6 +628,7 @@ const AdminStudents = () => {
     if (statusFilter === "active" && (!r.is_active || isInactiveStudentStatus(r.students?.student_status))) return false;
     if (statusFilter === "stopped" && (r.is_active && !isInactiveStudentStatus(r.students?.student_status))) return false;
     if (paymentFilter.length > 0 && !paymentFilter.includes(getPaymentStatus(r))) return false;
+    if (linkFilter.length > 0 && !linkFilter.includes(hasActiveLink(r) ? "sent" : "not_sent")) return false;
     if (trackFilter.length > 0) {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
