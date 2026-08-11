@@ -129,6 +129,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [numChecks, setNumChecks] = useState("1");
   const [firstCheckDate, setFirstCheckDate] = useState(today);
   const [firstCheckNumber, setFirstCheckNumber] = useState("");
+  const [firstCheckAmount, setFirstCheckAmount] = useState("");
   const [bankName, setBankName] = useState("");
   const [bankCode, setBankCode] = useState("");
   const [bankBranch, setBankBranch] = useState("");
@@ -965,6 +966,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setNumChecks("1");
     setFirstCheckDate(today);
     setFirstCheckNumber("");
+    setFirstCheckAmount("");
     setBankName("");
     setBankBranch("");
     setBankAccount("");
@@ -988,16 +990,35 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     const n = Math.max(1, parseInt(numChecks) || 1);
     const total = Math.round(totalSelected * 100) / 100;
     if (total <= 0) { toast.error("סה״כ הסכום חייב להיות גדול מ-0"); return; }
-    const baseWhole = Math.floor(total / n);
-    const remainder = Math.round((total - baseWhole * n) * 100) / 100;
-    const firstAmt = Math.round((baseWhole + remainder) * 100) / 100;
+    const manualFirst = parseFloat(firstCheckAmount);
+    const hasManualFirst = !Number.isNaN(manualFirst) && manualFirst > 0;
+    if (hasManualFirst && manualFirst > total) {
+      toast.error("סכום הצ׳ק הראשון לא יכול לעבור את סה״כ הפריסה");
+      return;
+    }
+    const remaining = hasManualFirst ? Math.round((total - manualFirst) * 100) / 100 : 0;
+    const restCount = hasManualFirst ? n - 1 : n;
+    if (hasManualFirst && restCount < 0) {
+      toast.error("מספר הצ׳קים קטן מדי לסכום הראשון שהוזן");
+      return;
+    }
+    const baseWhole = restCount > 0 ? Math.floor(remaining / restCount) : 0;
+    const remainder = restCount > 0 ? Math.round((remaining - baseWhole * restCount) * 100) / 100 : 0;
+    const firstAmt = hasManualFirst ? manualFirst : Math.round((baseWhole + remainder) * 100) / 100;
     const startNum = parseInt(firstCheckNumber);
     const rows: Array<{ date: string; number: string; amount: string }> = [];
     for (let i = 0; i < n; i++) {
+      const isFirst = i === 0;
+      const isSecond = i === 1 && hasManualFirst;
+      const amt = isFirst
+        ? firstAmt
+        : (hasManualFirst
+            ? (isSecond ? Math.round((baseWhole + remainder) * 100) / 100 : baseWhole)
+            : baseWhole);
       rows.push({
         date: addMonthsIso(firstCheckDate, i),
         number: Number.isFinite(startNum) ? String(startNum + i) : "",
-        amount: String(i === 0 ? firstAmt : baseWhole),
+        amount: String(amt),
       });
     }
     setChecks(rows);
@@ -1265,9 +1286,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 {checksOpen && (
                   <div className="space-y-3 pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground">
-                      פריסה אוטומטית: הצ׳ק הראשון סופג את השארית ושאר הצ׳קים בסכומים שלמים ושווים. ניתן לערוך כל שורה ידנית.
+                      ניתן להזין סכום לצ׳ק הראשון; אם השדה ריק, הסכום יתחלק שווה בשווה והראשון יספוג את השארית. ניתן לערוך כל שורה ידנית.
                     </p>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <div>
                         <Label className="text-xs">מספר צ׳קים</Label>
                         <Input type="number" min="1" max="24" value={numChecks} onChange={(e) => setNumChecks(e.target.value)} className="h-9" />
@@ -1281,6 +1302,18 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         <Input value={firstCheckNumber} onChange={(e) => setFirstCheckNumber(e.target.value)} placeholder="לדוגמה: 1001" className="h-9" />
                       </div>
                       <div>
+                        <Label className="text-xs">סכום צ׳ק ראשון (₪)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={firstCheckAmount}
+                          onChange={(e) => setFirstCheckAmount(e.target.value)}
+                          placeholder="ריק = חלוקה שווה"
+                          className="h-9"
+                        />
+                      </div>
+                      <div className="col-span-2">
                         <Label className="text-xs">סה״כ לפריסה</Label>
                         <Input value={`₪${totalSelected.toLocaleString()}`} disabled className="h-9" />
                       </div>
