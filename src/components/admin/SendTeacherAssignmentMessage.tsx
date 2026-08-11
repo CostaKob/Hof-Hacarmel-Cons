@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
+import { shortenUrl } from "@/lib/shortLink";
 
 interface Props {
   open: boolean;
@@ -21,7 +22,7 @@ function normalizeWaPhone(phone?: string | null): string {
   return String(phone).replace(/\D/g, "").replace(/^0/, "");
 }
 
-function buildMessage(student: any, enrollments: any[], pendingPayment: any | null, extraNote: string): string {
+function buildMessage(student: any, enrollments: any[], pendingPayment: any | null, extraNote: string, payLink?: string): string {
   const parentName = student.parent_name || "הורה יקר";
   const lines: string[] = [];
   lines.push(`שלום ${parentName},`);
@@ -56,7 +57,7 @@ function buildMessage(student: any, enrollments: any[], pendingPayment: any | nu
     lines.push("");
     if (pendingPayment.payment_link_url) {
       lines.push("לתשלום שכר הלימוד לחצו כאן:");
-      lines.push(pendingPayment.payment_link_url);
+      lines.push(payLink || pendingPayment.payment_link_url);
       lines.push("");
     }
   }
@@ -112,10 +113,27 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
     if (open) setExtraNote(defaultNote);
   }, [open, defaultNote]);
 
+  const [payLink, setPayLink] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let cancelled = false;
+    const url = pendingPayment?.payment_link_url;
+    if (!open || !url) {
+      setPayLink(undefined);
+      return;
+    }
+    shortenUrl(url).then((short) => {
+      if (!cancelled) setPayLink(short);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, pendingPayment?.payment_link_url]);
+
   useEffect(() => {
     if (!open) return;
-    setMessage(buildMessage(student, enrollments, pendingPayment, extraNote));
-  }, [open, student, enrollments, pendingPayment, extraNote]);
+    setMessage(buildMessage(student, enrollments, pendingPayment, extraNote, payLink));
+  }, [open, student, enrollments, pendingPayment, extraNote, payLink]);
 
   const parentWa = normalizeWaPhone(student?.parent_phone);
 
