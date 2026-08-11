@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ArchiveYearBanner from "./ArchiveYearBanner";
 import FamilyIcon from "@/components/icons/FamilyIcon";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -131,6 +132,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
           </div>
 
           <div className="flex items-center gap-2">
+            <ThemeSwitcher className="text-primary-foreground" />
             {/* Year Switcher */}
             {!yearsLoading && years.length > 0 && (
               <div className="flex items-center gap-1.5">
