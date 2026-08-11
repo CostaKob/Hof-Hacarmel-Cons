@@ -55,7 +55,7 @@ const MergeFamiliesDialog = ({
 }: Props) => {
   const qc = useQueryClient();
   const [selected, setSelected] = useState<string | null>(null);
-  const [mode, setMode] = useState<"same_parent" | "spouse">("same_parent");
+  const [mode, setMode] = useState<"same_parent" | "spouse" | null>(null);
   const { data: candidates = [], isLoading } = useMergeCandidates(
     parentNationalId,
     open,
