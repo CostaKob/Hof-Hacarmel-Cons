@@ -232,10 +232,9 @@ const StudentInstrumentLoansSection = ({ studentType, studentId }: Props) => {
                   </button>
                   {returningId === loan.id ? (
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="date"
+                      <DateInput
                         value={returnDate}
-                        onChange={(e) => setReturnDate(e.target.value)}
+                        onChange={(v) => setReturnDate(v)}
                         className="h-9 rounded-lg w-36"
                       />
                       <Button
