@@ -109,6 +109,33 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
   const [message, setMessage] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  const recipients = useMemo(
+    () =>
+      [
+        {
+          key: "parent",
+          label: student?.parent_name || "הורה 1",
+          phone: student?.parent_phone || null,
+          email: student?.parent_email || null,
+        },
+        {
+          key: "parent2",
+          label: student?.parent_name_2 || "הורה 2",
+          phone: student?.parent_phone_2 || null,
+          email: student?.parent_email_2 || null,
+        },
+      ].filter((r) => r.phone || r.email),
+    [student],
+  );
+
+  const [recipientKey, setRecipientKey] = useState<string>("parent");
+
+  useEffect(() => {
+    if (open) setRecipientKey(recipients[0]?.key ?? "parent");
+  }, [open, recipients]);
+
+  const recipient = recipients.find((r) => r.key === recipientKey) ?? recipients[0];
+
   useEffect(() => {
     if (open) setExtraNote(defaultNote);
   }, [open, defaultNote]);
@@ -135,7 +162,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
     setMessage(buildMessage(student, enrollments, pendingPayment, extraNote, payLink));
   }, [open, student, enrollments, pendingPayment, extraNote, payLink]);
 
-  const parentWa = normalizeWaPhone(student?.parent_phone);
+  const parentWa = normalizeWaPhone(recipient?.phone);
 
   const sendWhatsApp = () => {
     if (!parentWa) {
@@ -146,7 +173,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
   };
 
   const sendEmail = async () => {
-    if (!student.parent_email) {
+    if (!recipient?.email) {
       toast.error("אין כתובת מייל להורה");
       return;
     }
@@ -155,7 +182,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
       const { error } = await supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "plain-text",
-          recipientEmail: student.parent_email,
+          recipientEmail: recipient.email,
           replyTo: "musichof@gmail.com",
           templateData: {
             subject: `שיוך מורה — ${student.first_name} ${student.last_name}`,
@@ -183,6 +210,29 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
         </DialogHeader>
 
         <div className="space-y-3">
+          {recipients.length > 1 && (
+            <div className="space-y-1">
+              <Label className="text-xs">שליחה אל</Label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {recipients.map((r) => (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => setRecipientKey(r.key)}
+                    className={`rounded-xl border p-3 text-right transition ${
+                      recipientKey === r.key
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-xs text-muted-foreground" dir="ltr">{r.phone || "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate" dir="ltr">{r.email || "—"}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <Label className="text-xs">הערה לתחילת השיעורים</Label>
             <Textarea
@@ -210,7 +260,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
           </Button>
           <Button
             onClick={sendEmail}
-            disabled={sendingEmail || !student?.parent_email}
+            disabled={sendingEmail || !recipient?.email}
             className="h-11 rounded-xl"
             variant="outline"
           >

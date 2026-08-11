@@ -28,6 +28,9 @@ interface FamilyLike {
   parent_name?: string | null;
   parent_phone?: string | null;
   parent_email?: string | null;
+  partner_name?: string | null;
+  partner_phone?: string | null;
+  partner_email?: string | null;
 }
 
 interface ChildLike {
@@ -143,6 +146,33 @@ const SendFamilyAssignmentMessage = ({
   const [subject, setSubject] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
 
+  const recipients = useMemo(
+    () =>
+      [
+        {
+          key: "parent",
+          label: family.parent_name || "הורה 1",
+          phone: family.parent_phone || null,
+          email: family.parent_email || null,
+        },
+        {
+          key: "partner",
+          label: family.partner_name || "הורה 2",
+          phone: family.partner_phone || null,
+          email: family.partner_email || null,
+        },
+      ].filter((r) => r.phone || r.email),
+    [family],
+  );
+
+  const [recipientKey, setRecipientKey] = useState<string>("parent");
+
+  useEffect(() => {
+    if (open) setRecipientKey(recipients[0]?.key ?? "parent");
+  }, [open, recipients]);
+
+  const recipient = recipients.find((r) => r.key === recipientKey) ?? recipients[0];
+
   const { data: template } = useQuery({
     queryKey: ["message-template", FAMILY_ASSIGNMENT_TEMPLATE_KEY],
     queryFn: () => fetchMessageTemplate(FAMILY_ASSIGNMENT_TEMPLATE_KEY),
@@ -184,7 +214,7 @@ const SendFamilyAssignmentMessage = ({
     );
   }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject, shortLinks]);
 
-  const parentWa = normalizeWaPhone(family.parent_phone);
+  const parentWa = normalizeWaPhone(recipient?.phone);
 
   useEffect(() => {
     if (!open) return;
@@ -208,7 +238,7 @@ const SendFamilyAssignmentMessage = ({
   };
 
   const sendEmail = async () => {
-    if (!family.parent_email) {
+    if (!recipient?.email) {
       toast.error("אין כתובת מייל להורה");
       return;
     }
@@ -217,7 +247,7 @@ const SendFamilyAssignmentMessage = ({
       const { error } = await supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "plain-text",
-          recipientEmail: family.parent_email,
+          recipientEmail: recipient.email,
           replyTo: "musichof@gmail.com",
           templateData: {
             subject: subject.trim() || "שיוך מורה",
@@ -243,6 +273,33 @@ const SendFamilyAssignmentMessage = ({
         </DialogHeader>
 
         <div className="space-y-3">
+          {recipients.length > 1 && (
+            <div className="space-y-1">
+              <Label className="text-xs">שליחה אל</Label>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {recipients.map((r) => (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => setRecipientKey(r.key)}
+                    className={`rounded-xl border p-3 text-right transition ${
+                      recipientKey === r.key
+                        ? "border-primary bg-primary/5 ring-1 ring-primary"
+                        : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-xs text-muted-foreground" dir="ltr">
+                      {r.phone || "—"}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate" dir="ltr">
+                      {r.email || "—"}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="space-y-1">
             <Label className="text-xs">הערה לתחילת השיעורים</Label>
             <Textarea
@@ -307,7 +364,7 @@ const SendFamilyAssignmentMessage = ({
           </Button>
           <Button
             onClick={sendEmail}
-            disabled={sendingEmail || !family.parent_email}
+            disabled={sendingEmail || !recipient?.email}
             className="h-11 rounded-xl"
             variant="outline"
           >
