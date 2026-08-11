@@ -52,6 +52,7 @@ const AdminStudents = () => {
   const gradeFilter = getMultiFilter("grade");
   const levelFilter = getMultiFilter("level");
   const paymentFilter = getMultiFilter("payment");
+  const linkFilter = getMultiFilter("link");
   const trackFilter = getMultiFilter("track");
   const instrumentFilter = getMultiFilter("instrument");
   const regTypeFilter = getMultiFilter("reg_type");
@@ -89,6 +90,7 @@ const AdminStudents = () => {
       next.delete("grade");
       next.delete("level");
       next.delete("payment");
+      next.delete("link");
       next.delete("track");
       next.delete("instrument");
       next.delete("reg_type");
@@ -122,7 +124,7 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
-        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown")
+        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url")
         .eq("academic_year_id", selectedYearId)
         .order("payment_date", { ascending: false })
         .order("created_at", { ascending: false });
@@ -472,6 +474,23 @@ const AdminStudents = () => {
     return "unpaid";
   }, [paidByStudent, balanceByStudent]);
 
+  // Students with an active (pending) payment link that was generated for them
+  const activeLinkByStudent = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of yearPayments as any[]) {
+      if (!p.student_id) continue;
+      if (p.payment_status !== "pending") continue;
+      if (!p.payment_link_url) continue;
+      set.add(p.student_id);
+    }
+    return set;
+  }, [yearPayments]);
+
+  const hasActiveLink = useCallback((r: any) => {
+    const sid = r?.students?.id;
+    return !!sid && activeLinkByStudent.has(sid);
+  }, [activeLinkByStudent]);
+
   const getPaymentBalance = useCallback((r: any) => {
     const sid = r?.students?.id;
     const balance = sid ? balanceByStudent.get(sid) : null;
@@ -609,6 +628,7 @@ const AdminStudents = () => {
     if (statusFilter === "active" && (!r.is_active || isInactiveStudentStatus(r.students?.student_status))) return false;
     if (statusFilter === "stopped" && (r.is_active && !isInactiveStudentStatus(r.students?.student_status))) return false;
     if (paymentFilter.length > 0 && !paymentFilter.includes(getPaymentStatus(r))) return false;
+    if (linkFilter.length > 0 && !linkFilter.includes(hasActiveLink(r) ? "sent" : "not_sent")) return false;
     if (trackFilter.length > 0) {
       const map: Record<string, string> = {
         music_production: "has_music_production_course",
@@ -737,6 +757,15 @@ const AdminStudents = () => {
               value={paymentFilter}
               onChange={(v) => setMultiFilter("payment", v)}
             />
+
+            <MultiSelectFilter
+              className="w-full lg:w-40"
+              allLabel="לינק לתשלום"
+              options={["sent", "not_sent"]}
+              renderLabel={(k) => ({ sent: "🔗 נוצר לינק", not_sent: "ללא לינק" })[k]}
+              value={linkFilter}
+              onChange={(v) => setMultiFilter("link", v)}
+            />
           </>
         )}
 
@@ -783,7 +812,7 @@ const AdminStudents = () => {
           onChange={(v) => setMultiFilter("reg_type", v)}
         />
 
-        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
+        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || linkFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
           <Button
             type="button"
             variant="ghost"
@@ -1082,6 +1111,13 @@ const AdminStudents = () => {
                           {!r.is_active ? "רישום לא פעיל" : isInactiveStudentStatus(r.students?.student_status) ? r.students?.student_status : "פעיל"}
                         </Badge>
                       </div>
+                      {hasActiveLink(r) && (
+                        <div className="flex flex-wrap items-start justify-start sm:justify-end content-start gap-1.5 w-full">
+                          <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 bg-sky-500/10 text-sky-700 border-sky-500/30">
+                            🔗 נוצר לינק לתשלום ונשלח להורה
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </div>
 
