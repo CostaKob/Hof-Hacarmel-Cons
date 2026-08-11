@@ -141,8 +141,9 @@ const BankBranchPicker = ({
                 className={`${h} w-full justify-between font-normal`}
               >
                 <span className="truncate">
-                  {branch ? `${branch}${selectedBranch ? ` - ${selectedBranch.name}` : ""}` : "בחר סניף"}
+                  {selectedBranch ? `${selectedBranch.name}${selectedBranch.city ? ` - ${selectedBranch.city}` : ""}` : "בחר סניף"}
                 </span>
+
                 <ChevronsUpDown className="h-4 w-4 opacity-50 shrink-0" />
               </Button>
             </PopoverTrigger>
