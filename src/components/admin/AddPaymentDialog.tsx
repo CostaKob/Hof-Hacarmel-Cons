@@ -1265,7 +1265,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                       </div>
                       <div>
                         <Label className="text-xs">תאריך צ׳ק ראשון</Label>
-                        <Input type="date" value={firstCheckDate} onChange={(e) => setFirstCheckDate(e.target.value)} className="h-9" />
+                        <DateInput value={firstCheckDate} onChange={(v) => setFirstCheckDate(v)} className="h-9" />
                       </div>
                       <div>
                         <Label className="text-xs">מספר צ׳ק ראשון</Label>
