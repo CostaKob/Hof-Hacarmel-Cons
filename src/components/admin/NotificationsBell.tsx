@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, X, Trash2 } from "lucide-react";
+import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -114,16 +114,18 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                       </span>
                       {!n.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-destructive" />}
                     </button>
-                    <button
-                      aria-label="הסר התראה"
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label="נקה התראה"
                       onClick={(e) => {
                         e.stopPropagation();
                         dismiss([n.id]);
                       }}
-                      className="absolute top-2 left-2 rounded-md p-1 text-muted-foreground opacity-60 transition hover:bg-muted hover:opacity-100"
+                      className="absolute top-1.5 left-2 h-7 text-xs text-destructive opacity-100 transition hover:bg-destructive/10 hover:opacity-100 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                     >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
+                      נקה
+                    </Button>
                   </li>
                 );
               })}
