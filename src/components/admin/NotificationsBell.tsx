@@ -122,7 +122,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                         e.stopPropagation();
                         dismiss([n.id]);
                       }}
-                      className="absolute top-1.5 left-2 h-7 text-xs text-destructive opacity-0 transition hover:bg-destructive/10 hover:opacity-100 group-hover:opacity-100 focus:opacity-100"
+                      className="absolute top-1.5 left-2 h-7 text-xs text-destructive opacity-100 transition hover:bg-destructive/10 hover:opacity-100 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                     >
                       נקה
                     </Button>
