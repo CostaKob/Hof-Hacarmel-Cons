@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import ArchiveYearBanner from "./ArchiveYearBanner";
 import FamilyIcon from "@/components/icons/FamilyIcon";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
+import NotificationsBell from "./NotificationsBell";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -132,6 +133,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
           </div>
 
           <div className="flex items-center gap-2">
+            <NotificationsBell className="text-primary-foreground" />
             <ThemeSwitcher className="text-primary-foreground" />
             {/* Year Switcher */}
             {!yearsLoading && years.length > 0 && (
