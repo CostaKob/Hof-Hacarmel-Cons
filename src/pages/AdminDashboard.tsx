@@ -7,6 +7,7 @@ import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDay
 const MAIN_SECTIONS = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
   { path: "/admin/families", label: "משפחות", description: "כרטיס הורה מרכזי — שיוכים ותשלומים לפי משפחה", icon: UsersRound },
+  { path: "/admin/siblings", label: "אחים ואחיות", description: "חיבור אוטומטי של אחים וטיפול בהתאמות שממתינות לאישור", icon: Users },
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים ומסלולים מיוחדים", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
