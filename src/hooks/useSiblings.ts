@@ -24,6 +24,22 @@ export interface SiblingCandidate {
   already_linked: boolean;
 }
 
+export interface PendingSiblingPair {
+  student_a_id: string;
+  student_a_name: string;
+  student_a_grade: string | null;
+  student_b_id: string;
+  student_b_name: string;
+  student_b_grade: string | null;
+  city: string | null;
+  parent_a_name: string | null;
+  parent_a_phone: string | null;
+  parent_b_name: string | null;
+  parent_b_phone: string | null;
+  match_score: number;
+  match_reason: string | null;
+}
+
 export const useConfirmedSiblings = (studentId?: string) =>
   useQuery({
     queryKey: ["siblings-confirmed", studentId],
@@ -37,18 +53,37 @@ export const useConfirmedSiblings = (studentId?: string) =>
     },
   });
 
-export const useSiblingCandidates = (studentId?: string, enabled = false) =>
+export const useSiblingCandidates = (studentId?: string, enabled = false, yearId?: string | null) =>
   useQuery({
-    queryKey: ["siblings-candidates", studentId],
+    queryKey: ["siblings-candidates", studentId, yearId ?? null],
     enabled: !!studentId && enabled,
     queryFn: async (): Promise<SiblingCandidate[]> => {
       const { data, error } = await (supabase as any).rpc("get_sibling_candidates", {
         _student_id: studentId,
+        _year_id: yearId ?? null,
       });
       if (error) throw error;
       return (data ?? []) as SiblingCandidate[];
     },
   });
+
+export const usePendingSiblingPairs = (yearId?: string | null) =>
+  useQuery({
+    queryKey: ["siblings-pending", yearId ?? null],
+    queryFn: async (): Promise<PendingSiblingPair[]> => {
+      const { data, error } = await (supabase as any).rpc("list_pending_sibling_pairs", {
+        _year_id: yearId ?? null,
+      });
+      if (error) throw error;
+      return (data ?? []) as PendingSiblingPair[];
+    },
+  });
+
+const invalidateAll = (qc: ReturnType<typeof useQueryClient>) => {
+  qc.invalidateQueries({ queryKey: ["siblings-confirmed"] });
+  qc.invalidateQueries({ queryKey: ["siblings-candidates"] });
+  qc.invalidateQueries({ queryKey: ["siblings-pending"] });
+};
 
 export const useLinkSiblings = () => {
   const qc = useQueryClient();
@@ -69,8 +104,7 @@ export const useLinkSiblings = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["siblings-confirmed"] });
-      qc.invalidateQueries({ queryKey: ["siblings-candidates"] });
+      invalidateAll(qc);
       toast.success("קישור אחים נשמר");
     },
     onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
@@ -85,9 +119,44 @@ export const useUnlinkSiblings = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["siblings-confirmed"] });
-      qc.invalidateQueries({ queryKey: ["siblings-candidates"] });
+      invalidateAll(qc);
       toast.success("הקישור הוסר");
+    },
+    onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
+  });
+};
+
+export const useDismissSiblingPair = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { studentAId: string; studentBId: string }) => {
+      const [a, b] = [params.studentAId, params.studentBId].sort();
+      const { error } = await (supabase as any)
+        .from("sibling_dismissals")
+        .insert({ student_a_id: a, student_b_id: b });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast.success("סומן כלא אחים");
+    },
+    onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
+  });
+};
+
+export const useAutoLinkSiblings = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (yearId?: string | null) => {
+      const { data, error } = await (supabase as any).rpc("auto_link_siblings_by_parent_id", {
+        _year_id: yearId ?? null,
+      });
+      if (error) throw error;
+      return (data ?? 0) as number;
+    },
+    onSuccess: (count) => {
+      invalidateAll(qc);
+      toast.success(count > 0 ? `חוברו ${count} זוגות אחים אוטומטית` : "אין אחים חדשים לחיבור אוטומטי");
     },
     onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
   });
