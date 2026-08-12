@@ -32,12 +32,18 @@ export function useNotifications() {
           .select("id, type, title, body, link_path, entity_id, created_at")
           .order("created_at", { ascending: false })
           .limit(LIMIT),
-        supabase.from("notification_reads").select("notification_id").eq("user_id", user!.id),
+        supabase
+          .from("notification_reads")
+          .select("notification_id, dismissed")
+          .eq("user_id", user!.id),
       ]);
       if (error) throw error;
       if (readsError) throw readsError;
       const readSet = new Set((reads ?? []).map((r) => r.notification_id));
-      return (notifs ?? []).map((n) => ({ ...n, isRead: readSet.has(n.id) }));
+      const dismissedSet = new Set((reads ?? []).filter((r) => r.dismissed).map((r) => r.notification_id));
+      return (notifs ?? [])
+        .filter((n) => !dismissedSet.has(n.id))
+        .map((n) => ({ ...n, isRead: readSet.has(n.id) }));
     },
   });
 
@@ -71,6 +77,20 @@ export function useNotifications() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
   });
 
+  const dismiss = useMutation({
+    mutationFn: async (ids: string[]) => {
+      if (!user || ids.length === 0) return;
+      const { error } = await supabase
+        .from("notification_reads")
+        .upsert(
+          ids.map((notification_id) => ({ notification_id, user_id: user.id, dismissed: true })),
+          { onConflict: "notification_id,user_id" }
+        );
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+  });
+
   const items = query.data ?? [];
   const unreadCount = items.filter((n) => !n.isRead).length;
 
@@ -82,5 +102,8 @@ export function useNotifications() {
     markRead: (ids: string[]) => markRead.mutate(ids),
     markAllRead: () => markRead.mutate(items.filter((n) => !n.isRead).map((n) => n.id)),
     isMarking: markRead.isPending,
+    dismiss: (ids: string[]) => dismiss.mutate(ids),
+    clearAll: () => dismiss.mutate(items.map((n) => n.id)),
+    isClearing: dismiss.isPending,
   };
 }

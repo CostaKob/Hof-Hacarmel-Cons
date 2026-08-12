@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2 } from "lucide-react";
+import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, X, Trash2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,7 +29,8 @@ function timeAgo(iso: string) {
 const NotificationsBell = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { items, unreadCount, isLoading, enabled, markRead, markAllRead, isMarking } = useNotifications();
+  const { items, unreadCount, isLoading, enabled, markRead, markAllRead, isMarking, dismiss, clearAll, isClearing } =
+    useNotifications();
 
   if (!enabled) return null;
 
@@ -61,12 +62,26 @@ const NotificationsBell = ({ className }: { className?: string }) => {
       <PopoverContent align="end" dir="rtl" className="w-[22rem] p-0 max-w-[calc(100vw-1.5rem)]">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <p className="text-sm font-semibold">התראות</p>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" className="h-8 text-xs" disabled={isMarking} onClick={() => markAllRead()}>
-              {isMarking ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <CheckCheck className="h-3.5 w-3.5 ml-1" />}
-              סמן הכל כנקרא
-            </Button>
-          )}
+          <div className="flex items-center gap-1">
+            {unreadCount > 0 && (
+              <Button variant="ghost" size="sm" className="h-8 text-xs" disabled={isMarking} onClick={() => markAllRead()}>
+                {isMarking ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <CheckCheck className="h-3.5 w-3.5 ml-1" />}
+                סמן הכל כנקרא
+              </Button>
+            )}
+            {items.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-xs text-destructive hover:text-destructive"
+                disabled={isClearing}
+                onClick={() => clearAll()}
+              >
+                {isClearing ? <Loader2 className="h-3.5 w-3.5 animate-spin ml-1" /> : <Trash2 className="h-3.5 w-3.5 ml-1" />}
+                נקה הכל
+              </Button>
+            )}
+          </div>
         </div>
         <ScrollArea className="max-h-[26rem]">
           {isLoading ? (
@@ -79,7 +94,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                 const meta = ICONS[n.type] ?? { icon: Bell, className: "text-muted-foreground" };
                 const Icon = meta.icon;
                 return (
-                  <li key={n.id}>
+                  <li key={n.id} className="relative group">
                     <button
                       onClick={() => handleClick(n)}
                       className={cn(
@@ -98,6 +113,16 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                         <span className="block text-[11px] text-muted-foreground mt-1">{timeAgo(n.created_at)}</span>
                       </span>
                       {!n.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-destructive" />}
+                    </button>
+                    <button
+                      aria-label="הסר התראה"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        dismiss([n.id]);
+                      }}
+                      className="absolute top-2 left-2 rounded-md p-1 text-muted-foreground opacity-60 transition hover:bg-muted hover:opacity-100"
+                    >
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </li>
                 );
