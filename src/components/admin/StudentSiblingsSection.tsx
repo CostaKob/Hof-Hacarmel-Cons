@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Users, Search, X, ArrowRight, AlertCircle, UsersRound } from "lucide-react";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import {
   useConfirmedSiblings,
   useSiblingCandidates,
@@ -22,7 +23,13 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
   const navigate = useNavigate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data: siblings = [], isLoading } = useConfirmedSiblings(studentId);
-  const { data: candidates = [], isFetching: loadingCandidates } = useSiblingCandidates(studentId, true);
+  const { selectedYearId, activeYear } = useAcademicYear();
+  const yearId = selectedYearId ?? activeYear?.id ?? null;
+  const { data: candidates = [], isFetching: loadingCandidates } = useSiblingCandidates(
+    studentId,
+    true,
+    yearId,
+  );
   const linkMut = useLinkSiblings();
   const unlinkMut = useUnlinkSiblings();
 
@@ -152,7 +159,7 @@ const StudentSiblingsSection = ({ studentId }: Props) => {
             <DialogTitle>איתור אחים ואחיות</DialogTitle>
             <DialogDescription>
               המערכת מציעה תלמידים לפי ת.ז. הורה זהה (100%), טלפון הורה זהה (80%),
-              או שם משפחה + עיר (40%). אשר כל התאמה שנראית נכונה.
+              או שם משפחה + עיר (40%). מוצגים רק תלמידים עם שיוך בשנה הנבחרת.
             </DialogDescription>
           </DialogHeader>
 
