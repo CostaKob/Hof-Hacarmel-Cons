@@ -24,6 +24,7 @@ export function useNotifications() {
   const query = useQuery({
     queryKey: ["notifications", user?.id],
     enabled,
+    refetchInterval: 60_000,
     queryFn: async (): Promise<NotificationRow[]> => {
       const [{ data: notifs, error }, { data: reads, error: readsError }] = await Promise.all([
         supabase
