@@ -94,11 +94,11 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                 const meta = ICONS[n.type] ?? { icon: Bell, className: "text-muted-foreground" };
                 const Icon = meta.icon;
                 return (
-                  <li key={n.id} className="relative group">
+                  <li key={n.id} className="group flex items-start gap-2">
                     <button
                       onClick={() => handleClick(n)}
                       className={cn(
-                        "flex w-full items-start gap-3 px-4 py-3 text-right transition-colors hover:bg-accent",
+                        "flex flex-1 min-w-0 items-start gap-3 px-4 py-3 text-right transition-colors hover:bg-accent",
                         !n.isRead && "bg-primary/5"
                       )}
                     >
@@ -114,18 +114,20 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                       </span>
                       {!n.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-destructive" />}
                     </button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label="נקה התראה"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        dismiss([n.id]);
-                      }}
-                      className="absolute top-2 right-2 h-7 text-xs text-destructive opacity-100 transition hover:bg-destructive/10 hover:opacity-100 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-                    >
-                      נקה
-                    </Button>
+                    <div className="shrink-0 pt-2 pl-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="נקה התראה"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dismiss([n.id]);
+                        }}
+                        className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
+                      >
+                        נקה
+                      </Button>
+                    </div>
                   </li>
                 );
               })}
