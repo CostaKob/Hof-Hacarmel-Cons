@@ -260,10 +260,10 @@ const TeacherStudents = () => {
             <div className="grid grid-cols-3 gap-3">
               <Select value={schoolFilter} onValueChange={setSchoolFilter}>
                 <SelectTrigger className="h-11 rounded-xl bg-card">
-                  <SelectValue placeholder="כל בתי הספר" />
+                  <SelectValue placeholder="כל השלוחות" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">כל בתי הספר</SelectItem>
+                  <SelectItem value="all">כל השלוחות</SelectItem>
                   {schools.map((s) => (
                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                   ))}
