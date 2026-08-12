@@ -915,18 +915,21 @@ export type Database = {
       }
       notification_reads: {
         Row: {
+          dismissed: boolean
           id: string
           notification_id: string
           read_at: string
           user_id: string
         }
         Insert: {
+          dismissed?: boolean
           id?: string
           notification_id: string
           read_at?: string
           user_id: string
         }
         Update: {
+          dismissed?: boolean
           id?: string
           notification_id?: string
           read_at?: string
