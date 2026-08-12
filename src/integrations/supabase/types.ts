@@ -913,6 +913,79 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_reads: {
+        Row: {
+          id: string
+          notification_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          notification_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          notification_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_reads_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          academic_year_id: string | null
+          body: string | null
+          created_at: string
+          entity_id: string | null
+          id: string
+          link_path: string | null
+          metadata: Json
+          title: string
+          type: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          link_path?: string | null
+          metadata?: Json
+          title: string
+          type: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          id?: string
+          link_path?: string | null
+          metadata?: Json
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parents: {
         Row: {
           created_at: string
@@ -2838,6 +2911,17 @@ export type Database = {
       check_existing_registration: {
         Args: { _national_id: string; _year_id: string }
         Returns: Json
+      }
+      create_notification: {
+        Args: {
+          _body: string
+          _entity_id: string
+          _link_path: string
+          _title: string
+          _type: string
+          _year_id: string
+        }
+        Returns: undefined
       }
       create_short_link: { Args: { _url: string }; Returns: string }
       delete_email: {
