@@ -2132,6 +2132,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sibling_dismissals: {
+        Row: {
+          created_at: string
+          dismissed_by: string | null
+          id: string
+          student_a_id: string
+          student_b_id: string
+        }
+        Insert: {
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          student_a_id: string
+          student_b_id: string
+        }
+        Update: {
+          created_at?: string
+          dismissed_by?: string | null
+          id?: string
+          student_a_id?: string
+          student_b_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sibling_dismissals_student_a_id_fkey"
+            columns: ["student_a_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sibling_dismissals_student_b_id_fkey"
+            columns: ["student_b_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_notes: {
         Row: {
           author_user_id: string | null
@@ -2792,6 +2831,10 @@ export type Database = {
         Args: { _new_email: string; _user_id: string }
         Returns: undefined
       }
+      auto_link_siblings_by_parent_id: {
+        Args: { _year_id?: string }
+        Returns: number
+      }
       check_existing_registration: {
         Args: { _national_id: string; _year_id: string }
         Returns: Json
@@ -2915,21 +2958,37 @@ export type Database = {
         Args: { _school_id: string }
         Returns: string
       }
-      get_sibling_candidates: {
-        Args: { _student_id: string }
-        Returns: {
-          already_linked: boolean
-          city: string
-          first_name: string
-          grade: string
-          id: string
-          last_name: string
-          match_reason: string
-          match_score: number
-          parent_name: string
-          parent_phone: string
-        }[]
-      }
+      get_sibling_candidates:
+        | {
+            Args: { _student_id: string }
+            Returns: {
+              already_linked: boolean
+              city: string
+              first_name: string
+              grade: string
+              id: string
+              last_name: string
+              match_reason: string
+              match_score: number
+              parent_name: string
+              parent_phone: string
+            }[]
+          }
+        | {
+            Args: { _student_id: string; _year_id?: string }
+            Returns: {
+              already_linked: boolean
+              city: string
+              first_name: string
+              grade: string
+              id: string
+              last_name: string
+              match_reason: string
+              match_score: number
+              parent_name: string
+              parent_phone: string
+            }[]
+          }
       get_sm_payment_public_status: {
         Args: { _payment_id: string }
         Returns: {
@@ -2986,6 +3045,24 @@ export type Database = {
           partner_name: string
           partner_national_id: string
           partner_phone: string
+        }[]
+      }
+      list_pending_sibling_pairs: {
+        Args: { _year_id?: string }
+        Returns: {
+          city: string
+          match_reason: string
+          match_score: number
+          parent_a_name: string
+          parent_a_phone: string
+          parent_b_name: string
+          parent_b_phone: string
+          student_a_grade: string
+          student_a_id: string
+          student_a_name: string
+          student_b_grade: string
+          student_b_id: string
+          student_b_name: string
         }[]
       }
       list_public_available_inventory: {
