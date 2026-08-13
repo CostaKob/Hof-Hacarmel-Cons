@@ -65,6 +65,7 @@ const DEFAULT_END = "2027-08-31";
 interface Reconciliation {
   icount_total: number;
   system_total: number;
+  external_total?: number;
   missing_in_system: { doc_number: string; amount: number; client_name: string; doc_date: string }[];
   missing_in_icount: { doc_number: string; amount: number; source: string }[];
   amount_mismatches: { doc_number: string; icount_amount: number; system_amount: number; client_name: string }[];
@@ -314,9 +315,9 @@ const AdminCashflow = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid gap-3 sm:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-4">
                   <div className="rounded-xl border p-3">
-                    <div className="text-xs text-muted-foreground">סה"כ באייקאונט</div>
+                    <div className="text-xs text-muted-foreground">סה"כ באייקאונט (מסמכים מזוהים)</div>
                     <div className="text-lg font-semibold">{ILS(recon.icount_total)}</div>
                   </div>
                   <div className="rounded-xl border p-3">
@@ -327,7 +328,13 @@ const AdminCashflow = () => {
                     <div className="text-xs text-muted-foreground">פער</div>
                     <div className={`text-lg font-semibold ${Math.abs(diff) >= 0.5 ? "text-destructive" : "text-emerald-600"}`}>{ILS(diff)}</div>
                   </div>
+                  <div className="rounded-xl border p-3">
+                    <div className="text-xs text-muted-foreground">מסמכים חיצוניים (לא מזוהים)</div>
+                    <div className="text-lg font-semibold text-muted-foreground">{ILS(recon.external_total ?? 0)}</div>
+                  </div>
                 </div>
+
+
 
                 {clean ? (
                   <p className="text-sm text-muted-foreground">כל המסמכים באייקאונט תואמים לתשלומים במערכת.</p>
