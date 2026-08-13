@@ -150,35 +150,22 @@ const AdminCashflow = () => {
     return t;
   }, [filtered]);
 
-  const exportXlsx = () => {
+  const exportXlsx = async () => {
     if (!filtered.length) return;
-    const summary = months.map((m) => ({
-      "חודש": monthLabel(m.month),
-      "מזומן": m.byMethod.cash,
-      "שיקים": m.byMethod.cheque,
-      "אשראי": m.byMethod.credit,
-      "העברה בנקאית": m.byMethod.transfer,
-      "אחר": m.byMethod.other,
-      'סה"כ': m.total,
-      "תנועות": m.count,
-    }));
-    const detail = filtered.map((r) => ({
-      "תאריך פרעון": formatDate(r.due_date),
-      "חודש": monthLabel(r.month),
-      "סוג תנועה": r.amount < 0 ? "חובה" : "זכות",
-      "אסמכתא": `קבלה ${r.doc_number}`,
-      "לקוח": r.client_name,
-      "סוג פעולה": METHOD_LABEL[r.method],
-      "סכום": r.amount,
-      "מקור": SOURCE_LABEL[r.source],
-      "תאריך מסמך": formatDate(r.doc_date),
-      "הערות": r.note,
-    }));
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(summary), "סיכום חודשי");
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detail), "פירוט תנועות");
-    XLSX.writeFile(wb, `cashflow-${startDate}-${endDate}.xlsx`);
+    try {
+      await exportCashflowWorkbook({
+        rows: filtered,
+        months,
+        startDate,
+        endDate,
+        logoUrl,
+        sourceLabel: sourceFilter === "all" ? "הכל" : SOURCE_LABEL[sourceFilter as CashflowRow["source"]],
+      });
+    } catch (e) {
+      toast.error("ייצוא לאקסל נכשל", { description: (e as Error).message });
+    }
   };
+
 
   return (
     <AdminLayout title="דוח תזרים">
