@@ -191,12 +191,14 @@ const TeacherBranchCard = () => {
   });
 
 
-  const filteredRegistrations = registrations.filter((r) => {
-    const term = search.trim();
-    if (!term) return true;
-    const hay = `${r.student_first_name} ${r.student_last_name} ${r.student_national_id ?? ""} ${r.parent_name ?? ""} ${r.parent_phone ?? ""}`;
-    return hay.includes(term);
-  });
+  const filteredRegistrations = registrations
+    .filter((r) => r.status !== "converted")
+    .filter((r) => {
+      const term = search.trim();
+      if (!term) return true;
+      const hay = `${r.student_first_name} ${r.student_last_name} ${r.student_national_id ?? ""} ${r.parent_name ?? ""} ${r.parent_phone ?? ""}`;
+      return hay.includes(term);
+    });
 
   const filteredTeachers = teachers.filter((t) => {
     const term = search.trim();
