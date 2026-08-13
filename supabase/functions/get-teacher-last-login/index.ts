@@ -20,22 +20,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Not authorized -> return empty result (200) so the client UI doesn't error out
+    const denied = () =>
+      new Response(JSON.stringify({ logins: {} }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+
     const authHeader = req.headers.get("Authorization");
     const token = authHeader?.replace("Bearer ", "");
-    if (!token) {
-      return new Response(JSON.stringify({ error: "לא מורשה" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!token) return denied();
 
     const { data: { user: caller } } = await supabaseAdmin.auth.getUser(token);
-    if (!caller) {
-      return new Response(JSON.stringify({ error: "לא מורשה" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!caller) return denied();
 
     const callerEmail = (caller.email ?? "").trim().toLowerCase();
     const { data: isAdmin } = await supabaseAdmin.rpc("has_role", {
@@ -43,12 +39,8 @@ Deno.serve(async (req) => {
       _role: "admin",
     });
 
-    if (!isAdmin || !ALLOWED_EMAILS.includes(callerEmail)) {
-      return new Response(JSON.stringify({ error: "אין הרשאה" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!isAdmin || !ALLOWED_EMAILS.includes(callerEmail)) return denied();
+
 
     // Collect all auth users (paginated)
     const logins: Record<string, string | null> = {};
