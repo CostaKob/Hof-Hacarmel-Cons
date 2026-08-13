@@ -14,6 +14,9 @@ const corsHeaders = {
 
 const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 
+// Documents permanently excluded from the cashflow report (office decision).
+const IGNORED_DOC_NUMBERS = new Set(["1002", "1003", "1062", "1091", "1092", "1104", "7003"]);
+
 function getAuth() {
   const cid = Deno.env.get("ICOUNT_COMPANY_ID");
   const user = Deno.env.get("ICOUNT_USERNAME");
@@ -214,7 +217,13 @@ Deno.serve(async (req: Request) => {
 
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
-    const details = list.filter((d) => !Number(d.is_cancelled) && !Number(d.is_cancellation));
+    // IGNORED_DOC_NUMBERS are documents the office decided to exclude permanently.
+    const details = list.filter(
+      (d) =>
+        !Number(d.is_cancelled) &&
+        !Number(d.is_cancellation) &&
+        !IGNORED_DOC_NUMBERS.has(String(d.docnum ?? d.doc_number ?? "").trim()),
+    );
 
     let rows: Omit<Row, "source">[] = [];
     const unparsed: string[] = [];
