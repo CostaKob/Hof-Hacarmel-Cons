@@ -18,6 +18,7 @@ import AdminStudentForm from "./pages/admin/AdminStudentForm";
 import AdminStudentCard from "./pages/admin/AdminStudentCard";
 import AdminStudentPaymentCalc from "./pages/admin/AdminStudentPaymentCalc";
 import AdminPrivatePayments from "./pages/admin/AdminPrivatePayments";
+import AdminCashflow from "./pages/admin/AdminCashflow";
 import AdminSiblings from "./pages/admin/AdminSiblings";
 import AdminFamilies from "./pages/admin/AdminFamilies";
 import AdminFamilyCard from "./pages/admin/AdminFamilyCard";
@@ -135,6 +136,7 @@ const App = () => (
               <Route path="/admin/students/:studentId" element={<AdminRoute><AdminStudentCard /></AdminRoute>} />
               <Route path="/admin/students/:studentId/edit" element={<AdminRoute><AdminStudentForm /></AdminRoute>} />
               <Route path="/admin/students/:studentId/payment" element={<AdminRoute><AdminStudentPaymentCalc /></AdminRoute>} />
+              <Route path="/admin/cashflow" element={<AdminRoute><AdminCashflow /></AdminRoute>} />
               <Route path="/admin/private-payments" element={<AdminRoute><AdminPrivatePayments /></AdminRoute>} />
               <Route path="/admin/siblings" element={<AdminRoute><AdminSiblings /></AdminRoute>} />
               <Route path="/admin/families" element={<AdminRoute><AdminFamilies /></AdminRoute>} />
