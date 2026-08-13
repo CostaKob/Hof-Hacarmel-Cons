@@ -62,6 +62,14 @@ const monthLabel = (m: string) => {
 const DEFAULT_START = "2026-09-01";
 const DEFAULT_END = "2027-08-31";
 
+interface Reconciliation {
+  icount_total: number;
+  system_total: number;
+  missing_in_system: { doc_number: string; amount: number; client_name: string; doc_date: string }[];
+  missing_in_icount: { doc_number: string; amount: number; source: string }[];
+  amount_mismatches: { doc_number: string; icount_amount: number; system_amount: number; client_name: string }[];
+}
+
 const AdminCashflow = () => {
   const [startDate, setStartDate] = useState(DEFAULT_START);
   const [endDate, setEndDate] = useState(DEFAULT_END);
@@ -69,6 +77,7 @@ const AdminCashflow = () => {
   const [creditDay, setCreditDay] = useState("2");
   const [rows, setRows] = useState<CashflowRow[] | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [recon, setRecon] = useState<Reconciliation | null>(null);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const runReport = useMutation({
@@ -78,11 +87,12 @@ const AdminCashflow = () => {
       });
       if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
-      return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[] };
+      return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[]; reconciliation?: Reconciliation };
     },
     onSuccess: (data) => {
       setRows(data.rows);
       setWarnings(data.warnings ?? []);
+      setRecon(data.reconciliation ?? null);
       setOpenMonths({});
       if (data.warnings?.length) {
         toast.warning(`הדוח הופק חלקית — ${data.warnings.length} אזהרות`, {
@@ -98,6 +108,7 @@ const AdminCashflow = () => {
     },
     onError: (e: Error) => {
       setWarnings([]);
+      setRecon(null);
       toast.error("הפקת הדוח נכשלה", { description: e.message, duration: 12000 });
     },
   });
