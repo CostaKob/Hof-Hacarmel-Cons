@@ -59,6 +59,7 @@ export type Database = {
           branch_name: string
           created_at: string
           id: string
+          school_id: string | null
           teacher_id: string
           weekly_hours: number
         }
@@ -67,6 +68,7 @@ export type Database = {
           branch_name: string
           created_at?: string
           id?: string
+          school_id?: string | null
           teacher_id: string
           weekly_hours?: number
         }
@@ -75,6 +77,7 @@ export type Database = {
           branch_name?: string
           created_at?: string
           id?: string
+          school_id?: string | null
           teacher_id?: string
           weekly_hours?: number
         }
@@ -84,6 +87,13 @@ export type Database = {
             columns: ["academic_year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_coordinators_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
             referencedColumns: ["id"]
           },
           {
@@ -2949,6 +2959,10 @@ export type Database = {
           score: number
         }[]
       }
+      get_branch_coordinator_school_ids: {
+        Args: { _user_id: string }
+        Returns: string[]
+      }
       get_confirmed_siblings: {
         Args: { _student_id: string }
         Returns: {
@@ -3105,6 +3119,14 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_branch_coordinator_any: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      is_branch_coordinator_of: {
+        Args: { _school_id: string; _user_id: string }
         Returns: boolean
       }
       is_sm_coordinator: {

@@ -3,12 +3,13 @@ import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
+import { useBranchCoordinatorBranches } from "@/hooks/useBranchCoordinator";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School, Building2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageTitle from "@/components/PageTitle";
 import AppLogo from "@/components/AppLogo";
@@ -47,6 +48,8 @@ const TeacherDashboard = () => {
   const hasEnsembles = (ensembleStaff ?? []).length > 0;
   const { data: schoolMusicSchools } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
   const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
+  const { data: branchCoordinatorBranches } = useBranchCoordinatorBranches(teacher?.id);
+  const hasBranches = (branchCoordinatorBranches ?? []).length > 0;
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
@@ -139,6 +142,9 @@ const TeacherDashboard = () => {
           )}
           {hasSchoolMusic && (
             <StatCard icon={School} label="בתי ספר מנגנים" value={schoolMusicSchools!.length} onClick={() => navigate("/teacher/school-music-schools")} />
+          )}
+          {hasBranches && (
+            <StatCard icon={Building2} label="שלוחות שלי" value={branchCoordinatorBranches!.length} onClick={() => navigate("/teacher/branches")} />
           )}
         </div>
 

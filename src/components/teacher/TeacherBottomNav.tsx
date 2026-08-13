@@ -1,8 +1,9 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Users, FileText, Music, School } from "lucide-react";
+import { Home, Users, FileText, Music, School, Building2 } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
+import { useBranchCoordinatorBranches } from "@/hooks/useBranchCoordinator";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const TeacherBottomNav = () => {
@@ -12,9 +13,11 @@ const TeacherBottomNav = () => {
   const { selectedYearId } = useAcademicYear();
   const { data: ensembleStaff } = useTeacherEnsembleStaff(teacher?.id);
   const { data: schoolMusicSchools } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
+  const { data: branchCoordinatorBranches } = useBranchCoordinatorBranches(teacher?.id);
 
   const hasEnsembles = (ensembleStaff ?? []).length > 0;
   const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
+  const hasBranches = (branchCoordinatorBranches ?? []).length > 0;
 
   const items = [
     { path: "/teacher", label: "ראשי", icon: Home, exact: true },
@@ -22,6 +25,7 @@ const TeacherBottomNav = () => {
     { path: "/teacher/reports", label: "דיווחים", icon: FileText },
     ...(hasEnsembles ? [{ path: "/teacher/ensembles", label: "הרכבים", icon: Music }] : []),
     ...(hasSchoolMusic ? [{ path: "/teacher/school-music-schools", label: "מנגנים", icon: School }] : []),
+    ...(hasBranches ? [{ path: "/teacher/branches", label: "שלוחות", icon: Building2 }] : []),
   ];
 
   return (
