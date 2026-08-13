@@ -72,13 +72,14 @@ const AdminCashflow = () => {
   const [startDate, setStartDate] = useState(range.start);
   const [endDate, setEndDate] = useState(range.end);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [creditDay, setCreditDay] = useState("2");
   const [rows, setRows] = useState<CashflowRow[] | null>(null);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const runReport = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("icount-cashflow", {
-        body: { startDate, endDate },
+        body: { startDate, endDate, creditSettlementDay: Number(creditDay) },
       });
       if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -165,13 +166,13 @@ const AdminCashflow = () => {
           <h1 className="text-2xl font-bold">דוח תזרים</h1>
           <p className="text-sm text-muted-foreground mt-1">
             נתוני אמת מתוך המסמכים באייקאונט — ללא תחזיות. כל תנועה משויכת לחודש לפי תאריך הפרעון בפועל
-            (שיק לפי תאריך השיק, אשראי בתשלומים מפוצל לחודשי החיוב).
+            (שיק לפי תאריך השיק, אשראי לפי יום הזיכוי מחברת האשראי בחודש שאחרי העסקה, ובתשלומים — מפוצל לחודשי החיוב).
           </p>
         </div>
 
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <div className="space-y-2">
                 <Label>מתאריך</Label>
                 <DateInput value={startDate} onChange={setStartDate} />
@@ -191,6 +192,19 @@ const AdminCashflow = () => {
                     <SelectItem value="students">תלמידים</SelectItem>
                     <SelectItem value="school_music">בית ספר מנגן</SelectItem>
                     <SelectItem value="external">אחר / חיצוני</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>יום זיכוי אשראי (בחודש שאחרי)</Label>
+                <Select value={creditDay} onValueChange={setCreditDay}>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 28 }, (_, i) => String(i + 1)).map((d) => (
+                      <SelectItem key={d} value={d}>{d} לחודש</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

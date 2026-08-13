@@ -82,7 +82,16 @@ type Row = {
   source: "students" | "school_music" | "external";
 };
 
-function expandDoc(doc: any): Omit<Row, "source">[] {
+// Credit-card money does not arrive on the transaction date — the clearing house
+// settles it on a fixed day of the following month (default: the 2nd).
+function settlementDate(iso: string, day: number): string {
+  const [y, m] = iso.split("-").map(Number);
+  const base = new Date(Date.UTC(y, m, 1));
+  const lastDay = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + 1, 0)).getUTCDate();
+  return `${base.getUTCFullYear()}-${pad(base.getUTCMonth() + 1)}-${pad(Math.min(day, lastDay))}`;
+}
+
+function expandDoc(doc: any, ccDay: number): Omit<Row, "source">[] {
   const docDate = normDate(doc.dateissued ?? doc.doc_date ?? doc.date ?? doc.issue_date) ?? "";
   const meta = {
     client_name: String(doc.client_name ?? doc.custname ?? "").trim(),
@@ -110,7 +119,7 @@ function expandDoc(doc: any): Omit<Row, "source">[] {
   for (const cc of asArray(doc.cc)) {
     const total = num(cc.sum ?? cc.amount);
     const count = Math.max(1, Number(cc.num_of_payments ?? cc.payments_count ?? 1) || 1);
-    const first = normDate(cc.date ?? cc.charge_date) ?? docDate;
+    const first = settlementDate(normDate(cc.date ?? cc.charge_date) ?? docDate, ccDay);
     const last4 = String(cc.card_number ?? cc.num ?? "").slice(-4);
     const firstAmount = count > 1 && num(cc.first_payment) ? num(cc.first_payment) : Math.round((total / count) * 100) / 100;
     const rest = count > 1 ? Math.round(((total - firstAmount) / (count - 1)) * 100) / 100 : 0;
@@ -139,7 +148,8 @@ Deno.serve(async (req: Request) => {
   if (authFail) return authFail;
 
   try {
-    const { startDate, endDate, debug } = await req.json();
+    const { startDate, endDate, debug, creditSettlementDay } = await req.json();
+    const ccDay = Math.min(28, Math.max(1, Number(creditSettlementDay) || 2));
     if (!startDate || !endDate) {
       return new Response(JSON.stringify({ error: "startDate and endDate required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -182,17 +192,19 @@ Deno.serve(async (req: Request) => {
 
 
     if (debug) {
-      return new Response(JSON.stringify({ count: list.length, sample: list[0], lastRaw: lastRaw?.status }, null, 2), {
+      const withCc = list.filter((d) => asArray(d.cc).length).slice(-5);
+      return new Response(JSON.stringify({ count: list.length, withCc, lastRaw: lastRaw?.status }, null, 2), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
     const details = list.filter((d) => !Number(d.is_cancelled) && !Number(d.is_cancellation));
 
     let rows: Omit<Row, "source">[] = [];
-    for (const d of details) rows.push(...expandDoc(d));
+    for (const d of details) rows.push(...expandDoc(d, ccDay));
     rows = rows.filter((r) => r.due_date >= startDate && r.due_date <= endDate);
 
 
