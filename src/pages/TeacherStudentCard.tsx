@@ -49,7 +49,8 @@ const TeacherStudentCard = () => {
             variant="ghost"
             size="icon"
             className="text-primary-foreground hover:bg-primary-foreground/10"
-            onClick={() => navigate("/teacher/students")}
+            onClick={() => navigate(-1)}
+
           >
             <ArrowRight className="h-5 w-5" />
           </Button>
