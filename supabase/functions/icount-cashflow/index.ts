@@ -82,7 +82,16 @@ type Row = {
   source: "students" | "school_music" | "external";
 };
 
-function expandDoc(doc: any): Omit<Row, "source">[] {
+// Credit-card money does not arrive on the transaction date — the clearing house
+// settles it on a fixed day of the following month (default: the 2nd).
+function settlementDate(iso: string, day: number): string {
+  const [y, m] = iso.split("-").map(Number);
+  const base = new Date(Date.UTC(y, m, 1));
+  const lastDay = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth() + 1, 0)).getUTCDate();
+  return `${base.getUTCFullYear()}-${pad(base.getUTCMonth() + 1)}-${pad(Math.min(day, lastDay))}`;
+}
+
+function expandDoc(doc: any, ccDay: number): Omit<Row, "source">[] {
   const docDate = normDate(doc.dateissued ?? doc.doc_date ?? doc.date ?? doc.issue_date) ?? "";
   const meta = {
     client_name: String(doc.client_name ?? doc.custname ?? "").trim(),
