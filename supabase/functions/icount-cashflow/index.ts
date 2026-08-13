@@ -20,6 +20,9 @@ const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 const LEGACY_CUTOFF_DOCNUM = 1110;
 const LEGACY_KEPT_DOC_NUMBERS = new Set(["1095", "1110"]);
 
+// System-side payment records that should not be compared to iCount (test/noise).
+const SYSTEM_IGNORED_DOC_NUMBERS = new Set(["3005", "3006", "3007", "5005"]);
+
 function isExcludedDoc(docNumber: string): boolean {
   const dn = String(docNumber ?? "").trim();
   if (!dn) return false;
@@ -27,6 +30,11 @@ function isExcludedDoc(docNumber: string): boolean {
   const n = Number(dn);
   if (!Number.isFinite(n)) return false;
   return n <= LEGACY_CUTOFF_DOCNUM;
+}
+
+function isSystemIgnoredDoc(docNumber: string): boolean {
+  const dn = String(docNumber ?? "").trim();
+  return dn ? SYSTEM_IGNORED_DOC_NUMBERS.has(dn) : false;
 }
 
 
