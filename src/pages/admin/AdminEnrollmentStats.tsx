@@ -157,6 +157,8 @@ const AdminEnrollmentStats = () => {
     const assignedStudents = new Map<string, { grade: string }>();
     const instrumentCounts = new Map<string, number>();
     const schoolCounts = new Map<string, number>();
+    const deptEnrollments = new Map<string, number>();
+    const deptStudents = new Map<string, Set<string>>();
 
     for (const e of enrollments) {
       const sid = e.student_id;
@@ -164,20 +166,46 @@ const AdminEnrollmentStats = () => {
         assignedStudents.set(sid, { grade: normGrade(e.grade ?? e.students?.grade) });
       }
       const inst = (e.instruments?.name ?? "").trim();
-      if (inst) instrumentCounts.set(inst, (instrumentCounts.get(inst) ?? 0) + 1);
+      if (inst) {
+        instrumentCounts.set(inst, (instrumentCounts.get(inst) ?? 0) + 1);
+        const dept = departmentOf(inst);
+        deptEnrollments.set(dept, (deptEnrollments.get(dept) ?? 0) + 1);
+        if (sid) {
+          const set = deptStudents.get(dept) ?? new Set<string>();
+          set.add(sid);
+          deptStudents.set(dept, set);
+        }
+      }
       const school = (e.schools?.name ?? "").trim() || "ללא שלוחה";
       schoolCounts.set(school, (schoolCounts.get(school) ?? 0) + 1);
     }
 
+    // New vs continuing among assigned students
+    let assignedContinuing = 0;
+    for (const sid of assignedStudents.keys()) {
+      if (priorStudentIds.has(sid)) assignedContinuing++;
+    }
+    const assignedNew = assignedStudents.size - assignedContinuing;
+
     const pendingInstrumentCounts = new Map<string, number>();
     const pendingGradeCounts = new Map<string, number>();
+    const pendingDeptCounts = new Map<string, number>();
+    let pendingNew = 0;
+    let pendingContinuing = 0;
     for (const r of pendingRegs) {
       pendingGradeCounts.set(normGrade(r.grade), (pendingGradeCounts.get(normGrade(r.grade)) ?? 0) + 1);
+      const st = (r.student_status ?? "").toString().trim();
+      if (st === "ממשיך" || st === "continuing") pendingContinuing++;
+      else pendingNew++;
       for (const raw of (r.requested_instruments as string[] | null) ?? []) {
         const name = (raw ?? "").trim();
-        if (name) pendingInstrumentCounts.set(name, (pendingInstrumentCounts.get(name) ?? 0) + 1);
+        if (!name) continue;
+        pendingInstrumentCounts.set(name, (pendingInstrumentCounts.get(name) ?? 0) + 1);
+        const dept = departmentOf(name);
+        pendingDeptCounts.set(dept, (pendingDeptCounts.get(dept) ?? 0) + 1);
       }
     }
+
 
     const assignedGradeCounts = new Map<string, number>();
     for (const s of assignedStudents.values()) {
