@@ -132,56 +132,58 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
             <h1 className="text-lg font-bold">{title}</h1>
           </div>
 
-          <div className="flex items-center gap-2">
-            <NotificationsBell className="text-primary-foreground" />
-            <ThemeSwitcher className="text-primary-foreground" />
-            {/* Year Switcher */}
-            {!yearsLoading && years.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <CalendarDays className="h-4 w-4 text-primary-foreground/70 hidden sm:block" />
-                <Select value={selectedYearId ?? ""} onValueChange={setSelectedYearId}>
-                  <SelectTrigger className="w-32 sm:w-36 h-8 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:text-sm">
-                    <SelectValue placeholder="שנה" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((y) => (
-                      <SelectItem key={y.id} value={y.id}>
-                        {y.name} {y.is_active ? "✦" : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide min-w-0">
+              <NotificationsBell className="text-primary-foreground shrink-0" />
+              <ThemeSwitcher className="text-primary-foreground shrink-0" />
+              {/* Year Switcher */}
+              {!yearsLoading && years.length > 0 && (
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <CalendarDays className="h-4 w-4 text-primary-foreground/70 hidden sm:block" />
+                  <Select value={selectedYearId ?? ""} onValueChange={setSelectedYearId}>
+                    <SelectTrigger className="w-28 sm:w-36 h-8 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:text-sm">
+                      <SelectValue placeholder="שנה" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {years.map((y) => (
+                        <SelectItem key={y.id} value={y.id}>
+                          {y.name} {y.is_active ? "✦" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
 
-            <nav className="hidden items-center gap-1 md:flex">
-              {NAV_ITEMS.map((item) => (
+              <nav className="hidden items-center gap-1 md:flex shrink-0">
+                {NAV_ITEMS.map((item) => (
+                  <Button
+                    key={item.path}
+                    variant="ghost"
+                    size="sm"
+                    className={`text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3 shrink-0 ${
+                      (location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path)))
+                        ? "bg-primary-foreground/15"
+                        : ""
+                    }`}
+                    onClick={() => navigate(item.path)}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    <span className="hidden lg:inline mr-1">{item.label}</span>
+                  </Button>
+                ))}
                 <Button
-                  key={item.path}
                   variant="ghost"
                   size="sm"
-                  className={`text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3 ${
-                    (location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path)))
-                      ? "bg-primary-foreground/15"
-                      : ""
-                  }`}
-                  onClick={() => navigate(item.path)}
+                  className="text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3 shrink-0"
+                  onClick={signOut}
                 >
-                  <item.icon className="h-4 w-4" />
-                  <span className="hidden lg:inline mr-1">{item.label}</span>
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden lg:inline mr-1">התנתק</span>
                 </Button>
-              ))}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3"
-                onClick={signOut}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden lg:inline mr-1">התנתק</span>
-              </Button>
-            </nav>
-            <div className="flex items-center gap-1 md:hidden">
+              </nav>
+            </div>
+            <div className="flex items-center gap-1 md:hidden shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
