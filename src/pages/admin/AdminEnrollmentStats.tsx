@@ -526,11 +526,11 @@ const AdminEnrollmentStats = () => {
             {/* Grade chart */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <h2 className="font-semibold mb-3">תלמידים לפי שכבה</h2>
-              <div className="h-80" dir="ltr">
+              <div className="h-80 md:h-96" dir="ltr">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.gradeData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-                    <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
+                    <XAxis dataKey="grade" tick={{ fontSize: isMobile ? 10 : 12 }} interval={0} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                     <Tooltip />
                     <Legend />
