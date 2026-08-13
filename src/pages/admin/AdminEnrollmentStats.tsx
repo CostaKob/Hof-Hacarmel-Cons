@@ -241,16 +241,35 @@ const AdminEnrollmentStats = () => {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
 
+    const deptNames = Array.from(
+      new Set([...DEPARTMENTS.map((d) => d.name), ...deptEnrollments.keys(), ...pendingDeptCounts.keys()])
+    );
+    const departmentData = deptNames
+      .map((name) => ({
+        name,
+        students: deptStudents.get(name)?.size ?? 0,
+        enrollmentsCount: deptEnrollments.get(name) ?? 0,
+        pending: pendingDeptCounts.get(name) ?? 0,
+      }))
+      .filter((d) => d.enrollmentsCount > 0 || d.pending > 0)
+      .sort((a, b) => b.enrollmentsCount - a.enrollmentsCount);
+
     return {
       assignedCount: assignedStudents.size,
       enrollmentCount: enrollments.length,
       pendingCount: pendingRegs.length,
+      assignedNew,
+      assignedContinuing,
+      pendingNew,
+      pendingContinuing,
+      departmentData,
       gradeData,
       instrumentData,
       pendingInstrumentData,
       schoolData,
     };
-  }, [enrollments, pendingRegs]);
+  }, [enrollments, pendingRegs, priorStudentIds]);
+
 
   const isLoading = eLoading || rLoading;
   const maxInstrument = stats.instrumentData[0]?.value ?? 1;
