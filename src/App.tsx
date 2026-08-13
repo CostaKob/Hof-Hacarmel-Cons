@@ -235,6 +235,8 @@ const App = () => (
               <Route path="/teacher/school-music-schools/:id" element={<TeacherRoute><TeacherSchoolMusicSchoolCard /></TeacherRoute>} />
               <Route path="/teacher/school-music-schools/:id/attendance" element={<TeacherRoute><SchoolMusicAttendanceList variant="teacher" /></TeacherRoute>} />
               <Route path="/teacher/school-music-schools/:id/attendance/new" element={<TeacherRoute><SchoolMusicAttendanceForm variant="teacher" /></TeacherRoute>} />
+              <Route path="/teacher/branches" element={<TeacherRoute><TeacherBranches /></TeacherRoute>} />
+              <Route path="/teacher/branches/:schoolId" element={<TeacherRoute><TeacherBranchCard /></TeacherRoute>} />
               {/* Secretary */}
               <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
