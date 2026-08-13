@@ -148,24 +148,34 @@ Deno.serve(async (req: Request) => {
     const searchFrom = addMonths(startDate, -30);
     const searchTo = addMonths(endDate, 1);
 
-    const search = await icount("doc/search", {
-      ...auth,
-      start_date: toCompact(searchFrom),
-      end_date: toCompact(searchTo),
-      from_date: searchFrom,
-      to_date: searchTo,
-      detail_level: 10,
-      max_results: 5000,
-    });
-
-    if (search && search.status === false) {
-      const reason = search.error_description || search.reason || search.message || "שגיאה מ-iCount";
-      return new Response(JSON.stringify({ error: `iCount: ${reason}`, details: search }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // iCount caps a single search at 100 results — paginate.
+    const list: any[] = [];
+    let lastRaw: any = null;
+    for (let offset = 0; offset < 5000; offset += 100) {
+      const search = await icount("doc/search", {
+        ...auth,
+        start_date: toCompact(searchFrom),
+        end_date: toCompact(searchTo),
+        from_date: searchFrom,
+        to_date: searchTo,
+        detail_level: 10,
+        max_results: 100,
+        limit: 100,
+        offset,
       });
+      lastRaw = search;
+      if (search && search.status === false) {
+        if (offset > 0 && search.reason === "no_results") break;
+        const reason = search.error_description || search.reason || search.message || "שגיאה מ-iCount";
+        return new Response(JSON.stringify({ error: `iCount: ${reason}`, details: search }), {
+          status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const page = asArray(search.results_list ?? search.docs ?? search.results ?? search.data);
+      list.push(...page);
+      if (page.length < 100) break;
     }
 
-    const list: any[] = asArray(search.results_list ?? search.docs ?? search.results ?? search.data);
 
     if (debug) {
       const sample = list[0];
