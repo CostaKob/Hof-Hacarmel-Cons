@@ -81,7 +81,8 @@ const TeacherBranches = () => {
         .select("school_id, teacher_id")
         .eq("academic_year_id", selectedYearId!)
         .eq("is_active", true)
-        .in("school_id", schoolIds);
+        .in("school_id", schoolIds)
+        .returns<{ school_id: string; teacher_id: string }[]>();
       if (teacherError) throw teacherError;
 
       const { data: registrationData, error: registrationError } = await supabase
