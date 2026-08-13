@@ -181,10 +181,11 @@ Deno.serve(async (req: Request) => {
       const sample = list[0];
       let detail: any = null;
       if (sample) detail = await icount("doc/get", { ...auth, doc_id: sample.doc_id ?? sample.docnum, doctype: sample.doctype });
-      return new Response(JSON.stringify({ count: list.length, sample, detail }, null, 2), {
+      return new Response(JSON.stringify({ count: list.length, sample, detail, lastRaw: lastRaw?.status }, null, 2), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     // Load full details (payment breakdown) in small concurrent batches.
     const details: any[] = [];
