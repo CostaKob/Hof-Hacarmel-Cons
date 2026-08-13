@@ -29,6 +29,7 @@ const DATA_SECTIONS = [
 
 const TOOLS_SECTIONS = [
   { path: "/admin/yearly-summary", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכלל המערכת", icon: BarChart3 },
+  { path: "/admin/enrollment-stats", label: "דוח תלמידים ושיבוצים", description: "תלמידים לפי שכבה, התפלגות כלים ונרשמים שטרם שובצו", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים, הגדרת שנה פעילה ומעבר שנה", icon: CalendarDays },
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
   { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
