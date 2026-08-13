@@ -454,13 +454,14 @@ const AdminEnrollmentStats = () => {
                       name: d.name.replace("מחלקת ", ""),
                       משובצים: d.enrollmentsCount,
                       "טרם שובצו": d.pending,
+                      instruments: d.instruments,
                     }))}
                     margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                    <Tooltip />
+                    <Tooltip content={<DepartmentTooltip />} />
                     <Legend />
                     <Bar dataKey="משובצים" stackId="a" fill="hsl(var(--primary))" />
                     <Bar dataKey="טרם שובצו" stackId="a" fill="#f59e0b" radius={[6, 6, 0, 0]} />
