@@ -17,6 +17,13 @@ const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 // Documents permanently excluded from the cashflow report (office decision).
 const IGNORED_DOC_NUMBERS = new Set(["1002", "1003", "1062", "1091", "1092", "1104", "7003"]);
 
+// One-off test documents (1–2 ₪ experiments). Fixed list — nothing new is auto-excluded.
+const TEST_DOC_NUMBERS = new Set([
+  "1000", "1001", "1010", "1011", "1012", "1013",
+  "1042", "1043", "1044", "1045", "1046", "1047", "1048", "1049",
+  "1050", "1051", "1052", "1053", "1054", "3006", "3007",
+]);
+
 function getAuth() {
   const cid = Deno.env.get("ICOUNT_COMPANY_ID");
   const user = Deno.env.get("ICOUNT_USERNAME");
