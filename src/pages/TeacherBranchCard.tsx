@@ -480,7 +480,11 @@ const TeacherBranchCard = () => {
               <p className="text-center text-muted-foreground py-8">אין מורים פעילים בשלוחה זו</p>
             ) : (
               filteredTeachers.map((t) => (
-                <Card key={t.id}>
+                <Card
+                  key={t.id}
+                  onClick={() => navigate(`/teacher/branches/${schoolId}/teachers/${t.id}`)}
+                  className="cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+                >
                   <CardContent className="p-4">
                     <p className="font-semibold">
                       {t.first_name} {t.last_name}
