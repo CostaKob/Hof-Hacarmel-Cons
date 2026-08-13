@@ -58,22 +58,17 @@ const monthLabel = (m: string) => {
   return `${mm}-${y}`;
 };
 
-const defaultRange = () => {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 6, 0);
-  const iso = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return { start: iso(start), end: iso(end) };
-};
+// ברירת מחדל: שנת הלימודים 1.9.2026 – 31.8.2027
+const DEFAULT_START = "2026-09-01";
+const DEFAULT_END = "2027-08-31";
 
 const AdminCashflow = () => {
-  const range = defaultRange();
-  const [startDate, setStartDate] = useState(range.start);
-  const [endDate, setEndDate] = useState(range.end);
+  const [startDate, setStartDate] = useState(DEFAULT_START);
+  const [endDate, setEndDate] = useState(DEFAULT_END);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [creditDay, setCreditDay] = useState("2");
   const [rows, setRows] = useState<CashflowRow[] | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const runReport = useMutation({
@@ -83,15 +78,30 @@ const AdminCashflow = () => {
       });
       if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
-      return data as { rows: CashflowRow[]; docs_scanned: number };
+      return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[] };
     },
     onSuccess: (data) => {
       setRows(data.rows);
+      setWarnings(data.warnings ?? []);
       setOpenMonths({});
-      toast.success(`נסרקו ${data.docs_scanned} מסמכים · ${data.rows.length} תנועות בטווח`);
+      if (data.warnings?.length) {
+        toast.warning(`הדוח הופק חלקית — ${data.warnings.length} אזהרות`, {
+          description: data.warnings[0],
+          duration: 10000,
+        });
+      } else {
+        toast.success("הדוח הופק בהצלחה — כל המסמכים נמשכו במלואם", {
+          description: `נסרקו ${data.docs_scanned} מסמכים · ${data.rows.length} תנועות בטווח`,
+          duration: 6000,
+        });
+      }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      setWarnings([]);
+      toast.error("הפקת הדוח נכשלה", { description: e.message, duration: 12000 });
+    },
   });
+
 
   const filtered = useMemo(
     () => (rows ?? []).filter((r) => sourceFilter === "all" || r.source === sourceFilter),
