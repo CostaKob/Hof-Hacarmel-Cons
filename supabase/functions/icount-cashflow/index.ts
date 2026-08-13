@@ -312,10 +312,22 @@ Deno.serve(async (req: Request) => {
     finalRows.sort((a, b) => a.due_date.localeCompare(b.due_date) || a.doc_number.localeCompare(b.doc_number));
 
     // Reconciliation between iCount documents and our own payment records.
+    // Only documents that belong to our students / school-music payments are compared;
+    // unidentified (external) documents are reported separately so they don't skew the totals.
     const missing_in_system: { doc_number: string; amount: number; client_name: string; doc_date: string }[] = [];
     const amount_mismatches: { doc_number: string; icount_amount: number; system_amount: number; client_name: string }[] = [];
+    let icount_matched_total = 0;
+    let external_total = 0;
     for (const [docNum, info] of icountByDoc) {
       const sys = systemByDoc.get(docNum);
+      const isOurs = sys || studentKeys.has(docNum) || smKeys.has(docNum) ||
+        studentKeys.has(info.doc_id) || smKeys.has(info.doc_id);
+      if (!isOurs) {
+        external_total = Math.round((external_total + info.total) * 100) / 100;
+        missing_in_system.push({ doc_number: docNum, amount: info.total, client_name: info.client, doc_date: info.date });
+        continue;
+      }
+      icount_matched_total = Math.round((icount_matched_total + info.total) * 100) / 100;
       if (!sys) {
         missing_in_system.push({ doc_number: docNum, amount: info.total, client_name: info.client, doc_date: info.date });
       } else if (Math.abs(sys.total - info.total) > 0.5) {
@@ -328,12 +340,14 @@ Deno.serve(async (req: Request) => {
     }
     const sum = (ns: number[]) => Math.round(ns.reduce((a, b) => a + b, 0) * 100) / 100;
     const reconciliation = {
-      icount_total: sum([...icountByDoc.values()].map((v) => v.total)),
+      icount_total: icount_matched_total,
       system_total: sum([...systemByDoc.values()].map((v) => v.total)),
+      external_total,
       missing_in_system: missing_in_system.sort((a, b) => a.doc_number.localeCompare(b.doc_number)).slice(0, 100),
       missing_in_icount: missing_in_icount.sort((a, b) => a.doc_number.localeCompare(b.doc_number)).slice(0, 100),
       amount_mismatches: amount_mismatches.slice(0, 100),
     };
+
 
     return new Response(JSON.stringify({ rows: finalRows, docs_scanned: list.length, warnings, reconciliation }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
