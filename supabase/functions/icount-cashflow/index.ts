@@ -214,7 +214,13 @@ Deno.serve(async (req: Request) => {
 
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
-    const details = list.filter((d) => !Number(d.is_cancelled) && !Number(d.is_cancellation));
+    // IGNORED_DOC_NUMBERS are documents the office decided to exclude permanently.
+    const details = list.filter(
+      (d) =>
+        !Number(d.is_cancelled) &&
+        !Number(d.is_cancellation) &&
+        !IGNORED_DOC_NUMBERS.has(String(d.docnum ?? d.doc_number ?? "").trim()),
+    );
 
     let rows: Omit<Row, "source">[] = [];
     const unparsed: string[] = [];
