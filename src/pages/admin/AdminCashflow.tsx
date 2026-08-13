@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, FileSpreadsheet, ChevronDown, ChevronLeft, ExternalLink } from "lucide-react";
+import { Loader2, Search, FileSpreadsheet, ChevronDown, ChevronLeft, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
@@ -58,22 +58,17 @@ const monthLabel = (m: string) => {
   return `${mm}-${y}`;
 };
 
-const defaultRange = () => {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), 1);
-  const end = new Date(now.getFullYear(), now.getMonth() + 6, 0);
-  const iso = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  return { start: iso(start), end: iso(end) };
-};
+// ברירת מחדל: שנת הלימודים 1.9.2026 – 31.8.2027
+const DEFAULT_START = "2026-09-01";
+const DEFAULT_END = "2027-08-31";
 
 const AdminCashflow = () => {
-  const range = defaultRange();
-  const [startDate, setStartDate] = useState(range.start);
-  const [endDate, setEndDate] = useState(range.end);
+  const [startDate, setStartDate] = useState(DEFAULT_START);
+  const [endDate, setEndDate] = useState(DEFAULT_END);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
   const [creditDay, setCreditDay] = useState("2");
   const [rows, setRows] = useState<CashflowRow[] | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const runReport = useMutation({
@@ -83,15 +78,30 @@ const AdminCashflow = () => {
       });
       if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
-      return data as { rows: CashflowRow[]; docs_scanned: number };
+      return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[] };
     },
     onSuccess: (data) => {
       setRows(data.rows);
+      setWarnings(data.warnings ?? []);
       setOpenMonths({});
-      toast.success(`נסרקו ${data.docs_scanned} מסמכים · ${data.rows.length} תנועות בטווח`);
+      if (data.warnings?.length) {
+        toast.warning(`הדוח הופק חלקית — ${data.warnings.length} אזהרות`, {
+          description: data.warnings[0],
+          duration: 10000,
+        });
+      } else {
+        toast.success("הדוח הופק בהצלחה — כל המסמכים נמשכו במלואם", {
+          description: `נסרקו ${data.docs_scanned} מסמכים · ${data.rows.length} תנועות בטווח`,
+          duration: 6000,
+        });
+      }
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (e: Error) => {
+      setWarnings([]);
+      toast.error("הפקת הדוח נכשלה", { description: e.message, duration: 12000 });
+    },
   });
+
 
   const filtered = useMemo(
     () => (rows ?? []).filter((r) => sourceFilter === "all" || r.source === sourceFilter),
@@ -239,6 +249,46 @@ const AdminCashflow = () => {
             מושך מסמכים מאייקאונט ומחשב תזרים…
           </div>
         )}
+
+        {runReport.isError && !runReport.isPending && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-4 flex gap-3 items-start">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <div className="font-semibold text-destructive">הפקת הדוח נכשלה — הנתונים אינם מלאים</div>
+                <div className="text-muted-foreground mt-1">{(runReport.error as Error)?.message}</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {rows && !runReport.isPending && (
+          warnings.length ? (
+            <Card className="border-amber-500/50 bg-amber-500/5">
+              <CardContent className="py-4 flex gap-3 items-start">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-semibold text-amber-700">שימו לב — הדוח הופק באופן חלקי</div>
+                  <ul className="text-muted-foreground mt-1 space-y-1 list-disc pr-4">
+                    {warnings.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-emerald-500/50 bg-emerald-500/5">
+              <CardContent className="py-4 flex gap-3 items-start">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <span className="font-semibold text-emerald-700">הדוח הופק בהצלחה</span>
+                  <span className="text-muted-foreground"> — כל המסמכים נמשכו מאייקאונט במלואם ({rows.length} תנועות בטווח).</span>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        )}
+
+
 
         {rows && !runReport.isPending && (
           filtered.length === 0 ? (
