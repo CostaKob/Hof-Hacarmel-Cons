@@ -83,9 +83,9 @@ type Row = {
 };
 
 function expandDoc(doc: any): Omit<Row, "source">[] {
-  const docDate = normDate(doc.doc_date ?? doc.date ?? doc.issue_date) ?? "";
+  const docDate = normDate(doc.dateissued ?? doc.doc_date ?? doc.date ?? doc.issue_date) ?? "";
   const meta = {
-    client_name: String(doc.client_name ?? doc.custname ?? doc.client?.client_name ?? "").trim(),
+    client_name: String(doc.client_name ?? doc.custname ?? "").trim(),
     doc_id: String(doc.doc_id ?? doc.docnum ?? ""),
     doc_number: String(doc.docnum ?? doc.doc_number ?? ""),
     doc_type: String(doc.doctype ?? doc.doc_type ?? ""),
@@ -99,35 +99,39 @@ function expandDoc(doc: any): Omit<Row, "source">[] {
     out.push({ ...meta, due_date: d, month: d.slice(0, 7), method, amount, note });
   };
 
-  // Cheques
-  for (const c of asArray(doc.cheques ?? doc.cheque)) {
+  // Cheques — each with its own due date
+  for (const c of asArray(doc.cheques)) {
     const chequeNum = c.num ?? c.number ?? c.cheque_num ?? "";
     push(normDate(c.date ?? c.cheque_date), "cheque", num(c.sum ?? c.amount),
       chequeNum ? `תשלום בשיק מספר ${chequeNum}` : "תשלום בשיק");
   }
 
-  // Credit card — split across billing months
-  for (const cc of asArray(doc.cc ?? doc.creditcard ?? doc.credit_card)) {
+  // Credit card — split across the actual billing months
+  for (const cc of asArray(doc.cc)) {
     const total = num(cc.sum ?? cc.amount);
-    const count = Math.max(1, Number(cc.payments_count ?? cc.num_of_payments ?? cc.payments ?? 1) || 1);
+    const count = Math.max(1, Number(cc.num_of_payments ?? cc.payments_count ?? 1) || 1);
     const first = normDate(cc.date ?? cc.charge_date) ?? docDate;
-    const last4 = String(cc.num ?? cc.card_number ?? "").slice(-4);
-    const per = Math.round((total / count) * 100) / 100;
+    const last4 = String(cc.card_number ?? cc.num ?? "").slice(-4);
+    const firstAmount = count > 1 && num(cc.first_payment) ? num(cc.first_payment) : Math.round((total / count) * 100) / 100;
+    const rest = count > 1 ? Math.round(((total - firstAmount) / (count - 1)) * 100) / 100 : 0;
+    let allocated = 0;
     for (let i = 0; i < count; i++) {
-      const amt = i === count - 1 ? Math.round((total - per * (count - 1)) * 100) / 100 : per;
+      let amt = i === 0 ? firstAmount : rest;
+      if (i === count - 1) amt = Math.round((total - allocated) * 100) / 100;
+      allocated = Math.round((allocated + amt) * 100) / 100;
       const label = count > 1 ? `תשלום ${i + 1} מתוך ${count} בכרטיס אשראי` : "תשלום בכרטיס אשראי";
       push(addMonths(first, i), "credit", amt, last4 ? `${label} המסתיים ב- ${last4}` : label);
     }
   }
 
   for (const c of asArray(doc.cash)) push(normDate(c.date), "cash", num(c.sum ?? c.amount), "תשלום במזומן");
-  for (const b of asArray(doc.banktransfer ?? doc.bank_transfer)) {
-    push(normDate(b.date), "transfer", num(b.sum ?? b.amount), "העברה בנקאית");
-  }
-  for (const o of asArray(doc.other)) push(normDate(o.date), "other", num(o.sum ?? o.amount), String(o.info ?? "אחר"));
+  for (const b of asArray(doc.banktransfer)) push(normDate(b.date), "transfer", num(b.sum ?? b.amount), "העברה בנקאית");
+  for (const o of asArray(doc.paypal)) push(normDate(o.date), "other", num(o.sum ?? o.amount), "PayPal");
+  for (const o of asArray(doc.barter)) push(normDate(o.date), "other", num(o.sum ?? o.amount), "אחר");
 
   return out;
 }
+
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
