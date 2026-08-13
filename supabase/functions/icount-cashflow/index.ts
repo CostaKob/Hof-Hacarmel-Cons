@@ -246,27 +246,58 @@ Deno.serve(async (req: Request) => {
         `${unparsed.length} מסמכים לא נפרסו לתנועות פרעון (ללא פרטי תשלום מזוהים): ${unparsed.slice(0, 15).join(", ")}${unparsed.length > 15 ? "…" : ""}`,
       );
     }
+    // Doc-level totals from iCount (before the due-date filter) for reconciliation.
+    const icountByDoc = new Map<string, { total: number; client: string; date: string }>();
+    for (const r of rows) {
+      if (!r.doc_number) continue;
+      const cur = icountByDoc.get(r.doc_number) ?? { total: 0, client: r.client_name, date: r.doc_date };
+      cur.total = Math.round((cur.total + r.amount) * 100) / 100;
+      icountByDoc.set(r.doc_number, cur);
+    }
+
     rows = rows.filter((r) => r.due_date >= startDate && r.due_date <= endDate);
 
 
     // Classify each row against our own records (students vs school music).
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const docIds = [...new Set(rows.map((r) => r.doc_id).filter(Boolean))];
-    const docNumbers = [...new Set(rows.map((r) => r.doc_number).filter(Boolean))];
     const [sp, smp] = await Promise.all([
-      supabase.from("student_payments").select("icount_doc_id,icount_doc_number").or(
-        `icount_doc_id.in.(${docIds.join(",") || "null"}),icount_doc_number.in.(${docNumbers.join(",") || "null"})`,
-      ),
-      supabase.from("school_music_payments").select("icount_doc_id,icount_doc_number").or(
-        `icount_doc_id.in.(${docIds.join(",") || "null"}),icount_doc_number.in.(${docNumbers.join(",") || "null"})`,
-      ),
+      supabase.from("student_payments")
+        .select("icount_doc_id,icount_doc_number,amount,payment_date,payment_status")
+        .not("icount_doc_number", "is", null)
+        .gte("payment_date", searchFrom).lte("payment_date", searchTo),
+      supabase.from("school_music_payments")
+        .select("icount_doc_id,icount_doc_number,amount,created_at,payment_status")
+        .not("icount_doc_number", "is", null),
     ]);
     if (sp.error) warnings.push(`שיוך תנועות לתלמידים נכשל: ${sp.error.message}`);
     if (smp.error) warnings.push(`שיוך תנועות לבית ספר מנגן נכשל: ${smp.error.message}`);
+
     const studentKeys = new Set<string>();
-    for (const p of sp.data ?? []) { if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id)); if (p.icount_doc_number) studentKeys.add(String(p.icount_doc_number)); }
     const smKeys = new Set<string>();
-    for (const p of smp.data ?? []) { if (p.icount_doc_id) smKeys.add(String(p.icount_doc_id)); if (p.icount_doc_number) smKeys.add(String(p.icount_doc_number)); }
+    const systemByDoc = new Map<string, { total: number; source: "students" | "school_music" }>();
+    const addSystem = (docNum: string, amount: number, source: "students" | "school_music") => {
+      const cur = systemByDoc.get(docNum) ?? { total: 0, source };
+      cur.total = Math.round((cur.total + amount) * 100) / 100;
+      systemByDoc.set(docNum, cur);
+    };
+    for (const p of sp.data ?? []) {
+      if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id));
+      if (p.icount_doc_number) {
+        studentKeys.add(String(p.icount_doc_number));
+        if (!TEST_DOC_NUMBERS.has(String(p.icount_doc_number)) && !IGNORED_DOC_NUMBERS.has(String(p.icount_doc_number))) {
+          addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "students");
+        }
+      }
+    }
+    for (const p of smp.data ?? []) {
+      if (p.icount_doc_id) smKeys.add(String(p.icount_doc_id));
+      if (p.icount_doc_number) {
+        smKeys.add(String(p.icount_doc_number));
+        if (!TEST_DOC_NUMBERS.has(String(p.icount_doc_number)) && !IGNORED_DOC_NUMBERS.has(String(p.icount_doc_number))) {
+          addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "school_music");
+        }
+      }
+    }
 
     const finalRows: Row[] = rows.map((r) => ({
       ...r,
@@ -279,7 +310,31 @@ Deno.serve(async (req: Request) => {
 
     finalRows.sort((a, b) => a.due_date.localeCompare(b.due_date) || a.doc_number.localeCompare(b.doc_number));
 
-    return new Response(JSON.stringify({ rows: finalRows, docs_scanned: list.length, warnings }), {
+    // Reconciliation between iCount documents and our own payment records.
+    const missing_in_system: { doc_number: string; amount: number; client_name: string; doc_date: string }[] = [];
+    const amount_mismatches: { doc_number: string; icount_amount: number; system_amount: number; client_name: string }[] = [];
+    for (const [docNum, info] of icountByDoc) {
+      const sys = systemByDoc.get(docNum);
+      if (!sys) {
+        missing_in_system.push({ doc_number: docNum, amount: info.total, client_name: info.client, doc_date: info.date });
+      } else if (Math.abs(sys.total - info.total) > 0.5) {
+        amount_mismatches.push({ doc_number: docNum, icount_amount: info.total, system_amount: sys.total, client_name: info.client });
+      }
+    }
+    const missing_in_icount: { doc_number: string; amount: number; source: string }[] = [];
+    for (const [docNum, sys] of systemByDoc) {
+      if (!icountByDoc.has(docNum)) missing_in_icount.push({ doc_number: docNum, amount: sys.total, source: sys.source });
+    }
+    const sum = (ns: number[]) => Math.round(ns.reduce((a, b) => a + b, 0) * 100) / 100;
+    const reconciliation = {
+      icount_total: sum([...icountByDoc.values()].map((v) => v.total)),
+      system_total: sum([...systemByDoc.values()].map((v) => v.total)),
+      missing_in_system: missing_in_system.sort((a, b) => a.doc_number.localeCompare(b.doc_number)).slice(0, 100),
+      missing_in_icount: missing_in_icount.sort((a, b) => a.doc_number.localeCompare(b.doc_number)).slice(0, 100),
+      amount_mismatches: amount_mismatches.slice(0, 100),
+    };
+
+    return new Response(JSON.stringify({ rows: finalRows, docs_scanned: list.length, warnings, reconciliation }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
