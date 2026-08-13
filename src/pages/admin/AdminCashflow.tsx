@@ -172,7 +172,7 @@ const AdminCashflow = () => {
 
         <Card>
           <CardContent className="pt-6 space-y-4">
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-4">
               <div className="space-y-2">
                 <Label>מתאריך</Label>
                 <DateInput value={startDate} onChange={setStartDate} />
@@ -192,6 +192,19 @@ const AdminCashflow = () => {
                     <SelectItem value="students">תלמידים</SelectItem>
                     <SelectItem value="school_music">בית ספר מנגן</SelectItem>
                     <SelectItem value="external">אחר / חיצוני</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>יום זיכוי אשראי (בחודש שאחרי)</Label>
+                <Select value={creditDay} onValueChange={setCreditDay}>
+                  <SelectTrigger className="h-11 rounded-xl">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 28 }, (_, i) => String(i + 1)).map((d) => (
+                      <SelectItem key={d} value={d}>{d} לחודש</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
