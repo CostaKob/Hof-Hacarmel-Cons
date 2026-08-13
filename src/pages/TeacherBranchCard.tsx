@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { REGISTRATION_STATUSES } from "@/lib/registrationStatuses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
@@ -258,25 +259,26 @@ const TeacherBranchCard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="students" className="mt-2">
+        <Tabs dir="rtl" defaultValue="students" className="mt-2 text-right">
           <TabsList className="grid w-full grid-cols-4 h-11 rounded-xl">
             <TabsTrigger value="students" className="text-xs gap-1">
               <Users className="h-3.5 w-3.5" />
-              תלמידים
+              תלמידים ({filteredStudents.length})
             </TabsTrigger>
             <TabsTrigger value="registrations" className="text-xs gap-1">
               <FileText className="h-3.5 w-3.5" />
-              הרשמות
+              הרשמות ({filteredRegistrations.length})
             </TabsTrigger>
             <TabsTrigger value="teachers" className="text-xs gap-1">
               <UserCircle className="h-3.5 w-3.5" />
-              מורים
+              מורים ({filteredTeachers.length})
             </TabsTrigger>
             <TabsTrigger value="attendance" className="text-xs gap-1">
               <ClipboardCheck className="h-3.5 w-3.5" />
               נוכחות
             </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="students" className="mt-3 space-y-3">
             {/* Filters — same style as the admin students page */}
@@ -455,10 +457,10 @@ const TeacherBranchCard = () => {
                         </p>
                       </div>
                       <Badge
-                        variant={r.status === "approved" ? "default" : "outline"}
-                        className="shrink-0"
+                        variant="outline"
+                        className={`shrink-0 border-transparent ${REGISTRATION_STATUSES[r.status]?.color ?? ""}`}
                       >
-                        {r.status === "approved" ? "מאושר" : "ממתין"}
+                        {REGISTRATION_STATUSES[r.status]?.label ?? r.status}
                       </Badge>
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground space-y-1">
