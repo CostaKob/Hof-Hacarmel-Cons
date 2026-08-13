@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
+import { useIsMobile } from "@/hooks/use-mobile";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import {
@@ -140,6 +141,7 @@ const StatCard = ({
 );
 
 const AdminEnrollmentStats = () => {
+  const isMobile = useIsMobile();
   const { selectedYearId, years } = useAcademicYear();
   const selectedYear = years.find((y) => y.id === selectedYearId);
 
@@ -389,7 +391,8 @@ const AdminEnrollmentStats = () => {
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        innerRadius={isMobile ? 28 : 0}
+                        outerRadius={isMobile ? 60 : 80}
                         label={(d: any) => `${d.name} (${d.value})`}
                         labelLine={false}
                       >
@@ -429,7 +432,8 @@ const AdminEnrollmentStats = () => {
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        innerRadius={isMobile ? 28 : 0}
+                        outerRadius={isMobile ? 60 : 80}
                         label={(d: any) => `${d.name} (${d.value})`}
                         labelLine={false}
                       >
@@ -447,7 +451,7 @@ const AdminEnrollmentStats = () => {
             {/* Departments */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <h2 className="font-semibold mb-3">חלוקה למחלקות</h2>
-              <div className="h-80" dir="ltr">
+              <div className="h-80 md:h-96" dir="ltr">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={stats.departmentData.map((d) => ({
@@ -456,10 +460,17 @@ const AdminEnrollmentStats = () => {
                       "טרם שובצו": d.pending,
                       instruments: d.instruments,
                     }))}
-                    margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+                    margin={{ top: 8, right: 8, left: 0, bottom: isMobile ? 70 : 24 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      interval={0}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 70 : 30}
+                    />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                     <Tooltip content={<DepartmentTooltip />} />
                     <Legend />
@@ -515,11 +526,11 @@ const AdminEnrollmentStats = () => {
             {/* Grade chart */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <h2 className="font-semibold mb-3">תלמידים לפי שכבה</h2>
-              <div className="h-80" dir="ltr">
+              <div className="h-80 md:h-96" dir="ltr">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={stats.gradeData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-                    <XAxis dataKey="grade" tick={{ fontSize: 12 }} />
+                    <XAxis dataKey="grade" tick={{ fontSize: isMobile ? 10 : 12 }} interval={0} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                     <Tooltip />
                     <Legend />
@@ -557,17 +568,17 @@ const AdminEnrollmentStats = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <h2 className="font-semibold mb-3">התפלגות כלי נגינה (שיוכים פעילים)</h2>
-                <div className="h-96" dir="ltr">
+                <div className="h-80 md:h-96" dir="ltr">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={stats.instrumentData}
                         dataKey="value"
                         nameKey="name"
-                        cx="45%"
-                        cy="50%"
-                        innerRadius={45}
-                        outerRadius={90}
+                        cx={isMobile ? "50%" : "45%"}
+                        cy={isMobile ? "45%" : "50%"}
+                        innerRadius={isMobile ? 35 : 45}
+                        outerRadius={isMobile ? 70 : 90}
                         paddingAngle={1}
                       >
                         {stats.instrumentData.map((_, i) => (
@@ -579,11 +590,11 @@ const AdminEnrollmentStats = () => {
                         contentStyle={{ borderRadius: 12 }}
                       />
                       <Legend
-                        layout="vertical"
-                        verticalAlign="middle"
-                        align="left"
+                        layout={isMobile ? "horizontal" : "vertical"}
+                        verticalAlign={isMobile ? "bottom" : "middle"}
+                        align={isMobile ? "center" : "left"}
                         formatter={(value: any, entry: any) => `${entry.payload.name} (${entry.payload.value})`}
-                        wrapperStyle={{ fontSize: 12, paddingRight: 8 }}
+                        wrapperStyle={{ fontSize: isMobile ? 10 : 12, paddingRight: 8 }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
