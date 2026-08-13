@@ -472,8 +472,17 @@ const AdminCashflow = () => {
                                   </td>
                                   <td className="p-3">
                                     {r.client_name}
-                                    <span className="block text-xs text-muted-foreground">{SOURCE_LABEL[r.source]}</span>
+                                    {r.source === "external" ? (
+                                      <span className="block mt-1">
+                                        <Badge variant="outline" className="border-amber-500/60 text-amber-700 text-[11px]">
+                                          לא מזוהה במערכת
+                                        </Badge>
+                                      </span>
+                                    ) : (
+                                      <span className="block text-xs text-muted-foreground">{SOURCE_LABEL[r.source]}</span>
+                                    )}
                                   </td>
+
                                   <td className="p-3 whitespace-nowrap">{METHOD_LABEL[r.method]}</td>
                                   <td className={`p-3 whitespace-nowrap font-medium ${r.amount < 0 ? "text-destructive" : ""}`}>{ILS(r.amount)}</td>
                                   <td className="p-3 text-muted-foreground">{r.note}</td>
