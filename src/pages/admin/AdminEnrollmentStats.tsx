@@ -391,7 +391,8 @@ const AdminEnrollmentStats = () => {
                         nameKey="name"
                         cx="50%"
                         cy="50%"
-                        outerRadius={80}
+                        innerRadius={isMobile ? 28 : 0}
+                        outerRadius={isMobile ? 60 : 80}
                         label={(d: any) => `${d.name} (${d.value})`}
                         labelLine={false}
                       >
