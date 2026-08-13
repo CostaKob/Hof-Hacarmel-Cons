@@ -148,7 +148,8 @@ Deno.serve(async (req: Request) => {
   if (authFail) return authFail;
 
   try {
-    const { startDate, endDate, debug } = await req.json();
+    const { startDate, endDate, debug, creditSettlementDay } = await req.json();
+    const ccDay = Math.min(28, Math.max(1, Number(creditSettlementDay) || 2));
     if (!startDate || !endDate) {
       return new Response(JSON.stringify({ error: "startDate and endDate required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
