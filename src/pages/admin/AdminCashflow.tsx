@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import DateInput from "@/components/ui/date-input";
+import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Search, FileSpreadsheet, ChevronDown, ChevronLeft, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
-import { getEdgeErrorMessage } from "@/lib/edgeErrors";
+
 
 type Method = "cash" | "cheque" | "credit" | "transfer" | "other";
 
@@ -80,7 +80,7 @@ const AdminCashflow = () => {
       const { data, error } = await supabase.functions.invoke("icount-cashflow", {
         body: { startDate, endDate },
       });
-      if (error) throw new Error(await getEdgeErrorMessage(error));
+      if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
       return data as { rows: CashflowRow[]; docs_scanned: number };
     },
@@ -158,7 +158,7 @@ const AdminCashflow = () => {
   };
 
   return (
-    <AdminLayout>
+    <AdminLayout title="דוח תזרים">
       <PageTitle title="דוח תזרים" />
       <div className="space-y-6">
         <div>
