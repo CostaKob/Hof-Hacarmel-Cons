@@ -479,7 +479,7 @@ const AdminEnrollmentStats = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-              <div className="mt-4 overflow-x-auto">
+              <div className="mt-4 hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-muted-foreground border-b border-border">
@@ -519,6 +519,43 @@ const AdminEnrollmentStats = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile department cards */}
+              <div className="mt-4 md:hidden space-y-3">
+                {stats.departmentData.map((d) => (
+                  <div key={d.name} className="rounded-xl border border-border bg-background p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-semibold text-sm">{d.name}</span>
+                      <span className="text-xs text-muted-foreground">{d.students} תלמידים</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                      <div className="rounded-lg bg-muted/50 p-2 text-center">
+                        <div className="font-semibold">{d.enrollmentsCount}</div>
+                        <div className="text-muted-foreground">שיוכים</div>
+                      </div>
+                      <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 p-2 text-center">
+                        <div className="font-semibold text-amber-600 dark:text-amber-400">{d.pending}</div>
+                        <div className="text-muted-foreground">בקשות</div>
+                      </div>
+                    </div>
+                    {d.instruments.length > 0 && (
+                      <div className="space-y-1 pt-2 border-t border-border/50">
+                        {d.instruments.map((inst) => (
+                          <div key={`${d.name}-${inst.name}`} className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground pr-4">{inst.name}</span>
+                            <div className="flex gap-3">
+                              <span>{inst.assigned > 0 ? inst.assigned : "—"}</span>
+                              <span className="text-amber-600 dark:text-amber-400 w-4 text-left">
+                                {inst.pending > 0 ? inst.pending : "—"}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </div>
 
