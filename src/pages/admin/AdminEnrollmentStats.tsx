@@ -451,7 +451,7 @@ const AdminEnrollmentStats = () => {
             {/* Departments */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <h2 className="font-semibold mb-3">חלוקה למחלקות</h2>
-              <div className="h-80" dir="ltr">
+              <div className="h-80 md:h-96" dir="ltr">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={stats.departmentData.map((d) => ({
@@ -460,10 +460,17 @@ const AdminEnrollmentStats = () => {
                       "טרם שובצו": d.pending,
                       instruments: d.instruments,
                     }))}
-                    margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+                    margin={{ top: 8, right: 8, left: 0, bottom: isMobile ? 70 : 24 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
-                    <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: isMobile ? 10 : 12 }}
+                      interval={0}
+                      angle={isMobile ? -45 : 0}
+                      textAnchor={isMobile ? "end" : "middle"}
+                      height={isMobile ? 70 : 30}
+                    />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                     <Tooltip content={<DepartmentTooltip />} />
                     <Legend />
