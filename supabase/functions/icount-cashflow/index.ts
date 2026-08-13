@@ -204,7 +204,7 @@ Deno.serve(async (req: Request) => {
     const details = list.filter((d) => !Number(d.is_cancelled) && !Number(d.is_cancellation));
 
     let rows: Omit<Row, "source">[] = [];
-    for (const d of details) rows.push(...expandDoc(d));
+    for (const d of details) rows.push(...expandDoc(d, ccDay));
     rows = rows.filter((r) => r.due_date >= startDate && r.due_date <= endDate);
 
 
