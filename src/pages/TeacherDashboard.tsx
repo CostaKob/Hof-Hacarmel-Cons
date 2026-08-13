@@ -3,12 +3,13 @@ import { useTeacherProfile, useTeacherEnrollments, useTeacherLastReport } from "
 import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
+import { useBranchCoordinatorBranches } from "@/hooks/useBranchCoordinator";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School } from "lucide-react";
+import { Users, FileText, LogOut, GraduationCap, CalendarDays, KeyRound, ChevronLeft, BarChart3, Car, MapPin, Music, School, Building2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageTitle from "@/components/PageTitle";
 import AppLogo from "@/components/AppLogo";
