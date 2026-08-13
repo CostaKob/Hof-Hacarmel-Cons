@@ -302,7 +302,7 @@ const TeacherBranchCard = () => {
                       {t.first_name} {t.last_name}
                     </p>
                     <div className="mt-2 space-y-1">
-                      {t.phone && <PhoneDisplay phone={t.phone} showIcon size="sm" />}
+                      {t.phone && <PhoneDisplay phone={t.phone} showIcon textClassName="text-sm" />}
                       {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
                     </div>
                   </CardContent>
