@@ -258,25 +258,26 @@ const TeacherBranchCard = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="students" className="mt-2">
+        <Tabs dir="rtl" defaultValue="students" className="mt-2 text-right">
           <TabsList className="grid w-full grid-cols-4 h-11 rounded-xl">
             <TabsTrigger value="students" className="text-xs gap-1">
               <Users className="h-3.5 w-3.5" />
-              תלמידים
+              תלמידים ({filteredEnrollments.length})
             </TabsTrigger>
             <TabsTrigger value="registrations" className="text-xs gap-1">
               <FileText className="h-3.5 w-3.5" />
-              הרשמות
+              הרשמות ({filteredRegistrations.length})
             </TabsTrigger>
             <TabsTrigger value="teachers" className="text-xs gap-1">
               <UserCircle className="h-3.5 w-3.5" />
-              מורים
+              מורים ({filteredTeachers.length})
             </TabsTrigger>
             <TabsTrigger value="attendance" className="text-xs gap-1">
               <ClipboardCheck className="h-3.5 w-3.5" />
               נוכחות
             </TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="students" className="mt-3 space-y-3">
             {/* Filters — same style as the admin students page */}
