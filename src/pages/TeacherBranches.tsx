@@ -134,7 +134,7 @@ const TeacherBranches = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <PageTitle title="שלוחות שלי" />
+      <PageTitle title="השלוחות שלי" />
       <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
         <div className="mx-auto flex max-w-lg items-center gap-3">
           <Button
