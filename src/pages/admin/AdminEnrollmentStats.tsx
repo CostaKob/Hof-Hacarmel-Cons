@@ -296,6 +296,135 @@ const AdminEnrollmentStats = () => {
               <StatCard icon={School} label="שלוחות פעילות" value={stats.schoolData.length} />
             </div>
 
+            {/* New vs continuing */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <h2 className="font-semibold mb-3">חדשים מול ממשיכים — תלמידים משובצים</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900 p-3 text-center">
+                    <div className="text-3xl font-bold text-sky-700 dark:text-sky-400">{stats.assignedNew}</div>
+                    <div className="text-xs text-sky-700 dark:text-sky-400">חדשים</div>
+                  </div>
+                  <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 p-3 text-center">
+                    <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{stats.assignedContinuing}</div>
+                    <div className="text-xs text-emerald-700 dark:text-emerald-400">ממשיכים</div>
+                  </div>
+                </div>
+                <div className="h-56 mt-3" dir="ltr">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "חדשים", value: stats.assignedNew },
+                          { name: "ממשיכים", value: stats.assignedContinuing },
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={(d: any) => `${d.name} (${d.value})`}
+                        labelLine={false}
+                      >
+                        <Cell fill="#38bdf8" />
+                        <Cell fill="#34d399" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  ממשיך = תלמיד שהיה לו שיוך באחת השנים הקודמות.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <h2 className="font-semibold mb-3">חדשים מול ממשיכים — נרשמים שטרם שובצו</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-xl bg-sky-50 dark:bg-sky-950/20 border border-sky-200 dark:border-sky-900 p-3 text-center">
+                    <div className="text-3xl font-bold text-sky-700 dark:text-sky-400">{stats.pendingNew}</div>
+                    <div className="text-xs text-sky-700 dark:text-sky-400">חדשים</div>
+                  </div>
+                  <div className="rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 p-3 text-center">
+                    <div className="text-3xl font-bold text-amber-700 dark:text-amber-400">{stats.pendingContinuing}</div>
+                    <div className="text-xs text-amber-700 dark:text-amber-400">ממשיכים</div>
+                  </div>
+                </div>
+                <div className="h-56 mt-3" dir="ltr">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: "חדשים", value: stats.pendingNew },
+                          { name: "ממשיכים", value: stats.pendingContinuing },
+                        ]}
+                        dataKey="value"
+                        nameKey="name"
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={80}
+                        label={(d: any) => `${d.name} (${d.value})`}
+                        labelLine={false}
+                      >
+                        <Cell fill="#38bdf8" />
+                        <Cell fill="#f59e0b" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">לפי הסטטוס שנבחר בטופס ההרשמה.</p>
+              </div>
+            </div>
+
+            {/* Departments */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <h2 className="font-semibold mb-3">חלוקה למחלקות</h2>
+              <div className="h-80" dir="ltr">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={stats.departmentData.map((d) => ({
+                      name: d.name.replace("מחלקת ", ""),
+                      משובצים: d.enrollmentsCount,
+                      "טרם שובצו": d.pending,
+                    }))}
+                    margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="משובצים" stackId="a" fill="hsl(var(--primary))" />
+                    <Bar dataKey="טרם שובצו" stackId="a" fill="#f59e0b" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-muted-foreground border-b border-border">
+                      <th className="text-right py-2 font-medium">מחלקה</th>
+                      <th className="text-right py-2 font-medium">תלמידים</th>
+                      <th className="text-right py-2 font-medium">שיוכים</th>
+                      <th className="text-right py-2 font-medium">בקשות שטרם שובצו</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stats.departmentData.map((d) => (
+                      <tr key={d.name} className="border-b border-border/50">
+                        <td className="py-2">{d.name}</td>
+                        <td className="py-2 font-semibold">{d.students}</td>
+                        <td className="py-2">{d.enrollmentsCount}</td>
+                        <td className="py-2 text-amber-600 dark:text-amber-400">{d.pending}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
             {/* Grade chart */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
               <h2 className="font-semibold mb-3">תלמידים לפי שכבה</h2>
