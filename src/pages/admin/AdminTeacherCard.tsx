@@ -15,6 +15,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
@@ -29,13 +30,14 @@ const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
   const queryClient = useQueryClient();
   const [newBranch, setNewBranch] = useState("");
   const [newHours, setNewHours] = useState("");
+  const [newSchoolId, setNewSchoolId] = useState<string | null>(null);
 
   const { data: branches = [], isLoading } = useQuery({
     queryKey: ["branch-coordinators", teacherId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("branch_coordinators")
-        .select("*")
+        .select(`*, schools (id, name)`)
         .eq("teacher_id", teacherId)
         .order("created_at");
       if (error) throw error;
@@ -43,18 +45,44 @@ const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
     },
   });
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["branch-coordinators", teacherId] });
+  const { data: schools = [] } = useQuery({
+    queryKey: ["active-schools-for-branch-coordination"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("schools")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["branch-coordinators", teacherId] });
+    queryClient.invalidateQueries({ queryKey: ["branch-coordinator-branches", teacherId] });
+  };
 
   const addBranch = useMutation({
     mutationFn: async () => {
+      const branchName = newSchoolId
+        ? (schools.find((s: any) => s.id === newSchoolId)?.name ?? newBranch)
+        : newBranch;
       const { error } = await supabase.from("branch_coordinators").insert({
         teacher_id: teacherId,
-        branch_name: newBranch,
+        branch_name: branchName,
         weekly_hours: Number(newHours) || 0,
+        school_id: newSchoolId,
       } as any);
       if (error) throw error;
     },
-    onSuccess: () => { invalidate(); setNewBranch(""); setNewHours(""); toast.success("ריכוז שלוחה נוסף"); },
+    onSuccess: () => {
+      invalidate();
+      setNewBranch("");
+      setNewHours("");
+      setNewSchoolId(null);
+      toast.success("ריכוז שלוחה נוסף");
+    },
     onError: () => toast.error("שגיאה"),
   });
 
@@ -67,6 +95,8 @@ const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
     onError: () => toast.error("שגיאה"),
   });
 
+  const selectedSchoolName = schools.find((s: any) => s.id === newSchoolId)?.name;
+
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
       <h2 className="font-semibold text-foreground text-base">ריכוז שלוחה/תחום</h2>
@@ -76,8 +106,11 @@ const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
         <>
           {branches.map((b: any) => (
             <div key={b.id} className="flex items-center justify-between rounded-xl border p-2.5">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-medium text-sm">{b.branch_name}</span>
+                {b.schools?.name && (
+                  <Badge variant="outline" className="text-[10px]">שלוחה: {b.schools.name}</Badge>
+                )}
                 <Badge variant="secondary">{Number(b.weekly_hours)} שעות</Badge>
               </div>
               <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeBranch.mutate(b.id)}>
@@ -85,18 +118,55 @@ const BranchCoordinationSection = ({ teacherId }: { teacherId: string }) => {
               </Button>
             </div>
           ))}
-          <div className="flex gap-2 items-end">
-            <div className="flex-1 space-y-1">
-              <Label className="text-xs">שם שלוחה/תחום</Label>
-              <Input value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="למשל: שלוחת צפון" className="h-9" />
+          <div className="space-y-2 rounded-xl border border-dashed border-border p-3">
+            <Label className="text-xs font-medium">בחירת שלוחה לריכוז</Label>
+            <Select value={newSchoolId ?? ""} onValueChange={(v) => {
+              setNewSchoolId(v || null);
+              if (v) {
+                const name = schools.find((s: any) => s.id === v)?.name;
+                if (name) setNewBranch(name);
+              }
+            }}>
+              <SelectTrigger className="h-10 rounded-xl">
+                <SelectValue placeholder="בחר שלוחה..." />
+              </SelectTrigger>
+              <SelectContent>
+                {schools.map((s: any) => (
+                  <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                ))}
+                <SelectItem value="__custom">אחר / תחום כללי</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {newSchoolId === "__custom" && (
+              <div className="space-y-1">
+                <Label className="text-xs">שם תחום/ריכוז</Label>
+                <Input value={newBranch} onChange={(e) => setNewBranch(e.target.value)} placeholder="למשל: ריכוז ציוד" className="h-9" />
+              </div>
+            )}
+
+            <div className="flex gap-2 items-end">
+              <div className="w-24 space-y-1">
+                <Label className="text-xs">שעות</Label>
+                <Input type="number" min={0} value={newHours} onChange={(e) => setNewHours(e.target.value)} placeholder="0" className="h-9 text-center" />
+              </div>
+              <Button
+                size="sm"
+                className="h-9"
+                disabled={
+                  addBranch.isPending ||
+                  (newSchoolId === "__custom" ? !newBranch : !newSchoolId)
+                }
+                onClick={() => addBranch.mutate()}
+              >
+                <Plus className="h-4 w-4 ml-1" /> הוסף
+              </Button>
             </div>
-            <div className="w-20 space-y-1">
-              <Label className="text-xs">שעות</Label>
-              <Input type="number" min={0} value={newHours} onChange={(e) => setNewHours(e.target.value)} placeholder="0" className="h-9 text-center" />
-            </div>
-            <Button size="sm" className="h-9" disabled={!newBranch || addBranch.isPending} onClick={() => addBranch.mutate()}>
-              <Plus className="h-4 w-4 ml-1" /> הוסף
-            </Button>
+            {selectedSchoolName && newSchoolId !== "__custom" && (
+              <p className="text-xs text-muted-foreground">
+                יינתן למורה גישה לחשבון רכז שלוחה עבור <span className="font-medium text-foreground">{selectedSchoolName}</span>.
+              </p>
+            )}
           </div>
         </>
       )}
