@@ -34,7 +34,7 @@ const TeacherTeacherCard = () => {
         .from("teachers")
         .select("*")
         .eq("id", teacherId!)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       return data;
     },
