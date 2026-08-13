@@ -456,10 +456,10 @@ const TeacherBranchCard = () => {
                         </p>
                       </div>
                       <Badge
-                        variant={r.status === "approved" ? "default" : "outline"}
-                        className="shrink-0"
+                        variant="outline"
+                        className={`shrink-0 border-transparent ${REGISTRATION_STATUSES[r.status]?.color ?? ""}`}
                       >
-                        {r.status === "approved" ? "מאושר" : "ממתין"}
+                        {REGISTRATION_STATUSES[r.status]?.label ?? r.status}
                       </Badge>
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground space-y-1">
