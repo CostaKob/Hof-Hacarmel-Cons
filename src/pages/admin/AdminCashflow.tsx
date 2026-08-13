@@ -72,13 +72,14 @@ const AdminCashflow = () => {
   const [startDate, setStartDate] = useState(range.start);
   const [endDate, setEndDate] = useState(range.end);
   const [sourceFilter, setSourceFilter] = useState<string>("all");
+  const [creditDay, setCreditDay] = useState("2");
   const [rows, setRows] = useState<CashflowRow[] | null>(null);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const runReport = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("icount-cashflow", {
-        body: { startDate, endDate },
+        body: { startDate, endDate, creditSettlementDay: Number(creditDay) },
       });
       if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
