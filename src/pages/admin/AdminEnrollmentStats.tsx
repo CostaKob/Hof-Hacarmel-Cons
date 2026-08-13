@@ -568,17 +568,17 @@ const AdminEnrollmentStats = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <h2 className="font-semibold mb-3">התפלגות כלי נגינה (שיוכים פעילים)</h2>
-                <div className="h-96" dir="ltr">
+                <div className="h-80 md:h-96" dir="ltr">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={stats.instrumentData}
                         dataKey="value"
                         nameKey="name"
-                        cx="45%"
-                        cy="50%"
-                        innerRadius={45}
-                        outerRadius={90}
+                        cx={isMobile ? "50%" : "45%"}
+                        cy={isMobile ? "45%" : "50%"}
+                        innerRadius={isMobile ? 35 : 45}
+                        outerRadius={isMobile ? 70 : 90}
                         paddingAngle={1}
                       >
                         {stats.instrumentData.map((_, i) => (
@@ -590,11 +590,11 @@ const AdminEnrollmentStats = () => {
                         contentStyle={{ borderRadius: 12 }}
                       />
                       <Legend
-                        layout="vertical"
-                        verticalAlign="middle"
-                        align="left"
+                        layout={isMobile ? "horizontal" : "vertical"}
+                        verticalAlign={isMobile ? "bottom" : "middle"}
+                        align={isMobile ? "center" : "left"}
                         formatter={(value: any, entry: any) => `${entry.payload.name} (${entry.payload.value})`}
-                        wrapperStyle={{ fontSize: 12, paddingRight: 8 }}
+                        wrapperStyle={{ fontSize: isMobile ? 10 : 12, paddingRight: 8 }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
