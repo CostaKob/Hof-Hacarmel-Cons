@@ -21,6 +21,31 @@ import { Users, ClipboardList, Music, School } from "lucide-react";
 
 const GRADE_ORDER = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י", "יא", "יב"];
 
+const DEPARTMENTS: { name: string; match: (inst: string) => boolean }[] = [
+  { name: "מחלקת כלי קשת", match: (i) => ["כינור", "ויולה", "צ׳לו", "צ'לו", "צלו"].includes(i) },
+  {
+    name: "מחלקת כלי נשיפה",
+    match: (i) =>
+      ["חליל צד", "חלילית", "קלרינט", "קלרינט בס", "סקסופון", "חצוצרה", "קרן יער", "בריטון", "טרומבון", "טובה"].includes(i),
+  },
+  { name: "מחלקת כלי מקלדת", match: (i) => i.includes("פסנתר") },
+  { name: "מחלקת כלי פריטה", match: (i) => i.includes("גיטרה") },
+  { name: "מחלקת פיתוח קול", match: (i) => i.includes("פיתוח קול") },
+  {
+    name: "מחלקת תאוריה וקומפוזיציה",
+    match: (i) => i.includes("קומפוזיציה") || i.includes("תאוריה") || i.includes("הלחנה"),
+  },
+  {
+    name: "מחלקת כלי הקשה",
+    match: (i) => i.includes("כלי הקשה") || i.includes("תופים") || i.includes("קחון"),
+  },
+];
+
+const departmentOf = (instrument: string): string => {
+  const i = (instrument ?? "").trim();
+  return DEPARTMENTS.find((d) => d.match(i))?.name ?? "אחר";
+};
+
 const normGrade = (g?: string | null) => {
   const v = (g ?? "").replace(/["'׳״]/g, "").trim();
   return v || "ללא כיתה";
