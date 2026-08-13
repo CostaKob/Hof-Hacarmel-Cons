@@ -100,10 +100,14 @@ const TeacherBranches = () => {
           const studentSet = (studentCounts as any)[e.school_id] ?? new Set<string>();
           studentSet.add(e.student_id);
           (studentCounts as any)[e.school_id] = studentSet;
+        }
+      }
 
-          const teacherSet = (teacherCounts as any)[e.school_id] ?? new Set<string>();
-          teacherSet.add(e.teacher_id);
-          (teacherCounts as any)[e.school_id] = teacherSet;
+      for (const t of teacherData ?? []) {
+        if (t.school_id) {
+          const teacherSet = (teacherCounts as any)[t.school_id] ?? new Set<string>();
+          teacherSet.add(t.teacher_id);
+          (teacherCounts as any)[t.school_id] = teacherSet;
         }
       }
 
