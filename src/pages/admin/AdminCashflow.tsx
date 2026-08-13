@@ -11,7 +11,8 @@ import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Search, FileSpreadsheet, ChevronDown, ChevronLeft, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import { exportCashflowWorkbook } from "@/lib/cashflowExcel";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 
 type Method = "cash" | "cheque" | "credit" | "transfer" | "other";
