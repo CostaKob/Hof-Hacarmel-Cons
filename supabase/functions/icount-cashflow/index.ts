@@ -119,7 +119,7 @@ function expandDoc(doc: any, ccDay: number): Omit<Row, "source">[] {
   for (const cc of asArray(doc.cc)) {
     const total = num(cc.sum ?? cc.amount);
     const count = Math.max(1, Number(cc.num_of_payments ?? cc.payments_count ?? 1) || 1);
-    const first = normDate(cc.date ?? cc.charge_date) ?? docDate;
+    const first = settlementDate(normDate(cc.date ?? cc.charge_date) ?? docDate, ccDay);
     const last4 = String(cc.card_number ?? cc.num ?? "").slice(-4);
     const firstAmount = count > 1 && num(cc.first_payment) ? num(cc.first_payment) : Math.round((total / count) * 100) / 100;
     const rest = count > 1 ? Math.round(((total - firstAmount) / (count - 1)) * 100) / 100 : 0;
