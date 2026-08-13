@@ -14,6 +14,9 @@ const corsHeaders = {
 
 const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 
+// Documents permanently excluded from the cashflow report (office decision).
+const IGNORED_DOC_NUMBERS = new Set(["1002", "1003", "1062", "1091", "1092", "1104", "7003"]);
+
 function getAuth() {
   const cid = Deno.env.get("ICOUNT_COMPANY_ID");
   const user = Deno.env.get("ICOUNT_USERNAME");
