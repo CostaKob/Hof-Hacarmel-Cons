@@ -144,7 +144,7 @@ const TeacherDashboard = () => {
             <StatCard icon={School} label="בתי ספר מנגנים" value={schoolMusicSchools!.length} onClick={() => navigate("/teacher/school-music-schools")} />
           )}
           {hasBranches && (
-            <StatCard icon={Building2} label="שלוחות שלי" value={branchCoordinatorBranches!.length} onClick={() => navigate("/teacher/branches")} />
+            <StatCard icon={Building2} label="השלוחות שלי" value={branchCoordinatorBranches!.length} onClick={() => navigate("/teacher/branches")} />
           )}
         </div>
 
