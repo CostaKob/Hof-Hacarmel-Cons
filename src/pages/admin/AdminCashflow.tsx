@@ -62,6 +62,14 @@ const monthLabel = (m: string) => {
 const DEFAULT_START = "2026-09-01";
 const DEFAULT_END = "2027-08-31";
 
+interface Reconciliation {
+  icount_total: number;
+  system_total: number;
+  missing_in_system: { doc_number: string; amount: number; client_name: string; doc_date: string }[];
+  missing_in_icount: { doc_number: string; amount: number; source: string }[];
+  amount_mismatches: { doc_number: string; icount_amount: number; system_amount: number; client_name: string }[];
+}
+
 const AdminCashflow = () => {
   const [startDate, setStartDate] = useState(DEFAULT_START);
   const [endDate, setEndDate] = useState(DEFAULT_END);
@@ -69,6 +77,7 @@ const AdminCashflow = () => {
   const [creditDay, setCreditDay] = useState("2");
   const [rows, setRows] = useState<CashflowRow[] | null>(null);
   const [warnings, setWarnings] = useState<string[]>([]);
+  const [recon, setRecon] = useState<Reconciliation | null>(null);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const runReport = useMutation({
@@ -78,11 +87,12 @@ const AdminCashflow = () => {
       });
       if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
       if ((data as any)?.error) throw new Error((data as any).error);
-      return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[] };
+      return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[]; reconciliation?: Reconciliation };
     },
     onSuccess: (data) => {
       setRows(data.rows);
       setWarnings(data.warnings ?? []);
+      setRecon(data.reconciliation ?? null);
       setOpenMonths({});
       if (data.warnings?.length) {
         toast.warning(`הדוח הופק חלקית — ${data.warnings.length} אזהרות`, {
@@ -98,6 +108,7 @@ const AdminCashflow = () => {
     },
     onError: (e: Error) => {
       setWarnings([]);
+      setRecon(null);
       toast.error("הפקת הדוח נכשלה", { description: e.message, duration: 12000 });
     },
   });
@@ -288,6 +299,79 @@ const AdminCashflow = () => {
           )
         )}
 
+        {recon && !runReport.isPending && (() => {
+          const diff = Math.round((recon.icount_total - recon.system_total) * 100) / 100;
+          const clean = Math.abs(diff) < 0.5 && !recon.missing_in_system.length &&
+            !recon.missing_in_icount.length && !recon.amount_mismatches.length;
+          return (
+            <Card className={clean ? "border-emerald-500/50" : "border-amber-500/50"}>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base flex items-center gap-2">
+                  {clean
+                    ? <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    : <AlertTriangle className="h-4 w-4 text-amber-600" />}
+                  התאמה לדוח התשלומים במערכת
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border p-3">
+                    <div className="text-xs text-muted-foreground">סה"כ באייקאונט</div>
+                    <div className="text-lg font-semibold">{ILS(recon.icount_total)}</div>
+                  </div>
+                  <div className="rounded-xl border p-3">
+                    <div className="text-xs text-muted-foreground">סה"כ במערכת</div>
+                    <div className="text-lg font-semibold">{ILS(recon.system_total)}</div>
+                  </div>
+                  <div className="rounded-xl border p-3">
+                    <div className="text-xs text-muted-foreground">פער</div>
+                    <div className={`text-lg font-semibold ${Math.abs(diff) >= 0.5 ? "text-destructive" : "text-emerald-600"}`}>{ILS(diff)}</div>
+                  </div>
+                </div>
+
+                {clean ? (
+                  <p className="text-sm text-muted-foreground">כל המסמכים באייקאונט תואמים לתשלומים במערכת.</p>
+                ) : (
+                  <div className="space-y-3 text-sm">
+                    {recon.missing_in_system.length > 0 && (
+                      <div>
+                        <div className="font-medium text-amber-700">מסמכים באייקאונט שאין להם תשלום במערכת ({recon.missing_in_system.length})</div>
+                        <ul className="mt-1 space-y-1 text-muted-foreground list-disc pr-4">
+                          {recon.missing_in_system.slice(0, 20).map((d) => (
+                            <li key={d.doc_number}>מסמך {d.doc_number} · {d.client_name || "—"} · {ILS(d.amount)}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {recon.missing_in_icount.length > 0 && (
+                      <div>
+                        <div className="font-medium text-amber-700">תשלומים במערכת שלא נמצאו באייקאונט ({recon.missing_in_icount.length})</div>
+                        <ul className="mt-1 space-y-1 text-muted-foreground list-disc pr-4">
+                          {recon.missing_in_icount.slice(0, 20).map((d) => (
+                            <li key={d.doc_number}>מסמך {d.doc_number} · {ILS(d.amount)} · {d.source === "students" ? "תלמידים" : "בית ספר מנגן"}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {recon.amount_mismatches.length > 0 && (
+                      <div>
+                        <div className="font-medium text-destructive">פערי סכומים ({recon.amount_mismatches.length})</div>
+                        <ul className="mt-1 space-y-1 text-muted-foreground list-disc pr-4">
+                          {recon.amount_mismatches.slice(0, 20).map((d) => (
+                            <li key={d.doc_number}>מסמך {d.doc_number} · {d.client_name || "—"} · אייקאונט {ILS(d.icount_amount)} מול מערכת {ILS(d.system_amount)}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  ההשוואה מתבצעת ברמת מסמך על כל המסמכים שנסרקו (לא רק בטווח התאריכים המוצג), ומתעלמת ממסמכי הטסט הישנים.
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
 
         {rows && !runReport.isPending && (
@@ -388,8 +472,17 @@ const AdminCashflow = () => {
                                   </td>
                                   <td className="p-3">
                                     {r.client_name}
-                                    <span className="block text-xs text-muted-foreground">{SOURCE_LABEL[r.source]}</span>
+                                    {r.source === "external" ? (
+                                      <span className="block mt-1">
+                                        <Badge variant="outline" className="border-amber-500/60 text-amber-700 text-[11px]">
+                                          לא מזוהה במערכת
+                                        </Badge>
+                                      </span>
+                                    ) : (
+                                      <span className="block text-xs text-muted-foreground">{SOURCE_LABEL[r.source]}</span>
+                                    )}
                                   </td>
+
                                   <td className="p-3 whitespace-nowrap">{METHOD_LABEL[r.method]}</td>
                                   <td className={`p-3 whitespace-nowrap font-medium ${r.amount < 0 ? "text-destructive" : ""}`}>{ILS(r.amount)}</td>
                                   <td className="p-3 text-muted-foreground">{r.note}</td>
