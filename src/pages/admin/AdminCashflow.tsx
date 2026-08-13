@@ -81,6 +81,7 @@ const AdminCashflow = () => {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [recon, setRecon] = useState<Reconciliation | null>(null);
   const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
+  const { logoUrl } = useAppLogo();
 
   const runReport = useMutation({
     mutationFn: async () => {
