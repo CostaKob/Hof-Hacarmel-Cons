@@ -53,6 +53,7 @@ import TeacherBranchCard from "./pages/TeacherBranchCard";
 import TeacherTeacherCard from "./pages/TeacherTeacherCard";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
+import AdminEnrollmentStats from "./pages/admin/AdminEnrollmentStats";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
 
 import AdminYearPromotion from "./pages/admin/AdminYearPromotion";
