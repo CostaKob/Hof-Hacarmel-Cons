@@ -244,7 +244,7 @@ const TeacherBranchCard = () => {
                       </div>
                       {s?.parent_phone && (
                         <div className="mt-3">
-                          <PhoneDisplay phone={s.parent_phone} showIcon size="sm" />
+                          <PhoneDisplay phone={s.parent_phone} showIcon textClassName="text-sm" />
                         </div>
                       )}
                     </CardContent>
