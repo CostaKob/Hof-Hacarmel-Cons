@@ -557,24 +557,34 @@ const AdminEnrollmentStats = () => {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
                 <h2 className="font-semibold mb-3">התפלגות כלי נגינה (שיוכים פעילים)</h2>
-                <div className="h-80" dir="ltr">
+                <div className="h-96" dir="ltr">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
                         data={stats.instrumentData}
                         dataKey="value"
                         nameKey="name"
-                        cx="50%"
+                        cx="45%"
                         cy="50%"
-                        outerRadius={110}
-                        label={(d: any) => `${d.name} (${d.value})`}
-                        labelLine={false}
+                        innerRadius={45}
+                        outerRadius={90}
+                        paddingAngle={1}
                       >
                         {stats.instrumentData.map((_, i) => (
-                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                          <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} stroke="none" />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value: any, name: any) => [value, name]}
+                        contentStyle={{ borderRadius: 12 }}
+                      />
+                      <Legend
+                        layout="vertical"
+                        verticalAlign="middle"
+                        align="left"
+                        formatter={(value: any, entry: any) => `${entry.payload.name} (${entry.payload.value})`}
+                        wrapperStyle={{ fontSize: 12, paddingRight: 8 }}
+                      />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
