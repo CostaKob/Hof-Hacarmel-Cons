@@ -120,14 +120,75 @@ const TeacherBranchCard = () => {
     },
   });
 
-  const filteredStudents = students.filter((e) => {
+  // ── Student filters (mirrors the admin students page) ──
+  const [teacherFilter, setTeacherFilter] = useState<string[]>([]);
+  const [instrumentFilter, setInstrumentFilter] = useState<string[]>([]);
+  const [gradeFilter, setGradeFilter] = useState<string[]>([]);
+  const [cityFilter, setCityFilter] = useState<string[]>([]);
+  const [durationFilter, setDurationFilter] = useState<string[]>([]);
+  const [trackFilter, setTrackFilter] = useState<string[]>([]);
+
+  const uniqSorted = (vals: (string | null | undefined)[]) =>
+    [...new Set(vals.filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "he"));
+
+  const teacherOptions = uniqSorted(
+    students.map((e: any) => (e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : null)),
+  );
+  const instrumentOptions = uniqSorted(students.map((e: any) => e.instruments?.name));
+  const cityOptions = uniqSorted(students.map((e: any) => e.students?.city));
+  const durationOptions = [...new Set(students.map((e: any) => String(e.lesson_duration_minutes ?? "")).filter(Boolean))]
+    .sort((a, b) => Number(a) - Number(b));
+
+  const hasStudentFilters =
+    teacherFilter.length > 0 ||
+    instrumentFilter.length > 0 ||
+    gradeFilter.length > 0 ||
+    cityFilter.length > 0 ||
+    durationFilter.length > 0 ||
+    trackFilter.length > 0;
+
+  const clearStudentFilters = () => {
+    setTeacherFilter([]);
+    setInstrumentFilter([]);
+    setGradeFilter([]);
+    setCityFilter([]);
+    setDurationFilter([]);
+    setTrackFilter([]);
+  };
+
+  const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
+
+  const filteredStudents = students.filter((e: any) => {
     const s = e.students;
     if (!s) return false;
     const term = search.trim();
-    if (!term) return true;
-    const hay = `${s.first_name} ${s.last_name} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.city ?? ""}`;
-    return hay.includes(term);
+    if (term) {
+      const hay = `${s.first_name} ${s.last_name} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.parent_phone ?? ""} ${s.city ?? ""}`;
+      if (!hay.includes(term)) return false;
+    }
+    if (teacherFilter.length > 0) {
+      const name = e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "";
+      if (!teacherFilter.includes(name)) return false;
+    }
+    if (instrumentFilter.length > 0 && !instrumentFilter.includes(e.instruments?.name)) return false;
+    if (cityFilter.length > 0 && !cityFilter.includes(s.city)) return false;
+    if (durationFilter.length > 0 && !durationFilter.includes(String(e.lesson_duration_minutes ?? ""))) return false;
+    if (gradeFilter.length > 0) {
+      const wanted = gradeFilter.map(stripMarks);
+      if (!wanted.includes(stripMarks(s.grade ?? e.grade ?? ""))) return false;
+    }
+    if (trackFilter.length > 0) {
+      const map: Record<string, string> = {
+        music_production: "has_music_production_course",
+        recital: "has_recital_track",
+        major: "is_major_student",
+        junior: "is_junior_track",
+      };
+      if (!trackFilter.some((t) => map[t] && s[map[t]])) return false;
+    }
+    return true;
   });
+
 
   const filteredRegistrations = registrations.filter((r) => {
     const term = search.trim();
