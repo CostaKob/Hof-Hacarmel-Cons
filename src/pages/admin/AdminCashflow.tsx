@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { DateInput } from "@/components/ui/date-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Search, FileSpreadsheet, ChevronDown, ChevronLeft, ExternalLink } from "lucide-react";
+import { Loader2, Search, FileSpreadsheet, ChevronDown, ChevronLeft, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 
