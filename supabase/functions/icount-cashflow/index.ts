@@ -14,15 +14,21 @@ const corsHeaders = {
 
 const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
 
-// Documents permanently excluded from the cashflow report (office decision).
-const IGNORED_DOC_NUMBERS = new Set(["1002", "1003", "1062", "1091", "1092", "1104", "7003"]);
+// Clean slate (13/08/2026): everything issued up to document 1110 was test data,
+// except the two real tuition receipts below. Every document issued from now on
+// (number > the cutoff) is included automatically.
+const LEGACY_CUTOFF_DOCNUM = 1110;
+const LEGACY_KEPT_DOC_NUMBERS = new Set(["1095", "1110"]);
 
-// One-off test documents (1–2 ₪ experiments). Fixed list — nothing new is auto-excluded.
-const TEST_DOC_NUMBERS = new Set([
-  "1000", "1001", "1010", "1011", "1012", "1013",
-  "1042", "1043", "1044", "1045", "1046", "1047", "1048", "1049",
-  "1050", "1051", "1052", "1053", "1054", "3006", "3007",
-]);
+function isExcludedDoc(docNumber: string): boolean {
+  const dn = String(docNumber ?? "").trim();
+  if (!dn) return false;
+  if (LEGACY_KEPT_DOC_NUMBERS.has(dn)) return false;
+  const n = Number(dn);
+  if (!Number.isFinite(n)) return false;
+  return n <= LEGACY_CUTOFF_DOCNUM;
+}
+
 
 function getAuth() {
   const cid = Deno.env.get("ICOUNT_COMPANY_ID");
@@ -224,11 +230,11 @@ Deno.serve(async (req: Request) => {
 
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
-    // IGNORED_DOC_NUMBERS are documents the office decided to exclude permanently.
+    // Legacy test documents (up to the cutoff) are excluded permanently.
     const details = list.filter((d) => {
       const dn = String(d.docnum ?? d.doc_number ?? "").trim();
       return !Number(d.is_cancelled) && !Number(d.is_cancellation) &&
-        !IGNORED_DOC_NUMBERS.has(dn) && !TEST_DOC_NUMBERS.has(dn);
+        !isExcludedDoc(dn);
     });
 
     let rows: Omit<Row, "source">[] = [];
@@ -285,7 +291,7 @@ Deno.serve(async (req: Request) => {
       if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id));
       if (p.icount_doc_number) {
         studentKeys.add(String(p.icount_doc_number));
-        if (!TEST_DOC_NUMBERS.has(String(p.icount_doc_number)) && !IGNORED_DOC_NUMBERS.has(String(p.icount_doc_number))) {
+        if (!isExcludedDoc(String(p.icount_doc_number))) {
           addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "students");
         }
       }
@@ -294,7 +300,7 @@ Deno.serve(async (req: Request) => {
       if (p.icount_doc_id) smKeys.add(String(p.icount_doc_id));
       if (p.icount_doc_number) {
         smKeys.add(String(p.icount_doc_number));
-        if (!TEST_DOC_NUMBERS.has(String(p.icount_doc_number)) && !IGNORED_DOC_NUMBERS.has(String(p.icount_doc_number))) {
+        if (!isExcludedDoc(String(p.icount_doc_number))) {
           addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "school_music");
         }
       }
