@@ -159,6 +159,7 @@ const AdminEnrollmentStats = () => {
     const schoolCounts = new Map<string, number>();
     const deptEnrollments = new Map<string, number>();
     const deptStudents = new Map<string, Set<string>>();
+    const deptInstrumentCounts = new Map<string, Map<string, number>>();
 
     for (const e of enrollments) {
       const sid = e.student_id;
@@ -170,6 +171,9 @@ const AdminEnrollmentStats = () => {
         instrumentCounts.set(inst, (instrumentCounts.get(inst) ?? 0) + 1);
         const dept = departmentOf(inst);
         deptEnrollments.set(dept, (deptEnrollments.get(dept) ?? 0) + 1);
+        if (!deptInstrumentCounts.has(dept)) deptInstrumentCounts.set(dept, new Map());
+        const dm = deptInstrumentCounts.get(dept)!;
+        dm.set(inst, (dm.get(inst) ?? 0) + 1);
         if (sid) {
           const set = deptStudents.get(dept) ?? new Set<string>();
           set.add(sid);
@@ -190,6 +194,7 @@ const AdminEnrollmentStats = () => {
     const pendingInstrumentCounts = new Map<string, number>();
     const pendingGradeCounts = new Map<string, number>();
     const pendingDeptCounts = new Map<string, number>();
+    const pendingDeptInstrumentCounts = new Map<string, Map<string, number>>();
     let pendingNew = 0;
     let pendingContinuing = 0;
     for (const r of pendingRegs) {
@@ -203,6 +208,9 @@ const AdminEnrollmentStats = () => {
         pendingInstrumentCounts.set(name, (pendingInstrumentCounts.get(name) ?? 0) + 1);
         const dept = departmentOf(name);
         pendingDeptCounts.set(dept, (pendingDeptCounts.get(dept) ?? 0) + 1);
+        if (!pendingDeptInstrumentCounts.has(dept)) pendingDeptInstrumentCounts.set(dept, new Map());
+        const dm = pendingDeptInstrumentCounts.get(dept)!;
+        dm.set(name, (dm.get(name) ?? 0) + 1);
       }
     }
 
@@ -245,12 +253,26 @@ const AdminEnrollmentStats = () => {
       new Set([...DEPARTMENTS.map((d) => d.name), ...deptEnrollments.keys(), ...pendingDeptCounts.keys()])
     );
     const departmentData = deptNames
-      .map((name) => ({
-        name,
-        students: deptStudents.get(name)?.size ?? 0,
-        enrollmentsCount: deptEnrollments.get(name) ?? 0,
-        pending: pendingDeptCounts.get(name) ?? 0,
-      }))
+      .map((name) => {
+        const instMap = deptInstrumentCounts.get(name) ?? new Map<string, number>();
+        const pendingInstMap = pendingDeptInstrumentCounts.get(name) ?? new Map<string, number>();
+        const instruments = Array.from(new Set([...instMap.keys(), ...pendingInstMap.keys()])).sort((a, b) => {
+          const ca = (instMap.get(a) ?? 0) + (pendingInstMap.get(a) ?? 0);
+          const cb = (instMap.get(b) ?? 0) + (pendingInstMap.get(b) ?? 0);
+          return cb - ca;
+        });
+        return {
+          name,
+          students: deptStudents.get(name)?.size ?? 0,
+          enrollmentsCount: deptEnrollments.get(name) ?? 0,
+          pending: pendingDeptCounts.get(name) ?? 0,
+          instruments: instruments.map((inst) => ({
+            name: inst,
+            assigned: instMap.get(inst) ?? 0,
+            pending: pendingInstMap.get(inst) ?? 0,
+          })),
+        };
+      })
       .filter((d) => d.enrollmentsCount > 0 || d.pending > 0)
       .sort((a, b) => b.enrollmentsCount - a.enrollmentsCount);
 
