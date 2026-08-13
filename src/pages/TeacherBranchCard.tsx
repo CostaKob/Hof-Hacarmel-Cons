@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import PageTitle from "@/components/PageTitle";
 import {
   ChevronLeft,
@@ -20,8 +21,10 @@ import {
   ClipboardCheck,
   Search,
   GraduationCap,
+  X,
 } from "lucide-react";
 import { isInactiveStudentStatus } from "@/lib/constants";
+
 
 const statusLabel = (status?: string) => {
   switch (status) {
@@ -117,14 +120,75 @@ const TeacherBranchCard = () => {
     },
   });
 
-  const filteredStudents = students.filter((e) => {
+  // ── Student filters (mirrors the admin students page) ──
+  const [teacherFilter, setTeacherFilter] = useState<string[]>([]);
+  const [instrumentFilter, setInstrumentFilter] = useState<string[]>([]);
+  const [gradeFilter, setGradeFilter] = useState<string[]>([]);
+  const [cityFilter, setCityFilter] = useState<string[]>([]);
+  const [durationFilter, setDurationFilter] = useState<string[]>([]);
+  const [trackFilter, setTrackFilter] = useState<string[]>([]);
+
+  const uniqSorted = (vals: (string | null | undefined)[]) =>
+    [...new Set(vals.filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b, "he"));
+
+  const teacherOptions = uniqSorted(
+    students.map((e: any) => (e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : null)),
+  );
+  const instrumentOptions = uniqSorted(students.map((e: any) => e.instruments?.name));
+  const cityOptions = uniqSorted(students.map((e: any) => e.students?.city));
+  const durationOptions = [...new Set(students.map((e: any) => String(e.lesson_duration_minutes ?? "")).filter(Boolean))]
+    .sort((a, b) => Number(a) - Number(b));
+
+  const hasStudentFilters =
+    teacherFilter.length > 0 ||
+    instrumentFilter.length > 0 ||
+    gradeFilter.length > 0 ||
+    cityFilter.length > 0 ||
+    durationFilter.length > 0 ||
+    trackFilter.length > 0;
+
+  const clearStudentFilters = () => {
+    setTeacherFilter([]);
+    setInstrumentFilter([]);
+    setGradeFilter([]);
+    setCityFilter([]);
+    setDurationFilter([]);
+    setTrackFilter([]);
+  };
+
+  const stripMarks = (str: string) => (str ?? "").replace(/['"׳״']/g, "").trim();
+
+  const filteredStudents = students.filter((e: any) => {
     const s = e.students;
     if (!s) return false;
     const term = search.trim();
-    if (!term) return true;
-    const hay = `${s.first_name} ${s.last_name} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.city ?? ""}`;
-    return hay.includes(term);
+    if (term) {
+      const hay = `${s.first_name} ${s.last_name} ${s.national_id ?? ""} ${s.parent_name ?? ""} ${s.parent_phone ?? ""} ${s.city ?? ""}`;
+      if (!hay.includes(term)) return false;
+    }
+    if (teacherFilter.length > 0) {
+      const name = e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : "";
+      if (!teacherFilter.includes(name)) return false;
+    }
+    if (instrumentFilter.length > 0 && !instrumentFilter.includes(e.instruments?.name)) return false;
+    if (cityFilter.length > 0 && !cityFilter.includes(s.city)) return false;
+    if (durationFilter.length > 0 && !durationFilter.includes(String(e.lesson_duration_minutes ?? ""))) return false;
+    if (gradeFilter.length > 0) {
+      const wanted = gradeFilter.map(stripMarks);
+      if (!wanted.includes(stripMarks(s.grade ?? e.grade ?? ""))) return false;
+    }
+    if (trackFilter.length > 0) {
+      const map: Record<string, string> = {
+        music_production: "has_music_production_course",
+        recital: "has_recital_track",
+        major: "is_major_student",
+        junior: "is_junior_track",
+      };
+      if (!trackFilter.some((t) => map[t] && s[map[t]])) return false;
+    }
+    return true;
   });
+
 
   const filteredRegistrations = registrations.filter((r) => {
     const term = search.trim();
@@ -181,14 +245,14 @@ const TeacherBranchCard = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-lg px-5 -mt-3 pb-24">
+      <main className="mx-auto max-w-6xl px-5 -mt-3 pb-24">
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur pt-3 pb-2">
           <div className="relative">
             <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="חיפוש..."
+              placeholder="חיפוש לפי שם, ת.ז., הורה, טלפון או ישוב..."
               className="h-11 pr-9 rounded-xl"
             />
           </div>
@@ -215,44 +279,162 @@ const TeacherBranchCard = () => {
           </TabsList>
 
           <TabsContent value="students" className="mt-3 space-y-3">
+            {/* Filters — same style as the admin students page */}
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4 lg:flex lg:flex-wrap lg:items-center">
+              <MultiSelectFilter
+                className="w-full lg:w-40"
+                allLabel="מורה"
+                options={teacherOptions}
+                value={teacherFilter}
+                onChange={setTeacherFilter}
+              />
+              <MultiSelectFilter
+                className="w-full lg:w-40"
+                allLabel="כלי נגינה"
+                options={instrumentOptions}
+                value={instrumentFilter}
+                onChange={setInstrumentFilter}
+              />
+              <MultiSelectFilter
+                className="w-full lg:w-32"
+                allLabel="כיתה"
+                options={["א","ב","ג","ד","ה","ו","ז","ח","ט","י","יא","יב","בוגר"]}
+                renderLabel={(g) => `כיתה ${g}`}
+                value={gradeFilter}
+                onChange={setGradeFilter}
+              />
+              <MultiSelectFilter
+                className="w-full lg:w-36"
+                allLabel="ישוב מגורים"
+                options={cityOptions}
+                value={cityFilter}
+                onChange={setCityFilter}
+              />
+              <MultiSelectFilter
+                className="w-full lg:w-32"
+                allLabel="משך שיעור"
+                options={durationOptions}
+                renderLabel={(d) => `${d} דק׳`}
+                value={durationFilter}
+                onChange={setDurationFilter}
+              />
+              <MultiSelectFilter
+                className="w-full col-span-2 md:col-span-1 lg:w-44"
+                allLabel="קורסים ומסלולים"
+                options={["music_production", "recital", "major", "junior"]}
+                renderLabel={(k) => ({ music_production: "🎚️ הפקה מוסיקלית", recital: "🎼 רסיטל י״ב", major: "🎓 מגמת המוסיקה", junior: "📘 מסלול חטיבה" })[k] ?? k}
+                value={trackFilter}
+                onChange={setTrackFilter}
+              />
+              {hasStudentFilters && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearStudentFilters}
+                  className="h-11 rounded-xl gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  נקה סינון
+                </Button>
+              )}
+            </div>
+
             {studentsLoading ? (
               <p className="text-center text-muted-foreground py-8">טוען...</p>
             ) : filteredStudents.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">אין תלמידים פעילים בשלוחה זו</p>
             ) : (
-              filteredStudents.map((e) => {
-                const s = e.students;
-                return (
-                  <Card key={e.id} className="overflow-hidden">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="font-semibold truncate">
-                            {s?.first_name} {s?.last_name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {e.instruments?.name} · {e.grade ?? "ללא כיתה"}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            מורה: {e.teachers?.first_name} {e.teachers?.last_name}
-                          </p>
+              <>
+                <p className="text-sm text-muted-foreground mb-2">{filteredStudents.length} תלמידים</p>
+                <div className="space-y-2">
+                  {filteredStudents.map((e: any, index: number) => {
+                    const s = e.students;
+                    return (
+                      <div
+                        key={e.id}
+                        onClick={() => navigate(`/teacher/students/${e.id}`)}
+                        className={`flex flex-col sm:flex-row sm:items-stretch gap-3 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!s?.is_active ? "opacity-50" : ""}`}
+                      >
+                        {/* Right half — name + details */}
+                        <div className="flex items-start gap-3 sm:basis-1/2 sm:min-w-0">
+                          <span className="text-xs text-muted-foreground w-6 shrink-0 text-center pt-0.5">{index + 1}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-foreground">
+                              {s?.first_name} {s?.last_name}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
+                              <span>{e.instruments?.name}</span>
+                              <span>·</span>
+                              <span>{e.lesson_duration_minutes} דק׳</span>
+                              {e.teachers && (
+                                <>
+                                  <span>·</span>
+                                  <span>{e.teachers.first_name} {e.teachers.last_name}</span>
+                                </>
+                              )}
+                              {(e.grade ?? s?.grade) && (
+                                <>
+                                  <span>·</span>
+                                  <span className={s?.grade === "יב" || s?.grade === "בוגר" ? "font-bold text-amber-600 dark:text-amber-400" : ""}>
+                                    כיתה {s?.grade ?? e.grade}
+                                  </span>
+                                </>
+                              )}
+                              {s?.playing_level && (
+                                <>
+                                  <span>·</span>
+                                  <span>רמה {s.playing_level}</span>
+                                </>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground">
+                              {s?.parent_name && <span>{s.parent_name}</span>}
+                              {s?.parent_phone && (
+                                <>
+                                  <span>·</span>
+                                  <PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" />
+                                </>
+                              )}
+                              {s?.city && (
+                                <>
+                                  <span>·</span>
+                                  <span>{s.city}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <Badge variant="secondary" className="shrink-0">
-                          <GraduationCap className="h-3 w-3 ml-1" />
-                          {e.grade ?? "—"}
-                        </Badge>
+
+                        {/* Left half — tracks + status */}
+                        <div className="flex flex-col items-start sm:items-end gap-1.5 sm:basis-1/2 sm:min-w-0">
+                          <div className="flex flex-wrap items-start justify-start sm:justify-end content-start gap-1.5 w-full">
+                            {s?.is_major_student && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎓 מגמת המוסיקה</Badge>}
+                            {s?.is_junior_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">📘 מסלול חטיבה</Badge>}
+                            {s?.has_music_production_course && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎚️ הפקה</Badge>}
+                            {s?.has_recital_track && <Badge variant="secondary" className="rounded-lg text-[10px] px-1.5 py-0">🎼 רסיטל י״ב</Badge>}
+                          </div>
+                          <div className="flex flex-wrap items-start justify-start sm:justify-end content-start gap-1.5 w-full">
+                            <Badge variant="secondary" className="rounded-lg">
+                              <GraduationCap className="h-3 w-3 ml-1" />
+                              {s?.grade ?? e.grade ?? "—"}
+                            </Badge>
+                            <Badge
+                              variant={(!e.is_active || isInactiveStudentStatus(s?.student_status)) ? "outline" : "default"}
+                              className={`rounded-lg ${(!e.is_active || isInactiveStudentStatus(s?.student_status)) ? "text-destructive border-destructive" : ""}`}
+                            >
+                              {!e.is_active ? "רישום לא פעיל" : isInactiveStudentStatus(s?.student_status) ? s?.student_status : "פעיל"}
+                            </Badge>
+                          </div>
+                        </div>
                       </div>
-                      {s?.parent_phone && (
-                        <div className="mt-3">
-                          <PhoneDisplay phone={s.parent_phone} showIcon textClassName="text-sm" />
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })
+                    );
+                  })}
+                </div>
+              </>
             )}
           </TabsContent>
+
 
           <TabsContent value="registrations" className="mt-3 space-y-3">
             {registrationsLoading ? (
