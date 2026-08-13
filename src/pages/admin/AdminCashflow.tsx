@@ -250,6 +250,46 @@ const AdminCashflow = () => {
           </div>
         )}
 
+        {runReport.isError && !runReport.isPending && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-4 flex gap-3 items-start">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <div className="font-semibold text-destructive">הפקת הדוח נכשלה — הנתונים אינם מלאים</div>
+                <div className="text-muted-foreground mt-1">{(runReport.error as Error)?.message}</div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {rows && !runReport.isPending && (
+          warnings.length ? (
+            <Card className="border-amber-500/50 bg-amber-500/5">
+              <CardContent className="py-4 flex gap-3 items-start">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <div className="font-semibold text-amber-700">שימו לב — הדוח הופק באופן חלקי</div>
+                  <ul className="text-muted-foreground mt-1 space-y-1 list-disc pr-4">
+                    {warnings.map((w, i) => <li key={i}>{w}</li>)}
+                  </ul>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-emerald-500/50 bg-emerald-500/5">
+              <CardContent className="py-4 flex gap-3 items-start">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <span className="font-semibold text-emerald-700">הדוח הופק בהצלחה</span>
+                  <span className="text-muted-foreground"> — כל המסמכים נמשכו מאייקאונט במלואם ({rows.length} תנועות בטווח).</span>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        )}
+
+
+
         {rows && !runReport.isPending && (
           filtered.length === 0 ? (
             <Card><CardContent className="py-12 text-center text-muted-foreground">לא נמצאו תנועות בטווח שנבחר</CardContent></Card>
