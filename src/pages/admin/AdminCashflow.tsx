@@ -65,6 +65,7 @@ const DEFAULT_END = "2027-08-31";
 interface Reconciliation {
   icount_total: number;
   system_total: number;
+  external_total?: number;
   missing_in_system: { doc_number: string; amount: number; client_name: string; doc_date: string }[];
   missing_in_icount: { doc_number: string; amount: number; source: string }[];
   amount_mismatches: { doc_number: string; icount_amount: number; system_amount: number; client_name: string }[];
