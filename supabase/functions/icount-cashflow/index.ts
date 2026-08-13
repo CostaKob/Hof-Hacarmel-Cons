@@ -230,11 +230,11 @@ Deno.serve(async (req: Request) => {
 
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
-    // IGNORED_DOC_NUMBERS are documents the office decided to exclude permanently.
+    // Legacy test documents (up to the cutoff) are excluded permanently.
     const details = list.filter((d) => {
       const dn = String(d.docnum ?? d.doc_number ?? "").trim();
       return !Number(d.is_cancelled) && !Number(d.is_cancellation) &&
-        !IGNORED_DOC_NUMBERS.has(dn) && !TEST_DOC_NUMBERS.has(dn);
+        !isExcludedDoc(dn);
     });
 
     let rows: Omit<Row, "source">[] = [];
@@ -291,7 +291,7 @@ Deno.serve(async (req: Request) => {
       if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id));
       if (p.icount_doc_number) {
         studentKeys.add(String(p.icount_doc_number));
-        if (!TEST_DOC_NUMBERS.has(String(p.icount_doc_number)) && !IGNORED_DOC_NUMBERS.has(String(p.icount_doc_number))) {
+        if (!isExcludedDoc(String(p.icount_doc_number))) {
           addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "students");
         }
       }
@@ -300,7 +300,7 @@ Deno.serve(async (req: Request) => {
       if (p.icount_doc_id) smKeys.add(String(p.icount_doc_id));
       if (p.icount_doc_number) {
         smKeys.add(String(p.icount_doc_number));
-        if (!TEST_DOC_NUMBERS.has(String(p.icount_doc_number)) && !IGNORED_DOC_NUMBERS.has(String(p.icount_doc_number))) {
+        if (!isExcludedDoc(String(p.icount_doc_number))) {
           addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "school_music");
         }
       }
