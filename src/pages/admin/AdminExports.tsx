@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard, FileSpreadsheet } from "lucide-react";
+import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard, FileSpreadsheet, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import PageTitle from "@/components/PageTitle";
@@ -281,6 +281,24 @@ const AdminExports = () => {
             </Button>
           </div>
         ))}
+        </div>
+
+        {/* Interactive reports */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-xl bg-accent p-3.5">
+              <TrendingUp className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground text-base">דוח תזרים</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                תזרים אמיתי מאייקאונט לפי תאריכי פרעון — שיקים, אשראי בתשלומים וזיכויים
+              </p>
+            </div>
+            <Button variant="outline" className="rounded-xl h-11 gap-2" onClick={() => navigate("/admin/cashflow")}>
+              פתיחה
+            </Button>
+          </div>
         </div>
       </div>
     </AdminLayout>
