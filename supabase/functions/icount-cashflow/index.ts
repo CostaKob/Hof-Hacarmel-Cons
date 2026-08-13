@@ -164,22 +164,32 @@ Deno.serve(async (req: Request) => {
 
     // iCount caps a single search at 100 results — paginate.
     const list: any[] = [];
+    const warnings: string[] = [];
     let lastRaw: any = null;
+    let truncated = true;
     for (let offset = 0; offset < 5000; offset += 100) {
-      const search = await icount("doc/search", {
-        ...auth,
-        start_date: toCompact(searchFrom),
-        end_date: toCompact(searchTo),
-        from_date: searchFrom,
-        to_date: searchTo,
-        detail_level: 10,
-        max_results: 100,
-        limit: 100,
-        offset,
-      });
+      let search: any;
+      try {
+        search = await icount("doc/search", {
+          ...auth,
+          start_date: toCompact(searchFrom),
+          end_date: toCompact(searchTo),
+          from_date: searchFrom,
+          to_date: searchTo,
+          detail_level: 10,
+          max_results: 100,
+          limit: 100,
+          offset,
+        });
+      } catch (err) {
+        if (offset === 0) throw err;
+        warnings.push(`שליפת מסמכים נכשלה החל ממסמך ${offset + 1} (${(err as Error).message}) — ייתכן שחסרות תנועות בדוח.`);
+        truncated = false;
+        break;
+      }
       lastRaw = search;
       if (search && search.status === false) {
-        if (offset > 0 && search.reason === "no_results") break;
+        if (offset > 0 && search.reason === "no_results") { truncated = false; break; }
         const reason = search.error_description || search.reason || search.message || "שגיאה מ-iCount";
         return new Response(JSON.stringify({ error: `iCount: ${reason}`, details: search }), {
           status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -187,7 +197,10 @@ Deno.serve(async (req: Request) => {
       }
       const page = asArray(search.results_list ?? search.docs ?? search.results ?? search.data);
       list.push(...page);
-      if (page.length < 100) break;
+      if (page.length < 100) { truncated = false; break; }
+    }
+    if (truncated) {
+      warnings.push("נסרקו 5,000 מסמכים (מקסימום) — ייתכן שיש מסמכים נוספים שלא נכללו בדוח.");
     }
 
 
@@ -204,7 +217,20 @@ Deno.serve(async (req: Request) => {
     const details = list.filter((d) => !Number(d.is_cancelled) && !Number(d.is_cancellation));
 
     let rows: Omit<Row, "source">[] = [];
-    for (const d of details) rows.push(...expandDoc(d, ccDay));
+    const unparsed: string[] = [];
+    for (const d of details) {
+      const expanded = expandDoc(d, ccDay);
+      rows.push(...expanded);
+      const total = num(d.doc_total ?? d.total ?? d.totalsum ?? d.sum);
+      if (!expanded.length && total) {
+        unparsed.push(String(d.docnum ?? d.doc_number ?? d.doc_id ?? "?"));
+      }
+    }
+    if (unparsed.length) {
+      warnings.push(
+        `${unparsed.length} מסמכים לא נפרסו לתנועות פרעון (ללא פרטי תשלום מזוהים): ${unparsed.slice(0, 15).join(", ")}${unparsed.length > 15 ? "…" : ""}`,
+      );
+    }
     rows = rows.filter((r) => r.due_date >= startDate && r.due_date <= endDate);
 
 
@@ -220,6 +246,8 @@ Deno.serve(async (req: Request) => {
         `icount_doc_id.in.(${docIds.join(",") || "null"}),icount_doc_number.in.(${docNumbers.join(",") || "null"})`,
       ),
     ]);
+    if (sp.error) warnings.push(`שיוך תנועות לתלמידים נכשל: ${sp.error.message}`);
+    if (smp.error) warnings.push(`שיוך תנועות לבית ספר מנגן נכשל: ${smp.error.message}`);
     const studentKeys = new Set<string>();
     for (const p of sp.data ?? []) { if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id)); if (p.icount_doc_number) studentKeys.add(String(p.icount_doc_number)); }
     const smKeys = new Set<string>();
@@ -236,7 +264,7 @@ Deno.serve(async (req: Request) => {
 
     finalRows.sort((a, b) => a.due_date.localeCompare(b.due_date) || a.doc_number.localeCompare(b.doc_number));
 
-    return new Response(JSON.stringify({ rows: finalRows, docs_scanned: list.length }), {
+    return new Response(JSON.stringify({ rows: finalRows, docs_scanned: list.length, warnings }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
