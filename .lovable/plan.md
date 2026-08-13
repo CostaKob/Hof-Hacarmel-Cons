@@ -24,8 +24,8 @@
 
 ## 3. פרטים טכניים
 
-- **מיגרציה**: הוספת עמודת `school_id` (מפתח זר ל-`schools`, ניתנת לריק) לטבלה `branch_coordinators`.
+- **מיגרציה**: הוספת עמודת `school_id` (מפתח זר ל-`schools`, ניתנת לריק) לטבלה `branch_coordinators`. בעמודה זו נשמור את מזהה השלוחה, כי במערכת זו השלוחות מיוצגות בטבלת `schools`.
 - **פונקציות אבטחה** (`security definer`): `is_branch_coordinator_any(user)` ו-`is_branch_coordinator_of(user, school_id)`.
-- **מדיניות RLS** לקריאה בלבד לרכז שלוחה על: `enrollments` (לפי `school_id`), `students` (תלמידים עם שיוך בשלוחה), `teachers` (מורים המלמדים בשלוחה), `reports` + `report_lines` (דיווחים של אותם שיוכים), `registrations` (לפי התאמת `branch_school_name` לשם השלוחה).
+- **מדיניות RLS** לקריאה בלבד לרכז שלוחה על: `enrollments` (לפי `school_id` = השלוחה), `students` (תלמידים עם שיוך בשלוחה), `teachers` (מורים המלמדים בשלוחה), `reports` + `report_lines` (דיווחים של אותם שיוכים), `registrations` (לפי התאמת `branch_school_name` לשם השלוחה).
 - קבצים חדשים: `src/hooks/useBranchCoordinator.ts`, `src/pages/TeacherBranches.tsx`, `src/pages/TeacherBranchCard.tsx` + רכיבי לשוניות; עדכון `App.tsx`, `TeacherBottomNav.tsx`, `TeacherDashboard.tsx` ו-`AdminTeacherCard.tsx`.
 - ספירת השיעורים תשתמש ב-`src/lib/lessonCounts.ts` הקיים כדי לשמור על עקביות מול שאר המסכים.
