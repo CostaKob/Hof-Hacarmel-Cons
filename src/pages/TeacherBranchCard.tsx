@@ -281,7 +281,7 @@ const TeacherBranchCard = () => {
                     </div>
                     <div className="mt-2 text-xs text-muted-foreground space-y-1">
                       <p>הורה: {r.parent_name}</p>
-                      {r.parent_phone && <PhoneDisplay phone={r.parent_phone} showIcon size="sm" />}
+                      {r.parent_phone && <PhoneDisplay phone={r.parent_phone} showIcon textClassName="text-xs" />}
                     </div>
                   </CardContent>
                 </Card>
