@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import PageTitle from "@/components/PageTitle";
 import {
   ChevronLeft,
@@ -20,8 +21,10 @@ import {
   ClipboardCheck,
   Search,
   GraduationCap,
+  X,
 } from "lucide-react";
 import { isInactiveStudentStatus } from "@/lib/constants";
+
 
 const statusLabel = (status?: string) => {
   switch (status) {
