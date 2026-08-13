@@ -182,10 +182,12 @@ Deno.serve(async (req: Request) => {
 
 
     if (debug) {
-      return new Response(JSON.stringify({ count: list.length, sample: list[0], lastRaw: lastRaw?.status }, null, 2), {
+      const withCc = list.filter((d) => asArray(d.cc).length).slice(-5);
+      return new Response(JSON.stringify({ count: list.length, withCc, lastRaw: lastRaw?.status }, null, 2), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
