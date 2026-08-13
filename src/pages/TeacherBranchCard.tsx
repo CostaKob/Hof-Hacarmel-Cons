@@ -262,7 +262,7 @@ const TeacherBranchCard = () => {
           <TabsList className="grid w-full grid-cols-4 h-11 rounded-xl">
             <TabsTrigger value="students" className="text-xs gap-1">
               <Users className="h-3.5 w-3.5" />
-              תלמידים ({filteredEnrollments.length})
+              תלמידים ({filteredStudents.length})
             </TabsTrigger>
             <TabsTrigger value="registrations" className="text-xs gap-1">
               <FileText className="h-3.5 w-3.5" />
