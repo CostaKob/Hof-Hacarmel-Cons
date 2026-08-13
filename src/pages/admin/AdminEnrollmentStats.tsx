@@ -66,6 +66,51 @@ const CHART_COLORS = [
   "#fb923c",
 ];
 
+const DepartmentTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  const data = payload[0]?.payload;
+  if (!data) return null;
+  const assigned = data["משובצים"] ?? 0;
+  const pending = data["טרם שובצו"] ?? 0;
+  const instruments = (data.instruments ?? []) as { name: string; assigned: number; pending: number }[];
+  return (
+    <div className="rounded-xl border border-border bg-card p-3 shadow-lg text-sm" dir="rtl">
+      <div className="font-semibold mb-2">{label}</div>
+      <div className="space-y-1 mb-2">
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-muted-foreground">משובצים:</span>
+          <span className="font-semibold">{assigned}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span className="text-muted-foreground">טרם שובצו:</span>
+          <span className="font-semibold text-amber-600 dark:text-amber-400">{pending}</span>
+        </div>
+      </div>
+      {instruments.length > 0 && (
+        <>
+          <div className="border-t border-border my-2" />
+          <div className="text-xs text-muted-foreground mb-1">פירוט כלים:</div>
+          <div className="space-y-1">
+            {instruments.map((inst) => (
+              <div key={inst.name} className="flex items-center justify-between gap-4">
+                <span>{inst.name}</span>
+                <span>
+                  {inst.assigned > 0 && <span className="font-semibold">{inst.assigned}</span>}
+                  {inst.assigned > 0 && inst.pending > 0 && <span className="text-muted-foreground mx-1">+</span>}
+                  {inst.pending > 0 && (
+                    <span className="font-semibold text-amber-600 dark:text-amber-400">{inst.pending}</span>
+                  )}
+                  {inst.assigned === 0 && inst.pending === 0 && <span className="text-muted-foreground">—</span>}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 const StatCard = ({
   icon: Icon,
   label,
@@ -409,13 +454,14 @@ const AdminEnrollmentStats = () => {
                       name: d.name.replace("מחלקת ", ""),
                       משובצים: d.enrollmentsCount,
                       "טרם שובצו": d.pending,
+                      instruments: d.instruments,
                     }))}
                     margin={{ top: 8, right: 8, left: 0, bottom: 8 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
                     <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                    <Tooltip />
+                    <Tooltip content={<DepartmentTooltip />} />
                     <Legend />
                     <Bar dataKey="משובצים" stackId="a" fill="hsl(var(--primary))" />
                     <Bar dataKey="טרם שובצו" stackId="a" fill="#f59e0b" radius={[6, 6, 0, 0]} />
