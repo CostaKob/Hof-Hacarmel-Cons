@@ -426,7 +426,7 @@ const AdminEnrollmentStats = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="text-muted-foreground border-b border-border">
-                      <th className="text-right py-2 font-medium">מחלקה</th>
+                      <th className="text-right py-2 font-medium">מחלקה / כלי</th>
                       <th className="text-right py-2 font-medium">תלמידים</th>
                       <th className="text-right py-2 font-medium">שיוכים</th>
                       <th className="text-right py-2 font-medium">בקשות שטרם שובצו</th>
@@ -434,12 +434,31 @@ const AdminEnrollmentStats = () => {
                   </thead>
                   <tbody>
                     {stats.departmentData.map((d) => (
-                      <tr key={d.name} className="border-b border-border/50">
-                        <td className="py-2">{d.name}</td>
-                        <td className="py-2 font-semibold">{d.students}</td>
-                        <td className="py-2">{d.enrollmentsCount}</td>
-                        <td className="py-2 text-amber-600 dark:text-amber-400">{d.pending}</td>
-                      </tr>
+                      <>
+                        <tr key={d.name} className="border-b border-border/50 bg-muted/30">
+                          <td className="py-2 font-semibold">{d.name}</td>
+                          <td className="py-2 font-semibold">{d.students}</td>
+                          <td className="py-2 font-semibold">{d.enrollmentsCount}</td>
+                          <td className="py-2 font-semibold text-amber-600 dark:text-amber-400">{d.pending}</td>
+                        </tr>
+                        {d.instruments.map((inst) => (
+                          <tr key={`${d.name}-${inst.name}`} className="border-b border-border/30">
+                            <td className="py-1.5 pr-6 text-muted-foreground">{inst.name}</td>
+                            <td className="py-1.5">—</td>
+                            <td className="py-1.5">{inst.assigned > 0 ? inst.assigned : "—"}</td>
+                            <td className="py-1.5 text-amber-600 dark:text-amber-400">
+                              {inst.pending > 0 ? inst.pending : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                        {d.instruments.length === 0 && (
+                          <tr className="border-b border-border/30">
+                            <td className="py-1.5 pr-6 text-muted-foreground text-xs" colSpan={4}>
+                              אין כלים במחלקה זו
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     ))}
                   </tbody>
                 </table>
