@@ -118,10 +118,31 @@ const AdminEnrollmentStats = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("registrations")
-        .select("id, status, grade, requested_instruments, branch_school_name")
+        .select("id, status, student_status, grade, requested_instruments, branch_school_name")
         .eq("academic_year_id", selectedYearId!);
       if (error) throw error;
       return data as any[];
+    },
+  });
+
+  // Students that had enrollments in earlier years => "continuing"
+  const priorYearIds = useMemo(() => {
+    if (!selectedYear) return [] as string[];
+    return years
+      .filter((y) => new Date(y.start_date).getTime() < new Date(selectedYear.start_date).getTime())
+      .map((y) => y.id);
+  }, [years, selectedYear]);
+
+  const { data: priorStudentIds = new Set<string>() } = useQuery({
+    queryKey: ["stats-prior-students", priorYearIds.sort().join(",")],
+    enabled: priorYearIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("student_id")
+        .in("academic_year_id", priorYearIds);
+      if (error) throw error;
+      return new Set<string>((data as any[]).map((r) => r.student_id).filter(Boolean));
     },
   });
 
@@ -129,6 +150,7 @@ const AdminEnrollmentStats = () => {
     () => registrations.filter((r) => r.status !== "converted"),
     [registrations]
   );
+
 
   const stats = useMemo(() => {
     // Assigned students (unique)
