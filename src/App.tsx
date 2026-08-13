@@ -50,6 +50,7 @@ import TeacherSchoolMusicSchools from "./pages/TeacherSchoolMusicSchools";
 import TeacherSchoolMusicSchoolCard from "./pages/TeacherSchoolMusicSchoolCard";
 import TeacherBranches from "./pages/TeacherBranches";
 import TeacherBranchCard from "./pages/TeacherBranchCard";
+import TeacherTeacherCard from "./pages/TeacherTeacherCard";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
@@ -237,6 +238,7 @@ const App = () => (
               <Route path="/teacher/school-music-schools/:id/attendance/new" element={<TeacherRoute><SchoolMusicAttendanceForm variant="teacher" /></TeacherRoute>} />
               <Route path="/teacher/branches" element={<TeacherRoute><TeacherBranches /></TeacherRoute>} />
               <Route path="/teacher/branches/:schoolId" element={<TeacherRoute><TeacherBranchCard /></TeacherRoute>} />
+              <Route path="/teacher/branches/:schoolId/teachers/:teacherId" element={<TeacherRoute><TeacherTeacherCard /></TeacherRoute>} />
               {/* Secretary */}
               <Route path="/secretary" element={<ProtectedRoute allowedRoles={["secretary"]}><SecretaryDashboard /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
