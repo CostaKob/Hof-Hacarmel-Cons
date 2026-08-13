@@ -247,15 +247,16 @@ Deno.serve(async (req: Request) => {
       );
     }
     // Doc-level totals from iCount (before the due-date filter) for reconciliation.
-    const icountByDoc = new Map<string, { total: number; client: string; date: string }>();
+    const icountByDoc = new Map<string, { total: number; client: string; date: string; doc_id: string }>();
     for (const r of rows) {
       if (!r.doc_number) continue;
-      const cur = icountByDoc.get(r.doc_number) ?? { total: 0, client: r.client_name, date: r.doc_date };
+      const cur = icountByDoc.get(r.doc_number) ?? { total: 0, client: r.client_name, date: r.doc_date, doc_id: r.doc_id };
       cur.total = Math.round((cur.total + r.amount) * 100) / 100;
       icountByDoc.set(r.doc_number, cur);
     }
 
     rows = rows.filter((r) => r.due_date >= startDate && r.due_date <= endDate);
+
 
 
     // Classify each row against our own records (students vs school music).
