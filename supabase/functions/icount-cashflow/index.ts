@@ -182,32 +182,19 @@ Deno.serve(async (req: Request) => {
 
 
     if (debug) {
-      const sample = list[0];
-      let detail: any = null;
-      if (sample) detail = await icount("doc/get", { ...auth, doc_id: sample.doc_id ?? sample.docnum, doctype: sample.doctype });
-      return new Response(JSON.stringify({ count: list.length, sample, detail, lastRaw: lastRaw?.status }, null, 2), {
+      return new Response(JSON.stringify({ count: list.length, sample: list[0], lastRaw: lastRaw?.status }, null, 2), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-
-    // Load full details (payment breakdown) in small concurrent batches.
-    const details: any[] = [];
-    const BATCH = 8;
-    for (let i = 0; i < list.length; i += BATCH) {
-      const chunk = list.slice(i, i + BATCH);
-      const res = await Promise.all(chunk.map(async (d) => {
-        const hasPayments = d.cheques || d.cc || d.cash || d.banktransfer || d.other;
-        if (hasPayments) return d;
-        const full = await icount("doc/get", { ...auth, doc_id: d.doc_id ?? d.docnum, doctype: d.doctype });
-        return { ...d, ...(full?.doc_info ?? full?.doc ?? full ?? {}) };
-      }));
-      details.push(...res);
-    }
+    // doc/search with detail_level 10 already returns the payment breakdown.
+    // Cancelled documents are real-world reversals and must not be counted.
+    const details = list.filter((d) => !Number(d.is_cancelled) && !Number(d.is_cancellation));
 
     let rows: Omit<Row, "source">[] = [];
     for (const d of details) rows.push(...expandDoc(d));
     rows = rows.filter((r) => r.due_date >= startDate && r.due_date <= endDate);
+
 
     // Classify each row against our own records (students vs school music).
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
