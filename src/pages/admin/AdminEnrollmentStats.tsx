@@ -141,6 +141,7 @@ const StatCard = ({
 );
 
 const AdminEnrollmentStats = () => {
+  const isMobile = useIsMobile();
   const { selectedYearId, years } = useAcademicYear();
   const selectedYear = years.find((y) => y.id === selectedYearId);
 
