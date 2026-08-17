@@ -23,6 +23,8 @@ import {
   Search,
   GraduationCap,
   X,
+  MapPin,
+  Music,
 } from "lucide-react";
 import { isInactiveStudentStatus } from "@/lib/constants";
 
