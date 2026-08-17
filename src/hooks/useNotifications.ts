@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  initNotificationSound,
+  isNotificationSoundEnabled,
+  playNotificationSound,
+  setNotificationSoundEnabled,
+} from "@/lib/notificationSound";
+
 
 export interface NotificationRow {
   id: string;
