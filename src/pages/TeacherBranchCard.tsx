@@ -725,7 +725,14 @@ const TeacherBranchCard = () => {
           </TabsContent>
 
         </Tabs>
+
+        <EnrollmentHistoryDialog
+          enrollmentId={historyEnrollment?.id ?? null}
+          studentName={historyEnrollment?.name}
+          onOpenChange={(open) => !open && setHistoryEnrollment(null)}
+        />
       </main>
+
     </div>
   );
 };
