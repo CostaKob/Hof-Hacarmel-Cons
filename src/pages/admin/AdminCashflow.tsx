@@ -85,13 +85,35 @@ const AdminCashflow = () => {
 
   const runReport = useMutation({
     mutationFn: async () => {
+      // Refresh the session first — an expired token makes the function return 401
+      let { data: { session } } = await supabase.auth.getSession();
+      const expSoon = !session?.expires_at || session.expires_at * 1000 - Date.now() < 60_000;
+      if (expSoon) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        session = refreshed.session ?? session;
+      }
+      if (!session?.access_token) {
+        throw new Error("פג תוקף ההתחברות — יש להתחבר מחדש ולנסות שוב");
+      }
       const { data, error } = await supabase.functions.invoke("icount-cashflow", {
         body: { startDate, endDate, creditSettlementDay: Number(creditDay) },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (error) throw new Error(error.message || "שגיאה בהפקת הדוח");
+      if (error) {
+        const ctx: any = (error as any).context;
+        let detail = "";
+        try {
+          const body = await ctx?.json?.();
+          detail = body?.error ?? "";
+          if (ctx?.status === 401) detail = "פג תוקף ההתחברות — יש להתחבר מחדש ולנסות שוב";
+          if (ctx?.status === 403) detail = "אין הרשאה להפקת דוח תזרים";
+        } catch { /* ignore */ }
+        throw new Error(detail || error.message || "שגיאה בהפקת הדוח");
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       return data as { rows: CashflowRow[]; docs_scanned: number; warnings?: string[]; reconciliation?: Reconciliation };
     },
+
     onSuccess: (data) => {
       setRows(data.rows);
       setWarnings(data.warnings ?? []);
