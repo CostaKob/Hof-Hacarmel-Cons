@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2 } from "lucide-react";
+import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2, Volume2, VolumeX } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -29,8 +29,10 @@ function timeAgo(iso: string) {
 const NotificationsBell = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const { items, unreadCount, isLoading, enabled, markRead, markAllRead, isMarking, dismiss, clearAll, isClearing } =
-    useNotifications();
+  const {
+    items, unreadCount, isLoading, enabled, markRead, markAllRead, isMarking,
+    dismiss, clearAll, isClearing, soundEnabled, setSoundEnabled,
+  } = useNotifications();
 
   if (!enabled) return null;
 
@@ -61,7 +63,19 @@ const NotificationsBell = ({ className }: { className?: string }) => {
       </PopoverTrigger>
       <PopoverContent align="end" dir="rtl" className="w-[22rem] p-0 max-w-[calc(100vw-1.5rem)]">
         <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="text-sm font-semibold">התראות</p>
+          <div className="flex items-center gap-1">
+            <p className="text-sm font-semibold">התראות</p>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label={soundEnabled ? "כבה צליל התראה" : "הפעל צליל התראה"}
+              title={soundEnabled ? "צליל התראה פעיל" : "צליל התראה כבוי"}
+              className="h-7 w-7 text-muted-foreground"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+            >
+              {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </Button>
+          </div>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" className="h-8 text-xs" disabled={isMarking} onClick={() => markAllRead()}>
