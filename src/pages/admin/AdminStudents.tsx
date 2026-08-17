@@ -1135,6 +1135,7 @@ const AdminStudents = () => {
                         <div className="flex flex-wrap items-start justify-start sm:justify-end content-start gap-1.5 w-full">
                           <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0 bg-sky-500/10 text-sky-700 border-sky-500/30">
                             🔗 נוצר לינק לתשלום ונשלח להורה
+                            {getActiveLinkDate(r) && ` · ${getActiveLinkDate(r)}`}
                           </Badge>
                         </div>
                       )}
