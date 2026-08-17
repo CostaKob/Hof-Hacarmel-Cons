@@ -600,7 +600,86 @@ const TeacherBranchCard = () => {
           </TabsContent>
 
           <TabsContent value="attendance" className="mt-3 space-y-3">
-            {attendanceLoading ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={attendanceView === "summary" ? "default" : "outline"}
+                className="rounded-xl flex-1"
+                onClick={() => setAttendanceView("summary")}
+              >
+                מעקב לפי תלמיד
+              </Button>
+              <Button
+                size="sm"
+                variant={attendanceView === "reports" ? "default" : "outline"}
+                className="rounded-xl flex-1"
+                onClick={() => setAttendanceView("reports")}
+              >
+                דיווחים אחרונים
+              </Button>
+            </div>
+
+            {attendanceView === "summary" ? (
+              summaryLoading ? (
+                <p className="text-center text-muted-foreground py-8">טוען...</p>
+              ) : attendanceSummary.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">אין דיווחי נוכחות בשלוחה זו</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                      { label: "בקצב תקין", n: attendanceSummary.filter((r: any) => r.rateStatus === "good").length, cls: "text-green-600" },
+                      { label: "פיגור קל", n: attendanceSummary.filter((r: any) => r.rateStatus === "medium").length, cls: "text-yellow-500" },
+                      { label: "בפיגור", n: attendanceSummary.filter((r: any) => r.rateStatus === "bad").length, cls: "text-red-500" },
+                    ].map((s) => (
+                      <div key={s.label} className="rounded-xl border border-border bg-card py-2">
+                        <div className={`text-lg font-bold ${s.cls}`}>{s.n}</div>
+                        <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {attendanceSummary
+                    .filter((r: any) =>
+                      !search.trim() ||
+                      `${r.studentName} ${r.instrumentName} ${r.teacherName}`.includes(search.trim())
+                    )
+                    .map((r: any) => (
+                      <button
+                        key={r.enrollmentId}
+                        onClick={() => setHistoryEnrollment({ id: r.enrollmentId, name: r.studentName })}
+                        className="w-full text-right rounded-2xl border border-border bg-card p-3 space-y-2 active:scale-[0.99] transition"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium truncate">{r.studentName}</span>
+                          <span className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-semibold text-primary">
+                              {r.total} / {r.expected}
+                            </span>
+                            {r.rateStatus !== "unknown" && (
+                              <span className={`text-xs font-medium ${getRateColorClass(r.rateStatus)}`}>
+                                ({r.rate.toFixed(1)}/חודש)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {r.instrumentName} · {r.teacherName || "—"}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(r.counts as Record<string, number>)
+                            .filter(([, n]) => n > 0)
+                            .map(([k, n]) => (
+                              <Badge key={k} variant="secondary" className="text-[10px]">
+                                {STATUS_LABELS_HE[k] ?? k}: {n}
+                              </Badge>
+                            ))}
+                        </div>
+                      </button>
+                    ))}
+                </>
+              )
+            ) : attendanceLoading ? (
               <p className="text-center text-muted-foreground py-8">טוען...</p>
             ) : attendance.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">אין דיווחי נוכחות בשלוחה זו</p>
@@ -619,14 +698,13 @@ const TeacherBranchCard = () => {
                     <div className="space-y-2">
                       {(report.report_lines ?? []).slice(0, 5).map((line: any, idx: number) => {
                         const student = line.enrollments?.students;
-                        const st = statusLabel(line.status);
                         return (
                           <div key={idx} className="flex items-center justify-between text-sm border-b last:border-0 pb-2 last:pb-0">
                             <span className="truncate">
                               {student?.first_name} {student?.last_name}
                             </span>
-                            <Badge variant={st.variant} className="text-[10px] shrink-0">
-                              {st.label}
+                            <Badge variant="secondary" className="text-[10px] shrink-0">
+                              {STATUS_LABELS_HE[line.status] ?? line.status}
                             </Badge>
                           </div>
                         );
@@ -642,6 +720,7 @@ const TeacherBranchCard = () => {
               ))
             )}
           </TabsContent>
+
         </Tabs>
       </main>
     </div>
