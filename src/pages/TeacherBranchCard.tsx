@@ -211,7 +211,11 @@ const TeacherBranchCard = () => {
   const filteredTeachers = teachers.filter((t) => {
     const term = search.trim();
     if (!term) return true;
-    const hay = `${t.first_name} ${t.last_name} ${t.phone ?? ""} ${t.email ?? ""}`;
+    const instruments = (t.teacher_instruments ?? [])
+      .map((ti: any) => ti.instruments?.name)
+      .filter(Boolean)
+      .join(" ");
+    const hay = `${t.first_name} ${t.last_name} ${t.phone ?? ""} ${t.email ?? ""} ${t.city ?? ""} ${instruments}`;
     return hay.includes(term);
   });
 
