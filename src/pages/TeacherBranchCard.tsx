@@ -27,6 +27,16 @@ import {
   Music,
 } from "lucide-react";
 import { isInactiveStudentStatus } from "@/lib/constants";
+import {
+  emptyStatusCounts,
+  calcTotal,
+  getExpectedLessons,
+  getMonthlyRate,
+  getRateColorClass,
+  STATUS_LABELS_HE,
+} from "@/lib/lessonCounts";
+import EnrollmentHistoryDialog from "@/components/EnrollmentHistoryDialog";
+
 
 
 const statusLabel = (status?: string) => {
@@ -50,6 +60,9 @@ const TeacherBranchCard = () => {
   const { data: branches = [] } = useBranchCoordinatorBranches(teacher?.id);
   const branch = branches.find((b) => b.school_id === schoolId);
   const [search, setSearch] = useState("");
+  const [attendanceView, setAttendanceView] = useState<"summary" | "reports">("summary");
+  const [historyEnrollment, setHistoryEnrollment] = useState<{ id: string; name: string } | null>(null);
+
 
   const { data: students = [], isLoading: studentsLoading } = useQuery({
     queryKey: ["branch-students", schoolId, selectedYearId],
@@ -128,6 +141,59 @@ const TeacherBranchCard = () => {
       return data ?? [];
     },
   });
+
+  // Per-student attendance summary (progress tracking)
+  const { data: attendanceSummary = [], isLoading: summaryLoading } = useQuery({
+    queryKey: ["branch-attendance-summary", schoolId, selectedYearId],
+    enabled: !!schoolId && !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("report_lines")
+        .select(`
+          status,
+          enrollment_id,
+          enrollments!inner (
+            id, school_id, academic_year_id, is_active, start_date, instrument_start_date,
+            students (first_name, last_name, student_status),
+            instruments (name),
+            teachers (first_name, last_name)
+          )
+        `)
+        .eq("enrollments.school_id", schoolId!)
+        .eq("enrollments.academic_year_id", selectedYearId!)
+        .eq("enrollments.is_active", true)
+        .returns<any[]>();
+      if (error) throw error;
+      const map = new Map<string, any>();
+      for (const line of data ?? []) {
+        const e = line.enrollments;
+        if (!e) continue;
+        if (isInactiveStudentStatus(e.students?.student_status)) continue;
+        let row = map.get(e.id);
+        if (!row) {
+          row = {
+            enrollmentId: e.id,
+            studentName: `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}`.trim(),
+            instrumentName: e.instruments?.name ?? "—",
+            teacherName: `${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim(),
+            startDate: e.instrument_start_date || e.start_date,
+            counts: emptyStatusCounts(),
+          };
+          map.set(e.id, row);
+        }
+        if (line.status in row.counts) row.counts[line.status]++;
+      }
+      const rows = Array.from(map.values()).map((r) => {
+        const total = calcTotal(r.counts);
+        const expected = getExpectedLessons(r.startDate);
+        const { rate, status } = getMonthlyRate(total, r.startDate);
+        return { ...r, total, expected, rate, rateStatus: status };
+      });
+      rows.sort((a, b) => a.rate - b.rate);
+      return rows;
+    },
+  });
+
 
   // ── Student filters (mirrors the admin students page) ──
   const [teacherFilter, setTeacherFilter] = useState<string[]>([]);
@@ -537,7 +603,86 @@ const TeacherBranchCard = () => {
           </TabsContent>
 
           <TabsContent value="attendance" className="mt-3 space-y-3">
-            {attendanceLoading ? (
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant={attendanceView === "summary" ? "default" : "outline"}
+                className="rounded-xl flex-1"
+                onClick={() => setAttendanceView("summary")}
+              >
+                מעקב לפי תלמיד
+              </Button>
+              <Button
+                size="sm"
+                variant={attendanceView === "reports" ? "default" : "outline"}
+                className="rounded-xl flex-1"
+                onClick={() => setAttendanceView("reports")}
+              >
+                דיווחים אחרונים
+              </Button>
+            </div>
+
+            {attendanceView === "summary" ? (
+              summaryLoading ? (
+                <p className="text-center text-muted-foreground py-8">טוען...</p>
+              ) : attendanceSummary.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">אין דיווחי נוכחות בשלוחה זו</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {[
+                      { label: "בקצב תקין", n: attendanceSummary.filter((r: any) => r.rateStatus === "good").length, cls: "text-green-600" },
+                      { label: "פיגור קל", n: attendanceSummary.filter((r: any) => r.rateStatus === "medium").length, cls: "text-yellow-500" },
+                      { label: "בפיגור", n: attendanceSummary.filter((r: any) => r.rateStatus === "bad").length, cls: "text-red-500" },
+                    ].map((s) => (
+                      <div key={s.label} className="rounded-xl border border-border bg-card py-2">
+                        <div className={`text-lg font-bold ${s.cls}`}>{s.n}</div>
+                        <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {attendanceSummary
+                    .filter((r: any) =>
+                      !search.trim() ||
+                      `${r.studentName} ${r.instrumentName} ${r.teacherName}`.includes(search.trim())
+                    )
+                    .map((r: any) => (
+                      <button
+                        key={r.enrollmentId}
+                        onClick={() => setHistoryEnrollment({ id: r.enrollmentId, name: r.studentName })}
+                        className="w-full text-right rounded-2xl border border-border bg-card p-3 space-y-2 active:scale-[0.99] transition"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium truncate">{r.studentName}</span>
+                          <span className="flex items-center gap-2 shrink-0">
+                            <span className="text-sm font-semibold text-primary">
+                              {r.total} / {r.expected}
+                            </span>
+                            {r.rateStatus !== "unknown" && (
+                              <span className={`text-xs font-medium ${getRateColorClass(r.rateStatus)}`}>
+                                ({r.rate.toFixed(1)}/חודש)
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground truncate">
+                          {r.instrumentName} · {r.teacherName || "—"}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(r.counts as Record<string, number>)
+                            .filter(([, n]) => n > 0)
+                            .map(([k, n]) => (
+                              <Badge key={k} variant="secondary" className="text-[10px]">
+                                {STATUS_LABELS_HE[k] ?? k}: {n}
+                              </Badge>
+                            ))}
+                        </div>
+                      </button>
+                    ))}
+                </>
+              )
+            ) : attendanceLoading ? (
               <p className="text-center text-muted-foreground py-8">טוען...</p>
             ) : attendance.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">אין דיווחי נוכחות בשלוחה זו</p>
@@ -556,14 +701,13 @@ const TeacherBranchCard = () => {
                     <div className="space-y-2">
                       {(report.report_lines ?? []).slice(0, 5).map((line: any, idx: number) => {
                         const student = line.enrollments?.students;
-                        const st = statusLabel(line.status);
                         return (
                           <div key={idx} className="flex items-center justify-between text-sm border-b last:border-0 pb-2 last:pb-0">
                             <span className="truncate">
                               {student?.first_name} {student?.last_name}
                             </span>
-                            <Badge variant={st.variant} className="text-[10px] shrink-0">
-                              {st.label}
+                            <Badge variant="secondary" className="text-[10px] shrink-0">
+                              {STATUS_LABELS_HE[line.status] ?? line.status}
                             </Badge>
                           </div>
                         );
@@ -579,8 +723,16 @@ const TeacherBranchCard = () => {
               ))
             )}
           </TabsContent>
+
         </Tabs>
+
+        <EnrollmentHistoryDialog
+          enrollmentId={historyEnrollment?.id ?? null}
+          studentName={historyEnrollment?.name}
+          onOpenChange={(open) => !open && setHistoryEnrollment(null)}
+        />
       </main>
+
     </div>
   );
 };
