@@ -6,6 +6,7 @@
 //
 // Anonymous-callable: invoked from the public registration form.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { withIncomeType, SM_INCOME_TYPE_NAME } from "../_shared/icountIncomeType.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,9 +52,10 @@ async function createPaypage(opts: {
     max_payments: 1,
     ipn_url: IPN_URL,
     post_action_success: `${SUCCESS_URL_BASE}?status=ok&payment_id=${opts.paymentId}`,
-    items: [
-      { description: itemDesc, unitprice: opts.amount, quantity: 1, tax_exempt: 1 },
-    ],
+    items: await withIncomeType(
+      [{ description: itemDesc, unitprice: opts.amount, quantity: 1, tax_exempt: 1 }],
+      SM_INCOME_TYPE_NAME,
+    ),
   };
 
   const res = await fetch(`${ICOUNT_API}/paypage/create`, {

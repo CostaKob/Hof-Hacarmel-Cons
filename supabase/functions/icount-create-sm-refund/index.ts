@@ -2,6 +2,7 @@
 // Inserts a matching credit row (negative amount) linked via refund_of_payment_id.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
+import { withIncomeType, SM_INCOME_TYPE_NAME } from "../_shared/icountIncomeType.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +96,7 @@ Deno.serve(async (req: Request) => {
             based_on_docs: [{ doctype: "receipt", docnum: payment.icount_doc_number || payment.icount_doc_id }],
           }
         : {}),
-      items: [{ description, unitprice_incvat: negSum, quantity: 1 }],
+      items: await withIncomeType([{ description, unitprice_incvat: negSum, quantity: 1 }], SM_INCOME_TYPE_NAME),
     };
 
     switch (payment.payment_method) {

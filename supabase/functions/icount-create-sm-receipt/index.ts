@@ -2,6 +2,7 @@
 // Malkar (Non-Profit) — only receipts are issued, no VAT.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { requireAdminOrSecretary } from "../_shared/requireAdmin.ts";
+import { withIncomeType, SM_INCOME_TYPE_NAME } from "../_shared/icountIncomeType.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -114,7 +115,7 @@ Deno.serve(async (req: Request) => {
       lang: "he",
       currency_code: "ILS",
       vat_free: 1,
-      items: [{ description, unitprice_incvat: amount, quantity: 1 }],
+      items: await withIncomeType([{ description, unitprice_incvat: amount, quantity: 1 }], SM_INCOME_TYPE_NAME),
     };
 
     if (pm.type === 1) payload.cash = { sum: amount };
