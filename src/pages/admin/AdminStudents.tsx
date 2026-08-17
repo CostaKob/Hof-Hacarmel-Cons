@@ -18,6 +18,7 @@ import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { isInactiveStudentStatus } from "@/lib/constants";
+import { format } from "date-fns";
 
 const AdminStudents = () => {
   const navigate = useNavigate();
