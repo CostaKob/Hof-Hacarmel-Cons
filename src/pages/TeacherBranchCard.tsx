@@ -129,6 +129,59 @@ const TeacherBranchCard = () => {
     },
   });
 
+  // Per-student attendance summary (progress tracking)
+  const { data: attendanceSummary = [], isLoading: summaryLoading } = useQuery({
+    queryKey: ["branch-attendance-summary", schoolId, selectedYearId],
+    enabled: !!schoolId && !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("report_lines")
+        .select(`
+          status,
+          enrollment_id,
+          enrollments!inner (
+            id, school_id, academic_year_id, is_active, start_date, instrument_start_date,
+            students (first_name, last_name, student_status),
+            instruments (name),
+            teachers (first_name, last_name)
+          )
+        `)
+        .eq("enrollments.school_id", schoolId!)
+        .eq("enrollments.academic_year_id", selectedYearId!)
+        .eq("enrollments.is_active", true)
+        .returns<any[]>();
+      if (error) throw error;
+      const map = new Map<string, any>();
+      for (const line of data ?? []) {
+        const e = line.enrollments;
+        if (!e) continue;
+        if (isInactiveStudentStatus(e.students?.student_status)) continue;
+        let row = map.get(e.id);
+        if (!row) {
+          row = {
+            enrollmentId: e.id,
+            studentName: `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}`.trim(),
+            instrumentName: e.instruments?.name ?? "—",
+            teacherName: `${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim(),
+            startDate: e.instrument_start_date || e.start_date,
+            counts: emptyStatusCounts(),
+          };
+          map.set(e.id, row);
+        }
+        if (line.status in row.counts) row.counts[line.status]++;
+      }
+      const rows = Array.from(map.values()).map((r) => {
+        const total = calcTotal(r.counts);
+        const expected = getExpectedLessons(r.startDate);
+        const { rate, status } = getMonthlyRate(total, r.startDate);
+        return { ...r, total, expected, rate, rateStatus: status };
+      });
+      rows.sort((a, b) => a.rate - b.rate);
+      return rows;
+    },
+  });
+
+
   // ── Student filters (mirrors the admin students page) ──
   const [teacherFilter, setTeacherFilter] = useState<string[]>([]);
   const [instrumentFilter, setInstrumentFilter] = useState<string[]>([]);
