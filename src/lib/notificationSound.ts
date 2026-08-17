@@ -56,8 +56,13 @@ function tone(c: AudioContext, freq: number, start: number, duration: number) {
 }
 
 /** Plays the notification chime (and a short vibration on mobile). */
+let lastPlayedAt = 0;
+
 export function playNotificationSound() {
   if (!isNotificationSoundEnabled()) return;
+  const now = Date.now();
+  if (now - lastPlayedAt < 1500) return; // de-dupe realtime + polling triggers
+  lastPlayedAt = now;
   try {
     const c = getCtx();
     if (c) {
