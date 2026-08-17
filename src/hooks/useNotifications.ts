@@ -54,7 +54,13 @@ export function useNotifications() {
     },
   });
 
-  // Realtime: refresh when a new notification is inserted
+  // Realtime: refresh + chime when a new notification is inserted
+  const [soundEnabled, setSoundEnabledState] = useState(isNotificationSoundEnabled);
+
+  useEffect(() => {
+    initNotificationSound();
+  }, []);
+
   useEffect(() => {
     if (!enabled) return;
     const channel = supabase
@@ -62,13 +68,17 @@ export function useNotifications() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
-        () => queryClient.invalidateQueries({ queryKey: ["notifications"] })
+        () => {
+          playNotificationSound();
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [enabled, queryClient]);
+
 
   const markRead = useMutation({
     mutationFn: async (ids: string[]) => {
