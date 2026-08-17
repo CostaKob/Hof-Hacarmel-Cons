@@ -168,11 +168,29 @@ const StaffSection = ({ schoolId, isCoordinatorView }: { schoolId: string; isCoo
     queryKey: ["school-music-all-staff", schoolId],
     enabled: !!schoolId,
     queryFn: async () => {
-      const { data: groups, error: groupsError } = await supabase
-        .from("school_music_class_groups" as any)
-        .select("teacher_id, instruments(name), teachers(id, first_name, last_name, phone, city)")
+      const { data: schoolClasses, error: classesError } = await supabase
+        .from("school_music_classes" as any)
+        .select("id")
         .eq("school_music_school_id", schoolId);
-      if (groupsError) throw groupsError;
+      if (classesError) throw classesError;
+      const classIds = ((schoolClasses ?? []) as any[]).map((c) => c.id);
+
+      let groups: any[] = [];
+      if (classIds.length > 0) {
+        const { data: groupsData, error: groupsError } = await supabase
+          .from("school_music_class_groups" as any)
+          .select("teacher_id, instruments(name)")
+          .in("school_music_class_id", classIds);
+        if (groupsError) throw groupsError;
+        groups = (groupsData ?? []) as any[];
+      }
+
+      const { data: legacyGroups } = await supabase
+        .from("school_music_groups")
+        .select("teacher_id, instruments(name)")
+        .eq("school_music_school_id", schoolId);
+      groups = [...groups, ...(((legacyGroups ?? []) as any[]))];
+
 
       const { data: school, error: schoolError } = await supabase
         .from("school_music_schools")
