@@ -111,11 +111,33 @@ export function useNotifications() {
   const items = query.data ?? [];
   const unreadCount = items.filter((n) => !n.isRead).length;
 
+  // Fallback for when realtime is unavailable: chime when polling reveals a newer item.
+  const latestId = items[0]?.id ?? null;
+  const [lastSeenId, setLastSeenId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!latestId) return;
+    if (lastSeenId === null) {
+      setLastSeenId(latestId);
+      return;
+    }
+    if (latestId !== lastSeenId) {
+      setLastSeenId(latestId);
+      playNotificationSound();
+    }
+  }, [latestId, lastSeenId]);
+
   return {
     items,
     unreadCount,
     isLoading: query.isLoading,
     enabled,
+    soundEnabled,
+    setSoundEnabled: (v: boolean) => {
+      setNotificationSoundEnabled(v);
+      setSoundEnabledState(v);
+      if (v) playNotificationSound();
+    },
+
     markRead: (ids: string[]) => markRead.mutate(ids),
     markAllRead: () => markRead.mutate(items.filter((n) => !n.isRead).map((n) => n.id)),
     isMarking: markRead.isPending,
