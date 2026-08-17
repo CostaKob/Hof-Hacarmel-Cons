@@ -60,6 +60,9 @@ const TeacherBranchCard = () => {
   const { data: branches = [] } = useBranchCoordinatorBranches(teacher?.id);
   const branch = branches.find((b) => b.school_id === schoolId);
   const [search, setSearch] = useState("");
+  const [attendanceView, setAttendanceView] = useState<"summary" | "reports">("summary");
+  const [historyEnrollment, setHistoryEnrollment] = useState<{ id: string; name: string } | null>(null);
+
 
   const { data: students = [], isLoading: studentsLoading } = useQuery({
     queryKey: ["branch-students", schoolId, selectedYearId],
