@@ -493,23 +493,46 @@ const TeacherBranchCard = () => {
             ) : filteredTeachers.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">אין מורים פעילים בשלוחה זו</p>
             ) : (
-              filteredTeachers.map((t) => (
-                <Card
-                  key={t.id}
-                  onClick={() => navigate(`/teacher/branches/${schoolId}/teachers/${t.id}`)}
-                  className="cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-                >
-                  <CardContent className="p-4">
-                    <p className="font-semibold">
-                      {t.first_name} {t.last_name}
-                    </p>
-                    <div className="mt-2 space-y-1">
-                      {t.phone && <PhoneDisplay phone={t.phone} showIcon textClassName="text-sm" />}
-                      {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+              filteredTeachers.map((t) => {
+                const instruments = (t.teacher_instruments ?? [])
+                  .map((ti: any) => ti.instruments?.name)
+                  .filter(Boolean);
+                return (
+                  <Card
+                    key={t.id}
+                    onClick={() => navigate(`/teacher/branches/${schoolId}/teachers/${t.id}`)}
+                    className="cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+                  >
+                    <CardContent className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold">
+                          {t.first_name} {t.last_name}
+                        </p>
+                        {t.city && (
+                          <Badge variant="outline" className="rounded-lg gap-1 text-xs shrink-0">
+                            <MapPin className="h-3 w-3" />
+                            {t.city}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        {t.phone && <PhoneDisplay phone={t.phone} showIcon textClassName="text-sm" />}
+                        {t.email && <p className="text-xs text-muted-foreground">{t.email}</p>}
+                      </div>
+                      {instruments.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {instruments.map((name: string) => (
+                            <Badge key={name} variant="secondary" className="rounded-lg gap-1 text-xs">
+                              <Music className="h-3 w-3" />
+                              {name}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
             )}
           </TabsContent>
 
