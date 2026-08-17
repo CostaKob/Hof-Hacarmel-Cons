@@ -163,6 +163,110 @@ const RoleSection = ({
   </Card>
 );
 
+const StaffSection = ({ schoolId, isCoordinatorView }: { schoolId: string; isCoordinatorView: boolean }) => {
+  const { data: staff = [], isLoading } = useQuery({
+    queryKey: ["school-music-all-staff", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      const { data: groups, error: groupsError } = await supabase
+        .from("school_music_class_groups" as any)
+        .select("teacher_id, instruments(name), teachers(id, first_name, last_name, phone, city)")
+        .eq("school_music_school_id", schoolId);
+      if (groupsError) throw groupsError;
+
+      const { data: school, error: schoolError } = await supabase
+        .from("school_music_schools")
+        .select("coordinator_teacher_id, conductor_teacher_id")
+        .eq("id", schoolId)
+        .single();
+      if (schoolError) throw schoolError;
+
+      const teacherIds = new Set<string>();
+      if (school?.coordinator_teacher_id) teacherIds.add(school.coordinator_teacher_id);
+      if (school?.conductor_teacher_id) teacherIds.add(school.conductor_teacher_id);
+      for (const g of (groups ?? []) as any[]) {
+        if (g.teacher_id) teacherIds.add(g.teacher_id);
+      }
+
+      const ids = Array.from(teacherIds);
+      if (ids.length === 0) return [];
+
+      const { data: teachers, error: teachersError } = await supabase
+        .from("teachers")
+        .select("id, first_name, last_name, phone, city, teacher_instruments(instruments(name))")
+        .in("id", ids);
+      if (teachersError) throw teachersError;
+
+      const groupMap = new Map<string, Set<string>>();
+      for (const g of (groups ?? []) as any[]) {
+        if (!g.teacher_id) continue;
+        const set = groupMap.get(g.teacher_id) ?? new Set<string>();
+        if (g.instruments?.name) set.add(g.instruments.name);
+        groupMap.set(g.teacher_id, set);
+      }
+
+      const result = (teachers ?? []).map((t: any) => {
+        const assignedInstruments = groupMap.get(t.id) ?? new Set<string>();
+        const allInstruments = new Set<string>([
+          ...Array.from(assignedInstruments),
+          ...(t.teacher_instruments ?? []).map((ti: any) => ti.instruments?.name).filter(Boolean),
+        ]);
+        return { ...t, instruments: Array.from(allInstruments).sort((a, b) => a.localeCompare(b, "he")) };
+      });
+
+      return result.sort((a: any, b: any) =>
+        `${a.last_name ?? ""} ${a.first_name ?? ""}`.localeCompare(`${b.last_name ?? ""} ${b.first_name ?? ""}`, "he")
+      );
+    },
+  });
+
+  if (!isCoordinatorView) return null;
+  if (isLoading) return null;
+  if (staff.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          צוות המורים ({staff.length})
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {staff.map((t: any) => (
+          <div key={t.id} className="rounded-xl border bg-muted/20 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                <span className="font-medium truncate">{t.first_name} {t.last_name}</span>
+              </div>
+              {t.city && (
+                <Badge variant="outline" className="rounded-lg gap-1 text-xs shrink-0">
+                  <MapPin className="h-3 w-3" />
+                  {t.city}
+                </Badge>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+              {t.phone && <PhoneDisplay phone={t.phone} showIcon textClassName="text-sm" />}
+            </div>
+            {t.instruments.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {t.instruments.map((name: string) => (
+                  <Badge key={name} variant="secondary" className="rounded-lg gap-1 text-xs">
+                    <Music className="h-3 w-3" />
+                    {name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+};
+
 const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" | "coordinator" }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
