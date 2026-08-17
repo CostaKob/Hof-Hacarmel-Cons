@@ -27,6 +27,16 @@ import {
   Music,
 } from "lucide-react";
 import { isInactiveStudentStatus } from "@/lib/constants";
+import {
+  emptyStatusCounts,
+  calcTotal,
+  getExpectedLessons,
+  getMonthlyRate,
+  getRateColorClass,
+  STATUS_LABELS_HE,
+} from "@/lib/lessonCounts";
+import EnrollmentHistoryDialog from "@/components/EnrollmentHistoryDialog";
+
 
 
 const statusLabel = (status?: string) => {
