@@ -694,6 +694,9 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
           {...roleProps}
         />
 
+        {/* Staff */}
+        {id && <StaffSection schoolId={id} isCoordinatorView={isCoordinatorView} />}
+
         {/* ═══ CLASSES ═══ */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
