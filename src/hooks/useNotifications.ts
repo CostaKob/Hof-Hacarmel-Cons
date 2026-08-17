@@ -1,7 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import {
+  initNotificationSound,
+  isNotificationSoundEnabled,
+  playNotificationSound,
+  setNotificationSoundEnabled,
+} from "@/lib/notificationSound";
+
 
 export interface NotificationRow {
   id: string;
@@ -47,7 +54,13 @@ export function useNotifications() {
     },
   });
 
-  // Realtime: refresh when a new notification is inserted
+  // Realtime: refresh + chime when a new notification is inserted
+  const [soundEnabled, setSoundEnabledState] = useState(isNotificationSoundEnabled);
+
+  useEffect(() => {
+    initNotificationSound();
+  }, []);
+
   useEffect(() => {
     if (!enabled) return;
     const channel = supabase
@@ -55,13 +68,17 @@ export function useNotifications() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
-        () => queryClient.invalidateQueries({ queryKey: ["notifications"] })
+        () => {
+          playNotificationSound();
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        }
       )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [enabled, queryClient]);
+
 
   const markRead = useMutation({
     mutationFn: async (ids: string[]) => {
@@ -94,11 +111,33 @@ export function useNotifications() {
   const items = query.data ?? [];
   const unreadCount = items.filter((n) => !n.isRead).length;
 
+  // Fallback for when realtime is unavailable: chime when polling reveals a newer item.
+  const latestId = items[0]?.id ?? null;
+  const [lastSeenId, setLastSeenId] = useState<string | null>(null);
+  useEffect(() => {
+    if (!latestId) return;
+    if (lastSeenId === null) {
+      setLastSeenId(latestId);
+      return;
+    }
+    if (latestId !== lastSeenId) {
+      setLastSeenId(latestId);
+      playNotificationSound();
+    }
+  }, [latestId, lastSeenId]);
+
   return {
     items,
     unreadCount,
     isLoading: query.isLoading,
     enabled,
+    soundEnabled,
+    setSoundEnabled: (v: boolean) => {
+      setNotificationSoundEnabled(v);
+      setSoundEnabledState(v);
+      if (v) playNotificationSound();
+    },
+
     markRead: (ids: string[]) => markRead.mutate(ids),
     markAllRead: () => markRead.mutate(items.filter((n) => !n.isRead).map((n) => n.id)),
     isMarking: markRead.isPending,
