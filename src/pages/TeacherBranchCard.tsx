@@ -88,11 +88,17 @@ const TeacherBranchCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("teacher_id, teachers (id, first_name, last_name, phone, email)")
+        .select(`
+          teacher_id,
+          teachers (
+            id, first_name, last_name, phone, email, city,
+            teacher_instruments (instruments (name))
+          )
+        `)
         .eq("school_id", schoolId!)
         .eq("academic_year_id", selectedYearId!)
         .eq("is_active", true)
-        .returns<{ teacher_id: string; teachers: { id: string; first_name: string; last_name: string; phone: string | null; email: string | null } }[]>();
+        .returns<any[]>();
       if (error) throw error;
       const map = new Map<string, any>();
       for (const e of data ?? []) {
