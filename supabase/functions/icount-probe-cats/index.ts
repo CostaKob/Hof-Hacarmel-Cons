@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
     user: Deno.env.get("ICOUNT_USERNAME"),
     pass: Deno.env.get("ICOUNT_PASSWORD"),
   };
-  const paths = ["income_category/get_list", "inc_class/get_list", "classification/get_list", "doc/income_types", "general/income_types", "item/get_list"];
+  const paths = ["inventory/get_list","inventory/search","income_type/get_list","cat/get_list","category/get_list","doc/get_types","sort_code/get_list","inventory/item_list","doc/get_list_of_income_types","account/get_list"];
   const out: Record<string, unknown> = {};
   for (const p of paths) {
     try {
