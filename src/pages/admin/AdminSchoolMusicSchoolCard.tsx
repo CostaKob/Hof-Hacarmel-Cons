@@ -185,6 +185,12 @@ const StaffSection = ({ schoolId, isCoordinatorView }: { schoolId: string; isCoo
         groups = (groupsData ?? []) as any[];
       }
 
+      const { data: legacyGroups } = await supabase
+        .from("school_music_groups")
+        .select("teacher_id, instruments(name)")
+        .eq("school_music_school_id", schoolId);
+      groups = [...groups, ...(((legacyGroups ?? []) as any[]))];
+
 
       const { data: school, error: schoolError } = await supabase
         .from("school_music_schools")
