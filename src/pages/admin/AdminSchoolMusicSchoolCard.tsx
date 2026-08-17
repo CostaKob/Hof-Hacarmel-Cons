@@ -687,9 +687,6 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
                       }}>
                         <Pencil className="h-3 w-3" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); setDeleteClassId(cls.id); }}>
-                        <Trash2 className="h-3 w-3 text-destructive" />
-                      </Button>
                       {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                     </div>
                   </button>
