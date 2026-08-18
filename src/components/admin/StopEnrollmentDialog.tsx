@@ -2,16 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, CalendarClock, Undo2, Ban } from "lucide-react";
+import { Loader2, CalendarClock, Undo2, Ban, Sparkles, ChevronDown, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { buildPaymentSchedule, scheduleTotals, type ScheduleRow } from "@/lib/paymentSchedule";
@@ -26,8 +25,8 @@ const METHOD_LABELS: Record<string, string> = {
 };
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
-  cleared: { label: "נפרע", className: "bg-green-500/10 text-green-700 border-green-500/30" },
-  future: { label: "עתידי", className: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
+  cleared: { label: "נגבה", className: "bg-green-500/10 text-green-700 border-green-500/30" },
+  future: { label: "טרם נגבה", className: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
   cancelled: { label: "בוטל", className: "bg-muted text-muted-foreground border-border" },
   refunded: { label: "זוכה", className: "bg-destructive/10 text-destructive border-destructive/30" },
 };
@@ -61,6 +60,8 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [confirm, setConfirm] = useState<null | "cancel" | "refund">(null);
   const [creditRefundChoice, setCreditRefundChoice] = useState<CreditRefundChoice | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const [manualMode, setManualMode] = useState(false);
 
   const rows = useMemo(() => buildPaymentSchedule(payments), [payments]);
   const totals = useMemo(() => scheduleTotals(rows), [rows]);
@@ -70,6 +71,8 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
       setSelected({});
       setConfirm(null);
       setCreditRefundChoice(null);
+      setShowHistory(false);
+      setManualMode(false);
     }
   }, [open]);
 
@@ -78,6 +81,13 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
   const toRefund = selectedRows.filter((r) => !r.cancellable && r.refundable && r.kind !== "credit_installment");
   const cancelSum = toCancel.reduce((s, r) => s + r.remaining, 0);
   const refundSum = creditRefundChoice?.amount ?? toRefund.reduce((s, r) => s + r.remaining, 0);
+
+  const ownerNameOf = (r: ScheduleRow) => {
+    const ownerId =
+      enrollments.find((e: any) => e.id === r.enrollmentId)?.student_id ??
+      payments.find((p: any) => p.id === r.paymentId)?.student_id;
+    return ownerId ? studentNames?.get(ownerId) : undefined;
+  };
 
   const creditDeals = useMemo(() => {
     const grouped = new Map<string, ScheduleRow[]>();
@@ -174,48 +184,110 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
 
   const busy = cancelMutation.isPending || refundMutation.isPending;
 
+  const futureRows = rows.filter((r) => r.status === "future");
+  const paidRows = rows.filter((r) => r.status === "cleared");
+  const historyRows = rows.filter((r) => r.status === "cancelled" || r.status === "refunded");
+
+  const renderRow = (r: ScheduleRow, opts: { selectable: boolean }) => {
+    const selectable = opts.selectable && r.kind !== "credit_installment" && (r.cancellable || r.refundable);
+    const ownerName = ownerNameOf(r);
+    const meta = STATUS_META[r.status];
+    const Wrapper: any = selectable ? "label" : "div";
+    return (
+      <Wrapper
+        key={r.key}
+        className={`flex items-center gap-3 rounded-xl border p-3 text-sm ${
+          selected[r.key] ? "border-primary bg-primary/5" : "border-border bg-card"
+        } ${selectable ? "cursor-pointer" : ""}`}
+      >
+        {opts.selectable && (
+          <Checkbox
+            checked={!!selected[r.key]}
+            disabled={!selectable || busy}
+            onCheckedChange={(v) => setSelected((s) => ({ ...s, [r.key]: !!v }))}
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-foreground">{fmtDate(r.dueDate)}</span>
+            <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${meta.className}`}>
+              {meta.label}
+            </span>
+            {r.kind === "credit_installment" && (
+              <span className="text-[11px] px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground">
+                תשלום {r.installmentIndex}/{r.installmentCount}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {ownerName && <span className="font-medium text-foreground">{ownerName} · </span>}
+            {METHOD_LABELS[r.method ?? ""] ?? r.method ?? ""}
+            {r.reference && ` · ${r.kind === "cheque" ? "צ׳ק מס׳" : "אסמכתא"} ${r.reference}`}
+            {r.docNumber && ` · קבלה ${r.docNumber}`}
+            {r.kind === "credit_installment" ? " · מטופל למעלה, ברמת עסקת האשראי" : ""}
+          </p>
+        </div>
+        <span className="font-semibold whitespace-nowrap" dir="ltr">{fmt(r.amount)}</span>
+      </Wrapper>
+    );
+  };
+
+  const hasSelection = toCancel.length > 0 || toRefund.length > 0;
+
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => { if (!busy) onOpenChange(o); }}>
         <DialogContent dir="rtl" className="max-w-3xl max-h-[90vh] overflow-y-auto overscroll-contain">
           <DialogHeader className="text-right">
             <DialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-primary" /> לוח תשלומים עתידיים
+              <CalendarClock className="h-5 w-5 text-primary" /> תשלומים עתידיים והחזרים
             </DialogTitle>
             <DialogDescription>
-              כל הפירעונות — צ׳קים, תשלומי אשראי ומזומן. סמן מה לבטל ומה לזכות.
+              כאן רואים מה כבר נגבה מההורה, מה עוד עתיד לרדת, וכמה צריך להחזיר לו.
             </DialogDescription>
           </DialogHeader>
 
-          {/* Summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {[
-              { label: "נפרע", value: totals.paid, className: "text-green-700" },
-              { label: "עתידי", value: totals.future, className: "text-amber-700" },
-              { label: "בוטל", value: totals.cancelled, className: "text-muted-foreground" },
-              { label: "זוכה", value: totals.refunded, className: "text-destructive" },
-            ].map((c) => (
-              <div key={c.label} className="rounded-xl border border-border bg-muted/30 p-3 text-center">
-                <p className="text-xs text-muted-foreground">{c.label}</p>
-                <p className={`font-bold ${c.className}`} dir="ltr">{fmt(c.value)}</p>
+          {/* Plain-language summary */}
+          <div className="rounded-2xl border border-border bg-muted/30 p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-muted-foreground">כבר נגבה מההורה</p>
+                <p className="text-lg font-bold text-green-700" dir="ltr">{fmt(totals.paid)}</p>
               </div>
-            ))}
+              <div>
+                <p className="text-xs text-muted-foreground">עתיד לרדת</p>
+                <p className="text-lg font-bold text-amber-700" dir="ltr">{fmt(totals.future)}</p>
+              </div>
+            </div>
+            {(totals.cancelled > 0 || totals.refunded > 0) && (
+              <p className="text-xs text-muted-foreground">
+                {totals.refunded > 0 && `כבר זוכה ${fmt(totals.refunded)}`}
+                {totals.refunded > 0 && totals.cancelled > 0 && " · "}
+                {totals.cancelled > 0 && `בוטלו צ׳קים בסך ${fmt(totals.cancelled)}`}
+              </p>
+            )}
           </div>
 
-          {/* Credit due, straight from the payment calculator */}
-          {settlement && (
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-              <p className="text-sm font-semibold">זיכוי להורה לפי המחשבון · {fmt(settlement.credit)}</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                הסכום מגיע מהמחשבון בכרטיס התלמיד (חיוב לאחר עדכון תאריכי הסיום, פחות מה שכבר נגבה).
-                מתוכו {fmt(settlement.fromFuture)} מתשלומי אשראי שטרם נגבו
-                {settlement.fromPaid > 0 ? ` · ${fmt(settlement.fromPaid)} החזר על מה שכבר נגבה` : ""}
-                {settlement.uncovered >= 1
-                  ? ` · ${fmt(settlement.uncovered)} אינם מכוסים בעסקאות אשראי (צ׳קים/מזומן — טפל בהם ברשימה למטה)`
-                  : ""}
+          {/* Recommended action: credit from the calculator */}
+          {settlement ? (
+            <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold">הפעולה המומלצת</p>
+              </div>
+              <p className="text-sm leading-relaxed">
+                לפי המחשבון בכרטיס התלמיד ההורה שילם <strong>{fmt(settlement.credit)}</strong> יותר מדי.
+                {settlement.fromFuture > 0 && <> {fmt(settlement.fromFuture)} מתוכם עוד לא ירדו בפועל,</>}
+                {settlement.fromPaid > 0 && <> {fmt(settlement.fromPaid)} כבר נגבו,</>}
+                {" "}והמערכת תחזיר את הכל בפעולה אחת לכרטיס האשראי המקורי.
               </p>
+              {settlement.uncovered >= 1 && (
+                <p className="text-xs text-muted-foreground">
+                  {fmt(settlement.uncovered)} אינם מכוסים בעסקאות אשראי (צ׳קים/מזומן) — טפלו בהם ברשימה למטה.
+                </p>
+              )}
               <Button
-                className="h-11 rounded-xl w-full"
+                className="h-12 rounded-xl w-full text-base"
                 disabled={busy || settlement.items.length === 0}
                 onClick={() => {
                   const amount = settlement.items.reduce((s, i) => s + i.amount, 0);
@@ -227,15 +299,24 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
                   setConfirm("refund");
                 }}
               >
-                <Undo2 className="h-4 w-4 ml-1" />
-                החזר להורה באשראי {fmt(settlement.items.reduce((s, i) => s + i.amount, 0))}
+                <Undo2 className="h-4 w-4 ml-2" />
+                החזר להורה {fmt(settlement.items.reduce((s, i) => s + i.amount, 0))} לאשראי
               </Button>
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-border p-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              אין כרגע יתרת זכות להורה לפי המחשבון. אפשר עדיין לעצור תשלומים עתידיים למטה.
             </div>
           )}
 
+          {/* Credit-card deals */}
           {creditDeals.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">עסקאות אשראי בתשלומים</Label>
+              <p className="text-sm font-semibold">עסקאות אשראי בתשלומים</p>
+              <p className="text-xs text-muted-foreground">
+                בעסקת תשלומים אי אפשר לעצור חיוב בודד — אפשר רק להחזיר כסף לכרטיס. בחרו מה להחזיר:
+              </p>
               {creditDeals.map((deal) => {
                 const firstRow = deal.rows[0];
                 const payment = payments.find((item: any) => item.id === deal.paymentId);
@@ -250,7 +331,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {firstRow.docNumber ? `קבלה ${firstRow.docNumber} · ` : ""}
-                          נגבה עד כה {fmt(deal.paid)} · יתרה עתידית {fmt(deal.future)}
+                          נגבה עד כה {fmt(deal.paid)} · עתיד לרדת {fmt(deal.future)}
                           {deal.refunded > 0 ? ` · זוכה ${fmt(deal.refunded)}` : ""}
                         </p>
                       </div>
@@ -259,30 +340,27 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
                     <div className="flex flex-col sm:flex-row gap-2">
                       <Button
                         variant="outline"
-                        className="h-10 rounded-xl flex-1"
+                        className="h-11 rounded-xl flex-1 whitespace-normal"
                         disabled={busy || deal.future < 1}
                         onClick={() => {
-                          setCreditRefundChoice({ items: [{ paymentId: deal.paymentId, amount: deal.future }], amount: deal.future, label: "זיכוי היתרה העתידית" });
+                          setCreditRefundChoice({ items: [{ paymentId: deal.paymentId, amount: deal.future }], amount: deal.future, label: "זיכוי היתרה שטרם נגבתה" });
                           setConfirm("refund");
                         }}
                       >
-                        <Ban className="h-4 w-4 ml-1" /> השאר את שנגבה וזכה יתרה {fmt(deal.future)}
+                        <Ban className="h-4 w-4 ml-1" /> החזר רק את מה שטרם ירד · {fmt(deal.future)}
                       </Button>
                       <Button
                         variant="destructive"
-                        className="h-10 rounded-xl flex-1"
+                        className="h-11 rounded-xl flex-1 whitespace-normal"
                         disabled={busy || deal.remaining < 1}
                         onClick={() => {
                           setCreditRefundChoice({ items: [{ paymentId: deal.paymentId, amount: deal.remaining }], amount: deal.remaining, label: "זיכוי מלא של יתרת העסקה" });
                           setConfirm("refund");
                         }}
                       >
-                        <Undo2 className="h-4 w-4 ml-1" /> זכה את כל העסקה {fmt(deal.remaining)}
+                        <Undo2 className="h-4 w-4 ml-1" /> החזר את כל העסקה · {fmt(deal.remaining)}
                       </Button>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      בעסקת תשלומים לא עוצרים חיובים בודדים; הזיכוי מקזז את היתרה מול הכרטיס המקורי.
-                    </p>
                   </div>
                 );
               })}
@@ -290,80 +368,85 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
           )}
 
           {/* Schedule */}
-          {rows.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4 text-center">אין תשלומים להצגה</p>
-          ) : (
-            <div className="space-y-1.5">
-              {rows.map((r: ScheduleRow) => {
-                const selectable = r.kind !== "credit_installment" && (r.cancellable || r.refundable);
-                const ownerId =
-                  enrollments.find((e: any) => e.id === r.enrollmentId)?.student_id ??
-                  payments.find((p: any) => p.id === r.paymentId)?.student_id;
-                const ownerName = ownerId ? studentNames?.get(ownerId) : undefined;
-                const meta = STATUS_META[r.status];
-                return (
-                  <label
-                    key={r.key}
-                    className={`flex items-center gap-3 rounded-xl border p-3 text-sm ${
-                      selected[r.key] ? "border-primary bg-primary/5" : "border-border"
-                    } ${selectable ? "cursor-pointer" : "opacity-60"}`}
-                  >
-                    <Checkbox
-                      checked={!!selected[r.key]}
-                      disabled={!selectable || busy}
-                      onCheckedChange={(v) => setSelected((s) => ({ ...s, [r.key]: !!v }))}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-foreground">{fmtDate(r.dueDate)}</span>
-                        <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${meta.className}`}>
-                          {meta.label}
-                        </span>
-                        {r.kind === "credit_installment" && (
-                          <span className="text-[11px] px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground">
-                            תשלום {r.installmentIndex}/{r.installmentCount}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {ownerName && <span className="font-medium text-foreground">{ownerName} · </span>}
-                        {METHOD_LABELS[r.method ?? ""] ?? r.method ?? ""}
-                        {r.reference && ` · ${r.kind === "cheque" ? "צ׳ק מס׳" : "אסמכתא"} ${r.reference}`}
-                        {r.docNumber && ` · קבלה ${r.docNumber}`}
-                        {r.kind === "credit_installment"
-                          ? " · הפעולה מתבצעת ברמת עסקת האשראי"
-                          : r.cancellable ? " · ניתן לביטול" : r.refundable ? " · ניתן לזיכוי" : ""}
-                      </p>
-                    </div>
-                    <span className="font-semibold whitespace-nowrap" dir="ltr">{fmt(r.amount)}</span>
-                  </label>
-                );
-              })}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold">לוח הפירעונות</p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 rounded-lg text-xs"
+                onClick={() => { setManualMode((m) => !m); setSelected({}); }}
+              >
+                {manualMode ? "סיום בחירה ידנית" : "בחירה ידנית של שורות"}
+              </Button>
+            </div>
+
+            {rows.length === 0 && (
+              <p className="text-sm text-muted-foreground py-4 text-center">אין תשלומים להצגה</p>
+            )}
+
+            {futureRows.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-amber-700">טרם נגבו · אפשר לבטל צ׳קים</p>
+                {futureRows.map((r) => renderRow(r, { selectable: manualMode }))}
+              </div>
+            )}
+
+            {paidRows.length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-xs font-medium text-green-700">כבר נגבו · אפשר לזכות</p>
+                {paidRows.map((r) => renderRow(r, { selectable: manualMode }))}
+              </div>
+            )}
+
+            {historyRows.length > 0 && (
+              <div className="space-y-1.5">
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-xs text-muted-foreground"
+                  onClick={() => setShowHistory((s) => !s)}
+                >
+                  <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showHistory ? "rotate-180" : ""}`} />
+                  היסטוריה — בוטלו/זוכו ({historyRows.length})
+                </button>
+                {showHistory && historyRows.map((r) => renderRow(r, { selectable: false }))}
+              </div>
+            )}
+          </div>
+
+          {/* Sticky action bar — appears only in manual mode with a selection */}
+          {manualMode && (
+            <div className="sticky bottom-0 -mx-6 -mb-6 mt-2 border-t border-border bg-background/95 backdrop-blur p-4 space-y-3">
+              {hasSelection ? (
+                <p className="text-sm">
+                  נבחרו {selectedRows.length} שורות:
+                  {toCancel.length > 0 && <> ביטול {toCancel.length} צ׳קים בסך <strong>{fmt(cancelSum)}</strong>.</>}
+                  {toRefund.length > 0 && <> החזר כספי בסך <strong>{fmt(refundSum)}</strong> להורה.</>}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">סמנו שורות כדי לבטל צ׳קים עתידיים או לזכות תשלומים שכבר נגבו.</p>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button
+                  variant="outline"
+                  className="h-11 rounded-xl flex-1"
+                  disabled={busy || toCancel.length === 0}
+                  onClick={() => setConfirm("cancel")}
+                >
+                  {cancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Ban className="h-4 w-4 ml-1" />}
+                  בטל {toCancel.length} צ׳קים
+                </Button>
+                <Button
+                  className="h-11 rounded-xl flex-1"
+                  disabled={busy || toRefund.length === 0}
+                  onClick={() => setConfirm("refund")}
+                >
+                  {refundMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Undo2 className="h-4 w-4 ml-1" />}
+                  זכה {fmt(refundSum)}
+                </Button>
+              </div>
             </div>
           )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <div className="flex-1 text-sm text-muted-foreground text-right">
-              נבחרו {selectedRows.length} שורות · לביטול {fmt(cancelSum)} · לזיכוי {fmt(refundSum)}
-            </div>
-            <Button
-              variant="outline"
-              className="h-11 rounded-xl"
-              disabled={busy || toCancel.length === 0}
-              onClick={() => setConfirm("cancel")}
-            >
-              {cancelMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Ban className="h-4 w-4 ml-1" />}
-              בטל צ׳קים ({toCancel.length})
-            </Button>
-            <Button
-              className="h-11 rounded-xl"
-              disabled={busy || toRefund.length === 0}
-              onClick={() => setConfirm("refund")}
-            >
-              {refundMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Undo2 className="h-4 w-4 ml-1" />}
-              זכה {fmt(refundSum)}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -371,14 +454,23 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {confirm === "cancel" ? "אישור ביטול צ׳קים" : "אישור זיכוי"}
+              {confirm === "cancel" ? "לבטל את הצ׳קים?" : "לבצע החזר להורה?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirm === "cancel" ? (
-                <>⚠️ יבוטלו {toCancel.length} צ׳קים בסך {fmt(cancelSum)} ותופק קבלת זיכוי מרוכזת ב-iCount. הפעולה סופית.</>
-              ) : (
-                <>⚠️ {creditRefundChoice ? `${creditRefundChoice.label}: ` : "יבוצע זיכוי בסך "}{fmt(refundSum)}. הכסף יוחזר לכרטיס המקורי ותופק קבלה במינוס. הפעולה סופית.</>
-              )}
+            <AlertDialogDescription asChild>
+              <div className="space-y-2 text-right">
+                {confirm === "cancel" ? (
+                  <>
+                    <p>יבוטלו {toCancel.length} צ׳קים עתידיים בסך <strong>{fmt(cancelSum)}</strong>.</p>
+                    <p>תופק קבלת זיכוי מרוכזת ב-iCount. הכסף לא ירד מההורה.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>{creditRefundChoice?.label ?? "זיכוי לפי השורות שנבחרו"} · סכום <strong>{fmt(refundSum)}</strong>.</p>
+                    <p>הכסף יוחזר לאמצעי התשלום המקורי ותופק קבלת זיכוי.</p>
+                  </>
+                )}
+                <p className="text-destructive font-medium">הפעולה סופית ולא ניתנת לביטול.</p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
@@ -392,7 +484,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
             >
               כן, בצע
             </AlertDialogAction>
-            <AlertDialogCancel onClick={() => setCreditRefundChoice(null)}>ביטול</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setCreditRefundChoice(null)}>חזרה</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
