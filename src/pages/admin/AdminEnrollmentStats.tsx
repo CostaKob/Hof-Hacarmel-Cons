@@ -18,7 +18,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Users, ClipboardList, Music, School } from "lucide-react";
+import { Users, ClipboardList, Music, School, Trophy } from "lucide-react";
 
 const GRADE_ORDER = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י", "יא", "יב"];
 
