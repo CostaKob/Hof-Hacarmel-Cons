@@ -626,14 +626,8 @@ const StudentPaymentsSection = ({
         onDone={(info) => { setBankRefund(null); setRefundSuccess(info); }}
       />
 
-      <StopEnrollmentDialog
-        open={scheduleOpen}
-        onOpenChange={setScheduleOpen}
-        studentId={studentId}
-        payments={payments}
-        enrollments={enrollments}
-        invalidate={invalidateAll}
-      />
+
+
 
       <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
 
