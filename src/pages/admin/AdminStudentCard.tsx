@@ -493,8 +493,7 @@ const AdminStudentCard = () => {
               payments={filteredPayments}
               enrollments={enrollments}
               showYear
-              readOnly
-              extraInvalidateKeys={[["admin-student-payments", studentId]]}
+              familyParentNationalId={(student as any)?.parent_national_id ?? null}
               extraHeaderActions={
                 <div className="flex items-center gap-2">
                   <Select
