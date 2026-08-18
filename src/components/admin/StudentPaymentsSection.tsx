@@ -66,6 +66,7 @@ const StudentPaymentsSection = ({
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
