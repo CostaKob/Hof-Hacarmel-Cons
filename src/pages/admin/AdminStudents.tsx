@@ -516,6 +516,13 @@ const AdminStudents = () => {
     return typeof balance === "number" ? Math.max(0, Math.round(balance)) : null;
   }, [balanceByStudent]);
 
+  /** Positive number when the student is over-paid (has a credit). */
+  const getCreditAmount = useCallback((r: any) => {
+    const sid = r?.students?.id;
+    const balance = sid ? balanceByStudent.get(sid) : null;
+    return typeof balance === "number" && Math.round(balance) < 0 ? Math.abs(Math.round(balance)) : null;
+  }, [balanceByStudent]);
+
   const renderEnsembleBadges = (items: { id: string; ensemble_id: string; name: string }[]) => {
     if (!items.length) return null;
     return (
