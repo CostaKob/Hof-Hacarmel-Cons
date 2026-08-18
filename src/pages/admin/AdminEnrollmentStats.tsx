@@ -337,6 +337,24 @@ const AdminEnrollmentStats = () => {
       .filter((d) => d.enrollmentsCount > 0 || d.pending > 0)
       .sort((a, b) => b.enrollmentsCount - a.enrollmentsCount);
 
+    const teacherMap = new Map<
+      string,
+      { id: string; name: string; studentIds: Set<string>; enrollmentCount: number }
+    >();
+    for (const e of teacherEnrollments) {
+      const tid = e.teacher_id;
+      const teacher = e.teachers;
+      if (!tid || !teacher) continue;
+      const name = `${teacher.first_name ?? ""} ${teacher.last_name ?? ""}`.trim() || "מורה לא ידוע";
+      const entry = teacherMap.get(tid) ?? { id: tid, name, studentIds: new Set<string>(), enrollmentCount: 0 };
+      entry.enrollmentCount++;
+      if (e.student_id) entry.studentIds.add(e.student_id);
+      teacherMap.set(tid, entry);
+    }
+    const teacherData = Array.from(teacherMap.values())
+      .map((t) => ({ id: t.id, name: t.name, students: t.studentIds.size, enrollments: t.enrollmentCount }))
+      .sort((a, b) => b.students - a.students);
+
     return {
       assignedCount: assignedStudents.size,
       enrollmentCount: enrollments.length,
@@ -350,8 +368,9 @@ const AdminEnrollmentStats = () => {
       instrumentData,
       pendingInstrumentData,
       schoolData,
+      teacherData,
     };
-  }, [enrollments, pendingRegs, priorStudentIds]);
+  }, [enrollments, pendingRegs, priorStudentIds, teacherEnrollments]);
 
 
   const isLoading = eLoading || rLoading;
