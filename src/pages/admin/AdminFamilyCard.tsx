@@ -1349,6 +1349,28 @@ const AdminFamilyCard = () => {
                 <div className="flex flex-wrap gap-2 justify-end pt-2">
                   <Button variant="outline" disabled={refundMutation.isPending} onClick={() => setRefundTarget(null)}>ביטול</Button>
                   <Button
+                    variant="secondary"
+                    disabled={refundMutation.isPending}
+                    onClick={() => {
+                      const amt = parseFloat(refundAmount);
+                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
+                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
+                      setBankRefund({
+                        studentId: refundTarget.student_id ?? family?.children_ids?.[0],
+                        parentName: family?.parent_name ?? undefined,
+                        studentName: nameById[refundTarget.student_id] ?? undefined,
+                        paymentId: refundTarget.id,
+                        docNumber: refundTarget.icount_doc_number,
+                        paidAmount: Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0),
+                        refundAmount: amt,
+                      });
+                      setRefundTarget(null);
+                      setRefundAmount("");
+                    }}
+                  >
+                    החזר בהעברה בנקאית
+                  </Button>
+                  <Button
                     disabled={refundMutation.isPending}
                     onClick={() => {
                       const amt = parseFloat(refundAmount);
