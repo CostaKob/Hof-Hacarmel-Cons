@@ -256,7 +256,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-muted/30 p-4 text-right">
-              <p className="text-xs text-muted-foreground leading-5 min-h-[20px]">כבר נגבה מההורה</p>
+              <p className="text-xs text-muted-foreground leading-5 min-h-[20px]">כבר נפרע</p>
               <p className="mt-1 text-lg font-bold text-green-700 tabular-nums" dir="ltr">{fmt(totals.paid)}</p>
             </div>
             <div className="rounded-2xl border border-border bg-muted/30 p-4 text-right">
