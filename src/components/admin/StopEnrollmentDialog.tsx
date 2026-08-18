@@ -110,6 +110,52 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
     }));
   }, [rows]);
 
+  // ── Settlement: recompute what the parent owes if studies stop on `stopDate` ──
+  const settlement = useMemo(() => {
+    if (!stopMode || !stopEnrollmentId || !stopDate || !computeSettlement) return null;
+    const base = computeSettlement(stopEnrollmentId, stopDate);
+    if (!base) return null;
+
+    const enr = enrollments.find((e: any) => e.id === stopEnrollmentId);
+    const ownerId = enr?.student_id ?? base.studentId;
+
+    // Credit deals that belong to this child (family context) or all of them.
+    const ownDeals = creditDeals.filter((d) => {
+      const p = payments.find((x: any) => x.id === d.paymentId);
+      return !p?.student_id || p.student_id === ownerId;
+    });
+    const futureCredit = ownDeals.reduce((s, d) => s + d.future, 0);
+    const paidCredit = ownDeals.reduce((s, d) => s + d.paid, 0);
+
+    // Allocate the credit: first against installments not yet charged, then
+    // the rest against money already collected.
+    const fromFuture = Math.min(base.credit, futureCredit);
+    const fromPaid = Math.max(0, Math.round((base.credit - fromFuture) * 100) / 100);
+
+    // Per-deal allocation for the actual refund call.
+    let left = base.credit;
+    const items: { paymentId: string; amount: number }[] = [];
+    for (const d of [...ownDeals].sort((a, b) => b.future - a.future)) {
+      if (left < 1) break;
+      const amt = Math.min(left, d.remaining);
+      if (amt < 1) continue;
+      items.push({ paymentId: d.paymentId, amount: Math.round(amt * 100) / 100 });
+      left = Math.round((left - amt) * 100) / 100;
+    }
+
+    return {
+      ...base,
+      ownerName: ownerId ? studentNames?.get(ownerId) : undefined,
+      futureCredit,
+      paidCredit,
+      fromFuture: Math.round(fromFuture * 100) / 100,
+      fromPaid,
+      items,
+      uncovered: Math.round(left * 100) / 100,
+    };
+  }, [stopMode, stopEnrollmentId, stopDate, computeSettlement, enrollments, creditDeals, payments, studentNames]);
+
+
   const applySuggestion = () => {
     const suggested = suggestRowsForStopDate(rows, stopDate);
     const next: Record<string, boolean> = {};
