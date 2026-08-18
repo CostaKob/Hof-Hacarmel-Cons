@@ -1414,7 +1414,18 @@ const AdminFamilyCard = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
 
+      <BankTransferRefundDialog
+        open={!!bankRefund}
+        onOpenChange={(o) => { if (!o) setBankRefund(null); }}
+        defaults={bankRefund}
+        invalidate={invalidateFamily}
+        onDone={(info) => { setBankRefund(null); setRefundSuccess(info); }}
+      />
+
+      <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
 
 
       <StopEnrollmentDialog
