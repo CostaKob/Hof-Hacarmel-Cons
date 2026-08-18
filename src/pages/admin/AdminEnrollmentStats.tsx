@@ -198,6 +198,20 @@ const AdminEnrollmentStats = () => {
     [registrations]
   );
 
+  const { data: teacherEnrollments = [], isLoading: tLoading } = useQuery({
+    queryKey: ["stats-teacher-enrollments", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, teacher_id, student_id, teachers(id, first_name, last_name)")
+        .eq("academic_year_id", selectedYearId!)
+        .eq("is_active", true);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
 
   const stats = useMemo(() => {
     // Assigned students (unique)
