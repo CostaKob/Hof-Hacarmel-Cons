@@ -376,9 +376,9 @@ const AdminInventoryInstruments = () => {
       {/* Annual check progress */}
       <button
         type="button"
-        onClick={() => setFilterVerified(filterVerified === "not_verified" ? "all" : "not_verified")}
+        onClick={() => setFilterVerified(filterVerified.includes("not_verified") ? [] : ["not_verified"])}
         className={`mb-4 w-full text-right rounded-xl border p-3 transition-colors ${
-          filterVerified === "not_verified"
+          filterVerified.includes("not_verified")
             ? "border-primary bg-primary/10 ring-1 ring-primary"
             : "border-border bg-card hover:bg-muted/50"
         }`}
