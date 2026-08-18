@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
+import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "מזומן",
