@@ -39,6 +39,13 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 const fmt = (n: number) => `₪${Math.round(n).toLocaleString()}`;
 const fmtDate = (d: string) => format(new Date(d), "dd/MM/yyyy");
 
+export interface SettlementResult {
+  studentId: string;
+  currentDue: number;
+  newDue: number;
+  credit: number;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,16 +54,19 @@ interface Props {
   enrollments: any[];
   /** Optional map of studentId -> full name, used in family (multi-child) context. */
   studentNames?: Map<string, string>;
+  /** Recomputes what the parent owes if the enrollment ends on `stopDate`. */
+  computeSettlement?: (enrollmentId: string, stopDate: string) => SettlementResult | null;
   invalidate: () => void;
 }
 
 interface CreditRefundChoice {
-  paymentId: string;
+  items: { paymentId: string; amount: number }[];
   amount: number;
   label: string;
 }
 
-const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, invalidate }: Props) => {
+
+const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, computeSettlement, invalidate }: Props) => {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [stopMode, setStopMode] = useState(false);
@@ -100,6 +110,52 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
     }));
   }, [rows]);
 
+  // ── Settlement: recompute what the parent owes if studies stop on `stopDate` ──
+  const settlement = useMemo(() => {
+    if (!stopMode || !stopEnrollmentId || !stopDate || !computeSettlement) return null;
+    const base = computeSettlement(stopEnrollmentId, stopDate);
+    if (!base) return null;
+
+    const enr = enrollments.find((e: any) => e.id === stopEnrollmentId);
+    const ownerId = enr?.student_id ?? base.studentId;
+
+    // Credit deals that belong to this child (family context) or all of them.
+    const ownDeals = creditDeals.filter((d) => {
+      const p = payments.find((x: any) => x.id === d.paymentId);
+      return !p?.student_id || p.student_id === ownerId;
+    });
+    const futureCredit = ownDeals.reduce((s, d) => s + d.future, 0);
+    const paidCredit = ownDeals.reduce((s, d) => s + d.paid, 0);
+
+    // Allocate the credit: first against installments not yet charged, then
+    // the rest against money already collected.
+    const fromFuture = Math.min(base.credit, futureCredit);
+    const fromPaid = Math.max(0, Math.round((base.credit - fromFuture) * 100) / 100);
+
+    // Per-deal allocation for the actual refund call.
+    let left = base.credit;
+    const items: { paymentId: string; amount: number }[] = [];
+    for (const d of [...ownDeals].sort((a, b) => b.future - a.future)) {
+      if (left < 1) break;
+      const amt = Math.min(left, d.remaining);
+      if (amt < 1) continue;
+      items.push({ paymentId: d.paymentId, amount: Math.round(amt * 100) / 100 });
+      left = Math.round((left - amt) * 100) / 100;
+    }
+
+    return {
+      ...base,
+      ownerName: ownerId ? studentNames?.get(ownerId) : undefined,
+      futureCredit,
+      paidCredit,
+      fromFuture: Math.round(fromFuture * 100) / 100,
+      fromPaid,
+      items,
+      uncovered: Math.round(left * 100) / 100,
+    };
+  }, [stopMode, stopEnrollmentId, stopDate, computeSettlement, enrollments, creditDeals, payments, studentNames]);
+
+
   const applySuggestion = () => {
     const suggested = suggestRowsForStopDate(rows, stopDate);
     const next: Record<string, boolean> = {};
@@ -142,8 +198,11 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
     mutationFn: async () => {
       const byPayment = new Map<string, { amount: number; method: string | null }>();
       if (creditRefundChoice) {
-        byPayment.set(creditRefundChoice.paymentId, { amount: creditRefundChoice.amount, method: "credit_card" });
+        for (const it of creditRefundChoice.items) {
+          byPayment.set(it.paymentId, { amount: it.amount, method: "credit_card" });
+        }
       } else {
+
         for (const r of toRefund) {
           const cur = byPayment.get(r.paymentId) ?? { amount: 0, method: r.method };
           cur.amount += r.remaining;
@@ -234,7 +293,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                         className="h-10 rounded-xl flex-1"
                         disabled={busy || deal.future < 1}
                         onClick={() => {
-                          setCreditRefundChoice({ paymentId: deal.paymentId, amount: deal.future, label: "זיכוי היתרה העתידית" });
+                          setCreditRefundChoice({ items: [{ paymentId: deal.paymentId, amount: deal.future }], amount: deal.future, label: "זיכוי היתרה העתידית" });
                           setConfirm("refund");
                         }}
                       >
@@ -245,7 +304,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                         className="h-10 rounded-xl flex-1"
                         disabled={busy || deal.remaining < 1}
                         onClick={() => {
-                          setCreditRefundChoice({ paymentId: deal.paymentId, amount: deal.remaining, label: "זיכוי מלא של יתרת העסקה" });
+                          setCreditRefundChoice({ items: [{ paymentId: deal.paymentId, amount: deal.remaining }], amount: deal.remaining, label: "זיכוי מלא של יתרת העסקה" });
                           setConfirm("refund");
                         }}
                       >
@@ -303,6 +362,58 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                     סמן אוטומטית את הפירעונות שאחרי התאריך
                   </Button>
                 </div>
+
+                {settlement && (
+                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-sm font-semibold">
+                      חישוב מחדש{settlement.ownerName ? ` · ${settlement.ownerName}` : ""}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground">חיוב לשנה מלאה</p>
+                        <p className="font-bold" dir="ltr">{fmt(settlement.currentDue)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">חיוב עד {fmtDate(stopDate)}</p>
+                        <p className="font-bold" dir="ltr">{fmt(settlement.newDue)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">זיכוי להורה</p>
+                        <p className="font-bold text-destructive" dir="ltr">{fmt(settlement.credit)}</p>
+                      </div>
+                    </div>
+                    {settlement.credit >= 1 ? (
+                      <>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          מתוך הזיכוי: {fmt(settlement.fromFuture)} מתשלומי אשראי שטרם נגבו
+                          {settlement.fromPaid > 0 ? ` · ${fmt(settlement.fromPaid)} החזר על מה שכבר נגבה` : ""}
+                          {settlement.uncovered >= 1
+                            ? ` · ${fmt(settlement.uncovered)} אינם מכוסים בעסקאות אשראי (צ׳קים/מזומן — טפל בהם ברשימה למטה)`
+                            : ""}
+                        </p>
+                        <Button
+                          className="h-11 rounded-xl w-full"
+                          disabled={busy || settlement.items.length === 0}
+                          onClick={() => {
+                            const amount = settlement.items.reduce((s, i) => s + i.amount, 0);
+                            setCreditRefundChoice({
+                              items: settlement.items,
+                              amount: Math.round(amount * 100) / 100,
+                              label: `זיכוי הפרש הפסקת לימודים (${fmtDate(stopDate)})`,
+                            });
+                            setConfirm("refund");
+                          }}
+                        >
+                          <Undo2 className="h-4 w-4 ml-1" />
+                          החזר להורה באשראי {fmt(settlement.items.reduce((s, i) => s + i.amount, 0))}
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">אין הפרש לזיכוי בתאריך זה.</p>
+                    )}
+                  </div>
+                )}
+
               </div>
             )}
           </div>
