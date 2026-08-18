@@ -35,8 +35,10 @@ import {
   CheckCircle2,
   Ban,
   Loader2,
+  CalendarClock,
 } from "lucide-react";
 
+import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
@@ -96,6 +98,7 @@ const AdminFamilyCard = () => {
   const [selectedCheques, setSelectedCheques] = useState<Record<string, boolean>>({});
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
   const [invoiceNote, setInvoiceNote] = useState("");
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
 
 
@@ -1340,6 +1343,16 @@ const AdminFamilyCard = () => {
 
         </div>
       )}
+
+      <StopEnrollmentDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        studentId={family?.children_ids?.[0] ?? ""}
+        payments={payments}
+        enrollments={enrollments}
+        studentNames={childNameById}
+        invalidate={invalidateFamily}
+      />
     </AdminLayout>
   );
 };
