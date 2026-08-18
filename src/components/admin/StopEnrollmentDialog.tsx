@@ -50,6 +50,12 @@ interface Props {
   invalidate: () => void;
 }
 
+interface CreditRefundChoice {
+  paymentId: string;
+  amount: number;
+  label: string;
+}
+
 const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, invalidate }: Props) => {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
@@ -58,6 +64,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
   const [stopDate, setStopDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [closeEnrollment, setCloseEnrollment] = useState(true);
   const [confirm, setConfirm] = useState<null | "cancel" | "refund">(null);
+  const [creditRefundChoice, setCreditRefundChoice] = useState<CreditRefundChoice | null>(null);
 
   const rows = useMemo(() => buildPaymentSchedule(payments), [payments]);
   const totals = useMemo(() => scheduleTotals(rows), [rows]);
@@ -67,14 +74,31 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
       setSelected({});
       setStopMode(false);
       setConfirm(null);
+      setCreditRefundChoice(null);
     }
   }, [open]);
 
   const selectedRows = rows.filter((r) => selected[r.key]);
   const toCancel = selectedRows.filter((r) => r.cancellable);
-  const toRefund = selectedRows.filter((r) => !r.cancellable && r.refundable);
+  const toRefund = selectedRows.filter((r) => !r.cancellable && r.refundable && r.kind !== "credit_installment");
   const cancelSum = toCancel.reduce((s, r) => s + r.remaining, 0);
-  const refundSum = toRefund.reduce((s, r) => s + r.remaining, 0);
+  const refundSum = creditRefundChoice?.amount ?? toRefund.reduce((s, r) => s + r.remaining, 0);
+
+  const creditDeals = useMemo(() => {
+    const grouped = new Map<string, ScheduleRow[]>();
+    for (const row of rows) {
+      if (row.kind !== "credit_installment") continue;
+      grouped.set(row.paymentId, [...(grouped.get(row.paymentId) ?? []), row]);
+    }
+    return [...grouped.entries()].map(([paymentId, dealRows]) => ({
+      paymentId,
+      rows: dealRows,
+      paid: dealRows.filter((row) => row.status === "cleared").reduce((sum, row) => sum + row.remaining, 0),
+      future: dealRows.filter((row) => row.status === "future").reduce((sum, row) => sum + row.remaining, 0),
+      remaining: dealRows.reduce((sum, row) => sum + row.remaining, 0),
+      refunded: dealRows.filter((row) => row.status === "refunded").reduce((sum, row) => sum + row.amount, 0),
+    }));
+  }, [rows]);
 
   const applySuggestion = () => {
     const suggested = suggestRowsForStopDate(rows, stopDate);
@@ -117,10 +141,14 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
   const refundMutation = useMutation({
     mutationFn: async () => {
       const byPayment = new Map<string, { amount: number; method: string | null }>();
-      for (const r of toRefund) {
-        const cur = byPayment.get(r.paymentId) ?? { amount: 0, method: r.method };
-        cur.amount += r.remaining;
-        byPayment.set(r.paymentId, cur);
+      if (creditRefundChoice) {
+        byPayment.set(creditRefundChoice.paymentId, { amount: creditRefundChoice.amount, method: "credit_card" });
+      } else {
+        for (const r of toRefund) {
+          const cur = byPayment.get(r.paymentId) ?? { amount: 0, method: r.method };
+          cur.amount += r.remaining;
+          byPayment.set(r.paymentId, cur);
+        }
       }
       const results: any[] = [];
       for (const [paymentId, { amount, method }] of byPayment) {
@@ -140,6 +168,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
     onSuccess: (results: any[]) => {
       invalidate();
       setSelected({});
+      setCreditRefundChoice(null);
       toast.success(`בוצעו ${results.length} זיכויים בסך ${fmt(refundSum)}`);
       for (const r of results) if (r?.url) window.open(r.url, "_blank");
     },
@@ -175,6 +204,62 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
               </div>
             ))}
           </div>
+
+          {creditDeals.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">עסקאות אשראי בתשלומים</Label>
+              {creditDeals.map((deal) => {
+                const firstRow = deal.rows[0];
+                const payment = payments.find((item: any) => item.id === deal.paymentId);
+                const ownerId = payment?.student_id;
+                const ownerName = ownerId ? studentNames?.get(ownerId) : undefined;
+                return (
+                  <div key={deal.paymentId} className="rounded-xl border border-border p-3 space-y-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-foreground">
+                          {ownerName ? `${ownerName} · ` : ""}אשראי ב־{firstRow.installmentCount} תשלומים
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {firstRow.docNumber ? `קבלה ${firstRow.docNumber} · ` : ""}
+                          נגבה עד כה {fmt(deal.paid)} · יתרה עתידית {fmt(deal.future)}
+                          {deal.refunded > 0 ? ` · זוכה ${fmt(deal.refunded)}` : ""}
+                        </p>
+                      </div>
+                      <span className="font-bold whitespace-nowrap" dir="ltr">{fmt(deal.remaining)}</span>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <Button
+                        variant="outline"
+                        className="h-10 rounded-xl flex-1"
+                        disabled={busy || deal.future < 1}
+                        onClick={() => {
+                          setCreditRefundChoice({ paymentId: deal.paymentId, amount: deal.future, label: "זיכוי היתרה העתידית" });
+                          setConfirm("refund");
+                        }}
+                      >
+                        <Ban className="h-4 w-4 ml-1" /> השאר את שנגבה וזכה יתרה {fmt(deal.future)}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        className="h-10 rounded-xl flex-1"
+                        disabled={busy || deal.remaining < 1}
+                        onClick={() => {
+                          setCreditRefundChoice({ paymentId: deal.paymentId, amount: deal.remaining, label: "זיכוי מלא של יתרת העסקה" });
+                          setConfirm("refund");
+                        }}
+                      >
+                        <Undo2 className="h-4 w-4 ml-1" /> זכה את כל העסקה {fmt(deal.remaining)}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      בעסקת תשלומים לא עוצרים חיובים בודדים; הזיכוי מקזז את היתרה מול הכרטיס המקורי.
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Stop-studies wizard */}
           <div className="rounded-xl border border-border p-3 space-y-3">
@@ -228,7 +313,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
           ) : (
             <div className="space-y-1.5">
               {rows.map((r: ScheduleRow) => {
-                const selectable = r.cancellable || r.refundable;
+                const selectable = r.kind !== "credit_installment" && (r.cancellable || r.refundable);
                 const ownerId =
                   enrollments.find((e: any) => e.id === r.enrollmentId)?.student_id ??
                   payments.find((p: any) => p.id === r.paymentId)?.student_id;
@@ -263,7 +348,9 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                         {METHOD_LABELS[r.method ?? ""] ?? r.method ?? ""}
                         {r.reference && ` · ${r.kind === "cheque" ? "צ׳ק מס׳" : "אסמכתא"} ${r.reference}`}
                         {r.docNumber && ` · קבלה ${r.docNumber}`}
-                        {r.cancellable ? " · ניתן לביטול" : r.refundable ? " · ניתן לזיכוי" : ""}
+                        {r.kind === "credit_installment"
+                          ? " · הפעולה מתבצעת ברמת עסקת האשראי"
+                          : r.cancellable ? " · ניתן לביטול" : r.refundable ? " · ניתן לזיכוי" : ""}
                       </p>
                     </div>
                     <span className="font-semibold whitespace-nowrap" dir="ltr">{fmt(r.amount)}</span>
@@ -308,7 +395,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
               {confirm === "cancel" ? (
                 <>⚠️ יבוטלו {toCancel.length} צ׳קים בסך {fmt(cancelSum)} ותופק קבלת זיכוי מרוכזת ב-iCount. הפעולה סופית.</>
               ) : (
-                <>⚠️ יבוצע זיכוי בסך {fmt(refundSum)} (החזר לכרטיס האשראי המקורי בעסקאות אשראי) ותופק קבלה במינוס. הפעולה סופית.</>
+                <>⚠️ {creditRefundChoice ? `${creditRefundChoice.label}: ` : "יבוצע זיכוי בסך "}{fmt(refundSum)}. הכסף יוחזר לכרטיס המקורי ותופק קבלה במינוס. הפעולה סופית.</>
               )}
               {stopMode && closeEnrollment && stopEnrollmentId && (
                 <> בנוסף השיוך ייסגר בתאריך {fmtDate(stopDate)}.</>
@@ -326,7 +413,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
             >
               כן, בצע
             </AlertDialogAction>
-            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setCreditRefundChoice(null)}>ביטול</AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
