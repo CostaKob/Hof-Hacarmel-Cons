@@ -608,10 +608,10 @@ const AdminEnrollmentStats = () => {
               </div>
             </div>
 
-            {/* Instruments pie + list */}
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <h2 className="font-semibold mb-3">התפלגות כלי נגינה (שיוכים פעילים)</h2>
+            {/* Instruments distribution */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <h2 className="font-semibold mb-3">התפלגות כלי נגינה (שיוכים פעילים)</h2>
+              <div className="grid gap-4 lg:grid-cols-2">
                 <div className="h-80 md:h-96" dir="ltr">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -643,10 +643,7 @@ const AdminEnrollmentStats = () => {
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
 
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <h2 className="font-semibold mb-3">כמה תלמידים בכל כלי</h2>
                 <div className="space-y-2">
                   {stats.instrumentData.map((row, i) => (
                     <div key={row.name} className="space-y-1">
