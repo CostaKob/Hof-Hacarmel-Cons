@@ -376,6 +376,7 @@ const AdminEnrollmentStats = () => {
   const isLoading = eLoading || rLoading || tLoading;
   const maxInstrument = stats.instrumentData[0]?.value ?? 1;
   const maxTeacherStudents = stats.teacherData[0]?.students ?? 1;
+  const [showAllTeachers, setShowAllTeachers] = useState(false);
 
   return (
     <AdminLayout title="דוח תלמידים ושיבוצים" backPath="/admin">
