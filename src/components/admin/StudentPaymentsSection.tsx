@@ -7,13 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp, CalendarClock } from "lucide-react";
+import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
-import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "מזומן",
@@ -66,7 +65,6 @@ const StudentPaymentsSection = ({
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
