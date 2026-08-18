@@ -1,18 +1,8 @@
 import { useState, type ReactNode } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
-import { toast } from "sonner";
+import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
-import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
-import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
-import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "מזומן",
@@ -31,114 +21,31 @@ interface StudentPaymentsSectionProps {
   totalDue?: number;
   /** Optional calculated balance. Positive = still owes, zero/negative = fully paid. */
   balanceDue?: number;
-  /** Optional extra buttons to render in the header (e.g. "חשב/צור תשלום") */
+  /** Optional extra buttons to render in the header (e.g. year filter) */
   extraHeaderActions?: ReactNode;
-  /** Invalidation keys to refresh after mutations (in addition to defaults). */
-  extraInvalidateKeys?: (string | undefined)[][];
   /** Show academic year next to date (used in student card). */
   showYear?: boolean;
-  /** Read-only mode: only show existing payments/credits + download receipt. No add/edit/refund/create-invoice. */
-  readOnly?: boolean;
+  /**
+   * Parent national id of the student's family — used to link to the family card,
+   * where ALL money actions (payment / receipt / refund / cheque cancellation) live.
+   */
+  familyParentNationalId?: string | null;
 }
 
+/**
+ * READ-ONLY view of a student's payments & credits.
+ * Every money action (charge, receipt, refund, cheque cancellation, bank-transfer
+ * refund) is performed exclusively from the family card (`/admin/families/:id`).
+ */
 const StudentPaymentsSection = ({
-  studentId,
   payments,
-  enrollments,
   totalDue,
   balanceDue,
   extraHeaderActions,
-  extraInvalidateKeys = [],
   showYear = false,
-  readOnly = false,
+  familyParentNationalId,
 }: StudentPaymentsSectionProps) => {
-  const queryClient = useQueryClient();
-
-  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
-  const [editingPayment, setEditingPayment] = useState<any>(null);
-  const [paymentDialogType, setPaymentDialogType] = useState<"payment" | "credit">("payment");
-  const [refundTarget, setRefundTarget] = useState<any>(null);
-  const [refundAmount, setRefundAmount] = useState<string>("");
-  const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string } | null>(null);
-  const [invoiceNote, setInvoiceNote] = useState("");
-  const [pendingRefund, setPendingRefund] = useState<{ paymentId: string; amount: number } | null>(null);
-  const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
-
-  const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: ["admin-student-payments", studentId] });
-    queryClient.invalidateQueries({ queryKey: ["calc-payments", studentId] });
-    queryClient.invalidateQueries({ queryKey: ["admin-year-payments"] });
-    for (const key of extraInvalidateKeys) queryClient.invalidateQueries({ queryKey: key });
-  };
-
-  const createInvoiceMutation = useMutation({
-    mutationFn: async (params: { paymentId?: string; groupId?: string; note?: string }) => {
-      const { data, error } = await supabase.functions.invoke("icount-create-invoice", { body: params });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
-    },
-    onSuccess: (data: any) => {
-      invalidateAll();
-      if (data?.url) {
-        toast.success(`קבלה ${data.doc_number ?? ""} נוצרה`);
-        window.open(data.url, "_blank");
-      } else {
-        toast.success("קבלה נוצרה");
-      }
-    },
-    onError: (e: any) => toast.error(`שגיאה ביצירת קבלה: ${e?.message ?? ""}`),
-  });
-
-  const refundMutation = useMutation({
-    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke("icount-create-refund", { body: { paymentId, amount } });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
-    },
-    onSuccess: (data: any, vars) => {
-      invalidateAll();
-      setRefundTarget(null);
-      setRefundAmount("");
-      setRefundSuccess({
-        amount: Number(data?.refund_amount ?? vars.amount ?? 0),
-        docNumber: data?.doc_number,
-        sentToEmail: data?.sent_to_email,
-        url: data?.url,
-        ccRefund: false,
-      });
-    },
-    onError: (e: any) => toast.error(`שגיאה בביצוע זיכוי: ${e?.message ?? ""}`),
-  });
-
-  const ccRefundMutation = useMutation({
-    mutationFn: async ({ paymentId, amount }: { paymentId: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke("icount-student-refund-api", {
-        body: { paymentId, refundAmount: amount },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
-    },
-    onSuccess: (data: any, vars) => {
-      invalidateAll();
-      setRefundTarget(null);
-      setRefundAmount("");
-      setRefundSuccess({
-        amount: Number(data?.refund_amount ?? vars.amount ?? 0),
-        docNumber: data?.doc_number,
-        sentToEmail: data?.sent_to_email,
-        url: data?.url,
-        ccRefund: !!data?.cc_refund,
-        ccLast4: data?.cc_last4 ?? null,
-      });
-    },
-    onError: (e: any) => toast.error(`שגיאה בהחזר אשראי: ${e?.message ?? ""}`),
-  });
-
 
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
@@ -183,17 +90,28 @@ const StudentPaymentsSection = ({
             </span>
           )}
           {extraHeaderActions}
-          {!readOnly && (
-            <Button
-              className="h-10 rounded-xl text-sm"
-              onClick={() => { setEditingPayment(null); setPaymentDialogType("payment"); setPaymentDialogOpen(true); }}
-              disabled={enrollments.length === 0}
-            >
-              <Plus className="h-4 w-4" /> תשלום / זיכוי
-            </Button>
-          )}
         </div>
       </div>
+
+      {familyParentNationalId ? (
+        <div className="flex items-center justify-between gap-3 flex-wrap rounded-xl border border-border bg-muted/40 px-3 py-2">
+          <p className="text-xs text-muted-foreground">
+            ניהול תשלומים וזיכויים מתבצע בכרטיס המשפחה
+          </p>
+          <Button asChild variant="outline" size="sm" className="h-9 rounded-xl text-xs">
+            <Link to={`/admin/families/${familyParentNationalId}`}>
+              <Wallet className="h-3.5 w-3.5" /> מעבר לניהול כספים במשפחה
+            </Link>
+          </Button>
+        </div>
+      ) : (
+        <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-200">
+          <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            ניהול תשלומים וזיכויים מתבצע בכרטיס המשפחה. לתלמיד זה אין ת״ז הורה — יש להשלים אותה בכרטיס התלמיד כדי לפתוח את כרטיס המשפחה.
+          </span>
+        </div>
+      )}
 
       {payments.length === 0 ? (
         <p className="text-sm text-muted-foreground">לא בוצעו תשלומים עדיין</p>
@@ -225,13 +143,9 @@ const StudentPaymentsSection = ({
             const isExpanded = !!expanded[key];
             const isCredit = p.transaction_type !== "payment";
             const hasInvoice = !!p.invoice_url;
-            const hasDoc = !!p.icount_doc_id;
             const refundedSoFar = payments
               .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
               .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-            const remaining = Math.max(0, groupTotal - refundedSoFar);
-            const canRefund = !isCredit && hasDoc && remaining > 0 && !isGroup;
-            const isCombined = Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
 
             // Status pill: derived from payment_status / refunds / transaction type
             let statusLabel = "";
@@ -262,16 +176,7 @@ const StudentPaymentsSection = ({
 
             return (
               <div key={key} className="rounded-xl border border-border transition-colors">
-                <div
-                  onClick={
-                    readOnly
-                      ? undefined
-                      : isGroup
-                        ? () => setExpanded((s) => ({ ...s, [key]: !s[key] }))
-                        : () => { setEditingPayment(p); setPaymentDialogOpen(true); }
-                  }
-                  className={`flex items-center justify-between p-3 gap-2 ${readOnly ? "" : "cursor-pointer hover:bg-muted/50 rounded-xl"}`}
-                >
+                <div className="flex items-center justify-between p-3 gap-2">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-foreground text-sm">
@@ -331,55 +236,11 @@ const StudentPaymentsSection = ({
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
                   )}
-                  {!isCredit && hasInvoice && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלה"
+                  {hasInvoice && (
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg"
+                      title={isCredit ? "הורד קבלת זיכוי" : "הורד קבלה"}
                       onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {!readOnly && !isCredit && !hasDoc && (
-                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                      title={isGroup || isCombined ? "הפק קבלה מאוחדת אחת לכל התשלומים" : "הפק קבלה ב-iCount"}
-                      disabled={createInvoiceMutation.isPending}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingInvoiceParams(p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id });
-                      }}>
-                      <FileDown className="h-3.5 w-3.5" />
-                      {createInvoiceMutation.isPending ? "..." : (isGroup || isCombined ? "הפק קבלה מאוחדת" : "הפק קבלה")}
-                    </Button>
-                  )}
-                  {isCredit && hasInvoice && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="הורד קבלת זיכוי"
-                      onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
-                      <FileDown className="h-4 w-4" />
-                    </Button>
-                  )}
-                  {!readOnly && isCredit && !hasDoc && (
-                    <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
-                      title="הפק קבלת זיכוי (קבלה במינוס) ב-iCount"
-                      disabled={createInvoiceMutation.isPending}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingInvoiceParams({ paymentId: p.id });
-                      }}>
-                      <FileDown className="h-3.5 w-3.5" />
-                      {createInvoiceMutation.isPending ? "..." : "הפק קבלת זיכוי"}
-                    </Button>
-                  )}
-                  {!readOnly && canRefund && (
-                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      title={p.payment_method === "credit_card"
-                        ? `החזר אשראי דרך iCount (נותר ₪${remaining.toLocaleString()})`
-                        : `בצע זיכוי (קבלה במינוס) ב-iCount (נותר ₪${remaining.toLocaleString()})`}
-                      disabled={refundMutation.isPending || ccRefundMutation.isPending}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const isCc = p.payment_method === "credit_card";
-                        setRefundTarget({ ...p, _remaining: remaining, _cc: isCc });
-                        setRefundAmount(String(remaining));
-                      }}>
-                      <Undo2 className="h-4 w-4" />
                     </Button>
                   )}
                   <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
@@ -394,14 +255,12 @@ const StudentPaymentsSection = ({
                       const rRefunded = payments
                         .filter((x: any) => x.refund_of_payment_id === r.id)
                         .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-                      const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
                       const rIsCheck = r.payment_method === "check" || r.payment_method === "צ׳ק" || r.payment_method === "צ'ק";
                       const rRefLabel = rIsCheck ? "צ׳ק מס׳" : "אסמכתא";
                       return (
                         <div
                           key={r.id}
-                          onClick={readOnly ? undefined : () => { setEditingPayment(r); setPaymentDialogOpen(true); }}
-                          className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs ${readOnly ? "" : "cursor-pointer hover:bg-muted/50"}`}
+                          className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs"
                         >
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -412,23 +271,9 @@ const StudentPaymentsSection = ({
                             </div>
                             {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {!readOnly && !isCredit && hasDoc && rRemaining > 0 && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
-                                title={`בצע זיכוי לתשלום זה (נותר ₪${rRemaining.toLocaleString()})`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  const isCc = r.payment_method === "credit_card";
-                                  setRefundTarget({ ...r, _remaining: rRemaining, _cc: isCc });
-                                  setRefundAmount(String(rRemaining));
-                                }}>
-                                <Undo2 className="h-3.5 w-3.5" />
-                              </Button>
-                            )}
-                            <span className="font-semibold text-foreground whitespace-nowrap" dir="ltr">
-                              ₪{Math.abs(Number(r.amount || 0)).toLocaleString()}
-                            </span>
-                          </div>
+                          <span className="font-semibold text-foreground whitespace-nowrap shrink-0" dir="ltr">
+                            ₪{Math.abs(Number(r.amount || 0)).toLocaleString()}
+                          </span>
                         </div>
                       );
                     })}
@@ -439,196 +284,6 @@ const StudentPaymentsSection = ({
           })}
         </div>
       )}
-
-
-
-      <AddPaymentDialog
-        open={paymentDialogOpen}
-        onOpenChange={setPaymentDialogOpen}
-        studentId={studentId}
-        enrollments={enrollments}
-        editPayment={editingPayment}
-        defaultType={paymentDialogType}
-      />
-
-      <Dialog open={!!refundTarget} onOpenChange={(o) => {
-        if (!o && !refundMutation.isPending && !ccRefundMutation.isPending) {
-          setRefundTarget(null);
-          setRefundAmount("");
-        }
-      }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>זיכוי לקבלה {refundTarget?.icount_doc_number ?? ""}</DialogTitle>
-            <DialogDescription>
-              סכום מקורי: ₪{Number(refundTarget?.amount || 0).toLocaleString()}
-              {refundTarget && refundTarget._remaining !== Number(refundTarget.amount) && (
-                <> · נותר לזיכוי: ₪{Number(refundTarget?._remaining || 0).toLocaleString()}</>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-
-          {(refundMutation.isPending || ccRefundMutation.isPending) ? (
-            <div className="flex flex-col items-center justify-center gap-3 py-6">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-medium text-foreground">
-                {refundTarget?._cc ? "מבצע החזר לכרטיס אשראי..." : "מבצע זיכוי..."}
-              </p>
-              <p className="text-xs text-muted-foreground text-center">
-                אנא המתן, הפעולה עשויה לקחת מספר שניות
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              <Label htmlFor="refund-amount">סכום הזיכוי (₪)</Label>
-              <Input
-                id="refund-amount"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                max={refundTarget?._remaining ?? undefined}
-                step="0.01"
-                className="h-12 rounded-xl"
-                value={refundAmount}
-                onChange={(e) => setRefundAmount(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                {refundTarget?._cc
-                  ? "⚡ יבוצע החזר אמיתי לכרטיס המקורי דרך iCount בסכום שתבחר, ותופק קבלה במינוס מקושרת לקבלה המקורית. ניתן להחזיר חלקי או מלא."
-                  : "תופק קבלה במינוס ב-iCount, מקושרת לקבלה המקורית, ותירשם כשורת זיכוי בתשלומים."}
-              </p>
-            </div>
-          )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <Button
-              variant="outline"
-              className="h-11 rounded-xl"
-              disabled={refundMutation.isPending || ccRefundMutation.isPending}
-              onClick={() => { setRefundTarget(null); setRefundAmount(""); }}
-            >
-              ביטול
-            </Button>
-            <Button
-              variant="secondary"
-              className="h-11 rounded-xl"
-              disabled={refundMutation.isPending || ccRefundMutation.isPending}
-              onClick={() => {
-                const amt = Number(refundAmount);
-                const max = Number(refundTarget?._remaining || 0);
-                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
-                if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר לזיכוי (₪${max.toLocaleString()})`); return; }
-                setBankRefund({
-                  studentId,
-                  paymentId: refundTarget.id,
-                  docNumber: refundTarget.icount_doc_number,
-                  paidAmount: Number(refundTarget.amount || 0),
-                  refundAmount: amt,
-                });
-                setRefundTarget(null);
-                setRefundAmount("");
-              }}
-            >
-              החזר בהעברה בנקאית
-            </Button>
-            <Button
-              className="h-11 rounded-xl"
-              disabled={refundMutation.isPending || ccRefundMutation.isPending}
-              onClick={() => {
-                const amt = Number(refundAmount);
-                const max = Number(refundTarget?._remaining || 0);
-                if (!amt || amt <= 0) { toast.error("נא להזין סכום חיובי"); return; }
-                if (amt > max + 0.001) { toast.error(`הסכום חורג מהנותר לזיכוי (₪${max.toLocaleString()})`); return; }
-                if (refundTarget?._cc && amt < 1) { toast.error("iCount לא מאפשר החזר אשראי מתחת ל-₪1"); return; }
-                setPendingRefund({ paymentId: refundTarget.id, amount: amt });
-              }}
-            >
-              {(refundMutation.isPending || ccRefundMutation.isPending)
-                ? <><Loader2 className="h-4 w-4 animate-spin ml-2" />מבצע...</>
-                : refundTarget?._cc ? "בצע החזר אשראי" : "בצע זיכוי"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <AlertDialog open={!!pendingInvoiceParams} onOpenChange={(o) => { if (!o) { setPendingInvoiceParams(null); setInvoiceNote(""); } }}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>אישור הפקת קבלה</AlertDialogTitle>
-            <AlertDialogDescription>
-              ⚠️ הפקת קבלה ב-iCount היא פעולה <strong>סופית ובלתי הפיכה</strong>.
-              הקבלה תישלח באופן מיידי. האם להמשיך?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="space-y-1.5">
-            <Label className="text-sm">הערה לקבלה (אופציונלי)</Label>
-            <Textarea
-              value={invoiceNote}
-              onChange={(e) => setInvoiceNote(e.target.value)}
-              placeholder="הערה שתופיע על גבי הקבלה"
-              rows={3}
-              maxLength={500}
-              className="rounded-xl"
-            />
-          </div>
-          <AlertDialogFooter className="flex-row-reverse gap-2">
-            <AlertDialogAction
-              onClick={() => {
-                if (pendingInvoiceParams) createInvoiceMutation.mutate({ ...pendingInvoiceParams, note: invoiceNote.trim() || undefined });
-                setPendingInvoiceParams(null);
-                setInvoiceNote("");
-              }}
-            >
-              כן, הפק קבלה
-            </AlertDialogAction>
-            <AlertDialogCancel>ביטול</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-
-      <AlertDialog open={!!pendingRefund} onOpenChange={(o) => { if (!o) setPendingRefund(null); }}>
-        <AlertDialogContent dir="rtl">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{refundTarget?._cc ? "אישור החזר אשראי" : "אישור הפקת זיכוי"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {refundTarget?._cc ? (
-                <>⚠️ ביצוע החזר אשראי דרך iCount על סך ₪{pendingRefund?.amount.toLocaleString()} הוא פעולה <strong>סופית ובלתי הפיכה</strong>. הכסף יוחזר לכרטיס המקורי. האם להמשיך?</>
-              ) : (
-                <>⚠️ הפקת קבלה במינוס (זיכוי) ב-iCount על סך ₪{pendingRefund?.amount.toLocaleString()} היא פעולה <strong>סופית ובלתי הפיכה</strong>. האם להמשיך?</>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex-row-reverse gap-2">
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (pendingRefund) {
-                  if (refundTarget?._cc) ccRefundMutation.mutate(pendingRefund);
-                  else refundMutation.mutate(pendingRefund);
-                }
-                setPendingRefund(null);
-              }}
-            >
-              {refundTarget?._cc ? "כן, בצע החזר אשראי" : "כן, בצע זיכוי"}
-            </AlertDialogAction>
-            <AlertDialogCancel>ביטול</AlertDialogCancel>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      <BankTransferRefundDialog
-        open={!!bankRefund}
-        onOpenChange={(o) => { if (!o) setBankRefund(null); }}
-        defaults={bankRefund}
-        invalidate={invalidateAll}
-        onDone={(info) => { setBankRefund(null); setRefundSuccess(info); }}
-      />
-
-
-
-
-      <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
-
     </div>
   );
 };
