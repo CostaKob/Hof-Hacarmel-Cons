@@ -463,11 +463,12 @@ const AdminStudents = () => {
 
   // Returns "full" | "partial" | "unpaid"
   // Connected to the same calculated balance used in the payment summary screen.
-  const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" => {
+  const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" | "credit" => {
     const sid = r?.students?.id;
     const stuPaid = sid ? (paidByStudent.get(sid) ?? 0) : 0;
     const balance = sid ? balanceByStudent.get(sid) : null;
     if (typeof balance === "number") {
+      if (Math.round(balance) < 0) return "credit";
       if (Math.round(balance) <= 0) return "full";
       return stuPaid > 0.5 ? "partial" : "unpaid";
     }
