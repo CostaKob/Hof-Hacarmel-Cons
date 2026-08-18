@@ -229,7 +229,9 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
             <div className="space-y-1.5">
               {rows.map((r: ScheduleRow) => {
                 const selectable = r.cancellable || r.refundable;
-                const ownerId = enrollments.find((e: any) => e.id === r.enrollmentId)?.student_id;
+                const ownerId =
+                  enrollments.find((e: any) => e.id === r.enrollmentId)?.student_id ??
+                  payments.find((p: any) => p.id === r.paymentId)?.student_id;
                 const ownerName = ownerId ? studentNames?.get(ownerId) : undefined;
                 const meta = STATUS_META[r.status];
                 return (
