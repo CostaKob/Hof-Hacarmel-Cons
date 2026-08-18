@@ -488,6 +488,27 @@ const AdminFamilyCard = () => {
     return out;
   }, [payments]);
 
+  // Refund letters / documents saved for this family's children (bank-transfer requests etc.)
+  const { data: refundDocs = [] } = useQuery({
+    queryKey: ["family-refund-documents", childIdsKey],
+    enabled: !!family?.children_ids?.length,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("refund_documents")
+        .select("id, title, doc_type, refund_amount, bank_reference, file_path, created_at, student_id")
+        .in("student_id", family!.children_ids)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const openRefundDoc = async (path: string | null) => {
+    if (!path) return toast.error("למסמך זה לא נשמר קובץ");
+    const { data, error } = await supabase.storage.from("refund-documents").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) return toast.error("שגיאה בפתיחת המסמך");
+    window.open(data.signedUrl, "_blank");
+  };
 
 
   return (
