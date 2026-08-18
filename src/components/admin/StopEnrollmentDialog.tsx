@@ -45,10 +45,12 @@ interface Props {
   studentId: string;
   payments: any[];
   enrollments: any[];
+  /** Optional map of studentId -> full name, used in family (multi-child) context. */
+  studentNames?: Map<string, string>;
   invalidate: () => void;
 }
 
-const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, invalidate }: Props) => {
+const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, invalidate }: Props) => {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [stopMode, setStopMode] = useState(false);
@@ -155,7 +157,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
               <CalendarClock className="h-5 w-5 text-primary" /> לוח תשלומים עתידיים
             </DialogTitle>
             <DialogDescription>
-              כל הפירעונות של התלמיד — צ׳קים, תשלומי אשראי ומזומן. סמן מה לבטל ומה לזכות.
+              כל הפירעונות — צ׳קים, תשלומי אשראי ומזומן. סמן מה לבטל ומה לזכות.
             </DialogDescription>
           </DialogHeader>
 
@@ -190,6 +192,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                       <SelectContent>
                         {enrollments.map((e: any) => (
                           <SelectItem key={e.id} value={e.id}>
+                            {studentNames?.get(e.student_id) ? `${studentNames.get(e.student_id)} · ` : ""}
                             {e.instruments?.name ?? "כלי"} · {e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : ""}
                           </SelectItem>
                         ))}
@@ -226,6 +229,8 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
             <div className="space-y-1.5">
               {rows.map((r: ScheduleRow) => {
                 const selectable = r.cancellable || r.refundable;
+                const ownerId = enrollments.find((e: any) => e.id === r.enrollmentId)?.student_id;
+                const ownerName = ownerId ? studentNames?.get(ownerId) : undefined;
                 const meta = STATUS_META[r.status];
                 return (
                   <label
@@ -252,6 +257,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
+                        {ownerName && <span className="font-medium text-foreground">{ownerName} · </span>}
                         {METHOD_LABELS[r.method ?? ""] ?? r.method ?? ""}
                         {r.reference && ` · ${r.kind === "cheque" ? "צ׳ק מס׳" : "אסמכתא"} ${r.reference}`}
                         {r.docNumber && ` · קבלה ${r.docNumber}`}
