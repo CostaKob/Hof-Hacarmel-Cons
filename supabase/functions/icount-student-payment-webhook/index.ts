@@ -48,6 +48,40 @@ function isUuid(v?: string): boolean {
   return !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 }
 
+const ICOUNT_BASE = "https://api.icount.co.il/api/v3.php";
+
+/** Reads the number of credit-card installments from the iCount document. */
+async function fetchInstallmentsFromDoc(docId?: string, docNumber?: string): Promise<number | null> {
+  const cid = Deno.env.get("ICOUNT_COMPANY_ID");
+  const user = Deno.env.get("ICOUNT_USERNAME");
+  const pass = Deno.env.get("ICOUNT_PASSWORD");
+  if (!cid || !user || !pass) return null;
+  if (!docId && !docNumber) return null;
+  try {
+    const payload: Record<string, unknown> = { cid, user, pass, doctype: "receipt" };
+    if (docId) payload.doc_id = docId;
+    if (docNumber) payload.docnum = Number(docNumber) || docNumber;
+    const res = await fetch(`${ICOUNT_BASE}/doc/info`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    const di = data?.doc_info ?? data ?? {};
+    const ccRaw = di.cc ?? data?.cc ?? [];
+    const ccList = Array.isArray(ccRaw) ? ccRaw : Object.values(ccRaw || {});
+    const row: any = ccList[0] ?? {};
+    const n = Number(
+      row.num_of_payments ?? row.payments_count ?? row.payments ?? row.numofpayments ??
+      di.num_of_payments ?? di.payments_count ?? 0,
+    );
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  } catch (e) {
+    console.warn("[icount-student-ipn] doc/info installments lookup failed", e);
+    return null;
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -151,6 +185,17 @@ Deno.serve(async (req: Request) => {
       notes: `שולם דרך iCount${params.full_name ? ` · הורה: ${params.full_name}` : ""}`,
     };
     if (amount > 0) updateFields.amount = Math.abs(amount);
+
+    // Number of credit-card installments chosen by the payer on the iCount page
+    const installmentsRaw = pick(params, [
+      "num_of_payments", "numofpayments", "payments_count", "payments",
+      "num_payments", "tashlumim", "cc_payments",
+    ]);
+    let installments = Number(String(installmentsRaw ?? "").replace(/[^0-9]/g, "")) || 0;
+    if (installments < 1) {
+      installments = (await fetchInstallmentsFromDoc(docId, docNumber)) ?? 0;
+    }
+    if (installments >= 1) updateFields.installments = installments;
 
     const { error: updErr } = await supabase
       .from("student_payments")

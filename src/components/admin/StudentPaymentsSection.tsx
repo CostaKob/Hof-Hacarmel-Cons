@@ -14,6 +14,15 @@ import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: "מזומן",
+  credit_card: "אשראי",
+  bank_transfer: "העברה בנקאית",
+  cheque: "צ׳ק",
+  check: "צ׳ק",
+  other: "אחר",
+};
+
 interface StudentPaymentsSectionProps {
   studentId: string;
   payments: any[];
@@ -284,8 +293,13 @@ const StudentPaymentsSection = ({
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {isCredit ? "זיכוי" : "תשלום"}
-                    {p.payment_method && ` · ${p.payment_method}`}
-                    {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
+                    {p.payment_method && ` · ${PAYMENT_METHOD_LABELS[p.payment_method as string] ?? p.payment_method}`}
+                    {!isGroup && p.payment_method === "credit_card" && (
+                      Number(p.installments) > 1
+                        ? ` · ${p.installments} תשלומים`
+                        : " · תשלום אחד"
+                    )}
+                    {!isGroup && p.payment_method !== "credit_card" && Number(p.installments) > 1 && ` · ${p.installments} תשלומים`}
                     {!isGroup && p.reference_number && ` · ${refLabel} ${p.reference_number}`}
                     {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
