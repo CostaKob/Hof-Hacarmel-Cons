@@ -303,21 +303,28 @@ const AdminInventoryInstrumentForm = () => {
       });
       if (error) throw error;
 
+      let nextRepairState: InstrumentRepairState | null = null;
       if (checkResult === "unusable") {
-        await supabase.from("inventory_instruments").update({ repair_state: "unusable" }).eq("id", id!);
+        nextRepairState = "unusable";
       } else if (checkResult === "needs_repair" || checkResult === "needs_completion") {
-        if ((item as any)?.repair_state !== "in_repair") {
-          await supabase.from("inventory_instruments").update({ repair_state: "needs_repair" }).eq("id", id!);
-        }
+        if ((item as any)?.repair_state !== "in_repair") nextRepairState = "needs_repair";
       } else if (checkResult === "ok") {
         if ((item as any)?.repair_state === "needs_repair" || (item as any)?.repair_state === "unusable") {
-          await supabase.from("inventory_instruments").update({ repair_state: "ok" }).eq("id", id!);
+          nextRepairState = "ok";
         }
-      } else if (checkResult === "missing") {
+      }
+
+      if (nextRepairState) {
+        await supabase.from("inventory_instruments").update({ repair_state: nextRepairState }).eq("id", id!);
+      }
+      if (checkResult === "missing") {
         await supabase.from("inventory_instruments").update({ condition: "missing" }).eq("id", id!);
       }
+
+      return nextRepairState;
     },
-    onSuccess: () => {
+    onSuccess: (nextRepairState) => {
+      if (nextRepairState) setValue("repair_state", nextRepairState, { shouldDirty: false });
       qc.invalidateQueries({ queryKey: ["instrument-checks", id] });
       qc.invalidateQueries({ queryKey: ["instrument-checks-year"] });
       qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
@@ -325,6 +332,7 @@ const AdminInventoryInstrumentForm = () => {
       setVerifyNotes("");
       toast.success("הבדיקה נוספה");
     },
+
     onError: (e: any) => toast.error(e.message || "שגיאה"),
   });
 
