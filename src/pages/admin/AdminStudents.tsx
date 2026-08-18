@@ -780,8 +780,8 @@ const AdminStudents = () => {
             <MultiSelectFilter
               className="w-full lg:w-36"
               allLabel="תשלומים"
-              options={["full", "partial", "unpaid"]}
-              renderLabel={(k) => ({ full: "שולם במלואו", partial: "שולם חלקית", unpaid: "לא שולם" })[k]}
+              options={["full", "partial", "unpaid", "credit"]}
+              renderLabel={(k) => ({ full: "שולם במלואו", partial: "שולם חלקית", unpaid: "לא שולם", credit: "קיים זיכוי" })[k]}
               value={paymentFilter}
               onChange={(v) => setMultiFilter("payment", v)}
             />
