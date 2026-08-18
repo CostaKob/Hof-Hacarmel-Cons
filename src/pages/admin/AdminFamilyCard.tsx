@@ -204,36 +204,8 @@ const AdminFamilyCard = () => {
     return out;
   }, [children, enrollments, drafts, settings, yearFull, discountTypes]);
 
-  // Recompute what the parent owes if a given enrollment ends on `stopDate`.
-  const computeSettlement = useMemo(
-    () => (enrollmentId: string, stopDate: string) => {
-      if (!settings || !yearFull || !discountTypes) return null;
-      const enr = enrollments.find((e: any) => e.id === enrollmentId);
-      if (!enr) return null;
-      const prices = (settings.lesson_prices ?? {}) as Record<string, number>;
-      const yStart = yearFull.start_date as string;
-      const yEnd = yearFull.end_date as string;
-      const draft = drafts.find((d) => d.student_id === enr.student_id) ?? null;
-      const es = enrollments.filter((e: any) => e.student_id === enr.student_id);
-      const before = computeChildTotals(enr.student_id, es as any, draft, discountTypes, prices, yStart, yEnd);
-      const after = computeChildTotals(
-        enr.student_id,
-        es.map((e: any) => (e.id === enrollmentId ? { ...e, end_date: stopDate } : e)) as any,
-        draft,
-        discountTypes,
-        prices,
-        yStart,
-        yEnd,
-      );
-      return {
-        studentId: enr.student_id,
-        currentDue: before.net,
-        newDue: after.net,
-        credit: Math.max(0, Math.round((before.net - after.net) * 100) / 100),
-      };
-    },
-    [enrollments, drafts, settings, yearFull, discountTypes],
-  );
+
+
 
 
   // Selection of enrollments/items now happens inside AddPaymentDialog.
