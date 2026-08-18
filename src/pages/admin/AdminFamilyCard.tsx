@@ -1383,6 +1383,8 @@ const AdminFamilyCard = () => {
         payments={payments}
         enrollments={enrollments}
         studentNames={nameById}
+        computeSettlement={computeSettlement}
+
         invalidate={invalidateFamily}
       />
     </AdminLayout>
