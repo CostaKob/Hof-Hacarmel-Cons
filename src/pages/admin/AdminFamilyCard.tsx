@@ -35,8 +35,10 @@ import {
   CheckCircle2,
   Ban,
   Loader2,
+  CalendarClock,
 } from "lucide-react";
 
+import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
 import { useFamiliesList, useFamilyDetails } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
@@ -96,6 +98,7 @@ const AdminFamilyCard = () => {
   const [selectedCheques, setSelectedCheques] = useState<Record<string, boolean>>({});
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
   const [invoiceNote, setInvoiceNote] = useState("");
+  const [scheduleOpen, setScheduleOpen] = useState(false);
 
 
 
@@ -809,9 +812,20 @@ const AdminFamilyCard = () => {
 
           {/* Payments history */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <h2 className="font-semibold text-foreground text-base flex items-center gap-2 mb-3">
-              <Receipt className="h-4 w-4" /> תשלומים משותפים ({payments.length})
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
+                <Receipt className="h-4 w-4" /> תשלומים משותפים ({payments.length})
+              </h2>
+              {payments.length > 0 && (
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl text-sm"
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <CalendarClock className="h-4 w-4" /> תשלומים עתידיים / הפסקת לימודים
+                </Button>
+              )}
+            </div>
             {payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">אין תשלומים בשנה זו.</p>
             ) : (
@@ -1329,6 +1343,16 @@ const AdminFamilyCard = () => {
 
         </div>
       )}
+
+      <StopEnrollmentDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        studentId={family?.children_ids?.[0] ?? ""}
+        payments={payments}
+        enrollments={enrollments}
+        studentNames={nameById}
+        invalidate={invalidateFamily}
+      />
     </AdminLayout>
   );
 };
