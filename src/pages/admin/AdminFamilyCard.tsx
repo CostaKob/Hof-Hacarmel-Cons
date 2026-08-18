@@ -809,9 +809,20 @@ const AdminFamilyCard = () => {
 
           {/* Payments history */}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-            <h2 className="font-semibold text-foreground text-base flex items-center gap-2 mb-3">
-              <Receipt className="h-4 w-4" /> תשלומים משותפים ({payments.length})
-            </h2>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
+                <Receipt className="h-4 w-4" /> תשלומים משותפים ({payments.length})
+              </h2>
+              {payments.length > 0 && (
+                <Button
+                  variant="outline"
+                  className="h-10 rounded-xl text-sm"
+                  onClick={() => setScheduleOpen(true)}
+                >
+                  <CalendarClock className="h-4 w-4" /> תשלומים עתידיים / הפסקת לימודים
+                </Button>
+              )}
+            </div>
             {payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">אין תשלומים בשנה זו.</p>
             ) : (
