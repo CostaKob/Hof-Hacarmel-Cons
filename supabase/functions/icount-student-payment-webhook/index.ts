@@ -186,6 +186,17 @@ Deno.serve(async (req: Request) => {
     };
     if (amount > 0) updateFields.amount = Math.abs(amount);
 
+    // Number of credit-card installments chosen by the payer on the iCount page
+    const installmentsRaw = pick(params, [
+      "num_of_payments", "numofpayments", "payments_count", "payments",
+      "num_payments", "tashlumim", "cc_payments",
+    ]);
+    let installments = Number(String(installmentsRaw ?? "").replace(/[^0-9]/g, "")) || 0;
+    if (installments < 1) {
+      installments = (await fetchInstallmentsFromDoc(docId, docNumber)) ?? 0;
+    }
+    if (installments >= 1) updateFields.installments = installments;
+
     const { error: updErr } = await supabase
       .from("student_payments")
       .update(updateFields)
