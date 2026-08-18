@@ -52,12 +52,12 @@ const AdminInventoryInstruments = () => {
   const yearName = years.find((y) => y.id === selectedYearId)?.name || "";
   useListStatePreservation(ROUTE_KEY);
   const [search, setSearch] = usePersistedState<string>(ROUTE_KEY, "search", "");
-  const [filterInstrument, setFilterInstrument] = usePersistedState<string>(ROUTE_KEY, "filterInstrument", "all");
-  const [filterCondition, setFilterCondition] = usePersistedState<string>(ROUTE_KEY, "filterCondition", "all");
-  const [filterRepair, setFilterRepair] = usePersistedState<string>(ROUTE_KEY, "filterRepair", "all");
-  const [filterLocation, setFilterLocation] = usePersistedState<string>(ROUTE_KEY, "filterLocation", "all");
-  const [filterSchool, setFilterSchool] = usePersistedState<string>(ROUTE_KEY, "filterSchool", "all");
-  const [filterVerified, setFilterVerified] = usePersistedState<string>(ROUTE_KEY, "filterVerified", "all");
+  const [filterInstrument, setFilterInstrument] = usePersistedState<string[]>(ROUTE_KEY, "filterInstrumentMulti", []);
+  const [filterCondition, setFilterCondition] = usePersistedState<string[]>(ROUTE_KEY, "filterConditionMulti", []);
+  const [filterRepair, setFilterRepair] = usePersistedState<string[]>(ROUTE_KEY, "filterRepairMulti", []);
+  const [filterLocation, setFilterLocation] = usePersistedState<string[]>(ROUTE_KEY, "filterLocationMulti", []);
+  const [filterSchool, setFilterSchool] = usePersistedState<string[]>(ROUTE_KEY, "filterSchoolMulti", []);
+  const [filterVerified, setFilterVerified] = usePersistedState<string[]>(ROUTE_KEY, "filterVerifiedMulti", []);
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
