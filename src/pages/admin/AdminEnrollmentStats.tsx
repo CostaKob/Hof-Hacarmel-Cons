@@ -373,8 +373,9 @@ const AdminEnrollmentStats = () => {
   }, [enrollments, pendingRegs, priorStudentIds, teacherEnrollments]);
 
 
-  const isLoading = eLoading || rLoading;
+  const isLoading = eLoading || rLoading || tLoading;
   const maxInstrument = stats.instrumentData[0]?.value ?? 1;
+  const maxTeacherStudents = stats.teacherData[0]?.students ?? 1;
 
   return (
     <AdminLayout title="דוח תלמידים ושיבוצים" backPath="/admin">
