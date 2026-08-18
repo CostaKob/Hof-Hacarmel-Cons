@@ -1383,7 +1383,8 @@ const AdminFamilyCard = () => {
         payments={payments}
         enrollments={enrollments}
         studentNames={nameById}
-        computeSettlement={computeSettlement}
+        creditDue={Math.max(0, -balance)}
+
 
         invalidate={invalidateFamily}
       />
