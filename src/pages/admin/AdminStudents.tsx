@@ -463,11 +463,12 @@ const AdminStudents = () => {
 
   // Returns "full" | "partial" | "unpaid"
   // Connected to the same calculated balance used in the payment summary screen.
-  const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" => {
+  const getPaymentStatus = useCallback((r: any): "full" | "partial" | "unpaid" | "credit" => {
     const sid = r?.students?.id;
     const stuPaid = sid ? (paidByStudent.get(sid) ?? 0) : 0;
     const balance = sid ? balanceByStudent.get(sid) : null;
     if (typeof balance === "number") {
+      if (Math.round(balance) < 0) return "credit";
       if (Math.round(balance) <= 0) return "full";
       return stuPaid > 0.5 ? "partial" : "unpaid";
     }
@@ -513,6 +514,13 @@ const AdminStudents = () => {
     const sid = r?.students?.id;
     const balance = sid ? balanceByStudent.get(sid) : null;
     return typeof balance === "number" ? Math.max(0, Math.round(balance)) : null;
+  }, [balanceByStudent]);
+
+  /** Positive number when the student is over-paid (has a credit). */
+  const getCreditAmount = useCallback((r: any) => {
+    const sid = r?.students?.id;
+    const balance = sid ? balanceByStudent.get(sid) : null;
+    return typeof balance === "number" && Math.round(balance) < 0 ? Math.abs(Math.round(balance)) : null;
   }, [balanceByStudent]);
 
   const renderEnsembleBadges = (items: { id: string; ensemble_id: string; name: string }[]) => {
@@ -772,8 +780,8 @@ const AdminStudents = () => {
             <MultiSelectFilter
               className="w-full lg:w-36"
               allLabel="תשלומים"
-              options={["full", "partial", "unpaid"]}
-              renderLabel={(k) => ({ full: "שולם במלואו", partial: "שולם חלקית", unpaid: "לא שולם" })[k]}
+              options={["full", "partial", "unpaid", "credit"]}
+              renderLabel={(k) => ({ full: "שולם במלואו", partial: "שולם חלקית", unpaid: "לא שולם", credit: "קיים זיכוי" })[k]}
               value={paymentFilter}
               onChange={(v) => setMultiFilter("payment", v)}
             />
@@ -1025,12 +1033,17 @@ const AdminStudents = () => {
             {filtered.map((r: any, index: number) => {
               const payStatus = getPaymentStatus(r);
               const payBalance = getPaymentBalance(r);
-              const payLabel = payStatus === "full"
+              const payCredit = getCreditAmount(r);
+              const payLabel = payStatus === "credit"
+                ? `קיים זיכוי · ₪${(payCredit ?? 0).toLocaleString()}`
+                : payStatus === "full"
                 ? "שולם"
                 : payStatus === "partial"
                 ? `שולם חלקית${payBalance ? ` · יתרה ₪${payBalance.toLocaleString()}` : ""}`
                 : payBalance ? `לא שולם · יתרה ₪${payBalance.toLocaleString()}` : "לא שולם";
-              const payClass = payStatus === "full"
+              const payClass = payStatus === "credit"
+                ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700"
+                : payStatus === "full"
                 ? "bg-green-500/10 text-green-700 border-green-500/30"
                 : payStatus === "partial"
                 ? "bg-amber-500/10 text-amber-700 border-amber-500/30"
