@@ -198,8 +198,11 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
     mutationFn: async () => {
       const byPayment = new Map<string, { amount: number; method: string | null }>();
       if (creditRefundChoice) {
-        byPayment.set(creditRefundChoice.paymentId, { amount: creditRefundChoice.amount, method: "credit_card" });
+        for (const it of creditRefundChoice.items) {
+          byPayment.set(it.paymentId, { amount: it.amount, method: "credit_card" });
+        }
       } else {
+
         for (const r of toRefund) {
           const cur = byPayment.get(r.paymentId) ?? { amount: 0, method: r.method };
           cur.amount += r.remaining;
