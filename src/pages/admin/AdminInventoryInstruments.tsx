@@ -319,12 +319,12 @@ const AdminInventoryInstruments = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-3">
         {LOCATION_OPTIONS.map((opt) => {
-          const active = filterCondition === opt.value;
+          const active = filterCondition.includes(opt.value);
           return (
             <button
               key={opt.value}
               type="button"
-              onClick={() => setFilterCondition(active ? "all" : opt.value)}
+              onClick={() => setFilterCondition(active ? [] : [opt.value])}
               className={`rounded-xl border p-3 text-center transition-colors ${
                 active ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border bg-card hover:bg-muted/50"
               }`}
@@ -336,9 +336,9 @@ const AdminInventoryInstruments = () => {
         })}
         <button
           type="button"
-          onClick={() => setFilterRepair(filterRepair === "needs_repair" ? "all" : "needs_repair")}
+          onClick={() => setFilterRepair(filterRepair.includes("needs_repair") ? [] : ["needs_repair"])}
           className={`rounded-xl border p-3 text-center transition-colors ${
-            filterRepair === "needs_repair"
+            filterRepair.includes("needs_repair")
               ? "border-destructive bg-destructive/15 ring-1 ring-destructive"
               : "border-destructive/20 bg-destructive/5 hover:bg-destructive/10"
           }`}
@@ -348,9 +348,9 @@ const AdminInventoryInstruments = () => {
         </button>
         <button
           type="button"
-          onClick={() => setFilterRepair(filterRepair === "in_repair" ? "all" : "in_repair")}
+          onClick={() => setFilterRepair(filterRepair.includes("in_repair") ? [] : ["in_repair"])}
           className={`rounded-xl border p-3 text-center transition-colors ${
-            filterRepair === "in_repair"
+            filterRepair.includes("in_repair")
               ? "border-amber-400 bg-amber-100 ring-1 ring-amber-400"
               : "border-amber-200 bg-amber-50 hover:bg-amber-100"
           }`}
@@ -360,9 +360,9 @@ const AdminInventoryInstruments = () => {
         </button>
         <button
           type="button"
-          onClick={() => setFilterRepair(filterRepair === "unusable" ? "all" : "unusable")}
+          onClick={() => setFilterRepair(filterRepair.includes("unusable") ? [] : ["unusable"])}
           className={`rounded-xl border p-3 text-center transition-colors ${
-            filterRepair === "unusable"
+            filterRepair.includes("unusable")
               ? "border-neutral-700 bg-neutral-200 ring-1 ring-neutral-700"
               : "border-neutral-300 bg-neutral-100 hover:bg-neutral-200"
           }`}
