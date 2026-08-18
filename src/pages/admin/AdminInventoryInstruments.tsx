@@ -263,19 +263,26 @@ const AdminInventoryInstruments = () => {
 
   const filtered = items.filter((it: any) => {
     const check = checkByInstrument.get(it.id);
-    if (filterInstrument !== "all" && it.instrument_id !== filterInstrument) return false;
-    if (filterCondition !== "all" && it.condition !== filterCondition) return false;
-    if (filterRepair !== "all" && (it.repair_state || "ok") !== filterRepair) return false;
-    if (filterLocation !== "all") {
-      if (filterLocation === "none" && it.storage_location_id) return false;
-      if (filterLocation !== "none" && it.storage_location_id !== filterLocation) return false;
+    if (filterInstrument.length > 0 && !filterInstrument.includes(it.instrument_id)) return false;
+    if (filterCondition.length > 0 && !filterCondition.includes(it.condition)) return false;
+    if (filterRepair.length > 0 && !filterRepair.includes(it.repair_state || "ok")) return false;
+    if (filterLocation.length > 0) {
+      const hasNone = filterLocation.includes("none");
+      const hasLocations = filterLocation.some((v) => v !== "none");
+      if (hasNone && it.storage_location_id && !filterLocation.includes(it.storage_location_id)) return false;
+      if (hasLocations && !filterLocation.includes(it.storage_location_id || "none")) return false;
     }
-    if (filterSchool !== "all") {
-      if (filterSchool === "none" && it._borrower_school) return false;
-      if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
+    if (filterSchool.length > 0) {
+      const hasNone = filterSchool.includes("none");
+      const hasSchools = filterSchool.some((v) => v !== "none");
+      const schoolValue = it._borrower_school || "none";
+      if (hasNone && schoolValue !== "none" && !filterSchool.includes(schoolValue)) return false;
+      if (hasSchools && !filterSchool.includes(schoolValue)) return false;
     }
-    if (filterVerified === "verified" && !check) return false;
-    if (filterVerified === "not_verified" && check) return false;
+    if (filterVerified.length > 0) {
+      const isVerified = !!check;
+      if (!filterVerified.includes(isVerified ? "verified" : "not_verified")) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const matches =
