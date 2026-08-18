@@ -185,6 +185,15 @@ const StudentPaymentsSection = ({
             </span>
           )}
           {extraHeaderActions}
+          {!readOnly && payments.length > 0 && (
+            <Button
+              variant="outline"
+              className="h-10 rounded-xl text-sm"
+              onClick={() => setScheduleOpen(true)}
+            >
+              <CalendarClock className="h-4 w-4" /> תשלומים עתידיים / הפסקת לימודים
+            </Button>
+          )}
           {!readOnly && (
             <Button
               className="h-10 rounded-xl text-sm"
