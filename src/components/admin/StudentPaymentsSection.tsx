@@ -284,8 +284,13 @@ const StudentPaymentsSection = ({
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {isCredit ? "זיכוי" : "תשלום"}
-                    {p.payment_method && ` · ${p.payment_method}`}
-                    {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
+                    {p.payment_method && ` · ${PAYMENT_METHOD_LABELS[p.payment_method as string] ?? p.payment_method}`}
+                    {!isGroup && p.payment_method === "credit_card" && (
+                      Number(p.installments) > 1
+                        ? ` · ${p.installments} תשלומים`
+                        : " · תשלום אחד"
+                    )}
+                    {!isGroup && p.payment_method !== "credit_card" && Number(p.installments) > 1 && ` · ${p.installments} תשלומים`}
                     {!isGroup && p.reference_number && ` · ${refLabel} ${p.reference_number}`}
                     {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}
