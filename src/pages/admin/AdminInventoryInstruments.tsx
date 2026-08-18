@@ -458,74 +458,75 @@ const AdminInventoryInstruments = () => {
             <MapPin className="h-4 w-4" /> מיקומי אחסון
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
-          <Select value={filterInstrument} onValueChange={setFilterInstrument}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="סוג כלי" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הסוגים</SelectItem>
-              {instruments.map((i) => (
-                <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterCondition} onValueChange={setFilterCondition}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="זמינות הכלי" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל סטטוסי הזמינות</SelectItem>
-              {LOCATION_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterRepair} onValueChange={setFilterRepair}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="תקינות" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל מצבי התקינות</SelectItem>
-              {REPAIR_STATE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterLocation} onValueChange={setFilterLocation}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="מיקום אחסון" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל המיקומים</SelectItem>
-              <SelectItem value="none">ללא מיקום</SelectItem>
-              {locations.map((l) => (
-                <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterSchool} onValueChange={setFilterSchool}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="בית ספר של המושאל" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל בתי הספר</SelectItem>
-              <SelectItem value="none">לא מושאל / ללא בי״ס</SelectItem>
-              {borrowerSchools.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterVerified} onValueChange={setFilterVerified}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="בדיקה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל סטטוסי הבדיקה</SelectItem>
-              <SelectItem value="not_verified">טרם נבדק השנה</SelectItem>
-              <SelectItem value="verified">נבדק השנה</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap gap-2">
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל הסוגים"
+            options={instruments.map((i) => i.id)}
+            renderLabel={(id) => instruments.find((i) => i.id === id)?.name || id}
+            value={filterInstrument}
+            onChange={setFilterInstrument}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל סטטוסי הזמינות"
+            options={LOCATION_OPTIONS.map((o) => o.value)}
+            renderLabel={(v) => LOCATION_OPTIONS.find((o) => o.value === v)?.label || v}
+            value={filterCondition}
+            onChange={setFilterCondition}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל מצבי התקינות"
+            options={REPAIR_STATE_OPTIONS.map((o) => o.value)}
+            renderLabel={(v) => REPAIR_STATE_OPTIONS.find((o) => o.value === v)?.label || v}
+            value={filterRepair}
+            onChange={setFilterRepair}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל המיקומים"
+            options={["none", ...locations.map((l) => l.id)]}
+            renderLabel={(id) => id === "none" ? "ללא מיקום" : locations.find((l) => l.id === id)?.name || id}
+            value={filterLocation}
+            onChange={setFilterLocation}
+          />
+          <MultiSelectFilter
+            className="w-48"
+            allLabel="כל בתי הספר"
+            options={["none", ...borrowerSchools]}
+            renderLabel={(s) => s === "none" ? "לא מושאל / ללא בי״ס" : s}
+            value={filterSchool}
+            onChange={setFilterSchool}
+          />
+          <MultiSelectFilter
+            className="w-40"
+            allLabel="כל סטטוסי הבדיקה"
+            options={["verified", "not_verified"]}
+            renderLabel={(v) => v === "verified" ? "נבדק השנה" : "טרם נבדק השנה"}
+            value={filterVerified}
+            onChange={setFilterVerified}
+          />
+          {(filterInstrument.length > 0 || filterCondition.length > 0 || filterRepair.length > 0 || filterLocation.length > 0 || filterSchool.length > 0 || filterVerified.length > 0 || search) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilterInstrument([]);
+                setFilterCondition([]);
+                setFilterRepair([]);
+                setFilterLocation([]);
+                setFilterSchool([]);
+                setFilterVerified([]);
+                setSearch("");
+              }}
+              className="h-11 rounded-xl gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+              נקה סינון
+            </Button>
+          )}
         </div>
         {selectedIds.size > 0 && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
