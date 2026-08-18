@@ -39,6 +39,13 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 const fmt = (n: number) => `₪${Math.round(n).toLocaleString()}`;
 const fmtDate = (d: string) => format(new Date(d), "dd/MM/yyyy");
 
+export interface SettlementResult {
+  studentId: string;
+  currentDue: number;
+  newDue: number;
+  credit: number;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -47,14 +54,17 @@ interface Props {
   enrollments: any[];
   /** Optional map of studentId -> full name, used in family (multi-child) context. */
   studentNames?: Map<string, string>;
+  /** Recomputes what the parent owes if the enrollment ends on `stopDate`. */
+  computeSettlement?: (enrollmentId: string, stopDate: string) => SettlementResult | null;
   invalidate: () => void;
 }
 
 interface CreditRefundChoice {
-  paymentId: string;
+  items: { paymentId: string; amount: number }[];
   amount: number;
   label: string;
 }
+
 
 const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, invalidate }: Props) => {
   const queryClient = useQueryClient();
