@@ -248,7 +248,13 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
           </DialogHeader>
 
           {/* Plain-language summary */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="rounded-2xl border border-border bg-muted/30 p-4 text-right">
+              <p className="text-xs text-muted-foreground leading-5 min-h-[20px]">סכום העסקה המלא</p>
+              <p className="mt-1 text-lg font-bold text-foreground tabular-nums" dir="ltr">
+                {fmt(totals.paid + totals.future + totals.cancelled + totals.refunded)}
+              </p>
+            </div>
             <div className="rounded-2xl border border-border bg-muted/30 p-4 text-right">
               <p className="text-xs text-muted-foreground leading-5 min-h-[20px]">כבר נגבה מההורה</p>
               <p className="mt-1 text-lg font-bold text-green-700 tabular-nums" dir="ltr">{fmt(totals.paid)}</p>
@@ -257,7 +263,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
               <p className="text-xs text-muted-foreground leading-5 min-h-[20px]">עתיד לרדת</p>
               <p className="mt-1 text-lg font-bold text-amber-700 tabular-nums" dir="ltr">{fmt(totals.future)}</p>
             </div>
-            <div className="rounded-2xl border border-border bg-muted/30 p-4 text-right col-span-2 sm:col-span-1">
+            <div className="rounded-2xl border border-border bg-muted/30 p-4 text-right">
               <p className="text-xs text-muted-foreground leading-5 min-h-[20px]">
                 {totals.cancelled > 0 ? "זוכה / בוטל" : "כבר זוכה"}
               </p>
