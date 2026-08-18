@@ -14,6 +14,15 @@ import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: "מזומן",
+  credit_card: "אשראי",
+  bank_transfer: "העברה בנקאית",
+  cheque: "צ׳ק",
+  check: "צ׳ק",
+  other: "אחר",
+};
+
 interface StudentPaymentsSectionProps {
   studentId: string;
   payments: any[];
