@@ -1388,12 +1388,34 @@ const AdminFamilyCard = () => {
             </div>
           )}
 
+          {refundDocs.length > 0 && (
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+              <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
+                <FileDown className="h-4 w-4" /> מסמכי החזר ({refundDocs.length})
+              </h2>
+              <div className="space-y-2">
+                {refundDocs.map((d: any) => (
+                  <div key={d.id} className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{d.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(d.created_at), "dd/MM/yyyy")}
+                        {nameById[d.student_id] && ` · ${nameById[d.student_id]}`}
+                        {d.refund_amount ? ` · ${fmt(Number(d.refund_amount))}` : ""}
+                        {d.bank_reference ? ` · אסמכתא ${d.bank_reference}` : ""}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-9 rounded-xl text-xs shrink-0"
+                      onClick={() => openRefundDoc(d.file_path)}>
+                      <FileDown className="h-3.5 w-3.5" /> פתח
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
 
-
-
-        </div>
-      )}
 
       <StopEnrollmentDialog
         open={scheduleOpen}
