@@ -739,12 +739,23 @@ const AdminEnrollmentStats = () => {
 
             {/* Top teachers */}
             <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <Trophy className="h-5 w-5 text-amber-500" />
-                <h2 className="font-semibold">מורים עם הכי הרבה תלמידים</h2>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <h2 className="font-semibold">מורים עם הכי הרבה תלמידים</h2>
+                </div>
+                {stats.teacherData.length > 10 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAllTeachers((v) => !v)}
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
+                    {showAllTeachers ? "הצג פחות" : "פתח את כל המורים"}
+                  </button>
+                )}
               </div>
               <div className="space-y-3">
-                {stats.teacherData.slice(0, 10).map((t) => (
+                {stats.teacherData.slice(0, showAllTeachers ? undefined : 10).map((t) => (
                   <div key={t.id} className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
                       <span className="font-medium">{t.name}</span>
