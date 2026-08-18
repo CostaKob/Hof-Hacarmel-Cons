@@ -66,7 +66,7 @@ interface CreditRefundChoice {
 }
 
 
-const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, invalidate }: Props) => {
+const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, computeSettlement, invalidate }: Props) => {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [stopMode, setStopMode] = useState(false);
