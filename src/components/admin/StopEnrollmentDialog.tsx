@@ -362,6 +362,58 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                     סמן אוטומטית את הפירעונות שאחרי התאריך
                   </Button>
                 </div>
+
+                {settlement && (
+                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+                    <p className="text-sm font-semibold">
+                      חישוב מחדש{settlement.ownerName ? ` · ${settlement.ownerName}` : ""}
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-muted-foreground">חיוב לשנה מלאה</p>
+                        <p className="font-bold" dir="ltr">{fmt(settlement.currentDue)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">חיוב עד {fmtDate(stopDate)}</p>
+                        <p className="font-bold" dir="ltr">{fmt(settlement.newDue)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">זיכוי להורה</p>
+                        <p className="font-bold text-destructive" dir="ltr">{fmt(settlement.credit)}</p>
+                      </div>
+                    </div>
+                    {settlement.credit >= 1 ? (
+                      <>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          מתוך הזיכוי: {fmt(settlement.fromFuture)} מתשלומי אשראי שטרם נגבו
+                          {settlement.fromPaid > 0 ? ` · ${fmt(settlement.fromPaid)} החזר על מה שכבר נגבה` : ""}
+                          {settlement.uncovered >= 1
+                            ? ` · ${fmt(settlement.uncovered)} אינם מכוסים בעסקאות אשראי (צ׳קים/מזומן — טפל בהם ברשימה למטה)`
+                            : ""}
+                        </p>
+                        <Button
+                          className="h-11 rounded-xl w-full"
+                          disabled={busy || settlement.items.length === 0}
+                          onClick={() => {
+                            const amount = settlement.items.reduce((s, i) => s + i.amount, 0);
+                            setCreditRefundChoice({
+                              items: settlement.items,
+                              amount: Math.round(amount * 100) / 100,
+                              label: `זיכוי הפרש הפסקת לימודים (${fmtDate(stopDate)})`,
+                            });
+                            setConfirm("refund");
+                          }}
+                        >
+                          <Undo2 className="h-4 w-4 ml-1" />
+                          החזר להורה באשראי {fmt(settlement.items.reduce((s, i) => s + i.amount, 0))}
+                        </Button>
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">אין הפרש לזיכוי בתאריך זה.</p>
+                    )}
+                  </div>
+                )}
+
               </div>
             )}
           </div>
