@@ -101,6 +101,8 @@ const AdminFamilyCard = () => {
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
   const [invoiceNote, setInvoiceNote] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
+  const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
 
 
 
