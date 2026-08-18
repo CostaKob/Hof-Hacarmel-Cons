@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
@@ -12,13 +11,10 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, CalendarClock, Undo2, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import {
-  buildPaymentSchedule, scheduleTotals, suggestRowsForStopDate, type ScheduleRow,
-} from "@/lib/paymentSchedule";
+import { buildPaymentSchedule, scheduleTotals, type ScheduleRow } from "@/lib/paymentSchedule";
 
 const METHOD_LABELS: Record<string, string> = {
   cash: "מזומן",
@@ -39,13 +35,6 @@ const STATUS_META: Record<string, { label: string; className: string }> = {
 const fmt = (n: number) => `₪${Math.round(n).toLocaleString()}`;
 const fmtDate = (d: string) => format(new Date(d), "dd/MM/yyyy");
 
-export interface SettlementResult {
-  studentId: string;
-  currentDue: number;
-  newDue: number;
-  credit: number;
-}
-
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,8 +43,11 @@ interface Props {
   enrollments: any[];
   /** Optional map of studentId -> full name, used in family (multi-child) context. */
   studentNames?: Map<string, string>;
-  /** Recomputes what the parent owes if the enrollment ends on `stopDate`. */
-  computeSettlement?: (enrollmentId: string, stopDate: string) => SettlementResult | null;
+  /**
+   * Credit owed to the parent, taken from the payment calculator
+   * (charge after the updated end dates, minus what was already collected).
+   */
+  creditDue?: number;
   invalidate: () => void;
 }
 
@@ -65,14 +57,8 @@ interface CreditRefundChoice {
   label: string;
 }
 
-
-const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollments, studentNames, computeSettlement, invalidate }: Props) => {
-  const queryClient = useQueryClient();
+const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, studentNames, creditDue = 0, invalidate }: Props) => {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
-  const [stopMode, setStopMode] = useState(false);
-  const [stopEnrollmentId, setStopEnrollmentId] = useState<string>("");
-  const [stopDate, setStopDate] = useState<string>(new Date().toISOString().slice(0, 10));
-  const [closeEnrollment, setCloseEnrollment] = useState(true);
   const [confirm, setConfirm] = useState<null | "cancel" | "refund">(null);
   const [creditRefundChoice, setCreditRefundChoice] = useState<CreditRefundChoice | null>(null);
 
@@ -82,7 +68,6 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
   useEffect(() => {
     if (!open) {
       setSelected({});
-      setStopMode(false);
       setConfirm(null);
       setCreditRefundChoice(null);
     }
@@ -110,79 +95,34 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
     }));
   }, [rows]);
 
-  // ── Settlement: recompute what the parent owes if studies stop on `stopDate` ──
+  // ── Settlement taken straight from the payment calculator ──────────────
   const settlement = useMemo(() => {
-    if (!stopMode || !stopEnrollmentId || !stopDate || !computeSettlement) return null;
-    const base = computeSettlement(stopEnrollmentId, stopDate);
-    if (!base) return null;
+    const credit = Math.round((creditDue ?? 0) * 100) / 100;
+    if (credit < 1) return null;
+    const futureCredit = creditDeals.reduce((s, d) => s + d.future, 0);
+    const fromFuture = Math.min(credit, futureCredit);
+    const fromPaid = Math.max(0, Math.round((credit - fromFuture) * 100) / 100);
 
-    const enr = enrollments.find((e: any) => e.id === stopEnrollmentId);
-    const ownerId = enr?.student_id ?? base.studentId;
-
-    // Credit deals that belong to this child (family context) or all of them.
-    const ownDeals = creditDeals.filter((d) => {
-      const p = payments.find((x: any) => x.id === d.paymentId);
-      return !p?.student_id || p.student_id === ownerId;
-    });
-    const futureCredit = ownDeals.reduce((s, d) => s + d.future, 0);
-    const paidCredit = ownDeals.reduce((s, d) => s + d.paid, 0);
-
-    // Allocate the credit: first against installments not yet charged, then
-    // the rest against money already collected.
-    const fromFuture = Math.min(base.credit, futureCredit);
-    const fromPaid = Math.max(0, Math.round((base.credit - fromFuture) * 100) / 100);
-
-    // Per-deal allocation for the actual refund call.
-    let left = base.credit;
+    let left = credit;
     const items: { paymentId: string; amount: number }[] = [];
-    for (const d of [...ownDeals].sort((a, b) => b.future - a.future)) {
+    for (const d of [...creditDeals].sort((a, b) => b.future - a.future)) {
       if (left < 1) break;
       const amt = Math.min(left, d.remaining);
       if (amt < 1) continue;
       items.push({ paymentId: d.paymentId, amount: Math.round(amt * 100) / 100 });
       left = Math.round((left - amt) * 100) / 100;
     }
-
-    return {
-      ...base,
-      ownerName: ownerId ? studentNames?.get(ownerId) : undefined,
-      futureCredit,
-      paidCredit,
-      fromFuture: Math.round(fromFuture * 100) / 100,
-      fromPaid,
-      items,
-      uncovered: Math.round(left * 100) / 100,
-    };
-  }, [stopMode, stopEnrollmentId, stopDate, computeSettlement, enrollments, creditDeals, payments, studentNames]);
-
-
-  const applySuggestion = () => {
-    const suggested = suggestRowsForStopDate(rows, stopDate);
-    const next: Record<string, boolean> = {};
-    for (const r of suggested) next[r.key] = true;
-    setSelected(next);
-    toast.success(`נבחרו ${suggested.length} שורות שמועד פירעונן אחרי ${fmtDate(stopDate)}`);
-  };
-
-  const closeEnrollmentIfNeeded = async () => {
-    if (!stopMode || !closeEnrollment || !stopEnrollmentId) return;
-    const { error } = await supabase
-      .from("enrollments")
-      .update({ end_date: stopDate, is_active: false })
-      .eq("id", stopEnrollmentId);
-    if (error) throw error;
-    queryClient.invalidateQueries({ queryKey: ["admin-student-enrollments", studentId] });
-  };
+    return { credit, futureCredit, fromFuture: Math.round(fromFuture * 100) / 100, fromPaid, items, uncovered: Math.round(left * 100) / 100 };
+  }, [creditDue, creditDeals]);
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
       const paymentIds = [...new Set(toCancel.map((r) => r.paymentId))];
       const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
-        body: { paymentIds, reason: stopMode ? `הפסקת לימודים ${fmtDate(stopDate)}` : undefined },
+        body: { paymentIds },
       });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      await closeEnrollmentIfNeeded();
       return data;
     },
     onSuccess: (data: any) => {
@@ -202,7 +142,6 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
           byPayment.set(it.paymentId, { amount: it.amount, method: "credit_card" });
         }
       } else {
-
         for (const r of toRefund) {
           const cur = byPayment.get(r.paymentId) ?? { amount: 0, method: r.method };
           cur.amount += r.remaining;
@@ -221,7 +160,6 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
         results.push(data);
       }
-      await closeEnrollmentIfNeeded();
       return results;
     },
     onSuccess: (results: any[]) => {
@@ -263,6 +201,37 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
               </div>
             ))}
           </div>
+
+          {/* Credit due, straight from the payment calculator */}
+          {settlement && (
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <p className="text-sm font-semibold">זיכוי להורה לפי המחשבון · {fmt(settlement.credit)}</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                הסכום מגיע מהמחשבון בכרטיס התלמיד (חיוב לאחר עדכון תאריכי הסיום, פחות מה שכבר נגבה).
+                מתוכו {fmt(settlement.fromFuture)} מתשלומי אשראי שטרם נגבו
+                {settlement.fromPaid > 0 ? ` · ${fmt(settlement.fromPaid)} החזר על מה שכבר נגבה` : ""}
+                {settlement.uncovered >= 1
+                  ? ` · ${fmt(settlement.uncovered)} אינם מכוסים בעסקאות אשראי (צ׳קים/מזומן — טפל בהם ברשימה למטה)`
+                  : ""}
+              </p>
+              <Button
+                className="h-11 rounded-xl w-full"
+                disabled={busy || settlement.items.length === 0}
+                onClick={() => {
+                  const amount = settlement.items.reduce((s, i) => s + i.amount, 0);
+                  setCreditRefundChoice({
+                    items: settlement.items,
+                    amount: Math.round(amount * 100) / 100,
+                    label: "זיכוי הפרש לפי המחשבון",
+                  });
+                  setConfirm("refund");
+                }}
+              >
+                <Undo2 className="h-4 w-4 ml-1" />
+                החזר להורה באשראי {fmt(settlement.items.reduce((s, i) => s + i.amount, 0))}
+              </Button>
+            </div>
+          )}
 
           {creditDeals.length > 0 && (
             <div className="space-y-2">
@@ -319,104 +288,6 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
               })}
             </div>
           )}
-
-          {/* Stop-studies wizard */}
-          <div className="rounded-xl border border-border p-3 space-y-3">
-            <div className="flex items-center justify-between gap-3">
-              <Label className="text-sm font-semibold">אשף הפסקת לימודים</Label>
-              <Switch checked={stopMode} onCheckedChange={setStopMode} />
-            </div>
-            {stopMode && (
-              <div className="space-y-3">
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">שיוך שמופסק</Label>
-                    <Select value={stopEnrollmentId || undefined} onValueChange={setStopEnrollmentId}>
-                      <SelectTrigger className="h-11 rounded-xl"><SelectValue placeholder="בחר שיוך" /></SelectTrigger>
-                      <SelectContent>
-                        {enrollments.map((e: any) => (
-                          <SelectItem key={e.id} value={e.id}>
-                            {studentNames?.get(e.student_id) ? `${studentNames.get(e.student_id)} · ` : ""}
-                            {e.instruments?.name ?? "כלי"} · {e.teachers ? `${e.teachers.first_name} ${e.teachers.last_name}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">תאריך הפסקה</Label>
-                    <input
-                      type="date"
-                      value={stopDate}
-                      onChange={(e) => setStopDate(e.target.value)}
-                      className="h-11 w-full rounded-xl border border-input bg-background px-3 text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center justify-between gap-3 flex-wrap">
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox checked={closeEnrollment} onCheckedChange={(v) => setCloseEnrollment(!!v)} />
-                    סגור את השיוך בתאריך ההפסקה
-                  </label>
-                  <Button variant="secondary" className="h-10 rounded-xl" onClick={applySuggestion}>
-                    סמן אוטומטית את הפירעונות שאחרי התאריך
-                  </Button>
-                </div>
-
-                {settlement && (
-                  <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
-                    <p className="text-sm font-semibold">
-                      חישוב מחדש{settlement.ownerName ? ` · ${settlement.ownerName}` : ""}
-                    </p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <p className="text-xs text-muted-foreground">חיוב לשנה מלאה</p>
-                        <p className="font-bold" dir="ltr">{fmt(settlement.currentDue)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">חיוב עד {fmtDate(stopDate)}</p>
-                        <p className="font-bold" dir="ltr">{fmt(settlement.newDue)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">זיכוי להורה</p>
-                        <p className="font-bold text-destructive" dir="ltr">{fmt(settlement.credit)}</p>
-                      </div>
-                    </div>
-                    {settlement.credit >= 1 ? (
-                      <>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          מתוך הזיכוי: {fmt(settlement.fromFuture)} מתשלומי אשראי שטרם נגבו
-                          {settlement.fromPaid > 0 ? ` · ${fmt(settlement.fromPaid)} החזר על מה שכבר נגבה` : ""}
-                          {settlement.uncovered >= 1
-                            ? ` · ${fmt(settlement.uncovered)} אינם מכוסים בעסקאות אשראי (צ׳קים/מזומן — טפל בהם ברשימה למטה)`
-                            : ""}
-                        </p>
-                        <Button
-                          className="h-11 rounded-xl w-full"
-                          disabled={busy || settlement.items.length === 0}
-                          onClick={() => {
-                            const amount = settlement.items.reduce((s, i) => s + i.amount, 0);
-                            setCreditRefundChoice({
-                              items: settlement.items,
-                              amount: Math.round(amount * 100) / 100,
-                              label: `זיכוי הפרש הפסקת לימודים (${fmtDate(stopDate)})`,
-                            });
-                            setConfirm("refund");
-                          }}
-                        >
-                          <Undo2 className="h-4 w-4 ml-1" />
-                          החזר להורה באשראי {fmt(settlement.items.reduce((s, i) => s + i.amount, 0))}
-                        </Button>
-                      </>
-                    ) : (
-                      <p className="text-xs text-muted-foreground">אין הפרש לזיכוי בתאריך זה.</p>
-                    )}
-                  </div>
-                )}
-
-              </div>
-            )}
-          </div>
 
           {/* Schedule */}
           {rows.length === 0 ? (
@@ -507,9 +378,6 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                 <>⚠️ יבוטלו {toCancel.length} צ׳קים בסך {fmt(cancelSum)} ותופק קבלת זיכוי מרוכזת ב-iCount. הפעולה סופית.</>
               ) : (
                 <>⚠️ {creditRefundChoice ? `${creditRefundChoice.label}: ` : "יבוצע זיכוי בסך "}{fmt(refundSum)}. הכסף יוחזר לכרטיס המקורי ותופק קבלה במינוס. הפעולה סופית.</>
-              )}
-              {stopMode && closeEnrollment && stopEnrollmentId && (
-                <> בנוסף השיוך ייסגר בתאריך {fmtDate(stopDate)}.</>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
