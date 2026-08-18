@@ -18,7 +18,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Users, ClipboardList, Music, School } from "lucide-react";
+import { Users, ClipboardList, Music, School, Trophy } from "lucide-react";
 
 const GRADE_ORDER = ["א", "ב", "ג", "ד", "ה", "ו", "ז", "ח", "ט", "י", "יא", "יב"];
 
@@ -198,6 +198,20 @@ const AdminEnrollmentStats = () => {
     [registrations]
   );
 
+  const { data: teacherEnrollments = [], isLoading: tLoading } = useQuery({
+    queryKey: ["stats-teacher-enrollments", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, teacher_id, student_id, teachers(id, first_name, last_name)")
+        .eq("academic_year_id", selectedYearId!)
+        .eq("is_active", true);
+      if (error) throw error;
+      return data as any[];
+    },
+  });
+
 
   const stats = useMemo(() => {
     // Assigned students (unique)
@@ -323,6 +337,24 @@ const AdminEnrollmentStats = () => {
       .filter((d) => d.enrollmentsCount > 0 || d.pending > 0)
       .sort((a, b) => b.enrollmentsCount - a.enrollmentsCount);
 
+    const teacherMap = new Map<
+      string,
+      { id: string; name: string; studentIds: Set<string>; enrollmentCount: number }
+    >();
+    for (const e of teacherEnrollments) {
+      const tid = e.teacher_id;
+      const teacher = e.teachers;
+      if (!tid || !teacher) continue;
+      const name = `${teacher.first_name ?? ""} ${teacher.last_name ?? ""}`.trim() || "מורה לא ידוע";
+      const entry = teacherMap.get(tid) ?? { id: tid, name, studentIds: new Set<string>(), enrollmentCount: 0 };
+      entry.enrollmentCount++;
+      if (e.student_id) entry.studentIds.add(e.student_id);
+      teacherMap.set(tid, entry);
+    }
+    const teacherData = Array.from(teacherMap.values())
+      .map((t) => ({ id: t.id, name: t.name, students: t.studentIds.size, enrollments: t.enrollmentCount }))
+      .sort((a, b) => b.students - a.students);
+
     return {
       assignedCount: assignedStudents.size,
       enrollmentCount: enrollments.length,
@@ -336,12 +368,14 @@ const AdminEnrollmentStats = () => {
       instrumentData,
       pendingInstrumentData,
       schoolData,
+      teacherData,
     };
-  }, [enrollments, pendingRegs, priorStudentIds]);
+  }, [enrollments, pendingRegs, priorStudentIds, teacherEnrollments]);
 
 
-  const isLoading = eLoading || rLoading;
+  const isLoading = eLoading || rLoading || tLoading;
   const maxInstrument = stats.instrumentData[0]?.value ?? 1;
+  const maxTeacherStudents = stats.teacherData[0]?.students ?? 1;
 
   return (
     <AdminLayout title="דוח תלמידים ושיבוצים" backPath="/admin">
@@ -699,6 +733,36 @@ const AdminEnrollmentStats = () => {
                     <div className="text-sm text-muted-foreground">אין נתונים.</div>
                   )}
                 </div>
+              </div>
+            </div>
+
+            {/* Top teachers */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                <h2 className="font-semibold">מורים עם הכי הרבה תלמידים</h2>
+              </div>
+              <div className="space-y-3">
+                {stats.teacherData.slice(0, 10).map((t) => (
+                  <div key={t.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{t.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground text-xs">{t.enrollments} שיוכים</span>
+                        <span className="font-semibold min-w-[3ch] text-left">{t.students}</span>
+                      </div>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-amber-500"
+                        style={{ width: `${(t.students / maxTeacherStudents) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {stats.teacherData.length === 0 && (
+                  <div className="text-sm text-muted-foreground">אין שיוכים פעילים בשנה זו.</div>
+                )}
               </div>
             </div>
           </>
