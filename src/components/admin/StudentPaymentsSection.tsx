@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, FileDown, Undo2, Loader2, ChevronDown, ChevronUp, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
@@ -633,6 +633,15 @@ const StudentPaymentsSection = ({
         defaults={bankRefund}
         invalidate={invalidateAll}
         onDone={(info) => { setBankRefund(null); setRefundSuccess(info); }}
+      />
+
+      <StopEnrollmentDialog
+        open={scheduleOpen}
+        onOpenChange={setScheduleOpen}
+        studentId={studentId}
+        payments={payments}
+        enrollments={enrollments}
+        invalidate={invalidateAll}
       />
 
       <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
