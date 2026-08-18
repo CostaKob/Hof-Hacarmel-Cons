@@ -1033,12 +1033,17 @@ const AdminStudents = () => {
             {filtered.map((r: any, index: number) => {
               const payStatus = getPaymentStatus(r);
               const payBalance = getPaymentBalance(r);
-              const payLabel = payStatus === "full"
+              const payCredit = getCreditAmount(r);
+              const payLabel = payStatus === "credit"
+                ? `קיים זיכוי · ₪${(payCredit ?? 0).toLocaleString()}`
+                : payStatus === "full"
                 ? "שולם"
                 : payStatus === "partial"
                 ? `שולם חלקית${payBalance ? ` · יתרה ₪${payBalance.toLocaleString()}` : ""}`
                 : payBalance ? `לא שולם · יתרה ₪${payBalance.toLocaleString()}` : "לא שולם";
-              const payClass = payStatus === "full"
+              const payClass = payStatus === "credit"
+                ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-700"
+                : payStatus === "full"
                 ? "bg-green-500/10 text-green-700 border-green-500/30"
                 : payStatus === "partial"
                 ? "bg-amber-500/10 text-amber-700 border-amber-500/30"
