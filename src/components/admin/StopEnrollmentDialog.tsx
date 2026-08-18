@@ -304,7 +304,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, studentId, payments, enrollm
                         className="h-10 rounded-xl flex-1"
                         disabled={busy || deal.remaining < 1}
                         onClick={() => {
-                          setCreditRefundChoice({ paymentId: deal.paymentId, amount: deal.remaining, label: "זיכוי מלא של יתרת העסקה" });
+                          setCreditRefundChoice({ items: [{ paymentId: deal.paymentId, amount: deal.remaining }], amount: deal.remaining, label: "זיכוי מלא של יתרת העסקה" });
                           setConfirm("refund");
                         }}
                       >
