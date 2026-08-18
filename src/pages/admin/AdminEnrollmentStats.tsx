@@ -735,6 +735,36 @@ const AdminEnrollmentStats = () => {
                 </div>
               </div>
             </div>
+
+            {/* Top teachers */}
+            <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <Trophy className="h-5 w-5 text-amber-500" />
+                <h2 className="font-semibold">מורים עם הכי הרבה תלמידים</h2>
+              </div>
+              <div className="space-y-3">
+                {stats.teacherData.slice(0, 10).map((t) => (
+                  <div key={t.id} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{t.name}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-muted-foreground text-xs">{t.enrollments} שיוכים</span>
+                        <span className="font-semibold min-w-[3ch] text-left">{t.students}</span>
+                      </div>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-amber-500"
+                        style={{ width: `${(t.students / maxTeacherStudents) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+                {stats.teacherData.length === 0 && (
+                  <div className="text-sm text-muted-foreground">אין שיוכים פעילים בשנה זו.</div>
+                )}
+              </div>
+            </div>
           </>
         )}
       </div>
