@@ -1598,7 +1598,7 @@ const AdminStudentPaymentCalc = () => {
           enrollments={enrollments ?? []}
           totalDue={totalIncVat}
           balanceDue={balance}
-          readOnly
+          familyParentNationalId={student?.parent_national_id ?? null}
         />
 
         <SendTeacherAssignmentMessage

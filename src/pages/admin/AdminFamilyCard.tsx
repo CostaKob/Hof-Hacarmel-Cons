@@ -45,6 +45,8 @@ import { computeChildTotals, type FamilyDraftRow } from "@/lib/familyCalc";
 import type { DiscountType } from "@/lib/discounts";
 import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOverride, type RefundSource } from "@/components/admin/AddPaymentDialog";
 import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignmentMessage";
+import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
+import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
 
 
@@ -99,6 +101,8 @@ const AdminFamilyCard = () => {
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
   const [invoiceNote, setInvoiceNote] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
+  const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
 
 
 
@@ -484,6 +488,27 @@ const AdminFamilyCard = () => {
     return out;
   }, [payments]);
 
+  // Refund letters / documents saved for this family's children (bank-transfer requests etc.)
+  const { data: refundDocs = [] } = useQuery({
+    queryKey: ["family-refund-documents", childIdsKey],
+    enabled: !!family?.children_ids?.length,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("refund_documents")
+        .select("id, title, doc_type, refund_amount, bank_reference, file_path, created_at, student_id")
+        .in("student_id", family!.children_ids)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const openRefundDoc = async (path: string | null) => {
+    if (!path) return toast.error("למסמך זה לא נשמר קובץ");
+    const { data, error } = await supabase.storage.from("refund-documents").createSignedUrl(path, 300);
+    if (error || !data?.signedUrl) return toast.error("שגיאה בפתיחת המסמך");
+    window.open(data.signedUrl, "_blank");
+  };
 
 
   return (
@@ -1324,6 +1349,28 @@ const AdminFamilyCard = () => {
                 <div className="flex flex-wrap gap-2 justify-end pt-2">
                   <Button variant="outline" disabled={refundMutation.isPending} onClick={() => setRefundTarget(null)}>ביטול</Button>
                   <Button
+                    variant="secondary"
+                    disabled={refundMutation.isPending}
+                    onClick={() => {
+                      const amt = parseFloat(refundAmount);
+                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
+                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
+                      setBankRefund({
+                        studentId: refundTarget.student_id ?? family?.children_ids?.[0],
+                        parentName: family?.parent_name ?? undefined,
+                        studentName: nameById[refundTarget.student_id] ?? undefined,
+                        paymentId: refundTarget.id,
+                        docNumber: refundTarget.icount_doc_number,
+                        paidAmount: Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0),
+                        refundAmount: amt,
+                      });
+                      setRefundTarget(null);
+                      setRefundAmount("");
+                    }}
+                  >
+                    החזר בהעברה בנקאית
+                  </Button>
+                  <Button
                     disabled={refundMutation.isPending}
                     onClick={() => {
                       const amt = parseFloat(refundAmount);
@@ -1341,12 +1388,45 @@ const AdminFamilyCard = () => {
             </div>
           )}
 
-
-
-
-
+          {refundDocs.length > 0 && (
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm space-y-3">
+              <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
+                <FileDown className="h-4 w-4" /> מסמכי החזר ({refundDocs.length})
+              </h2>
+              <div className="space-y-2">
+                {refundDocs.map((d: any) => (
+                  <div key={d.id} className="flex items-center justify-between gap-2 rounded-xl border border-border px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{d.title}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(d.created_at), "dd/MM/yyyy")}
+                        {nameById[d.student_id] && ` · ${nameById[d.student_id]}`}
+                        {d.refund_amount ? ` · ${fmt(Number(d.refund_amount))}` : ""}
+                        {d.bank_reference ? ` · אסמכתא ${d.bank_reference}` : ""}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm" className="h-9 rounded-xl text-xs shrink-0"
+                      onClick={() => openRefundDoc(d.file_path)}>
+                      <FileDown className="h-3.5 w-3.5" /> פתח
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      <BankTransferRefundDialog
+        open={!!bankRefund}
+        onOpenChange={(o) => { if (!o) setBankRefund(null); }}
+        defaults={bankRefund}
+        invalidate={invalidateFamily}
+        onDone={(info) => { setBankRefund(null); setRefundSuccess(info); }}
+      />
+
+      <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
+
 
       <StopEnrollmentDialog
         open={scheduleOpen}
