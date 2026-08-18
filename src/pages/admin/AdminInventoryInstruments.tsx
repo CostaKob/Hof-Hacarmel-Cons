@@ -6,6 +6,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft, Trash2, MapPin, Upload, FileDown, CheckCircle2, Circle, AlertTriangle, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -52,12 +53,12 @@ const AdminInventoryInstruments = () => {
   const yearName = years.find((y) => y.id === selectedYearId)?.name || "";
   useListStatePreservation(ROUTE_KEY);
   const [search, setSearch] = usePersistedState<string>(ROUTE_KEY, "search", "");
-  const [filterInstrument, setFilterInstrument] = usePersistedState<string>(ROUTE_KEY, "filterInstrument", "all");
-  const [filterCondition, setFilterCondition] = usePersistedState<string>(ROUTE_KEY, "filterCondition", "all");
-  const [filterRepair, setFilterRepair] = usePersistedState<string>(ROUTE_KEY, "filterRepair", "all");
-  const [filterLocation, setFilterLocation] = usePersistedState<string>(ROUTE_KEY, "filterLocation", "all");
-  const [filterSchool, setFilterSchool] = usePersistedState<string>(ROUTE_KEY, "filterSchool", "all");
-  const [filterVerified, setFilterVerified] = usePersistedState<string>(ROUTE_KEY, "filterVerified", "all");
+  const [filterInstrument, setFilterInstrument] = usePersistedState<string[]>(ROUTE_KEY, "filterInstrumentMulti", []);
+  const [filterCondition, setFilterCondition] = usePersistedState<string[]>(ROUTE_KEY, "filterConditionMulti", []);
+  const [filterRepair, setFilterRepair] = usePersistedState<string[]>(ROUTE_KEY, "filterRepairMulti", []);
+  const [filterLocation, setFilterLocation] = usePersistedState<string[]>(ROUTE_KEY, "filterLocationMulti", []);
+  const [filterSchool, setFilterSchool] = usePersistedState<string[]>(ROUTE_KEY, "filterSchoolMulti", []);
+  const [filterVerified, setFilterVerified] = usePersistedState<string[]>(ROUTE_KEY, "filterVerifiedMulti", []);
   const [toDelete, setToDelete] = useState<{ id: string; serial: string } | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -263,19 +264,26 @@ const AdminInventoryInstruments = () => {
 
   const filtered = items.filter((it: any) => {
     const check = checkByInstrument.get(it.id);
-    if (filterInstrument !== "all" && it.instrument_id !== filterInstrument) return false;
-    if (filterCondition !== "all" && it.condition !== filterCondition) return false;
-    if (filterRepair !== "all" && (it.repair_state || "ok") !== filterRepair) return false;
-    if (filterLocation !== "all") {
-      if (filterLocation === "none" && it.storage_location_id) return false;
-      if (filterLocation !== "none" && it.storage_location_id !== filterLocation) return false;
+    if (filterInstrument.length > 0 && !filterInstrument.includes(it.instrument_id)) return false;
+    if (filterCondition.length > 0 && !filterCondition.includes(it.condition)) return false;
+    if (filterRepair.length > 0 && !filterRepair.includes(it.repair_state || "ok")) return false;
+    if (filterLocation.length > 0) {
+      const hasNone = filterLocation.includes("none");
+      const hasLocations = filterLocation.some((v) => v !== "none");
+      if (hasNone && it.storage_location_id && !filterLocation.includes(it.storage_location_id)) return false;
+      if (hasLocations && !filterLocation.includes(it.storage_location_id || "none")) return false;
     }
-    if (filterSchool !== "all") {
-      if (filterSchool === "none" && it._borrower_school) return false;
-      if (filterSchool !== "none" && it._borrower_school !== filterSchool) return false;
+    if (filterSchool.length > 0) {
+      const hasNone = filterSchool.includes("none");
+      const hasSchools = filterSchool.some((v) => v !== "none");
+      const schoolValue = it._borrower_school || "none";
+      if (hasNone && schoolValue !== "none" && !filterSchool.includes(schoolValue)) return false;
+      if (hasSchools && !filterSchool.includes(schoolValue)) return false;
     }
-    if (filterVerified === "verified" && !check) return false;
-    if (filterVerified === "not_verified" && check) return false;
+    if (filterVerified.length > 0) {
+      const isVerified = !!check;
+      if (!filterVerified.includes(isVerified ? "verified" : "not_verified")) return false;
+    }
     if (search) {
       const s = search.toLowerCase();
       const matches =
@@ -312,12 +320,12 @@ const AdminInventoryInstruments = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-2 mb-3">
         {LOCATION_OPTIONS.map((opt) => {
-          const active = filterCondition === opt.value;
+          const active = filterCondition.includes(opt.value);
           return (
             <button
               key={opt.value}
               type="button"
-              onClick={() => setFilterCondition(active ? "all" : opt.value)}
+              onClick={() => setFilterCondition(active ? [] : [opt.value])}
               className={`rounded-xl border p-3 text-center transition-colors ${
                 active ? "border-primary bg-primary/10 ring-1 ring-primary" : "border-border bg-card hover:bg-muted/50"
               }`}
@@ -329,9 +337,9 @@ const AdminInventoryInstruments = () => {
         })}
         <button
           type="button"
-          onClick={() => setFilterRepair(filterRepair === "needs_repair" ? "all" : "needs_repair")}
+          onClick={() => setFilterRepair(filterRepair.includes("needs_repair") ? [] : ["needs_repair"])}
           className={`rounded-xl border p-3 text-center transition-colors ${
-            filterRepair === "needs_repair"
+            filterRepair.includes("needs_repair")
               ? "border-destructive bg-destructive/15 ring-1 ring-destructive"
               : "border-destructive/20 bg-destructive/5 hover:bg-destructive/10"
           }`}
@@ -341,9 +349,9 @@ const AdminInventoryInstruments = () => {
         </button>
         <button
           type="button"
-          onClick={() => setFilterRepair(filterRepair === "in_repair" ? "all" : "in_repair")}
+          onClick={() => setFilterRepair(filterRepair.includes("in_repair") ? [] : ["in_repair"])}
           className={`rounded-xl border p-3 text-center transition-colors ${
-            filterRepair === "in_repair"
+            filterRepair.includes("in_repair")
               ? "border-amber-400 bg-amber-100 ring-1 ring-amber-400"
               : "border-amber-200 bg-amber-50 hover:bg-amber-100"
           }`}
@@ -353,9 +361,9 @@ const AdminInventoryInstruments = () => {
         </button>
         <button
           type="button"
-          onClick={() => setFilterRepair(filterRepair === "unusable" ? "all" : "unusable")}
+          onClick={() => setFilterRepair(filterRepair.includes("unusable") ? [] : ["unusable"])}
           className={`rounded-xl border p-3 text-center transition-colors ${
-            filterRepair === "unusable"
+            filterRepair.includes("unusable")
               ? "border-neutral-700 bg-neutral-200 ring-1 ring-neutral-700"
               : "border-neutral-300 bg-neutral-100 hover:bg-neutral-200"
           }`}
@@ -369,9 +377,9 @@ const AdminInventoryInstruments = () => {
       {/* Annual check progress */}
       <button
         type="button"
-        onClick={() => setFilterVerified(filterVerified === "not_verified" ? "all" : "not_verified")}
+        onClick={() => setFilterVerified(filterVerified.includes("not_verified") ? [] : ["not_verified"])}
         className={`mb-4 w-full text-right rounded-xl border p-3 transition-colors ${
-          filterVerified === "not_verified"
+          filterVerified.includes("not_verified")
             ? "border-primary bg-primary/10 ring-1 ring-primary"
             : "border-border bg-card hover:bg-muted/50"
         }`}
@@ -451,74 +459,75 @@ const AdminInventoryInstruments = () => {
             <MapPin className="h-4 w-4" /> מיקומי אחסון
           </Button>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2">
-          <Select value={filterInstrument} onValueChange={setFilterInstrument}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="סוג כלי" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל הסוגים</SelectItem>
-              {instruments.map((i) => (
-                <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterCondition} onValueChange={setFilterCondition}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="זמינות הכלי" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל סטטוסי הזמינות</SelectItem>
-              {LOCATION_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterRepair} onValueChange={setFilterRepair}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="תקינות" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל מצבי התקינות</SelectItem>
-              {REPAIR_STATE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterLocation} onValueChange={setFilterLocation}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="מיקום אחסון" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל המיקומים</SelectItem>
-              <SelectItem value="none">ללא מיקום</SelectItem>
-              {locations.map((l) => (
-                <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterSchool} onValueChange={setFilterSchool}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="בית ספר של המושאל" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל בתי הספר</SelectItem>
-              <SelectItem value="none">לא מושאל / ללא בי״ס</SelectItem>
-              {borrowerSchools.map((s) => (
-                <SelectItem key={s} value={s}>{s}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterVerified} onValueChange={setFilterVerified}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="בדיקה" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">כל סטטוסי הבדיקה</SelectItem>
-              <SelectItem value="not_verified">טרם נבדק השנה</SelectItem>
-              <SelectItem value="verified">נבדק השנה</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap gap-2">
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל הסוגים"
+            options={instruments.map((i) => i.id)}
+            renderLabel={(id) => instruments.find((i) => i.id === id)?.name || id}
+            value={filterInstrument}
+            onChange={setFilterInstrument}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל סטטוסי הזמינות"
+            options={LOCATION_OPTIONS.map((o) => o.value)}
+            renderLabel={(v) => LOCATION_OPTIONS.find((o) => o.value === v)?.label || v}
+            value={filterCondition}
+            onChange={setFilterCondition}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל מצבי התקינות"
+            options={REPAIR_STATE_OPTIONS.map((o) => o.value)}
+            renderLabel={(v) => REPAIR_STATE_OPTIONS.find((o) => o.value === v)?.label || v}
+            value={filterRepair}
+            onChange={setFilterRepair}
+          />
+          <MultiSelectFilter
+            className="w-44"
+            allLabel="כל המיקומים"
+            options={["none", ...locations.map((l) => l.id)]}
+            renderLabel={(id) => id === "none" ? "ללא מיקום" : locations.find((l) => l.id === id)?.name || id}
+            value={filterLocation}
+            onChange={setFilterLocation}
+          />
+          <MultiSelectFilter
+            className="w-48"
+            allLabel="כל בתי הספר"
+            options={["none", ...borrowerSchools]}
+            renderLabel={(s) => s === "none" ? "לא מושאל / ללא בי״ס" : s}
+            value={filterSchool}
+            onChange={setFilterSchool}
+          />
+          <MultiSelectFilter
+            className="w-40"
+            allLabel="כל סטטוסי הבדיקה"
+            options={["verified", "not_verified"]}
+            renderLabel={(v) => v === "verified" ? "נבדק השנה" : "טרם נבדק השנה"}
+            value={filterVerified}
+            onChange={setFilterVerified}
+          />
+          {(filterInstrument.length > 0 || filterCondition.length > 0 || filterRepair.length > 0 || filterLocation.length > 0 || filterSchool.length > 0 || filterVerified.length > 0 || search) && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFilterInstrument([]);
+                setFilterCondition([]);
+                setFilterRepair([]);
+                setFilterLocation([]);
+                setFilterSchool([]);
+                setFilterVerified([]);
+                setSearch("");
+              }}
+              className="h-11 rounded-xl gap-1 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+              נקה סינון
+            </Button>
+          )}
         </div>
         {selectedIds.size > 0 && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
