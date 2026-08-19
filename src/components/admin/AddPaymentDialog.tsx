@@ -154,7 +154,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
       resetForm();
-      if (defaultType) setTransactionType(defaultType);
+      if (defaultType) {
+        setTransactionType(defaultType);
+        if (defaultType === "credit") setPaymentMethod("transfer");
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editPayment, open, defaultType]);
