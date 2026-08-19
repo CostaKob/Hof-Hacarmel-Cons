@@ -339,8 +339,10 @@ Deno.serve(async (req: Request) => {
     let external_total = 0;
     for (const [docNum, info] of icountByDoc) {
       const sys = systemByDoc.get(docNum);
-      const isOurs = sys || studentKeys.has(docNum) || smKeys.has(docNum) ||
-        studentKeys.has(info.doc_id) || smKeys.has(info.doc_id);
+      const isStudentDoc = studentKeys.has(docNum) || studentKeys.has(info.doc_id);
+      const isOurs = sys || smKeys.has(docNum) || smKeys.has(info.doc_id);
+      // תשלומי שיעורים פרטניים לא מופיעים בדוח התזרים ולא בהתאמות.
+      if (isStudentDoc) continue;
       if (!isOurs) {
         external_total = Math.round((external_total + info.total) * 100) / 100;
         missing_in_system.push({ doc_number: docNum, amount: info.total, client_name: info.client, doc_date: info.date });
@@ -355,6 +357,7 @@ Deno.serve(async (req: Request) => {
     }
     const missing_in_icount: { doc_number: string; amount: number; source: string }[] = [];
     for (const [docNum, sys] of systemByDoc) {
+      if (studentKeys.has(docNum)) continue;
       if (!icountByDoc.has(docNum)) missing_in_icount.push({ doc_number: docNum, amount: sys.total, source: sys.source });
     }
     const sum = (ns: number[]) => Math.round(ns.reduce((a, b) => a + b, 0) * 100) / 100;
