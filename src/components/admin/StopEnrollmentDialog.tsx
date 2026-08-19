@@ -71,6 +71,7 @@ const StopEnrollmentDialog = ({
 
   const futureRows = rows.filter((r) => r.status === "future");
   const paidRows = rows.filter((r) => r.status === "cleared");
+  const pendingRows = rows.filter((r) => r.status === "pending_cancellation");
   const historyRows = rows.filter((r) => r.status === "cancelled" || r.status === "refunded");
 
   const sum = (list: ScheduleRow[]) => list.reduce((s, r) => s + r.remaining, 0);
