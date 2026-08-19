@@ -8,7 +8,7 @@ interface DashboardItem {
   path: string;
   label: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
 }
 
 const PRIVATE_LESSONS_SECTIONS: DashboardItem[] = [
