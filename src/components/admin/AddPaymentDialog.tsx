@@ -739,6 +739,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
+      // Single-student mode with two parents on the family record: bill the
+      // parent explicitly chosen by the user.
+      const chosenParentPayer = !familyContext && hasTwoParents && selectedPayerParent
+        ? (() => {
+            const parts = selectedPayerParent.name.trim().split(/\s+/);
+            return {
+              firstName: parts[0] ?? "",
+              lastName: parts.slice(1).join(" "),
+              email: selectedPayerParent.email,
+              phone: selectedPayerParent.phone,
+              nationalId: selectedPayerParent.nationalId,
+            };
+          })()
+        : null;
+
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
         body: {
           studentId: anchorStudentId,
@@ -753,6 +768,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             // Force a new paypage — the anchor student's cached pending row
             // may belong to a non-family link.
             forceNewPaypage: true,
+          } : {}),
+          ...(chosenParentPayer ? {
+            skipPayerPrefill: true,
+            payerLabel: `הורה משלם - ${selectedPayerParent!.name}`,
+            payerDetails: chosenParentPayer,
           } : {}),
           ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
         },
