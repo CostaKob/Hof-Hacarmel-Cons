@@ -34,8 +34,6 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/admin/private-payments", label: "תשלומים", icon: Wallet },
 ];
 
-const TOP_ROW = NAV_ITEMS.slice(0, 5);
-const BOTTOM_ROW = NAV_ITEMS.slice(5);
 
 interface AdminLayoutProps {
   children: ReactNode;
