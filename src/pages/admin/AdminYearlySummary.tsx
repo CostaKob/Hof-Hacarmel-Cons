@@ -108,8 +108,8 @@ const AdminYearlySummary = () => {
   const isLoading = eLoading || lLoading;
 
   return (
-    <AdminLayout title="סיכום שיעורים שנתי - כלל המערכת" backPath="/admin">
-      <PageTitle title="סיכום שנתי" />
+    <AdminLayout title="נוכחות תלמידים - סיכום שנתי" backPath="/admin">
+      <PageTitle title="נוכחות תלמידים - סיכום שנתי" />
       <div className="space-y-4">
         {/* Filters */}
         <div className="flex flex-wrap gap-3">
