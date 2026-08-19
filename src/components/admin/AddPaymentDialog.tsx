@@ -1241,7 +1241,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             onChange={(ev) =>
                               setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
-                            placeholder={it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
+                            placeholder={transactionType === "credit" ? "0.00" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="h-9 w-24 shrink-0 sm:w-28"
                           />
                         </div>
