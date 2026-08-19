@@ -26,7 +26,14 @@ interface Props {
   parentNationalId?: string | null;
   studentIds?: string[];
   /** Opens the existing bank-transfer refund letter flow for the remaining difference. */
-  onRequestTransfer?: (args: { amount: number; parentName: string }) => void;
+  onRequestTransfer?: (args: {
+    amount: number;
+    parentName: string;
+    chequesTotal: number;
+    creditDue: number;
+    chequesCount: number;
+  }) => void;
+
   invalidate: () => void;
 }
 
