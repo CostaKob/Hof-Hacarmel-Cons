@@ -203,8 +203,12 @@ const AdminInventoryInstrumentForm = () => {
         .from("instrument_loans")
         .select(`
           *,
-          students(id, first_name, last_name),
-          school_music_students(id, student_first_name, student_last_name)
+          students(id, first_name, last_name, grade),
+          school_music_students(
+            id, student_first_name, student_last_name, class_name,
+            school_music_schools(school_name),
+            academic_years(name)
+          )
         `)
         .eq("inventory_instrument_id", id!)
         .order("loan_date", { ascending: false });
@@ -213,6 +217,35 @@ const AdminInventoryInstrumentForm = () => {
     },
     enabled: isEdit,
   });
+
+  // Context (branch school / academic year / grade) for private students in the loan list
+  const privateStudentIds = Array.from(
+    new Set((loans as any[]).map((l) => l.student_id).filter(Boolean)),
+  ) as string[];
+
+  const { data: privateContext = {} } = useQuery({
+    queryKey: ["instrument-loan-private-context", privateStudentIds.sort().join(",")],
+    enabled: privateStudentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("student_id, grade, start_date, schools(name), academic_years(name)")
+        .in("student_id", privateStudentIds)
+        .order("start_date", { ascending: false });
+      if (error) throw error;
+      const map: Record<string, { school?: string; year?: string; grade?: string }> = {};
+      (data as any[]).forEach((e) => {
+        if (map[e.student_id]) return;
+        map[e.student_id] = {
+          school: e.schools?.name,
+          year: e.academic_years?.name,
+          grade: e.grade || undefined,
+        };
+      });
+      return map;
+    },
+  });
+
 
   useEffect(() => {
     if (item && initializedItemIdRef.current !== item.id) {
@@ -837,32 +870,56 @@ const AdminInventoryInstrumentForm = () => {
                     ? `/admin/students/${loan.student_id}`
                     : null;
                   const isActive = !loan.return_date;
+                  const ctx = isPrivate ? (privateContext as any)[loan.student_id] : null;
+                  const schoolName = isPrivate
+                    ? ctx?.school
+                    : student?.school_music_schools?.school_name;
+                  const yearLabel = isPrivate
+                    ? ctx?.year
+                    : student?.academic_years?.name;
+                  const classLabel = isPrivate ? ctx?.grade : student?.class_name;
+                  const details = [
+                    schoolName && `בי"ס: ${schoolName}`,
+                    yearLabel && `שנה: ${yearLabel}`,
+                    classLabel && `כיתה: ${classLabel}`,
+                  ].filter(Boolean) as string[];
+
                   return (
                     <div
                       key={loan.id}
                       className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3 bg-background"
                     >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                        {studentLink ? (
-                          <button
-                            type="button"
-                            onClick={() => navigate(studentLink)}
-                            className="text-sm font-medium text-primary hover:underline truncate flex items-center gap-1"
-                          >
-                            {name || "ללא שם"}
-                            <ExternalLink className="h-3 w-3" />
-                          </button>
-                        ) : (
-                          <span className="text-sm font-medium truncate">{name || "ללא שם"}</span>
-                        )}
-                        <Badge variant="outline" className="text-[10px]">
-                          {isPrivate ? "פרטני" : "ביס מנגן"}
-                        </Badge>
-                        {isActive && (
-                          <Badge variant="outline" className={CONDITION_COLORS.loaned}>פעיל</Badge>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                          {studentLink ? (
+                            <button
+                              type="button"
+                              onClick={() => navigate(studentLink)}
+                              className="text-sm font-medium text-primary hover:underline truncate flex items-center gap-1"
+                            >
+                              {name || "ללא שם"}
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                          ) : (
+                            <span className="text-sm font-medium truncate">{name || "ללא שם"}</span>
+                          )}
+                          <Badge variant="outline" className="text-[10px]">
+                            {isPrivate ? "פרטני" : "ביס מנגן"}
+                          </Badge>
+                          {isActive && (
+                            <Badge variant="outline" className={CONDITION_COLORS.loaned}>פעיל</Badge>
+                          )}
+                        </div>
+                        {details.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground pr-6">
+                            {details.map((d, i) => (
+                              <span key={i}>{d}</span>
+                            ))}
+                          </div>
                         )}
                       </div>
+
                       {editingLoanId === loan.id ? (
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                           <div className="flex items-center gap-1">
