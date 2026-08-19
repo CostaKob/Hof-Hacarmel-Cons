@@ -534,7 +534,8 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
       {/* Add payment */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
+        <DialogContent dir="rtl" className="max-w-md max-h-[85vh] overflow-y-auto overscroll-contain">
+
           <DialogHeader><DialogTitle>הוספת תשלום</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
