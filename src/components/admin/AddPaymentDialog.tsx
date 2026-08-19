@@ -204,11 +204,23 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return opts;
   }, [student]);
 
-  const hasTwoParents = !familyContext && parentOptions.length > 1;
+  const hasTwoParents = parentOptions.length > 1;
   const selectedPayerParent = useMemo(
     () => parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null,
     [parentOptions, payerChoice],
   );
+
+  // Default the picker to the parent that the family context bills, if identifiable.
+  useEffect(() => {
+    if (!open || !familyContext || parentOptions.length < 2) return;
+    const pid = (familyContext.parentNationalId ?? "").trim();
+    const match = parentOptions.find(
+      (p) => (pid && p.nationalId === pid) || p.name === (familyContext.parentName ?? "").trim(),
+    );
+    if (match) setPayerChoice(match.key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, familyContext?.parentNationalId, parentOptions.length]);
+
 
   const { data: settings } = useQuery({
     queryKey: ["addpay-payment-settings"],
