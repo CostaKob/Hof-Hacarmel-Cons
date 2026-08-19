@@ -200,7 +200,7 @@ export interface ScheduleTotals {
 export function scheduleTotals(rows: ScheduleRow[]): ScheduleTotals {
   const t: ScheduleTotals = { paid: 0, future: 0, cancelled: 0, refunded: 0 };
   for (const r of rows) {
-    if (r.status === "cancelled") t.cancelled += r.amount;
+    if (r.status === "cancelled" || r.status === "pending_cancellation") t.cancelled += r.amount;
     else if (r.status === "refunded") t.refunded += r.amount;
     else if (r.status === "future") t.future += r.remaining;
     else t.paid += r.remaining;
