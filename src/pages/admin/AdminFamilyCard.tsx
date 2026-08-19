@@ -25,7 +25,6 @@ import {
   Receipt,
   ArrowLeft,
   FileDown,
-  Undo2,
   Trash2,
   Plus,
   Copy,
