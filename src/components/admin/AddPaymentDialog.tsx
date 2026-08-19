@@ -24,10 +24,10 @@ const PAYMENT_METHODS = [
   { value: "check", label: "צ׳ק" },
 ];
 
-// Credit (זיכוי) can also be executed as an outgoing bank transfer.
+// Credit (זיכוי) is executed as an outgoing bank transfer by default.
 const CREDIT_PAYMENT_METHODS = [
+  { value: "transfer", label: "העברה בנקאית (ברירת מחדל)" },
   ...PAYMENT_METHODS,
-  { value: "transfer", label: "העברה בנקאית" },
 ];
 
 
