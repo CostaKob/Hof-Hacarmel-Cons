@@ -271,7 +271,10 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
         const items = r.cheque_cancellation_request_items ?? [];
         const busy =
           receivedMutation.isPending || transferRequestedMutation.isPending ||
-          completeMutation.isPending || abortMutation.isPending;
+          completeMutation.isPending || abortMutation.isPending ||
+          stepBackMutation.isPending || removeItemMutation.isPending;
+        const canStepBack = status === "awaiting_transfer" || status === "transfer_requested" || status === "cancelled";
+        const canEditItems = status === "awaiting_cheques" || status === "awaiting_transfer";
         return (
           <div key={r.id} className="rounded-xl border border-border p-3 space-y-2">
             <div className="flex items-start justify-between gap-2 flex-wrap">
