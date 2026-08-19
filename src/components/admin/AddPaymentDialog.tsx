@@ -1242,7 +1242,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
             {(isEdit || paymentMethod !== "credit_card") && (
               <div>
-                <Label>תאריך תשלום</Label>
+                <Label>{transactionType === "credit" ? "תאריך זיכוי" : "תאריך תשלום"}</Label>
                 <DateInput value={paymentDate} onChange={(v) => setPaymentDate(v)} />
               </div>
             )}
