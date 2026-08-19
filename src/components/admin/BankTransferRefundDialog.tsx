@@ -53,6 +53,12 @@ const DEFAULT_TEMPLATE = `שלום רב,
 {{שם_הארגון}}
 {{פרטי_קשר}}`;
 
+export interface AccountSummaryLine {
+  label: string;
+  value: string;
+  strong?: boolean;
+}
+
 export interface BankRefundDefaults {
   studentId?: string;
   parentName?: string;
@@ -62,7 +68,10 @@ export interface BankRefundDefaults {
   refundAmount?: number;
   paymentId: string;
   docNumber?: string | null;
+  /** Snapshot of the family account (charged / paid / cheques / credit due). */
+  accountSummary?: AccountSummaryLine[];
 }
+
 
 interface Props {
   open: boolean;
@@ -229,6 +238,21 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
 
   const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
 
+  // "State of the account" block — so the bookkeeping office sees how the refund
+  // amount was derived (charged, paid, cheques cancelled, credit due).
+  const summaryLines = defaults?.accountSummary ?? [];
+  const summaryText = summaryLines.length
+    ? `מצב החשבון:\n${summaryLines.map((l) => `${l.label}: ${l.value}`).join("\n")}`
+    : "";
+  const summaryHtml = summaryLines.length
+    ? `<table class="summary"><caption>מצב החשבון</caption><tbody>${summaryLines
+        .map(
+          (l) =>
+            `<tr class="${l.strong ? "strong" : ""}"><th>${esc(l.label)}</th><td>${esc(l.value)}</td></tr>`,
+        )
+        .join("")}</tbody></table>`
+    : "";
+
   const buildHtml = () => `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8">
 <title>בקשת החזר בהעברה בנקאית</title>
 <style>
@@ -239,13 +263,20 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   h1 { font-size: 17px; margin: 18px 0 4px; text-decoration: underline; }
   h2 { font-size: 15px; margin: 0 0 18px; text-decoration: underline; font-weight: 600; }
   pre { font-family: inherit; font-size: 15px; white-space: pre-wrap; margin: 0; }
+  table.summary { border-collapse: collapse; margin: 16px 0; min-width: 320px; font-size: 14px; }
+  table.summary caption { text-align: right; font-weight: 700; padding-bottom: 6px; }
+  table.summary th, table.summary td { border: 1px solid #bbb; padding: 6px 12px; text-align: right; font-weight: 400; }
+  table.summary th { background: #f3f4f6; }
+  table.summary tr.strong th, table.summary tr.strong td { font-weight: 700; background: #fef3c7; }
 </style></head><body>
 <img class="logo" src="${logoUrl}" alt="" />
 <div class="date">${esc(letterDate)}</div>
 <h1>הנדון: ביטול עסקת ${esc(transactionKind)} ${esc(cancelKind)} ע"י העברה בנקאית</h1>
 ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
 <pre>${esc(filled)}</pre>
+${summaryHtml}
 </body></html>`;
+
 
   const saveDocument = async (html: string) => {
     const path = `${defaults?.studentId || "general"}/${Date.now()}-refund-letter.html`;
@@ -264,7 +295,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
       parent_name: parentName || accountOwner || null,
       refund_amount: Number(refundAmount) || null,
       bank_reference: reference || null,
-      content_text: filled,
+      content_text: summaryText ? `${filled}\n\n${summaryText}` : filled,
       content_html: html,
       file_path: path,
       created_by: userRes?.user?.id ?? null,
@@ -391,8 +422,24 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
             </div>
           )}
 
+          {summaryLines.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-sm font-semibold mb-2">מצב החשבון</p>
+              <div className="grid gap-1 sm:grid-cols-2">
+                {summaryLines.map((l) => (
+                  <div key={l.label}
+                    className={`flex items-center justify-between gap-3 text-sm rounded-lg px-2 py-1 ${l.strong ? "bg-amber-500/10 font-semibold text-foreground" : "text-muted-foreground"}`}>
+                    <span>{l.label}</span>
+                    <span className="font-mono">{l.value}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">הפירוט הזה מודפס גם במכתב להנהלת החשבונות.</p>
+            </div>
+          )}
 
           <div className="grid gap-4 md:grid-cols-2">
+
             {/* Form */}
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">

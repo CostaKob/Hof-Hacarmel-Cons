@@ -1543,17 +1543,29 @@ const AdminFamilyCard = () => {
           parentNationalId={parentNationalId}
           studentIds={family?.children_ids ?? []}
           invalidate={invalidateFamily}
-          onRequestTransfer={({ amount, parentName }) => {
+          onRequestTransfer={({ amount, parentName, chequesTotal, creditDue, chequesCount }) => {
             const src = payments.find((p: any) => p.payment_method === "check" && p.icount_doc_id) ?? payments[0];
+            const due = creditDue || Math.max(0, -balance);
+            const finalAmount = amount || Math.max(0, Math.round((due - chequesTotal) * 100) / 100);
             setBankRefund({
               studentId: family?.children_ids?.[0],
               parentName: parentName || family?.parent_name || "",
               subject: "החזר יתרה לאחר ביטול צ׳קים",
-              refundAmount: amount,
+              paidAmount: Math.round(totalPaid),
+              refundAmount: finalAmount,
               paymentId: src?.id,
               docNumber: src?.icount_doc_number ?? null,
+              accountSummary: [
+                { label: "סה״כ חיוב", value: fmt(totalExpected) },
+                { label: "סה״כ שולם בפועל", value: fmt(totalPaid) },
+                { label: "זיכויים שכבר בוצעו", value: fmt(Math.abs(totalCredit)) },
+                { label: `צ׳קים שבוטלו (${chequesCount})`, value: fmt(chequesTotal) },
+                { label: "סה״כ מגיע להורה", value: fmt(due) },
+                { label: "להעברה בנקאית", value: fmt(finalAmount), strong: true },
+              ],
             });
           }}
+
         />
       </div>
 
