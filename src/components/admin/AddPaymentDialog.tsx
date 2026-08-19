@@ -179,6 +179,37 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     },
   });
 
+  // Parents available for billing on this student (single-student mode only).
+  const parentOptions = useMemo(() => {
+    if (!student) return [] as Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }>;
+    const opts: Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }> = [];
+    if ((student.parent_name ?? "").trim() || (student.parent_national_id ?? "").trim()) {
+      opts.push({
+        key: "p1",
+        name: (student.parent_name ?? "").trim() || "הורה 1",
+        nationalId: (student.parent_national_id ?? "").trim(),
+        email: (student.parent_email ?? "").trim(),
+        phone: (student.parent_phone ?? "").trim(),
+      });
+    }
+    if ((student.parent_name_2 ?? "").trim() || (student.parent_national_id_2 ?? "").trim()) {
+      opts.push({
+        key: "p2",
+        name: (student.parent_name_2 ?? "").trim() || "הורה 2",
+        nationalId: (student.parent_national_id_2 ?? "").trim(),
+        email: (student.parent_email_2 ?? "").trim(),
+        phone: (student.parent_phone_2 ?? "").trim(),
+      });
+    }
+    return opts;
+  }, [student]);
+
+  const hasTwoParents = !familyContext && parentOptions.length > 1;
+  const selectedPayerParent = useMemo(
+    () => parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null,
+    [parentOptions, payerChoice],
+  );
+
   const { data: settings } = useQuery({
     queryKey: ["addpay-payment-settings"],
     enabled: open,
