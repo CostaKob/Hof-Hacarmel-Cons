@@ -1306,9 +1306,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     onChange={(e) => setBankRefundAmount(e.target.value)}
                     placeholder="0.00"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    זיכוי אחד לכל הקבלה — לא לכל צ׳ק בנפרד.
-                  </p>
                 </div>
                 <Button
                   className="w-full h-11 rounded-xl"
