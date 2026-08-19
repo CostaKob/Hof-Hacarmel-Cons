@@ -401,6 +401,25 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
             <DialogTitle>אישור ההעברה והפקת קבלת זיכוי</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            {confirmTarget && (
+              <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">
+                    סכום קבלת הזיכוי ({(confirmTarget.cheque_cancellation_request_items ?? []).length} צ׳קים שבוטלו)
+                  </span>
+                  <b className="text-foreground">
+                    {fmt((confirmTarget.cheque_cancellation_request_items ?? [])
+                      .reduce((s: number, i: any) => s + Number(i.amount || 0), 0))}
+                  </b>
+                </div>
+                {Number(confirmTarget.refund_amount) > 0 && (
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>מתוכו הוחזר בהעברה בנקאית</span>
+                    <span>{fmt(confirmTarget.refund_amount)}</span>
+                  </div>
+                )}
+              </div>
+            )}
             <div>
               <Label className="text-sm">תאריך ההעברה</Label>
               <Input type="date" className="h-12 rounded-xl mt-1" value={transferDate}
