@@ -90,9 +90,11 @@ interface AddPaymentDialogProps {
   defaultType?: "payment" | "credit";
   familyContext?: FamilyPaymentContext | null;
   refundSources?: RefundSource[];
+  /** Opens the "cancel future cheques" dialog from within the credit flow. */
+  onOpenChequeCancel?: () => void;
 }
 
-const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext, refundSources = [] }: AddPaymentDialogProps) => {
+const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPayment, defaultType, familyContext, refundSources = [], onOpenChequeCancel }: AddPaymentDialogProps) => {
 
 
   const queryClient = useQueryClient();
@@ -1252,6 +1254,20 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 ))}
               </select>
             </div>
+
+            {!isEdit && transactionType === "credit" && onOpenChequeCancel && (
+              <div className="rounded-xl border border-border bg-muted/30 p-3 flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground">צ׳קים עתידיים</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    לפני החזר בהעברה בנקאית — בדקו אם יש צ׳קים שטרם הופקדו וניתן לבטל אותם.
+                  </p>
+                </div>
+                <Button type="button" variant="outline" className="h-10 rounded-xl shrink-0 gap-2" onClick={onOpenChequeCancel}>
+                  <CalendarClock className="h-4 w-4" /> ביטול צ׳קים עתידיים
+                </Button>
+              </div>
+            )}
 
             {/* Credit executed as an outgoing bank transfer — one refund for the
                 whole receipt (including cheque spreads), not per cheque. */}
