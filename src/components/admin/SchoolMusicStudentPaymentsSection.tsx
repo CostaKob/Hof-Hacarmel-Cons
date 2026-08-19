@@ -10,7 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, Link2Off, MessageCircle, Loader2 } from "lucide-react";
+import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, MessageCircle, Loader2 } from "lucide-react";
+import { DateInput } from "@/components/ui/date-input";
+import BankBranchPicker from "@/components/admin/BankBranchPicker";
 import { toast } from "sonner";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
@@ -42,6 +44,16 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   cancelled: "outline",
 };
 
+const METHOD_LABELS: Record<string, string> = {
+  cash: "מזומן",
+  credit_card: "כרטיס אשראי",
+  bank_transfer: "העברה בנקאית",
+  cheque: "צ׳ק",
+  bit: "ביט",
+  other: "אחר",
+};
+
+
 const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, academicYearId, defaultAmount }: Props) => {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
@@ -49,6 +61,13 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   const [method, setMethod] = useState("cash");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  // Cheque details (used when method === "cheque")
+  const [chequeNumber, setChequeNumber] = useState("");
+  const [chequeDate, setChequeDate] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankCode, setBankCode] = useState("");
+  const [bankBranch, setBankBranch] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
 
   const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
@@ -160,6 +179,17 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         }
       }
 
+      const chequeInfo = method === "cheque"
+        ? [
+            chequeNumber && `צ׳ק ${chequeNumber}`,
+            chequeDate && `תאריך פירעון: ${chequeDate.split("-").reverse().join("/")}`,
+            bankName && `בנק: ${bankName}`,
+            bankBranch && `סניף: ${bankBranch}`,
+            bankAccount && `ח-ן: ${bankAccount}`,
+          ].filter(Boolean).join(" · ")
+        : "";
+      const finalNotes = [notes, chequeInfo].filter(Boolean).join(" | ");
+
       const { error } = await supabase.from("school_music_payments" as any).insert({
         school_music_student_id: studentId,
         school_music_school_id: schoolMusicSchoolId,
@@ -167,9 +197,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         amount: amt,
         payment_status: "paid",
         payment_method: method,
-        transaction_reference: reference || null,
-        paid_at: new Date().toISOString(),
-        notes: notes || null,
+        transaction_reference: (method === "cheque" ? chequeNumber : reference) || reference || null,
+        paid_at: (method === "cheque" && chequeDate ? new Date(chequeDate) : new Date()).toISOString(),
+        notes: finalNotes || null,
       });
       if (error) throw error;
 
@@ -229,6 +259,12 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
       setMethod("cash");
       setReference("");
       setNotes("");
+      setChequeNumber("");
+      setChequeDate("");
+      setBankName("");
+      setBankCode("");
+      setBankBranch("");
+      setBankAccount("");
       toast.success("התשלום נרשם");
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בהוספת תשלום"),
@@ -257,26 +293,8 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
   });
 
-  // Deletes only the iCount paypage + link, keeping the pending payment row.
-  const deleteLinkMutation = useMutation({
-    mutationFn: async (payment: PaymentRow) => {
-      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
-        body: { paymentId: payment.id, strict: true },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
-      await supabase
-        .from("school_music_payments" as any)
-        .update({ payment_link_url: null, icount_payment_page_id: null })
-        .eq("id", payment.id);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
-      invalidate();
-      toast.success("הקישור ודף הסליקה נמחקו");
-    },
-    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
-  });
+
+
 
   const cleanupStaleLinkMutation = useMutation({
     mutationFn: async () => {
@@ -438,7 +456,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   <p className="text-xs text-muted-foreground mt-0.5">
                     נוצר: {new Date(p.created_at).toLocaleDateString("he-IL")}
                     {p.paid_at && ` · שולם: ${new Date(p.paid_at).toLocaleDateString("he-IL")}`}
-                    {p.payment_method && ` · ${p.payment_method}`}
+                    {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] ?? p.payment_method}`}
                     {p.transaction_reference && ` · אסמכתא ${p.transaction_reference}`}
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
@@ -475,19 +493,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="icon" variant="outline"
-                        className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                        title="מחק קישור תשלום וסגור את דף הסליקה ב-iCount"
-                        disabled={deleteLinkMutation.isPending}
-                        onClick={() => {
-                          if (confirm("למחוק את קישור התשלום? דף הסליקה ייסגר ויימחק מ-iCount.")) {
-                            deleteLinkMutation.mutate(p);
-                          }
-                        }}>
-                        {deleteLinkMutation.isPending
-                          ? <Loader2 className="h-4 w-4 animate-spin" />
-                          : <Link2Off className="h-4 w-4" />}
-                      </Button>
                     </>
                   )}
                   {canIssueReceipt && (
@@ -539,7 +544,8 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
       {/* Add payment */}
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent dir="rtl" className="max-w-md">
+        <DialogContent dir="rtl" className="max-w-md max-h-[85vh] overflow-y-auto overscroll-contain">
+
           <DialogHeader><DialogTitle>הוספת תשלום</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div className="space-y-1.5">
@@ -554,16 +560,47 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   <SelectItem value="cash">מזומן</SelectItem>
                   <SelectItem value="credit_card">כרטיס אשראי</SelectItem>
                   <SelectItem value="bank_transfer">העברה בנקאית</SelectItem>
-                  <SelectItem value="cheque">המחאה</SelectItem>
+                  <SelectItem value="cheque">צ׳ק</SelectItem>
                   <SelectItem value="bit">ביט</SelectItem>
                   <SelectItem value="other">אחר</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {method === "cheque" && (
+              <div className="rounded-xl border border-border p-3 space-y-3">
+                <p className="text-xs font-medium text-foreground">פרטי הצ׳ק</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">מספר צ׳ק</Label>
+                    <Input value={chequeNumber} onChange={(e) => setChequeNumber(e.target.value)}
+                      placeholder="לדוגמה: 1234" className="h-10 rounded-xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">תאריך פירעון</Label>
+                    <DateInput value={chequeDate} onChange={(v) => setChequeDate(v)} className="h-10 rounded-xl" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 items-end">
+                  <BankBranchPicker
+                    bankName={bankName}
+                    setBankName={setBankName}
+                    bankCode={bankCode}
+                    setBankCode={setBankCode}
+                    branch={bankBranch}
+                    setBranch={setBankBranch}
+                  />
+                  <div className="space-y-1">
+                    <Label className="text-xs">מס׳ חשבון</Label>
+                    <Input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} className="h-10 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-sm">אסמכתא (אופציונלי)</Label>
               <Input value={reference} onChange={(e) => setReference(e.target.value)} className="h-11 rounded-xl" />
             </div>
+
             <div className="space-y-1.5">
               <Label className="text-sm">הערות</Label>
               <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-11 rounded-xl" />
