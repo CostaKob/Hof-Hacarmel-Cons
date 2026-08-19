@@ -1433,6 +1433,33 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </div>
             {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
               <div className="space-y-2">
+                {hasTwoParents && (
+                  <div className="rounded-xl border border-border p-3 space-y-2">
+                    <Label className="text-sm">מי ההורה המשלם?</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {parentOptions.map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          onClick={() => setPayerChoice(p.key)}
+                          className={`text-right rounded-xl border p-2.5 transition ${
+                            payerChoice === p.key
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-muted/50"
+                          }`}
+                        >
+                          <p className="text-sm font-medium">{p.name}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {[p.nationalId, p.phone, p.email].filter(Boolean).join(" · ") || "אין פרטים"}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      פרטי ההורה שנבחר ימולאו אוטומטית בדף התשלום.
+                    </p>
+                  </div>
+                )}
                 <Button
                   variant="outline"
                   className="w-full h-11 rounded-xl"
