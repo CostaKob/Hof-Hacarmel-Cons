@@ -203,8 +203,12 @@ const AdminInventoryInstrumentForm = () => {
         .from("instrument_loans")
         .select(`
           *,
-          students(id, first_name, last_name),
-          school_music_students(id, student_first_name, student_last_name)
+          students(id, first_name, last_name, grade),
+          school_music_students(
+            id, student_first_name, student_last_name, class_name,
+            school_music_schools(school_name),
+            academic_years(name)
+          )
         `)
         .eq("inventory_instrument_id", id!)
         .order("loan_date", { ascending: false });
@@ -213,6 +217,35 @@ const AdminInventoryInstrumentForm = () => {
     },
     enabled: isEdit,
   });
+
+  // Context (branch school / academic year / grade) for private students in the loan list
+  const privateStudentIds = Array.from(
+    new Set((loans as any[]).map((l) => l.student_id).filter(Boolean)),
+  ) as string[];
+
+  const { data: privateContext = {} } = useQuery({
+    queryKey: ["instrument-loan-private-context", privateStudentIds.sort().join(",")],
+    enabled: privateStudentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("student_id, grade, start_date, schools(name), academic_years(name)")
+        .in("student_id", privateStudentIds)
+        .order("start_date", { ascending: false });
+      if (error) throw error;
+      const map: Record<string, { school?: string; year?: string; grade?: string }> = {};
+      (data as any[]).forEach((e) => {
+        if (map[e.student_id]) return;
+        map[e.student_id] = {
+          school: e.schools?.name,
+          year: e.academic_years?.name,
+          grade: e.grade || undefined,
+        };
+      });
+      return map;
+    },
+  });
+
 
   useEffect(() => {
     if (item && initializedItemIdRef.current !== item.id) {
