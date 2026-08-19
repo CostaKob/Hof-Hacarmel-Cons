@@ -5,12 +5,13 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle } from "lucide-react";
+import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle, RotateCcw } from "lucide-react";
 import { useFamiliesList } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
 import { useFamilyDupDismissals, dupPairKey } from "@/hooks/useFamilyDupDismissals";
+import { useOpenRefundProcesses } from "@/hooks/useRefundProcess";
 
 const norm = (s?: string | null) => (s || "").trim().toLowerCase();
 const pairKey = dupPairKey;
@@ -23,6 +24,9 @@ const AdminFamilies = () => {
   const [q, setQ] = useState("");
   const [onlyMulti, setOnlyMulti] = useState(false);
   const [onlyDup, setOnlyDup] = useState(false);
+  const [onlyRefund, setOnlyRefund] = useState(false);
+  const { data: refundProcesses } = useOpenRefundProcesses(yearId);
+  const refundByFamily = refundProcesses?.byFamily;
   const { dismissed, dismissPairs } = useFamilyDupDismissals();
   const [mergeTarget, setMergeTarget] = useState<{
     id: string;
@@ -81,6 +85,7 @@ const AdminFamilies = () => {
     let list = [...families];
     if (onlyMulti) list = list.filter((f) => f.children_count > 1);
     if (onlyDup) list = list.filter((f) => dupIds.has(f.parent_national_id));
+    if (onlyRefund) list = list.filter((f) => refundByFamily?.has(f.parent_national_id));
     if (term) {
       list = list.filter((f) => {
         return (
@@ -96,9 +101,10 @@ const AdminFamilies = () => {
       if (b.children_count !== a.children_count) return b.children_count - a.children_count;
       return cmpHe(a.parent_name || "", b.parent_name || "");
     });
-  }, [families, q, onlyMulti, onlyDup, dupIds]);
+  }, [families, q, onlyMulti, onlyDup, onlyRefund, dupIds, refundByFamily]);
 
   const multiCount = families.filter((f) => f.children_count > 1).length;
+  const refundCount = families.filter((f) => refundByFamily?.has(f.parent_national_id)).length;
 
 
   return (
@@ -135,6 +141,16 @@ const AdminFamilies = () => {
             כפילויות אפשריות
             <Badge variant="secondary" className="ms-2">{dupIds.size}</Badge>
           </Button>
+          <Button
+            type="button"
+            variant={onlyRefund ? "default" : "outline"}
+            onClick={() => setOnlyRefund((v) => !v)}
+            className="h-12 rounded-xl w-full sm:w-auto"
+          >
+            <RotateCcw className="h-4 w-4 ms-2" />
+            בתהליך זיכוי
+            <Badge variant="secondary" className="ms-2">{refundCount}</Badge>
+          </Button>
         </div>
 
         <div className="text-sm text-muted-foreground">
@@ -163,6 +179,14 @@ const AdminFamilies = () => {
                   <Badge variant={f.children_count > 1 ? "default" : "secondary"}>
                     {f.children_count} {f.children_count === 1 ? "ילד" : "ילדים"}
                   </Badge>
+                  {refundByFamily?.has(f.parent_national_id) && (
+                    <span
+                      className={`text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap ${refundByFamily.get(f.parent_national_id)!.className}`}
+                      title={refundByFamily.get(f.parent_national_id)!.label}
+                    >
+                      בתהליך זיכוי
+                    </span>
+                  )}
                   {dupIds.has(f.parent_national_id) && (
                     <Badge variant="destructive" className="gap-1">
                       <AlertTriangle className="h-3 w-3" />
