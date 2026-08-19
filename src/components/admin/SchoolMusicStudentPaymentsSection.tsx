@@ -51,6 +51,13 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
   const [method, setMethod] = useState("cash");
   const [reference, setReference] = useState("");
   const [notes, setNotes] = useState("");
+  // Cheque details (used when method === "cheque")
+  const [chequeNumber, setChequeNumber] = useState("");
+  const [chequeDate, setChequeDate] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [bankCode, setBankCode] = useState("");
+  const [bankBranch, setBankBranch] = useState("");
+  const [bankAccount, setBankAccount] = useState("");
 
   const [pendingInvoiceId, setPendingInvoiceId] = useState<string | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
