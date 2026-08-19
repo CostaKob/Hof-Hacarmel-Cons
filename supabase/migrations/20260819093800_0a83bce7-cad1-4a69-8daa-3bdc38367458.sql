@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_inventory_condition_from_loans() FROM PUBLIC, anon, authenticated;
