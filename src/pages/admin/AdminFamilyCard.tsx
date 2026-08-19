@@ -1074,9 +1074,7 @@ const AdminFamilyCard = () => {
                         {canRefund && (
                           <Button variant="outline" size="icon"
                             className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                            title={p.payment_method === "credit_card"
-                              ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
-                              : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
+                            title={`זיכוי (נותר ₪${remaining.toLocaleString()})`}
                             onClick={() => {
                               setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
                               setRefundMethod("bank_transfer");
