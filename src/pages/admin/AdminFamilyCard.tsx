@@ -1074,12 +1074,10 @@ const AdminFamilyCard = () => {
                         {canRefund && (
                           <Button variant="outline" size="icon"
                             className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                            title={p.payment_method === "credit_card"
-                              ? `החזר אשראי (נותר ₪${remaining.toLocaleString()})`
-                              : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
+                            title={`זיכוי (נותר ₪${remaining.toLocaleString()})`}
                             onClick={() => {
                               setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
-                              setRefundMethod(p.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
+                              setRefundMethod("bank_transfer");
                               setRefundAmount(String(remaining));
                             }}>
                             <Undo2 className="h-4 w-4" />
@@ -1174,7 +1172,7 @@ const AdminFamilyCard = () => {
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
                                       setRefundTarget({ ...r, _remaining: rRemaining, _cc: r.payment_method === "credit_card" });
-                                      setRefundMethod(r.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
+                                      setRefundMethod("bank_transfer");
                                       setRefundAmount(String(rRemaining));
                                     }}>
                                     <Undo2 className="h-3.5 w-3.5" />
@@ -1437,8 +1435,8 @@ const AdminFamilyCard = () => {
                           key: "credit_card" as const,
                           title: "זיכוי לכרטיס האשראי",
                           desc: refundTarget._cc
-                            ? "זיכוי ישיר דרך iCount לכרטיס שבו שולם"
-                            : "שים לב: התשלום המקורי לא בוצע באשראי — ייתכן שהזיכוי ייכשל",
+                            ? "מקרים חריגים בלבד: זיכוי ישיר דרך iCount לכרטיס שבו שולם"
+                            : "מקרים חריגים בלבד — התשלום המקורי לא בוצע באשראי, ולכן זיכוי לכרטיס לא אפשרי",
                         },
                         {
                           key: "receipt" as const,
