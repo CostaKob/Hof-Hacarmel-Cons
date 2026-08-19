@@ -276,21 +276,20 @@ const StopEnrollmentDialog = ({
       <AlertDialog open={confirm} onOpenChange={(o) => { if (!o) setConfirm(false); }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>לבטל את הצ׳קים?</AlertDialogTitle>
+            <AlertDialogTitle>לפתוח בקשה למשיכת הצ׳קים?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-right">
-                <p>יבוטלו {toCancel.length} צ׳קים עתידיים בסך <strong>{fmt(cancelSum)}</strong>.</p>
-                <p>תופק קבלת זיכוי מרוכזת. הכסף לא ייגבה מההורה.</p>
-                <p className="text-destructive font-medium">הפעולה סופית ולא ניתנת לביטול.</p>
+                <p>{toCancel.length} צ׳קים בסך <strong>{fmt(cancelSum)}</strong> יסומנו "בבקשת ביטול" ויירדו מהסכום הכולל.</p>
+                <p>ייפתח מכתב מודפס להנהלת החשבונות עם פירוט מלא של הצ׳קים ותאריכי הפירעון.</p>
+                <p className="text-muted-foreground">לא מופק כעת מסמך ב-iCount. המשך התהליך מתבצע בכרטיס המשפחה.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => { cancelMutation.mutate(); setConfirm(false); }}
             >
-              כן, בטל
+              כן, הפק מכתב
             </AlertDialogAction>
             <AlertDialogCancel>חזרה</AlertDialogCancel>
           </AlertDialogFooter>
