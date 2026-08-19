@@ -285,13 +285,21 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
       const { error } = await supabase.from("school_music_payments" as any).delete().eq("id", payment.id);
       if (error) throw error;
 
+      // Also close/clear any stale paypage stored on the student record
+      await supabase.functions.invoke("icount-delete-paypage", { body: { studentId } }).catch(() => null);
+
       // Deliberately NOT regenerating a new pending row / payment link here:
       // deleting means the admin wants the link gone. A new link can be created
       // manually with "צור קישור".
     },
-    onSuccess: () => { invalidate(); toast.success("התשלום נמחק"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
+      invalidate();
+      toast.success("התשלום נמחק");
+    },
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
   });
+
 
 
 
