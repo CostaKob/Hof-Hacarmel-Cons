@@ -1190,23 +1190,19 @@ const AdminFamilyCard = () => {
                         {selectedIds.length > 0 && (
                           <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg bg-muted/60 p-2">
                             <span className="text-[11px] text-muted-foreground flex-1">
-                              נבחרו {selectedIds.length} צ׳קים · {fmt(selectedSum)} — יופק זיכוי אחד מאוחד עם פירוט הצ׳קים
+                              נבחרו {selectedIds.length} צ׳קים · {fmt(selectedSum)} — ייפתח תהליך משיכה מהבנק עם מכתב להנהלת החשבונות
                             </span>
                             <div className="flex gap-2">
                               <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs"
                                 onClick={() => setSelectedCheques({})}>
                                 נקה בחירה
                               </Button>
-                              <Button variant="destructive" size="sm" className="h-8 rounded-lg text-xs"
+                              <Button size="sm" className="h-8 rounded-lg text-xs"
                                 disabled={cancelChequesMutation.isPending}
-                                onClick={() => {
-                                  if (confirm(`לבטל ${selectedIds.length} צ׳קים בסך ${fmt(selectedSum)}?\nתופק קבלת זיכוי אחת ב-iCount עם פירוט הצ׳קים שבוטלו.`)) {
-                                    cancelChequesMutation.mutate(selectedIds);
-                                  }
-                                }}>
+                                onClick={() => cancelChequesMutation.mutate(selectedIds)}>
                                 {cancelChequesMutation.isPending
-                                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin ms-1" />מבטל צ׳קים, אנא המתן...</>
-                                  : <><Ban className="h-3.5 w-3.5 ms-1" />בטל צ׳קים שנבחרו</>}
+                                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin ms-1" />יוצר בקשה...</>
+                                  : <><Ban className="h-3.5 w-3.5 ms-1" />בקשת משיכת צ׳קים</>}
 
                               </Button>
                             </div>
