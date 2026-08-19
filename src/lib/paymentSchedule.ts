@@ -8,7 +8,13 @@
 // Nothing here touches the network, so it can be unit-tested in isolation.
 
 export type ScheduleKind = "cheque" | "credit_installment" | "one_off";
-export type ScheduleStatus = "cleared" | "future" | "cancelled" | "refunded";
+export type ScheduleStatus =
+  | "cleared"
+  | "future"
+  | "cancelled"
+  | "refunded"
+  /** Withdrawal from the bank was requested — the cheque no longer counts, but is not cancelled yet. */
+  | "pending_cancellation";
 
 export interface ScheduleRow {
   /** Unique row key (virtual rows get an index suffix). */
