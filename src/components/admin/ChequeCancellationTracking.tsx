@@ -128,14 +128,103 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
     onError: (e: any) => toast.error(`שגיאה בהפקת הזיכוי: ${e?.message ?? ""}`),
   });
 
-  // Abort — cheques go back to normal.
+  // Step back one stage — the process is fully reversible until it is completed.
+  const stepBackMutation = useMutation({
+    mutationFn: async (r: any) => {
+      const status = r.status as ChequeRequestStatus;
+      if (status === "transfer_requested") {
+        const { error } = await supabase
+          .from("cheque_cancellation_requests")
+          .update({ status: "awaiting_transfer", transfer_requested_at: null })
+          .eq("id", r.id);
+        if (error) throw error;
+        return;
+      }
+      if (status === "awaiting_transfer") {
+        const ids = paymentIdsOf(r);
+        if (ids.length) {
+          await supabase
+            .from("student_payments")
+            .update({ cheque_status: "pending_cancellation", cheque_cancelled_at: null } as any)
+            .in("id", ids);
+        }
+        const { error } = await supabase
+          .from("cheque_cancellation_requests")
+          .update({ status: "awaiting_cheques", cheques_received_at: null })
+          .eq("id", r.id);
+        if (error) throw error;
+        return;
+      }
+      if (status === "cancelled") {
+        const ids = paymentIdsOf(r);
+        if (ids.length) {
+          await supabase
+            .from("student_payments")
+            .update({ cheque_status: "pending_cancellation", cheque_cancelled_at: null } as any)
+            .in("id", ids);
+        }
+        const { error } = await supabase
+          .from("cheque_cancellation_requests")
+          .update({ status: "awaiting_cheques", cheques_received_at: null, transfer_requested_at: null })
+          .eq("id", r.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => { refresh(); toast.success("חזרנו שלב אחורה"); },
+    onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
+  });
+
+  // Remove a single cheque from an open request (e.g. it was cleared meanwhile).
+  const removeItemMutation = useMutation({
+    mutationFn: async ({ r, item, cleared }: { r: any; item: any; cleared: boolean }) => {
+      const { error: dErr } = await supabase
+        .from("cheque_cancellation_request_items")
+        .delete()
+        .eq("id", item.id);
+      if (dErr) throw dErr;
+
+      if (item.payment_id) {
+        await supabase
+          .from("student_payments")
+          .update({
+            cheque_status: cleared ? "cleared" : "pending",
+            cheque_cleared_at: cleared ? new Date().toISOString().slice(0, 10) : null,
+            cheque_cancelled_at: null,
+          } as any)
+          .eq("id", item.payment_id);
+      }
+
+      const rest = (r.cheque_cancellation_request_items ?? []).filter((i: any) => i.id !== item.id);
+      if (!rest.length) {
+        const { error } = await supabase
+          .from("cheque_cancellation_requests")
+          .update({ status: "cancelled", cheques_total: 0, refund_amount: 0 })
+          .eq("id", r.id);
+        if (error) throw error;
+        return;
+      }
+      const total = rest.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+      const { error } = await supabase
+        .from("cheque_cancellation_requests")
+        .update({
+          cheques_total: total,
+          refund_amount: Math.max(0, Math.round((Number(r.credit_due || 0) - total) * 100) / 100),
+        })
+        .eq("id", r.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { refresh(); toast.success("הצ׳ק הוסר מהבקשה"); },
+    onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
+  });
+
+  // Abort — cheques go back to normal at any stage before completion.
   const abortMutation = useMutation({
     mutationFn: async (r: any) => {
       const ids = paymentIdsOf(r);
-      if (ids.length && r.status === "awaiting_cheques") {
+      if (ids.length) {
         await supabase
           .from("student_payments")
-          .update({ cheque_status: "pending" } as any)
+          .update({ cheque_status: "pending", cheque_cancelled_at: null } as any)
           .in("id", ids);
       }
       const { error } = await supabase
@@ -144,9 +233,10 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
         .eq("id", r.id);
       if (error) throw error;
     },
-    onSuccess: () => { refresh(); toast.success("התהליך בוטל"); },
+    onSuccess: () => { refresh(); toast.success("התהליך בוטל והצ׳קים הוחזרו למצב רגיל"); },
     onError: (e: any) => toast.error(`שגיאה: ${e?.message ?? ""}`),
   });
+
 
   const reprintLetter = (r: any) => {
     const items = (r.cheque_cancellation_request_items ?? []).map((i: any) => ({
