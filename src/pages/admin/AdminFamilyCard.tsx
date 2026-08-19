@@ -103,6 +103,8 @@ const AdminFamilyCard = () => {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
+  const [refundMethod, setRefundMethod] = useState<"bank_transfer" | "credit_card" | "receipt">("bank_transfer");
+  const [owedByGroup, setOwedByGroup] = useState<Record<string, string>>({});
 
 
 
@@ -1077,6 +1079,7 @@ const AdminFamilyCard = () => {
                               : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
                             onClick={() => {
                               setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
+                              setRefundMethod(p.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
                               setRefundAmount(String(remaining));
                             }}>
                             <Undo2 className="h-4 w-4" />
@@ -1171,6 +1174,7 @@ const AdminFamilyCard = () => {
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
                                       setRefundTarget({ ...r, _remaining: rRemaining, _cc: r.payment_method === "credit_card" });
+                                      setRefundMethod(r.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
                                       setRefundAmount(String(rRemaining));
                                     }}>
                                     <Undo2 className="h-3.5 w-3.5" />
@@ -1244,7 +1248,64 @@ const AdminFamilyCard = () => {
                             </div>
                           </div>
                         )}
+
+                        {(() => {
+                          const chequeRows = rows.filter((r: any) => r.payment_method === "check");
+                          if (chequeRows.length === 0) return null;
+                          const sum = (a: any[]) => a.reduce((s, r) => s + Math.abs(Number(r.amount || 0)), 0);
+                          const clearedSum = sum(chequeRows.filter((r: any) => r.cheque_status === "cleared"));
+                          const cancelledSum = sum(chequeRows.filter((r: any) => r.cheque_status === "cancelled"));
+                          if (cancelledSum <= 0) return null;
+                          const owedRaw = owedByGroup[groupKey];
+                          const owed = owedRaw === undefined || owedRaw === "" ? clearedSum : Number(owedRaw);
+                          const dueBack = Math.max(0, clearedSum - (Number.isFinite(owed) ? owed : clearedSum));
+                          return (
+                            <div className="mt-2 rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                              <p className="text-xs font-semibold text-foreground">
+                                חישוב סופי לאחר ביטול הצ׳קים
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                נפרע בפועל <b className="text-green-700">{fmt(clearedSum)}</b> · בוטל <b className="text-destructive">{fmt(cancelledSum)}</b>
+                              </p>
+                              <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                                <div className="flex-1 space-y-1">
+                                  <label className="text-[11px] text-muted-foreground">סכום שההורה חייב בפועל (לאחר הפסקת הלימודים)</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={owedRaw ?? String(clearedSum)}
+                                    onChange={(e) => setOwedByGroup((s) => ({ ...s, [groupKey]: e.target.value }))}
+                                    className="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+                                  />
+                                </div>
+                                <div className="text-xs">
+                                  <span className="text-muted-foreground">להחזר בהעברה בנקאית: </span>
+                                  <b className="text-foreground">{fmt(dueBack)}</b>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="h-9 rounded-xl text-xs w-full sm:w-auto"
+                                disabled={dueBack <= 0}
+                                onClick={() => {
+                                  setBankRefund({
+                                    studentId: p.student_id ?? family?.children_ids?.[0],
+                                    parentName: family?.parent_name ?? undefined,
+                                    studentName: nameById[p.student_id] ?? undefined,
+                                    paymentId: p.id,
+                                    docNumber: p.icount_doc_number,
+                                    paidAmount: clearedSum,
+                                    refundAmount: dueBack,
+                                  });
+                                }}
+                              >
+                                המשך למכתב החזר בהעברה בנקאית
+                              </Button>
+                            </div>
+                          );
+                        })()}
                       </div>
+
                       );
                     })()}
 
@@ -1336,13 +1397,13 @@ const AdminFamilyCard = () => {
               <div className="bg-card rounded-2xl border border-border p-5 max-w-md w-full space-y-3"
                 onClick={(e) => e.stopPropagation()}>
                 <h3 className="font-semibold">
-                  {refundTarget._cc ? "החזר אשראי" : "זיכוי"} · קבלה {refundTarget.icount_doc_number ?? ""}
+                  זיכוי · קבלה {refundTarget.icount_doc_number ?? ""}
                 </h3>
                 {refundMutation.isPending ? (
                   <div className="flex flex-col items-center justify-center gap-3 py-8">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm font-medium text-foreground">
-                      {refundTarget._cc ? "מבצע החזר לכרטיס אשראי..." : "מתבצע זיכוי, אנא המתן..."}
+                      {refundMethod === "credit_card" ? "מבצע החזר לכרטיס אשראי..." : "מתבצע זיכוי, אנא המתן..."}
                     </p>
                     <p className="text-xs text-muted-foreground text-center">
                       הפעולה עשויה לקחת מספר שניות — אין לסגור את החלון
@@ -1363,46 +1424,86 @@ const AdminFamilyCard = () => {
                         className="w-full h-11 rounded-xl border border-border bg-background px-3"
                       />
                     </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs text-muted-foreground">אופן הזיכוי</label>
+                      {([
+                        {
+                          key: "bank_transfer" as const,
+                          title: "החזר בהעברה בנקאית",
+                          desc: "מכתב להנהלת החשבונות → ביצוע ההעברה → הזנת אסמכתא והפקת קבלת זיכוי",
+                        },
+                        {
+                          key: "credit_card" as const,
+                          title: "זיכוי לכרטיס האשראי",
+                          desc: refundTarget._cc
+                            ? "זיכוי ישיר דרך iCount לכרטיס שבו שולם"
+                            : "שים לב: התשלום המקורי לא בוצע באשראי — ייתכן שהזיכוי ייכשל",
+                        },
+                        {
+                          key: "receipt" as const,
+                          title: "קבלת זיכוי בלבד",
+                          desc: "מפיק קבלה במינוס ב-iCount ללא העברה בנקאית (לרישום חשבונאי)",
+                        },
+                      ]).map((opt) => (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setRefundMethod(opt.key)}
+                          className={`w-full text-right rounded-xl border p-3 transition ${
+                            refundMethod === opt.key
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-muted/50"
+                          }`}
+                        >
+                          <p className="text-sm font-medium text-foreground">{opt.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
+                        </button>
+                      ))}
+                    </div>
                   </>
                 )}
                 <div className="flex flex-wrap gap-2 justify-end pt-2">
                   <Button variant="outline" disabled={refundMutation.isPending} onClick={() => setRefundTarget(null)}>ביטול</Button>
                   <Button
-                    variant="secondary"
                     disabled={refundMutation.isPending}
                     onClick={() => {
                       const amt = parseFloat(refundAmount);
                       if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
                       if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
-                      setBankRefund({
-                        studentId: refundTarget.student_id ?? family?.children_ids?.[0],
-                        parentName: family?.parent_name ?? undefined,
-                        studentName: nameById[refundTarget.student_id] ?? undefined,
+                      if (refundMethod === "bank_transfer") {
+                        setBankRefund({
+                          studentId: refundTarget.student_id ?? family?.children_ids?.[0],
+                          parentName: family?.parent_name ?? undefined,
+                          studentName: nameById[refundTarget.student_id] ?? undefined,
+                          paymentId: refundTarget.id,
+                          docNumber: refundTarget.icount_doc_number,
+                          paidAmount: Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0),
+                          refundAmount: amt,
+                        });
+                        setRefundTarget(null);
+                        setRefundAmount("");
+                        return;
+                      }
+                      if (refundMethod === "credit_card" && !refundTarget._cc
+                        && !confirm("התשלום המקורי לא סומן כאשראי. לנסות בכל זאת לבצע זיכוי לכרטיס?")) return;
+                      refundMutation.mutate({
                         paymentId: refundTarget.id,
-                        docNumber: refundTarget.icount_doc_number,
-                        paidAmount: Number(refundTarget._originalTotal ?? refundTarget.amount ?? 0),
-                        refundAmount: amt,
+                        amount: amt,
+                        isCc: refundMethod === "credit_card",
                       });
-                      setRefundTarget(null);
-                      setRefundAmount("");
-                    }}
-                  >
-                    החזר בהעברה בנקאית
-                  </Button>
-                  <Button
-                    disabled={refundMutation.isPending}
-                    onClick={() => {
-                      const amt = parseFloat(refundAmount);
-                      if (!Number.isFinite(amt) || amt <= 0) return toast.error("סכום לא תקין");
-                      if (amt > refundTarget._remaining + 0.005) return toast.error("סכום גבוה מהנותר");
-                      refundMutation.mutate({ paymentId: refundTarget.id, amount: amt, isCc: refundTarget._cc });
                     }}
                   >
                     {refundMutation.isPending
                       ? <><Loader2 className="h-4 w-4 animate-spin ml-2" />מבצע זיכוי...</>
-                      : "בצע"}
+                      : refundMethod === "bank_transfer"
+                        ? "המשך למכתב להנהלת החשבונות"
+                        : refundMethod === "credit_card"
+                          ? "בצע זיכוי לאשראי"
+                          : "הפק קבלת זיכוי"}
                   </Button>
                 </div>
+
               </div>
             </div>
           )}
