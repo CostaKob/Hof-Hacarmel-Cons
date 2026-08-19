@@ -112,14 +112,24 @@ Deno.serve(async (req: Request) => {
     const description =
       `ביטול צ׳קים עתידיים — ${studentFullName}${reason ? ` (${reason})` : ""} — ` +
       `קבלה מקור ${head.icount_doc_number ?? head.icount_doc_id} ` +
-      `(סכום העסקה ₪${transactionTotal.toLocaleString()}, בוטלו ${rows.length} צ׳קים בסך ₪${cancelTotal.toLocaleString()})`;
+      `(סכום העסקה ₪${transactionTotal.toLocaleString()}, בוטלו ${rows.length} צ׳קים בסך ₪${cancelTotal.toLocaleString()}` +
+      (transferAmount ? `, החזר בהעברה בנקאית ₪${transferAmount.toLocaleString()}` : "") + `)`;
 
-    // One document line per cancelled cheque (clearer than one long paragraph)
+    // One document line per cancelled cheque (clearer than one long paragraph),
+    // plus a separate line for the money actually transferred back to the parent.
     const chequeItems = rows.map((r: any) => ({
       description: `צ׳ק ${r.reference_number ?? ""} · ${fmtDate(r.payment_date)} · בוטל`,
       unitprice_incvat: -Math.abs(Number(r.amount || 0)),
       quantity: 1,
     }));
+    if (transferAmount) {
+      chequeItems.push({
+        description: `החזר בהעברה בנקאית${refundReference ? ` · אסמכתא ${refundReference}` : ""}${refundDate ? ` · ${fmtDate(refundDate)}` : ""}`,
+        unitprice_incvat: -transferAmount,
+        quantity: 1,
+      });
+    }
+
 
 
     const payload: any = {
