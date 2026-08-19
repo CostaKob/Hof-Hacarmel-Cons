@@ -852,7 +852,7 @@ const AdminFamilyCard = () => {
                   className="h-10 rounded-xl text-sm"
                   onClick={() => setScheduleOpen(true)}
                 >
-                  <CalendarClock className="h-4 w-4" /> תשלומים עתידיים / הפסקת לימודים
+                  <CalendarClock className="h-4 w-4" /> ביטול צ׳קים עתידיים
                 </Button>
               )}
             </div>
