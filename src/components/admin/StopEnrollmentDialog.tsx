@@ -230,6 +230,13 @@ const StopEnrollmentDialog = ({
                 </div>
               )}
 
+              {pendingRows.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-purple-700">בבקשת ביטול · ממתינים למשיכה מהבנק</p>
+                  {pendingRows.map((r) => renderRow(r, { selectable: false }))}
+                </div>
+              )}
+
               {historyRows.length > 0 && (
                 <div className="space-y-1.5">
                   <button
