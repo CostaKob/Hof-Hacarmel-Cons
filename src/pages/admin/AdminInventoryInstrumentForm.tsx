@@ -870,6 +870,20 @@ const AdminInventoryInstrumentForm = () => {
                     ? `/admin/students/${loan.student_id}`
                     : null;
                   const isActive = !loan.return_date;
+                  const ctx = isPrivate ? (privateContext as any)[loan.student_id] : null;
+                  const schoolName = isPrivate
+                    ? ctx?.school
+                    : student?.school_music_schools?.school_name;
+                  const yearLabel = isPrivate
+                    ? ctx?.year
+                    : student?.academic_years?.name;
+                  const classLabel = isPrivate ? ctx?.grade : student?.class_name;
+                  const details = [
+                    schoolName && `בי"ס: ${schoolName}`,
+                    yearLabel && `שנה: ${yearLabel}`,
+                    classLabel && `כיתה: ${classLabel}`,
+                  ].filter(Boolean) as string[];
+
                   return (
                     <div
                       key={loan.id}
