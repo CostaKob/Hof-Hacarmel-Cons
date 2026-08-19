@@ -257,17 +257,16 @@ const StopEnrollmentDialog = ({
             <div className="sticky bottom-0 -mx-6 -mb-6 mt-2 border-t border-border bg-background/95 backdrop-blur p-4 space-y-3">
               <p className="text-sm">
                 {toCancel.length > 0
-                  ? <>נבחרו {toCancel.length} צ׳קים לביטול בסך <strong>{fmt(cancelSum)}</strong>.</>
-                  : <span className="text-muted-foreground">סמנו צ׳קים שטרם הופקדו כדי לבטל אותם.</span>}
+                  ? <>נבחרו {toCancel.length} צ׳קים בסך <strong>{fmt(cancelSum)}</strong> לבקשת משיכה מהבנק.</>
+                  : <span className="text-muted-foreground">סמנו צ׳קים שטרם הופקדו כדי לבקש את משיכתם.</span>}
               </p>
               <Button
-                variant="destructive"
                 className="h-11 rounded-xl w-full"
                 disabled={busy || toCancel.length === 0}
                 onClick={() => setConfirm(true)}
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Ban className="h-4 w-4 ml-1" />}
-                בטל {toCancel.length || ""} צ׳קים
+                {busy ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <FileText className="h-4 w-4 ml-1" />}
+                הפק מכתב בקשה למשיכת {toCancel.length || ""} צ׳קים
               </Button>
             </div>
           )}
