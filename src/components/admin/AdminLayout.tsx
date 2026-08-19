@@ -189,8 +189,8 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
             </div>
           </div>
 
-          {/* Navigation rows — no horizontal scroll */}
-          <nav className="mt-3">
+          {/* Desktop navigation rows — no horizontal scroll */}
+          <nav className="mt-3 hidden md:block">
             <div className="grid grid-cols-5 gap-1">
               {TOP_ROW.map((item) => (
                 <NavButton key={item.path} item={item} />
