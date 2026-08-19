@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.sync_instrument_condition_on_loan() FROM PUBLIC, anon, authenticated;
