@@ -1,0 +1,2 @@
+ALTER TABLE public.student_payments DROP CONSTRAINT IF EXISTS student_payments_cheque_status_chk;
+ALTER TABLE public.student_payments ADD CONSTRAINT student_payments_cheque_status_chk CHECK (cheque_status = ANY (ARRAY['pending'::text, 'cleared'::text, 'cancelled'::text, 'pending_cancellation'::text]));
