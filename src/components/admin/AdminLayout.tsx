@@ -208,7 +208,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
 
       {/* Mobile / tablet bottom navigation */}
       <nav className="fixed bottom-3 left-3 right-3 z-10 flex rounded-full border border-border bg-card/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl md:hidden safe-area-pb">
-        {NAV_ITEMS.map((item) => (
+        {MOBILE_NAV_ITEMS.map((item) => (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
