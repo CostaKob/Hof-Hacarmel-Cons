@@ -24,10 +24,10 @@ const PAYMENT_METHODS = [
   { value: "check", label: "צ׳ק" },
 ];
 
-// Credit (זיכוי) can also be executed as an outgoing bank transfer.
+// Credit (זיכוי) is executed as an outgoing bank transfer by default.
 const CREDIT_PAYMENT_METHODS = [
+  { value: "transfer", label: "העברה בנקאית (ברירת מחדל)" },
   ...PAYMENT_METHODS,
-  { value: "transfer", label: "העברה בנקאית" },
 ];
 
 
@@ -154,7 +154,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       setTransactionType((editPayment as any).transaction_type || "payment");
     } else {
       resetForm();
-      if (defaultType) setTransactionType(defaultType);
+      if (defaultType) {
+        setTransactionType(defaultType);
+        if (defaultType === "credit") setPaymentMethod("transfer");
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editPayment, open, defaultType]);
@@ -1132,7 +1135,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 <button
                   type="button"
                   className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "credit" ? "bg-destructive text-destructive-foreground border-destructive" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
-                  onClick={() => setTransactionType("credit")}
+                  onClick={() => {
+                    setTransactionType("credit");
+                    setPaymentMethod("transfer");
+                  }}
                 >
                   זיכוי
                 </button>
