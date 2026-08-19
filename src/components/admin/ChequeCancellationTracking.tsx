@@ -323,12 +323,25 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
                 {status === "awaiting_transfer" && (
                   <Button size="sm" className="h-8 rounded-lg text-xs" disabled={busy}
                     onClick={() => {
-                      onRequestTransfer?.({ amount: Number(r.refund_amount || 0), parentName: r.parent_name ?? "" });
+                      const chequesTotal = items.reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+                      const creditDue = Number(r.credit_due || 0);
+                      // Fall back to credit-due minus the cancelled cheques when the stored
+                      // refund amount is missing/zero, so the letter never prints an empty sum.
+                      const amount = Number(r.refund_amount || 0) ||
+                        Math.max(0, Math.round((creditDue - chequesTotal) * 100) / 100);
+                      onRequestTransfer?.({
+                        amount,
+                        parentName: r.parent_name ?? "",
+                        chequesTotal,
+                        creditDue,
+                        chequesCount: items.length,
+                      });
                       transferRequestedMutation.mutate(r);
                     }}>
                     <Banknote className="h-3.5 w-3.5 ms-1" /> בקשת העברה בנקאית
                   </Button>
                 )}
+
 
                 {status === "transfer_requested" && (
                   <Button size="sm" className="h-8 rounded-lg text-xs" disabled={busy}
