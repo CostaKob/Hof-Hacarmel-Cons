@@ -239,6 +239,31 @@ Deno.serve(async (req: Request) => {
 
     if (insErr) console.error("[insert cancel credit row]", insErr);
 
+    // The cleared money that was physically wired back is a separate credit row,
+    // so the family balance shows both parts (cheques cancelled + transfer).
+    if (transferAmount) {
+      const { error: trErr } = await supabase.from("student_payments").insert({
+        student_id: head.student_id,
+        enrollment_id: head.enrollment_id,
+        academic_year_id: head.academic_year_id,
+        family_payment_group_id: head.family_payment_group_id,
+        family_parent_national_id: head.family_parent_national_id,
+        amount: -transferAmount,
+        transaction_type: "credit",
+        payment_method: "transfer",
+        payment_date: refundDate || today,
+        notes: ["החזר בהעברה בנקאית", refundReference ? `אסמכתא ${refundReference}` : null,
+          `קבלת זיכוי ${docNumber || ""}`.trim()].filter(Boolean).join(" · "),
+        refund_of_payment_id: head.id,
+        icount_doc_id: docId,
+        icount_doc_number: docNumber,
+        invoice_url: docUrl,
+        icount_doc_type: "receipt",
+      });
+      if (trErr) console.error("[insert transfer credit row]", trErr);
+    }
+
+
     const { error: updErr } = await supabase
       .from("student_payments")
       .update({
