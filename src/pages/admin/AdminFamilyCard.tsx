@@ -1161,7 +1161,9 @@ const AdminFamilyCard = () => {
                                       id: r.id,
                                       status: isCleared ? "pending" : "cleared",
                                     })}>
-                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                    {chequeStatusMutation.isPending && (chequeStatusMutation.variables as any)?.id === r.id
+                                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                      : <CheckCircle2 className="h-3.5 w-3.5" />}
                                   </Button>
                                 )}
                                 {!isGroup && !isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
@@ -1184,8 +1186,11 @@ const AdminFamilyCard = () => {
                                       deleteRowMutation.mutate(r.id);
                                     }
                                   }}>
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  {deleteRowMutation.isPending && deleteRowMutation.variables === r.id
+                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    : <Trash2 className="h-3.5 w-3.5" />}
                                 </Button>
+
                                 <span className="font-semibold text-foreground whitespace-nowrap" dir="ltr">
                                   {fmt(Math.abs(Number(r.amount || 0)))}
                                 </span>
