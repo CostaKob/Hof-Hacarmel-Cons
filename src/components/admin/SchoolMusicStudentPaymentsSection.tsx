@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, MessageCircle, Loader2 } from "lucide-react";
+import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, Link2Off, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
@@ -249,64 +249,33 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
       const { error } = await supabase.from("school_music_payments" as any).delete().eq("id", payment.id);
       if (error) throw error;
 
-      // After deletion, reconcile the pending paylink to reflect the new (larger) remaining balance.
-      const tuition = Number(defaultAmount ?? 0);
-      if (tuition > 0) {
-        const remainingRows = payments.filter((p) => p.id !== payment.id);
-        const newNet = computeNetPaid(remainingRows);
-        const remaining = Math.max(0, tuition - newNet);
-        if (remaining > 0.001) {
-          const pendingRows = remainingRows.filter(
-            (p) => p.payment_status === "pending" && !p.refund_of_payment_id,
-          );
-          if (pendingRows.length > 0) {
-            const [keep, ...extras] = pendingRows;
-            for (const pr of extras) {
-              if (pr.payment_link_url || pr.icount_payment_page_id) {
-                await supabase.functions.invoke("icount-delete-paypage", {
-                  body: { paymentId: pr.id, strict: false },
-                });
-              }
-              await supabase.from("school_music_payments" as any).delete().eq("id", pr.id);
-            }
-            // Delete old paypage (wrong amount) then regenerate with the new remaining
-            if (keep.payment_link_url || keep.icount_payment_page_id) {
-              await supabase.functions.invoke("icount-delete-paypage", {
-                body: { paymentId: keep.id, strict: false },
-              });
-            }
-            await supabase
-              .from("school_music_payments" as any)
-              .update({ amount: remaining })
-              .eq("id", keep.id);
-            await supabase.functions.invoke("icount-generate-paylink", {
-              body: { studentId, paymentId: keep.id, amount: remaining },
-            });
-          } else {
-            // No pending row exists — create one with a fresh paylink for the remaining
-            const { data: newRow } = await supabase
-              .from("school_music_payments" as any)
-              .insert({
-                school_music_student_id: studentId,
-                school_music_school_id: schoolMusicSchoolId,
-                academic_year_id: academicYearId,
-                amount: remaining,
-                payment_status: "pending",
-                notes: "נוצר אוטומטית לאחר מחיקת תשלום",
-              })
-              .select("id")
-              .single() as { data: { id: string } | null };
-            if (newRow?.id) {
-              await supabase.functions.invoke("icount-generate-paylink", {
-                body: { studentId, paymentId: newRow.id, amount: remaining },
-              });
-            }
-          }
-        }
-      }
+      // Deliberately NOT regenerating a new pending row / payment link here:
+      // deleting means the admin wants the link gone. A new link can be created
+      // manually with "צור קישור".
     },
     onSuccess: () => { invalidate(); toast.success("התשלום נמחק"); },
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
+  });
+
+  // Deletes only the iCount paypage + link, keeping the pending payment row.
+  const deleteLinkMutation = useMutation({
+    mutationFn: async (payment: PaymentRow) => {
+      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
+        body: { paymentId: payment.id, strict: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
+      await supabase
+        .from("school_music_payments" as any)
+        .update({ payment_link_url: null, icount_payment_page_id: null })
+        .eq("id", payment.id);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
+      invalidate();
+      toast.success("הקישור ודף הסליקה נמחקו");
+    },
+    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
   });
 
   const cleanupStaleLinkMutation = useMutation({
@@ -506,6 +475,19 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}
+                      <Button size="icon" variant="outline"
+                        className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                        title="מחק קישור תשלום וסגור את דף הסליקה ב-iCount"
+                        disabled={deleteLinkMutation.isPending}
+                        onClick={() => {
+                          if (confirm("למחוק את קישור התשלום? דף הסליקה ייסגר ויימחק מ-iCount.")) {
+                            deleteLinkMutation.mutate(p);
+                          }
+                        }}>
+                        {deleteLinkMutation.isPending
+                          ? <Loader2 className="h-4 w-4 animate-spin" />
+                          : <Link2Off className="h-4 w-4" />}
+                      </Button>
                     </>
                   )}
                   {canIssueReceipt && (
