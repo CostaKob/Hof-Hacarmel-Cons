@@ -169,6 +169,17 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         }
       }
 
+      const chequeInfo = method === "cheque"
+        ? [
+            chequeNumber && `צ׳ק ${chequeNumber}`,
+            chequeDate && `תאריך פירעון: ${chequeDate.split("-").reverse().join("/")}`,
+            bankName && `בנק: ${bankName}`,
+            bankBranch && `סניף: ${bankBranch}`,
+            bankAccount && `ח-ן: ${bankAccount}`,
+          ].filter(Boolean).join(" · ")
+        : "";
+      const finalNotes = [notes, chequeInfo].filter(Boolean).join(" | ");
+
       const { error } = await supabase.from("school_music_payments" as any).insert({
         school_music_student_id: studentId,
         school_music_school_id: schoolMusicSchoolId,
@@ -176,9 +187,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
         amount: amt,
         payment_status: "paid",
         payment_method: method,
-        transaction_reference: reference || null,
-        paid_at: new Date().toISOString(),
-        notes: notes || null,
+        transaction_reference: (method === "cheque" ? chequeNumber : reference) || reference || null,
+        paid_at: (method === "cheque" && chequeDate ? new Date(chequeDate) : new Date()).toISOString(),
+        notes: finalNotes || null,
       });
       if (error) throw error;
 
