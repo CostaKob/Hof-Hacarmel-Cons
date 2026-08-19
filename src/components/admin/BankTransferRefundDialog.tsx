@@ -53,6 +53,12 @@ const DEFAULT_TEMPLATE = `שלום רב,
 {{שם_הארגון}}
 {{פרטי_קשר}}`;
 
+export interface AccountSummaryLine {
+  label: string;
+  value: string;
+  strong?: boolean;
+}
+
 export interface BankRefundDefaults {
   studentId?: string;
   parentName?: string;
@@ -62,7 +68,10 @@ export interface BankRefundDefaults {
   refundAmount?: number;
   paymentId: string;
   docNumber?: string | null;
+  /** Snapshot of the family account (charged / paid / cheques / credit due). */
+  accountSummary?: AccountSummaryLine[];
 }
+
 
 interface Props {
   open: boolean;
