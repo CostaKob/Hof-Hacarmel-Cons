@@ -422,8 +422,23 @@ ${summaryHtml}
             </div>
           )}
 
+          {summaryLines.length > 0 && (
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-sm font-semibold mb-2">מצב החשבון</p>
+              <div className="grid gap-1 sm:grid-cols-2">
+                {summaryLines.map((l) => (
+                  <div key={l.label}
+                    className={`flex items-center justify-between gap-3 text-sm rounded-lg px-2 py-1 ${l.strong ? "bg-amber-500/10 font-semibold text-foreground" : "text-muted-foreground"}`}>
+                    <span>{l.label}</span>
+                    <span className="font-mono">{l.value}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-2">הפירוט הזה מודפס גם במכתב להנהלת החשבונות.</p>
+            </div>
+          )}
 
-          <div className="grid gap-4 md:grid-cols-2">
+
             {/* Form */}
             <div className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
