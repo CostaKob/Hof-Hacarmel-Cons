@@ -1539,8 +1539,9 @@ const AdminFamilyCard = () => {
         enrollments={enrollments}
         studentNames={nameById}
         creditDue={Math.max(0, -balance)}
-
-
+        parentName={family?.parent_name ?? ""}
+        parentNationalId={parentNationalId ?? ""}
+        academicYearId={yearId}
         invalidate={invalidateFamily}
       />
     </AdminLayout>
