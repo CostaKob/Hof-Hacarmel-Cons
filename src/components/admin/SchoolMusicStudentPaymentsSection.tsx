@@ -475,19 +475,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                           <MessageCircle className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button size="icon" variant="outline"
-                        className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                        title="מחק קישור תשלום וסגור את דף הסליקה ב-iCount"
-                        disabled={deleteLinkMutation.isPending}
-                        onClick={() => {
-                          if (confirm("למחוק את קישור התשלום? דף הסליקה ייסגר ויימחק מ-iCount.")) {
-                            deleteLinkMutation.mutate(p);
-                          }
-                        }}>
-                        {deleteLinkMutation.isPending
-                          ? <Loader2 className="h-4 w-4 animate-spin" />
-                          : <Link2Off className="h-4 w-4" />}
-                      </Button>
                     </>
                   )}
                   {canIssueReceipt && (
