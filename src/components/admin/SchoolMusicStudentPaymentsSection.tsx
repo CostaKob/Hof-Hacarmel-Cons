@@ -285,32 +285,25 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
       const { error } = await supabase.from("school_music_payments" as any).delete().eq("id", payment.id);
       if (error) throw error;
 
+      // Also close/clear any stale paypage stored on the student record
+      await supabase.functions.invoke("icount-delete-paypage", { body: { studentId } }).catch(() => null);
+
       // Deliberately NOT regenerating a new pending row / payment link here:
       // deleting means the admin wants the link gone. A new link can be created
       // manually with "צור קישור".
     },
-    onSuccess: () => { invalidate(); toast.success("התשלום נמחק"); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
+      invalidate();
+      toast.success("התשלום נמחק");
+    },
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
   });
 
 
 
 
-  const cleanupStaleLinkMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
-        body: { studentId, strict: true },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
-      invalidate();
-      toast.success("דף הסליקה הישן נמחק");
-    },
-    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
-  });
+
 
   const createReceiptMutation = useMutation({
     mutationFn: async (paymentId: string) => {
@@ -412,21 +405,10 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
 
       {payments.length === 0 ? (
-        <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-border p-3 flex-wrap">
+        <div className="rounded-xl border border-dashed border-border p-3">
           <p className="text-sm text-muted-foreground">לא נרשמו תשלומים</p>
-          {student?.icount_payment_url && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 gap-1 rounded-lg text-xs text-destructive hover:bg-destructive/10"
-              disabled={cleanupStaleLinkMutation.isPending}
-              onClick={() => cleanupStaleLinkMutation.mutate()}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              {cleanupStaleLinkMutation.isPending ? "מוחק..." : "מחק דף סליקה ישן"}
-            </Button>
-          )}
         </div>
+
       ) : (
         <div className="space-y-2">
           {[...payments].sort((a: any, b: any) =>
