@@ -190,9 +190,9 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
             </div>
           </div>
 
-          {/* Desktop navigation — one row on wide screens, two rows on medium */}
+          {/* Desktop / tablet navigation — one row */}
           <nav className="mt-3 hidden md:block">
-            <div className="grid grid-cols-5 gap-1 lg:grid-cols-9">
+            <div className="grid grid-cols-9 gap-1">
               {NAV_ITEMS.map((item) => (
                 <NavButton key={item.path} item={item} />
               ))}
