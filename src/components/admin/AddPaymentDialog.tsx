@@ -1136,7 +1136,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 <button
                   type="button"
                   className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "payment" ? "bg-emerald-600 text-white border-emerald-600" : "bg-background text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
-                  onClick={() => setTransactionType("payment")}
+                  onClick={() => { setTransactionType("payment"); setSelectedAmounts({}); }}
+
                 >
                   תשלום
                 </button>
