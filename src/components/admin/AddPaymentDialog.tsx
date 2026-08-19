@@ -751,9 +751,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
-      // Single-student mode with two parents on the family record: bill the
-      // parent explicitly chosen by the user.
-      const chosenParentPayer = !familyContext && hasTwoParents && selectedPayerParent
+      // When the student/family has two parents, bill the parent explicitly
+      // chosen by the user (overrides the default family payer).
+      const chosenParentPayer = hasTwoParents && selectedPayerParent
         ? (() => {
             const parts = selectedPayerParent.name.trim().split(/\s+/);
             return {
