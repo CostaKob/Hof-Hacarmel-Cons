@@ -18,6 +18,7 @@ const PRIVATE_LESSONS_SECTIONS: DashboardItem[] = [
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
   { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
+  { path: "/admin/yearly-summary", label: "נוכחות תלמידים - סיכום שנתי", description: "סיכום שנתי של נוכחות ושיעורים פרטניים", icon: BarChart3 },
 ];
 
 const ENSEMBLES_AND_TRACKS_SECTIONS: DashboardItem[] = [
