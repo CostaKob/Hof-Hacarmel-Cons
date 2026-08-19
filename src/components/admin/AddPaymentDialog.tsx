@@ -1247,7 +1247,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               </div>
             )}
             <div>
-              <Label htmlFor="payment-method">אופן תשלום</Label>
+              <Label htmlFor="payment-method">{transactionType === "credit" ? "אופן זיכוי" : "אופן תשלום"}</Label>
               <select id="payment-method" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className={selectClass}>
                 {(transactionType === "credit" ? CREDIT_PAYMENT_METHODS : PAYMENT_METHODS).map((m) => (
                   <option key={m.value} value={m.value}>{m.label}</option>
