@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Loader2, FileText, ClipboardCheck, Banknote, Receipt, X } from "lucide-react";
+import { Loader2, FileText, ClipboardCheck, Banknote, Receipt, X, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import {
