@@ -108,7 +108,7 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
       <header className="bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
         <div className="mx-auto max-w-5xl">
           {/* Utility row: logo/title and year/theme/logout */}
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-2">
               {backPath && (
                 <Button
@@ -159,14 +159,14 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
               <h1 className="text-base font-bold sm:text-lg">{title}</h1>
             </div>
 
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-2 md:justify-end">
               <NotificationsBell className="text-primary-foreground shrink-0" />
               <ThemeSwitcher className="text-primary-foreground shrink-0" />
               {!yearsLoading && years.length > 0 && (
                 <div className="flex items-center gap-1.5 shrink-0">
                   <CalendarDays className="h-4 w-4 text-primary-foreground/70 hidden sm:block" />
                   <Select value={selectedYearId ?? ""} onValueChange={setSelectedYearId}>
-                    <SelectTrigger className="h-8 w-28 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:w-36 sm:text-sm">
+                    <SelectTrigger className="h-8 w-24 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:w-36 sm:text-sm">
                       <SelectValue placeholder="שנה" />
                     </SelectTrigger>
                     <SelectContent>
