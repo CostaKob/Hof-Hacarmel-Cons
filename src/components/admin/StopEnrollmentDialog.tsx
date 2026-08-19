@@ -43,10 +43,17 @@ interface Props {
   studentNames?: Map<string, string>;
   /** Credit owed to the parent, taken from the payment calculator. */
   creditDue?: number;
+  parentName?: string;
+  parentNationalId?: string;
+  academicYearId?: string | null;
   invalidate: () => void;
 }
 
-const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, studentNames, creditDue = 0, invalidate }: Props) => {
+const StopEnrollmentDialog = ({
+  open, onOpenChange, studentId, payments, enrollments, studentNames, creditDue = 0,
+  parentName = "", parentNationalId = "", academicYearId = null, invalidate,
+}: Props) => {
+  const { logoUrl } = useAppLogo();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [confirm, setConfirm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
