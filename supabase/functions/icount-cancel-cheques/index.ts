@@ -39,7 +39,7 @@ Deno.serve(async (req: Request) => {
   if (authFail) return authFail;
 
   try {
-    const { paymentIds, reason } = await req.json();
+    const { paymentIds, reason, allowCancelled } = await req.json();
     if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
       return new Response(JSON.stringify({ error: "paymentIds required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
