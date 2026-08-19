@@ -63,7 +63,11 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const bad = rows.find((r: any) => r.cheque_status === "cancelled");
+    // When the cancellation went through the tracked workflow the rows are already
+    // marked "cancelled" — the credit receipt is issued only at the final stage.
+    const bad = allowCancelled
+      ? rows.find((r: any) => r.cheque_cancel_credit_id)
+      : rows.find((r: any) => r.cheque_status === "cancelled");
     if (bad) {
       return new Response(JSON.stringify({ error: "אחד הצ׳קים כבר בוטל" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
