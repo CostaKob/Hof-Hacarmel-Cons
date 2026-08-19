@@ -304,7 +304,9 @@ Deno.serve(async (req: Request) => {
       if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id));
       if (p.icount_doc_number) {
         studentKeys.add(String(p.icount_doc_number));
-        // תשלומי שיעורים פרטניים לא נכללים בדוח תזרים זה — רק בית-ספר מנגן ותנועות חיצוניות.
+        if (!isExcludedDoc(String(p.icount_doc_number)) && !isSystemIgnoredDoc(String(p.icount_doc_number))) {
+          addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "students");
+        }
       }
     }
     for (const p of smp.data ?? []) {
@@ -317,16 +319,14 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const finalRows: Row[] = rows
-      .map((r) => ({
-        ...r,
-        source: studentKeys.has(r.doc_id) || studentKeys.has(r.doc_number)
-          ? "students"
-          : smKeys.has(r.doc_id) || smKeys.has(r.doc_number)
-            ? "school_music"
-            : "external",
-      }))
-      .filter((r) => r.source !== "students");
+    const finalRows: Row[] = rows.map((r) => ({
+      ...r,
+      source: studentKeys.has(r.doc_id) || studentKeys.has(r.doc_number)
+        ? "students"
+        : smKeys.has(r.doc_id) || smKeys.has(r.doc_number)
+          ? "school_music"
+          : "external",
+    }));
 
     finalRows.sort((a, b) => a.due_date.localeCompare(b.due_date) || a.doc_number.localeCompare(b.doc_number));
 
@@ -339,10 +339,7 @@ Deno.serve(async (req: Request) => {
     let external_total = 0;
     for (const [docNum, info] of icountByDoc) {
       const sys = systemByDoc.get(docNum);
-      const isStudentDoc = studentKeys.has(docNum) || studentKeys.has(info.doc_id);
-      const isOurs = sys || smKeys.has(docNum) || smKeys.has(info.doc_id);
-      // תשלומי שיעורים פרטניים לא מופיעים בדוח התזרים ולא בהתאמות.
-      if (isStudentDoc) continue;
+      const isOurs = sys || studentKeys.has(docNum) || studentKeys.has(info.doc_id) || smKeys.has(docNum) || smKeys.has(info.doc_id);
       if (!isOurs) {
         external_total = Math.round((external_total + info.total) * 100) / 100;
         missing_in_system.push({ doc_number: docNum, amount: info.total, client_name: info.client, doc_date: info.date });
@@ -357,7 +354,6 @@ Deno.serve(async (req: Request) => {
     }
     const missing_in_icount: { doc_number: string; amount: number; source: string }[] = [];
     for (const [docNum, sys] of systemByDoc) {
-      if (studentKeys.has(docNum)) continue;
       if (!icountByDoc.has(docNum)) missing_in_icount.push({ doc_number: docNum, amount: sys.total, source: sys.source });
     }
     const sum = (ns: number[]) => Math.round(ns.reduce((a, b) => a + b, 0) * 100) / 100;
