@@ -408,25 +408,27 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
             <DialogTitle>אישור ההעברה והפקת קבלת זיכוי</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {confirmTarget && (
-              <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">
-                    סכום קבלת הזיכוי ({(confirmTarget.cheque_cancellation_request_items ?? []).length} צ׳קים שבוטלו)
-                  </span>
-                  <b className="text-foreground">
-                    {fmt((confirmTarget.cheque_cancellation_request_items ?? [])
-                      .reduce((s: number, i: any) => s + Number(i.amount || 0), 0))}
-                  </b>
-                </div>
-                {Number(confirmTarget.refund_amount) > 0 && (
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>מתוכו הוחזר בהעברה בנקאית</span>
-                    <span>{fmt(confirmTarget.refund_amount)}</span>
+            {confirmTarget && (() => {
+              const chequesTotal = (confirmTarget.cheque_cancellation_request_items ?? [])
+                .reduce((s: number, i: any) => s + Number(i.amount || 0), 0);
+              const transfer = Number(confirmTarget.refund_amount || 0);
+              return (
+                <div className="rounded-xl border border-border bg-muted/40 p-3 text-sm space-y-1">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>ביטול צ׳קים ({(confirmTarget.cheque_cancellation_request_items ?? []).length})</span>
+                    <span>{fmt(chequesTotal)}</span>
                   </div>
-                )}
-              </div>
-            )}
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <span>החזר בהעברה בנקאית</span>
+                    <span>{fmt(transfer)}</span>
+                  </div>
+                  <div className="flex items-center justify-between border-t border-border pt-1 mt-1">
+                    <span className="text-foreground">סה״כ קבלת הזיכוי</span>
+                    <b className="text-foreground">{fmt(chequesTotal + transfer)}</b>
+                  </div>
+                </div>
+              );
+            })()}
             <div>
               <Label className="text-sm">תאריך ההעברה</Label>
               <Input type="date" className="h-12 rounded-xl mt-1" value={transferDate}
