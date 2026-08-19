@@ -875,27 +875,37 @@ const AdminInventoryInstrumentForm = () => {
                       key={loan.id}
                       className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3 bg-background"
                     >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <User className="h-4 w-4 text-muted-foreground shrink-0" />
-                        {studentLink ? (
-                          <button
-                            type="button"
-                            onClick={() => navigate(studentLink)}
-                            className="text-sm font-medium text-primary hover:underline truncate flex items-center gap-1"
-                          >
-                            {name || "ללא שם"}
-                            <ExternalLink className="h-3 w-3" />
-                          </button>
-                        ) : (
-                          <span className="text-sm font-medium truncate">{name || "ללא שם"}</span>
-                        )}
-                        <Badge variant="outline" className="text-[10px]">
-                          {isPrivate ? "פרטני" : "ביס מנגן"}
-                        </Badge>
-                        {isActive && (
-                          <Badge variant="outline" className={CONDITION_COLORS.loaned}>פעיל</Badge>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <User className="h-4 w-4 text-muted-foreground shrink-0" />
+                          {studentLink ? (
+                            <button
+                              type="button"
+                              onClick={() => navigate(studentLink)}
+                              className="text-sm font-medium text-primary hover:underline truncate flex items-center gap-1"
+                            >
+                              {name || "ללא שם"}
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                          ) : (
+                            <span className="text-sm font-medium truncate">{name || "ללא שם"}</span>
+                          )}
+                          <Badge variant="outline" className="text-[10px]">
+                            {isPrivate ? "פרטני" : "ביס מנגן"}
+                          </Badge>
+                          {isActive && (
+                            <Badge variant="outline" className={CONDITION_COLORS.loaned}>פעיל</Badge>
+                          )}
+                        </div>
+                        {details.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground pr-6">
+                            {details.map((d, i) => (
+                              <span key={i}>{d}</span>
+                            ))}
+                          </div>
                         )}
                       </div>
+
                       {editingLoanId === loan.id ? (
                         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                           <div className="flex items-center gap-1">
