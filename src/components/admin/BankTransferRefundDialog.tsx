@@ -25,9 +25,13 @@ import { useAppLogo } from "@/hooks/useAppLogo";
 import type { RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 
 const TEMPLATE_KEY = "bank-refund-letter-template-v2";
-const MAIN_MSG_KEY = "bank-refund-main-message-v1";
+const MAIN_MSG_KEY = "bank-refund-main-message-v2";
 
-export const DEFAULT_MAIN_MESSAGE = `אבקש לבטל {{סוג_ביטול}} עסקת אשראי ע"י העברה בנקאית עבור {{שם_ההורה}}.`;
+/** Original transaction type the parent paid with — decides the letter's wording. */
+export const TRANSACTION_KINDS = ["אשראי", "צ׳קים", "מזומן"] as const;
+
+export const DEFAULT_MAIN_MESSAGE = `אבקש לבטל {{סוג_ביטול}} עסקת {{סוג_עסקה}} ע"י העברה בנקאית עבור {{שם_ההורה}}.`;
+
 
 const DEFAULT_TEMPLATE = `שלום רב,
 
