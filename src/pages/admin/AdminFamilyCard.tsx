@@ -25,7 +25,6 @@ import {
   Receipt,
   ArrowLeft,
   FileDown,
-  Undo2,
   Trash2,
   Plus,
   Copy,
@@ -891,9 +890,8 @@ const AdminFamilyCard = () => {
                     .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
                     .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                   const remaining = Math.max(0, groupTotal - refundedSoFar);
-                  // A cheque spread is one transaction: refunds always apply to the whole
-                  // receipt, never to a single cheque row.
-                  const canRefund = !isCredit && hasDoc && remaining > 0;
+                  // Refunds are performed only from the family payment dialog.
+
 
                   const isCombined =
                     Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
@@ -1071,18 +1069,6 @@ const AdminFamilyCard = () => {
                           </>
                         )}
 
-                        {canRefund && (
-                          <Button variant="outline" size="icon"
-                            className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                            title={`זיכוי (נותר ₪${remaining.toLocaleString()})`}
-                            onClick={() => {
-                              setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
-                              setRefundMethod("bank_transfer");
-                              setRefundAmount(String(remaining));
-                            }}>
-                            <Undo2 className="h-4 w-4" />
-                          </Button>
-                        )}
                         <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
                           {isCredit ? `−${fmt(Math.abs(groupTotal))}` : fmt(Math.abs(groupTotal))}
                         </span>
@@ -1165,17 +1151,6 @@ const AdminFamilyCard = () => {
                                     {chequeStatusMutation.isPending && (chequeStatusMutation.variables as any)?.id === r.id
                                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                       : <CheckCircle2 className="h-3.5 w-3.5" />}
-                                  </Button>
-                                )}
-                                {!isGroup && !isCredit && hasDoc && rRemaining > 0 && !isCancelled && (
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
-                                    title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
-                                    onClick={() => {
-                                      setRefundTarget({ ...r, _remaining: rRemaining, _cc: r.payment_method === "credit_card" });
-                                      setRefundMethod("bank_transfer");
-                                      setRefundAmount(String(rRemaining));
-                                    }}>
-                                    <Undo2 className="h-3.5 w-3.5" />
                                   </Button>
                                 )}
                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:bg-destructive/10"
