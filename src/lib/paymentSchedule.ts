@@ -111,18 +111,20 @@ export function buildPaymentSchedule(payments: any[], opts: BuildOptions = {}): 
       const status: ScheduleStatus =
         chequeStatus === "cancelled"
           ? "cancelled"
-          : refunded >= amount - 0.005
-            ? "refunded"
-            : chequeStatus === "cleared" || due <= today
-              ? "cleared"
-              : "future";
+          : chequeStatus === "pending_cancellation"
+            ? "pending_cancellation"
+            : refunded >= amount - 0.005
+              ? "refunded"
+              : chequeStatus === "cleared" || due <= today
+                ? "cleared"
+                : "future";
       rows.push({
         ...common,
         key: `c:${p.id}`,
         kind: "cheque",
         dueDate: due,
         amount,
-        remaining: status === "cancelled" ? 0 : remainingOnRow,
+        remaining: status === "cancelled" || status === "pending_cancellation" ? 0 : remainingOnRow,
         status,
         cancellable: status === "future",
         refundable: status === "cleared" && remainingOnRow > 0.005,
