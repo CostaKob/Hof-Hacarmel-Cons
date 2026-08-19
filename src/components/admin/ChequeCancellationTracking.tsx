@@ -109,7 +109,14 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
     mutationFn: async (r: any) => {
       const ids = paymentIdsOf(r);
       const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
-        body: { paymentIds: ids, reason: "ביטול צ׳קים לאחר החזר בהעברה בנקאית", allowCancelled: true },
+        body: {
+          paymentIds: ids,
+          reason: "ביטול צ׳קים לאחר החזר בהעברה בנקאית",
+          allowCancelled: true,
+          refundAmount: Number(r.refund_amount || 0),
+          refundReference: reference || null,
+          refundDate: transferDate,
+        },
       });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
