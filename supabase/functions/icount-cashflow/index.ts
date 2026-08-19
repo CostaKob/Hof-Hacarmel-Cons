@@ -21,10 +21,11 @@ const LEGACY_CUTOFF_DOCNUM = 1110;
 const LEGACY_KEPT_DOC_NUMBERS = new Set(["1095", "1110"]);
 
 // Specific iCount documents that must never appear in cashflow or warnings.
-const ICOUNT_IGNORED_DOC_NUMBERS = new Set(["7003"]);
+// 1113/1114 = תשלום טסט של 9 ₪ שבוטל מיד ולא נסלק בפועל.
+const ICOUNT_IGNORED_DOC_NUMBERS = new Set(["7003", "1113", "1114"]);
 
 // System-side payment records that should not be compared to iCount (test/noise).
-const SYSTEM_IGNORED_DOC_NUMBERS = new Set(["3005", "3006", "3007", "5005"]);
+const SYSTEM_IGNORED_DOC_NUMBERS = new Set(["3005", "3006", "3007", "5005", "1113", "1114"]);
 
 function isExcludedDoc(docNumber: string): boolean {
   const dn = String(docNumber ?? "").trim();
