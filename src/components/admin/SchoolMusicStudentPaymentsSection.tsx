@@ -549,16 +549,47 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   <SelectItem value="cash">מזומן</SelectItem>
                   <SelectItem value="credit_card">כרטיס אשראי</SelectItem>
                   <SelectItem value="bank_transfer">העברה בנקאית</SelectItem>
-                  <SelectItem value="cheque">המחאה</SelectItem>
+                  <SelectItem value="cheque">צ׳ק</SelectItem>
                   <SelectItem value="bit">ביט</SelectItem>
                   <SelectItem value="other">אחר</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {method === "cheque" && (
+              <div className="rounded-xl border border-border p-3 space-y-3">
+                <p className="text-xs font-medium text-foreground">פרטי הצ׳ק</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs">מספר צ׳ק</Label>
+                    <Input value={chequeNumber} onChange={(e) => setChequeNumber(e.target.value)}
+                      placeholder="לדוגמה: 1234" className="h-10 rounded-xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">תאריך פירעון</Label>
+                    <DateInput value={chequeDate} onChange={(v) => setChequeDate(v)} className="h-10 rounded-xl" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2 items-end">
+                  <BankBranchPicker
+                    bankName={bankName}
+                    setBankName={setBankName}
+                    bankCode={bankCode}
+                    setBankCode={setBankCode}
+                    branch={bankBranch}
+                    setBranch={setBankBranch}
+                  />
+                  <div className="space-y-1">
+                    <Label className="text-xs">מס׳ חשבון</Label>
+                    <Input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} className="h-10 rounded-xl" />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="space-y-1.5">
               <Label className="text-sm">אסמכתא (אופציונלי)</Label>
               <Input value={reference} onChange={(e) => setReference(e.target.value)} className="h-11 rounded-xl" />
             </div>
+
             <div className="space-y-1.5">
               <Label className="text-sm">הערות</Label>
               <Input value={notes} onChange={(e) => setNotes(e.target.value)} className="h-11 rounded-xl" />
