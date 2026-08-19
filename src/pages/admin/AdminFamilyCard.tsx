@@ -1071,18 +1071,6 @@ const AdminFamilyCard = () => {
                           </>
                         )}
 
-                        {canRefund && (
-                          <Button variant="outline" size="icon"
-                            className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                            title={`זיכוי (נותר ₪${remaining.toLocaleString()})`}
-                            onClick={() => {
-                              setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
-                              setRefundMethod("bank_transfer");
-                              setRefundAmount(String(remaining));
-                            }}>
-                            <Undo2 className="h-4 w-4" />
-                          </Button>
-                        )}
                         <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
                           {isCredit ? `−${fmt(Math.abs(groupTotal))}` : fmt(Math.abs(groupTotal))}
                         </span>
