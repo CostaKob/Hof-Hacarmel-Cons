@@ -2,7 +2,7 @@ import { ReactNode, useState, useRef, ComponentType } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, LucideIcon } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, Wallet, BarChart3, LucideIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -19,7 +19,7 @@ type IconComponent = ComponentType<{ className?: string }>;
 interface NavItem {
   path: string;
   label: string;
-  icon?: LucideIcon | IconComponent;
+  icon: LucideIcon | IconComponent;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -28,10 +28,14 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/admin/families", label: "משפחות", icon: FamilyIcon },
   { path: "/admin/teachers", label: "מורים", icon: GraduationCap },
   { path: "/admin/ensembles", label: "הרכבים", icon: Music2 },
-  { path: "/admin/school-music-schools", label: "מנגנים", icon: Music4 },
+  { path: "/admin/school-music-schools", label: "בית ספר מנגן", icon: Music4 },
   { path: "/admin/registrations", label: "הרשמות", icon: ClipboardList },
+  { path: "/admin/yearly-summary", label: "נוכחות תלמידים", icon: BarChart3 },
+  { path: "/admin/private-payments", label: "תשלומים", icon: Wallet },
 ];
 
+const TOP_ROW = NAV_ITEMS.slice(0, 5);
+const BOTTOM_ROW = NAV_ITEMS.slice(5);
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -78,70 +82,90 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
     }
   };
 
+  const isActive = (path: string) =>
+    path === "/admin"
+      ? location.pathname === "/admin"
+      : location.pathname.startsWith(path);
+
+  const NavButton = ({ item }: { item: NavItem }) => (
+    <Button
+      key={item.path}
+      variant="ghost"
+      size="sm"
+      className={`flex h-auto flex-col items-center justify-center gap-0.5 rounded-xl py-2 text-primary-foreground hover:bg-primary-foreground/10 ${
+        isActive(item.path) ? "bg-primary-foreground/15" : ""
+      }`}
+      onClick={() => navigate(item.path)}
+    >
+      <item.icon className="h-5 w-5" />
+      <span className="text-[10px] leading-none md:text-xs">{item.label}</span>
+    </Button>
+  );
+
   return (
     <div dir="rtl" className="min-h-screen bg-background">
-      <header className="bg-primary px-4 pb-5 pt-4 text-primary-foreground shadow-md">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <div className="flex items-center gap-2">
-            {backPath && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
-                onClick={() => onBack ? onBack() : navigate(-1)}
-              >
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            )}
-            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <button className="rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-foreground/30 cursor-pointer">
-                  <img
-                    src={logoUrl}
-                    alt="לוגו"
-                    className="h-10 w-auto object-contain"
-                  />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent className="w-56 p-3" align="start">
-                <p className="text-sm font-semibold mb-2">החלפת לוגו</p>
+      <header className="bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
+        <div className="mx-auto max-w-5xl">
+          {/* Utility row: logo/title and year/theme/logout */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {backPath && (
                 <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full rounded-xl"
-                  disabled={uploading}
-                  onClick={() => inputRef.current?.click()}
+                  variant="ghost"
+                  size="icon"
+                  className="text-primary-foreground hover:bg-primary-foreground/10"
+                  onClick={() => (onBack ? onBack() : navigate(-1))}
                 >
-                  {uploading ? (
-                    <Loader2 className="h-4 w-4 animate-spin ml-2" />
-                  ) : (
-                    <Upload className="h-4 w-4 ml-2" />
-                  )}
-                  {uploading ? "מעלה..." : "בחר תמונה"}
+                  <ArrowRight className="h-5 w-5" />
                 </Button>
-                <p className="text-[11px] text-muted-foreground mt-1.5 text-center">PNG, JPG עד 5MB</p>
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleUpload}
-                />
-              </PopoverContent>
-            </Popover>
-            <h1 className="text-lg font-bold">{title}</h1>
-          </div>
+              )}
+              <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <button className="rounded-lg transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary-foreground/30 cursor-pointer">
+                    <img
+                      src={logoUrl}
+                      alt="לוגו"
+                      className="h-10 w-auto object-contain"
+                    />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-56 p-3" align="start">
+                  <p className="text-sm font-semibold mb-2">החלפת לוגו</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full rounded-xl"
+                    disabled={uploading}
+                    onClick={() => inputRef.current?.click()}
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin ml-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 ml-2" />
+                    )}
+                    {uploading ? "מעלה..." : "בחר תמונה"}
+                  </Button>
+                  <p className="text-[11px] text-muted-foreground mt-1.5 text-center">PNG, JPG עד 5MB</p>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleUpload}
+                  />
+                </PopoverContent>
+              </Popover>
+              <h1 className="text-base font-bold sm:text-lg">{title}</h1>
+            </div>
 
-          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2">
               <NotificationsBell className="text-primary-foreground shrink-0" />
               <ThemeSwitcher className="text-primary-foreground shrink-0" />
-              {/* Year Switcher */}
               {!yearsLoading && years.length > 0 && (
                 <div className="flex items-center gap-1.5 shrink-0">
                   <CalendarDays className="h-4 w-4 text-primary-foreground/70 hidden sm:block" />
                   <Select value={selectedYearId ?? ""} onValueChange={setSelectedYearId}>
-                    <SelectTrigger className="w-28 sm:w-36 h-8 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:text-sm">
+                    <SelectTrigger className="h-8 w-28 rounded-lg bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground text-xs sm:w-36 sm:text-sm">
                       <SelectValue placeholder="שנה" />
                     </SelectTrigger>
                     <SelectContent>
@@ -154,36 +178,6 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
                   </Select>
                 </div>
               )}
-
-              <nav className="hidden items-center gap-1 md:flex shrink-0">
-                {NAV_ITEMS.map((item) => (
-                  <Button
-                    key={item.path}
-                    variant="ghost"
-                    size="sm"
-                    className={`text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3 shrink-0 ${
-                      (location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path)))
-                        ? "bg-primary-foreground/15"
-                        : ""
-                    }`}
-                    onClick={() => navigate(item.path)}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span className="hidden lg:inline mr-1">{item.label}</span>
-                  </Button>
-                ))}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-primary-foreground hover:bg-primary-foreground/10 px-2 lg:px-3 shrink-0"
-                  onClick={signOut}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden lg:inline mr-1">התנתק</span>
-                </Button>
-              </nav>
-            </div>
-            <div className="flex items-center gap-1 md:hidden shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -194,35 +188,27 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
               </Button>
             </div>
           </div>
+
+          {/* Navigation rows — no horizontal scroll */}
+          <nav className="mt-3">
+            <div className="grid grid-cols-5 gap-1">
+              {TOP_ROW.map((item) => (
+                <NavButton key={item.path} item={item} />
+              ))}
+            </div>
+            <div className="mt-1 grid grid-cols-4 gap-1">
+              {BOTTOM_ROW.map((item) => (
+                <NavButton key={item.path} item={item} />
+              ))}
+            </div>
+          </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-5 -mt-2 pb-28 md:pb-6">
+      <main className="mx-auto max-w-5xl px-4 py-5 pb-6 -mt-2">
         <ArchiveYearBanner />
         {children}
       </main>
-
-      <nav className="fixed bottom-3 left-3 right-3 z-10 flex rounded-full border border-border bg-card/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl md:hidden safe-area-pb">
-        {NAV_ITEMS.map((item) => {
-          const isActive =
-            item.path === "/admin"
-              ? location.pathname === "/admin"
-              : location.pathname.startsWith(item.path);
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              className={`flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-medium transition-colors ${
-                isActive ? "bg-primary/10 text-primary" : "text-muted-foreground"
-              }`}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-
     </div>
   );
 };
