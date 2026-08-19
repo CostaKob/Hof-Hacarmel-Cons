@@ -481,7 +481,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                     <Button size="sm" variant="outline" className="h-8 gap-1 rounded-lg text-xs"
                       disabled={createReceiptMutation.isPending}
                       onClick={() => setPendingInvoiceId(p.id)}>
-                      <FileDown className="h-3.5 w-3.5" /> הפק קבלה
+                      {createReceiptMutation.isPending && (createReceiptMutation.variables as any) === p.id
+                        ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מפיק...</>
+                        : <><FileDown className="h-3.5 w-3.5" /> הפק קבלה</>}
                     </Button>
                   )}
                   {hasUrl && (
@@ -505,18 +507,24 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                       </Button>
                     );
                   })()}
-                  {!hasDoc && (
-                    <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                      onClick={() => {
-                        const hasPaypage = !!p.payment_link_url || !!p.icount_payment_page_id;
-                        const msg = hasPaypage
-                          ? "למחוק את התשלום? דף הסליקה המשויך יימחק קודם מ-iCount."
-                          : "למחוק את התשלום?";
-                        if (confirm(msg)) deleteMutation.mutate(p);
-                      }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
+                  {!hasDoc && (() => {
+                    const isDeleting = deleteMutation.isPending && (deleteMutation.variables as any)?.id === p.id;
+                    return (
+                      <Button size="icon" variant="ghost" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                        disabled={deleteMutation.isPending}
+                        title={isDeleting ? "מוחק, אנא המתן..." : "מחק תשלום"}
+                        onClick={() => {
+                          const hasPaypage = !!p.payment_link_url || !!p.icount_payment_page_id;
+                          const msg = hasPaypage
+                            ? "למחוק את התשלום? דף הסליקה המשויך יימחק קודם מ-iCount."
+                            : "למחוק את התשלום?";
+                          if (confirm(msg)) deleteMutation.mutate(p);
+                        }}>
+                        {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                      </Button>
+                    );
+                  })()}
+
                 </div>
               </div>
             );
