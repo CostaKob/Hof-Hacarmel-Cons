@@ -1,25 +1,39 @@
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
-import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp } from "lucide-react";
+import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic } from "lucide-react";
 
+interface DashboardItem {
+  path: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
-const MAIN_SECTIONS = [
+const PRIVATE_LESSONS_SECTIONS: DashboardItem[] = [
   { path: "/admin/students", label: "תלמידים", description: "ניהול תלמידים, פרטים אישיים ורישומים", icon: Users },
   { path: "/admin/families", label: "משפחות", description: "כרטיס הורה מרכזי — שיוכים ותשלומים לפי משפחה", icon: UsersRound },
   { path: "/admin/siblings", label: "אחים ואחיות", description: "חיבור אוטומטי של אחים וטיפול בהתאמות שממתינות לאישור", icon: Users },
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
-  { path: "/admin/ensembles", label: "הרכבים ומסלולים מיוחדים", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
+  { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
 ];
 
-const SCHOOL_MUSIC_SECTIONS = [
+const ENSEMBLES_AND_TRACKS_SECTIONS: DashboardItem[] = [
+  { path: "/admin/ensembles", label: "הרכבי ביצוע", description: "ניהול הרכבים, צוות ומשתתפים", icon: Music2 },
+  { path: "/admin/special-tracks/music-major", label: "מגמת המוסיקה", description: "תלמידים במגמת המוסיקה", icon: GraduationCap },
+  { path: "/admin/special-tracks/junior-track", label: "מסלול חטיבה", description: "תלמידים במסלול חטיבה", icon: School },
+  { path: "/admin/special-tracks/music-production", label: "הפקה מוסיקלית", description: "תלמידים בקורס הפקה מוסיקלית", icon: Radio },
+  { path: "/admin/special-tracks/recital", label: "מסלול רסיטל", description: "תלמידים במסלול רסיטל", icon: FileMusic },
+];
+
+const SCHOOL_MUSIC_SECTIONS: DashboardItem[] = [
   { path: "/admin/school-music-schools", label: "בתי ספר מנגנים", description: "ניהול בתי ספר מנגנים, קבוצות ורכזים", icon: Music4 },
   { path: "/admin/school-music-attendance", label: "נוכחות מורים", description: "דוח נוכחות מרוכז עם איתור דיווחים חסרים", icon: ClipboardList },
   { path: "/admin/school-music-payments", label: "תשלומים", description: "מעקב, סימון ידני וזיכוי תשלומים", icon: Wallet },
 ];
 
-const DATA_SECTIONS = [
+const DATA_SECTIONS: DashboardItem[] = [
   { path: "/admin/schools", label: "שלוחות", description: "ניהול שלוחות לימוד וכתובות", icon: School },
   { path: "/admin/educational-schools", label: "בתי ספר", description: "ניהול בתי ספר ללימודי בוקר", icon: School },
   { path: "/admin/instruments", label: "כלי נגינה", description: "ניהול כלי נגינה", icon: Music },
@@ -27,12 +41,11 @@ const DATA_SECTIONS = [
   { path: "/admin/cities", label: "ישובי מגורים", description: "ניהול רשימת הישובים בטפסי ההרשמה", icon: MapPin },
 ];
 
-const TOOLS_SECTIONS = [
+const TOOLS_SECTIONS: DashboardItem[] = [
   { path: "/admin/yearly-summary", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכלל המערכת", icon: BarChart3 },
   { path: "/admin/enrollment-stats", label: "דוח תלמידים ושיבוצים", description: "תלמידים לפי שכבה, התפלגות כלים ונרשמים שטרם שובצו", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים, הגדרת שנה פעילה ומעבר שנה", icon: CalendarDays },
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
-  { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
   { path: "/admin/cashflow", label: "דוח תזרים", description: "תזרים אמיתי מאייקאונט לפי תאריכי פרעון — שיקים, אשראי בתשלומים וזיכויים", icon: TrendingUp },
   { path: "/admin/exports", label: "דוחות וייצוא", description: "ייצוא תלמידים, מורים, דיווחים וסיכומים לאקסל", icon: FileDown },
   { path: "/admin/messaging", label: "שליחת הודעות להורים", description: "רשימת תפוצה, נוסח הודעת השיוך ולוח בקרת מיילים", icon: Mail },
@@ -61,7 +74,7 @@ const ExternalLinkCard = ({ item }: { item: typeof FORM_LINKS[0] }) => (
   </a>
 );
 
-const SectionCard = ({ item, navigate }: { item: typeof MAIN_SECTIONS[0]; navigate: (path: string) => void }) => (
+const SectionCard = ({ item, navigate }: { item: DashboardItem; navigate: (path: string) => void }) => (
   <button
     onClick={() => navigate(item.path)}
     className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:shadow-md active:scale-[0.98] text-right"
