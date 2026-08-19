@@ -136,6 +136,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [bankAccount, setBankAccount] = useState("");
   const [checks, setChecks] = useState<Array<{ date: string; number: string; amount: string }>>([]);
 
+  // ---- Paying parent selection (single-student mode, when the family has 2 parents) ----
+  const [payerChoice, setPayerChoice] = useState<"p1" | "p2">("p1");
+
   const isEdit = !!editPayment;
 
   // Pre-fill form when editing or reset for new
