@@ -1174,6 +1174,7 @@ const AdminFamilyCard = () => {
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
                                       setRefundTarget({ ...r, _remaining: rRemaining, _cc: r.payment_method === "credit_card" });
+                                      setRefundMethod(r.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
                                       setRefundAmount(String(rRemaining));
                                     }}>
                                     <Undo2 className="h-3.5 w-3.5" />
