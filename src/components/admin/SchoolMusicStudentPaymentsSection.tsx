@@ -446,7 +446,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                   <p className="text-xs text-muted-foreground mt-0.5">
                     נוצר: {new Date(p.created_at).toLocaleDateString("he-IL")}
                     {p.paid_at && ` · שולם: ${new Date(p.paid_at).toLocaleDateString("he-IL")}`}
-                    {p.payment_method && ` · ${p.payment_method}`}
+                    {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] ?? p.payment_method}`}
                     {p.transaction_reference && ` · אסמכתא ${p.transaction_reference}`}
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
