@@ -387,3 +387,9 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
 .theme-clean [aria-selected="true"] svg {
   color: hsl(0 78% 45%);
 }
+
+/* Admin dashboard section headings: always red in every theme */
+.admin-section-title,
+.admin-section-title svg {
+  color: hsl(0 78% 45%) !important;
+}
