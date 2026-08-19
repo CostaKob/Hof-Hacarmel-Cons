@@ -295,7 +295,7 @@ ${summaryHtml}
       parent_name: parentName || accountOwner || null,
       refund_amount: Number(refundAmount) || null,
       bank_reference: reference || null,
-      content_text: filled,
+      content_text: summaryText ? `${filled}\n\n${summaryText}` : filled,
       content_html: html,
       file_path: path,
       created_by: userRes?.user?.id ?? null,
