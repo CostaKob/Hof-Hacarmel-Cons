@@ -1501,6 +1501,25 @@ const AdminFamilyCard = () => {
         </div>
       )}
 
+      <div className="mt-4">
+        <ChequeCancellationTracking
+          parentNationalId={parentNationalId}
+          studentIds={family?.children_ids ?? []}
+          invalidate={invalidateFamily}
+          onRequestTransfer={({ amount, parentName }) => {
+            const src = payments.find((p: any) => p.payment_method === "check" && p.icount_doc_id) ?? payments[0];
+            setBankRefund({
+              studentId: family?.children_ids?.[0],
+              parentName: parentName || family?.parent_name || "",
+              subject: "החזר יתרה לאחר ביטול צ׳קים",
+              refundAmount: amount,
+              paymentId: src?.id,
+              docNumber: src?.icount_doc_number ?? null,
+            });
+          }}
+        />
+      </div>
+
       <BankTransferRefundDialog
         open={!!bankRefund}
         onOpenChange={(o) => { if (!o) setBankRefund(null); }}
