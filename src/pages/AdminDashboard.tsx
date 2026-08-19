@@ -127,8 +127,8 @@ const AdminDashboard = () => {
         {/* School Music */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Music4 className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground">בית ספר מנגן</h2>
+            <Music4 className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-semibold text-destructive">בית ספר מנגן</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {SCHOOL_MUSIC_SECTIONS.map((s) => (
@@ -140,8 +140,8 @@ const AdminDashboard = () => {
         {/* Data */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Database className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground">נתונים</h2>
+            <Database className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-semibold text-destructive">נתונים</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {DATA_SECTIONS.map((s) => (
@@ -153,8 +153,8 @@ const AdminDashboard = () => {
         {/* Tools */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground">כלים ודוחות</h2>
+            <BarChart3 className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-semibold text-destructive">כלים ודוחות</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {TOOLS_SECTIONS.map((s) => (
