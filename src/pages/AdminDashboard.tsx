@@ -18,6 +18,7 @@ const PRIVATE_LESSONS_SECTIONS: DashboardItem[] = [
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
   { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
+  { path: "/admin/yearly-summary", label: "נוכחות תלמידים - סיכום שנתי", description: "סיכום שנתי של נוכחות ושיעורים פרטניים", icon: BarChart3 },
 ];
 
 const ENSEMBLES_AND_TRACKS_SECTIONS: DashboardItem[] = [
@@ -43,7 +44,6 @@ const DATA_SECTIONS: DashboardItem[] = [
 ];
 
 const TOOLS_SECTIONS: DashboardItem[] = [
-  { path: "/admin/yearly-summary", label: "סיכום שנתי", description: "סיכום שיעורים שנתי לכלל המערכת", icon: BarChart3 },
   { path: "/admin/enrollment-stats", label: "דוח תלמידים ושיבוצים", description: "תלמידים לפי שכבה, התפלגות כלים ונרשמים שטרם שובצו", icon: BarChart3 },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים, הגדרת שנה פעילה ומעבר שנה", icon: CalendarDays },
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
