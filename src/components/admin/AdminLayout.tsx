@@ -34,8 +34,6 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/admin/private-payments", label: "תשלומים", icon: Wallet },
 ];
 
-const TOP_ROW = NAV_ITEMS.slice(0, 5);
-const BOTTOM_ROW = NAV_ITEMS.slice(5);
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -189,15 +187,10 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
             </div>
           </div>
 
-          {/* Desktop navigation rows — no horizontal scroll */}
+          {/* Desktop navigation — one row on wide screens, two rows on medium */}
           <nav className="mt-3 hidden md:block">
-            <div className="grid grid-cols-5 gap-1">
-              {TOP_ROW.map((item) => (
-                <NavButton key={item.path} item={item} />
-              ))}
-            </div>
-            <div className="mt-1 grid grid-cols-4 gap-1">
-              {BOTTOM_ROW.map((item) => (
+            <div className="grid grid-cols-5 gap-1 lg:grid-cols-9">
+              {NAV_ITEMS.map((item) => (
                 <NavButton key={item.path} item={item} />
               ))}
             </div>
