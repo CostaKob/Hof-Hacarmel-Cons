@@ -1079,6 +1079,7 @@ const AdminFamilyCard = () => {
                               : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
                             onClick={() => {
                               setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
+                              setRefundMethod(p.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
                               setRefundAmount(String(remaining));
                             }}>
                             <Undo2 className="h-4 w-4" />
