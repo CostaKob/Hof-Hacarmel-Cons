@@ -249,6 +249,12 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
       setMethod("cash");
       setReference("");
       setNotes("");
+      setChequeNumber("");
+      setChequeDate("");
+      setBankName("");
+      setBankCode("");
+      setBankBranch("");
+      setBankAccount("");
       toast.success("התשלום נרשם");
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בהוספת תשלום"),
