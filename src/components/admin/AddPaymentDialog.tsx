@@ -136,6 +136,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [bankAccount, setBankAccount] = useState("");
   const [checks, setChecks] = useState<Array<{ date: string; number: string; amount: string }>>([]);
 
+  // ---- Paying parent selection (single-student mode, when the family has 2 parents) ----
+  const [payerChoice, setPayerChoice] = useState<"p1" | "p2">("p1");
+
   const isEdit = !!editPayment;
 
   // Pre-fill form when editing or reset for new
@@ -175,6 +178,37 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       return data as any;
     },
   });
+
+  // Parents available for billing on this student (single-student mode only).
+  const parentOptions = useMemo(() => {
+    if (!student) return [] as Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }>;
+    const opts: Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }> = [];
+    if ((student.parent_name ?? "").trim() || (student.parent_national_id ?? "").trim()) {
+      opts.push({
+        key: "p1",
+        name: (student.parent_name ?? "").trim() || "הורה 1",
+        nationalId: (student.parent_national_id ?? "").trim(),
+        email: (student.parent_email ?? "").trim(),
+        phone: (student.parent_phone ?? "").trim(),
+      });
+    }
+    if ((student.parent_name_2 ?? "").trim() || (student.parent_national_id_2 ?? "").trim()) {
+      opts.push({
+        key: "p2",
+        name: (student.parent_name_2 ?? "").trim() || "הורה 2",
+        nationalId: (student.parent_national_id_2 ?? "").trim(),
+        email: (student.parent_email_2 ?? "").trim(),
+        phone: (student.parent_phone_2 ?? "").trim(),
+      });
+    }
+    return opts;
+  }, [student]);
+
+  const hasTwoParents = !familyContext && parentOptions.length > 1;
+  const selectedPayerParent = useMemo(
+    () => parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null,
+    [parentOptions, payerChoice],
+  );
 
   const { data: settings } = useQuery({
     queryKey: ["addpay-payment-settings"],
@@ -705,6 +739,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
+      // Single-student mode with two parents on the family record: bill the
+      // parent explicitly chosen by the user.
+      const chosenParentPayer = !familyContext && hasTwoParents && selectedPayerParent
+        ? (() => {
+            const parts = selectedPayerParent.name.trim().split(/\s+/);
+            return {
+              firstName: parts[0] ?? "",
+              lastName: parts.slice(1).join(" "),
+              email: selectedPayerParent.email,
+              phone: selectedPayerParent.phone,
+              nationalId: selectedPayerParent.nationalId,
+            };
+          })()
+        : null;
+
       const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
         body: {
           studentId: anchorStudentId,
@@ -719,6 +768,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             // Force a new paypage — the anchor student's cached pending row
             // may belong to a non-family link.
             forceNewPaypage: true,
+          } : {}),
+          ...(chosenParentPayer ? {
+            skipPayerPrefill: true,
+            payerLabel: `הורה משלם - ${selectedPayerParent!.name}`,
+            payerDetails: chosenParentPayer,
           } : {}),
           ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
         },
@@ -1379,6 +1433,33 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </div>
             {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
               <div className="space-y-2">
+                {hasTwoParents && (
+                  <div className="rounded-xl border border-border p-3 space-y-2">
+                    <Label className="text-sm">מי ההורה המשלם?</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {parentOptions.map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          onClick={() => setPayerChoice(p.key)}
+                          className={`text-right rounded-xl border p-2.5 transition ${
+                            payerChoice === p.key
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:bg-muted/50"
+                          }`}
+                        >
+                          <p className="text-sm font-medium">{p.name}</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {[p.nationalId, p.phone, p.email].filter(Boolean).join(" · ") || "אין פרטים"}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      פרטי ההורה שנבחר ימולאו אוטומטית בדף התשלום.
+                    </p>
+                  </div>
+                )}
                 <Button
                   variant="outline"
                   className="w-full h-11 rounded-xl"
