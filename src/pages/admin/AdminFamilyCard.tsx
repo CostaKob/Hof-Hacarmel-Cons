@@ -1527,7 +1527,7 @@ const AdminFamilyCard = () => {
                       </p>
                     </div>
                     <Button variant="outline" size="sm" className="h-9 rounded-xl text-xs shrink-0"
-                      onClick={() => openRefundDoc(d.file_path)}>
+                      onClick={() => openRefundDoc(d.file_path, d.id)}>
                       <FileDown className="h-3.5 w-3.5" /> פתח
                     </Button>
                   </div>
