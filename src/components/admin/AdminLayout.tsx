@@ -34,6 +34,9 @@ const NAV_ITEMS: NavItem[] = [
   { path: "/admin/private-payments", label: "תשלומים", icon: Wallet },
 ];
 
+const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
+  (item) => item.path !== "/admin/families" && item.path !== "/admin/yearly-summary"
+);
 
 interface AdminLayoutProps {
   children: ReactNode;
