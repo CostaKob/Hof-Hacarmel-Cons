@@ -87,6 +87,7 @@ const AdminFamilyCard = () => {
   const queryClient = useQueryClient();
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
+  const { logoUrl } = useAppLogo();
 
   const [unifyOpen, setUnifyOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
