@@ -257,26 +257,8 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
     onError: (e: any) => toast.error(e?.message || "שגיאה במחיקה"),
   });
 
-  // Deletes only the iCount paypage + link, keeping the pending payment row.
-  const deleteLinkMutation = useMutation({
-    mutationFn: async (payment: PaymentRow) => {
-      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
-        body: { paymentId: payment.id, strict: true },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
-      await supabase
-        .from("school_music_payments" as any)
-        .update({ payment_link_url: null, icount_payment_page_id: null })
-        .eq("id", payment.id);
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
-      invalidate();
-      toast.success("הקישור ודף הסליקה נמחקו");
-    },
-    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
-  });
+
+
 
   const cleanupStaleLinkMutation = useMutation({
     mutationFn: async () => {
