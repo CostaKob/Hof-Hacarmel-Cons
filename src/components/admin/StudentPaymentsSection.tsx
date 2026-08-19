@@ -94,13 +94,13 @@ const StudentPaymentsSection = ({
       </div>
 
       {familyParentNationalId ? (
-        <div className="flex items-center justify-between gap-3 flex-wrap rounded-xl border border-border bg-muted/40 px-3 py-2">
-          <p className="text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 py-3">
+          <p className="text-sm text-foreground font-medium">
             ניהול תשלומים וזיכויים מתבצע בכרטיס המשפחה
           </p>
-          <Button asChild variant="outline" size="sm" className="h-9 rounded-xl text-xs">
+          <Button asChild className="h-12 w-full sm:w-auto rounded-xl px-6 gap-2 shadow-sm">
             <Link to={`/admin/families/${familyParentNationalId}`}>
-              <Wallet className="h-3.5 w-3.5" /> מעבר לניהול כספים במשפחה
+              <Wallet className="h-4 w-4" /> ניהול כספים בכרטיס המשפחה
             </Link>
           </Button>
         </div>
