@@ -438,6 +438,7 @@ ${summaryHtml}
             </div>
           )}
 
+          <div className="grid gap-4 md:grid-cols-2">
 
             {/* Form */}
             <div className="space-y-3">
