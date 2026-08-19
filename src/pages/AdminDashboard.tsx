@@ -101,8 +101,8 @@ const AdminDashboard = () => {
         {/* Private Lessons */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground">לימודים פרטניים</h2>
+            <Users className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-semibold text-destructive">לימודים פרטניים</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {PRIVATE_LESSONS_SECTIONS.map((s) => (
@@ -114,8 +114,8 @@ const AdminDashboard = () => {
         {/* Ensembles & Special Tracks */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Music2 className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold text-muted-foreground">הרכבים ומסלולים מיוחדים</h2>
+            <Music2 className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-semibold text-destructive">הרכבים ומסלולים מיוחדים</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {ENSEMBLES_AND_TRACKS_SECTIONS.map((s) => (
