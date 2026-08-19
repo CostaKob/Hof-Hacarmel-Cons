@@ -1,0 +1,1 @@
+delete from public.student_payments where id = '0423c15d-e5dc-4950-a95b-cb08ca66e313';
