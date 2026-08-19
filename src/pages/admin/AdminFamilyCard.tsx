@@ -1248,7 +1248,64 @@ const AdminFamilyCard = () => {
                             </div>
                           </div>
                         )}
+
+                        {(() => {
+                          const chequeRows = rows.filter((r: any) => r.payment_method === "check");
+                          if (chequeRows.length === 0) return null;
+                          const sum = (a: any[]) => a.reduce((s, r) => s + Math.abs(Number(r.amount || 0)), 0);
+                          const clearedSum = sum(chequeRows.filter((r: any) => r.cheque_status === "cleared"));
+                          const cancelledSum = sum(chequeRows.filter((r: any) => r.cheque_status === "cancelled"));
+                          if (cancelledSum <= 0) return null;
+                          const owedRaw = owedByGroup[groupKey];
+                          const owed = owedRaw === undefined || owedRaw === "" ? clearedSum : Number(owedRaw);
+                          const dueBack = Math.max(0, clearedSum - (Number.isFinite(owed) ? owed : clearedSum));
+                          return (
+                            <div className="mt-2 rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                              <p className="text-xs font-semibold text-foreground">
+                                חישוב סופי לאחר ביטול הצ׳קים
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                נפרע בפועל <b className="text-green-700">{fmt(clearedSum)}</b> · בוטל <b className="text-destructive">{fmt(cancelledSum)}</b>
+                              </p>
+                              <div className="flex flex-col sm:flex-row sm:items-end gap-2">
+                                <div className="flex-1 space-y-1">
+                                  <label className="text-[11px] text-muted-foreground">סכום שההורה חייב בפועל (לאחר הפסקת הלימודים)</label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={owedRaw ?? String(clearedSum)}
+                                    onChange={(e) => setOwedByGroup((s) => ({ ...s, [groupKey]: e.target.value }))}
+                                    className="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm"
+                                  />
+                                </div>
+                                <div className="text-xs">
+                                  <span className="text-muted-foreground">להחזר בהעברה בנקאית: </span>
+                                  <b className="text-foreground">{fmt(dueBack)}</b>
+                                </div>
+                              </div>
+                              <Button
+                                size="sm"
+                                className="h-9 rounded-xl text-xs w-full sm:w-auto"
+                                disabled={dueBack <= 0}
+                                onClick={() => {
+                                  setBankRefund({
+                                    studentId: p.student_id ?? family?.children_ids?.[0],
+                                    parentName: family?.parent_name ?? undefined,
+                                    studentName: nameById[p.student_id] ?? undefined,
+                                    paymentId: p.id,
+                                    docNumber: p.icount_doc_number,
+                                    paidAmount: clearedSum,
+                                    refundAmount: dueBack,
+                                  });
+                                }}
+                              >
+                                המשך למכתב החזר בהעברה בנקאית
+                              </Button>
+                            </div>
+                          );
+                        })()}
                       </div>
+
                       );
                     })()}
 
