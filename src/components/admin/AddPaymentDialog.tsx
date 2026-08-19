@@ -1184,19 +1184,30 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   />
                 </div>
               </>
+            ) : transactionType === "credit" && paymentMethod === "transfer" ? (
+              <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm leading-relaxed">
+                בזיכוי בהעברה בנקאית לא בוחרים שיוכים — הזיכוי נרשם על הקבלה כולה.
+                בחרו למטה את הקבלה לזיכוי ואת סכום ההחזר בפועל.
+              </div>
             ) : (
               <div>
                 <div className="flex items-center justify-between">
-                  <Label>שיוכים וסכומים</Label>
+                  <Label>{transactionType === "credit" ? "שיוכים לזיכוי · הזינו סכום החזר" : "שיוכים וסכומים"}</Label>
                   <div className="flex gap-2 text-xs">
                     <button type="button" className="text-primary hover:underline" onClick={selectAll}>בחר הכל</button>
                     <span className="text-muted-foreground">·</span>
                     <button type="button" className="text-muted-foreground hover:underline" onClick={clearAll}>נקה</button>
                   </div>
                 </div>
+                {transactionType === "credit" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    הסכומים כאן הם סכומי הזיכוי, לא סכום החיוב המקורי.
+                  </p>
+                )}
                 {paymentItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">אין שיוכים פעילים</p>
                 ) : (
+
                   <div className="mt-2 w-full space-y-2 overflow-hidden">
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
