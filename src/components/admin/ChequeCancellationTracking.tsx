@@ -330,23 +330,47 @@ const ChequeCancellationTracking = ({ parentNationalId, studentIds = [], onReque
                   </Button>
                 )}
 
+                {canStepBack && (
+                  <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs" disabled={busy}
+                    title="חזרה לשלב הקודם"
+                    onClick={() => stepBackMutation.mutate(r)}>
+                    <Undo2 className="h-3.5 w-3.5 ms-1" />
+                    {status === "cancelled" ? "החזר את התהליך" : "שלב אחורה"}
+                  </Button>
+                )}
+
                 {status !== "completed" && status !== "cancelled" && (
                   <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-destructive"
-                    title="בטל את התהליך" disabled={busy}
-                    onClick={() => { if (confirm("לבטל את תהליך ביטול הצ׳קים?")) abortMutation.mutate(r); }}>
+                    title="בטל את התהליך והחזר את הצ׳קים למצב רגיל" disabled={busy}
+                    onClick={() => { if (confirm("לבטל את תהליך ביטול הצ׳קים? הצ׳קים יחזרו למצב רגיל.")) abortMutation.mutate(r); }}>
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>
             </div>
 
-            <div className="text-[11px] text-muted-foreground flex flex-wrap gap-x-3 gap-y-1">
+            <div className="space-y-1">
               {items.map((i: any) => (
-                <span key={i.id}>
-                  צ׳ק {i.cheque_number ?? ""} · {fmtDate(i.due_date)} · {fmt(i.amount)}
-                </span>
+                <div key={i.id} className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground rounded-lg px-2 py-1 bg-muted/40">
+                  <span>צ׳ק {i.cheque_number ?? ""} · {fmtDate(i.due_date)} · {fmt(i.amount)}</span>
+                  {canEditItems && (
+                    <span className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" className="h-7 rounded-lg text-[11px] text-green-700 hover:bg-green-500/10"
+                        title="הצ׳ק נפרע בינתיים — הוצא אותו מהבקשה" disabled={busy}
+                        onClick={() => removeItemMutation.mutate({ r, item: i, cleared: true })}>
+                        נפרע בינתיים
+                      </Button>
+                      <Button variant="ghost" size="sm" className="h-7 rounded-lg text-[11px]"
+                        title="הסר מהבקשה והחזר למצב רגיל" disabled={busy}
+                        onClick={() => removeItemMutation.mutate({ r, item: i, cleared: false })}>
+                        הסר
+                      </Button>
+                    </span>
+                  )}
+                </div>
               ))}
             </div>
+
           </div>
         );
       })}
