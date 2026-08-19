@@ -178,10 +178,11 @@ const StopEnrollmentDialog = ({
         <DialogContent dir="rtl" className="max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain">
           <DialogHeader className="text-right">
             <DialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-primary" /> ביטול צ׳קים עתידיים
+              <CalendarClock className="h-5 w-5 text-primary" /> בקשה למשיכת צ׳קים וביטולם
             </DialogTitle>
             <DialogDescription>
-              כאן מבטלים צ׳קים שטרם הופקדו. זיכוי כספי מתבצע תמיד בהעברה בנקאית מחלון התשלום/זיכוי המשפחתי.
+              שלב 1 בתהליך: מסמנים צ׳קים שטרם נפרעו ומפיקים מכתב להנהלת החשבונות למשיכתם מהבנק.
+              לא מופק כאן מסמך חשבונאי — קבלת הזיכוי תופק רק לאחר אישור ההעברה הבנקאית.
             </DialogDescription>
           </DialogHeader>
 
