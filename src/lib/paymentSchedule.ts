@@ -8,7 +8,13 @@
 // Nothing here touches the network, so it can be unit-tested in isolation.
 
 export type ScheduleKind = "cheque" | "credit_installment" | "one_off";
-export type ScheduleStatus = "cleared" | "future" | "cancelled" | "refunded";
+export type ScheduleStatus =
+  | "cleared"
+  | "future"
+  | "cancelled"
+  | "refunded"
+  /** Withdrawal from the bank was requested — the cheque no longer counts, but is not cancelled yet. */
+  | "pending_cancellation";
 
 export interface ScheduleRow {
   /** Unique row key (virtual rows get an index suffix). */
@@ -105,18 +111,20 @@ export function buildPaymentSchedule(payments: any[], opts: BuildOptions = {}): 
       const status: ScheduleStatus =
         chequeStatus === "cancelled"
           ? "cancelled"
-          : refunded >= amount - 0.005
-            ? "refunded"
-            : chequeStatus === "cleared" || due <= today
-              ? "cleared"
-              : "future";
+          : chequeStatus === "pending_cancellation"
+            ? "pending_cancellation"
+            : refunded >= amount - 0.005
+              ? "refunded"
+              : chequeStatus === "cleared" || due <= today
+                ? "cleared"
+                : "future";
       rows.push({
         ...common,
         key: `c:${p.id}`,
         kind: "cheque",
         dueDate: due,
         amount,
-        remaining: status === "cancelled" ? 0 : remainingOnRow,
+        remaining: status === "cancelled" || status === "pending_cancellation" ? 0 : remainingOnRow,
         status,
         cancellable: status === "future",
         refundable: status === "cleared" && remainingOnRow > 0.005,
@@ -192,7 +200,7 @@ export interface ScheduleTotals {
 export function scheduleTotals(rows: ScheduleRow[]): ScheduleTotals {
   const t: ScheduleTotals = { paid: 0, future: 0, cancelled: 0, refunded: 0 };
   for (const r of rows) {
-    if (r.status === "cancelled") t.cancelled += r.amount;
+    if (r.status === "cancelled" || r.status === "pending_cancellation") t.cancelled += r.amount;
     else if (r.status === "refunded") t.refunded += r.amount;
     else if (r.status === "future") t.future += r.remaining;
     else t.paid += r.remaining;

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -10,16 +10,24 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, CalendarClock, Ban, ChevronDown, Info } from "lucide-react";
+import { Loader2, CalendarClock, FileText, ChevronDown, Info } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { buildPaymentSchedule, type ScheduleRow } from "@/lib/paymentSchedule";
+import {
+  createChequeWithdrawalRequest, openLetter, parseChequeMeta,
+} from "@/lib/chequeCancellation";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   cleared: { label: "נפרע", className: "bg-green-500/10 text-green-700 border-green-500/30" },
   future: { label: "טרם נפרע", className: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
   cancelled: { label: "בוטל", className: "bg-muted text-muted-foreground border-border" },
   refunded: { label: "זוכה", className: "bg-destructive/10 text-destructive border-destructive/30" },
+  pending_cancellation: {
+    label: "בבקשת ביטול",
+    className: "bg-purple-500/10 text-purple-700 border-purple-500/30",
+  },
 };
 
 const fmt = (n: number) => `₪${Math.round(n).toLocaleString()}`;
@@ -35,10 +43,17 @@ interface Props {
   studentNames?: Map<string, string>;
   /** Credit owed to the parent, taken from the payment calculator. */
   creditDue?: number;
+  parentName?: string;
+  parentNationalId?: string;
+  academicYearId?: string | null;
   invalidate: () => void;
 }
 
-const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, studentNames, creditDue = 0, invalidate }: Props) => {
+const StopEnrollmentDialog = ({
+  open, onOpenChange, studentId, payments, enrollments, studentNames, creditDue = 0,
+  parentName = "", parentNationalId = "", academicYearId = null, invalidate,
+}: Props) => {
+  const { logoUrl } = useAppLogo();
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [confirm, setConfirm] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -56,6 +71,7 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
 
   const futureRows = rows.filter((r) => r.status === "future");
   const paidRows = rows.filter((r) => r.status === "cleared");
+  const pendingRows = rows.filter((r) => r.status === "pending_cancellation");
   const historyRows = rows.filter((r) => r.status === "cancelled" || r.status === "refunded");
 
   const sum = (list: ScheduleRow[]) => list.reduce((s, r) => s + r.remaining, 0);
@@ -73,23 +89,44 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
     return ownerId ? studentNames?.get(ownerId) : undefined;
   };
 
+  // Stage 1 of the process: ask the bookkeeping office to pull the cheques from the bank.
+  // No accounting document is issued at this point.
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const paymentIds = [...new Set(toCancel.map((r) => r.paymentId))];
-      const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
-        body: { paymentIds },
+      const items = toCancel.map((r) => {
+        const p = payments.find((x: any) => x.id === r.paymentId);
+        const meta = parseChequeMeta(p?.notes);
+        const ownerId = p?.student_id;
+        return {
+          paymentId: r.paymentId,
+          chequeNumber: String(r.reference ?? ""),
+          bank: meta.bank,
+          branch: meta.branch,
+          account: meta.account,
+          dueDate: r.dueDate,
+          amount: r.amount,
+          studentName: ownerId ? studentNames?.get(ownerId) : undefined,
+          docNumber: r.docNumber,
+        };
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
+      return await createChequeWithdrawalRequest({
+        items,
+        parentName,
+        parentNationalId,
+        studentId: studentId || null,
+        academicYearId,
+        creditDue,
+        logoUrl,
+      });
     },
-    onSuccess: (data: any) => {
+    onSuccess: (res) => {
       invalidate();
       setSelected({});
-      toast.success(`בוטלו ${data?.cancelled_count ?? toCancel.length} צ׳קים · ${fmt(Number(data?.cancelled_amount ?? cancelSum))}`);
-      if (data?.url) window.open(data.url, "_blank");
+      toast.success(`נפתחה בקשה למשיכת ${toCancel.length} צ׳קים · ${fmt(res.total)}`);
+      openLetter(res.html);
+      onOpenChange(false);
     },
-    onError: (e: any) => toast.error(`שגיאה בביטול הצ׳קים: ${e?.message ?? ""}`),
+    onError: (e: any) => toast.error(`שגיאה ביצירת הבקשה: ${e?.message ?? ""}`),
   });
 
   const busy = cancelMutation.isPending;
@@ -141,10 +178,11 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
         <DialogContent dir="rtl" className="max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain">
           <DialogHeader className="text-right">
             <DialogTitle className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-primary" /> ביטול צ׳קים עתידיים
+              <CalendarClock className="h-5 w-5 text-primary" /> בקשה למשיכת צ׳קים וביטולם
             </DialogTitle>
             <DialogDescription>
-              כאן מבטלים צ׳קים שטרם הופקדו. זיכוי כספי מתבצע תמיד בהעברה בנקאית מחלון התשלום/זיכוי המשפחתי.
+              שלב 1 בתהליך: מסמנים צ׳קים שטרם נפרעו ומפיקים מכתב להנהלת החשבונות למשיכתם מהבנק.
+              לא מופק כאן מסמך חשבונאי — קבלת הזיכוי תופק רק לאחר אישור ההעברה הבנקאית.
             </DialogDescription>
           </DialogHeader>
 
@@ -192,6 +230,13 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
                 </div>
               )}
 
+              {pendingRows.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-medium text-purple-700">בבקשת ביטול · ממתינים למשיכה מהבנק</p>
+                  {pendingRows.map((r) => renderRow(r, { selectable: false }))}
+                </div>
+              )}
+
               {historyRows.length > 0 && (
                 <div className="space-y-1.5">
                   <button
@@ -212,17 +257,16 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
             <div className="sticky bottom-0 -mx-6 -mb-6 mt-2 border-t border-border bg-background/95 backdrop-blur p-4 space-y-3">
               <p className="text-sm">
                 {toCancel.length > 0
-                  ? <>נבחרו {toCancel.length} צ׳קים לביטול בסך <strong>{fmt(cancelSum)}</strong>.</>
-                  : <span className="text-muted-foreground">סמנו צ׳קים שטרם הופקדו כדי לבטל אותם.</span>}
+                  ? <>נבחרו {toCancel.length} צ׳קים בסך <strong>{fmt(cancelSum)}</strong> לבקשת משיכה מהבנק.</>
+                  : <span className="text-muted-foreground">סמנו צ׳קים שטרם הופקדו כדי לבקש את משיכתם.</span>}
               </p>
               <Button
-                variant="destructive"
                 className="h-11 rounded-xl w-full"
                 disabled={busy || toCancel.length === 0}
                 onClick={() => setConfirm(true)}
               >
-                {busy ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <Ban className="h-4 w-4 ml-1" />}
-                בטל {toCancel.length || ""} צ׳קים
+                {busy ? <Loader2 className="h-4 w-4 animate-spin ml-2" /> : <FileText className="h-4 w-4 ml-1" />}
+                הפק מכתב בקשה למשיכת {toCancel.length || ""} צ׳קים
               </Button>
             </div>
           )}
@@ -232,21 +276,20 @@ const StopEnrollmentDialog = ({ open, onOpenChange, payments, enrollments, stude
       <AlertDialog open={confirm} onOpenChange={(o) => { if (!o) setConfirm(false); }}>
         <AlertDialogContent dir="rtl">
           <AlertDialogHeader>
-            <AlertDialogTitle>לבטל את הצ׳קים?</AlertDialogTitle>
+            <AlertDialogTitle>לפתוח בקשה למשיכת הצ׳קים?</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-2 text-right">
-                <p>יבוטלו {toCancel.length} צ׳קים עתידיים בסך <strong>{fmt(cancelSum)}</strong>.</p>
-                <p>תופק קבלת זיכוי מרוכזת. הכסף לא ייגבה מההורה.</p>
-                <p className="text-destructive font-medium">הפעולה סופית ולא ניתנת לביטול.</p>
+                <p>{toCancel.length} צ׳קים בסך <strong>{fmt(cancelSum)}</strong> יסומנו "בבקשת ביטול" ויירדו מהסכום הכולל.</p>
+                <p>ייפתח מכתב מודפס להנהלת החשבונות עם פירוט מלא של הצ׳קים ותאריכי הפירעון.</p>
+                <p className="text-muted-foreground">לא מופק כעת מסמך ב-iCount. המשך התהליך מתבצע בכרטיס המשפחה.</p>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row-reverse gap-2">
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => { cancelMutation.mutate(); setConfirm(false); }}
             >
-              כן, בטל
+              כן, הפק מכתב
             </AlertDialogAction>
             <AlertDialogCancel>חזרה</AlertDialogCancel>
           </AlertDialogFooter>

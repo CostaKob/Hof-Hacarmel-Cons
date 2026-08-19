@@ -158,6 +158,171 @@ export type Database = {
           },
         ]
       }
+      cheque_cancellation_request_items: {
+        Row: {
+          account: string | null
+          amount: number
+          bank: string | null
+          branch: string | null
+          cheque_number: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          payment_id: string | null
+          request_id: string
+        }
+        Insert: {
+          account?: string | null
+          amount?: number
+          bank?: string | null
+          branch?: string | null
+          cheque_number?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          payment_id?: string | null
+          request_id: string
+        }
+        Update: {
+          account?: string | null
+          amount?: number
+          bank?: string | null
+          branch?: string | null
+          cheque_number?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          payment_id?: string | null
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cheque_cancellation_request_items_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "student_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_cancellation_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "cheque_cancellation_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cheque_cancellation_requests: {
+        Row: {
+          academic_year_id: string | null
+          cheques_received_at: string | null
+          cheques_total: number
+          created_at: string
+          credit_due: number
+          credit_payment_id: string | null
+          family_parent_national_id: string | null
+          id: string
+          notes: string | null
+          parent_name: string | null
+          reason: string | null
+          refund_amount: number
+          requested_at: string
+          requested_by: string | null
+          status: string
+          student_id: string | null
+          transfer_confirmed_at: string | null
+          transfer_letter_id: string | null
+          transfer_reference: string | null
+          transfer_requested_at: string | null
+          updated_at: string
+          withdrawal_letter_id: string | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          cheques_received_at?: string | null
+          cheques_total?: number
+          created_at?: string
+          credit_due?: number
+          credit_payment_id?: string | null
+          family_parent_national_id?: string | null
+          id?: string
+          notes?: string | null
+          parent_name?: string | null
+          reason?: string | null
+          refund_amount?: number
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          student_id?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_letter_id?: string | null
+          transfer_reference?: string | null
+          transfer_requested_at?: string | null
+          updated_at?: string
+          withdrawal_letter_id?: string | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          cheques_received_at?: string | null
+          cheques_total?: number
+          created_at?: string
+          credit_due?: number
+          credit_payment_id?: string | null
+          family_parent_national_id?: string | null
+          id?: string
+          notes?: string | null
+          parent_name?: string | null
+          reason?: string | null
+          refund_amount?: number
+          requested_at?: string
+          requested_by?: string | null
+          status?: string
+          student_id?: string | null
+          transfer_confirmed_at?: string | null
+          transfer_letter_id?: string | null
+          transfer_reference?: string | null
+          transfer_requested_at?: string | null
+          updated_at?: string
+          withdrawal_letter_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cheque_cancellation_requests_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_cancellation_requests_credit_payment_id_fkey"
+            columns: ["credit_payment_id"]
+            isOneToOne: false
+            referencedRelation: "student_payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_cancellation_requests_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_cancellation_requests_transfer_letter_id_fkey"
+            columns: ["transfer_letter_id"]
+            isOneToOne: false
+            referencedRelation: "refund_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cheque_cancellation_requests_withdrawal_letter_id_fkey"
+            columns: ["withdrawal_letter_id"]
+            isOneToOne: false
+            referencedRelation: "refund_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cities: {
         Row: {
           created_at: string

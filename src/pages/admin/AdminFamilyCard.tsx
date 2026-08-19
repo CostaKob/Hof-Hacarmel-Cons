@@ -45,6 +45,9 @@ import AddPaymentDialog, { type FamilyPaymentContext, type FamilyPaymentItemOver
 import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignmentMessage";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
+import ChequeCancellationTracking from "@/components/admin/ChequeCancellationTracking";
+import { createChequeWithdrawalRequest, parseChequeMeta, openLetter } from "@/lib/chequeCancellation";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 
 
@@ -84,6 +87,7 @@ const AdminFamilyCard = () => {
   const queryClient = useQueryClient();
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
+  const { logoUrl } = useAppLogo();
 
   const [unifyOpen, setUnifyOpen] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
@@ -442,23 +446,43 @@ const AdminFamilyCard = () => {
     onError: (e: any) => toast.error(`שגיאה בעדכון: ${e?.message ?? ""}`),
   });
 
-  // Cancel selected future cheques — one consolidated negative receipt in iCount.
+  // Stage 1 of the cheque cancellation process: a withdrawal request + a letter to
+  // the bookkeeping office. No iCount document is created here.
   const cancelChequesMutation = useMutation({
     mutationFn: async (paymentIds: string[]) => {
-      const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
-        body: { paymentIds },
+      const rows = payments.filter((p: any) => paymentIds.includes(p.id));
+      const items = rows.map((p: any) => {
+        const meta = parseChequeMeta(p.notes);
+        return {
+          paymentId: p.id,
+          chequeNumber: String(p.reference_number ?? ""),
+          bank: meta.bank,
+          branch: meta.branch,
+          account: meta.account,
+          dueDate: String(p.payment_date ?? "").slice(0, 10),
+          amount: Math.abs(Number(p.amount || 0)),
+          studentName: p.student_id ? nameById.get(p.student_id) : undefined,
+          docNumber: p.icount_doc_number ?? null,
+        };
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
+      return await createChequeWithdrawalRequest({
+        items,
+        parentName: family?.parent_name ?? "",
+        parentNationalId: parentNationalId ?? "",
+        studentId: family?.children_ids?.[0] ?? null,
+        academicYearId: yearId,
+        creditDue: Math.max(0, -balance),
+        logoUrl,
+      });
     },
-    onSuccess: (data: any) => {
+    onSuccess: (res: any) => {
       invalidateFamily();
+      queryClient.invalidateQueries({ queryKey: ["cheque-cancellation-requests"] });
       setSelectedCheques({});
-      toast.success(`בוטלו ${data?.cancelled_count ?? 0} צ׳קים · זיכוי ${fmt(Number(data?.cancelled_amount ?? 0))}`);
-      if (data?.url) window.open(data.url, "_blank");
+      toast.success(`נפתחה בקשה למשיכת צ׳קים · ${fmt(Number(res?.total ?? 0))}`);
+      openLetter(res.html);
     },
-    onError: (e: any) => toast.error(`שגיאה בביטול הצ׳קים: ${e?.message ?? ""}`),
+    onError: (e: any) => toast.error(`שגיאה ביצירת הבקשה: ${e?.message ?? ""}`),
   });
 
 
@@ -1189,23 +1213,19 @@ const AdminFamilyCard = () => {
                         {selectedIds.length > 0 && (
                           <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg bg-muted/60 p-2">
                             <span className="text-[11px] text-muted-foreground flex-1">
-                              נבחרו {selectedIds.length} צ׳קים · {fmt(selectedSum)} — יופק זיכוי אחד מאוחד עם פירוט הצ׳קים
+                              נבחרו {selectedIds.length} צ׳קים · {fmt(selectedSum)} — ייפתח תהליך משיכה מהבנק עם מכתב להנהלת החשבונות
                             </span>
                             <div className="flex gap-2">
                               <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs"
                                 onClick={() => setSelectedCheques({})}>
                                 נקה בחירה
                               </Button>
-                              <Button variant="destructive" size="sm" className="h-8 rounded-lg text-xs"
+                              <Button size="sm" className="h-8 rounded-lg text-xs"
                                 disabled={cancelChequesMutation.isPending}
-                                onClick={() => {
-                                  if (confirm(`לבטל ${selectedIds.length} צ׳קים בסך ${fmt(selectedSum)}?\nתופק קבלת זיכוי אחת ב-iCount עם פירוט הצ׳קים שבוטלו.`)) {
-                                    cancelChequesMutation.mutate(selectedIds);
-                                  }
-                                }}>
+                                onClick={() => cancelChequesMutation.mutate(selectedIds)}>
                                 {cancelChequesMutation.isPending
-                                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin ms-1" />מבטל צ׳קים, אנא המתן...</>
-                                  : <><Ban className="h-3.5 w-3.5 ms-1" />בטל צ׳קים שנבחרו</>}
+                                  ? <><Loader2 className="h-3.5 w-3.5 animate-spin ms-1" />יוצר בקשה...</>
+                                  : <><Ban className="h-3.5 w-3.5 ms-1" />בקשת משיכת צ׳קים</>}
 
                               </Button>
                             </div>
@@ -1501,6 +1521,25 @@ const AdminFamilyCard = () => {
         </div>
       )}
 
+      <div className="mt-4">
+        <ChequeCancellationTracking
+          parentNationalId={parentNationalId}
+          studentIds={family?.children_ids ?? []}
+          invalidate={invalidateFamily}
+          onRequestTransfer={({ amount, parentName }) => {
+            const src = payments.find((p: any) => p.payment_method === "check" && p.icount_doc_id) ?? payments[0];
+            setBankRefund({
+              studentId: family?.children_ids?.[0],
+              parentName: parentName || family?.parent_name || "",
+              subject: "החזר יתרה לאחר ביטול צ׳קים",
+              refundAmount: amount,
+              paymentId: src?.id,
+              docNumber: src?.icount_doc_number ?? null,
+            });
+          }}
+        />
+      </div>
+
       <BankTransferRefundDialog
         open={!!bankRefund}
         onOpenChange={(o) => { if (!o) setBankRefund(null); }}
@@ -1520,8 +1559,9 @@ const AdminFamilyCard = () => {
         enrollments={enrollments}
         studentNames={nameById}
         creditDue={Math.max(0, -balance)}
-
-
+        parentName={family?.parent_name ?? ""}
+        parentNationalId={parentNationalId ?? ""}
+        academicYearId={yearId}
         invalidate={invalidateFamily}
       />
     </AdminLayout>
