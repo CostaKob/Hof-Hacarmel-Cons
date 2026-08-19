@@ -1079,7 +1079,7 @@ const AdminFamilyCard = () => {
                               : `זיכוי (נותר ₪${remaining.toLocaleString()})`}
                             onClick={() => {
                               setRefundTarget({ ...p, _remaining: remaining, _originalTotal: groupTotal, _cc: p.payment_method === "credit_card" });
-                              setRefundMethod(p.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
+                              setRefundMethod("bank_transfer");
                               setRefundAmount(String(remaining));
                             }}>
                             <Undo2 className="h-4 w-4" />
@@ -1174,7 +1174,7 @@ const AdminFamilyCard = () => {
                                     title={`זיכוי לתשלום זה (נותר ${fmt(rRemaining)})`}
                                     onClick={() => {
                                       setRefundTarget({ ...r, _remaining: rRemaining, _cc: r.payment_method === "credit_card" });
-                                      setRefundMethod(r.payment_method === "credit_card" ? "credit_card" : "bank_transfer");
+                                      setRefundMethod("bank_transfer");
                                       setRefundAmount(String(rRemaining));
                                     }}>
                                     <Undo2 className="h-3.5 w-3.5" />
