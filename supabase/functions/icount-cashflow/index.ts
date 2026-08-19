@@ -317,14 +317,16 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const finalRows: Row[] = rows.map((r) => ({
-      ...r,
-      source: studentKeys.has(r.doc_id) || studentKeys.has(r.doc_number)
-        ? "students"
-        : smKeys.has(r.doc_id) || smKeys.has(r.doc_number)
-          ? "school_music"
-          : "external",
-    }));
+    const finalRows: Row[] = rows
+      .map((r) => ({
+        ...r,
+        source: studentKeys.has(r.doc_id) || studentKeys.has(r.doc_number)
+          ? "students"
+          : smKeys.has(r.doc_id) || smKeys.has(r.doc_number)
+            ? "school_music"
+            : "external",
+      }))
+      .filter((r) => r.source !== "students");
 
     finalRows.sort((a, b) => a.due_date.localeCompare(b.due_date) || a.doc_number.localeCompare(b.doc_number));
 
