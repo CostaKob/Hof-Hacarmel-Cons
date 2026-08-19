@@ -442,11 +442,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
   }, [selectedAmounts]);
 
+  // In credit mode the amounts are refund amounts — never pre-fill them with the
+  // full charge of the enrollment (that confuses the user).
+  const initialAmountFor = (it: PaymentItem) =>
+    transactionType === "credit" ? "" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "";
+
   const toggleItem = (it: PaymentItem, checked: boolean) => {
     setSelectedAmounts((prev) => {
       const next = { ...prev };
       if (checked) {
-        next[it.id] = prev[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
+        next[it.id] = prev[it.id] ?? initialAmountFor(it);
       } else {
         delete next[it.id];
       }
@@ -456,9 +461,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const selectAll = () => {
     const next: Record<string, string> = {};
-    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
+    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? initialAmountFor(it);
     setSelectedAmounts(next);
   };
+
   const clearAll = () => setSelectedAmounts({});
 
 
@@ -1130,7 +1136,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 <button
                   type="button"
                   className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "payment" ? "bg-emerald-600 text-white border-emerald-600" : "bg-background text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
-                  onClick={() => setTransactionType("payment")}
+                  onClick={() => { setTransactionType("payment"); setSelectedAmounts({}); }}
+
                 >
                   תשלום
                 </button>
@@ -1140,7 +1147,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   onClick={() => {
                     setTransactionType("credit");
                     setPaymentMethod("transfer");
+                    setSelectedAmounts({});
                   }}
+
                 >
                   זיכוי
                 </button>
@@ -1178,19 +1187,30 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   />
                 </div>
               </>
+            ) : transactionType === "credit" && paymentMethod === "transfer" ? (
+              <div className="rounded-xl border border-border bg-muted/20 p-3 text-sm leading-relaxed">
+                בזיכוי בהעברה בנקאית לא בוחרים שיוכים — הזיכוי נרשם על הקבלה כולה.
+                בחרו למטה את הקבלה לזיכוי ואת סכום ההחזר בפועל.
+              </div>
             ) : (
               <div>
                 <div className="flex items-center justify-between">
-                  <Label>שיוכים וסכומים</Label>
+                  <Label>{transactionType === "credit" ? "שיוכים לזיכוי · הזינו סכום החזר" : "שיוכים וסכומים"}</Label>
                   <div className="flex gap-2 text-xs">
                     <button type="button" className="text-primary hover:underline" onClick={selectAll}>בחר הכל</button>
                     <span className="text-muted-foreground">·</span>
                     <button type="button" className="text-muted-foreground hover:underline" onClick={clearAll}>נקה</button>
                   </div>
                 </div>
+                {transactionType === "credit" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    הסכומים כאן הם סכומי הזיכוי, לא סכום החיוב המקורי.
+                  </p>
+                )}
                 {paymentItems.length === 0 ? (
                   <p className="text-sm text-muted-foreground mt-2">אין שיוכים פעילים</p>
                 ) : (
+
                   <div className="mt-2 w-full space-y-2 overflow-hidden">
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
@@ -1224,7 +1244,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             onChange={(ev) =>
                               setSelectedAmounts((prev) => ({ ...prev, [it.id]: ev.target.value }))
                             }
-                            placeholder={it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
+                            placeholder={transactionType === "credit" ? "0.00" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="h-9 w-24 shrink-0 sm:w-28"
                           />
                         </div>
