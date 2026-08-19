@@ -1129,14 +1129,14 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               <div className="flex gap-2 mt-1">
                 <button
                   type="button"
-                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "payment" ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "payment" ? "bg-emerald-600 text-white border-emerald-600" : "bg-background text-emerald-700 border-emerald-200 hover:bg-emerald-50"}`}
                   onClick={() => setTransactionType("payment")}
                 >
                   תשלום
                 </button>
                 <button
                   type="button"
-                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "credit" ? "bg-destructive text-destructive-foreground border-destructive" : "bg-background text-muted-foreground border-input hover:bg-muted"}`}
+                  className={`flex-1 h-10 rounded-lg text-sm font-medium border transition-colors ${transactionType === "credit" ? "bg-red-600 text-white border-red-600" : "bg-background text-red-700 border-red-200 hover:bg-red-50"}`}
                   onClick={() => {
                     setTransactionType("credit");
                     setPaymentMethod("transfer");
