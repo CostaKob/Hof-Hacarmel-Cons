@@ -103,6 +103,8 @@ const AdminFamilyCard = () => {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [bankRefund, setBankRefund] = useState<BankRefundDefaults | null>(null);
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
+  const [refundMethod, setRefundMethod] = useState<"bank_transfer" | "credit_card" | "receipt">("bank_transfer");
+  const [owedByGroup, setOwedByGroup] = useState<Record<string, string>>({});
 
 
 
