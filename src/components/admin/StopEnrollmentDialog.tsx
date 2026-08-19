@@ -10,16 +10,24 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2, CalendarClock, Ban, ChevronDown, Info } from "lucide-react";
+import { Loader2, CalendarClock, FileText, ChevronDown, Info } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { buildPaymentSchedule, type ScheduleRow } from "@/lib/paymentSchedule";
+import {
+  createChequeWithdrawalRequest, openLetter, parseChequeMeta,
+} from "@/lib/chequeCancellation";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 const STATUS_META: Record<string, { label: string; className: string }> = {
   cleared: { label: "נפרע", className: "bg-green-500/10 text-green-700 border-green-500/30" },
   future: { label: "טרם נפרע", className: "bg-amber-500/10 text-amber-700 border-amber-500/30" },
   cancelled: { label: "בוטל", className: "bg-muted text-muted-foreground border-border" },
   refunded: { label: "זוכה", className: "bg-destructive/10 text-destructive border-destructive/30" },
+  pending_cancellation: {
+    label: "בבקשת ביטול",
+    className: "bg-purple-500/10 text-purple-700 border-purple-500/30",
+  },
 };
 
 const fmt = (n: number) => `₪${Math.round(n).toLocaleString()}`;
