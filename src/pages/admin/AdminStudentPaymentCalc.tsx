@@ -1477,7 +1477,7 @@ const AdminStudentPaymentCalc = () => {
             </div>
           ) : null}
 
-          {/* Generate iCount link — inside summary so context is clear */}
+          {/* Save calculation */}
           <div className="pt-3 border-t border-primary/20 flex flex-wrap justify-end items-center gap-2">
             {lastSavedAt && (
               <span className="text-xs text-muted-foreground ml-auto">
@@ -1493,14 +1493,6 @@ const AdminStudentPaymentCalc = () => {
               {savingDraft ? <Loader2 className="h-4 w-4 ml-2 animate-spin" /> : null}
               {savingDraft ? "שומר..." : "שמור חישוב"}
             </Button>
-            {student?.parent_national_id && (
-              <Button
-                className="h-12 rounded-xl px-5"
-                onClick={() => navigate(`/admin/families/${encodeURIComponent(student.parent_national_id!)}`)}
-              >
-                נהל תשלומים בכרטיס המשפחה
-              </Button>
-            )}
           </div>
 
         </div>
