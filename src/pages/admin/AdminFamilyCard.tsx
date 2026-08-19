@@ -1545,8 +1545,11 @@ const AdminFamilyCard = () => {
           invalidate={invalidateFamily}
           onRequestTransfer={({ amount, parentName, chequesTotal, creditDue, chequesCount }) => {
             const src = payments.find((p: any) => p.payment_method === "check" && p.icount_doc_id) ?? payments[0];
-            const due = creditDue || Math.max(0, -balance);
-            const finalAmount = amount || Math.max(0, Math.round((due - chequesTotal) * 100) / 100);
+            const creditsGiven = Math.abs(totalCredit);
+            // Money actually left in our hands after pulling the cancelled cheques
+            const netReceived = Math.round((totalPaid - chequesTotal) * 100) / 100;
+            const computed = Math.max(0, Math.round((netReceived - creditsGiven - totalExpected) * 100) / 100);
+            const finalAmount = amount || computed;
             setBankRefund({
               studentId: family?.children_ids?.[0],
               parentName: parentName || family?.parent_name || "",
@@ -1556,15 +1559,20 @@ const AdminFamilyCard = () => {
               paymentId: src?.id,
               docNumber: src?.icount_doc_number ?? null,
               accountSummary: [
-                { label: "סה״כ חיוב", value: fmt(totalExpected) },
-                { label: "סה״כ שולם בפועל", value: fmt(totalPaid) },
-                { label: "זיכויים שכבר בוצעו", value: fmt(Math.abs(totalCredit)) },
-                { label: `צ׳קים שבוטלו (${chequesCount})`, value: fmt(chequesTotal) },
-                { label: "סה״כ מגיע להורה", value: fmt(due) },
+                { label: "סה״כ חיוב (עסקה מעודכנת)", value: fmt(totalExpected) },
+                { label: "סה״כ נרשם כתשלום (כולל צ׳קים עתידיים)", value: fmt(totalPaid) },
+                { label: `בניכוי צ׳קים שבוטלו/נמשכו (${chequesCount})`, value: `-${fmt(chequesTotal)}` },
+                { label: "בניכוי זיכויים שכבר בוצעו", value: `-${fmt(creditsGiven)}` },
+                { label: "התקבל בפועל נטו", value: fmt(Math.round((netReceived - creditsGiven) * 100) / 100) },
+                {
+                  label: netReceived - creditsGiven - totalExpected >= 0 ? "יתרה לטובת ההורה" : "יתרה לחובת ההורה",
+                  value: fmt(Math.abs(Math.round((netReceived - creditsGiven - totalExpected) * 100) / 100)),
+                },
                 { label: "להעברה בנקאית", value: fmt(finalAmount), strong: true },
               ],
             });
           }}
+
 
         />
       </div>
