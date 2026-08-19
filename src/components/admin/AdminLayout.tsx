@@ -198,29 +198,25 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-5 pb-24 md:pb-6 -mt-2">
+      <main className="mx-auto max-w-5xl px-4 py-5 -mt-2 pb-28 md:pb-6">
         <ArchiveYearBanner />
         {children}
       </main>
 
       {/* Mobile / tablet bottom navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-primary px-2 py-2 text-primary-foreground shadow-[0_-2px_8px_rgba(0,0,0,0.15)] md:hidden">
-        <div className="flex items-center justify-around gap-1 overflow-x-auto scrollbar-hide">
-          {NAV_ITEMS.map((item) => (
-            <Button
-              key={item.path}
-              variant="ghost"
-              size="sm"
-              className={`flex h-auto min-w-[4.5rem] flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-primary-foreground hover:bg-primary-foreground/10 ${
-                isActive(item.path) ? "bg-primary-foreground/15" : ""
-              }`}
-              onClick={() => navigate(item.path)}
-            >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] leading-none whitespace-nowrap">{item.label}</span>
-            </Button>
-          ))}
-        </div>
+      <nav className="fixed bottom-3 left-3 right-3 z-10 flex rounded-full border border-border bg-card/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl md:hidden safe-area-pb">
+        {NAV_ITEMS.map((item) => (
+          <button
+            key={item.path}
+            onClick={() => navigate(item.path)}
+            className={`flex flex-1 flex-col items-center gap-0.5 rounded-full py-1.5 text-[11px] font-medium transition-colors ${
+              isActive(item.path) ? "bg-primary/10 text-primary" : "text-muted-foreground"
+            }`}
+          >
+            <item.icon className="h-5 w-5" />
+            {item.label}
+          </button>
+        ))}
       </nav>
     </div>
   );
