@@ -891,9 +891,8 @@ const AdminFamilyCard = () => {
                     .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
                     .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                   const remaining = Math.max(0, groupTotal - refundedSoFar);
-                  // A cheque spread is one transaction: refunds always apply to the whole
-                  // receipt, never to a single cheque row.
-                  const canRefund = !isCredit && hasDoc && remaining > 0;
+                  // Refunds are performed only from the family payment dialog.
+
 
                   const isCombined =
                     Array.isArray(p.enrollment_breakdown) && p.enrollment_breakdown.length > 1;
