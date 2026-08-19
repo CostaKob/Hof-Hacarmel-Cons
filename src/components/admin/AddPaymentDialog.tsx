@@ -442,11 +442,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
   }, [selectedAmounts]);
 
+  // In credit mode the amounts are refund amounts — never pre-fill them with the
+  // full charge of the enrollment (that confuses the user).
+  const initialAmountFor = (it: PaymentItem) =>
+    transactionType === "credit" ? "" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "";
+
   const toggleItem = (it: PaymentItem, checked: boolean) => {
     setSelectedAmounts((prev) => {
       const next = { ...prev };
       if (checked) {
-        next[it.id] = prev[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
+        next[it.id] = prev[it.id] ?? initialAmountFor(it);
       } else {
         delete next[it.id];
       }
@@ -456,9 +461,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const selectAll = () => {
     const next: Record<string, string> = {};
-    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? (it.defaultAmount !== 0 ? String(it.defaultAmount) : "");
+    for (const it of paymentItems) next[it.id] = selectedAmounts[it.id] ?? initialAmountFor(it);
     setSelectedAmounts(next);
   };
+
   const clearAll = () => setSelectedAmounts({});
 
 
