@@ -1147,7 +1147,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   onClick={() => {
                     setTransactionType("credit");
                     setPaymentMethod("transfer");
+                    setSelectedAmounts({});
                   }}
+
                 >
                   זיכוי
                 </button>
