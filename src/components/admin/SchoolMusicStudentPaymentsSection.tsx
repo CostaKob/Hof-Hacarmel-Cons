@@ -304,21 +304,6 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
 
 
-  const cleanupStaleLinkMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke("icount-delete-paypage", {
-        body: { studentId, strict: true },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "שגיאה במחיקת דף הסליקה");
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["sm-student-contact", studentId] });
-      invalidate();
-      toast.success("דף הסליקה הישן נמחק");
-    },
-    onError: (e: any) => toast.error(e?.message || "שגיאה במחיקת דף הסליקה"),
-  });
 
   const createReceiptMutation = useMutation({
     mutationFn: async (paymentId: string) => {
