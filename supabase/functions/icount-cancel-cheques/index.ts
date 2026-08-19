@@ -39,7 +39,10 @@ Deno.serve(async (req: Request) => {
   if (authFail) return authFail;
 
   try {
-    const { paymentIds, reason, allowCancelled } = await req.json();
+    const { paymentIds, reason, allowCancelled, refundAmount, refundReference, refundDate } = await req.json();
+    // Part of the credit can be a real bank transfer back to the parent (money that
+    // was already cleared); it appears as an extra negative line on the same receipt.
+    const transferAmount = Math.abs(Number(refundAmount || 0));
     if (!Array.isArray(paymentIds) || paymentIds.length === 0) {
       return new Response(JSON.stringify({ error: "paymentIds required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
