@@ -88,23 +88,44 @@ const StopEnrollmentDialog = ({
     return ownerId ? studentNames?.get(ownerId) : undefined;
   };
 
+  // Stage 1 of the process: ask the bookkeeping office to pull the cheques from the bank.
+  // No accounting document is issued at this point.
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const paymentIds = [...new Set(toCancel.map((r) => r.paymentId))];
-      const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
-        body: { paymentIds },
+      const items = toCancel.map((r) => {
+        const p = payments.find((x: any) => x.id === r.paymentId);
+        const meta = parseChequeMeta(p?.notes);
+        const ownerId = p?.student_id;
+        return {
+          paymentId: r.paymentId,
+          chequeNumber: String(r.reference ?? ""),
+          bank: meta.bank,
+          branch: meta.branch,
+          account: meta.account,
+          dueDate: r.dueDate,
+          amount: r.amount,
+          studentName: ownerId ? studentNames?.get(ownerId) : undefined,
+          docNumber: r.docNumber,
+        };
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
+      return await createChequeWithdrawalRequest({
+        items,
+        parentName,
+        parentNationalId,
+        studentId: studentId || null,
+        academicYearId,
+        creditDue,
+        logoUrl,
+      });
     },
-    onSuccess: (data: any) => {
+    onSuccess: (res) => {
       invalidate();
       setSelected({});
-      toast.success(`בוטלו ${data?.cancelled_count ?? toCancel.length} צ׳קים · ${fmt(Number(data?.cancelled_amount ?? cancelSum))}`);
-      if (data?.url) window.open(data.url, "_blank");
+      toast.success(`נפתחה בקשה למשיכת ${toCancel.length} צ׳קים · ${fmt(res.total)}`);
+      openLetter(res.html);
+      onOpenChange(false);
     },
-    onError: (e: any) => toast.error(`שגיאה בביטול הצ׳קים: ${e?.message ?? ""}`),
+    onError: (e: any) => toast.error(`שגיאה ביצירת הבקשה: ${e?.message ?? ""}`),
   });
 
   const busy = cancelMutation.isPending;
