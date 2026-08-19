@@ -10,7 +10,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split } from "lucide-react";
+import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
