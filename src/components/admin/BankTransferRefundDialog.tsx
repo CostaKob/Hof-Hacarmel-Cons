@@ -79,6 +79,7 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const [letterDate, setLetterDate] = useState(format(new Date(), "dd/MM/yyyy"));
   const [subject, setSubject] = useState("");
   const [cancelKind, setCancelKind] = useState("חלקית");
+  const [transactionKind, setTransactionKind] = useState<string>("אשראי");
   const [parentName, setParentName] = useState("");
   const [paidAmount, setPaidAmount] = useState("");
   const [refundAmount, setRefundAmount] = useState("");
@@ -149,6 +150,7 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
       setLetterDate(draft.letterDate ?? format(new Date(), "dd/MM/yyyy"));
       setSubject(draft.subject ?? "");
       setCancelKind(draft.cancelKind ?? "חלקית");
+      setTransactionKind(draft.transactionKind ?? "אשראי");
       setParentName(draft.parentName ?? "");
       setPaidAmount(draft.paidAmount ?? "");
       setRefundAmount(draft.refundAmount ?? "");
@@ -186,12 +188,12 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   useEffect(() => {
     if (!open || !draftKey) return;
     const payload = {
-      letterDate, subject, cancelKind, parentName, paidAmount, refundAmount, notes,
+      letterDate, subject, cancelKind, transactionKind, parentName, paidAmount, refundAmount, notes,
       accountOwner, ownerNationalId, bankName, bankNumber, manualBank, branch, manualBranch,
       accountNumber, reference, transferDate,
     };
     try { localStorage.setItem(draftKey, JSON.stringify(payload)); } catch { /* ignore */ }
-  }, [open, draftKey, letterDate, subject, cancelKind, parentName, paidAmount, refundAmount, notes,
+  }, [open, draftKey, letterDate, subject, cancelKind, transactionKind, parentName, paidAmount, refundAmount, notes,
       accountOwner, ownerNationalId, bankName, bankNumber, manualBank, branch, manualBranch,
       accountNumber, reference, transferDate]);
 
@@ -204,6 +206,7 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
   const filled = useMemo(() => {
     const map: Record<string, string> = {
       "סוג_ביטול": cancelKind,
+      "סוג_עסקה": transactionKind,
       "שם_ההורה": parentName,
       "סכום_ששולם": Number(paidAmount || 0).toLocaleString(),
       "סכום_הזיכוי": Number(refundAmount || 0).toLocaleString(),
@@ -221,7 +224,7 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
     const apply = (s: string) => s.replace(/\{\{\s*([^}]+?)\s*\}\}/g, (_m, k: string) => map[k.trim()] ?? "");
     map["הודעה_ראשית"] = apply(mainMessage);
     return apply(template);
-  }, [template, mainMessage, cancelKind, parentName, paidAmount, refundAmount, notes, accountOwner, ownerNationalId,
+  }, [template, mainMessage, cancelKind, transactionKind, parentName, paidAmount, refundAmount, notes, accountOwner, ownerNationalId,
       bankName, bankNumber, branch, accountNumber, signer, orgName, contact]);
 
   const esc = (s: string) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string));
@@ -239,7 +242,7 @@ const BankTransferRefundDialog = ({ open, onOpenChange, defaults, onDone, invali
 </style></head><body>
 <img class="logo" src="${logoUrl}" alt="" />
 <div class="date">${esc(letterDate)}</div>
-<h1>הנדון: ביטול עסקת אשראי ${esc(cancelKind)} ע"י העברה בנקאית</h1>
+<h1>הנדון: ביטול עסקת ${esc(transactionKind)} ${esc(cancelKind)} ע"י העברה בנקאית</h1>
 ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
 <pre>${esc(filled)}</pre>
 </body></html>`;
@@ -404,6 +407,18 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
               </div>
 
               <div className="space-y-1">
+                <Label>סוג העסקה המקורית</Label>
+                <Select value={transactionKind} onValueChange={setTransactionKind}>
+                  <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TRANSACTION_KINDS.map((k) => (
+                      <SelectItem key={k} value={k}>{k}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
                 <Label>עבור (נושא)</Label>
                 <Input className="h-11 rounded-xl" value={subject} onChange={(e) => setSubject(e.target.value)} />
               </div>
@@ -440,7 +455,7 @@ ${subject ? `<h2>עבור: ${esc(subject)}</h2>` : ""}
                 <Textarea className="rounded-xl min-h-[80px] text-sm" value={mainMessage}
                   onChange={(e) => setMainMessage(e.target.value)} />
                 <p className="text-[11px] text-muted-foreground">
-                  ניתן להשתמש במשתנים: {"{{סוג_ביטול}} {{שם_ההורה}} {{סכום_הזיכוי}}"}
+                  ניתן להשתמש במשתנים: {"{{סוג_ביטול}} {{סוג_עסקה}} {{שם_ההורה}} {{סכום_הזיכוי}}"}
                 </p>
               </div>
 
