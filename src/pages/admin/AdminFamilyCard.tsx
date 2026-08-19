@@ -1001,6 +1001,12 @@ const AdminFamilyCard = () => {
                             <FileDown className="h-4 w-4" />
                           </Button>
                         )}
+                        {(() => {
+                          const iv: any = createInvoiceMutation.variables;
+                          const invoicingThis = createInvoiceMutation.isPending &&
+                            (iv?.paymentId === p.id || (!!p.payment_group_id && iv?.groupId === p.payment_group_id));
+                          return (
+                            <>
                         {!hasDoc && !isPending && !isCredit && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
@@ -1011,8 +1017,9 @@ const AdminFamilyCard = () => {
                               );
                             }}>
 
-                            <FileDown className="h-3.5 w-3.5 ms-1" />
-                            {isCombined ? "קבלה מאוחדת" : "הפק קבלה"}
+                            {invoicingThis
+                              ? <><Loader2 className="h-3.5 w-3.5 ms-1 animate-spin" />מפיק קבלה...</>
+                              : <><FileDown className="h-3.5 w-3.5 ms-1" />{isCombined ? "קבלה מאוחדת" : "הפק קבלה"}</>}
                           </Button>
                         )}
                         {isCredit && hasInvoice && (
@@ -1025,10 +1032,14 @@ const AdminFamilyCard = () => {
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
                             onClick={() => { setInvoiceNote(""); setPendingInvoiceParams({ paymentId: p.id, isCredit: true }); }}>
-                            <FileDown className="h-3.5 w-3.5 ms-1" />
-                            קבלת זיכוי
+                            {invoicingThis
+                              ? <><Loader2 className="h-3.5 w-3.5 ms-1 animate-spin" />מפיק...</>
+                              : <><FileDown className="h-3.5 w-3.5 ms-1" />קבלת זיכוי</>}
                           </Button>
                         )}
+                            </>
+                          );
+                        })()}
                         {isPending && p.payment_link_url && (
                           <>
                             <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg" title="פתח קישור"
@@ -1044,17 +1055,20 @@ const AdminFamilyCard = () => {
                             </Button>
                             <Button variant="outline" size="icon"
                               className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
-                              title="בטל קישור ומחק שורה"
+                              title={deleteLinkMutation.isPending ? "מוחק, אנא המתן..." : "בטל קישור ומחק שורה"}
                               disabled={deleteLinkMutation.isPending}
                               onClick={() => {
                                 if (confirm("לבטל את קישור התשלום? דף הסליקה יימחק מ-iCount.")) {
                                   deleteLinkMutation.mutate(p.id);
                                 }
                               }}>
-                              <Trash2 className="h-4 w-4" />
+                              {deleteLinkMutation.isPending && deleteLinkMutation.variables === p.id
+                                ? <Loader2 className="h-4 w-4 animate-spin" />
+                                : <Trash2 className="h-4 w-4" />}
                             </Button>
                           </>
                         )}
+
                         {canRefund && (
                           <Button variant="outline" size="icon"
                             className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
