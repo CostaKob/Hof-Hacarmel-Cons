@@ -443,23 +443,43 @@ const AdminFamilyCard = () => {
     onError: (e: any) => toast.error(`שגיאה בעדכון: ${e?.message ?? ""}`),
   });
 
-  // Cancel selected future cheques — one consolidated negative receipt in iCount.
+  // Stage 1 of the cheque cancellation process: a withdrawal request + a letter to
+  // the bookkeeping office. No iCount document is created here.
   const cancelChequesMutation = useMutation({
     mutationFn: async (paymentIds: string[]) => {
-      const { data, error } = await supabase.functions.invoke("icount-cancel-cheques", {
-        body: { paymentIds },
+      const rows = payments.filter((p: any) => paymentIds.includes(p.id));
+      const items = rows.map((p: any) => {
+        const meta = parseChequeMeta(p.notes);
+        return {
+          paymentId: p.id,
+          chequeNumber: String(p.reference_number ?? ""),
+          bank: meta.bank,
+          branch: meta.branch,
+          account: meta.account,
+          dueDate: String(p.payment_date ?? "").slice(0, 10),
+          amount: Math.abs(Number(p.amount || 0)),
+          studentName: p.student_id ? nameById.get(p.student_id) : undefined,
+          docNumber: p.icount_doc_number ?? null,
+        };
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
-      return data;
+      return await createChequeWithdrawalRequest({
+        items,
+        parentName: family?.parent_name ?? "",
+        parentNationalId: parentNationalId ?? "",
+        studentId: family?.children_ids?.[0] ?? null,
+        academicYearId: yearId,
+        creditDue: Math.max(0, -balance),
+        logoUrl,
+      });
     },
-    onSuccess: (data: any) => {
+    onSuccess: (res: any) => {
       invalidateFamily();
+      queryClient.invalidateQueries({ queryKey: ["cheque-cancellation-requests"] });
       setSelectedCheques({});
-      toast.success(`בוטלו ${data?.cancelled_count ?? 0} צ׳קים · זיכוי ${fmt(Number(data?.cancelled_amount ?? 0))}`);
-      if (data?.url) window.open(data.url, "_blank");
+      toast.success(`נפתחה בקשה למשיכת צ׳קים · ${fmt(Number(res?.total ?? 0))}`);
+      openLetter(res.html);
     },
-    onError: (e: any) => toast.error(`שגיאה בביטול הצ׳קים: ${e?.message ?? ""}`),
+    onError: (e: any) => toast.error(`שגיאה ביצירת הבקשה: ${e?.message ?? ""}`),
   });
 
 
