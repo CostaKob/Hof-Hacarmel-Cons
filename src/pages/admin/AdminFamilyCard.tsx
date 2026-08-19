@@ -527,12 +527,29 @@ const AdminFamilyCard = () => {
     },
   });
 
-  const openRefundDoc = async (path: string | null) => {
-    if (!path) return toast.error("למסמך זה לא נשמר קובץ");
-    const { data, error } = await supabase.storage.from("refund-documents").createSignedUrl(path, 300);
-    if (error || !data?.signedUrl) return toast.error("שגיאה בפתיחת המסמך");
-    window.open(data.signedUrl, "_blank");
+  // Storage serves the archived letters as plain text, so download the file and
+  // re-open it locally as UTF-8 HTML (otherwise the browser shows raw markup).
+  const openRefundDoc = async (path: string | null, docId?: string) => {
+    let html: string | null = null;
+    if (path) {
+      const { data } = await supabase.storage.from("refund-documents").download(path);
+      if (data) html = new TextDecoder("utf-8").decode(await data.arrayBuffer());
+    }
+    if (!html && docId) {
+      const { data } = await supabase
+        .from("refund_documents")
+        .select("content_html")
+        .eq("id", docId)
+        .maybeSingle();
+      html = data?.content_html ?? null;
+    }
+    if (!html) return toast.error("לא ניתן לפתוח את המסמך");
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    const w = window.open(url, "_blank");
+    if (!w) { URL.revokeObjectURL(url); return toast.error("החלון נחסם על ידי הדפדפן"); }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
   };
+
 
 
   return (
@@ -1510,7 +1527,7 @@ const AdminFamilyCard = () => {
                       </p>
                     </div>
                     <Button variant="outline" size="sm" className="h-9 rounded-xl text-xs shrink-0"
-                      onClick={() => openRefundDoc(d.file_path)}>
+                      onClick={() => openRefundDoc(d.file_path, d.id)}>
                       <FileDown className="h-3.5 w-3.5" /> פתח
                     </Button>
                   </div>
