@@ -244,6 +244,35 @@ const AdminYearCalendar = () => {
     }
   };
 
+  /* ------------------------------------------------------------------
+     סנכרון אוטומטי שקט אחרי כל שמירה/מחיקה (עם השהיה קצרה לאיחוד שינויים).
+     בנוסף רץ סנכרון יומי אוטומטי בשרת (cron).
+     ------------------------------------------------------------------ */
+  const autoSyncTimer = useRef<number | null>(null);
+  const [autoSyncing, setAutoSyncing] = useState(false);
+
+  const scheduleAutoSync = () => {
+    if (autoSyncTimer.current) window.clearTimeout(autoSyncTimer.current);
+    autoSyncTimer.current = window.setTimeout(async () => {
+      try {
+        setAutoSyncing(true);
+        const { error: fnError } = await supabase.functions.invoke("google-calendar-sync");
+        if (fnError) throw fnError;
+      } catch (e: any) {
+        toast.error("הסנכרון האוטומטי ל-Google נכשל — אפשר לנסות ידנית");
+      } finally {
+        setAutoSyncing(false);
+      }
+    }, 2500) as unknown as number;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (autoSyncTimer.current) window.clearTimeout(autoSyncTimer.current);
+    };
+  }, []);
+
+
   const undoStack = useRef<UndoEntry[]>([]);
   const redoStack = useRef<UndoEntry[]>([]);
 
