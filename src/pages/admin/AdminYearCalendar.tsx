@@ -528,9 +528,10 @@ const AdminYearCalendar = () => {
   const removeLane = (monthKey: string) => {
     setExtraLanesByMonth((prev) => ({
       ...prev,
-      [monthKey]: Math.max(0, (prev[monthKey] ?? 0) - 1),
+      [monthKey]: (prev[monthKey] ?? 0) - 1,
     }));
   };
+
 
   /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
   const handleUndo = async () => {
@@ -680,10 +681,34 @@ const AdminYearCalendar = () => {
         (acc, it) => Math.max(acc, it.lane + 1),
         0
       );
-      result[m.key] = Math.max(3, used) + (extraLanesByMonth[m.key] ?? 0);
+      result[m.key] = Math.max(
+        Math.max(1, used),
+        Math.max(3, used) + (extraLanesByMonth[m.key] ?? 0)
+      );
     });
     return result;
   }, [itemsByMonth, extraLanesByMonth]);
+
+  /** מחיקת השורה האחרונה בחודש — רק אם היא ריקה. */
+  const tryRemoveLane = (monthKey: string) => {
+    const laneCount = laneCountByMonth[monthKey] ?? 3;
+    if (laneCount <= 1) {
+      toast("חייבת להישאר לפחות שורה אחת בחודש");
+      return;
+    }
+    const lastLaneItems = (itemsByMonth[monthKey]?.general ?? []).filter(
+      (it) => Math.min(it.lane, laneCount - 1) === laneCount - 1
+    );
+    if (lastLaneItems.length > 0) {
+      toast.error(
+        `לא ניתן למחוק — בשורה ${laneCount} יש ${lastLaneItems.length} אירועים. יש להעביר או למחוק אותם קודם.`
+      );
+      return;
+    }
+    removeLane(monthKey);
+    toast.success(`שורה ${laneCount} נמחקה`);
+  };
+
 
   /** מספר השורות בחודש שאליו שייך האירוע שנערך כרגע. */
   const formLaneCount = useMemo(() => {
@@ -857,22 +882,38 @@ const AdminYearCalendar = () => {
         <span>
           {m.label} {m.year}
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            addLane(m.key);
-            pushUndo({ kind: "lane", monthKey: m.key });
-          }}
-          className="rounded-lg px-2 py-1 text-xs"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.6)",
-            color: "#3B1D18",
-            fontWeight: 500,
-          }}
-          title="הוסף שורה לחודש זה"
-        >
-          + שורה
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => {
+              addLane(m.key);
+              pushUndo({ kind: "lane", monthKey: m.key });
+            }}
+            className="rounded-lg px-2 py-1 text-xs"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.6)",
+              color: "#3B1D18",
+              fontWeight: 500,
+            }}
+            title="הוסף שורה לחודש זה"
+          >
+            + שורה
+          </button>
+          <button
+            type="button"
+            onClick={() => tryRemoveLane(m.key)}
+            className="rounded-lg px-2 py-1 text-xs"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.6)",
+              color: "#3B1D18",
+              fontWeight: 500,
+            }}
+            title="מחק את השורה האחרונה (רק אם ריקה)"
+          >
+            − שורה
+          </button>
+        </div>
+
       </div>
     );
 
