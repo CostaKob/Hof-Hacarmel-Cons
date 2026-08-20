@@ -1024,6 +1024,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setCheckNumber("");
     setTransactionType("payment");
     setSelectedAmounts({});
+    setDescOverrides({});
+    setEditingDescIds([]);
     setEditEnrollmentId("");
     setEditAmount("");
     
