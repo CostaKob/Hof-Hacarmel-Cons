@@ -183,8 +183,10 @@ export type Database = {
           created_at: string
           description_he: string | null
           end_date: string
+          google_calendar_id: string | null
           google_etag: string | null
           google_event_id: string | null
+          google_synced_at: string | null
           id: string
           lane_index: number
           location_he: string | null
@@ -202,8 +204,10 @@ export type Database = {
           created_at?: string
           description_he?: string | null
           end_date: string
+          google_calendar_id?: string | null
           google_etag?: string | null
           google_event_id?: string | null
+          google_synced_at?: string | null
           id?: string
           lane_index?: number
           location_he?: string | null
@@ -221,8 +225,10 @@ export type Database = {
           created_at?: string
           description_he?: string | null
           end_date?: string
+          google_calendar_id?: string | null
           google_etag?: string | null
           google_event_id?: string | null
+          google_synced_at?: string | null
           id?: string
           lane_index?: number
           location_he?: string | null
@@ -257,6 +263,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      calendar_sync_deletions: {
+        Row: {
+          deleted_at: string
+          google_calendar_id: string | null
+          google_event_id: string
+          id: string
+        }
+        Insert: {
+          deleted_at?: string
+          google_calendar_id?: string | null
+          google_event_id: string
+          id?: string
+        }
+        Update: {
+          deleted_at?: string
+          google_calendar_id?: string | null
+          google_event_id?: string
+          id?: string
+        }
+        Relationships: []
       }
       cheque_cancellation_request_items: {
         Row: {
@@ -873,6 +900,33 @@ export type Database = {
           id?: string
           parent_a_national_id?: string
           parent_b_national_id?: string
+        }
+        Relationships: []
+      }
+      google_calendar_sync_state: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          sync_token: string | null
+          updated_at: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          sync_token?: string | null
+          updated_at?: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          sync_token?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
