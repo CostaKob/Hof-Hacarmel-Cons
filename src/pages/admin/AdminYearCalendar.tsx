@@ -887,16 +887,19 @@ const AdminYearCalendar = () => {
               <Label>סוג אירוע</Label>
               <Select
                 value={form.track_id}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const isAvailability = tracks.find((t) => t.id === value)?.key === "availability";
+                  const availabilityState = isAvailability ? "reserves" : null;
                   setForm({
                     ...form,
                     track_id: value,
-                    availability_state:
-                      tracks.find((t) => t.id === value)?.key === "availability"
-                        ? "reserves"
-                        : null,
-                  })
-                }
+                    availability_state: availabilityState,
+                    title_he:
+                      isAvailability && availabilityState
+                        ? AVAILABILITY_LABEL[availabilityState]
+                        : form.title_he,
+                  });
+                }}
               >
                 <SelectTrigger className="h-11 rounded-xl text-right">
                   <SelectValue placeholder="בחר סוג אירוע" />
