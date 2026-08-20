@@ -252,6 +252,8 @@ const AdminYearCalendar = () => {
   ) => {
     const track = tracks.find((t) => t.id === trackId);
     const date = isoDate(monthDef.year, monthDef.month, day);
+    const isAvailability = track?.key === "availability";
+    const availabilityState = isAvailability ? "reserves" : null;
     setEditingId(null);
     setForm({
       ...emptyForm(),
@@ -259,7 +261,8 @@ const AdminYearCalendar = () => {
       lane_index: laneIndex,
       start_date: date,
       end_date: date,
-      availability_state: track?.key === "availability" ? "reserves" : null,
+      availability_state: availabilityState,
+      title_he: isAvailability && availabilityState ? AVAILABILITY_LABEL[availabilityState] : "",
     });
     setDialogOpen(true);
   };
