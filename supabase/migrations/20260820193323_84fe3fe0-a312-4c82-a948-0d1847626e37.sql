@@ -1,0 +1,1 @@
+ALTER TABLE public.calendar_items ADD COLUMN IF NOT EXISTS lane_index integer NOT NULL DEFAULT 0;

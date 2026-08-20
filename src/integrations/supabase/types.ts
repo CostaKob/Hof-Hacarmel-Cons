@@ -186,6 +186,7 @@ export type Database = {
           google_etag: string | null
           google_event_id: string | null
           id: string
+          lane_index: number
           location_he: string | null
           person_id: string | null
           start_date: string
@@ -204,6 +205,7 @@ export type Database = {
           google_etag?: string | null
           google_event_id?: string | null
           id?: string
+          lane_index?: number
           location_he?: string | null
           person_id?: string | null
           start_date: string
@@ -222,6 +224,7 @@ export type Database = {
           google_etag?: string | null
           google_event_id?: string | null
           id?: string
+          lane_index?: number
           location_he?: string | null
           person_id?: string | null
           start_date?: string
