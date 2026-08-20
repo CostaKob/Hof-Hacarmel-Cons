@@ -681,10 +681,34 @@ const AdminYearCalendar = () => {
         (acc, it) => Math.max(acc, it.lane + 1),
         0
       );
-      result[m.key] = Math.max(3, used) + (extraLanesByMonth[m.key] ?? 0);
+      result[m.key] = Math.max(
+        Math.max(1, used),
+        Math.max(3, used) + (extraLanesByMonth[m.key] ?? 0)
+      );
     });
     return result;
   }, [itemsByMonth, extraLanesByMonth]);
+
+  /** מחיקת השורה האחרונה בחודש — רק אם היא ריקה. */
+  const tryRemoveLane = (monthKey: string) => {
+    const laneCount = laneCountByMonth[monthKey] ?? 3;
+    if (laneCount <= 1) {
+      toast("חייבת להישאר לפחות שורה אחת בחודש");
+      return;
+    }
+    const lastLaneItems = (itemsByMonth[monthKey]?.general ?? []).filter(
+      (it) => Math.min(it.lane, laneCount - 1) === laneCount - 1
+    );
+    if (lastLaneItems.length > 0) {
+      toast.error(
+        `לא ניתן למחוק — בשורה ${laneCount} יש ${lastLaneItems.length} אירועים. יש להעביר או למחוק אותם קודם.`
+      );
+      return;
+    }
+    removeLane(monthKey);
+    toast.success(`שורה ${laneCount} נמחקה`);
+  };
+
 
   /** מספר השורות בחודש שאליו שייך האירוע שנערך כרגע. */
   const formLaneCount = useMemo(() => {
