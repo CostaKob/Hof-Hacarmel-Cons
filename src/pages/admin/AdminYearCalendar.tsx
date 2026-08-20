@@ -131,6 +131,8 @@ const RANGE_END = MONTHS[MONTHS.length - 1].endISO;
 const emptyForm = (): CalendarFormValues => ({
   title_he: "",
   description_he: "",
+  start_time: "",
+  location_he: "",
   track_id: "",
   branch_id: null,
   person_id: null,
