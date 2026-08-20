@@ -24,6 +24,7 @@ export type CalendarFormValues = {
   branch_id: string | null;
   person_id: string | null;
   availability_state: "reserves" | "at_work" | "home" | null;
+  lane_index: number;
   start_date: string;
   end_date: string;
   status: "confirmed" | "tentative" | "cancelled";
@@ -74,6 +75,7 @@ const toPayload = (values: CalendarFormValues) => ({
   branch_id: values.branch_id,
   person_id: values.person_id,
   availability_state: values.availability_state,
+  lane_index: values.lane_index ?? 0,
   start_date: values.start_date,
   end_date: values.end_date,
   status: values.status,
