@@ -72,13 +72,14 @@ const COLORS = {
   memorial: "#3FA9BE",
 };
 
+/** צבע לפי סוג אירוע. אירוע רגיל — ללא צבע (לבן עם מסגרת). */
 const TRACK_BG: Record<string, string> = {
   availability_reserves: COLORS.reserves,
   availability_at_work: COLORS.atWork,
   availability_home: COLORS.home,
-  holidays: COLORS.holiday,
-  branch_events: "#FFFFFF",
-  notes: "#F3F4F6",
+  vacation: COLORS.holiday,
+  memorial: COLORS.memorial,
+  regular: "#FFFFFF",
 };
 
 const AVAILABILITY_LABEL: Record<string, string> = {
@@ -130,6 +131,8 @@ const RANGE_END = MONTHS[MONTHS.length - 1].endISO;
 const emptyForm = (): CalendarFormValues => ({
   title_he: "",
   description_he: "",
+  start_time: "",
+  location_he: "",
   track_id: "",
   branch_id: null,
   person_id: null,
@@ -150,6 +153,8 @@ type UIItem = {
   id: string;
   title: string;
   detail?: string;
+  time?: string;
+  place?: string;
   from: number;
   to: number;
   bg: string;
@@ -158,6 +163,9 @@ type UIItem = {
   clippedEnd: boolean;
   raw: CalendarItem;
 };
+
+/** HH:MM מתוך ערך time של המסד */
+const formatTime = (value?: string | null) => (value ? value.slice(0, 5) : "");
 
 /** סידור שורות אוטומטי — לכל פריט השורה הראשונה ללא חפיפה. */
 const packLanes = (list: UIItem[]): UIItem[][] => {
@@ -226,6 +234,8 @@ const AdminYearCalendar = () => {
     setForm({
       title_he: item.title_he,
       description_he: item.description_he ?? "",
+      start_time: formatTime((item as any).start_time),
+      location_he: (item as any).location_he ?? "",
       track_id: item.track_id,
       branch_id: item.branch_id,
       person_id: item.person_id,
@@ -297,10 +307,12 @@ const AdminYearCalendar = () => {
           id: item.id,
           title: item.title_he,
           detail: item.description_he ?? undefined,
+          time: formatTime((item as any).start_time) || undefined,
+          place: (item as any).location_he ?? undefined,
           from,
           to,
-          bg: TRACK_BG[bgKey] ?? "#F3F4F6",
-          bordered: !(item.track?.is_continuous ?? false),
+          bg: TRACK_BG[bgKey] ?? "#FFFFFF",
+          bordered: key === "regular",
           clippedStart,
           clippedEnd,
           raw: item,
@@ -365,6 +377,7 @@ const AdminYearCalendar = () => {
                   margin: compact ? 2 : 3,
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   position: "relative",
                   fontSize: compact ? 11 : 13,
                   color: "#1F2937",
@@ -372,21 +385,24 @@ const AdminYearCalendar = () => {
                   paddingInline: 8,
                   paddingBlock: compact ? 2 : 4,
                   overflow: "visible",
-                  textAlign: "start",
+                  textAlign: "center",
                   cursor: "pointer",
                 }}
-                title={[item.title, item.detail].filter(Boolean).join(" — ")}
+                title={[item.title, item.detail, item.time, item.place]
+                  .filter(Boolean)
+                  .join(" — ")}
               >
                 {showText && (
                   <span
                     style={{
                       position: "sticky",
-                      insetInlineStart: 8,
+                      insetInline: 8,
                       zIndex: 1,
                       display: "block",
                       width: "100%",
                       minWidth: 0,
                       lineHeight: 1.25,
+                      textAlign: "center",
                     }}
                   >
                     <span
@@ -412,6 +428,20 @@ const AdminYearCalendar = () => {
                         }}
                       >
                         {item.detail}
+                      </span>
+                    )}
+                    {(item.time || item.place) && (
+                      <span
+                        className="font-normal"
+                        style={{
+                          display: "block",
+                          whiteSpace: "normal",
+                          overflowWrap: "anywhere",
+                          opacity: 0.75,
+                          fontSize: compact ? 10 : 11,
+                        }}
+                      >
+                        {[item.time, item.place].filter(Boolean).join(" · ")}
                       </span>
                     )}
                   </span>
@@ -586,29 +616,52 @@ const AdminYearCalendar = () => {
 
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">כותרת</Label>
+              <Label htmlFor="title">כותרת ראשית</Label>
               <Input
                 id="title"
                 value={form.title_he}
                 onChange={(e) => setForm({ ...form, title_he: e.target.value })}
-                placeholder="למשל: סוכות"
+                placeholder="למשל: ישיבת פתיחת שנה"
                 className="h-12 rounded-xl text-right"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description">תיאור (אופציונלי)</Label>
+              <Label htmlFor="description">פירוט (אופציונלי)</Label>
               <Input
                 id="description"
                 value={form.description_he}
                 onChange={(e) => setForm({ ...form, description_he: e.target.value })}
-                placeholder="למשל: חלוקת כלים"
+                placeholder="למשל: כל מורי האולפן"
                 className="h-12 rounded-xl text-right"
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="time">שעה</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={form.start_time}
+                  onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                  className="h-12 rounded-xl text-center"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="location">מיקום</Label>
+                <Input
+                  id="location"
+                  value={form.location_he}
+                  onChange={(e) => setForm({ ...form, location_he: e.target.value })}
+                  placeholder="למשל: העמר"
+                  className="h-12 rounded-xl text-right"
+                />
+              </div>
+            </div>
+
             <div className="grid gap-2">
-              <Label>מסלול</Label>
+              <Label>סוג אירוע</Label>
               <Select
                 value={form.track_id}
                 onValueChange={(value) =>
@@ -623,7 +676,7 @@ const AdminYearCalendar = () => {
                 }
               >
                 <SelectTrigger className="h-11 rounded-xl text-right">
-                  <SelectValue placeholder="בחר מסלול" />
+                  <SelectValue placeholder="בחר סוג אירוע" />
                 </SelectTrigger>
                 <SelectContent dir="rtl">
                   {tracks.map((t) => (
@@ -656,7 +709,7 @@ const AdminYearCalendar = () => {
               </div>
             )}
 
-            {selectedTrack?.key === "branch_events" && (
+            {selectedTrack?.key === "regular" && (
               <div className="grid gap-2">
                 <Label>סניף</Label>
                 <Select
