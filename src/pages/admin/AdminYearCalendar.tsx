@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   fetchCalendarData,
   createCalendarItem,
@@ -224,6 +225,7 @@ const AdminYearCalendar = () => {
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const isMobile = useIsMobile();
 
   /** סנכרון דו-כיווני מול Google Calendar. */
   const handleGoogleSync = async () => {
@@ -841,57 +843,88 @@ const AdminYearCalendar = () => {
       );
     };
 
+    const monthLabelInner = (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: isMobile ? "row" : "column",
+          alignItems: "center",
+          justifyContent: isMobile ? "space-between" : "center",
+          gap: 6,
+          width: isMobile ? "100%" : undefined,
+        }}
+      >
+        <span>
+          {m.label} {m.year}
+        </span>
+        <button
+          type="button"
+          onClick={() => {
+            addLane(m.key);
+            pushUndo({ kind: "lane", monthKey: m.key });
+          }}
+          className="rounded-lg px-2 py-1 text-xs"
+          style={{
+            backgroundColor: "rgba(255,255,255,0.6)",
+            color: "#3B1D18",
+            fontWeight: 500,
+          }}
+          title="הוסף שורה לחודש זה"
+        >
+          + שורה
+        </button>
+      </div>
+    );
+
     return (
       <div key={m.key} style={{ borderBottom: `2px solid ${COLORS.grid}` }}>
-        <div className="flex" style={{ minWidth: "min-content" }}>
-          {/* עמודת שם החודש — דביקה */}
+        {/* במובייל: כותרת החודש כפס עליון (ללא sticky אופקי שמהבהב ב-iOS) */}
+        {isMobile && (
           <div
-            className="shrink-0"
             style={{
-              position: "sticky",
-              // ב-RTL inline-start = right. חלק מדפדפני מובייל (iOS Safari)
-              // לא מיישמים inset לוגי על sticky — לכן גם ערך פיזי.
-              insetInlineStart: 0,
-              right: 0,
-              zIndex: 3,
-              width: MONTH_COL_WIDTH,
-              minWidth: MONTH_COL_WIDTH,
-              alignSelf: "stretch",
               backgroundColor: COLORS.monthHeader,
               color: "#3B1D18",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              textAlign: "center",
               fontFamily: "'Rubik', sans-serif",
               fontWeight: 600,
-              fontSize: 18,
+              fontSize: 16,
+              padding: "6px 12px",
             }}
           >
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-              <span>
-                {m.label} {m.year}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  addLane(m.key);
-                  pushUndo({ kind: "lane", monthKey: m.key });
-                }}
-                className="rounded-lg px-2 py-1 text-xs"
-                style={{
-                  backgroundColor: "rgba(255,255,255,0.6)",
-                  color: "#3B1D18",
-                  fontWeight: 500,
-                }}
-                title="הוסף שורה לחודש זה"
-              >
-                + שורה
-              </button>
-            </div>
+            {monthLabelInner}
           </div>
+        )}
+        <div className="flex" style={{ minWidth: isMobile ? undefined : "min-content" }}>
+          {/* עמודת שם החודש — דביקה (דסקטופ בלבד) */}
+          {!isMobile && (
+            <div
+              className="shrink-0"
+              style={{
+                position: "sticky",
+                insetInlineStart: 0,
+                right: 0,
+                zIndex: 3,
+                width: MONTH_COL_WIDTH,
+                minWidth: MONTH_COL_WIDTH,
+                alignSelf: "stretch",
+                backgroundColor: COLORS.monthHeader,
+                color: "#3B1D18",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                fontFamily: "'Rubik', sans-serif",
+                fontWeight: 600,
+                fontSize: 18,
+              }}
+            >
+              {monthLabelInner}
+            </div>
+          )}
 
-          <div className="min-w-0">
+          <div
+            className={isMobile ? "min-w-0 flex-1 overflow-x-auto" : "min-w-0"}
+            style={isMobile ? { WebkitOverflowScrolling: "touch" } : undefined}
+          >
             {/* מספרי ימים */}
             <div style={{ ...gridStyle, backgroundColor: COLORS.dayNumbers }}>
               {days.map((d) => (
@@ -1061,7 +1094,9 @@ const AdminYearCalendar = () => {
         ref={calendarContainerRef}
         onMouseDown={handleMouseDown}
         onClickCapture={handleClickCapture}
-        className="year-calendar-scroll relative overflow-auto rounded-xl border"
+        className={`year-calendar-scroll relative rounded-xl border ${
+          isMobile ? "overflow-x-hidden" : "overflow-auto"
+        }`}
         style={{
           borderColor: COLORS.grid,
           fontFamily: "'Assistant', sans-serif",
