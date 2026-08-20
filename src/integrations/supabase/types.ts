@@ -105,6 +105,24 @@ export type Database = {
           },
         ]
       }
+      branches: {
+        Row: {
+          created_at: string
+          id: string
+          name_he: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_he: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_he?: string
+        }
+        Relationships: []
+      }
       broadcast_messages: {
         Row: {
           academic_year_id: string | null
@@ -154,6 +172,79 @@ export type Database = {
             columns: ["academic_year_id"]
             isOneToOne: false
             referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calendar_items: {
+        Row: {
+          availability_state: string | null
+          branch_id: string | null
+          created_at: string
+          description_he: string | null
+          end_date: string
+          google_etag: string | null
+          google_event_id: string | null
+          id: string
+          person_id: string | null
+          start_date: string
+          status: string
+          title_he: string
+          track_id: string
+          updated_at: string
+        }
+        Insert: {
+          availability_state?: string | null
+          branch_id?: string | null
+          created_at?: string
+          description_he?: string | null
+          end_date: string
+          google_etag?: string | null
+          google_event_id?: string | null
+          id?: string
+          person_id?: string | null
+          start_date: string
+          status?: string
+          title_he: string
+          track_id: string
+          updated_at?: string
+        }
+        Update: {
+          availability_state?: string | null
+          branch_id?: string | null
+          created_at?: string
+          description_he?: string | null
+          end_date?: string
+          google_etag?: string | null
+          google_event_id?: string | null
+          id?: string
+          person_id?: string | null
+          start_date?: string
+          status?: string
+          title_he?: string
+          track_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_items_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_items_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "people"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calendar_items_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
             referencedColumns: ["id"]
           },
         ]
@@ -1221,6 +1312,24 @@ export type Database = {
           recital_track_price?: number
           updated_at?: string
           vat_rate?: number
+        }
+        Relationships: []
+      }
+      people: {
+        Row: {
+          created_at: string
+          id: string
+          name_he: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name_he: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name_he?: string
         }
         Relationships: []
       }
@@ -3053,6 +3162,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tracks: {
+        Row: {
+          created_at: string
+          id: string
+          is_continuous: boolean
+          key: string
+          label_he: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_continuous?: boolean
+          key: string
+          label_he: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_continuous?: boolean
+          key?: string
+          label_he?: string
+          sort_order?: number
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
