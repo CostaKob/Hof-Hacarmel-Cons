@@ -54,7 +54,7 @@ import TeacherTeacherCard from "./pages/TeacherTeacherCard";
 import SecretaryDashboard from "./pages/SecretaryDashboard";
 import AdminYearlySummary from "./pages/admin/AdminYearlySummary";
 import AdminEnrollmentStats from "./pages/admin/AdminEnrollmentStats";
-import AdminDiscountAudit from "./pages/admin/AdminDiscountAudit";
+
 import AdminAcademicYears from "./pages/admin/AdminAcademicYears";
 
 import AdminYearPromotion from "./pages/admin/AdminYearPromotion";
@@ -169,7 +169,7 @@ const App = () => (
               <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
               <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
               <Route path="/admin/enrollment-stats" element={<AdminRoute><AdminEnrollmentStats /></AdminRoute>} />
-              <Route path="/admin/discount-audit" element={<AdminRoute><AdminDiscountAudit /></AdminRoute>} />
+              
               <Route path="/admin/academic-years" element={<AdminRoute><AdminAcademicYears /></AdminRoute>} />
               
               <Route path="/admin/year-promotion" element={<AdminRoute><AdminYearPromotion /></AdminRoute>} />
