@@ -815,7 +815,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           } : {}),
           ...(chosenParentPayer ? {
             skipPayerPrefill: true,
-            payerLabel: `הורה משלם - ${selectedPayerParent!.name}`,
+            payerLabel: `${isCustomPayer ? "משלם נוסף" : "הורה משלם"} - ${selectedPayerParent!.name}`,
             payerDetails: chosenParentPayer,
           } : {}),
           ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
