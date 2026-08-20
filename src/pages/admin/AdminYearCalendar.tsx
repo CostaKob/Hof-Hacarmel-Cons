@@ -370,7 +370,8 @@ const AdminYearCalendar = () => {
                   color: "#1F2937",
                   minWidth: 0,
                   paddingInline: 8,
-                  overflow: "hidden",
+                  paddingBlock: compact ? 2 : 4,
+                  overflow: "visible",
                   textAlign: "start",
                   cursor: "pointer",
                 }}
@@ -382,17 +383,20 @@ const AdminYearCalendar = () => {
                       position: "sticky",
                       insetInlineStart: 8,
                       zIndex: 1,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      alignItems: "center",
-                      gap: 4,
+                      display: "block",
+                      width: "100%",
                       minWidth: 0,
                       lineHeight: 1.25,
                     }}
                   >
                     <span
                       className="font-semibold"
-                      style={{ whiteSpace: "normal", flexShrink: 0 }}
+                      style={{
+                        display: "block",
+                        whiteSpace: "normal",
+                        overflowWrap: "anywhere",
+                        wordBreak: "break-word",
+                      }}
                     >
                       {item.title}
                     </span>
@@ -400,8 +404,10 @@ const AdminYearCalendar = () => {
                       <span
                         className="font-normal"
                         style={{
-                          flexShrink: 0,
+                          display: "block",
                           whiteSpace: "normal",
+                          overflowWrap: "anywhere",
+                          wordBreak: "break-word",
                           opacity: 0.9,
                         }}
                       >
