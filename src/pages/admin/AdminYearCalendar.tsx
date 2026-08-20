@@ -248,6 +248,77 @@ const AdminYearCalendar = () => {
     });
   };
 
+  /* ------------------------------------------------------------------
+     גרירה לגלילה (click-and-drag) — כמו בגוגל שיטס.
+     ------------------------------------------------------------------ */
+  const dragRef = useRef({
+    isDragging: false,
+    didDrag: false,
+    startX: 0,
+    startY: 0,
+    scrollLeft: 0,
+    scrollTop: 0,
+  });
+
+  const isInteractiveTarget = (target: EventTarget | null): boolean => {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+    const interactive = ["BUTTON", "INPUT", "TEXTAREA", "SELECT", "A"];
+    if (interactive.includes(el.tagName)) return true;
+    if (el.closest("button, input, textarea, select, a, [role='dialog']")) return true;
+    return false;
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isInteractiveTarget(e.target)) return;
+    const container = calendarContainerRef.current;
+    if (!container) return;
+    dragRef.current = {
+      isDragging: true,
+      didDrag: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollLeft: container.scrollLeft,
+      scrollTop: container.scrollTop,
+    };
+    container.style.cursor = "grabbing";
+    container.style.userSelect = "none";
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!dragRef.current.isDragging) return;
+    const container = calendarContainerRef.current;
+    if (!container) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    // RTL: dragging left (negative dx) should scroll right (positive scrollLeft)
+    container.scrollLeft = dragRef.current.scrollLeft - dx;
+    container.scrollTop = dragRef.current.scrollTop - dy;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      dragRef.current.didDrag = true;
+    }
+  };
+
+  const handleMouseUp = () => {
+    const container = calendarContainerRef.current;
+    if (container) {
+      container.style.cursor = "grab";
+      container.style.userSelect = "";
+    }
+    dragRef.current.isDragging = false;
+    // keep didDrag true briefly so the upcoming click is suppressed
+    setTimeout(() => {
+      dragRef.current.didDrag = false;
+    }, 50);
+  };
+
+  const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragRef.current.didDrag) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const load = async (isRefresh = false) => {
     try {
       if (isRefresh) {
