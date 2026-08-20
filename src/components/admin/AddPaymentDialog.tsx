@@ -1046,6 +1046,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setCheckNumber("");
     setTransactionType("payment");
     setSelectedAmounts({});
+    setCustomLabels({});
+    setEditingLabelFor(null);
+    setMergeLines(false);
+    setMergedLabel("");
     setEditEnrollmentId("");
     setEditAmount("");
     
