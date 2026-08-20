@@ -470,6 +470,30 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const clearAll = () => setSelectedAmounts({});
 
+  const hebrewYearName = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
+
+  /** The default text that will appear as the line description on the receipt
+   *  / payment page. Can be overridden manually per line. */
+  const defaultLineDescription = (id: string, item?: PaymentItem) => {
+    const yearSuffix = hebrewYearName ? ` ${hebrewYearName}` : "";
+    const childPrefix = familyContext && item?.studentId
+      ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
+      : "";
+    if (item?.kind === "special" || item?.kind === "discount") {
+      return `${childPrefix}${item.label}${yearSuffix}`;
+    }
+    const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
+    const descParts = [
+      e?.instruments?.name ?? "שכר לימוד",
+      e?.schools?.name ? `· ${e.schools.name}` : "",
+      e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+    ].filter(Boolean).join(" ");
+    return `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, "");
+  };
+
+  const lineDescription = (id: string, item?: PaymentItem) =>
+    descOverrides[id]?.trim() || defaultLineDescription(id, item);
+
 
   const mutation = useMutation({
     mutationFn: async () => {
