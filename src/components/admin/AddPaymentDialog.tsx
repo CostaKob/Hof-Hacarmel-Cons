@@ -1235,27 +1235,44 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
                       const isDiscount = it.kind === "discount";
+                      const custom = customLabels[it.id]?.trim();
+                      const isEditingLabel = editingLabelFor === it.id;
                       return (
                         <div
                           key={it.id}
-                            className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2 ${
+                            className={`w-full min-w-0 rounded-lg border p-2 ${
                             isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
                           }`}
                         >
+                          <div className="flex w-full min-w-0 items-center gap-2">
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) => toggleItem(it, !!v)}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium leading-snug break-words">
-                              {it.label}
+                              {custom || it.label}
                               {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
                               {isDiscount && <span className="text-[10px] text-emerald-700 mr-1">−</span>}
                             </p>
-                            {it.subLabel && (
+                            {custom ? (
+                              <p className="text-xs leading-snug break-words text-muted-foreground">
+                                שם מקורי: {it.label}
+                              </p>
+                            ) : it.subLabel ? (
                               <p className={`text-xs leading-snug break-words ${isDiscount ? "text-emerald-700" : "text-muted-foreground"}`}>{it.subLabel}</p>
-                            )}
+                            ) : null}
                           </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 rounded-lg"
+                            title="שינוי שם השורה בקבלה"
+                            onClick={() => setEditingLabelFor(isEditingLabel ? null : it.id)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Input
                             type="number"
                             step="0.01"
@@ -1267,6 +1284,35 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             placeholder={transactionType === "credit" ? "0.00" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="h-9 w-24 shrink-0 sm:w-28"
                           />
+                          </div>
+                          {isEditingLabel && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <Input
+                                autoFocus
+                                value={customLabels[it.id] ?? ""}
+                                onChange={(ev) =>
+                                  setCustomLabels((prev) => ({ ...prev, [it.id]: ev.target.value }))
+                                }
+                                placeholder={it.label}
+                                className="h-9 flex-1"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-9 rounded-lg px-3 text-xs"
+                                onClick={() => {
+                                  setCustomLabels((prev) => {
+                                    const next = { ...prev };
+                                    delete next[it.id];
+                                    return next;
+                                  });
+                                  setEditingLabelFor(null);
+                                }}
+                              >
+                                איפוס
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1275,6 +1321,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         סה״כ: ₪{totalSelected.toLocaleString()}
                       </p>
                     )}
+                    <div className="rounded-lg border border-border bg-muted/20 p-2 space-y-2">
+                      <label className="flex items-center gap-2 text-sm">
+                        <Checkbox checked={mergeLines} onCheckedChange={(v) => setMergeLines(!!v)} />
+                        <span>איחוד לשורה אחת בקבלה (ללא פירוט השיוכים)</span>
+                      </label>
+                      {mergeLines && (
+                        <Input
+                          value={mergedLabel}
+                          onChange={(ev) => setMergedLabel(ev.target.value)}
+                          placeholder="לדוגמה: שכר לימוד תשפ״ז"
+                          className="h-9"
+                        />
+                      )}
+                    </div>
+
                   </div>
                 )}
               </div>
