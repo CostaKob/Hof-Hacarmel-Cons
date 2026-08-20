@@ -528,9 +528,10 @@ const AdminYearCalendar = () => {
   const removeLane = (monthKey: string) => {
     setExtraLanesByMonth((prev) => ({
       ...prev,
-      [monthKey]: Math.max(0, (prev[monthKey] ?? 0) - 1),
+      [monthKey]: (prev[monthKey] ?? 0) - 1,
     }));
   };
+
 
   /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
   const handleUndo = async () => {
