@@ -27,10 +27,8 @@ export type CalendarFormValues = {
   status: "confirmed" | "tentative" | "cancelled";
 };
 
-export const fetchCalendarData = async (year: number) => {
-  const start = `${year}-01-01`;
-  const end = `${year}-12-31`;
-
+/** טוען את כל הנתונים לטווח תאריכים אחד (שאילתה אחת לכל השנה). */
+export const fetchCalendarData = async (rangeStart: string, rangeEnd: string) => {
   const [tracksRes, branchesRes, peopleRes, itemsRes] = await Promise.all([
     supabase.from("tracks").select("*").order("sort_order", { ascending: true }),
     supabase.from("branches").select("*").order("name_he", { ascending: true }),
@@ -45,10 +43,12 @@ export const fetchCalendarData = async (year: number) => {
         person:person_id (*)
       `
       )
-      .gte("start_date", start)
-      .lte("start_date", end)
+      // חפיפה לטווח: מתחיל לפני סוף הטווח ומסתיים אחרי תחילתו
+      .lte("start_date", rangeEnd)
+      .gte("end_date", rangeStart)
       .order("start_date", { ascending: true }),
   ]);
+
 
   if (tracksRes.error) throw tracksRes.error;
   if (branchesRes.error) throw branchesRes.error;
