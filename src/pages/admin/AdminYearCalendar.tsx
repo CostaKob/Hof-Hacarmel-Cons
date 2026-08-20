@@ -413,15 +413,25 @@ const AdminYearCalendar = () => {
     [tracks]
   );
 
-  /** מספר השורות הידניות — נגזר מהאירועים הקיימים, עם אפשרות להוסיף. */
-  const [extraLanes, setExtraLanes] = useState(0);
-  const laneCount = useMemo(() => {
-    const maxLane = items.reduce((acc, item) => {
-      if (item.track?.key === "availability") return acc;
-      return Math.max(acc, ((item as any).lane_index ?? 0) + 1);
-    }, 0);
-    return Math.max(4, maxLane) + extraLanes;
-  }, [items, extraLanes]);
+  /** שורות לכל חודש: 3 כברירת מחדל, ואפשר להוסיף שורות לחודש בודד. */
+  const [extraLanesByMonth, setExtraLanesByMonth] = useState<Record<string, number>>({});
+  const laneCountByMonth = useMemo(() => {
+    const result: Record<string, number> = {};
+    MONTHS.forEach((m) => {
+      const used = (itemsByMonth[m.key]?.general ?? []).reduce(
+        (acc, it) => Math.max(acc, it.lane + 1),
+        0
+      );
+      result[m.key] = Math.max(3, used) + (extraLanesByMonth[m.key] ?? 0);
+    });
+    return result;
+  }, [itemsByMonth, extraLanesByMonth]);
+
+  /** מספר השורות בחודש שאליו שייך האירוע שנערך כרגע. */
+  const formLaneCount = useMemo(() => {
+    const key = form.start_date ? form.start_date.slice(0, 7) : MONTHS[0].key;
+    return laneCountByMonth[key] ?? 3;
+  }, [form.start_date, laneCountByMonth]);
 
   const renderMonth = (m: MonthDef) => {
     const gridStyle = monthGridStyle(m.dayCount);
@@ -429,6 +439,7 @@ const AdminYearCalendar = () => {
     const weekdayOf = (day: number) => new Date(m.year, m.month - 1, day).getDay();
     const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
     const monthData = itemsByMonth[m.key] ?? { general: [], availability: [] };
+    const laneCount = laneCountByMonth[m.key] ?? 3;
 
     const renderLane = (
       keyPrefix: string,
@@ -595,7 +606,29 @@ const AdminYearCalendar = () => {
               fontSize: 18,
             }}
           >
-            {m.label} {m.year}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+              <span>
+                {m.label} {m.year}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setExtraLanesByMonth((prev) => ({
+                    ...prev,
+                    [m.key]: (prev[m.key] ?? 0) + 1,
+                  }))
+                }
+                className="rounded-lg px-2 py-1 text-xs"
+                style={{
+                  backgroundColor: "rgba(255,255,255,0.6)",
+                  color: "#3B1D18",
+                  fontWeight: 500,
+                }}
+                title="הוסף שורה לחודש זה"
+              >
+                + שורה
+              </button>
+            </div>
           </div>
 
           <div className="min-w-0">
@@ -728,16 +761,6 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
-      <div className="mb-3 flex justify-end">
-        <Button
-          variant="outline"
-          className="h-11 rounded-xl"
-          onClick={() => setExtraLanes((n) => n + 1)}
-        >
-          הוסף שורה
-        </Button>
-      </div>
-
       {loading ? (
         <div className="py-12 text-center text-muted-foreground">טוען…</div>
       ) : (
@@ -846,7 +869,7 @@ const AdminYearCalendar = () => {
                     <SelectValue placeholder="בחר שורה" />
                   </SelectTrigger>
                   <SelectContent dir="rtl">
-                    {Array.from({ length: laneCount }, (_, i) => (
+                    {Array.from({ length: formLaneCount }, (_, i) => (
                       <SelectItem key={i} value={String(i)}>
                         {`שורה ${i + 1}`}
                       </SelectItem>
