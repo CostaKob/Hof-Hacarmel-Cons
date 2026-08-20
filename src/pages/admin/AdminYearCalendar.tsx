@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
@@ -24,12 +24,14 @@ import {
   createCalendarItem,
   updateCalendarItem,
   deleteCalendarItem,
+  restoreCalendarItem,
   type CalendarItem,
   type CalendarFormValues,
   type Track,
   type Branch,
   type Person,
 } from "@/services/calendarStore";
+import { toast } from "sonner";
 
 /* ------------------------------------------------------------------
    שלב 3 — שנה מלאה: אוגוסט 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
@@ -182,6 +184,26 @@ const packLanes = (list: UIItem[]): UIItem[][] => {
   return lanes;
 };
 
+/** ממיר שורה מהמסד לערכי טופס (לשימוש בעריכה ובביטול פעולה). */
+const rowToForm = (item: CalendarItem): CalendarFormValues => ({
+  title_he: item.title_he,
+  description_he: item.description_he ?? "",
+  start_time: formatTime((item as any).start_time),
+  location_he: (item as any).location_he ?? "",
+  track_id: item.track_id,
+  branch_id: item.branch_id,
+  person_id: item.person_id,
+  availability_state: (item.availability_state as any) ?? null,
+  start_date: item.start_date,
+  end_date: item.end_date,
+  status: (item.status as any) ?? "confirmed",
+});
+
+type UndoEntry =
+  | { kind: "create"; id: string }
+  | { kind: "update"; id: string; before: CalendarFormValues }
+  | { kind: "delete"; row: any };
+
 const AdminYearCalendar = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -194,6 +216,7 @@ const AdminYearCalendar = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const undoStack = useRef<UndoEntry[]>([]);
 
   const load = async () => {
     try {
@@ -231,20 +254,12 @@ const AdminYearCalendar = () => {
 
   const openEditDialog = (item: CalendarItem) => {
     setEditingId(item.id);
-    setForm({
-      title_he: item.title_he,
-      description_he: item.description_he ?? "",
-      start_time: formatTime((item as any).start_time),
-      location_he: (item as any).location_he ?? "",
-      track_id: item.track_id,
-      branch_id: item.branch_id,
-      person_id: item.person_id,
-      availability_state: (item.availability_state as any) ?? null,
-      start_date: item.start_date,
-      end_date: item.end_date,
-      status: (item.status as any) ?? "confirmed",
-    });
+    setForm(rowToForm(item));
     setDialogOpen(true);
+  };
+
+  const pushUndo = (entry: UndoEntry) => {
+    undoStack.current = [...undoStack.current.slice(-19), entry];
   };
 
   const handleSave = async () => {
@@ -254,9 +269,14 @@ const AdminYearCalendar = () => {
     try {
       setSaving(true);
       if (editingId) {
+        const before = items.find((i) => i.id === editingId);
         await updateCalendarItem(editingId, form);
+        if (before) {
+          pushUndo({ kind: "update", id: editingId, before: rowToForm(before) });
+        }
       } else {
-        await createCalendarItem(form);
+        const created = await createCalendarItem(form);
+        pushUndo({ kind: "create", id: created.id });
       }
       await load();
       setDialogOpen(false);
@@ -271,7 +291,12 @@ const AdminYearCalendar = () => {
     if (!editingId) return;
     try {
       setSaving(true);
+      const before = items.find((i) => i.id === editingId);
       await deleteCalendarItem(editingId);
+      if (before) {
+        const { track, branch, person, ...row } = before as any;
+        pushUndo({ kind: "delete", row });
+      }
       await load();
       setDialogOpen(false);
     } catch (e: any) {
@@ -280,6 +305,48 @@ const AdminYearCalendar = () => {
       setSaving(false);
     }
   };
+
+  /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
+  const handleUndo = async () => {
+    const entry = undoStack.current.pop();
+    if (!entry) {
+      toast("אין פעולה לביטול");
+      return;
+    }
+    try {
+      setSaving(true);
+      if (entry.kind === "create") {
+        await deleteCalendarItem(entry.id);
+        toast.success("ההוספה בוטלה");
+      } else if (entry.kind === "update") {
+        await updateCalendarItem(entry.id, entry.before);
+        toast.success("העריכה בוטלה");
+      } else {
+        await restoreCalendarItem(entry.row);
+        toast.success("המחיקה בוטלה");
+      }
+      await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בביטול הפעולה");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isUndo = (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z";
+      if (!isUndo) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      e.preventDefault();
+      void handleUndo();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
 
   const selectedTrack = useMemo(
     () => tracks.find((t) => t.id === form.track_id),
