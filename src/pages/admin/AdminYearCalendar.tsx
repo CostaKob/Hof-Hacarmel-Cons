@@ -425,7 +425,7 @@ const AdminYearCalendar = () => {
         toast.success("השורה נוספה מחדש");
       }
       undoStack.current = [...undoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load();
+      if (entry.kind !== "lane") await load(true);
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בשחזור הפעולה");
     } finally {
