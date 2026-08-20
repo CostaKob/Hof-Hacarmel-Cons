@@ -1,0 +1,1 @@
+update public.calendar_items set title_he = 'סוכות' where title_he = 'חופש סוכות' and start_date = '2026-10-05' and track_id = (select id from public.tracks where key = 'holidays');
