@@ -947,6 +947,18 @@ const AdminYearCalendar = () => {
     <AdminLayout title="לוח שנה שנתי" fullWidth>
       <PageTitle title="לוח שנה שנתי" />
 
+      <div className="mb-4 flex justify-end">
+        <Button
+          variant="outline"
+          onClick={handleGoogleSync}
+          disabled={syncing}
+          className="h-11 rounded-xl"
+        >
+          {syncing ? "מסנכרן…" : "סנכרון עם Google Calendar"}
+        </Button>
+      </div>
+
+
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">
           {error}
