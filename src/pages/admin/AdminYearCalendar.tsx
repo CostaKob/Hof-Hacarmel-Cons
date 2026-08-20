@@ -249,6 +249,10 @@ const AdminYearCalendar = () => {
     setDialogOpen(true);
   };
 
+  const pushUndo = (entry: UndoEntry) => {
+    undoStack.current = [...undoStack.current.slice(-19), entry];
+  };
+
   const handleSave = async () => {
     if (!form.title_he.trim() || !form.track_id || !form.start_date || !form.end_date) {
       return;
@@ -256,9 +260,14 @@ const AdminYearCalendar = () => {
     try {
       setSaving(true);
       if (editingId) {
+        const before = items.find((i) => i.id === editingId);
         await updateCalendarItem(editingId, form);
+        if (before) {
+          pushUndo({ kind: "update", id: editingId, before: rowToForm(before) });
+        }
       } else {
-        await createCalendarItem(form);
+        const created = await createCalendarItem(form);
+        pushUndo({ kind: "create", id: created.id });
       }
       await load();
       setDialogOpen(false);
@@ -273,7 +282,12 @@ const AdminYearCalendar = () => {
     if (!editingId) return;
     try {
       setSaving(true);
+      const before = items.find((i) => i.id === editingId);
       await deleteCalendarItem(editingId);
+      if (before) {
+        const { track, branch, person, ...row } = before as any;
+        pushUndo({ kind: "delete", row });
+      }
       await load();
       setDialogOpen(false);
     } catch (e: any) {
@@ -282,6 +296,48 @@ const AdminYearCalendar = () => {
       setSaving(false);
     }
   };
+
+  /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
+  const handleUndo = async () => {
+    const entry = undoStack.current.pop();
+    if (!entry) {
+      toast("אין פעולה לביטול");
+      return;
+    }
+    try {
+      setSaving(true);
+      if (entry.kind === "create") {
+        await deleteCalendarItem(entry.id);
+        toast.success("ההוספה בוטלה");
+      } else if (entry.kind === "update") {
+        await updateCalendarItem(entry.id, entry.before);
+        toast.success("העריכה בוטלה");
+      } else {
+        await restoreCalendarItem(entry.row);
+        toast.success("המחיקה בוטלה");
+      }
+      await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בביטול הפעולה");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const isUndo = (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z";
+      if (!isUndo) return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      e.preventDefault();
+      void handleUndo();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items]);
 
   const selectedTrack = useMemo(
     () => tracks.find((t) => t.id === form.track_id),
