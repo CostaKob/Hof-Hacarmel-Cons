@@ -1553,9 +1553,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </div>
             {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
               <div className="space-y-2">
-                {hasTwoParents && (
+                {parentOptions.length > 0 && (
                   <div className="rounded-xl border border-border p-3 space-y-2">
-                    <Label className="text-sm">מי ההורה המשלם?</Label>
+                    <Label className="text-sm">מי המשלם?</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {parentOptions.map((p) => (
                         <button
@@ -1574,9 +1574,47 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                           </p>
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => setPayerChoice("custom")}
+                        className={`text-right rounded-xl border p-2.5 transition ${
+                          isCustomPayer ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <p className="text-sm font-medium">משלם נוסף</p>
+                        <p className="text-[11px] text-muted-foreground">סבא/סבתא, בן משפחה או צד ג׳</p>
+                      </button>
                     </div>
+                    {isCustomPayer && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        <Input
+                          value={customPayer.name}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, name: e.target.value }))}
+                          placeholder="שם מלא"
+                          className="h-11 rounded-xl"
+                        />
+                        <Input
+                          value={customPayer.nationalId}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, nationalId: e.target.value }))}
+                          placeholder="ת״ז"
+                          className="h-11 rounded-xl"
+                        />
+                        <Input
+                          value={customPayer.phone}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, phone: e.target.value }))}
+                          placeholder="טלפון"
+                          className="h-11 rounded-xl"
+                        />
+                        <Input
+                          value={customPayer.email}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, email: e.target.value }))}
+                          placeholder="אימייל"
+                          className="h-11 rounded-xl"
+                        />
+                      </div>
+                    )}
                     <p className="text-[11px] text-muted-foreground">
-                      פרטי ההורה שנבחר ימולאו אוטומטית בדף התשלום.
+                      פרטי המשלם שנבחר ימולאו אוטומטית בדף התשלום. אפשר ליצור קישור נפרד לכל משלם.
                     </p>
                   </div>
                 )}
