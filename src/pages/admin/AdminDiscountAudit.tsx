@@ -120,7 +120,7 @@ const AdminDiscountAudit = () => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(
-          "id, student_id, is_active, lesson_duration_minutes, start_date, end_date, price_per_lesson, schools:school_id(name), students:student_id(id, first_name, last_name, grade, status)",
+          "id, student_id, is_active, lesson_duration_minutes, start_date, end_date, price_per_lesson, schools:school_id(name), students:student_id(id, first_name, last_name, grade)",
         )
         .eq("academic_year_id", yearId!)
         .eq("is_active", true);
