@@ -153,6 +153,8 @@ type UIItem = {
   id: string;
   title: string;
   detail?: string;
+  time?: string;
+  place?: string;
   from: number;
   to: number;
   bg: string;
@@ -161,6 +163,9 @@ type UIItem = {
   clippedEnd: boolean;
   raw: CalendarItem;
 };
+
+/** HH:MM מתוך ערך time של המסד */
+const formatTime = (value?: string | null) => (value ? value.slice(0, 5) : "");
 
 /** סידור שורות אוטומטי — לכל פריט השורה הראשונה ללא חפיפה. */
 const packLanes = (list: UIItem[]): UIItem[][] => {
