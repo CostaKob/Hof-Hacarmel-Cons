@@ -948,11 +948,33 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
+      <style>{`
+        .year-calendar-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+        .year-calendar-scroll::-webkit-scrollbar {
+          width: 12px;
+          height: 12px;
+        }
+        .year-calendar-scroll::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 6px;
+        }
+        .year-calendar-scroll::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 6px;
+          border: 2px solid #f1f1f1;
+        }
+        .year-calendar-scroll::-webkit-scrollbar-thumb:hover {
+          background: #a1a1a1;
+        }
+      `}</style>
       <div
         ref={calendarContainerRef}
         onMouseDown={handleMouseDown}
         onClickCapture={handleClickCapture}
-        className="relative overflow-auto rounded-xl border"
+        className="year-calendar-scroll relative overflow-auto rounded-xl border"
         style={{
           borderColor: COLORS.grid,
           fontFamily: "'Assistant', sans-serif",
