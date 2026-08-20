@@ -252,6 +252,8 @@ const AdminYearCalendar = () => {
   ) => {
     const track = tracks.find((t) => t.id === trackId);
     const date = isoDate(monthDef.year, monthDef.month, day);
+    const isAvailability = track?.key === "availability";
+    const availabilityState = isAvailability ? "reserves" : null;
     setEditingId(null);
     setForm({
       ...emptyForm(),
@@ -259,7 +261,8 @@ const AdminYearCalendar = () => {
       lane_index: laneIndex,
       start_date: date,
       end_date: date,
-      availability_state: track?.key === "availability" ? "reserves" : null,
+      availability_state: availabilityState,
+      title_he: isAvailability && availabilityState ? AVAILABILITY_LABEL[availabilityState] : "",
     });
     setDialogOpen(true);
   };
@@ -835,16 +838,18 @@ const AdminYearCalendar = () => {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">כותרת ראשית</Label>
-              <Input
-                id="title"
-                value={form.title_he}
-                onChange={(e) => setForm({ ...form, title_he: e.target.value })}
-                placeholder="למשל: ישיבת פתיחת שנה"
-                className="h-12 rounded-xl text-right"
-              />
-            </div>
+            {selectedTrack?.key !== "availability" && (
+              <div className="grid gap-2">
+                <Label htmlFor="title">כותרת ראשית</Label>
+                <Input
+                  id="title"
+                  value={form.title_he}
+                  onChange={(e) => setForm({ ...form, title_he: e.target.value })}
+                  placeholder="למשל: ישיבת פתיחת שנה"
+                  className="h-12 rounded-xl text-right"
+                />
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="description">פירוט (אופציונלי)</Label>
@@ -884,16 +889,19 @@ const AdminYearCalendar = () => {
               <Label>סוג אירוע</Label>
               <Select
                 value={form.track_id}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const isAvailability = tracks.find((t) => t.id === value)?.key === "availability";
+                  const availabilityState = isAvailability ? "reserves" : null;
                   setForm({
                     ...form,
                     track_id: value,
-                    availability_state:
-                      tracks.find((t) => t.id === value)?.key === "availability"
-                        ? "reserves"
-                        : null,
-                  })
-                }
+                    availability_state: availabilityState,
+                    title_he:
+                      isAvailability && availabilityState
+                        ? AVAILABILITY_LABEL[availabilityState]
+                        : form.title_he,
+                  });
+                }}
               >
                 <SelectTrigger className="h-11 rounded-xl text-right">
                   <SelectValue placeholder="בחר סוג אירוע" />
@@ -941,7 +949,13 @@ const AdminYearCalendar = () => {
                       <button
                         key={state}
                         type="button"
-                        onClick={() => setForm({ ...form, availability_state: state })}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            availability_state: state,
+                            title_he: AVAILABILITY_LABEL[state],
+                          })
+                        }
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 h-11 text-sm transition"
                         style={{
                           borderColor: active ? "#1F2937" : COLORS.grid,
