@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import AdminYearCalendar from "./pages/admin/AdminYearCalendar";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminStudents from "./pages/admin/AdminStudents";
 import AdminStudentForm from "./pages/admin/AdminStudentForm";
@@ -168,6 +169,7 @@ const App = () => (
               <Route path="/admin/instruments/new" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
               <Route path="/admin/instruments/:id/edit" element={<AdminRoute><AdminInstrumentForm /></AdminRoute>} />
               <Route path="/admin/yearly-summary" element={<AdminRoute><AdminYearlySummary /></AdminRoute>} />
+              <Route path="/admin/year-calendar" element={<AdminRoute><AdminYearCalendar /></AdminRoute>} />
               <Route path="/admin/enrollment-stats" element={<AdminRoute><AdminEnrollmentStats /></AdminRoute>} />
               
               <Route path="/admin/academic-years" element={<AdminRoute><AdminAcademicYears /></AdminRoute>} />
