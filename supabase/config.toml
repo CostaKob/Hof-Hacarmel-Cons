@@ -1,5 +1,9 @@
 project_id = "mtzzalrmtzfrkrpdjjoy"
 
+[functions.google-calendar-sync]
+verify_jwt = false
+
+
 [functions.icount-webhook]
 verify_jwt = false
 
