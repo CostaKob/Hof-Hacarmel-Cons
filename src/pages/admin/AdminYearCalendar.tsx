@@ -383,26 +383,26 @@ const AdminYearCalendar = () => {
                       insetInlineStart: 8,
                       zIndex: 1,
                       display: "flex",
+                      flexWrap: "wrap",
                       alignItems: "center",
-                      gap: 6,
+                      gap: 4,
                       minWidth: 0,
+                      lineHeight: 1.25,
                     }}
                   >
                     <span
                       className="font-semibold"
-                      style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                      style={{ whiteSpace: "normal", flexShrink: 0 }}
                     >
                       {item.title}
                     </span>
-                    {item.detail && !compact && (
+                    {item.detail && (
                       <span
                         className="font-normal"
                         style={{
-                          flex: 1,
-                          minWidth: 0,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
+                          flexShrink: 0,
+                          whiteSpace: "normal",
+                          opacity: 0.9,
                         }}
                       >
                         {item.detail}
