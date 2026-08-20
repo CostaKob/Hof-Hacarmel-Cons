@@ -850,20 +850,31 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
-      {loading ? (
-        <div className="py-12 text-center text-muted-foreground">טוען…</div>
-      ) : (
-        <div
-          className="overflow-x-auto rounded-xl border"
-          style={{
-            borderColor: COLORS.grid,
-            fontFamily: "'Assistant', sans-serif",
-            scrollBehavior: "smooth",
-          }}
-        >
-          {MONTHS.map((m) => renderMonth(m))}
-        </div>
-      )}
+      <div
+        ref={calendarContainerRef}
+        className="relative overflow-x-auto rounded-xl border"
+        style={{
+          borderColor: COLORS.grid,
+          fontFamily: "'Assistant', sans-serif",
+          scrollBehavior: "smooth",
+        }}
+      >
+        {loading ? (
+          <div className="py-12 text-center text-muted-foreground">טוען…</div>
+        ) : (
+          <>
+            {MONTHS.map((m) => renderMonth(m))}
+            {refreshing && (
+              <div
+                className="absolute inset-0 z-10 flex items-start justify-center bg-white/60 pt-20"
+                aria-live="polite"
+              >
+                <span className="text-muted-foreground">מעדכן…</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
