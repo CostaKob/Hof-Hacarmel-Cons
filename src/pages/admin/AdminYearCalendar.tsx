@@ -4,7 +4,6 @@ import PageTitle from "@/components/PageTitle";
 /* ------------------------------------------------------------------
    שלב 1 — בלוק חודש בודד (אוקטובר 2026), נתונים קשיחים בקוד.
    ציר הימים: יום 1 בקצה הימני (נגזר מ־direction: rtl על ה־Grid).
-   כדי להפוך את הציר ל־LTR — שנה את DAY_AXIS_DIR בלבד.
 ------------------------------------------------------------------- */
 const DAY_AXIS_DIR: "rtl" | "ltr" = "rtl";
 
@@ -12,6 +11,7 @@ const YEAR = 2026;
 const MONTH = 10; // אוקטובר
 const DAYS_IN_MONTH = new Date(YEAR, MONTH, 0).getDate();
 const MONTH_LABEL = "אוקטובר";
+const COL_WIDTH = 90;
 
 const HEB_WEEKDAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 
@@ -57,51 +57,113 @@ const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
 
 const gridStyle: React.CSSProperties = {
   display: "grid",
-  gridTemplateColumns: `repeat(${DAYS_IN_MONTH}, minmax(90px, 1fr))`,
+  gridTemplateColumns: `repeat(${DAYS_IN_MONTH}, minmax(${COL_WIDTH}px, 1fr))`,
   direction: DAY_AXIS_DIR,
-  minWidth: `${DAYS_IN_MONTH * 90}px`,
+  minWidth: `${DAYS_IN_MONTH * COL_WIDTH}px`,
 };
 
-const TrackRow = ({ items }: { items: Item[] }) => (
-  <div style={{ ...gridStyle, height: 44 }}>
+const cellTextStyle: React.CSSProperties = {
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  paddingInline: 8,
+  textAlign: "start",
+};
+
+/** שכבת רקע רציפה — סופי שבוע + קווי רשת, מאחורי כל התוכן */
+const WeekendBackdrop = () => (
+  <div
+    aria-hidden
+    style={{
+      ...gridStyle,
+      position: "absolute",
+      inset: 0,
+      pointerEvents: "none",
+      zIndex: 0,
+    }}
+  >
     {days.map((d) => (
       <div
         key={d}
         style={{
-          gridColumn: `${d} / span 1`,
-          gridRow: 1,
+          minWidth: 0,
           borderInlineStart: `1px solid ${COLORS.grid}`,
           backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
         }}
       />
     ))}
+  </div>
+);
+
+const TrackRow = ({ items }: { items: Item[] }) => (
+  <div style={{ ...gridStyle, minHeight: 34, position: "relative", zIndex: 1 }}>
     {items.map((item) => (
       <div
         key={`${item.title}-${item.from}`}
         style={{
+          ...cellTextStyle,
           gridColumn: `${item.from} / span ${item.to - item.from + 1}`,
           gridRow: 1,
           backgroundColor: item.bg,
           border: item.bordered ? `1px solid #9CA3AF` : "none",
           borderRadius: 6,
           margin: 3,
-          padding: "0 8px",
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
           gap: 6,
           fontSize: 13,
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          textOverflow: "ellipsis",
           color: "#1F2937",
         }}
         title={[item.title, item.detail].filter(Boolean).join(" — ")}
       >
-        <span style={{ fontWeight: 600 }}>{item.title}</span>
-        {item.detail && <span style={{ fontWeight: 400 }}>{item.detail}</span>}
+        <span className="font-semibold" style={{ ...cellTextStyle, paddingInline: 0, flexShrink: 1 }}>
+          {item.title}
+        </span>
+        {item.detail && (
+          <span className="font-normal" style={{ ...cellTextStyle, paddingInline: 0, flexShrink: 1 }}>
+            {item.detail}
+          </span>
+        )}
       </div>
     ))}
+  </div>
+);
+
+const AvailabilityRow = ({ items }: { items: Item[] }) => (
+  <div
+    style={{
+      ...gridStyle,
+      minHeight: 22,
+      position: "relative",
+      zIndex: 1,
+      borderTop: `1px solid ${COLORS.grid}`,
+    }}
+  >
+    {items.map((item) => {
+      const span = item.to - item.from + 1;
+      const showText = span * COL_WIDTH >= 60;
+      return (
+        <div
+          key={`${item.title}-${item.from}`}
+          style={{
+            ...cellTextStyle,
+            gridColumn: `${item.from} / span ${span}`,
+            gridRow: 1,
+            backgroundColor: item.bg,
+            borderRadius: 4,
+            margin: 2,
+            display: "flex",
+            alignItems: "center",
+            fontSize: 11,
+            color: "#1F2937",
+          }}
+          title={item.title}
+        >
+          {showText && item.title}
+        </div>
+      );
+    })}
   </div>
 );
 
@@ -117,9 +179,10 @@ const AdminYearCalendar = () => {
         <div className="flex" style={{ minWidth: "min-content" }}>
           {/* עמודת שם החודש — דביקה */}
           <div
-            className="sticky z-10 shrink-0"
+            className="sticky shrink-0"
             style={{
               insetInlineStart: 0,
+              zIndex: 2,
               width: 120,
               backgroundColor: COLORS.monthHeader,
               color: "#3B1D18",
@@ -129,7 +192,6 @@ const AdminYearCalendar = () => {
               fontFamily: "'Rubik', sans-serif",
               fontWeight: 600,
               fontSize: 18,
-              writingMode: "horizontal-tb",
             }}
           >
             {MONTH_LABEL} {YEAR}
@@ -143,6 +205,7 @@ const AdminYearCalendar = () => {
                 <div
                   key={d}
                   style={{
+                    minWidth: 0,
                     borderInlineStart: `1px solid ${COLORS.grid}`,
                     textAlign: "center",
                     padding: "4px 0",
@@ -162,6 +225,7 @@ const AdminYearCalendar = () => {
                 <div
                   key={d}
                   style={{
+                    minWidth: 0,
                     borderInlineStart: `1px solid ${COLORS.grid}`,
                     textAlign: "center",
                     padding: "3px 0",
@@ -175,17 +239,16 @@ const AdminYearCalendar = () => {
               ))}
             </div>
 
-            {/* מסלולי תוכן */}
-            <TrackRow items={AVAILABILITY} />
-            <TrackRow items={HOLIDAYS} />
-            <TrackRow items={BRANCH_EVENTS} />
+            {/* מסלולי תוכן — עם שכבת רקע רציפה */}
+            <div style={{ position: "relative" }}>
+              <WeekendBackdrop />
+              <TrackRow items={HOLIDAYS} />
+              <TrackRow items={BRANCH_EVENTS} />
+              <AvailabilityRow items={AVAILABILITY} />
+            </div>
           </div>
         </div>
       </div>
-
-      <p className="mt-3 text-sm text-muted-foreground">
-        שלב 1 — תצוגה סטטית של חודש אחד לבדיקת מבנה, כיווניות, פונטים וצבעים.
-      </p>
     </AdminLayout>
   );
 };
