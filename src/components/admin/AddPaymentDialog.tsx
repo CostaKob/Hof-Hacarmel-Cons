@@ -108,6 +108,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [checkNumber, setCheckNumber] = useState("");
   // Multi-select map: enrollmentId -> amount string
   const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
+  // Manual overrides for the receipt/paylink line descriptions (itemId -> text)
+  const [descOverrides, setDescOverrides] = useState<Record<string, string>>({});
+  const [editingDescIds, setEditingDescIds] = useState<string[]>([]);
   // Edit-mode single enrollment + amount
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
