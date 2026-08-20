@@ -728,6 +728,16 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
+      <div className="mb-3 flex justify-end">
+        <Button
+          variant="outline"
+          className="h-11 rounded-xl"
+          onClick={() => setExtraLanes((n) => n + 1)}
+        >
+          הוסף שורה
+        </Button>
+      </div>
+
       {loading ? (
         <div className="py-12 text-center text-muted-foreground">טוען…</div>
       ) : (
@@ -822,6 +832,29 @@ const AdminYearCalendar = () => {
                 </SelectContent>
               </Select>
             </div>
+
+            {selectedTrack?.key !== "availability" && (
+              <div className="grid gap-2">
+                <Label>שורה בלוח</Label>
+                <Select
+                  value={String(form.lane_index ?? 0)}
+                  onValueChange={(value) =>
+                    setForm({ ...form, lane_index: Number(value) })
+                  }
+                >
+                  <SelectTrigger className="h-11 rounded-xl text-right">
+                    <SelectValue placeholder="בחר שורה" />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    {Array.from({ length: laneCount }, (_, i) => (
+                      <SelectItem key={i} value={String(i)}>
+                        {`שורה ${i + 1}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {selectedTrack?.key === "availability" && (
               <div className="grid gap-2">
