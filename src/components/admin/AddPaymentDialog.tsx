@@ -1622,7 +1622,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   variant="outline"
                   className="w-full h-11 rounded-xl"
                   onClick={() => generateLinkMutation.mutate()}
-                  disabled={totalSelected <= 0 || generateLinkMutation.isPending}
+                  disabled={totalSelected <= 0 || generateLinkMutation.isPending || (isCustomPayer && !customPayer.name.trim())}
                 >
                   {generateLinkMutation.isPending ? (
                     <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישור...</>
