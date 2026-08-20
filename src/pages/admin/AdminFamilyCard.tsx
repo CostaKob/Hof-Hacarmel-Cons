@@ -303,8 +303,6 @@ const AdminFamilyCard = () => {
           en.teacherName !== "—" ? en.teacherName : "",
           en.schoolName !== "—" ? en.schoolName : "",
         ].filter(Boolean).join(" · ");
-
-
         overrideItems.push({
           id: `${c.id}:${en.enrollmentId}`,
           enrollmentId: en.enrollmentId,
