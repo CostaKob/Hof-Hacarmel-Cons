@@ -204,9 +204,10 @@ const rowToForm = (item: CalendarItem): CalendarFormValues => ({
 });
 
 type UndoEntry =
-  | { kind: "create"; id: string }
-  | { kind: "update"; id: string; before: CalendarFormValues }
-  | { kind: "delete"; row: any };
+  | { kind: "create"; id: string; row: any }
+  | { kind: "update"; id: string; before: CalendarFormValues; after: CalendarFormValues }
+  | { kind: "delete"; row: any }
+  | { kind: "lane"; monthKey: string };
 
 const AdminYearCalendar = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -221,6 +222,7 @@ const AdminYearCalendar = () => {
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
   const undoStack = useRef<UndoEntry[]>([]);
+  const redoStack = useRef<UndoEntry[]>([]);
 
   const load = async () => {
     try {
@@ -270,6 +272,7 @@ const AdminYearCalendar = () => {
 
   const pushUndo = (entry: UndoEntry) => {
     undoStack.current = [...undoStack.current.slice(-19), entry];
+    redoStack.current = [];
   };
 
   const handleSave = async () => {
@@ -282,11 +285,16 @@ const AdminYearCalendar = () => {
         const before = items.find((i) => i.id === editingId);
         await updateCalendarItem(editingId, form);
         if (before) {
-          pushUndo({ kind: "update", id: editingId, before: rowToForm(before) });
+          pushUndo({
+            kind: "update",
+            id: editingId,
+            before: rowToForm(before),
+            after: { ...form },
+          });
         }
       } else {
         const created = await createCalendarItem(form);
-        pushUndo({ kind: "create", id: created.id });
+        pushUndo({ kind: "create", id: created.id, row: created });
       }
       await load();
       setDialogOpen(false);
@@ -316,6 +324,16 @@ const AdminYearCalendar = () => {
     }
   };
 
+  const addLane = (monthKey: string) => {
+    setExtraLanesByMonth((prev) => ({ ...prev, [monthKey]: (prev[monthKey] ?? 0) + 1 }));
+  };
+  const removeLane = (monthKey: string) => {
+    setExtraLanesByMonth((prev) => ({
+      ...prev,
+      [monthKey]: Math.max(0, (prev[monthKey] ?? 0) - 1),
+    }));
+  };
+
   /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
   const handleUndo = async () => {
     const entry = undoStack.current.pop();
@@ -331,11 +349,15 @@ const AdminYearCalendar = () => {
       } else if (entry.kind === "update") {
         await updateCalendarItem(entry.id, entry.before);
         toast.success("העריכה בוטלה");
-      } else {
+      } else if (entry.kind === "delete") {
         await restoreCalendarItem(entry.row);
         toast.success("המחיקה בוטלה");
+      } else {
+        removeLane(entry.monthKey);
+        toast.success("הוספת השורה בוטלה");
       }
-      await load();
+      redoStack.current = [...redoStack.current.slice(-19), entry];
+      if (entry.kind !== "lane") await load();
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בביטול הפעולה");
     } finally {
@@ -343,15 +365,47 @@ const AdminYearCalendar = () => {
     }
   };
 
+  /** ביצוע מחדש (⇧⌘Z / Ctrl+Shift+Z). */
+  const handleRedo = async () => {
+    const entry = redoStack.current.pop();
+    if (!entry) {
+      toast("אין פעולה לשחזור");
+      return;
+    }
+    try {
+      setSaving(true);
+      if (entry.kind === "create") {
+        await restoreCalendarItem(entry.row);
+        toast.success("ההוספה שוחזרה");
+      } else if (entry.kind === "update") {
+        await updateCalendarItem(entry.id, entry.after);
+        toast.success("העריכה שוחזרה");
+      } else if (entry.kind === "delete") {
+        await deleteCalendarItem(entry.row.id);
+        toast.success("המחיקה שוחזרה");
+      } else {
+        addLane(entry.monthKey);
+        toast.success("השורה נוספה מחדש");
+      }
+      undoStack.current = [...undoStack.current.slice(-19), entry];
+      if (entry.kind !== "lane") await load();
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בשחזור הפעולה");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      const isUndo = (e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === "z";
-      if (!isUndo) return;
+      const isZ = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z";
+      if (!isZ) return;
       const target = e.target as HTMLElement | null;
       const tag = target?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
       e.preventDefault();
-      void handleUndo();
+      if (e.shiftKey) void handleRedo();
+      else void handleUndo();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
@@ -612,12 +666,10 @@ const AdminYearCalendar = () => {
               </span>
               <button
                 type="button"
-                onClick={() =>
-                  setExtraLanesByMonth((prev) => ({
-                    ...prev,
-                    [m.key]: (prev[m.key] ?? 0) + 1,
-                  }))
-                }
+                onClick={() => {
+                  addLane(m.key);
+                  pushUndo({ kind: "lane", monthKey: m.key });
+                }}
                 className="rounded-lg px-2 py-1 text-xs"
                 style={{
                   backgroundColor: "rgba(255,255,255,0.6)",
