@@ -32,16 +32,31 @@ import {
 } from "@/services/calendarStore";
 
 /* ------------------------------------------------------------------
-   שלב 2 — נתונים ממסד הנתונים, הוספה / עריכה / מחיקה בדיאלוג עברי.
+   שלב 3 — שנה מלאה: ספטמבר 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
    ציר הימים: יום 1 בקצה הימני (נגזר מ־direction: rtl על ה־Grid).
 ------------------------------------------------------------------- */
 const DAY_AXIS_DIR: "rtl" | "ltr" = "rtl";
 
-const YEAR = 2026;
-const MONTH = 10; // אוקטובר
-const DAYS_IN_MONTH = new Date(YEAR, MONTH, 0).getDate();
-const MONTH_LABEL = "אוקטובר";
+const START_YEAR = 2026;
+const START_MONTH = 9; // ספטמבר
+const MONTH_COUNT = 12;
 const COL_WIDTH = 90;
+const MONTH_COL_WIDTH = 120;
+
+const MONTH_NAMES_HE = [
+  "ינואר",
+  "פברואר",
+  "מרץ",
+  "אפריל",
+  "מאי",
+  "יוני",
+  "יולי",
+  "אוגוסט",
+  "ספטמבר",
+  "אוקטובר",
+  "נובמבר",
+  "דצמבר",
+];
 
 const HEB_WEEKDAYS = ["א'", "ב'", "ג'", "ד'", "ה'", "ו'", "ש'"];
 
@@ -78,15 +93,39 @@ const STATUS_LABEL: Record<string, string> = {
   cancelled: "מבוטל",
 };
 
-const days = Array.from({ length: DAYS_IN_MONTH }, (_, i) => i + 1);
-const weekdayOf = (day: number) => new Date(YEAR, MONTH - 1, day).getDay();
-const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
-
 const pad2 = (n: number) => String(n).padStart(2, "0");
+const isoDate = (year: number, month: number, day: number) =>
+  `${year}-${pad2(month)}-${pad2(day)}`;
+const daysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate();
 
-const dateOfDay = (day: number) => `${YEAR}-${pad2(MONTH)}-${pad2(day)}`;
+type MonthDef = {
+  key: string;
+  year: number;
+  month: number; // 1-12
+  label: string;
+  dayCount: number;
+  startISO: string;
+  endISO: string;
+};
 
-const dayFromDate = (iso: string) => Number(iso.slice(8, 10));
+const MONTHS: MonthDef[] = Array.from({ length: MONTH_COUNT }, (_, i) => {
+  const raw = START_MONTH - 1 + i;
+  const year = START_YEAR + Math.floor(raw / 12);
+  const month = (raw % 12) + 1;
+  const dayCount = daysInMonth(year, month);
+  return {
+    key: `${year}-${pad2(month)}`,
+    year,
+    month,
+    label: MONTH_NAMES_HE[month - 1],
+    dayCount,
+    startISO: isoDate(year, month, 1),
+    endISO: isoDate(year, month, dayCount),
+  };
+});
+
+const RANGE_START = MONTHS[0].startISO;
+const RANGE_END = MONTHS[MONTHS.length - 1].endISO;
 
 const emptyForm = (): CalendarFormValues => ({
   title_he: "",
@@ -100,21 +139,12 @@ const emptyForm = (): CalendarFormValues => ({
   status: "confirmed",
 });
 
-const gridStyle: React.CSSProperties = {
+const monthGridStyle = (dayCount: number): React.CSSProperties => ({
   display: "grid",
-  gridTemplateColumns: `repeat(${DAYS_IN_MONTH}, minmax(${COL_WIDTH}px, 1fr))`,
+  gridTemplateColumns: `repeat(${dayCount}, minmax(${COL_WIDTH}px, 1fr))`,
   direction: DAY_AXIS_DIR,
-  minWidth: `${DAYS_IN_MONTH * COL_WIDTH}px`,
-};
-
-const cellTextStyle: React.CSSProperties = {
-  minWidth: 0,
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  paddingInline: 8,
-  textAlign: "start",
-};
+  minWidth: `${dayCount * COL_WIDTH}px`,
+});
 
 type UIItem = {
   id: string;
@@ -123,34 +153,26 @@ type UIItem = {
   from: number;
   to: number;
   bg: string;
-  bordered?: boolean;
-  trackKey: string;
+  bordered: boolean;
+  clippedStart: boolean;
+  clippedEnd: boolean;
   raw: CalendarItem;
 };
 
-const WeekendBackdrop = () => (
-  <div
-    aria-hidden
-    style={{
-      ...gridStyle,
-      position: "absolute",
-      inset: 0,
-      pointerEvents: "none",
-      zIndex: 0,
-    }}
-  >
-    {days.map((d) => (
-      <div
-        key={d}
-        style={{
-          minWidth: 0,
-          borderInlineStart: `1px solid ${COLORS.grid}`,
-          backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
-        }}
-      />
-    ))}
-  </div>
-);
+/** סידור שורות אוטומטי — לכל פריט השורה הראשונה ללא חפיפה. */
+const packLanes = (list: UIItem[]): UIItem[][] => {
+  const sorted = [...list].sort((a, b) => a.from - b.from || a.to - b.to);
+  const lanes: UIItem[][] = [];
+  sorted.forEach((item) => {
+    let lane = lanes.find((l) => l.every((x) => item.from > x.to || item.to < x.from));
+    if (!lane) {
+      lane = [];
+      lanes.push(lane);
+    }
+    lane.push(item);
+  });
+  return lanes;
+};
 
 const AdminYearCalendar = () => {
   const [tracks, setTracks] = useState<Track[]>([]);
@@ -169,7 +191,7 @@ const AdminYearCalendar = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchCalendarData(YEAR);
+      const data = await fetchCalendarData(RANGE_START, RANGE_END);
       setTracks(data.tracks);
       setBranches(data.branches);
       setPeople(data.people);
@@ -185,50 +207,16 @@ const AdminYearCalendar = () => {
     load();
   }, []);
 
-  const itemsByTrack = useMemo(() => {
-    const map: Record<string, UIItem[]> = {};
-    tracks.forEach((t) => (map[t.key] = []));
-
-    items.forEach((item) => {
-      const key = item.track?.key ?? "";
-      const from = dayFromDate(item.start_date);
-      const to = dayFromDate(item.end_date);
-      const bgKey = item.availability_state
-        ? `${key}_${item.availability_state}`
-        : key;
-      const bg = TRACK_BG[bgKey] ?? "#F3F4F6";
-      const isContinuous = item.track?.is_continuous ?? false;
-
-      map[key] = map[key] ?? [];
-      map[key].push({
-        id: item.id,
-        title: item.title_he,
-        detail: item.description_he ?? undefined,
-        from,
-        to,
-        bg,
-        bordered: !isContinuous,
-        trackKey: key,
-        raw: item,
-      });
-    });
-
-    return map;
-  }, [items, tracks]);
-
-  const openAddDialog = (trackId: string, day?: number) => {
+  const openAddDialog = (trackId: string, monthDef: MonthDef, day: number) => {
     const track = tracks.find((t) => t.id === trackId);
-    const start = day ? dateOfDay(day) : dateOfDay(1);
-    const end = day ? dateOfDay(day) : dateOfDay(DAYS_IN_MONTH);
-
+    const date = isoDate(monthDef.year, monthDef.month, day);
     setEditingId(null);
     setForm({
       ...emptyForm(),
       track_id: trackId,
-      start_date: start,
-      end_date: end,
-      availability_state:
-        track?.key === "availability" ? "reserves" : null,
+      start_date: date,
+      end_date: date,
+      availability_state: track?.key === "availability" ? "reserves" : null,
     });
     setDialogOpen(true);
   };
@@ -288,180 +276,270 @@ const AdminYearCalendar = () => {
     [tracks, form.track_id]
   );
 
-  const TrackRow = ({ trackKey }: { trackKey: string }) => {
-    const track = tracks.find((t) => t.key === trackKey);
-    const rowItems = itemsByTrack[trackKey] ?? [];
-    const occupied = useMemo(() => {
-      const set = new Set<number>();
-      rowItems.forEach((item) => {
-        for (let d = item.from; d <= item.to; d++) set.add(d);
+  /** פריטים חתוכים לגבולות חודש, מקובצים לפי מסלול. */
+  const itemsByMonth = useMemo(() => {
+    const result: Record<string, Record<string, UIItem[]>> = {};
+    MONTHS.forEach((m) => {
+      const byTrack: Record<string, UIItem[]> = {};
+      tracks.forEach((t) => (byTrack[t.key] = []));
+
+      items.forEach((item) => {
+        if (item.start_date > m.endISO || item.end_date < m.startISO) return;
+        const key = item.track?.key ?? "";
+        const clippedStart = item.start_date < m.startISO;
+        const clippedEnd = item.end_date > m.endISO;
+        const from = clippedStart ? 1 : Number(item.start_date.slice(8, 10));
+        const to = clippedEnd ? m.dayCount : Number(item.end_date.slice(8, 10));
+        const bgKey = item.availability_state ? `${key}_${item.availability_state}` : key;
+
+        byTrack[key] = byTrack[key] ?? [];
+        byTrack[key].push({
+          id: item.id,
+          title: item.title_he,
+          detail: item.description_he ?? undefined,
+          from,
+          to,
+          bg: TRACK_BG[bgKey] ?? "#F3F4F6",
+          bordered: !(item.track?.is_continuous ?? false),
+          clippedStart,
+          clippedEnd,
+          raw: item,
+        });
       });
-      return set;
-    }, [rowItems]);
+
+      result[m.key] = byTrack;
+    });
+    return result;
+  }, [items, tracks]);
+
+  const renderMonth = (m: MonthDef) => {
+    const gridStyle = monthGridStyle(m.dayCount);
+    const days = Array.from({ length: m.dayCount }, (_, i) => i + 1);
+    const weekdayOf = (day: number) => new Date(m.year, m.month - 1, day).getDay();
+    const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
+    const byTrack = itemsByMonth[m.key] ?? {};
+
+    const renderLane = (
+      track: Track,
+      lane: UIItem[],
+      laneIndex: number,
+      rowHeight: number,
+      compact: boolean
+    ) => {
+      const occupied = new Set<number>();
+      lane.forEach((item) => {
+        for (let d = item.from; d <= item.to; d++) occupied.add(d);
+      });
+
+      return (
+        <div
+          key={`${track.key}-lane-${laneIndex}`}
+          style={{
+            ...gridStyle,
+            minHeight: rowHeight,
+            position: "relative",
+            zIndex: 1,
+            borderTop: laneIndex === 0 ? `1px solid ${COLORS.grid}` : undefined,
+          }}
+        >
+          {lane.map((item) => {
+            const span = item.to - item.from + 1;
+            const radius = compact ? 4 : 6;
+            const startRadius = item.clippedStart ? 0 : radius;
+            const endRadius = item.clippedEnd ? 0 : radius;
+            const showText = !compact || span * COL_WIDTH >= 60;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => openEditDialog(item.raw)}
+                style={{
+                  gridColumn: `${item.from} / span ${span}`,
+                  gridRow: 1,
+                  backgroundColor: item.bg,
+                  border: item.bordered && !compact ? "1px solid #9CA3AF" : "none",
+                  borderStartStartRadius: startRadius,
+                  borderEndStartRadius: startRadius,
+                  borderStartEndRadius: endRadius,
+                  borderEndEndRadius: endRadius,
+                  margin: compact ? 2 : 3,
+                  display: "flex",
+                  alignItems: "center",
+                  position: "relative",
+                  fontSize: compact ? 11 : 13,
+                  color: "#1F2937",
+                  minWidth: 0,
+                  paddingInline: 8,
+                  overflow: "hidden",
+                  textAlign: "start",
+                  cursor: "pointer",
+                }}
+                title={[item.title, item.detail].filter(Boolean).join(" — ")}
+              >
+                {showText && (
+                  <span
+                    style={{
+                      position: "sticky",
+                      insetInlineStart: 8,
+                      zIndex: 1,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      minWidth: 0,
+                    }}
+                  >
+                    <span
+                      className="font-semibold"
+                      style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                    >
+                      {item.title}
+                    </span>
+                    {item.detail && !compact && (
+                      <span
+                        className="font-normal"
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {item.detail}
+                      </span>
+                    )}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+          {days
+            .filter((d) => !occupied.has(d))
+            .map((d) => (
+              <button
+                key={`empty-${d}`}
+                type="button"
+                onClick={() => openAddDialog(track.id, m, d)}
+                style={{
+                  gridColumn: `${d} / span 1`,
+                  gridRow: 1,
+                  minHeight: rowHeight,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                aria-label={`הוסף אירוע ב${d} ב${m.label} ${m.year} — ${track.label_he}`}
+              />
+            ))}
+        </div>
+      );
+    };
 
     return (
-      <div style={{ ...gridStyle, minHeight: 34, position: "relative", zIndex: 1 }}>
-        {rowItems.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => openEditDialog(item.raw)}
+      <div key={m.key} style={{ borderBottom: `2px solid ${COLORS.grid}` }}>
+        <div className="flex" style={{ minWidth: "min-content" }}>
+          {/* עמודת שם החודש — דביקה */}
+          <div
+            className="sticky shrink-0"
             style={{
-              gridColumn: `${item.from} / span ${item.to - item.from + 1}`,
-              gridRow: 1,
-              backgroundColor: item.bg,
-              border: item.bordered ? `1px solid #9CA3AF` : "none",
-              borderRadius: 6,
-              margin: 3,
+              insetInlineStart: 0,
+              zIndex: 3,
+              width: MONTH_COL_WIDTH,
+              backgroundColor: COLORS.monthHeader,
+              color: "#3B1D18",
               display: "flex",
               alignItems: "center",
-              position: "relative",
-              fontSize: 13,
-              color: "#1F2937",
-              minWidth: 0,
-              paddingInline: 8,
-              overflow: "hidden",
-              textAlign: "start",
-              cursor: "pointer",
+              justifyContent: "center",
+              textAlign: "center",
+              fontFamily: "'Rubik', sans-serif",
+              fontWeight: 600,
+              fontSize: 18,
             }}
-            title={[item.title, item.detail].filter(Boolean).join(" — ")}
           >
-            <span
-              style={{
-                position: "sticky",
-                insetInlineStart: 8,
-                zIndex: 1,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                minWidth: 0,
-              }}
-            >
-              <span
-                className="font-semibold"
-                style={{
-                  paddingInline: 0,
-                  whiteSpace: "nowrap",
-                  flexShrink: 0,
-                }}
-              >
-                {item.title}
-              </span>
-              {item.detail && (
-                <span
-                  className="font-normal"
+            {m.label} {m.year}
+          </div>
+
+          <div className="min-w-0">
+            {/* מספרי ימים */}
+            <div style={{ ...gridStyle, backgroundColor: COLORS.dayNumbers }}>
+              {days.map((d) => (
+                <div
+                  key={d}
                   style={{
-                    flex: 1,
                     minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    paddingInline: 0,
+                    borderInlineStart: `1px solid ${COLORS.grid}`,
+                    textAlign: "center",
+                    padding: "4px 0",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#4B2E27",
                   }}
                 >
-                  {item.detail}
-                </span>
-              )}
-            </span>
-          </button>
-        ))}
-        {track &&
-          days
-            .filter((d) => !occupied.has(d))
-            .map((d) => (
-              <button
-                key={`empty-${d}`}
-                type="button"
-                onClick={() => openAddDialog(track.id, d)}
-                style={{
-                  gridColumn: `${d} / span 1`,
-                  gridRow: 1,
-                  minHeight: 34,
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
-                }}
-                aria-label={`הוסף אירוע ב${d} ב${MONTH_LABEL}`}
-              />
-            ))}
-      </div>
-    );
-  };
+                  {d}
+                </div>
+              ))}
+            </div>
 
-  const AvailabilityRow = ({ trackKey }: { trackKey: string }) => {
-    const track = tracks.find((t) => t.key === trackKey);
-    const rowItems = itemsByTrack[trackKey] ?? [];
-    const occupied = useMemo(() => {
-      const set = new Set<number>();
-      rowItems.forEach((item) => {
-        for (let d = item.from; d <= item.to; d++) set.add(d);
-      });
-      return set;
-    }, [rowItems]);
+            {/* ימי שבוע */}
+            <div style={{ ...gridStyle, borderBottom: `1px solid ${COLORS.grid}` }}>
+              {days.map((d) => (
+                <div
+                  key={d}
+                  style={{
+                    minWidth: 0,
+                    borderInlineStart: `1px solid ${COLORS.grid}`,
+                    textAlign: "center",
+                    padding: "3px 0",
+                    fontSize: 12,
+                    color: "#374151",
+                    backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
+                  }}
+                >
+                  {HEB_WEEKDAYS[weekdayOf(d)]}
+                </div>
+              ))}
+            </div>
 
-    return (
-      <div
-        style={{
-          ...gridStyle,
-          minHeight: 22,
-          position: "relative",
-          zIndex: 1,
-          borderTop: `1px solid ${COLORS.grid}`,
-        }}
-      >
-        {rowItems.map((item) => {
-          const span = item.to - item.from + 1;
-          const showText = span * COL_WIDTH >= 60;
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => openEditDialog(item.raw)}
-              style={{
-                ...cellTextStyle,
-                gridColumn: `${item.from} / span ${span}`,
-                gridRow: 1,
-                backgroundColor: item.bg,
-                borderRadius: 4,
-                margin: 2,
-                display: "flex",
-                alignItems: "center",
-                fontSize: 11,
-                color: "#1F2937",
-                position: "relative",
-                cursor: "pointer",
-                border: "none",
-                textAlign: "start",
-              }}
-              title={item.title}
-            >
-              {showText && (
-                <span style={{ position: "sticky", insetInlineStart: 8, zIndex: 1 }}>
-                  {item.title}
-                </span>
-              )}
-            </button>
-          );
-        })}
-        {track &&
-          days
-            .filter((d) => !occupied.has(d))
-            .map((d) => (
-              <button
-                key={`empty-${d}`}
-                type="button"
-                onClick={() => openAddDialog(track.id, d)}
+            {/* מסלולי תוכן — עם שכבת רקע רציפה */}
+            <div style={{ position: "relative" }}>
+              <div
+                aria-hidden
                 style={{
-                  gridColumn: `${d} / span 1`,
-                  gridRow: 1,
-                  minHeight: 22,
-                  backgroundColor: "transparent",
-                  border: "none",
-                  cursor: "pointer",
+                  ...gridStyle,
+                  position: "absolute",
+                  inset: 0,
+                  pointerEvents: "none",
+                  zIndex: 0,
                 }}
-                aria-label={`הוסף זמינות ב${d} ב${MONTH_LABEL}`}
-              />
-            ))}
+              >
+                {days.map((d) => (
+                  <div
+                    key={d}
+                    style={{
+                      minWidth: 0,
+                      borderInlineStart: `1px solid ${COLORS.grid}`,
+                      backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
+                    }}
+                  />
+                ))}
+              </div>
+
+              {tracks.map((track) => {
+                const compact = track.key === "availability";
+                const rowHeight = compact ? 22 : 34;
+                const lanes = packLanes(byTrack[track.key] ?? []);
+                const rendered = lanes.length ? lanes : [[]];
+                return (
+                  <div key={track.key}>
+                    {rendered.map((lane, i) =>
+                      renderLane(track, lane, i, rowHeight, compact)
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -484,84 +562,13 @@ const AdminYearCalendar = () => {
       ) : (
         <div
           className="overflow-x-auto rounded-xl border"
-          style={{ borderColor: COLORS.grid, fontFamily: "'Assistant', sans-serif" }}
+          style={{
+            borderColor: COLORS.grid,
+            fontFamily: "'Assistant', sans-serif",
+            scrollBehavior: "smooth",
+          }}
         >
-          <div className="flex" style={{ minWidth: "min-content" }}>
-            {/* עמודת שם החודש — דביקה */}
-            <div
-              className="sticky shrink-0"
-              style={{
-                insetInlineStart: 0,
-                zIndex: 2,
-                width: 120,
-                backgroundColor: COLORS.monthHeader,
-                color: "#3B1D18",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "'Rubik', sans-serif",
-                fontWeight: 600,
-                fontSize: 18,
-              }}
-            >
-              {MONTH_LABEL} {YEAR}
-            </div>
-
-            {/* אזור הימים */}
-            <div className="min-w-0">
-              {/* מספרי ימים */}
-              <div style={{ ...gridStyle, backgroundColor: COLORS.dayNumbers }}>
-                {days.map((d) => (
-                  <div
-                    key={d}
-                    style={{
-                      minWidth: 0,
-                      borderInlineStart: `1px solid ${COLORS.grid}`,
-                      textAlign: "center",
-                      padding: "4px 0",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#4B2E27",
-                    }}
-                  >
-                    {d}
-                  </div>
-                ))}
-              </div>
-
-              {/* ימי שבוע */}
-              <div style={{ ...gridStyle, borderBottom: `1px solid ${COLORS.grid}` }}>
-                {days.map((d) => (
-                  <div
-                    key={d}
-                    style={{
-                      minWidth: 0,
-                      borderInlineStart: `1px solid ${COLORS.grid}`,
-                      textAlign: "center",
-                      padding: "3px 0",
-                      fontSize: 12,
-                      color: "#374151",
-                      backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
-                    }}
-                  >
-                    {HEB_WEEKDAYS[weekdayOf(d)]}
-                  </div>
-                ))}
-              </div>
-
-              {/* מסלולי תוכן — עם שכבת רקע רציפה */}
-              <div style={{ position: "relative" }}>
-                <WeekendBackdrop />
-                {tracks.map((track) =>
-                  track.key === "availability" ? (
-                    <AvailabilityRow key={track.key} trackKey={track.key} />
-                  ) : (
-                    <TrackRow key={track.key} trackKey={track.key} />
-                  )
-                )}
-              </div>
-            </div>
-          </div>
+          {MONTHS.map((m) => renderMonth(m))}
         </div>
       )}
 
