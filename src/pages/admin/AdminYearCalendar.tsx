@@ -845,7 +845,7 @@ const AdminYearCalendar = () => {
   };
 
   return (
-    <AdminLayout title="לוח שנה שנתי">
+    <AdminLayout title="לוח שנה שנתי" fullWidth>
       <PageTitle title="לוח שנה שנתי" />
 
       {error && (
