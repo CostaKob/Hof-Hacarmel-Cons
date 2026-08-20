@@ -239,7 +239,7 @@ const AdminYearCalendar = () => {
     const saved = pendingScrollRef.current;
     if (!saved) return;
     pendingScrollRef.current = null;
-    // Use rAF to ensure layout has settled after React render
+    // Use rAF to ensure layout has settled after React render/commit
     requestAnimationFrame(() => {
       window.scrollTo({ top: saved.windowY, behavior: "instant" });
       if (calendarContainerRef.current) {
@@ -267,12 +267,19 @@ const AdminYearCalendar = () => {
     } finally {
       if (isRefresh) {
         setRefreshing(false);
-        restoreScroll();
       } else {
         setLoading(false);
       }
     }
   };
+
+  /** שחזור המיקום רק אחרי שהדיאלוג נסגר — Radix Dialog נועל את גלילת הגוף בזמן פתיחה. */
+  useEffect(() => {
+    if (!refreshing && !dialogOpen && pendingScrollRef.current) {
+      restoreScroll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshing, dialogOpen]);
 
   useEffect(() => {
     load(false);
