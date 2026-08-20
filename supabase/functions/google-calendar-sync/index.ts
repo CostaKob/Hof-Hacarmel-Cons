@@ -55,8 +55,15 @@ function itemToEvent(item: Json): Json {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const authErr = await requireAdminOrSecretary(req, corsHeaders);
-  if (authErr) return authErr;
+  // סנכרון יזום מ-cron: מזוהה באמצעות סוד ייעודי בכותרת, ללא משתמש מחובר.
+  const cronSecret = Deno.env.get("CALENDAR_SYNC_CRON_SECRET");
+  const isCron = !!cronSecret && req.headers.get("x-cron-secret") === cronSecret;
+
+  if (!isCron) {
+    const authErr = await requireAdminOrSecretary(req, corsHeaders);
+    if (authErr) return authErr;
+  }
+
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
