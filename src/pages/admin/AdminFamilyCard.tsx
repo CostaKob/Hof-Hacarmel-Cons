@@ -1005,7 +1005,7 @@ const AdminFamilyCard = () => {
                             <div className="mt-1 space-y-0.5 text-[11px] font-normal">
                               {(pl || fullName) && (
                                 <div className="text-foreground">
-                                  <span className="text-muted-foreground">שולם ע״י: </span>
+                                  <span className="text-muted-foreground">{isPending ? "משלם: " : "שולם ע״י: "}</span>
                                   {pl}
                                   {pl && fullName ? " · " : ""}
                                   {fullName && <span className="font-medium">{fullName}</span>}
