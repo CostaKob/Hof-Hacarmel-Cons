@@ -250,6 +250,7 @@ const AdminYearCalendar = () => {
 
   /* ------------------------------------------------------------------
      גרירה לגלילה (click-and-drag) — כמו בגוגל שיטס.
+     אופקי = גלילה בתוך המיכל, אנכי = גלילת החלון כולו.
      ------------------------------------------------------------------ */
   const dragRef = useRef({
     isDragging: false,
@@ -257,7 +258,7 @@ const AdminYearCalendar = () => {
     startX: 0,
     startY: 0,
     scrollLeft: 0,
-    scrollTop: 0,
+    scrollY: 0,
   });
 
   const isInteractiveTarget = (target: EventTarget | null): boolean => {
@@ -267,6 +268,38 @@ const AdminYearCalendar = () => {
     if (interactive.includes(el.tagName)) return true;
     if (el.closest("button, input, textarea, select, a, [role='dialog']")) return true;
     return false;
+  };
+
+  const endDrag = () => {
+    const container = calendarContainerRef.current;
+    if (container) {
+      container.style.cursor = "grab";
+      container.style.userSelect = "";
+    }
+    dragRef.current.isDragging = false;
+    window.removeEventListener("mousemove", onWindowMouseMove);
+    window.removeEventListener("mouseup", onWindowMouseUp);
+    setTimeout(() => {
+      dragRef.current.didDrag = false;
+    }, 50);
+  };
+
+  const onWindowMouseMove = (e: MouseEvent) => {
+    if (!dragRef.current.isDragging) return;
+    const container = calendarContainerRef.current;
+    if (!container) return;
+    const dx = e.clientX - dragRef.current.startX;
+    const dy = e.clientY - dragRef.current.startY;
+    // RTL: גרירה שמאלה (dx שלילי) גוללת ימינה (scrollLeft גדל)
+    container.scrollLeft = dragRef.current.scrollLeft - dx;
+    window.scrollTo({ top: dragRef.current.scrollY - dy, behavior: "instant" });
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      dragRef.current.didDrag = true;
+    }
+  };
+
+  const onWindowMouseUp = () => {
+    endDrag();
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -279,37 +312,12 @@ const AdminYearCalendar = () => {
       startX: e.clientX,
       startY: e.clientY,
       scrollLeft: container.scrollLeft,
-      scrollTop: container.scrollTop,
+      scrollY: window.scrollY,
     };
     container.style.cursor = "grabbing";
     container.style.userSelect = "none";
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!dragRef.current.isDragging) return;
-    const container = calendarContainerRef.current;
-    if (!container) return;
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
-    // RTL: dragging left (negative dx) should scroll right (positive scrollLeft)
-    container.scrollLeft = dragRef.current.scrollLeft - dx;
-    container.scrollTop = dragRef.current.scrollTop - dy;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-      dragRef.current.didDrag = true;
-    }
-  };
-
-  const handleMouseUp = () => {
-    const container = calendarContainerRef.current;
-    if (container) {
-      container.style.cursor = "grab";
-      container.style.userSelect = "";
-    }
-    dragRef.current.isDragging = false;
-    // keep didDrag true briefly so the upcoming click is suppressed
-    setTimeout(() => {
-      dragRef.current.didDrag = false;
-    }, 50);
+    window.addEventListener("mousemove", onWindowMouseMove);
+    window.addEventListener("mouseup", onWindowMouseUp);
   };
 
   const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
