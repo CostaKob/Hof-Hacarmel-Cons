@@ -551,7 +551,7 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen} dir="rtl">
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>{editingId ? "עריכת אירוע" : "הוספת אירוע"}</DialogTitle>
