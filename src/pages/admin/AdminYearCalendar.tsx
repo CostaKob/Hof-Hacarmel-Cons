@@ -846,11 +846,17 @@ const AdminYearCalendar = () => {
         <div className="flex" style={{ minWidth: "min-content" }}>
           {/* עמודת שם החודש — דביקה */}
           <div
-            className="sticky shrink-0"
+            className="shrink-0"
             style={{
+              position: "sticky",
+              // ב-RTL inline-start = right. חלק מדפדפני מובייל (iOS Safari)
+              // לא מיישמים inset לוגי על sticky — לכן גם ערך פיזי.
               insetInlineStart: 0,
+              right: 0,
               zIndex: 3,
               width: MONTH_COL_WIDTH,
+              minWidth: MONTH_COL_WIDTH,
+              alignSelf: "stretch",
               backgroundColor: COLORS.monthHeader,
               color: "#3B1D18",
               display: "flex",
