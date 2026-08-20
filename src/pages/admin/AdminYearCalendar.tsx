@@ -215,6 +215,7 @@ const AdminYearCalendar = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [items, setItems] = useState<CalendarItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -224,9 +225,37 @@ const AdminYearCalendar = () => {
   const undoStack = useRef<UndoEntry[]>([]);
   const redoStack = useRef<UndoEntry[]>([]);
 
-  const load = async () => {
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+  const pendingScrollRef = useRef<{ windowY: number; containerX: number } | null>(null);
+
+  const captureScroll = () => {
+    pendingScrollRef.current = {
+      windowY: window.scrollY,
+      containerX: calendarContainerRef.current?.scrollLeft ?? 0,
+    };
+  };
+
+  const restoreScroll = () => {
+    const saved = pendingScrollRef.current;
+    if (!saved) return;
+    pendingScrollRef.current = null;
+    // Use rAF to ensure layout has settled after React render/commit
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: saved.windowY, behavior: "instant" });
+      if (calendarContainerRef.current) {
+        calendarContainerRef.current.scrollLeft = saved.containerX;
+      }
+    });
+  };
+
+  const load = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        captureScroll();
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       const data = await fetchCalendarData(RANGE_START, RANGE_END);
       setTracks(data.tracks);
@@ -236,12 +265,24 @@ const AdminYearCalendar = () => {
     } catch (e: any) {
       setError(e.message ?? "שגיאה בטעינת הנתונים");
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
+  /** שחזור המיקום רק אחרי שהדיאלוג נסגר — Radix Dialog נועל את גלילת הגוף בזמן פתיחה. */
   useEffect(() => {
-    load();
+    if (!refreshing && !dialogOpen && pendingScrollRef.current) {
+      restoreScroll();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [refreshing, dialogOpen]);
+
+  useEffect(() => {
+    load(false);
   }, []);
 
   const openAddDialog = (
@@ -299,7 +340,7 @@ const AdminYearCalendar = () => {
         const created = await createCalendarItem(form);
         pushUndo({ kind: "create", id: created.id, row: created });
       }
-      await load();
+      await load(true);
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה בשמירה");
@@ -318,7 +359,7 @@ const AdminYearCalendar = () => {
         const { track, branch, person, ...row } = before as any;
         pushUndo({ kind: "delete", row });
       }
-      await load();
+      await load(true);
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה במחיקה");
@@ -360,7 +401,7 @@ const AdminYearCalendar = () => {
         toast.success("הוספת השורה בוטלה");
       }
       redoStack.current = [...redoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load();
+      if (entry.kind !== "lane") await load(true);
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בביטול הפעולה");
     } finally {
@@ -391,7 +432,7 @@ const AdminYearCalendar = () => {
         toast.success("השורה נוספה מחדש");
       }
       undoStack.current = [...undoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load();
+      if (entry.kind !== "lane") await load(true);
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בשחזור הפעולה");
     } finally {
@@ -816,20 +857,31 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
-      {loading ? (
-        <div className="py-12 text-center text-muted-foreground">טוען…</div>
-      ) : (
-        <div
-          className="overflow-x-auto rounded-xl border"
-          style={{
-            borderColor: COLORS.grid,
-            fontFamily: "'Assistant', sans-serif",
-            scrollBehavior: "smooth",
-          }}
-        >
-          {MONTHS.map((m) => renderMonth(m))}
-        </div>
-      )}
+      <div
+        ref={calendarContainerRef}
+        className="relative overflow-x-auto rounded-xl border"
+        style={{
+          borderColor: COLORS.grid,
+          fontFamily: "'Assistant', sans-serif",
+          scrollBehavior: "smooth",
+        }}
+      >
+        {loading ? (
+          <div className="py-12 text-center text-muted-foreground">טוען…</div>
+        ) : (
+          <>
+            {MONTHS.map((m) => renderMonth(m))}
+            {refreshing && (
+              <div
+                className="absolute inset-0 z-10 flex items-start justify-center bg-white/60 pt-20"
+                aria-live="polite"
+              >
+                <span className="text-muted-foreground">מעדכן…</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg overflow-y-auto max-h-[90vh]">
