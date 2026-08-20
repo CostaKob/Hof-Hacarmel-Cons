@@ -949,7 +949,13 @@ const AdminYearCalendar = () => {
                       <button
                         key={state}
                         type="button"
-                        onClick={() => setForm({ ...form, availability_state: state })}
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            availability_state: state,
+                            title_he: AVAILABILITY_LABEL[state],
+                          })
+                        }
                         className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 h-11 text-sm transition"
                         style={{
                           borderColor: active ? "#1F2937" : COLORS.grid,
