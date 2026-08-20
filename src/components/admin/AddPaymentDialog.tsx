@@ -783,9 +783,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
-      // When the student/family has two parents, bill the parent explicitly
-      // chosen by the user (overrides the default family payer).
-      const chosenParentPayer = hasTwoParents && selectedPayerParent
+      // When the student/family has two parents — or when an extra payer was
+      // entered manually — bill that payer explicitly (overrides the family payer).
+      const chosenParentPayer = (hasTwoParents || isCustomPayer) && selectedPayerParent?.name
         ? (() => {
             const parts = selectedPayerParent.name.trim().split(/\s+/);
             return {
