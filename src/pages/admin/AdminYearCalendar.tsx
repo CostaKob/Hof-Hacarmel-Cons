@@ -315,7 +315,6 @@ const AdminYearCalendar = () => {
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    console.log("mousedown", e.target?.tagName, isInteractiveTarget(e.target));
     if (isInteractiveTarget(e.target)) return;
     const container = calendarContainerRef.current;
     if (!container) return;
@@ -331,7 +330,6 @@ const AdminYearCalendar = () => {
     container.style.userSelect = "none";
     window.addEventListener("mousemove", onWindowMouseMove);
     window.addEventListener("mouseup", onWindowMouseUp);
-    console.log("drag started");
   };
 
   const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
