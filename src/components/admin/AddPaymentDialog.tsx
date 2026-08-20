@@ -142,7 +142,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [checks, setChecks] = useState<Array<{ date: string; number: string; amount: string }>>([]);
 
   // ---- Paying parent selection (single-student mode, when the family has 2 parents) ----
-  const [payerChoice, setPayerChoice] = useState<"p1" | "p2">("p1");
+  const [payerChoice, setPayerChoice] = useState<string>("p1");
+  // Free-form extra payer (grandparent, ex-spouse, third party...)
+  const [customPayer, setCustomPayer] = useState({ name: "", nationalId: "", email: "", phone: "" });
 
   const isEdit = !!editPayment;
 
