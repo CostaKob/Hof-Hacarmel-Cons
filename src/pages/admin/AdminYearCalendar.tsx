@@ -222,6 +222,27 @@ const AdminYearCalendar = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  /** סנכרון דו-כיווני מול Google Calendar. */
+  const handleGoogleSync = async () => {
+    try {
+      setSyncing(true);
+      const { data, error: fnError } = await supabase.functions.invoke("google-calendar-sync");
+      if (fnError) throw fnError;
+      const d = data as any;
+      toast.success(
+        `סונכרן: ${d?.pushed ?? 0} נשלחו לגוגל, ${d?.pulled ?? 0} התקבלו מגוגל`
+      );
+      if (d?.errors?.length) toast.error(`שגיאות: ${d.errors.slice(0, 2).join(" | ")}`);
+      await load(true);
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בסנכרון");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const undoStack = useRef<UndoEntry[]>([]);
   const redoStack = useRef<UndoEntry[]>([]);
 
