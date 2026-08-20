@@ -838,16 +838,18 @@ const AdminYearCalendar = () => {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="title">כותרת ראשית</Label>
-              <Input
-                id="title"
-                value={form.title_he}
-                onChange={(e) => setForm({ ...form, title_he: e.target.value })}
-                placeholder="למשל: ישיבת פתיחת שנה"
-                className="h-12 rounded-xl text-right"
-              />
-            </div>
+            {selectedTrack?.key !== "availability" && (
+              <div className="grid gap-2">
+                <Label htmlFor="title">כותרת ראשית</Label>
+                <Input
+                  id="title"
+                  value={form.title_he}
+                  onChange={(e) => setForm({ ...form, title_he: e.target.value })}
+                  placeholder="למשל: ישיבת פתיחת שנה"
+                  className="h-12 rounded-xl text-right"
+                />
+              </div>
+            )}
 
             <div className="grid gap-2">
               <Label htmlFor="description">פירוט (אופציונלי)</Label>
