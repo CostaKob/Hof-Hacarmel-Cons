@@ -115,6 +115,7 @@ const TrackRow = ({ items }: { items: Item[] }) => (
           color: "#1F2937",
           minWidth: 0,
           paddingInline: 8,
+          overflow: "hidden",
         }}
         title={[item.title, item.detail].filter(Boolean).join(" — ")}
       >
