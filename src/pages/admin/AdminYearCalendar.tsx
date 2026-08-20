@@ -32,14 +32,14 @@ import {
 } from "@/services/calendarStore";
 
 /* ------------------------------------------------------------------
-   שלב 3 — שנה מלאה: ספטמבר 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
+   שלב 3 — שנה מלאה: אוגוסט 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
    ציר הימים: יום 1 בקצה הימני (נגזר מ־direction: rtl על ה־Grid).
 ------------------------------------------------------------------- */
 const DAY_AXIS_DIR: "rtl" | "ltr" = "rtl";
 
 const START_YEAR = 2026;
-const START_MONTH = 9; // ספטמבר
-const MONTH_COUNT = 12;
+const START_MONTH = 8; // אוגוסט
+const MONTH_COUNT = 13;
 const COL_WIDTH = 90;
 const MONTH_COL_WIDTH = 120;
 
