@@ -377,6 +377,7 @@ const AdminYearCalendar = () => {
                   margin: compact ? 2 : 3,
                   display: "flex",
                   alignItems: "center",
+                  justifyContent: "center",
                   position: "relative",
                   fontSize: compact ? 11 : 13,
                   color: "#1F2937",
@@ -384,21 +385,24 @@ const AdminYearCalendar = () => {
                   paddingInline: 8,
                   paddingBlock: compact ? 2 : 4,
                   overflow: "visible",
-                  textAlign: "start",
+                  textAlign: "center",
                   cursor: "pointer",
                 }}
-                title={[item.title, item.detail].filter(Boolean).join(" — ")}
+                title={[item.title, item.detail, item.time, item.place]
+                  .filter(Boolean)
+                  .join(" — ")}
               >
                 {showText && (
                   <span
                     style={{
                       position: "sticky",
-                      insetInlineStart: 8,
+                      insetInline: 8,
                       zIndex: 1,
                       display: "block",
                       width: "100%",
                       minWidth: 0,
                       lineHeight: 1.25,
+                      textAlign: "center",
                     }}
                   >
                     <span
@@ -424,6 +428,20 @@ const AdminYearCalendar = () => {
                         }}
                       >
                         {item.detail}
+                      </span>
+                    )}
+                    {(item.time || item.place) && (
+                      <span
+                        className="font-normal"
+                        style={{
+                          display: "block",
+                          whiteSpace: "normal",
+                          overflowWrap: "anywhere",
+                          opacity: 0.75,
+                          fontSize: compact ? 10 : 11,
+                        }}
+                      >
+                        {[item.time, item.place].filter(Boolean).join(" · ")}
                       </span>
                     )}
                   </span>
