@@ -139,6 +139,7 @@ const emptyForm = (): CalendarFormValues => ({
   branch_id: null,
   person_id: null,
   availability_state: null,
+  lane_index: 0,
   start_date: "",
   end_date: "",
   status: "confirmed",
@@ -163,6 +164,8 @@ type UIItem = {
   bordered: boolean;
   clippedStart: boolean;
   clippedEnd: boolean;
+  compact: boolean;
+  lane: number;
   raw: CalendarItem;
 };
 
@@ -194,6 +197,7 @@ const rowToForm = (item: CalendarItem): CalendarFormValues => ({
   branch_id: item.branch_id,
   person_id: item.person_id,
   availability_state: (item.availability_state as any) ?? null,
+  lane_index: (item as any).lane_index ?? 0,
   start_date: item.start_date,
   end_date: item.end_date,
   status: (item.status as any) ?? "confirmed",
@@ -238,13 +242,19 @@ const AdminYearCalendar = () => {
     load();
   }, []);
 
-  const openAddDialog = (trackId: string, monthDef: MonthDef, day: number) => {
+  const openAddDialog = (
+    trackId: string,
+    monthDef: MonthDef,
+    day: number,
+    laneIndex: number
+  ) => {
     const track = tracks.find((t) => t.id === trackId);
     const date = isoDate(monthDef.year, monthDef.month, day);
     setEditingId(null);
     setForm({
       ...emptyForm(),
       track_id: trackId,
+      lane_index: laneIndex,
       start_date: date,
       end_date: date,
       availability_state: track?.key === "availability" ? "reserves" : null,
@@ -353,24 +363,24 @@ const AdminYearCalendar = () => {
     [tracks, form.track_id]
   );
 
-  /** פריטים חתוכים לגבולות חודש, מקובצים לפי מסלול. */
+  /** פריטים חתוכים לגבולות חודש: שורות ידניות + זמינות בתחתית. */
   const itemsByMonth = useMemo(() => {
-    const result: Record<string, Record<string, UIItem[]>> = {};
+    const result: Record<string, { general: UIItem[]; availability: UIItem[] }> = {};
     MONTHS.forEach((m) => {
-      const byTrack: Record<string, UIItem[]> = {};
-      tracks.forEach((t) => (byTrack[t.key] = []));
+      const general: UIItem[] = [];
+      const availability: UIItem[] = [];
 
       items.forEach((item) => {
         if (item.start_date > m.endISO || item.end_date < m.startISO) return;
         const key = item.track?.key ?? "";
+        const isAvailability = key === "availability";
         const clippedStart = item.start_date < m.startISO;
         const clippedEnd = item.end_date > m.endISO;
         const from = clippedStart ? 1 : Number(item.start_date.slice(8, 10));
         const to = clippedEnd ? m.dayCount : Number(item.end_date.slice(8, 10));
         const bgKey = item.availability_state ? `${key}_${item.availability_state}` : key;
 
-        byTrack[key] = byTrack[key] ?? [];
-        byTrack[key].push({
+        const ui: UIItem = {
           id: item.id,
           title: item.title_he,
           detail: item.description_he ?? undefined,
@@ -382,24 +392,48 @@ const AdminYearCalendar = () => {
           bordered: key === "regular",
           clippedStart,
           clippedEnd,
+          compact: isAvailability,
+          lane: Math.max(0, (item as any).lane_index ?? 0),
           raw: item,
-        });
+        };
+        (isAvailability ? availability : general).push(ui);
       });
 
-      result[m.key] = byTrack;
+      result[m.key] = { general, availability };
     });
     return result;
   }, [items, tracks]);
+
+  const availabilityTrack = useMemo(
+    () => tracks.find((t) => t.key === "availability"),
+    [tracks]
+  );
+  const defaultTrack = useMemo(
+    () => tracks.find((t) => t.key === "regular") ?? tracks[0],
+    [tracks]
+  );
+
+  /** מספר השורות הידניות — נגזר מהאירועים הקיימים, עם אפשרות להוסיף. */
+  const [extraLanes, setExtraLanes] = useState(0);
+  const laneCount = useMemo(() => {
+    const maxLane = items.reduce((acc, item) => {
+      if (item.track?.key === "availability") return acc;
+      return Math.max(acc, ((item as any).lane_index ?? 0) + 1);
+    }, 0);
+    return Math.max(4, maxLane) + extraLanes;
+  }, [items, extraLanes]);
 
   const renderMonth = (m: MonthDef) => {
     const gridStyle = monthGridStyle(m.dayCount);
     const days = Array.from({ length: m.dayCount }, (_, i) => i + 1);
     const weekdayOf = (day: number) => new Date(m.year, m.month - 1, day).getDay();
     const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
-    const byTrack = itemsByMonth[m.key] ?? {};
+    const monthData = itemsByMonth[m.key] ?? { general: [], availability: [] };
 
     const renderLane = (
-      track: Track,
+      keyPrefix: string,
+      addTrackId: string | undefined,
+      addLaneIndex: number,
       lane: UIItem[],
       laneIndex: number,
       rowHeight: number,
@@ -412,7 +446,7 @@ const AdminYearCalendar = () => {
 
       return (
         <div
-          key={`${track.key}-lane-${laneIndex}`}
+          key={`${keyPrefix}-lane-${laneIndex}`}
           style={{
             ...gridStyle,
             minHeight: rowHeight,
@@ -522,7 +556,9 @@ const AdminYearCalendar = () => {
               <button
                 key={`empty-${d}`}
                 type="button"
-                onClick={() => openAddDialog(track.id, m, d)}
+                onClick={() =>
+                  addTrackId && openAddDialog(addTrackId, m, d, addLaneIndex)
+                }
                 style={{
                   gridColumn: `${d} / span 1`,
                   gridRow: 1,
@@ -531,7 +567,7 @@ const AdminYearCalendar = () => {
                   border: "none",
                   cursor: "pointer",
                 }}
-                aria-label={`הוסף אירוע ב${d} ב${m.label} ${m.year} — ${track.label_he}`}
+                aria-label={`הוסף אירוע ב${d} ב${m.label} ${m.year}`}
               />
             ))}
         </div>
@@ -627,19 +663,51 @@ const AdminYearCalendar = () => {
                 ))}
               </div>
 
-              {tracks.map((track) => {
-                const compact = track.key === "availability";
-                const rowHeight = compact ? 22 : 34;
-                const lanes = packLanes(byTrack[track.key] ?? []);
-                const rendered = lanes.length ? lanes : [[]];
+              {Array.from({ length: laneCount }, (_, laneIndex) => {
+                const inLane = (monthData.general ?? []).filter(
+                  (it) => Math.min(it.lane, laneCount - 1) === laneIndex
+                );
+                // אם יש חפיפה באותה שורה — נפרוס לתת-שורות כדי לא להסתיר אירועים
+                const sub = packLanes(inLane);
+                const rendered = sub.length ? sub : [[]];
                 return (
-                  <div key={track.key}>
+                  <div key={`gen-${laneIndex}`}>
                     {rendered.map((lane, i) =>
-                      renderLane(track, lane, i, rowHeight, compact)
+                      renderLane(
+                        `gen-${laneIndex}`,
+                        defaultTrack?.id,
+                        laneIndex,
+                        lane,
+                        i,
+                        34,
+                        false
+                      )
                     )}
                   </div>
                 );
               })}
+
+              {/* זמינות — תמיד בתחתית */}
+              {availabilityTrack &&
+                (() => {
+                  const lanes = packLanes(monthData.availability ?? []);
+                  const rendered = lanes.length ? lanes : [[]];
+                  return (
+                    <div key="availability">
+                      {rendered.map((lane, i) =>
+                        renderLane(
+                          "availability",
+                          availabilityTrack.id,
+                          0,
+                          lane,
+                          i,
+                          22,
+                          true
+                        )
+                      )}
+                    </div>
+                  );
+                })()}
             </div>
           </div>
         </div>
