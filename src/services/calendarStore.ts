@@ -1,0 +1,110 @@
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+export type Track = Database["public"]["Tables"]["tracks"]["Row"];
+export type Branch = Database["public"]["Tables"]["branches"]["Row"];
+export type Person = Database["public"]["Tables"]["people"]["Row"];
+export type CalendarItemRow = Database["public"]["Tables"]["calendar_items"]["Row"];
+
+export type CalendarItemInsert = Database["public"]["Tables"]["calendar_items"]["Insert"];
+export type CalendarItemUpdate = Database["public"]["Tables"]["calendar_items"]["Update"];
+
+export type CalendarItem = CalendarItemRow & {
+  track?: Track | null;
+  branch?: Branch | null;
+  person?: Person | null;
+};
+
+export type CalendarFormValues = {
+  title_he: string;
+  description_he: string;
+  track_id: string;
+  branch_id: string | null;
+  person_id: string | null;
+  availability_state: "reserves" | "at_work" | "home" | null;
+  start_date: string;
+  end_date: string;
+  status: "confirmed" | "tentative" | "cancelled";
+};
+
+export const fetchCalendarData = async (year: number) => {
+  const start = `${year}-01-01`;
+  const end = `${year}-12-31`;
+
+  const [tracksRes, branchesRes, peopleRes, itemsRes] = await Promise.all([
+    supabase.from("tracks").select("*").order("sort_order", { ascending: true }),
+    supabase.from("branches").select("*").order("name_he", { ascending: true }),
+    supabase.from("people").select("*").order("name_he", { ascending: true }),
+    supabase
+      .from("calendar_items")
+      .select(
+        `
+        *,
+        track:track_id (*),
+        branch:branch_id (*),
+        person:person_id (*)
+      `
+      )
+      .gte("start_date", start)
+      .lte("start_date", end)
+      .order("start_date", { ascending: true }),
+  ]);
+
+  if (tracksRes.error) throw tracksRes.error;
+  if (branchesRes.error) throw branchesRes.error;
+  if (peopleRes.error) throw peopleRes.error;
+  if (itemsRes.error) throw itemsRes.error;
+
+  return {
+    tracks: tracksRes.data as Track[],
+    branches: branchesRes.data as Branch[],
+    people: peopleRes.data as Person[],
+    items: itemsRes.data as CalendarItem[],
+  };
+};
+
+export const createCalendarItem = async (values: CalendarFormValues) => {
+  const insert: CalendarItemInsert = {
+    title_he: values.title_he.trim(),
+    description_he: values.description_he.trim() || null,
+    track_id: values.track_id,
+    branch_id: values.branch_id,
+    person_id: values.person_id,
+    availability_state: values.availability_state,
+    start_date: values.start_date,
+    end_date: values.end_date,
+    status: values.status,
+  };
+
+  const { data, error } = await supabase.from("calendar_items").insert(insert).select().single();
+  if (error) throw error;
+  return data as CalendarItemRow;
+};
+
+export const updateCalendarItem = async (id: string, values: CalendarFormValues) => {
+  const update: CalendarItemUpdate = {
+    title_he: values.title_he.trim(),
+    description_he: values.description_he.trim() || null,
+    track_id: values.track_id,
+    branch_id: values.branch_id,
+    person_id: values.person_id,
+    availability_state: values.availability_state,
+    start_date: values.start_date,
+    end_date: values.end_date,
+    status: values.status,
+  };
+
+  const { data, error } = await supabase
+    .from("calendar_items")
+    .update(update)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as CalendarItemRow;
+};
+
+export const deleteCalendarItem = async (id: string) => {
+  const { error } = await supabase.from("calendar_items").delete().eq("id", id);
+  if (error) throw error;
+};
