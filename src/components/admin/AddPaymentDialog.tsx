@@ -881,8 +881,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
       const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
-      const baseLines = baseEntries.map(({ id, amt, item }) => {
+      const baseLines = mergeLines && mergedLabel.trim()
+        ? [{ description: mergedLabel.trim(), amount: grossTotal }]
+        : baseEntries.map(({ id, amt, item }) => {
         const amount = Math.round(amt * 100) / 100;
+        const custom = customLabels[id]?.trim();
+        if (custom) return { description: custom, amount };
         const childPrefix = familyContext && item?.studentId
           ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
           : "";
