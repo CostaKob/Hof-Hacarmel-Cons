@@ -300,8 +300,9 @@ const AdminYearCalendar = () => {
     const dy = e.clientY - dragRef.current.lastY;
     dragRef.current.lastX = e.clientX;
     dragRef.current.lastY = e.clientY;
-    // ב־RTL scrollBy({ left: dx }) מתנהג נכון: גרירה שמאלה מציגה ימים מאוחרים יותר.
-    container.scrollBy({ left: dx, behavior: "instant" });
+    // התנהגות טאץ': התוכן נגרר עם העכבר — גרירה ימינה מזיזה את הלוח ימינה.
+    container.scrollBy({ left: -dx, behavior: "instant" });
+
     window.scrollBy({ top: -dy, behavior: "instant" });
     const totalDx = e.clientX - dragRef.current.startX;
     const totalDy = e.clientY - dragRef.current.startY;
