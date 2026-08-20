@@ -1041,6 +1041,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setEditingDescIds([]);
     setEditEnrollmentId("");
     setEditAmount("");
+    setPayerChoice("p1");
+    setCustomPayer({ name: "", nationalId: "", email: "", phone: "" });
+    
     
     setSplitOpen(false);
     setSplitParts([
