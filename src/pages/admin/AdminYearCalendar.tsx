@@ -72,13 +72,14 @@ const COLORS = {
   memorial: "#3FA9BE",
 };
 
+/** צבע לפי סוג אירוע. אירוע רגיל — ללא צבע (לבן עם מסגרת). */
 const TRACK_BG: Record<string, string> = {
   availability_reserves: COLORS.reserves,
   availability_at_work: COLORS.atWork,
   availability_home: COLORS.home,
-  holidays: COLORS.holiday,
-  branch_events: "#FFFFFF",
-  notes: "#F3F4F6",
+  vacation: COLORS.holiday,
+  memorial: COLORS.memorial,
+  regular: "#FFFFFF",
 };
 
 const AVAILABILITY_LABEL: Record<string, string> = {
