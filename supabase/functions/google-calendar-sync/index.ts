@@ -56,8 +56,9 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   // סנכרון יזום מ-cron: מזוהה באמצעות סוד ייעודי בכותרת, ללא משתמש מחובר.
-  const cronSecret = Deno.env.get("CALENDAR_SYNC_CRON_SECRET");
+  const cronSecret = Deno.env.get("CALENDAR_SYNC_CRON_KEY");
   const isCron = !!cronSecret && req.headers.get("x-cron-secret") === cronSecret;
+
 
   if (!isCron) {
     const authErr = await requireAdminOrSecretary(req, corsHeaders);
