@@ -878,24 +878,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
       const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
-      const baseLines = baseEntries.map(({ id, amt, item }) => {
-        const amount = Math.round(amt * 100) / 100;
-        const childPrefix = familyContext && item?.studentId
-          ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
-          : "";
-        if (item?.kind === "special") return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
-        if (item?.kind === "discount") return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
-        const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
-        const descParts = [
-          e?.instruments?.name ?? "שכר לימוד",
-          e?.schools?.name ? `· ${e.schools.name}` : "",
-          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
-        ].filter(Boolean).join(" ");
-        return {
-          description: `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
-          amount,
-        };
-      });
+      const baseLines = baseEntries.map(({ id, amt, item }) => ({
+        description: lineDescription(id, item),
+        amount: Math.round(amt * 100) / 100,
+      }));
 
       const familyTitleName = familyContext
         ? (() => {
