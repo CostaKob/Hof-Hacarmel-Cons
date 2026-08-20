@@ -1193,6 +1193,17 @@ const AdminYearCalendar = () => {
                 מחק
               </Button>
             )}
+            {editingId && (
+              <Button
+                variant="secondary"
+                onClick={handleDuplicate}
+                disabled={saving}
+                className="h-12 rounded-xl"
+              >
+                שכפל אירוע
+              </Button>
+            )}
+
             <div className="flex-1" />
             <Button
               variant="outline"
