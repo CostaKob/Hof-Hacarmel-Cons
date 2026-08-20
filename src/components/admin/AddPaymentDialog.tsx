@@ -142,7 +142,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [checks, setChecks] = useState<Array<{ date: string; number: string; amount: string }>>([]);
 
   // ---- Paying parent selection (single-student mode, when the family has 2 parents) ----
-  const [payerChoice, setPayerChoice] = useState<"p1" | "p2">("p1");
+  const [payerChoice, setPayerChoice] = useState<string>("p1");
+  // Free-form extra payer (grandparent, ex-spouse, third party...)
+  const [customPayer, setCustomPayer] = useState({ name: "", nationalId: "", email: "", phone: "" });
 
   const isEdit = !!editPayment;
 
@@ -189,8 +191,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   // Parents available for billing on this student (single-student mode only).
   const parentOptions = useMemo(() => {
-    if (!student) return [] as Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }>;
-    const opts: Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }> = [];
+    if (!student) return [] as Array<{ key: string; name: string; nationalId: string; email: string; phone: string }>;
+    const opts: Array<{ key: string; name: string; nationalId: string; email: string; phone: string }> = [];
     if ((student.parent_name ?? "").trim() || (student.parent_national_id ?? "").trim()) {
       opts.push({
         key: "p1",
@@ -213,10 +215,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   }, [student]);
 
   const hasTwoParents = parentOptions.length > 1;
-  const selectedPayerParent = useMemo(
-    () => parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null,
-    [parentOptions, payerChoice],
-  );
+  const isCustomPayer = payerChoice === "custom";
+  const selectedPayerParent = useMemo(() => {
+    if (isCustomPayer) {
+      return {
+        key: "custom",
+        name: customPayer.name.trim(),
+        nationalId: customPayer.nationalId.trim(),
+        email: customPayer.email.trim(),
+        phone: customPayer.phone.trim(),
+      };
+    }
+    return parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null;
+  }, [parentOptions, payerChoice, isCustomPayer, customPayer]);
 
   // Default the picker to the parent that the family context bills, if identifiable.
   useEffect(() => {
@@ -228,6 +239,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     if (match) setPayerChoice(match.key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, familyContext?.parentNationalId, parentOptions.length]);
+
+
 
 
   const { data: settings } = useQuery({
@@ -770,9 +783,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
-      // When the student/family has two parents, bill the parent explicitly
-      // chosen by the user (overrides the default family payer).
-      const chosenParentPayer = hasTwoParents && selectedPayerParent
+      // When the student/family has two parents — or when an extra payer was
+      // entered manually — bill that payer explicitly (overrides the family payer).
+      const chosenParentPayer = (hasTwoParents || isCustomPayer) && selectedPayerParent?.name
         ? (() => {
             const parts = selectedPayerParent.name.trim().split(/\s+/);
             return {
@@ -802,7 +815,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           } : {}),
           ...(chosenParentPayer ? {
             skipPayerPrefill: true,
-            payerLabel: `הורה משלם - ${selectedPayerParent!.name}`,
+            payerLabel: `${isCustomPayer ? "משלם נוסף" : "הורה משלם"} - ${selectedPayerParent!.name}`,
             payerDetails: chosenParentPayer,
           } : {}),
           ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
@@ -1028,6 +1041,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setEditingDescIds([]);
     setEditEnrollmentId("");
     setEditAmount("");
+    setPayerChoice("p1");
+    setCustomPayer({ name: "", nationalId: "", email: "", phone: "" });
+    
     
     setSplitOpen(false);
     setSplitParts([
@@ -1537,9 +1553,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             </div>
             {!isEdit && transactionType === "payment" && paymentMethod === "credit_card" && (
               <div className="space-y-2">
-                {hasTwoParents && (
+                {parentOptions.length > 0 && (
                   <div className="rounded-xl border border-border p-3 space-y-2">
-                    <Label className="text-sm">מי ההורה המשלם?</Label>
+                    <Label className="text-sm">מי המשלם?</Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {parentOptions.map((p) => (
                         <button
@@ -1558,9 +1574,47 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                           </p>
                         </button>
                       ))}
+                      <button
+                        type="button"
+                        onClick={() => setPayerChoice("custom")}
+                        className={`text-right rounded-xl border p-2.5 transition ${
+                          isCustomPayer ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
+                        }`}
+                      >
+                        <p className="text-sm font-medium">משלם נוסף</p>
+                        <p className="text-[11px] text-muted-foreground">סבא/סבתא, בן משפחה או צד ג׳</p>
+                      </button>
                     </div>
+                    {isCustomPayer && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        <Input
+                          value={customPayer.name}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, name: e.target.value }))}
+                          placeholder="שם מלא"
+                          className="h-11 rounded-xl"
+                        />
+                        <Input
+                          value={customPayer.nationalId}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, nationalId: e.target.value }))}
+                          placeholder="ת״ז"
+                          className="h-11 rounded-xl"
+                        />
+                        <Input
+                          value={customPayer.phone}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, phone: e.target.value }))}
+                          placeholder="טלפון"
+                          className="h-11 rounded-xl"
+                        />
+                        <Input
+                          value={customPayer.email}
+                          onChange={(e) => setCustomPayer((p) => ({ ...p, email: e.target.value }))}
+                          placeholder="אימייל"
+                          className="h-11 rounded-xl"
+                        />
+                      </div>
+                    )}
                     <p className="text-[11px] text-muted-foreground">
-                      פרטי ההורה שנבחר ימולאו אוטומטית בדף התשלום.
+                      פרטי המשלם שנבחר ימולאו אוטומטית בדף התשלום. אפשר ליצור קישור נפרד לכל משלם.
                     </p>
                   </div>
                 )}
@@ -1568,7 +1622,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                   variant="outline"
                   className="w-full h-11 rounded-xl"
                   onClick={() => generateLinkMutation.mutate()}
-                  disabled={totalSelected <= 0 || generateLinkMutation.isPending}
+                  disabled={totalSelected <= 0 || generateLinkMutation.isPending || (isCustomPayer && !customPayer.name.trim())}
                 >
                   {generateLinkMutation.isPending ? (
                     <><Loader2 className="h-4 w-4 animate-spin ml-2" /> יוצר קישור...</>
