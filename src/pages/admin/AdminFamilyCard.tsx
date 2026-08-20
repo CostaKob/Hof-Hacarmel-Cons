@@ -993,26 +993,32 @@ const AdminFamilyCard = () => {
                             ? " · משפחתי"
                             : (p.student_id && ` · ${nameById.get(p.student_id)}`) || ""}
                         </p>
-                        {isPending && (() => {
+                        {(() => {
                           const bd: any = p.enrollment_breakdown ?? {};
                           const pd = bd && !Array.isArray(bd) ? bd.payerDetails : null;
                           const pl = bd && !Array.isArray(bd) ? bd.payerLabel : null;
                           const fullName = pd ? [pd.firstName, pd.lastName].filter(Boolean).join(" ").trim() : "";
                           const contact = pd ? [pd.phone, pd.email].filter(Boolean).join(" · ") : "";
-                          if (!pl && !fullName && !contact && !p.payment_link_url) return null;
+                          const showLink = isPending && !!p.payment_link_url;
+                          if (!pl && !fullName && !contact && !showLink) return null;
                           return (
                             <div className="mt-1 space-y-0.5 text-[11px] font-normal">
                               {(pl || fullName) && (
                                 <div className="text-foreground">
+                                  <span className="text-muted-foreground">שולם ע״י: </span>
                                   {pl}
                                   {pl && fullName ? " · " : ""}
                                   {fullName && <span className="font-medium">{fullName}</span>}
                                 </div>
                               )}
                               {contact && <div className="text-muted-foreground">{contact}</div>}
-                              {p.payment_link_url && (
+                              {showLink && (
                                 <div className="text-muted-foreground truncate max-w-[220px]" dir="ltr">{p.payment_link_url}</div>
                               )}
+                            </div>
+                          );
+                        })()}
+
                             </div>
                           );
                         })()}
