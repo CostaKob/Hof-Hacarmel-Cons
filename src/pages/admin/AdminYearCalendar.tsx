@@ -82,15 +82,11 @@ const days = Array.from({ length: DAYS_IN_MONTH }, (_, i) => i + 1);
 const weekdayOf = (day: number) => new Date(YEAR, MONTH - 1, day).getDay();
 const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
 
-const dateOfDay = (day: number) => {
-  const d = new Date(YEAR, MONTH - 1, day);
-  return d.toISOString().split("T")[0];
-};
+const pad2 = (n: number) => String(n).padStart(2, "0");
 
-const dayFromDate = (iso: string) => {
-  const d = new Date(iso);
-  return d.getDate();
-};
+const dateOfDay = (day: number) => `${YEAR}-${pad2(MONTH)}-${pad2(day)}`;
+
+const dayFromDate = (iso: string) => Number(iso.slice(8, 10));
 
 const emptyForm = (): CalendarFormValues => ({
   title_he: "",
