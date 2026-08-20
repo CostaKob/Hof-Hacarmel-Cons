@@ -111,20 +111,52 @@ const TrackRow = ({ items }: { items: Item[] }) => (
           margin: 3,
           display: "flex",
           alignItems: "center",
-          gap: 6,
+          position: "relative",
           fontSize: 13,
           color: "#1F2937",
         }}
         title={[item.title, item.detail].filter(Boolean).join(" — ")}
       >
-        <span className="font-semibold" style={{ ...cellTextStyle, paddingInline: 0, flexShrink: 1 }}>
-          {item.title}
-        </span>
-        {item.detail && (
-          <span className="font-normal" style={{ ...cellTextStyle, paddingInline: 0, flexShrink: 1 }}>
-            {item.detail}
+        <span
+          style={{
+            position: "sticky",
+            insetInlineStart: 8,
+            zIndex: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            minWidth: 0,
+          }}
+        >
+          <span
+            className="font-semibold"
+            style={{
+              paddingInline: 0,
+              whiteSpace: "nowrap",
+              flexShrink: item.detail ? 0 : 1,
+              minWidth: item.detail ? "auto" : 0,
+              overflow: item.detail ? "visible" : "hidden",
+              textOverflow: item.detail ? "initial" : "ellipsis",
+            }}
+          >
+            {item.title}
           </span>
-        )}
+          {item.detail && (
+            <span
+              className="font-normal"
+              style={{
+                flex: 1,
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                paddingInline: 0,
+              }}
+            >
+              {item.detail}
+            </span>
+          )}
+        </span>
       </div>
     ))}
   </div>
