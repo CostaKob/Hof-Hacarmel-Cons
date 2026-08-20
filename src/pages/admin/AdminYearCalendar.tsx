@@ -265,7 +265,14 @@ const AdminYearCalendar = () => {
   const isInteractiveTarget = (target: EventTarget | null): boolean => {
     const el = target as HTMLElement | null;
     if (!el) return false;
-    const interactive = ["BUTTON", "INPUT", "TEXTAREA", "SELECT", "A"];
+    // תאים ריקים הם כפתורים שמאפשרים הוספת אירוע — אבל אנחנו רוצים לאפשר גרירה עליהם.
+    // אם המשתמש יזוז מעל 3 פיקסלים, הלחיצה תדחה.
+    if (el.tagName === "BUTTON") {
+      const ariaLabel = el.getAttribute("aria-label") ?? "";
+      if (ariaLabel.startsWith("הוסף אירוע")) return false;
+      return true;
+    }
+    const interactive = ["INPUT", "TEXTAREA", "SELECT", "A"];
     if (interactive.includes(el.tagName)) return true;
     if (el.closest("button, input, textarea, select, a, [role='dialog']")) return true;
     return false;
