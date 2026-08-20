@@ -248,6 +248,97 @@ const AdminYearCalendar = () => {
     });
   };
 
+  /* ------------------------------------------------------------------
+     גרירה לגלילה (click-and-drag) — כמו בגוגל שיטס.
+     אופקי = גלילה בתוך המיכל (scrollBy כדי לטפל נכון ב־RTL),
+     אנכי = גלילת החלון כולו.
+     ------------------------------------------------------------------ */
+  const dragRef = useRef({
+    isDragging: false,
+    didDrag: false,
+    startX: 0,
+    startY: 0,
+    lastX: 0,
+    lastY: 0,
+  });
+
+  const isInteractiveTarget = (target: EventTarget | null): boolean => {
+    const el = target as HTMLElement | null;
+    if (!el) return false;
+    // תאים ריקים הם כפתורים שמאפשרים הוספת אירוע — אבל אנחנו רוצים לאפשר גרירה עליהם.
+    // אם המשתמש יזוז מעל 3 פיקסלים, הלחיצה תדחה.
+    if (el.tagName === "BUTTON") {
+      const ariaLabel = el.getAttribute("aria-label") ?? "";
+      if (ariaLabel.startsWith("הוסף אירוע")) return false;
+      return true;
+    }
+    const interactive = ["INPUT", "TEXTAREA", "SELECT", "A"];
+    if (interactive.includes(el.tagName)) return true;
+    if (el.closest("button, input, textarea, select, a, [role='dialog']")) return true;
+    return false;
+  };
+
+  const endDrag = () => {
+    const container = calendarContainerRef.current;
+    if (container) {
+      container.style.cursor = "grab";
+      container.style.userSelect = "";
+    }
+    dragRef.current.isDragging = false;
+    window.removeEventListener("mousemove", onWindowMouseMove);
+    window.removeEventListener("mouseup", onWindowMouseUp);
+    setTimeout(() => {
+      dragRef.current.didDrag = false;
+    }, 50);
+  };
+
+  const onWindowMouseMove = (e: MouseEvent) => {
+    if (!dragRef.current.isDragging) return;
+    const container = calendarContainerRef.current;
+    if (!container) return;
+    const dx = e.clientX - dragRef.current.lastX;
+    const dy = e.clientY - dragRef.current.lastY;
+    dragRef.current.lastX = e.clientX;
+    dragRef.current.lastY = e.clientY;
+    // ב־RTL scrollBy({ left: dx }) מתנהג נכון: גרירה שמאלה מציגה ימים מאוחרים יותר.
+    container.scrollBy({ left: dx, behavior: "instant" });
+    window.scrollBy({ top: -dy, behavior: "instant" });
+    const totalDx = e.clientX - dragRef.current.startX;
+    const totalDy = e.clientY - dragRef.current.startY;
+    if (Math.abs(totalDx) > 3 || Math.abs(totalDy) > 3) {
+      dragRef.current.didDrag = true;
+    }
+  };
+
+  const onWindowMouseUp = () => {
+    endDrag();
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (isInteractiveTarget(e.target)) return;
+    const container = calendarContainerRef.current;
+    if (!container) return;
+    dragRef.current = {
+      isDragging: true,
+      didDrag: false,
+      startX: e.clientX,
+      startY: e.clientY,
+      lastX: e.clientX,
+      lastY: e.clientY,
+    };
+    container.style.cursor = "grabbing";
+    container.style.userSelect = "none";
+    window.addEventListener("mousemove", onWindowMouseMove);
+    window.addEventListener("mouseup", onWindowMouseUp);
+  };
+
+  const handleClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragRef.current.didDrag) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
+
   const load = async (isRefresh = false) => {
     try {
       if (isRefresh) {
@@ -857,13 +948,38 @@ const AdminYearCalendar = () => {
         </div>
       )}
 
+      <style>{`
+        .year-calendar-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #c1c1c1 #f1f1f1;
+        }
+        .year-calendar-scroll::-webkit-scrollbar {
+          width: 12px;
+          height: 12px;
+        }
+        .year-calendar-scroll::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 6px;
+        }
+        .year-calendar-scroll::-webkit-scrollbar-thumb {
+          background: #c1c1c1;
+          border-radius: 6px;
+          border: 2px solid #f1f1f1;
+        }
+        .year-calendar-scroll::-webkit-scrollbar-thumb:hover {
+          background: #a1a1a1;
+        }
+      `}</style>
       <div
         ref={calendarContainerRef}
-        className="relative overflow-x-auto rounded-xl border"
+        onMouseDown={handleMouseDown}
+        onClickCapture={handleClickCapture}
+        className="year-calendar-scroll relative overflow-auto rounded-xl border"
         style={{
           borderColor: COLORS.grid,
           fontFamily: "'Assistant', sans-serif",
           scrollBehavior: "smooth",
+          cursor: "grab",
         }}
       >
         {loading ? (
