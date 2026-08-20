@@ -1094,7 +1094,9 @@ const AdminYearCalendar = () => {
         ref={calendarContainerRef}
         onMouseDown={handleMouseDown}
         onClickCapture={handleClickCapture}
-        className="year-calendar-scroll relative overflow-auto rounded-xl border"
+        className={`year-calendar-scroll relative rounded-xl border ${
+          isMobile ? "overflow-x-hidden" : "overflow-auto"
+        }`}
         style={{
           borderColor: COLORS.grid,
           fontFamily: "'Assistant', sans-serif",
