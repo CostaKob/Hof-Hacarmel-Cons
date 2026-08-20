@@ -1211,13 +1211,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
                       const isDiscount = it.kind === "discount";
+                      const isEditingDesc = editingDescIds.includes(it.id);
+                      const hasOverride = !!descOverrides[it.id]?.trim();
                       return (
                         <div
                           key={it.id}
-                            className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2 ${
+                            className={`w-full min-w-0 rounded-lg border p-2 ${
                             isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
                           }`}
                         >
+                          <div className="flex w-full min-w-0 items-center gap-2">
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) => toggleItem(it, !!v)}
@@ -1243,6 +1246,60 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             placeholder={transactionType === "credit" ? "0.00" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="h-9 w-24 shrink-0 sm:w-28"
                           />
+                          </div>
+
+                          {transactionType === "payment" && (
+                            <div className="mt-1.5 ps-6">
+                              {isEditingDesc ? (
+                                <div className="space-y-1">
+                                  <Label className="text-[11px] text-muted-foreground">
+                                    שם השורה בקבלה / בדף התשלום
+                                  </Label>
+                                  <Input
+                                    value={descOverrides[it.id] ?? defaultLineDescription(it.id, it)}
+                                    onChange={(ev) =>
+                                      setDescOverrides((prev) => ({ ...prev, [it.id]: ev.target.value }))
+                                    }
+                                    className="h-9 text-sm"
+                                  />
+                                  <div className="flex gap-3 text-xs">
+                                    <button
+                                      type="button"
+                                      className="text-primary hover:underline"
+                                      onClick={() => setEditingDescIds((prev) => prev.filter((x) => x !== it.id))}
+                                    >
+                                      סיום עריכה
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="text-muted-foreground hover:underline"
+                                      onClick={() => {
+                                        setDescOverrides((prev) => {
+                                          const next = { ...prev };
+                                          delete next[it.id];
+                                          return next;
+                                        });
+                                        setEditingDescIds((prev) => prev.filter((x) => x !== it.id));
+                                      }}
+                                    >
+                                      איפוס לברירת מחדל
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="flex w-full items-start gap-1.5 text-start text-[11px] text-muted-foreground hover:text-primary"
+                                  onClick={() => setEditingDescIds((prev) => [...prev, it.id])}
+                                >
+                                  <Pencil className="mt-[2px] h-3 w-3 shrink-0" />
+                                  <span className="break-words">
+                                    {hasOverride ? descOverrides[it.id] : defaultLineDescription(it.id, it)}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
