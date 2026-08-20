@@ -10,7 +10,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split, CalendarClock } from "lucide-react";
+import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split, CalendarClock, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
@@ -108,6 +108,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [checkNumber, setCheckNumber] = useState("");
   // Multi-select map: enrollmentId -> amount string
   const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
+  // Optional user-written description per line (overrides the auto-generated one)
+  const [customLabels, setCustomLabels] = useState<Record<string, string>>({});
+  const [editingLabelFor, setEditingLabelFor] = useState<string | null>(null);
+  // Optional single merged description for the whole payment / payment link
+  const [mergeLines, setMergeLines] = useState(false);
+  const [mergedLabel, setMergedLabel] = useState("");
   // Edit-mode single enrollment + amount
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
@@ -500,7 +506,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             kind: it?.kind ?? (id.startsWith("special:") ? "special" : id.startsWith("discount:") ? "discount" : "enrollment"),
             enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") || id.startsWith("discount:") ? null : id),
             studentId: it?.studentId ?? studentId,
-            label: it?.label ?? null,
+            label: customLabels[id]?.trim() || it?.label || null,
             amt: parseFloat(amt),
           };
         })
@@ -711,8 +717,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
       const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
-      const lines = entries.map(({ id, amt, item }) => {
+      const buildLines = (rawEntries: typeof entries) => rawEntries.map(({ id, amt, item }) => {
         const amount = Math.round(amt * 100) / 100;
+        const custom = customLabels[id]?.trim();
+        if (custom) return { description: custom, amount };
         const childPrefix = familyContext && item?.studentId
           ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
           : "";
@@ -733,6 +741,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           amount,
         };
       });
+
+      const lines = mergeLines && mergedLabel.trim()
+        ? [{ description: mergedLabel.trim(), amount: total }]
+        : buildLines(entries);
 
       const anchorStudentId = familyContext?.anchorStudentId ?? studentId;
       const payer = familyContext
@@ -869,8 +881,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
       const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
-      const baseLines = baseEntries.map(({ id, amt, item }) => {
+      const baseLines = mergeLines && mergedLabel.trim()
+        ? [{ description: mergedLabel.trim(), amount: grossTotal }]
+        : baseEntries.map(({ id, amt, item }) => {
         const amount = Math.round(amt * 100) / 100;
+        const custom = customLabels[id]?.trim();
+        if (custom) return { description: custom, amount };
         const childPrefix = familyContext && item?.studentId
           ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
           : "";
@@ -1030,6 +1046,10 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setCheckNumber("");
     setTransactionType("payment");
     setSelectedAmounts({});
+    setCustomLabels({});
+    setEditingLabelFor(null);
+    setMergeLines(false);
+    setMergedLabel("");
     setEditEnrollmentId("");
     setEditAmount("");
     
@@ -1215,27 +1235,44 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
                       const isDiscount = it.kind === "discount";
+                      const custom = customLabels[it.id]?.trim();
+                      const isEditingLabel = editingLabelFor === it.id;
                       return (
                         <div
                           key={it.id}
-                            className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2 ${
+                            className={`w-full min-w-0 rounded-lg border p-2 ${
                             isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
                           }`}
                         >
+                          <div className="flex w-full min-w-0 items-center gap-2">
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) => toggleItem(it, !!v)}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium leading-snug break-words">
-                              {it.label}
+                              {custom || it.label}
                               {it.kind === "special" && <span className="text-[10px] text-primary mr-1">★</span>}
                               {isDiscount && <span className="text-[10px] text-emerald-700 mr-1">−</span>}
                             </p>
-                            {it.subLabel && (
+                            {custom ? (
+                              <p className="text-xs leading-snug break-words text-muted-foreground">
+                                שם מקורי: {it.label}
+                              </p>
+                            ) : it.subLabel ? (
                               <p className={`text-xs leading-snug break-words ${isDiscount ? "text-emerald-700" : "text-muted-foreground"}`}>{it.subLabel}</p>
-                            )}
+                            ) : null}
                           </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 shrink-0 rounded-lg"
+                            title="שינוי שם השורה בקבלה"
+                            onClick={() => setEditingLabelFor(isEditingLabel ? null : it.id)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
                           <Input
                             type="number"
                             step="0.01"
@@ -1247,6 +1284,35 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             placeholder={transactionType === "credit" ? "0.00" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="h-9 w-24 shrink-0 sm:w-28"
                           />
+                          </div>
+                          {isEditingLabel && (
+                            <div className="mt-2 flex items-center gap-2">
+                              <Input
+                                autoFocus
+                                value={customLabels[it.id] ?? ""}
+                                onChange={(ev) =>
+                                  setCustomLabels((prev) => ({ ...prev, [it.id]: ev.target.value }))
+                                }
+                                placeholder={it.label}
+                                className="h-9 flex-1"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                className="h-9 rounded-lg px-3 text-xs"
+                                onClick={() => {
+                                  setCustomLabels((prev) => {
+                                    const next = { ...prev };
+                                    delete next[it.id];
+                                    return next;
+                                  });
+                                  setEditingLabelFor(null);
+                                }}
+                              >
+                                איפוס
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1255,6 +1321,21 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         סה״כ: ₪{totalSelected.toLocaleString()}
                       </p>
                     )}
+                    <div className="rounded-lg border border-border bg-muted/20 p-2 space-y-2">
+                      <label className="flex items-center gap-2 text-sm">
+                        <Checkbox checked={mergeLines} onCheckedChange={(v) => setMergeLines(!!v)} />
+                        <span>איחוד לשורה אחת בקבלה (ללא פירוט השיוכים)</span>
+                      </label>
+                      {mergeLines && (
+                        <Input
+                          value={mergedLabel}
+                          onChange={(ev) => setMergedLabel(ev.target.value)}
+                          placeholder="לדוגמה: שכר לימוד תשפ״ז"
+                          className="h-9"
+                        />
+                      )}
+                    </div>
+
                   </div>
                 )}
               </div>
