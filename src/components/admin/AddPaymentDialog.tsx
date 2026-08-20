@@ -506,7 +506,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             kind: it?.kind ?? (id.startsWith("special:") ? "special" : id.startsWith("discount:") ? "discount" : "enrollment"),
             enrollmentId: it?.enrollmentId ?? (id.startsWith("special:") || id.startsWith("discount:") ? null : id),
             studentId: it?.studentId ?? studentId,
-            label: it?.label ?? null,
+            label: customLabels[id]?.trim() || it?.label || null,
             amt: parseFloat(amt),
           };
         })
