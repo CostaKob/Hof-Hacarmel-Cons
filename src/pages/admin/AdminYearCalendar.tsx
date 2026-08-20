@@ -102,7 +102,6 @@ const TrackRow = ({ items }: { items: Item[] }) => (
       <div
         key={`${item.title}-${item.from}`}
         style={{
-          ...cellTextStyle,
           gridColumn: `${item.from} / span ${item.to - item.from + 1}`,
           gridRow: 1,
           backgroundColor: item.bg,
@@ -114,6 +113,8 @@ const TrackRow = ({ items }: { items: Item[] }) => (
           position: "relative",
           fontSize: 13,
           color: "#1F2937",
+          minWidth: 0,
+          paddingInline: 8,
         }}
         title={[item.title, item.detail].filter(Boolean).join(" — ")}
       >
@@ -133,10 +134,7 @@ const TrackRow = ({ items }: { items: Item[] }) => (
             style={{
               paddingInline: 0,
               whiteSpace: "nowrap",
-              flexShrink: item.detail ? 0 : 1,
-              minWidth: item.detail ? "auto" : 0,
-              overflow: item.detail ? "visible" : "hidden",
-              textOverflow: item.detail ? "initial" : "ellipsis",
+              flexShrink: 0,
             }}
           >
             {item.title}
