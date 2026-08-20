@@ -1886,6 +1886,51 @@ export type Database = {
           },
         ]
       }
+      school_music_graduate_marks: {
+        Row: {
+          academic_year_id: string
+          created_at: string
+          id: string
+          is_graduate: boolean
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_year_id: string
+          created_at?: string
+          id?: string
+          is_graduate: boolean
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_year_id?: string
+          created_at?: string
+          id?: string
+          is_graduate?: boolean
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "school_music_graduate_marks_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "school_music_graduate_marks_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_music_groups: {
         Row: {
           created_at: string
