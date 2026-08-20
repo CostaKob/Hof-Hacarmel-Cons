@@ -300,11 +300,9 @@ const AdminYearCalendar = () => {
     const dy = e.clientY - dragRef.current.lastY;
     dragRef.current.lastX = e.clientX;
     dragRef.current.lastY = e.clientY;
-    console.log("mousemove dx", dx, "dy", dy, "scrollLeft before", container.scrollLeft);
     // ב־RTL scrollBy({ left: dx }) מתנהג נכון: גרירה שמאלה מציגה ימים מאוחרים יותר.
     container.scrollBy({ left: dx, behavior: "instant" });
     window.scrollBy({ top: -dy, behavior: "instant" });
-    console.log("scrollLeft after", container.scrollLeft);
     const totalDx = e.clientX - dragRef.current.startX;
     const totalDy = e.clientY - dragRef.current.startY;
     if (Math.abs(totalDx) > 3 || Math.abs(totalDy) > 3) {
@@ -313,7 +311,6 @@ const AdminYearCalendar = () => {
   };
 
   const onWindowMouseUp = () => {
-    console.log("mouseup, didDrag", dragRef.current.didDrag);
     endDrag();
   };
 
