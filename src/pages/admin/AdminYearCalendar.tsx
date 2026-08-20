@@ -352,7 +352,7 @@ const AdminYearCalendar = () => {
         const { track, branch, person, ...row } = before as any;
         pushUndo({ kind: "delete", row });
       }
-      await load();
+      await load(true);
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה במחיקה");
