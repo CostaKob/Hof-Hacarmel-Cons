@@ -65,18 +65,22 @@ export const fetchCalendarData = async (rangeStart: string, rangeEnd: string) =>
   };
 };
 
+const toPayload = (values: CalendarFormValues) => ({
+  title_he: values.title_he.trim(),
+  description_he: values.description_he.trim() || null,
+  start_time: values.start_time?.trim() ? values.start_time : null,
+  location_he: values.location_he?.trim() || null,
+  track_id: values.track_id,
+  branch_id: values.branch_id,
+  person_id: values.person_id,
+  availability_state: values.availability_state,
+  start_date: values.start_date,
+  end_date: values.end_date,
+  status: values.status,
+});
+
 export const createCalendarItem = async (values: CalendarFormValues) => {
-  const insert: CalendarItemInsert = {
-    title_he: values.title_he.trim(),
-    description_he: values.description_he.trim() || null,
-    track_id: values.track_id,
-    branch_id: values.branch_id,
-    person_id: values.person_id,
-    availability_state: values.availability_state,
-    start_date: values.start_date,
-    end_date: values.end_date,
-    status: values.status,
-  };
+  const insert: CalendarItemInsert = toPayload(values);
 
   const { data, error } = await supabase.from("calendar_items").insert(insert).select().single();
   if (error) throw error;
@@ -84,17 +88,7 @@ export const createCalendarItem = async (values: CalendarFormValues) => {
 };
 
 export const updateCalendarItem = async (id: string, values: CalendarFormValues) => {
-  const update: CalendarItemUpdate = {
-    title_he: values.title_he.trim(),
-    description_he: values.description_he.trim() || null,
-    track_id: values.track_id,
-    branch_id: values.branch_id,
-    person_id: values.person_id,
-    availability_state: values.availability_state,
-    start_date: values.start_date,
-    end_date: values.end_date,
-    status: values.status,
-  };
+  const update: CalendarItemUpdate = toPayload(values);
 
   const { data, error } = await supabase
     .from("calendar_items")
