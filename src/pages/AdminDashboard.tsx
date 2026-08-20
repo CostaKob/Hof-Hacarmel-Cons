@@ -45,6 +45,7 @@ const DATA_SECTIONS: DashboardItem[] = [
 
 const TOOLS_SECTIONS: DashboardItem[] = [
   { path: "/admin/enrollment-stats", label: "דוח תלמידים ושיבוצים", description: "תלמידים לפי שכבה, התפלגות כלים ונרשמים שטרם שובצו", icon: BarChart3 },
+  { path: "/admin/discount-audit", label: "בדיקת הנחות", description: "בדיקה שכל ההנחות מיושמות — בוגרי מנגן, כרם מהר״ל, אח שני וכלי שני", icon: BadgePercent },
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים, הגדרת שנה פעילה ומעבר שנה", icon: CalendarDays },
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
   { path: "/admin/cashflow", label: "דוח תזרים", description: "תזרים אמיתי מאייקאונט לפי תאריכי פרעון — שיקים, אשראי בתשלומים וזיכויים", icon: TrendingUp },
