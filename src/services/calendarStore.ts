@@ -18,6 +18,8 @@ export type CalendarItem = CalendarItemRow & {
 export type CalendarFormValues = {
   title_he: string;
   description_he: string;
+  start_time: string;
+  location_he: string;
   track_id: string;
   branch_id: string | null;
   person_id: string | null;
