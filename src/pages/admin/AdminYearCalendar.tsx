@@ -882,22 +882,38 @@ const AdminYearCalendar = () => {
         <span>
           {m.label} {m.year}
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            addLane(m.key);
-            pushUndo({ kind: "lane", monthKey: m.key });
-          }}
-          className="rounded-lg px-2 py-1 text-xs"
-          style={{
-            backgroundColor: "rgba(255,255,255,0.6)",
-            color: "#3B1D18",
-            fontWeight: 500,
-          }}
-          title="הוסף שורה לחודש זה"
-        >
-          + שורה
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button
+            type="button"
+            onClick={() => {
+              addLane(m.key);
+              pushUndo({ kind: "lane", monthKey: m.key });
+            }}
+            className="rounded-lg px-2 py-1 text-xs"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.6)",
+              color: "#3B1D18",
+              fontWeight: 500,
+            }}
+            title="הוסף שורה לחודש זה"
+          >
+            + שורה
+          </button>
+          <button
+            type="button"
+            onClick={() => tryRemoveLane(m.key)}
+            className="rounded-lg px-2 py-1 text-xs"
+            style={{
+              backgroundColor: "rgba(255,255,255,0.6)",
+              color: "#3B1D18",
+              fontWeight: 500,
+            }}
+            title="מחק את השורה האחרונה (רק אם ריקה)"
+          >
+            − שורה
+          </button>
+        </div>
+
       </div>
     );
 
