@@ -216,6 +216,7 @@ const AdminYearCalendar = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const undoStack = useRef<UndoEntry[]>([]);
 
   const load = async () => {
     try {
