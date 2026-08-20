@@ -189,10 +189,15 @@ const AvailabilityRow = ({ items }: { items: Item[] }) => (
             alignItems: "center",
             fontSize: 11,
             color: "#1F2937",
+            position: "relative",
           }}
           title={item.title}
         >
-          {showText && item.title}
+          {showText && (
+            <span style={{ position: "sticky", insetInlineStart: 8, zIndex: 1 }}>
+              {item.title}
+            </span>
+          )}
         </div>
       );
     })}
