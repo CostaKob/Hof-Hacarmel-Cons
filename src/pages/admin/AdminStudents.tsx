@@ -446,15 +446,23 @@ const AdminStudents = () => {
         selected,
       );
 
+      // Special courses (music production / recital) — full price, discounts don't apply
+      const stu = studentRows[0]?.students;
+      let specialBase = 0;
+      if (stu?.has_music_production_course) specialBase += Number(paymentSettings.music_production_price) || 0;
+      if (stu?.has_recital_track) specialBase += Number(paymentSettings.recital_track_price) || 0;
+
+      const afterStdWithSpecial = afterStdDiscount + specialBase;
+
       const customDiscountAmount = (Array.isArray(discounts?.customDiscounts) ? discounts.customDiscounts : []).reduce((sum: number, c: any) => {
         const v = Number(c.value) || 0;
-        return sum + (c.mode === "pct" ? (afterStdDiscount * v) / 100 : v);
+        return sum + (c.mode === "pct" ? (afterStdWithSpecial * v) / 100 : v);
       }, 0);
-      const totalDue = Math.max(0, Math.round(afterStdDiscount - customDiscountAmount));
+      const totalDue = Math.max(0, Math.round(afterStdWithSpecial - customDiscountAmount));
       const paid = paidByStudent.get(sid) ?? 0;
       map.set(sid, totalDue - paid);
 
-      if (proratedTotal <= 0 && paid <= 0) {
+      if (proratedTotal <= 0 && specialBase <= 0 && paid <= 0) {
         map.set(sid, 0);
       }
     }
