@@ -191,8 +191,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   // Parents available for billing on this student (single-student mode only).
   const parentOptions = useMemo(() => {
-    if (!student) return [] as Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }>;
-    const opts: Array<{ key: "p1" | "p2"; name: string; nationalId: string; email: string; phone: string }> = [];
+    if (!student) return [] as Array<{ key: string; name: string; nationalId: string; email: string; phone: string }>;
+    const opts: Array<{ key: string; name: string; nationalId: string; email: string; phone: string }> = [];
     if ((student.parent_name ?? "").trim() || (student.parent_national_id ?? "").trim()) {
       opts.push({
         key: "p1",
@@ -215,10 +215,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   }, [student]);
 
   const hasTwoParents = parentOptions.length > 1;
-  const selectedPayerParent = useMemo(
-    () => parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null,
-    [parentOptions, payerChoice],
-  );
+  const isCustomPayer = payerChoice === "custom";
+  const selectedPayerParent = useMemo(() => {
+    if (isCustomPayer) {
+      return {
+        key: "custom",
+        name: customPayer.name.trim(),
+        nationalId: customPayer.nationalId.trim(),
+        email: customPayer.email.trim(),
+        phone: customPayer.phone.trim(),
+      };
+    }
+    return parentOptions.find((p) => p.key === payerChoice) ?? parentOptions[0] ?? null;
+  }, [parentOptions, payerChoice, isCustomPayer, customPayer]);
 
   // Default the picker to the parent that the family context bills, if identifiable.
   useEffect(() => {
@@ -230,6 +239,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     if (match) setPayerChoice(match.key);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, familyContext?.parentNationalId, parentOptions.length]);
+
+
 
 
   const { data: settings } = useQuery({
