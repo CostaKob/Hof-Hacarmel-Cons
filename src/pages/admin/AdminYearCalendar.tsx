@@ -244,6 +244,35 @@ const AdminYearCalendar = () => {
     }
   };
 
+  /* ------------------------------------------------------------------
+     סנכרון אוטומטי שקט אחרי כל שמירה/מחיקה (עם השהיה קצרה לאיחוד שינויים).
+     בנוסף רץ סנכרון יומי אוטומטי בשרת (cron).
+     ------------------------------------------------------------------ */
+  const autoSyncTimer = useRef<number | null>(null);
+  const [autoSyncing, setAutoSyncing] = useState(false);
+
+  const scheduleAutoSync = () => {
+    if (autoSyncTimer.current) window.clearTimeout(autoSyncTimer.current);
+    autoSyncTimer.current = window.setTimeout(async () => {
+      try {
+        setAutoSyncing(true);
+        const { error: fnError } = await supabase.functions.invoke("google-calendar-sync");
+        if (fnError) throw fnError;
+      } catch (e: any) {
+        toast.error("הסנכרון האוטומטי ל-Google נכשל — אפשר לנסות ידנית");
+      } finally {
+        setAutoSyncing(false);
+      }
+    }, 2500) as unknown as number;
+  };
+
+  useEffect(() => {
+    return () => {
+      if (autoSyncTimer.current) window.clearTimeout(autoSyncTimer.current);
+    };
+  }, []);
+
+
   const undoStack = useRef<UndoEntry[]>([]);
   const redoStack = useRef<UndoEntry[]>([]);
 
@@ -455,6 +484,7 @@ const AdminYearCalendar = () => {
         pushUndo({ kind: "create", id: created.id, row: created });
       }
       await load(true);
+      scheduleAutoSync();
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה בשמירה");
@@ -474,6 +504,7 @@ const AdminYearCalendar = () => {
         pushUndo({ kind: "delete", row });
       }
       await load(true);
+      scheduleAutoSync();
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה במחיקה");
@@ -522,7 +553,10 @@ const AdminYearCalendar = () => {
         toast.success("הוספת השורה בוטלה");
       }
       redoStack.current = [...redoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load(true);
+      if (entry.kind !== "lane") {
+        await load(true);
+        scheduleAutoSync();
+      }
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בביטול הפעולה");
     } finally {
@@ -553,7 +587,10 @@ const AdminYearCalendar = () => {
         toast.success("השורה נוספה מחדש");
       }
       undoStack.current = [...undoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load(true);
+      if (entry.kind !== "lane") {
+        await load(true);
+        scheduleAutoSync();
+      }
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בשחזור הפעולה");
     } finally {
@@ -973,11 +1010,13 @@ const AdminYearCalendar = () => {
         <Button
           variant="outline"
           onClick={handleGoogleSync}
-          disabled={syncing}
+          disabled={syncing || autoSyncing}
           className="h-11 rounded-xl"
+          title="הסנכרון מתבצע אוטומטית אחרי כל שינוי, ופעם ביום ברקע"
         >
-          {syncing ? "מסנכרן…" : "סנכרון עם Google Calendar"}
+          {syncing ? "מסנכרן…" : autoSyncing ? "מסנכרן אוטומטית…" : "סנכרון עם Google Calendar"}
         </Button>
+
       </div>
 
 
