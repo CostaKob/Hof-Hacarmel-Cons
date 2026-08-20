@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
@@ -222,6 +223,27 @@ const AdminYearCalendar = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  /** סנכרון דו-כיווני מול Google Calendar. */
+  const handleGoogleSync = async () => {
+    try {
+      setSyncing(true);
+      const { data, error: fnError } = await supabase.functions.invoke("google-calendar-sync");
+      if (fnError) throw fnError;
+      const d = data as any;
+      toast.success(
+        `סונכרן: ${d?.pushed ?? 0} נשלחו לגוגל, ${d?.pulled ?? 0} התקבלו מגוגל`
+      );
+      if (d?.errors?.length) toast.error(`שגיאות: ${d.errors.slice(0, 2).join(" | ")}`);
+      await load(true);
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בסנכרון");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
   const undoStack = useRef<UndoEntry[]>([]);
   const redoStack = useRef<UndoEntry[]>([]);
 
@@ -946,6 +968,18 @@ const AdminYearCalendar = () => {
   return (
     <AdminLayout title="לוח שנה שנתי" fullWidth>
       <PageTitle title="לוח שנה שנתי" />
+
+      <div className="mb-4 flex justify-end">
+        <Button
+          variant="outline"
+          onClick={handleGoogleSync}
+          disabled={syncing}
+          className="h-11 rounded-xl"
+        >
+          {syncing ? "מסנכרן…" : "סנכרון עם Google Calendar"}
+        </Button>
+      </div>
+
 
       {error && (
         <div className="mb-4 rounded-xl bg-red-50 p-4 text-red-700">
