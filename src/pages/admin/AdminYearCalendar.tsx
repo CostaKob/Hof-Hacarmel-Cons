@@ -250,15 +250,16 @@ const AdminYearCalendar = () => {
 
   /* ------------------------------------------------------------------
      גרירה לגלילה (click-and-drag) — כמו בגוגל שיטס.
-     אופקי = גלילה בתוך המיכל, אנכי = גלילת החלון כולו.
+     אופקי = גלילה בתוך המיכל (scrollBy כדי לטפל נכון ב־RTL),
+     אנכי = גלילת החלון כולו.
      ------------------------------------------------------------------ */
   const dragRef = useRef({
     isDragging: false,
     didDrag: false,
     startX: 0,
     startY: 0,
-    scrollLeft: 0,
-    scrollY: 0,
+    lastX: 0,
+    lastY: 0,
   });
 
   const isInteractiveTarget = (target: EventTarget | null): boolean => {
@@ -288,12 +289,16 @@ const AdminYearCalendar = () => {
     if (!dragRef.current.isDragging) return;
     const container = calendarContainerRef.current;
     if (!container) return;
-    const dx = e.clientX - dragRef.current.startX;
-    const dy = e.clientY - dragRef.current.startY;
-    // RTL: גרירה שמאלה (dx שלילי) גוללת ימינה (scrollLeft גדל)
-    container.scrollLeft = dragRef.current.scrollLeft - dx;
-    window.scrollTo({ top: dragRef.current.scrollY - dy, behavior: "instant" });
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+    const dx = e.clientX - dragRef.current.lastX;
+    const dy = e.clientY - dragRef.current.lastY;
+    dragRef.current.lastX = e.clientX;
+    dragRef.current.lastY = e.clientY;
+    // ב־RTL scrollBy({ left: dx }) מתנהג נכון: גרירה שמאלה מציגה ימים מאוחרים יותר.
+    container.scrollBy({ left: dx, behavior: "instant" });
+    window.scrollBy({ top: -dy, behavior: "instant" });
+    const totalDx = e.clientX - dragRef.current.startX;
+    const totalDy = e.clientY - dragRef.current.startY;
+    if (Math.abs(totalDx) > 3 || Math.abs(totalDy) > 3) {
       dragRef.current.didDrag = true;
     }
   };
@@ -311,8 +316,8 @@ const AdminYearCalendar = () => {
       didDrag: false,
       startX: e.clientX,
       startY: e.clientY,
-      scrollLeft: container.scrollLeft,
-      scrollY: window.scrollY,
+      lastX: e.clientX,
+      lastY: e.clientY,
     };
     container.style.cursor = "grabbing";
     container.style.userSelect = "none";
