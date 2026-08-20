@@ -484,6 +484,7 @@ const AdminYearCalendar = () => {
         pushUndo({ kind: "create", id: created.id, row: created });
       }
       await load(true);
+      scheduleAutoSync();
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה בשמירה");
@@ -503,6 +504,7 @@ const AdminYearCalendar = () => {
         pushUndo({ kind: "delete", row });
       }
       await load(true);
+      scheduleAutoSync();
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה במחיקה");
@@ -551,7 +553,10 @@ const AdminYearCalendar = () => {
         toast.success("הוספת השורה בוטלה");
       }
       redoStack.current = [...redoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load(true);
+      if (entry.kind !== "lane") {
+        await load(true);
+        scheduleAutoSync();
+      }
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בביטול הפעולה");
     } finally {
@@ -582,7 +587,10 @@ const AdminYearCalendar = () => {
         toast.success("השורה נוספה מחדש");
       }
       undoStack.current = [...undoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load(true);
+      if (entry.kind !== "lane") {
+        await load(true);
+        scheduleAutoSync();
+      }
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בשחזור הפעולה");
     } finally {
