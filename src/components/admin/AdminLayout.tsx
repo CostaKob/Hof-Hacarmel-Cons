@@ -43,9 +43,10 @@ interface AdminLayoutProps {
   title: string;
   backPath?: string;
   onBack?: () => void;
+  fullWidth?: boolean;
 }
 
-const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) => {
+const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
@@ -201,7 +202,11 @@ const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) =>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-5 -mt-2 pb-28 md:pb-6">
+      <main
+        className={`mx-auto px-4 py-5 -mt-2 pb-28 md:pb-6 ${
+          fullWidth ? "max-w-none" : "max-w-5xl"
+        }`}
+      >
         <ArchiveYearBanner />
         {children}
       </main>
