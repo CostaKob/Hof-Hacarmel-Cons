@@ -10,7 +10,7 @@ import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split, CalendarClock } from "lucide-react";
+import { Trash2, Link as LinkIcon, Loader2, Plus, Copy, ExternalLink, Split, CalendarClock, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
@@ -108,6 +108,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [checkNumber, setCheckNumber] = useState("");
   // Multi-select map: enrollmentId -> amount string
   const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
+  // Manual overrides for the receipt/paylink line descriptions (itemId -> text)
+  const [descOverrides, setDescOverrides] = useState<Record<string, string>>({});
+  const [editingDescIds, setEditingDescIds] = useState<string[]>([]);
   // Edit-mode single enrollment + amount
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
@@ -467,6 +470,30 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
   const clearAll = () => setSelectedAmounts({});
 
+  const hebrewYearName = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
+
+  /** The default text that will appear as the line description on the receipt
+   *  / payment page. Can be overridden manually per line. */
+  const defaultLineDescription = (id: string, item?: PaymentItem) => {
+    const yearSuffix = hebrewYearName ? ` ${hebrewYearName}` : "";
+    const childPrefix = familyContext && item?.studentId
+      ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
+      : "";
+    if (item?.kind === "special" || item?.kind === "discount") {
+      return `${childPrefix}${item.label}${yearSuffix}`;
+    }
+    const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
+    const descParts = [
+      e?.instruments?.name ?? "שכר לימוד",
+      e?.schools?.name ? `· ${e.schools.name}` : "",
+      e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
+    ].filter(Boolean).join(" ");
+    return `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, "");
+  };
+
+  const lineDescription = (id: string, item?: PaymentItem) =>
+    descOverrides[id]?.trim() || defaultLineDescription(id, item);
+
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -709,30 +736,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       if (total <= 0) throw new Error("סה״כ הקישור חייב להיות גדול מ-0");
 
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
-      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
 
-      const lines = entries.map(({ id, amt, item }) => {
-        const amount = Math.round(amt * 100) / 100;
-        const childPrefix = familyContext && item?.studentId
-          ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
-          : "";
-        if (item?.kind === "special") {
-          return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
-        }
-        if (item?.kind === "discount") {
-          return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
-        }
-        const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
-        const descParts = [
-          e?.instruments?.name ?? "שכר לימוד",
-          e?.schools?.name ? `· ${e.schools.name}` : "",
-          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
-        ].filter(Boolean).join(" ");
-        return {
-          description: `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
-          amount,
-        };
-      });
+      const lines = entries.map(({ id, amt, item }) => ({
+        description: lineDescription(id, item),
+        amount: Math.round(amt * 100) / 100,
+      }));
 
       const anchorStudentId = familyContext?.anchorStudentId ?? studentId;
       const payer = familyContext
@@ -867,26 +875,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       if (grossTotal <= 0) throw new Error("סה״כ החישוב חייב להיות גדול מ-0");
 
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
-      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
+      
 
-      const baseLines = baseEntries.map(({ id, amt, item }) => {
-        const amount = Math.round(amt * 100) / 100;
-        const childPrefix = familyContext && item?.studentId
-          ? `${familyContext.childrenNames[item.studentId] ?? ""} · `
-          : "";
-        if (item?.kind === "special") return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
-        if (item?.kind === "discount") return { description: `${childPrefix}${item.label}${yearSuffix}`, amount };
-        const e = enrollments.find((x: any) => x.id === (item?.enrollmentId ?? id));
-        const descParts = [
-          e?.instruments?.name ?? "שכר לימוד",
-          e?.schools?.name ? `· ${e.schools.name}` : "",
-          e?.lesson_duration_minutes ? `· ${e.lesson_duration_minutes} דק׳` : "",
-        ].filter(Boolean).join(" ");
-        return {
-          description: `${childPrefix}שכר לימוד שנתי${yearSuffix} - ${descParts}`.replace(/ - $/, ""),
-          amount,
-        };
-      });
+      const baseLines = baseEntries.map(({ id, amt, item }) => ({
+        description: lineDescription(id, item),
+        amount: Math.round(amt * 100) / 100,
+      }));
 
       const familyTitleName = familyContext
         ? (() => {
@@ -1030,6 +1024,8 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setCheckNumber("");
     setTransactionType("payment");
     setSelectedAmounts({});
+    setDescOverrides({});
+    setEditingDescIds([]);
     setEditEnrollmentId("");
     setEditAmount("");
     
@@ -1215,13 +1211,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                     {paymentItems.map((it) => {
                       const checked = selectedAmounts[it.id] !== undefined;
                       const isDiscount = it.kind === "discount";
+                      const isEditingDesc = editingDescIds.includes(it.id);
+                      const hasOverride = !!descOverrides[it.id]?.trim();
                       return (
                         <div
                           key={it.id}
-                            className={`flex w-full min-w-0 items-center gap-2 rounded-lg border p-2 ${
+                            className={`w-full min-w-0 rounded-lg border p-2 ${
                             isDiscount ? "border-emerald-300/60 bg-emerald-50/40" : "border-border"
                           }`}
                         >
+                          <div className="flex w-full min-w-0 items-center gap-2">
                           <Checkbox
                             checked={checked}
                             onCheckedChange={(v) => toggleItem(it, !!v)}
@@ -1247,6 +1246,60 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                             placeholder={transactionType === "credit" ? "0.00" : it.defaultAmount !== 0 ? String(it.defaultAmount) : "0.00"}
                             className="h-9 w-24 shrink-0 sm:w-28"
                           />
+                          </div>
+
+                          {transactionType === "payment" && (
+                            <div className="mt-1.5 ps-6">
+                              {isEditingDesc ? (
+                                <div className="space-y-1">
+                                  <Label className="text-[11px] text-muted-foreground">
+                                    שם השורה בקבלה / בדף התשלום
+                                  </Label>
+                                  <Input
+                                    value={descOverrides[it.id] ?? defaultLineDescription(it.id, it)}
+                                    onChange={(ev) =>
+                                      setDescOverrides((prev) => ({ ...prev, [it.id]: ev.target.value }))
+                                    }
+                                    className="h-9 text-sm"
+                                  />
+                                  <div className="flex gap-3 text-xs">
+                                    <button
+                                      type="button"
+                                      className="text-primary hover:underline"
+                                      onClick={() => setEditingDescIds((prev) => prev.filter((x) => x !== it.id))}
+                                    >
+                                      סיום עריכה
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="text-muted-foreground hover:underline"
+                                      onClick={() => {
+                                        setDescOverrides((prev) => {
+                                          const next = { ...prev };
+                                          delete next[it.id];
+                                          return next;
+                                        });
+                                        setEditingDescIds((prev) => prev.filter((x) => x !== it.id));
+                                      }}
+                                    >
+                                      איפוס לברירת מחדל
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="flex w-full items-start gap-1.5 text-start text-[11px] text-muted-foreground hover:text-primary"
+                                  onClick={() => setEditingDescIds((prev) => [...prev, it.id])}
+                                >
+                                  <Pencil className="mt-[2px] h-3 w-3 shrink-0" />
+                                  <span className="break-words">
+                                    {hasOverride ? descOverrides[it.id] : defaultLineDescription(it.id, it)}
+                                  </span>
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
