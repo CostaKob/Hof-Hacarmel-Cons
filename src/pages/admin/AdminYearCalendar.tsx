@@ -1010,11 +1010,13 @@ const AdminYearCalendar = () => {
         <Button
           variant="outline"
           onClick={handleGoogleSync}
-          disabled={syncing}
+          disabled={syncing || autoSyncing}
           className="h-11 rounded-xl"
+          title="הסנכרון מתבצע אוטומטית אחרי כל שינוי, ופעם ביום ברקע"
         >
-          {syncing ? "מסנכרן…" : "סנכרון עם Google Calendar"}
+          {syncing ? "מסנכרן…" : autoSyncing ? "מסנכרן אוטומטית…" : "סנכרון עם Google Calendar"}
         </Button>
+
       </div>
 
 
