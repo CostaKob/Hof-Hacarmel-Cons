@@ -459,6 +459,13 @@ const AdminYearCalendar = () => {
     }
   };
 
+  /** שכפול אירוע קיים — נשארים באותו דיאלוג עם כל הפרטים, במצב הוספה. */
+  const handleDuplicate = () => {
+    setEditingId(null);
+    setForm((prev) => ({ ...prev }));
+  };
+
+
   const addLane = (monthKey: string) => {
     setExtraLanesByMonth((prev) => ({ ...prev, [monthKey]: (prev[monthKey] ?? 0) + 1 }));
   };
