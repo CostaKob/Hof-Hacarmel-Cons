@@ -709,7 +709,7 @@ const AdminYearCalendar = () => {
               </div>
             )}
 
-            {selectedTrack?.key === "branch_events" && (
+            {selectedTrack?.key === "regular" && (
               <div className="grid gap-2">
                 <Label>סניף</Label>
                 <Select
