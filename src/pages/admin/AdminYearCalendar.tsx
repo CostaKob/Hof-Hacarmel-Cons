@@ -395,6 +395,13 @@ const AdminYearCalendar = () => {
   const AvailabilityRow = ({ trackKey }: { trackKey: string }) => {
     const track = tracks.find((t) => t.key === trackKey);
     const rowItems = itemsByTrack[trackKey] ?? [];
+    const occupied = useMemo(() => {
+      const set = new Set<number>();
+      rowItems.forEach((item) => {
+        for (let d = item.from; d <= item.to; d++) set.add(d);
+      });
+      return set;
+    }, [rowItems]);
 
     return (
       <div
@@ -441,22 +448,24 @@ const AdminYearCalendar = () => {
           );
         })}
         {track &&
-          days.map((d) => (
-            <button
-              key={`empty-${d}`}
-              type="button"
-              onClick={() => openAddDialog(track.id, d)}
-              style={{
-                gridColumn: `${d} / span 1`,
-                gridRow: 1,
-                minHeight: 22,
-                backgroundColor: "transparent",
-                border: "none",
-                cursor: "pointer",
-              }}
-              aria-label={`הוסף זמינות ב${d} ב${MONTH_LABEL}`}
-            />
-          ))}
+          days
+            .filter((d) => !occupied.has(d))
+            .map((d) => (
+              <button
+                key={`empty-${d}`}
+                type="button"
+                onClick={() => openAddDialog(track.id, d)}
+                style={{
+                  gridColumn: `${d} / span 1`,
+                  gridRow: 1,
+                  minHeight: 22,
+                  backgroundColor: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+                aria-label={`הוסף זמינות ב${d} ב${MONTH_LABEL}`}
+              />
+            ))}
       </div>
     );
   };
