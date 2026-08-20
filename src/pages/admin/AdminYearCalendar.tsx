@@ -616,29 +616,52 @@ const AdminYearCalendar = () => {
 
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="title">כותרת</Label>
+              <Label htmlFor="title">כותרת ראשית</Label>
               <Input
                 id="title"
                 value={form.title_he}
                 onChange={(e) => setForm({ ...form, title_he: e.target.value })}
-                placeholder="למשל: סוכות"
+                placeholder="למשל: ישיבת פתיחת שנה"
                 className="h-12 rounded-xl text-right"
               />
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="description">תיאור (אופציונלי)</Label>
+              <Label htmlFor="description">פירוט (אופציונלי)</Label>
               <Input
                 id="description"
                 value={form.description_he}
                 onChange={(e) => setForm({ ...form, description_he: e.target.value })}
-                placeholder="למשל: חלוקת כלים"
+                placeholder="למשל: כל מורי האולפן"
                 className="h-12 rounded-xl text-right"
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="time">שעה</Label>
+                <Input
+                  id="time"
+                  type="time"
+                  value={form.start_time}
+                  onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                  className="h-12 rounded-xl text-center"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="location">מיקום</Label>
+                <Input
+                  id="location"
+                  value={form.location_he}
+                  onChange={(e) => setForm({ ...form, location_he: e.target.value })}
+                  placeholder="למשל: העמר"
+                  className="h-12 rounded-xl text-right"
+                />
+              </div>
+            </div>
+
             <div className="grid gap-2">
-              <Label>מסלול</Label>
+              <Label>סוג אירוע</Label>
               <Select
                 value={form.track_id}
                 onValueChange={(value) =>
@@ -653,7 +676,7 @@ const AdminYearCalendar = () => {
                 }
               >
                 <SelectTrigger className="h-11 rounded-xl text-right">
-                  <SelectValue placeholder="בחר מסלול" />
+                  <SelectValue placeholder="בחר סוג אירוע" />
                 </SelectTrigger>
                 <SelectContent dir="rtl">
                   {tracks.map((t) => (
