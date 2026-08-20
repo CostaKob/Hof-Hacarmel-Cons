@@ -24,12 +24,14 @@ import {
   createCalendarItem,
   updateCalendarItem,
   deleteCalendarItem,
+  restoreCalendarItem,
   type CalendarItem,
   type CalendarFormValues,
   type Track,
   type Branch,
   type Person,
 } from "@/services/calendarStore";
+import { toast } from "sonner";
 
 /* ------------------------------------------------------------------
    שלב 3 — שנה מלאה: אוגוסט 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
