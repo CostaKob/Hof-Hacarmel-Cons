@@ -241,7 +241,7 @@ const AdminYearCalendar = () => {
     pendingScrollRef.current = null;
     // Use rAF to ensure layout has settled after React render
     requestAnimationFrame(() => {
-      window.scrollTo({ top: saved.windowY, left: saved.windowY, behavior: "instant" });
+      window.scrollTo({ top: saved.windowY, behavior: "instant" });
       if (calendarContainerRef.current) {
         calendarContainerRef.current.scrollLeft = saved.containerX;
       }
