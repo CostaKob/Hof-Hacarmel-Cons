@@ -215,6 +215,7 @@ const AdminYearCalendar = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [items, setItems] = useState<CalendarItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -224,9 +225,37 @@ const AdminYearCalendar = () => {
   const undoStack = useRef<UndoEntry[]>([]);
   const redoStack = useRef<UndoEntry[]>([]);
 
-  const load = async () => {
+  const calendarContainerRef = useRef<HTMLDivElement>(null);
+  const pendingScrollRef = useRef<{ windowY: number; containerX: number } | null>(null);
+
+  const captureScroll = () => {
+    pendingScrollRef.current = {
+      windowY: window.scrollY,
+      containerX: calendarContainerRef.current?.scrollLeft ?? 0,
+    };
+  };
+
+  const restoreScroll = () => {
+    const saved = pendingScrollRef.current;
+    if (!saved) return;
+    pendingScrollRef.current = null;
+    // Use rAF to ensure layout has settled after React render
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: saved.windowY, left: saved.windowY, behavior: "instant" });
+      if (calendarContainerRef.current) {
+        calendarContainerRef.current.scrollLeft = saved.containerX;
+      }
+    });
+  };
+
+  const load = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (isRefresh) {
+        captureScroll();
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       const data = await fetchCalendarData(RANGE_START, RANGE_END);
       setTracks(data.tracks);
@@ -236,12 +265,17 @@ const AdminYearCalendar = () => {
     } catch (e: any) {
       setError(e.message ?? "שגיאה בטעינת הנתונים");
     } finally {
-      setLoading(false);
+      if (isRefresh) {
+        setRefreshing(false);
+        restoreScroll();
+      } else {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    load();
+    load(false);
   }, []);
 
   const openAddDialog = (
