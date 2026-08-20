@@ -938,11 +938,14 @@ const AdminYearCalendar = () => {
 
       <div
         ref={calendarContainerRef}
-        className="relative overflow-x-auto rounded-xl border"
+        onMouseDown={handleMouseDown}
+        onClickCapture={handleClickCapture}
+        className="relative overflow-auto rounded-xl border"
         style={{
           borderColor: COLORS.grid,
           fontFamily: "'Assistant', sans-serif",
           scrollBehavior: "smooth",
+          cursor: "grab",
         }}
       >
         {loading ? (
