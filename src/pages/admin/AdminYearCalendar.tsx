@@ -394,7 +394,7 @@ const AdminYearCalendar = () => {
         toast.success("הוספת השורה בוטלה");
       }
       redoStack.current = [...redoStack.current.slice(-19), entry];
-      if (entry.kind !== "lane") await load();
+      if (entry.kind !== "lane") await load(true);
     } catch (e: any) {
       toast.error(e.message ?? "שגיאה בביטול הפעולה");
     } finally {
