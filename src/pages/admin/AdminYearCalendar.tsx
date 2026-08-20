@@ -690,70 +690,28 @@ const AdminYearCalendar = () => {
 
             {selectedTrack?.key === "availability" && (
               <div className="grid gap-2">
-                <Label>סטטוס זמינות</Label>
-                <Select
-                  value={form.availability_state ?? "reserves"}
-                  onValueChange={(value) =>
-                    setForm({ ...form, availability_state: value as any })
-                  }
-                >
-                  <SelectTrigger className="h-11 rounded-xl text-right">
-                    <SelectValue placeholder="בחר סטטוס" />
-                  </SelectTrigger>
-                  <SelectContent dir="rtl">
-                    <SelectItem value="reserves">{AVAILABILITY_LABEL.reserves}</SelectItem>
-                    <SelectItem value="at_work">{AVAILABILITY_LABEL.at_work}</SelectItem>
-                    <SelectItem value="home">{AVAILABILITY_LABEL.home}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {selectedTrack?.key === "regular" && (
-              <div className="grid gap-2">
-                <Label>סניף</Label>
-                <Select
-                  value={form.branch_id ?? "__none__"}
-                  onValueChange={(value) =>
-                    setForm({ ...form, branch_id: value === "__none__" ? null : value })
-                  }
-                >
-                  <SelectTrigger className="h-11 rounded-xl text-right">
-                    <SelectValue placeholder="בחר סניף" />
-                  </SelectTrigger>
-                  <SelectContent dir="rtl">
-                    <SelectItem value="__none__">ללא סניף</SelectItem>
-                    {branches.map((b) => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name_he}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {selectedTrack?.key === "availability" && (
-              <div className="grid gap-2">
-                <Label>אדם</Label>
-                <Select
-                  value={form.person_id ?? "__none__"}
-                  onValueChange={(value) =>
-                    setForm({ ...form, person_id: value === "__none__" ? null : value })
-                  }
-                >
-                  <SelectTrigger className="h-11 rounded-xl text-right">
-                    <SelectValue placeholder="בחר אדם" />
-                  </SelectTrigger>
-                  <SelectContent dir="rtl">
-                    <SelectItem value="__none__">ללא אדם</SelectItem>
-                    {people.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name_he}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>צבע</Label>
+                <div className="flex gap-3">
+                  {(["reserves", "at_work", "home"] as const).map((state) => {
+                    const active = (form.availability_state ?? "reserves") === state;
+                    return (
+                      <button
+                        key={state}
+                        type="button"
+                        onClick={() => setForm({ ...form, availability_state: state })}
+                        className="flex flex-1 items-center justify-center gap-2 rounded-xl border px-3 h-11 text-sm transition"
+                        style={{
+                          borderColor: active ? "#1F2937" : COLORS.grid,
+                          borderWidth: active ? 2 : 1,
+                          backgroundColor: TRACK_BG[`availability_${state}`],
+                          color: "#1F2937",
+                        }}
+                      >
+                        {AVAILABILITY_LABEL[state]}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
