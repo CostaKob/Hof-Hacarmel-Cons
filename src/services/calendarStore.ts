@@ -104,3 +104,15 @@ export const deleteCalendarItem = async (id: string) => {
   const { error } = await supabase.from("calendar_items").delete().eq("id", id);
   if (error) throw error;
 };
+
+/** משחזר פריט שנמחק, כולל אותו מזהה (לצורך ביטול פעולה / Undo). */
+export const restoreCalendarItem = async (row: CalendarItemRow) => {
+  const { created_at, updated_at, ...rest } = row as any;
+  const { data, error } = await supabase
+    .from("calendar_items")
+    .insert(rest as CalendarItemInsert)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as CalendarItemRow;
+};
