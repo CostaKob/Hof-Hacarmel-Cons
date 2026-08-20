@@ -108,6 +108,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
   const [checkNumber, setCheckNumber] = useState("");
   // Multi-select map: enrollmentId -> amount string
   const [selectedAmounts, setSelectedAmounts] = useState<Record<string, string>>({});
+  // Optional user-written description per line (overrides the auto-generated one)
+  const [customLabels, setCustomLabels] = useState<Record<string, string>>({});
+  const [editingLabelFor, setEditingLabelFor] = useState<string | null>(null);
+  // Optional single merged description for the whole payment / payment link
+  const [mergeLines, setMergeLines] = useState(false);
+  const [mergedLabel, setMergedLabel] = useState("");
   // Edit-mode single enrollment + amount
   const [editEnrollmentId, setEditEnrollmentId] = useState("");
   const [editAmount, setEditAmount] = useState("");
