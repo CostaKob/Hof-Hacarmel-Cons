@@ -333,7 +333,7 @@ const AdminYearCalendar = () => {
         const created = await createCalendarItem(form);
         pushUndo({ kind: "create", id: created.id, row: created });
       }
-      await load();
+      await load(true);
       setDialogOpen(false);
     } catch (e: any) {
       setError(e.message ?? "שגיאה בשמירה");
