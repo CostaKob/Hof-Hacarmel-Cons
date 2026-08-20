@@ -300,8 +300,10 @@ const AdminFamilyCard = () => {
         if (!en.isActive) continue;
         const parts = [
           en.instrumentName,
+          en.teacherName !== "—" ? en.teacherName : "",
           en.schoolName !== "—" ? en.schoolName : "",
         ].filter(Boolean).join(" · ");
+
 
         overrideItems.push({
           id: `${c.id}:${en.enrollmentId}`,
