@@ -253,19 +253,7 @@ const AdminYearCalendar = () => {
 
   const openEditDialog = (item: CalendarItem) => {
     setEditingId(item.id);
-    setForm({
-      title_he: item.title_he,
-      description_he: item.description_he ?? "",
-      start_time: formatTime((item as any).start_time),
-      location_he: (item as any).location_he ?? "",
-      track_id: item.track_id,
-      branch_id: item.branch_id,
-      person_id: item.person_id,
-      availability_state: (item.availability_state as any) ?? null,
-      start_date: item.start_date,
-      end_date: item.end_date,
-      status: (item.status as any) ?? "confirmed",
-    });
+    setForm(rowToForm(item));
     setDialogOpen(true);
   };
 
