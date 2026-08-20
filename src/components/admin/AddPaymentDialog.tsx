@@ -875,7 +875,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       if (grossTotal <= 0) throw new Error("סה״כ החישוב חייב להיות גדול מ-0");
 
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
-      const yearSuffix = hebrewYear ? ` ${hebrewYear}` : "";
+      
 
       const baseLines = baseEntries.map(({ id, amt, item }) => ({
         description: lineDescription(id, item),
