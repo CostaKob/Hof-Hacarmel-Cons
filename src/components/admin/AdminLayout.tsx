@@ -43,9 +43,10 @@ interface AdminLayoutProps {
   title: string;
   backPath?: string;
   onBack?: () => void;
+  fullWidth?: boolean;
 }
 
-const AdminLayout = ({ children, title, backPath, onBack }: AdminLayoutProps) => {
+const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useAuth();
