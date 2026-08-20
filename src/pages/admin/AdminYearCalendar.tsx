@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   fetchCalendarData,
   createCalendarItem,
@@ -224,6 +225,7 @@ const AdminYearCalendar = () => {
   const [form, setForm] = useState<CalendarFormValues>(emptyForm());
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const isMobile = useIsMobile();
 
   /** סנכרון דו-כיווני מול Google Calendar. */
   const handleGoogleSync = async () => {
