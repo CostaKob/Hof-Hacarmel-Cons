@@ -19,6 +19,7 @@ export type CalendarFormValues = {
   title_he: string;
   description_he: string;
   start_time: string;
+  end_time: string;
   location_he: string;
   track_id: string;
   branch_id: string | null;
@@ -70,6 +71,7 @@ const toPayload = (values: CalendarFormValues) => ({
   title_he: values.title_he.trim(),
   description_he: values.description_he.trim() || null,
   start_time: values.start_time?.trim() ? values.start_time : null,
+  end_time: values.end_time?.trim() ? values.end_time : null,
   location_he: values.location_he?.trim() || null,
   track_id: values.track_id,
   branch_id: values.branch_id,
