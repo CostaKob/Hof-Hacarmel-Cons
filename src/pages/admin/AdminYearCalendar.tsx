@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { DateInput } from "@/components/ui/date-input";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
 import {
   fetchCalendarData,
   createCalendarItem,
@@ -46,6 +47,9 @@ const START_YEAR = 2026;
 const START_MONTH = 8; // אוגוסט
 const MONTH_COUNT = 13;
 const COL_WIDTH = 90;
+/** רק המשתמשים האלה רואים את כפתורי הייצוא לאקסל והסנכרון ל-Google Calendar. */
+const CALENDAR_TOOLS_EMAILS = ["costakob@gmail.com", "amirstoler@gmail.com"];
+
 const MONTH_COL_WIDTH = 120;
 
 const MONTH_NAMES_HE = [
