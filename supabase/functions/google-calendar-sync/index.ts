@@ -225,6 +225,7 @@ Deno.serve(async (req) => {
         if (!startDate || !rawEnd) continue;
         const endDate = ev.end?.date ? addDays(rawEnd, -1) : rawEnd;
         const startTime = ev.start?.dateTime ? ev.start.dateTime.slice(11, 16) : null;
+        const endTime = ev.end?.dateTime ? ev.end.dateTime.slice(11, 16) : null;
 
         const payload: Json = {
           title_he: ev.summary ?? "(ללא כותרת)",
@@ -233,6 +234,7 @@ Deno.serve(async (req) => {
           start_date: startDate,
           end_date: endDate < startDate ? startDate : endDate,
           start_time: startTime,
+          end_time: endTime,
           google_event_id: ev.id,
           google_etag: ev.etag ?? null,
           google_calendar_id: CALENDAR_ID,
