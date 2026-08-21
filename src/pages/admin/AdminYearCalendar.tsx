@@ -230,6 +230,13 @@ const AdminYearCalendar = () => {
   const [syncing, setSyncing] = useState(false);
   const isMobile = useIsMobile();
 
+  /** כלי הייצוא והסנכרון גלויים רק למשתמשים מורשים. */
+  const { user } = useAuth();
+  const canUseCalendarTools = CALENDAR_TOOLS_EMAILS.includes(
+    (user?.email ?? "").toLowerCase()
+  );
+
+
   /** סנכרון דו-כיווני מול Google Calendar. */
   const handleGoogleSync = async () => {
     try {
