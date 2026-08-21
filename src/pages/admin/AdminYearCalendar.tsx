@@ -1127,7 +1127,17 @@ const AdminYearCalendar = () => {
     <AdminLayout title="לוח שנה שנתי" fullWidth>
       <PageTitle title="לוח שנה שנתי" />
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={handleExportExcel}
+          disabled={exporting || loading}
+          className="h-11 rounded-xl"
+          title="הורדת הלוח כקובץ אקסל במבנה זהה לתצוגה"
+        >
+          {exporting ? "מייצא…" : "הורדה לאקסל"}
+        </Button>
+
         <Button
           variant="outline"
           onClick={handleGoogleSync}
