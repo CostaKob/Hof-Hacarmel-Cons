@@ -72,7 +72,7 @@ export const exportYearCalendarToExcel = async (
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "קונסרבטוריון חוף הכרמל";
   const sheet = workbook.addWorksheet("לוח שנה שנתי", {
-    views: [{ rightToLeft: true }],
+    views: [{ rightToLeft: false }],
     pageSetup: { orientation: "landscape", fitToPage: true },
   });
 
