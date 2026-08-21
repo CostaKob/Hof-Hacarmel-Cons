@@ -1,0 +1,1 @@
+UPDATE public.calendar_items SET google_synced_at = NULL;
