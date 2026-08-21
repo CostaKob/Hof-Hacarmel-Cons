@@ -72,12 +72,18 @@ export const exportYearCalendarToExcel = async (
   const workbook = new ExcelJS.Workbook();
   workbook.creator = "קונסרבטוריון חוף הכרמל";
   const sheet = workbook.addWorksheet("לוח שנה שנתי", {
-    views: [{ rightToLeft: true, state: "frozen", xSplit: 1 }],
+    views: [{ rightToLeft: false }],
     pageSetup: { orientation: "landscape", fitToPage: true },
   });
 
-  sheet.getColumn(1).width = 16;
-  for (let d = 1; d <= 31; d += 1) sheet.getColumn(1 + d).width = 9;
+  /* פריסה פיזית מימין לשמאל: עמודת החודש בקצה הימני (32),
+     יום 1 לידה (31) והלאה שמאלה — כך התצוגה נכונה גם בצפיינים
+     שמתעלמים מדגל rightToLeft (iOS Quick Look, Google Sheets). */
+  const LABEL_COL = 32;
+  const dayCol = (d: number) => LABEL_COL - d;
+
+  sheet.getColumn(LABEL_COL).width = 16;
+  for (let d = 1; d <= 31; d += 1) sheet.getColumn(dayCol(d)).width = 9;
 
   let row = 1;
 
@@ -85,14 +91,14 @@ export const exportYearCalendarToExcel = async (
     const headerRow = sheet.getRow(row);
     const weekdayRow = sheet.getRow(row + 1);
 
-    const monthCell = headerRow.getCell(1);
+    const monthCell = headerRow.getCell(LABEL_COL);
     monthCell.value = `${month.label} ${month.year}`;
     monthCell.font = { name: "Arial", bold: true, size: 12, color: { argb: "FFFFFFFF" } };
     monthCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: COLORS.monthHeader } };
     monthCell.alignment = { vertical: "middle", horizontal: "center" };
     monthCell.border = border;
 
-    const weekdayMonthCell = weekdayRow.getCell(1);
+    const weekdayMonthCell = weekdayRow.getCell(LABEL_COL);
     weekdayMonthCell.fill = {
       type: "pattern",
       pattern: "solid",
@@ -105,14 +111,14 @@ export const exportYearCalendarToExcel = async (
       const weekend = weekday === 5 || weekday === 6;
       const fillArgb = weekend ? COLORS.weekend : COLORS.dayNumbers;
 
-      const dayCell = headerRow.getCell(1 + d);
+      const dayCell = headerRow.getCell(dayCol(d));
       dayCell.value = d;
       dayCell.font = { name: "Arial", bold: true, size: 11 };
       dayCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fillArgb } };
       dayCell.alignment = { vertical: "middle", horizontal: "center" };
       dayCell.border = border;
 
-      const wdCell = weekdayRow.getCell(1 + d);
+      const wdCell = weekdayRow.getCell(dayCol(d));
       wdCell.value = HEB_WEEKDAYS[weekday];
       wdCell.font = { name: "Arial", size: 9, color: { argb: "FF6B6B6B" } };
       wdCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fillArgb } };
@@ -128,11 +134,11 @@ export const exportYearCalendarToExcel = async (
       const excelRow = sheet.getRow(rowIndex);
       excelRow.height = height;
       for (let d = 1; d <= month.dayCount; d += 1) {
-        const cell = excelRow.getCell(1 + d);
+        const cell = excelRow.getCell(dayCol(d));
         cell.border = border;
         cell.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
       }
-      const laneCell = excelRow.getCell(1);
+      const laneCell = excelRow.getCell(LABEL_COL);
       laneCell.border = border;
 
       laneItems.forEach((item) => {
@@ -141,12 +147,12 @@ export const exportYearCalendarToExcel = async (
         if (to < from) return;
         if (to > from) {
           try {
-            sheet.mergeCells(rowIndex, 1 + from, rowIndex, 1 + to);
+            sheet.mergeCells(rowIndex, dayCol(to), rowIndex, dayCol(from));
           } catch {
             /* חפיפה — נשאיר את התא הבודד */
           }
         }
-        const cell = sheet.getRow(rowIndex).getCell(1 + from);
+        const cell = sheet.getRow(rowIndex).getCell(dayCol(to));
         const extra = cellText(item);
         cell.value = {
           richText: [
@@ -176,7 +182,7 @@ export const exportYearCalendarToExcel = async (
     (availabilityLanes.length ? availabilityLanes : [[]]).forEach((laneItems, i) => {
       const rowIndex = row + i;
       if (i === 0) {
-        const label = sheet.getRow(rowIndex).getCell(1);
+        const label = sheet.getRow(rowIndex).getCell(LABEL_COL);
         label.value = "זמינות";
         label.font = { name: "Arial", size: 9, bold: true };
         label.alignment = { vertical: "middle", horizontal: "center" };
