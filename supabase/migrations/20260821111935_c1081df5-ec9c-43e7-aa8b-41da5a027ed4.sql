@@ -1,0 +1,1 @@
+UPDATE public.calendar_items SET updated_at = now() WHERE start_time IS NOT NULL;
