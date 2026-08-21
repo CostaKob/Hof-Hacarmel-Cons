@@ -34,6 +34,7 @@ import {
   type Person,
 } from "@/services/calendarStore";
 import { toast } from "sonner";
+import { exportYearCalendarToExcel, argbFromHex } from "@/services/calendarExcel";
 
 /* ------------------------------------------------------------------
    שלב 3 — שנה מלאה: אוגוסט 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
@@ -721,6 +722,41 @@ const AdminYearCalendar = () => {
     return laneCountByMonth[key] ?? 3;
   }, [form.start_date, laneCountByMonth]);
 
+  /** הורדת הלוח כקובץ אקסל במבנה זהה לתצוגה. */
+  const [exporting, setExporting] = useState(false);
+  const handleExportExcel = async () => {
+    try {
+      setExporting(true);
+      const monthsData = MONTHS.map((m) => {
+        const data = itemsByMonth[m.key] ?? { general: [], availability: [] };
+        const toExcel = (it: UIItem) => ({
+          title: it.title || (it.raw.availability_state
+            ? AVAILABILITY_LABEL[it.raw.availability_state] ?? ""
+            : ""),
+          detail: it.detail,
+          time: it.time,
+          place: it.place,
+          from: it.from,
+          to: it.to,
+          argb: argbFromHex(it.bg),
+          lane: it.lane,
+        });
+        return {
+          month: m,
+          general: data.general.map(toExcel),
+          availability: data.availability.map(toExcel),
+          laneCount: laneCountByMonth[m.key] ?? 3,
+        };
+      });
+      await exportYearCalendarToExcel(monthsData, "לוח-שנה-שנתי.xlsx");
+      toast.success("הקובץ הורד");
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בייצוא");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const renderMonth = (m: MonthDef) => {
     const gridStyle = monthGridStyle(m.dayCount);
     const days = Array.from({ length: m.dayCount }, (_, i) => i + 1);
@@ -1091,7 +1127,17 @@ const AdminYearCalendar = () => {
     <AdminLayout title="לוח שנה שנתי" fullWidth>
       <PageTitle title="לוח שנה שנתי" />
 
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={handleExportExcel}
+          disabled={exporting || loading}
+          className="h-11 rounded-xl"
+          title="הורדת הלוח כקובץ אקסל במבנה זהה לתצוגה"
+        >
+          {exporting ? "מייצא…" : "הורדה לאקסל"}
+        </Button>
+
         <Button
           variant="outline"
           onClick={handleGoogleSync}
