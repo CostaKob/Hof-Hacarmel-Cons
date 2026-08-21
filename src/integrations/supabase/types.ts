@@ -183,6 +183,7 @@ export type Database = {
           created_at: string
           description_he: string | null
           end_date: string
+          end_time: string | null
           google_calendar_id: string | null
           google_etag: string | null
           google_event_id: string | null
@@ -204,6 +205,7 @@ export type Database = {
           created_at?: string
           description_he?: string | null
           end_date: string
+          end_time?: string | null
           google_calendar_id?: string | null
           google_etag?: string | null
           google_event_id?: string | null
@@ -225,6 +227,7 @@ export type Database = {
           created_at?: string
           description_he?: string | null
           end_date?: string
+          end_time?: string | null
           google_calendar_id?: string | null
           google_etag?: string | null
           google_event_id?: string | null
