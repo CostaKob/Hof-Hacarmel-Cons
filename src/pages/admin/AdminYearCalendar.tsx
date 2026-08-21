@@ -645,7 +645,10 @@ const AdminYearCalendar = () => {
           id: item.id,
           title: item.title_he,
           detail: item.description_he ?? undefined,
-          time: formatTime((item as any).start_time) || undefined,
+          time:
+            [formatTime((item as any).start_time), formatTime((item as any).end_time)]
+              .filter(Boolean)
+              .join("–") || undefined,
           place: (item as any).location_he ?? undefined,
           from,
           to,
@@ -1195,14 +1198,24 @@ const AdminYearCalendar = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="time">שעה</Label>
+                <Label htmlFor="time">משעה</Label>
                 <Input
                   id="time"
                   type="time"
                   value={form.start_time}
                   onChange={(e) => setForm({ ...form, start_time: e.target.value })}
+                  className="h-12 rounded-xl text-center"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="end_time">עד שעה</Label>
+                <Input
+                  id="end_time"
+                  type="time"
+                  value={form.end_time}
+                  onChange={(e) => setForm({ ...form, end_time: e.target.value })}
                   className="h-12 rounded-xl text-center"
                 />
               </div>
