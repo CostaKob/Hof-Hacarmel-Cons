@@ -34,6 +34,7 @@ import {
   type Person,
 } from "@/services/calendarStore";
 import { toast } from "sonner";
+import { exportYearCalendarToExcel, argbFromHex } from "@/services/calendarExcel";
 
 /* ------------------------------------------------------------------
    שלב 3 — שנה מלאה: אוגוסט 2026 עד אוגוסט 2027, גלילה אנכית רציפה.
