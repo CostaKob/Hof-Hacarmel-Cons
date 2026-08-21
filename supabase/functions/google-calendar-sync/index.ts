@@ -37,18 +37,39 @@ function addDays(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+const TZ = "Asia/Jerusalem";
+
+function addHour(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const total = Math.min(h * 60 + m + 60, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 function itemToEvent(item: Json): Json {
-  const descParts: string[] = [];
-  if (item.description_he) descParts.push(item.description_he);
-  if (item.start_time) descParts.push(`שעה: ${String(item.start_time).slice(0, 5)}`);
-  return {
+  const description = item.description_he || undefined;
+  const base = {
     summary: item.title_he,
-    description: descParts.join("\n") || undefined,
+    description,
     location: item.location_he || undefined,
-    start: { date: item.start_date },
-    end: { date: addDays(item.end_date, 1) },
     status: item.status === "cancelled" ? "cancelled" : "confirmed",
     extendedProperties: { private: { appItemId: item.id } },
+  };
+
+  // אירוע עם שעה — נשלח כאירוע ממוקד בזמן ולא כאירוע יום שלם
+  if (item.start_time) {
+    const startTime = String(item.start_time).slice(0, 5);
+    const endTime = item.end_time ? String(item.end_time).slice(0, 5) : addHour(startTime);
+    return {
+      ...base,
+      start: { dateTime: `${item.start_date}T${startTime}:00`, timeZone: TZ },
+      end: { dateTime: `${item.end_date}T${endTime}:00`, timeZone: TZ },
+    };
+  }
+
+  return {
+    ...base,
+    start: { date: item.start_date },
+    end: { date: addDays(item.end_date, 1) },
   };
 }
 
