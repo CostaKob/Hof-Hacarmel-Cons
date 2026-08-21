@@ -53,6 +53,8 @@ function itemToEvent(item: Json): Json {
     location: item.location_he || undefined,
     status: item.status === "cancelled" ? "cancelled" : "confirmed",
     extendedProperties: { private: { appItemId: item.id } },
+    // ללא תזכורות — לא רוצים התראות בלילה שלפני
+    reminders: { useDefault: false, overrides: [] },
   };
 
   // אירוע עם שעה — נשלח כאירוע ממוקד בזמן ולא כאירוע יום שלם
