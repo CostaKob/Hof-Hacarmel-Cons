@@ -1572,7 +1572,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                   dir="ltr"
                   value={form.end_time}
                   onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                  className="h-12 w-full min-w-0 rounded-xl px-2 text-center [&::-webkit-date-and-time-value]:text-center"
+                  className="h-12 w-full min-w-0 rounded-xl px-2 py-0 text-center"
                 />
               </div>
               <div className="col-span-2 grid min-w-0 gap-2 sm:col-span-1">
