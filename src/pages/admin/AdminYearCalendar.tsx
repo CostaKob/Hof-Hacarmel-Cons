@@ -1464,8 +1464,24 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+
+  if (isCoordinator) {
+    return (
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-28">
+        <h1 className="mb-4 text-2xl font-bold">לוח שנה שנתי</h1>
+        {calendarContent}
+      </div>
+    );
+  }
+
+  return (
+    <AdminLayout title="לוח שנה שנתי" fullWidth>
+      {calendarContent}
     </AdminLayout>
   );
 };
+
 
 export default AdminYearCalendar;
