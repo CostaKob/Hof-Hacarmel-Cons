@@ -183,6 +183,8 @@ type UIItem = {
   clippedEnd: boolean;
   compact: boolean;
   lane: number;
+  /** בקשה שממתינה לאישור מנהל (מוצג לרכז שהגיש אותה) */
+  pending?: "create" | "update" | "delete";
   raw: CalendarItem;
 };
 
