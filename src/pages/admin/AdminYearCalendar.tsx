@@ -1346,9 +1346,9 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       {isCoordinator && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           שינויים שתבצעו כאן נשלחים כבקשה לאישור מנהל, ויופיעו בלוח רק לאחר אישור.
-          {myRequests.length > 0 && (
+          {visibleMyRequests.length > 0 && (
             <div className="mt-2 space-y-1">
-              {myRequests.slice(0, 5).map((r) => (
+              {visibleMyRequests.slice(0, 5).map((r) => (
                 <div key={r.id} className="flex items-center justify-between gap-2">
                   <span>
                     {changeRequestActionLabel(r.action)}
