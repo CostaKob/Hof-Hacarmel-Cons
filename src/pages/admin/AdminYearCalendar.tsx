@@ -283,6 +283,19 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCoordinator]);
 
+  /**
+   * בקשות שמוצגות בבאנר של הרכז:
+   * ממתינות — תמיד; מאושרות/נדחות — נעלמות אוטומטית אחרי 3 ימים.
+   */
+  const visibleMyRequests = useMemo(() => {
+    const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    return myRequests.filter((r) => {
+      if (r.status === "pending") return true;
+      const ts = new Date((r as any).reviewed_at ?? r.created_at).getTime();
+      return Number.isFinite(ts) && ts >= cutoff;
+    });
+  }, [myRequests]);
+
 
 
 
@@ -1346,9 +1359,9 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       {isCoordinator && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
           שינויים שתבצעו כאן נשלחים כבקשה לאישור מנהל, ויופיעו בלוח רק לאחר אישור.
-          {myRequests.length > 0 && (
+          {visibleMyRequests.length > 0 && (
             <div className="mt-2 space-y-1">
-              {myRequests.slice(0, 5).map((r) => (
+              {visibleMyRequests.slice(0, 5).map((r) => (
                 <div key={r.id} className="flex items-center justify-between gap-2">
                   <span>
                     {changeRequestActionLabel(r.action)}
@@ -1539,35 +1552,37 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
               />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="grid gap-2">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+              <div className="grid min-w-0 gap-2">
                 <Label htmlFor="time">משעה</Label>
                 <Input
                   id="time"
                   type="time"
+                  dir="ltr"
                   value={form.start_time}
                   onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                  className="h-12 rounded-xl text-center"
+                  className="h-12 w-full min-w-0 rounded-xl px-2 text-center [&::-webkit-date-and-time-value]:text-center"
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="grid min-w-0 gap-2">
                 <Label htmlFor="end_time">עד שעה</Label>
                 <Input
                   id="end_time"
                   type="time"
+                  dir="ltr"
                   value={form.end_time}
                   onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                  className="h-12 rounded-xl text-center"
+                  className="h-12 w-full min-w-0 rounded-xl px-2 text-center [&::-webkit-date-and-time-value]:text-center"
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="col-span-2 grid min-w-0 gap-2 sm:col-span-1">
                 <Label htmlFor="location">מיקום</Label>
                 <Input
                   id="location"
                   value={form.location_he}
                   onChange={(e) => setForm({ ...form, location_he: e.target.value })}
                   placeholder="למשל: העמר"
-                  className="h-12 rounded-xl text-right"
+                  className="h-12 w-full min-w-0 rounded-xl text-right"
                 />
               </div>
             </div>
