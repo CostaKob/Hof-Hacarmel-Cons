@@ -767,9 +767,10 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
    * כדי שהמורה יראה מיד את מה שביקש עם הכיתוב "ממתין לאישור".
    */
   const displayItems = useMemo(() => {
-    if (!isCoordinator) return items;
-    const pending = myRequests.filter((r) => r.status === "pending");
+    const source = isCoordinator ? myRequests : pendingRequests;
+    const pending = source.filter((r) => r.status === "pending");
     if (pending.length === 0) return items;
+
 
     const updates = new Map<string, CalendarChangeRequest>();
     const deletes = new Set<string>();
