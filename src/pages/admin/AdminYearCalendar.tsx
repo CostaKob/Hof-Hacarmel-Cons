@@ -588,6 +588,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
   /** ביצוע מחדש (⇧⌘Z / Ctrl+Shift+Z). */
   const handleRedo = async () => {
+    if (isCoordinator) return;
     const entry = redoStack.current.pop();
     if (!entry) {
       toast("אין פעולה לשחזור");
