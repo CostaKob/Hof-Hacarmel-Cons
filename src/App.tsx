@@ -44,6 +44,7 @@ import TeacherEditReport from "./pages/TeacherEditReport";
 import TeacherChangePassword from "./pages/TeacherChangePassword";
 import TeacherYearlySummary from "./pages/TeacherYearlySummary";
 import TeacherTravelSummary from "./pages/TeacherTravelSummary";
+import TeacherYearCalendar from "./pages/TeacherYearCalendar";
 import TeacherEnsembles from "./pages/TeacherEnsembles";
 import TeacherEnsembleCard from "./pages/TeacherEnsembleCard";
 import TeacherEnsembleStudentCard from "./pages/TeacherEnsembleStudentCard";
@@ -235,6 +236,7 @@ const App = () => (
               <Route path="/teacher/change-password" element={<TeacherRoute><TeacherChangePassword /></TeacherRoute>} />
               <Route path="/teacher/yearly-summary" element={<TeacherRoute><TeacherYearlySummary /></TeacherRoute>} />
               <Route path="/teacher/travel-summary" element={<TeacherRoute><TeacherTravelSummary /></TeacherRoute>} />
+              <Route path="/teacher/year-calendar" element={<TeacherRoute><TeacherYearCalendar /></TeacherRoute>} />
               <Route path="/teacher/ensembles" element={<TeacherRoute><TeacherEnsembles /></TeacherRoute>} />
               <Route path="/teacher/ensembles/:id" element={<TeacherRoute><TeacherEnsembleCard /></TeacherRoute>} />
               <Route path="/teacher/ensembles/:id/students/:studentId" element={<TeacherRoute><TeacherEnsembleStudentCard /></TeacherRoute>} />

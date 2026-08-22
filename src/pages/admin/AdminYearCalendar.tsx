@@ -34,6 +34,15 @@ import {
   type Branch,
   type Person,
 } from "@/services/calendarStore";
+import {
+  submitCalendarChangeRequest,
+  fetchPendingChangeRequests,
+  fetchMyChangeRequests,
+  approveChangeRequest,
+  rejectChangeRequest,
+  changeRequestActionLabel,
+  type CalendarChangeRequest,
+} from "@/services/calendarChangeRequests";
 import { toast } from "sonner";
 import { exportYearCalendarToExcel, argbFromHex } from "@/services/calendarExcel";
 
@@ -218,7 +227,12 @@ type UndoEntry =
   | { kind: "delete"; row: any }
   | { kind: "lane"; monthKey: string };
 
-const AdminYearCalendar = () => {
+export type YearCalendarMode = "admin" | "coordinator";
+
+const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
+  /** במצב רכז אין כתיבה ישירה — כל שינוי נשלח כבקשה לאישור מנהל. */
+  const isCoordinator = mode === "coordinator";
+
   const [tracks, setTracks] = useState<Track[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
@@ -234,11 +248,40 @@ const AdminYearCalendar = () => {
   const [syncing, setSyncing] = useState(false);
   const isMobile = useIsMobile();
 
-  /** כלי הייצוא והסנכרון גלויים רק למשתמשים מורשים. */
+  /** כלי הייצוא והסנכרון גלויים רק למשתמשים מורשים (ולעולם לא לרכזים). */
   const { user } = useAuth();
-  const canUseCalendarTools = CALENDAR_TOOLS_EMAILS.includes(
-    (user?.email ?? "").toLowerCase()
-  );
+  const canUseCalendarTools =
+    !isCoordinator &&
+    CALENDAR_TOOLS_EMAILS.includes((user?.email ?? "").toLowerCase());
+
+  /* ---------------- בקשות שינוי (רכזים ← מנהל) ---------------- */
+  const [pendingRequests, setPendingRequests] = useState<CalendarChangeRequest[]>([]);
+  const [myRequests, setMyRequests] = useState<CalendarChangeRequest[]>([]);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+
+  const loadPendingRequests = async () => {
+    try {
+      setPendingRequests(await fetchPendingChangeRequests());
+    } catch {
+      /* לא חוסם את הלוח */
+    }
+  };
+
+  const loadMyRequests = async () => {
+    try {
+      setMyRequests(await fetchMyChangeRequests());
+    } catch {
+      /* לא חוסם את הלוח */
+    }
+  };
+
+  useEffect(() => {
+    if (isCoordinator) loadMyRequests();
+    else loadPendingRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCoordinator]);
+
+
 
 
   /** סנכרון דו-כיווני מול Google Calendar. */
@@ -478,12 +521,30 @@ const AdminYearCalendar = () => {
     redoStack.current = [];
   };
 
+  const requesterName = user?.email ?? null;
+
   const handleSave = async () => {
     if (!form.title_he.trim() || !form.track_id || !form.start_date || !form.end_date) {
       return;
     }
     try {
       setSaving(true);
+
+      if (isCoordinator) {
+        const before = editingId ? items.find((i) => i.id === editingId) : null;
+        await submitCalendarChangeRequest({
+          action: editingId ? "update" : "create",
+          calendarItemId: editingId,
+          payload: { ...form },
+          snapshot: before ? rowToForm(before) : null,
+          requestedByName: requesterName,
+        });
+        await loadMyRequests();
+        toast.success("הבקשה נשלחה לאישור המנהל");
+        setDialogOpen(false);
+        return;
+      }
+
       if (editingId) {
         const before = items.find((i) => i.id === editingId);
         await updateCalendarItem(editingId, form);
@@ -514,6 +575,21 @@ const AdminYearCalendar = () => {
     try {
       setSaving(true);
       const before = items.find((i) => i.id === editingId);
+
+      if (isCoordinator) {
+        await submitCalendarChangeRequest({
+          action: "delete",
+          calendarItemId: editingId,
+          payload: null,
+          snapshot: before ? rowToForm(before) : null,
+          requestedByName: requesterName,
+        });
+        await loadMyRequests();
+        toast.success("בקשת המחיקה נשלחה לאישור המנהל");
+        setDialogOpen(false);
+        return;
+      }
+
       await deleteCalendarItem(editingId);
       if (before) {
         const { track, branch, person, ...row } = before as any;
@@ -528,6 +604,39 @@ const AdminYearCalendar = () => {
       setSaving(false);
     }
   };
+
+  /** מנהל מאשר בקשת שינוי של רכז — רק אז השינוי נכנס ללוח. */
+  const handleApproveRequest = async (req: CalendarChangeRequest) => {
+    if (!user?.id) return;
+    try {
+      setReviewingId(req.id);
+      await approveChangeRequest(req, user.id);
+      await Promise.all([load(true), loadPendingRequests()]);
+      scheduleAutoSync();
+      toast.success("הבקשה אושרה ועודכנה בלוח");
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה באישור הבקשה");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const handleRejectRequest = async (req: CalendarChangeRequest) => {
+    if (!user?.id) return;
+    try {
+      setReviewingId(req.id);
+      await rejectChangeRequest(req.id, user.id);
+      await loadPendingRequests();
+      toast.success("הבקשה נדחתה");
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בדחיית הבקשה");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+
+
 
   /** שכפול אירוע קיים — נשארים באותו דיאלוג עם כל הפרטים, במצב הוספה. */
   const handleDuplicate = () => {
@@ -549,6 +658,7 @@ const AdminYearCalendar = () => {
 
   /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
   const handleUndo = async () => {
+    if (isCoordinator) return;
     const entry = undoStack.current.pop();
     if (!entry) {
       toast("אין פעולה לביטול");
@@ -583,6 +693,7 @@ const AdminYearCalendar = () => {
 
   /** ביצוע מחדש (⇧⌘Z / Ctrl+Shift+Z). */
   const handleRedo = async () => {
+    if (isCoordinator) return;
     const entry = redoStack.current.pop();
     if (!entry) {
       toast("אין פעולה לשחזור");
@@ -1134,9 +1245,86 @@ const AdminYearCalendar = () => {
     );
   };
 
-  return (
-    <AdminLayout title="לוח שנה שנתי" fullWidth>
+  const calendarContent = (
+    <>
       <PageTitle title="לוח שנה שנתי" />
+
+      {isCoordinator && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          שינויים שתבצעו כאן נשלחים כבקשה לאישור מנהל, ויופיעו בלוח רק לאחר אישור.
+          {myRequests.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {myRequests.slice(0, 5).map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-2">
+                  <span>
+                    {changeRequestActionLabel(r.action)}
+                    {r.payload?.title_he || r.snapshot?.title_he
+                      ? ` — ${r.payload?.title_he ?? r.snapshot?.title_he}`
+                      : ""}
+                  </span>
+                  <span className="shrink-0 font-medium">
+                    {r.status === "pending"
+                      ? "ממתין לאישור"
+                      : r.status === "approved"
+                        ? "אושר"
+                        : "נדחה"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isCoordinator && pendingRequests.length > 0 && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="mb-3 font-semibold text-amber-900">
+            בקשות שינוי מרכזים ({pendingRequests.length})
+          </div>
+          <div className="space-y-2">
+            {pendingRequests.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-col gap-2 rounded-lg bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="text-sm">
+                  <div className="font-medium">
+                    {changeRequestActionLabel(r.action)}
+                    {r.payload?.title_he || r.snapshot?.title_he
+                      ? ` — ${r.payload?.title_he ?? r.snapshot?.title_he}`
+                      : ""}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {r.requested_by_name ?? "רכז"} ·{" "}
+                    {new Date(r.created_at).toLocaleDateString("he-IL")}
+                    {r.payload?.start_date ? ` · ${r.payload.start_date}` : ""}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="h-10 rounded-xl"
+                    disabled={reviewingId === r.id}
+                    onClick={() => handleApproveRequest(r)}
+                  >
+                    אשר
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-10 rounded-xl"
+                    disabled={reviewingId === r.id}
+                    onClick={() => handleRejectRequest(r)}
+                  >
+                    דחה
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {canUseCalendarTools && (
         <div className="mb-4 flex flex-wrap justify-end gap-2">
@@ -1459,8 +1647,24 @@ const AdminYearCalendar = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  );
+
+  if (isCoordinator) {
+    return (
+      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-28">
+        <h1 className="mb-4 text-2xl font-bold">לוח שנה שנתי</h1>
+        {calendarContent}
+      </div>
+    );
+  }
+
+  return (
+    <AdminLayout title="לוח שנה שנתי" fullWidth>
+      {calendarContent}
     </AdminLayout>
   );
 };
+
 
 export default AdminYearCalendar;
