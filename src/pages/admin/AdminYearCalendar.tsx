@@ -596,6 +596,38 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     }
   };
 
+  /** מנהל מאשר בקשת שינוי של רכז — רק אז השינוי נכנס ללוח. */
+  const handleApproveRequest = async (req: CalendarChangeRequest) => {
+    if (!user?.id) return;
+    try {
+      setReviewingId(req.id);
+      await approveChangeRequest(req, user.id);
+      await Promise.all([load(true), loadPendingRequests()]);
+      scheduleAutoSync();
+      toast.success("הבקשה אושרה ועודכנה בלוח");
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה באישור הבקשה");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+  const handleRejectRequest = async (req: CalendarChangeRequest) => {
+    if (!user?.id) return;
+    try {
+      setReviewingId(req.id);
+      await rejectChangeRequest(req.id, user.id);
+      await loadPendingRequests();
+      toast.success("הבקשה נדחתה");
+    } catch (e: any) {
+      toast.error(e.message ?? "שגיאה בדחיית הבקשה");
+    } finally {
+      setReviewingId(null);
+    }
+  };
+
+
+
 
   /** שכפול אירוע קיים — נשארים באותו דיאלוג עם כל הפרטים, במצב הוספה. */
   const handleDuplicate = () => {
