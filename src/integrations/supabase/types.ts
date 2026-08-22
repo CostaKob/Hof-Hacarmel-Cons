@@ -176,6 +176,54 @@ export type Database = {
           },
         ]
       }
+      calendar_change_requests: {
+        Row: {
+          action: string
+          calendar_item_id: string | null
+          created_at: string
+          id: string
+          payload: Json | null
+          requested_by: string
+          requested_by_name: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          snapshot: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          action: string
+          calendar_item_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          requested_by?: string
+          requested_by_name?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          snapshot?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          calendar_item_id?: string | null
+          created_at?: string
+          id?: string
+          payload?: Json | null
+          requested_by?: string
+          requested_by_name?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          snapshot?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_items: {
         Row: {
           availability_state: string | null
