@@ -1077,7 +1077,26 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                         {[item.time, item.place].filter(Boolean).join(" · ")}
                       </span>
                     )}
+                    {pendingLabel && (
+                      <span
+                        className="font-semibold"
+                        style={{
+                          display: "inline-block",
+                          marginBlockStart: 2,
+                          paddingInline: 6,
+                          paddingBlock: 1,
+                          borderRadius: 999,
+                          backgroundColor: "#FEF3C7",
+                          color: "#92400E",
+                          fontSize: compact ? 9 : 10,
+                          textDecoration: "none",
+                        }}
+                      >
+                        ⏳ {pendingLabel}
+                      </span>
+                    )}
                   </span>
+
                 )}
               </button>
             );
