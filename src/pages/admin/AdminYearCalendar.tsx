@@ -811,7 +811,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     });
 
     return [...merged, ...creates] as CalendarItem[];
-  }, [items, myRequests, isCoordinator, tracks]);
+  }, [items, myRequests, pendingRequests, isCoordinator, tracks]);
 
   /** פריטים חתוכים לגבולות חודש: שורות ידניות + זמינות בתחתית. */
   const itemsByMonth = useMemo(() => {
