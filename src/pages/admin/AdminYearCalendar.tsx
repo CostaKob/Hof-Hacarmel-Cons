@@ -1402,8 +1402,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                       : ""}
                   </div>
                   <div className="text-muted-foreground">
-                    {r.requested_by_name ?? "רכז"} · נשלח{" "}
-                    {new Date(r.created_at).toLocaleDateString("he-IL")}
+                    {r.requested_by_name ?? "רכז"}
                     {(() => {
                       const d = r.payload?.start_date ?? r.snapshot?.start_date;
                       if (!d) return "";
