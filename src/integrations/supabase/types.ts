@@ -3544,6 +3544,10 @@ export type Database = {
         Args: { _school_id: string; _user_id: string }
         Returns: boolean
       }
+      is_ensemble_conductor_any: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
       is_sm_coordinator: {
         Args: { _school_id: string; _user_id: string }
         Returns: boolean
