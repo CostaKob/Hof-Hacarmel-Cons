@@ -1139,9 +1139,86 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     );
   };
 
-  return (
-    <AdminLayout title="לוח שנה שנתי" fullWidth>
+  const calendarContent = (
+    <>
       <PageTitle title="לוח שנה שנתי" />
+
+      {isCoordinator && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          שינויים שתבצעו כאן נשלחים כבקשה לאישור מנהל, ויופיעו בלוח רק לאחר אישור.
+          {myRequests.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {myRequests.slice(0, 5).map((r) => (
+                <div key={r.id} className="flex items-center justify-between gap-2">
+                  <span>
+                    {changeRequestActionLabel(r.action)}
+                    {r.payload?.title_he || r.snapshot?.title_he
+                      ? ` — ${r.payload?.title_he ?? r.snapshot?.title_he}`
+                      : ""}
+                  </span>
+                  <span className="shrink-0 font-medium">
+                    {r.status === "pending"
+                      ? "ממתין לאישור"
+                      : r.status === "approved"
+                        ? "אושר"
+                        : "נדחה"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!isCoordinator && pendingRequests.length > 0 && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+          <div className="mb-3 font-semibold text-amber-900">
+            בקשות שינוי מרכזים ({pendingRequests.length})
+          </div>
+          <div className="space-y-2">
+            {pendingRequests.map((r) => (
+              <div
+                key={r.id}
+                className="flex flex-col gap-2 rounded-lg bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="text-sm">
+                  <div className="font-medium">
+                    {changeRequestActionLabel(r.action)}
+                    {r.payload?.title_he || r.snapshot?.title_he
+                      ? ` — ${r.payload?.title_he ?? r.snapshot?.title_he}`
+                      : ""}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {r.requested_by_name ?? "רכז"} ·{" "}
+                    {new Date(r.created_at).toLocaleDateString("he-IL")}
+                    {r.payload?.start_date ? ` · ${r.payload.start_date}` : ""}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="h-10 rounded-xl"
+                    disabled={reviewingId === r.id}
+                    onClick={() => handleApproveRequest(r)}
+                  >
+                    אשר
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-10 rounded-xl"
+                    disabled={reviewingId === r.id}
+                    onClick={() => handleRejectRequest(r)}
+                  >
+                    דחה
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {canUseCalendarTools && (
         <div className="mb-4 flex flex-wrap justify-end gap-2">
