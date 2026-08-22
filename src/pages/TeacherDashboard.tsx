@@ -51,6 +51,7 @@ const TeacherDashboard = () => {
   const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
   const { data: branchCoordinatorBranches } = useBranchCoordinatorBranches(teacher?.id);
   const hasBranches = (branchCoordinatorBranches ?? []).length > 0;
+  const { data: isCalendarCoordinator } = useIsCalendarCoordinator(teacher?.id);
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
