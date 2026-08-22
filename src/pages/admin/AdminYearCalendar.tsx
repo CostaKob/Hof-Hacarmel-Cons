@@ -972,16 +972,36 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
             const startRadius = item.clippedStart ? 0 : radius;
             const endRadius = item.clippedEnd ? 0 : radius;
             const showText = !compact || span * COL_WIDTH >= 60;
+            const pendingLabel =
+              item.pending === "create"
+                ? "ממתין לאישור"
+                : item.pending === "update"
+                  ? "עריכה ממתינה לאישור"
+                  : item.pending === "delete"
+                    ? "מחיקה ממתינה לאישור"
+                    : null;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => openEditDialog(item.raw)}
+                onClick={() => {
+                  if (item.pending) {
+                    toast.info(`${pendingLabel} — לא ניתן לערוך עד לאישור המנהל`);
+                    return;
+                  }
+                  openEditDialog(item.raw);
+                }}
                 style={{
                   gridColumn: `${item.from} / span ${span}`,
                   gridRow: 1,
                   backgroundColor: item.bg,
-                  border: item.bordered && !compact ? "1px solid #9CA3AF" : "none",
+                  border: item.pending
+                    ? "2px dashed #F59E0B"
+                    : item.bordered && !compact
+                      ? "1px solid #9CA3AF"
+                      : "none",
+                  opacity: item.pending === "delete" ? 0.55 : 1,
+                  textDecoration: item.pending === "delete" ? "line-through" : undefined,
                   borderStartStartRadius: startRadius,
                   borderEndStartRadius: startRadius,
                   borderStartEndRadius: endRadius,
@@ -1000,10 +1020,11 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                   textAlign: "center",
                   cursor: "pointer",
                 }}
-                title={[item.title, item.detail, item.time, item.place]
+                title={[item.title, item.detail, item.time, item.place, pendingLabel]
                   .filter(Boolean)
                   .join(" — ")}
               >
+
                 {showText && (
                   <span
                     style={{
