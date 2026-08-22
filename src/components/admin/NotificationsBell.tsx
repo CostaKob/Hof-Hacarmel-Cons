@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2, Volume2, VolumeX } from "lucide-react";
+import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2, Volume2, VolumeX, CalendarClock } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -12,6 +12,7 @@ const ICONS: Record<string, { icon: typeof Bell; className: string }> = {
   payment_paid: { icon: CreditCard, className: "text-emerald-600" },
   payment_failed: { icon: AlertTriangle, className: "text-destructive" },
   sibling_candidate: { icon: Users, className: "text-amber-600" },
+  calendar_change_request: { icon: CalendarClock, className: "text-sky-600" },
 };
 
 function timeAgo(iso: string) {
