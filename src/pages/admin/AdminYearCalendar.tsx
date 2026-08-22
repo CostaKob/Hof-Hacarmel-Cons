@@ -285,16 +285,37 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
   /**
    * בקשות שמוצגות בבאנר של הרכז:
-   * ממתינות — תמיד; מאושרות/נדחות — נעלמות אוטומטית אחרי 3 ימים.
+   * ממתינות — תמיד; מאושרות/נדחות — מוצגות פעם אחת בלבד (בכניסה הראשונה אחרי ההכרעה).
    */
+  const SEEN_KEY = "calendar_seen_resolved_requests";
+  const [seenResolvedIds] = useState<Set<string>>(() => {
+    try {
+      return new Set<string>(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"));
+    } catch {
+      return new Set<string>();
+    }
+  });
+
   const visibleMyRequests = useMemo(() => {
-    const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
     return myRequests.filter((r) => {
       if (r.status === "pending") return true;
-      const ts = new Date((r as any).reviewed_at ?? r.created_at).getTime();
-      return Number.isFinite(ts) && ts >= cutoff;
+      return !seenResolvedIds.has(r.id);
     });
+  }, [myRequests, seenResolvedIds]);
+
+  // מסמנים בקשות שהוכרעו כ"נראו" — כך שלא יופיעו שוב בכניסה הבאה.
+  useEffect(() => {
+    const resolved = myRequests.filter((r) => r.status !== "pending").map((r) => r.id);
+    if (resolved.length === 0) return;
+    try {
+      const stored: string[] = JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
+      const merged = Array.from(new Set([...stored, ...resolved]));
+      localStorage.setItem(SEEN_KEY, JSON.stringify(merged.slice(-200)));
+    } catch {
+      /* ignore */
+    }
   }, [myRequests]);
+
 
 
 
