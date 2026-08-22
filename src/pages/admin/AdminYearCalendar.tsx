@@ -34,6 +34,15 @@ import {
   type Branch,
   type Person,
 } from "@/services/calendarStore";
+import {
+  submitCalendarChangeRequest,
+  fetchPendingChangeRequests,
+  fetchMyChangeRequests,
+  approveChangeRequest,
+  rejectChangeRequest,
+  changeRequestActionLabel,
+  type CalendarChangeRequest,
+} from "@/services/calendarChangeRequests";
 import { toast } from "sonner";
 import { exportYearCalendarToExcel, argbFromHex } from "@/services/calendarExcel";
 
