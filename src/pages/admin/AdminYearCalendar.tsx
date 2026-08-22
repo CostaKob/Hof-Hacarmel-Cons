@@ -554,6 +554,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
   /** ביטול הפעולה האחרונה (⌘Z / Ctrl+Z). */
   const handleUndo = async () => {
+    if (isCoordinator) return;
     const entry = undoStack.current.pop();
     if (!entry) {
       toast("אין פעולה לביטול");
