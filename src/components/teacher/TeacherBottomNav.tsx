@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Users, FileText, Music, School, Building2 } from "lucide-react";
+import { Home, Users, FileText, Music, School, Building2, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
 import { useBranchCoordinatorBranches } from "@/hooks/useBranchCoordinator";
+import { useIsCalendarCoordinator } from "@/hooks/useCalendarAccess";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const TeacherBottomNav = () => {
@@ -14,6 +15,7 @@ const TeacherBottomNav = () => {
   const { data: ensembleStaff } = useTeacherEnsembleStaff(teacher?.id);
   const { data: schoolMusicSchools } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
   const { data: branchCoordinatorBranches } = useBranchCoordinatorBranches(teacher?.id);
+  const { data: isCalendarCoordinator } = useIsCalendarCoordinator(teacher?.id);
 
   const hasEnsembles = (ensembleStaff ?? []).length > 0;
   const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
@@ -26,6 +28,7 @@ const TeacherBottomNav = () => {
     ...(hasEnsembles ? [{ path: "/teacher/ensembles", label: "הרכבים", icon: Music }] : []),
     ...(hasSchoolMusic ? [{ path: "/teacher/school-music-schools", label: "מנגנים", icon: School }] : []),
     ...(hasBranches ? [{ path: "/teacher/branches", label: "שלוחות", icon: Building2 }] : []),
+    ...(isCalendarCoordinator ? [{ path: "/teacher/year-calendar", label: "לוח שנה", icon: CalendarDays }] : []),
   ];
 
   return (
