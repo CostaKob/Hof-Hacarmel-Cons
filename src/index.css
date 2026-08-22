@@ -393,3 +393,24 @@ body[data-scroll-locked] nav.fixed.bottom-3 {
 .admin-section-title svg {
   color: hsl(0 78% 45%) !important;
 }
+
+/* iOS/Safari: שדות שעה מתנפחים לגובה ענק — מקבעים גובה ומיישרים למרכז */
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-height: 0;
+  line-height: normal;
+}
+input[type="time"]::-webkit-date-and-time-value {
+  margin: 0;
+  text-align: center;
+  min-height: 0;
+  line-height: normal;
+}
+input[type="time"]::-webkit-datetime-edit {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  line-height: normal;
+}
