@@ -749,6 +749,56 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     [tracks, form.track_id]
   );
 
+  /**
+   * במצב רכז — משלבים בלוח גם את הבקשות שהוגשו וממתינות לאישור,
+   * כדי שהמורה יראה מיד את מה שביקש עם הכיתוב "ממתין לאישור".
+   */
+  const displayItems = useMemo(() => {
+    if (!isCoordinator) return items;
+    const pending = myRequests.filter((r) => r.status === "pending");
+    if (pending.length === 0) return items;
+
+    const updates = new Map<string, CalendarChangeRequest>();
+    const deletes = new Set<string>();
+    const creates: any[] = [];
+
+    pending.forEach((r) => {
+      if (r.action === "update" && r.calendar_item_id) updates.set(r.calendar_item_id, r);
+      else if (r.action === "delete" && r.calendar_item_id) deletes.add(r.calendar_item_id);
+      else if (r.action === "create" && r.payload) {
+        const p = r.payload;
+        creates.push({
+          id: `pending-${r.id}`,
+          ...p,
+          description_he: p.description_he || null,
+          location_he: p.location_he || null,
+          start_time: p.start_time || null,
+          end_time: p.end_time || null,
+          track: tracks.find((t) => t.id === p.track_id) ?? null,
+          branch: null,
+          person: null,
+          __pending: "create",
+        });
+      }
+    });
+
+    const merged = items.map((it) => {
+      if (deletes.has(it.id)) return { ...it, __pending: "delete" } as any;
+      const u = updates.get(it.id);
+      if (u?.payload) {
+        return {
+          ...it,
+          ...u.payload,
+          track: tracks.find((t) => t.id === u.payload!.track_id) ?? it.track,
+          __pending: "update",
+        } as any;
+      }
+      return it;
+    });
+
+    return [...merged, ...creates] as CalendarItem[];
+  }, [items, myRequests, isCoordinator, tracks]);
+
   /** פריטים חתוכים לגבולות חודש: שורות ידניות + זמינות בתחתית. */
   const itemsByMonth = useMemo(() => {
     const result: Record<string, { general: UIItem[]; availability: UIItem[] }> = {};
@@ -756,7 +806,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       const general: UIItem[] = [];
       const availability: UIItem[] = [];
 
-      items.forEach((item) => {
+      displayItems.forEach((item) => {
         if (item.start_date > m.endISO || item.end_date < m.startISO) return;
         const key = item.track?.key ?? "";
         const isAvailability = key === "availability";
@@ -783,6 +833,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
           clippedEnd,
           compact: isAvailability,
           lane: Math.max(0, (item as any).lane_index ?? 0),
+          pending: (item as any).__pending,
           raw: item,
         };
         (isAvailability ? availability : general).push(ui);
@@ -791,7 +842,8 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       result[m.key] = { general, availability };
     });
     return result;
-  }, [items, tracks]);
+  }, [displayItems, tracks]);
+
 
   const availabilityTrack = useMemo(
     () => tracks.find((t) => t.key === "availability"),
