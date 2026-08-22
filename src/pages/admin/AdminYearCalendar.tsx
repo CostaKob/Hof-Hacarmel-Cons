@@ -218,7 +218,12 @@ type UndoEntry =
   | { kind: "delete"; row: any }
   | { kind: "lane"; monthKey: string };
 
-const AdminYearCalendar = () => {
+export type YearCalendarMode = "admin" | "coordinator";
+
+const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
+  /** במצב רכז אין כתיבה ישירה — כל שינוי נשלח כבקשה לאישור מנהל. */
+  const isCoordinator = mode === "coordinator";
+
   const [tracks, setTracks] = useState<Track[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [people, setPeople] = useState<Person[]>([]);
