@@ -283,6 +283,19 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isCoordinator]);
 
+  /**
+   * בקשות שמוצגות בבאנר של הרכז:
+   * ממתינות — תמיד; מאושרות/נדחות — נעלמות אוטומטית אחרי 3 ימים.
+   */
+  const visibleMyRequests = useMemo(() => {
+    const cutoff = Date.now() - 3 * 24 * 60 * 60 * 1000;
+    return myRequests.filter((r) => {
+      if (r.status === "pending") return true;
+      const ts = new Date((r as any).reviewed_at ?? r.created_at).getTime();
+      return Number.isFinite(ts) && ts >= cutoff;
+    });
+  }, [myRequests]);
+
 
 
 
