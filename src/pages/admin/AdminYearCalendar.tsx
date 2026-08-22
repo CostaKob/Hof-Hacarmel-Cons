@@ -483,12 +483,30 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     redoStack.current = [];
   };
 
+  const requesterName = user?.email ?? null;
+
   const handleSave = async () => {
     if (!form.title_he.trim() || !form.track_id || !form.start_date || !form.end_date) {
       return;
     }
     try {
       setSaving(true);
+
+      if (isCoordinator) {
+        const before = editingId ? items.find((i) => i.id === editingId) : null;
+        await submitCalendarChangeRequest({
+          action: editingId ? "update" : "create",
+          calendarItemId: editingId,
+          payload: { ...form },
+          snapshot: before ? rowToForm(before) : null,
+          requestedByName: requesterName,
+        });
+        await loadMyRequests();
+        toast.success("הבקשה נשלחה לאישור המנהל");
+        setDialogOpen(false);
+        return;
+      }
+
       if (editingId) {
         const before = items.find((i) => i.id === editingId);
         await updateCalendarItem(editingId, form);
@@ -519,6 +537,21 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     try {
       setSaving(true);
       const before = items.find((i) => i.id === editingId);
+
+      if (isCoordinator) {
+        await submitCalendarChangeRequest({
+          action: "delete",
+          calendarItemId: editingId,
+          payload: null,
+          snapshot: before ? rowToForm(before) : null,
+          requestedByName: requesterName,
+        });
+        await loadMyRequests();
+        toast.success("בקשת המחיקה נשלחה לאישור המנהל");
+        setDialogOpen(false);
+        return;
+      }
+
       await deleteCalendarItem(editingId);
       if (before) {
         const { track, branch, person, ...row } = before as any;
@@ -533,6 +566,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       setSaving(false);
     }
   };
+
 
   /** שכפול אירוע קיים — נשארים באותו דיאלוג עם כל הפרטים, במצב הוספה. */
   const handleDuplicate = () => {
