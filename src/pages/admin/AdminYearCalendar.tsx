@@ -239,11 +239,40 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   const [syncing, setSyncing] = useState(false);
   const isMobile = useIsMobile();
 
-  /** כלי הייצוא והסנכרון גלויים רק למשתמשים מורשים. */
+  /** כלי הייצוא והסנכרון גלויים רק למשתמשים מורשים (ולעולם לא לרכזים). */
   const { user } = useAuth();
-  const canUseCalendarTools = CALENDAR_TOOLS_EMAILS.includes(
-    (user?.email ?? "").toLowerCase()
-  );
+  const canUseCalendarTools =
+    !isCoordinator &&
+    CALENDAR_TOOLS_EMAILS.includes((user?.email ?? "").toLowerCase());
+
+  /* ---------------- בקשות שינוי (רכזים ← מנהל) ---------------- */
+  const [pendingRequests, setPendingRequests] = useState<CalendarChangeRequest[]>([]);
+  const [myRequests, setMyRequests] = useState<CalendarChangeRequest[]>([]);
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+
+  const loadPendingRequests = async () => {
+    try {
+      setPendingRequests(await fetchPendingChangeRequests());
+    } catch {
+      /* לא חוסם את הלוח */
+    }
+  };
+
+  const loadMyRequests = async () => {
+    try {
+      setMyRequests(await fetchMyChangeRequests());
+    } catch {
+      /* לא חוסם את הלוח */
+    }
+  };
+
+  useEffect(() => {
+    if (isCoordinator) loadMyRequests();
+    else loadPendingRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCoordinator]);
+
+
 
 
   /** סנכרון דו-כיווני מול Google Calendar. */
