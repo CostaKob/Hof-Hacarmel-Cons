@@ -767,9 +767,10 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
    * כדי שהמורה יראה מיד את מה שביקש עם הכיתוב "ממתין לאישור".
    */
   const displayItems = useMemo(() => {
-    if (!isCoordinator) return items;
-    const pending = myRequests.filter((r) => r.status === "pending");
+    const source = isCoordinator ? myRequests : pendingRequests;
+    const pending = source.filter((r) => r.status === "pending");
     if (pending.length === 0) return items;
+
 
     const updates = new Map<string, CalendarChangeRequest>();
     const deletes = new Set<string>();
@@ -810,7 +811,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     });
 
     return [...merged, ...creates] as CalendarItem[];
-  }, [items, myRequests, isCoordinator, tracks]);
+  }, [items, myRequests, pendingRequests, isCoordinator, tracks]);
 
   /** פריטים חתוכים לגבולות חודש: שורות ידניות + זמינות בתחתית. */
   const itemsByMonth = useMemo(() => {
@@ -999,11 +1000,16 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                 type="button"
                 onClick={() => {
                   if (item.pending) {
-                    toast.info(`${pendingLabel} — לא ניתן לערוך עד לאישור המנהל`);
+                    toast.info(
+                      isCoordinator
+                        ? `${pendingLabel} — לא ניתן לערוך עד לאישור המנהל`
+                        : `${pendingLabel} — ניתן לאשר או לדחות בבאנר הבקשות למעלה`
+                    );
                     return;
                   }
                   openEditDialog(item.raw);
                 }}
+
                 style={{
                   gridColumn: `${item.from} / span ${span}`,
                   gridRow: 1,
