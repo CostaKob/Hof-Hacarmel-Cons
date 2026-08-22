@@ -1000,11 +1000,16 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                 type="button"
                 onClick={() => {
                   if (item.pending) {
-                    toast.info(`${pendingLabel} — לא ניתן לערוך עד לאישור המנהל`);
+                    toast.info(
+                      isCoordinator
+                        ? `${pendingLabel} — לא ניתן לערוך עד לאישור המנהל`
+                        : `${pendingLabel} — ניתן לאשר או לדחות בבאנר הבקשות למעלה`
+                    );
                     return;
                   }
                   openEditDialog(item.raw);
                 }}
+
                 style={{
                   gridColumn: `${item.from} / span ${span}`,
                   gridRow: 1,
