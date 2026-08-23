@@ -44,8 +44,6 @@ const STATUS_LABEL: Record<string, string> = {
   vacation: "חופשה",
 };
 
-const STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive" =>
-  s === "present" ? "default" : (s === "absent" || s === "unjustified_absence" ? "destructive" : "secondary");
 
 const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" }) => {
   const { id: schoolId } = useParams<{ id: string }>();
