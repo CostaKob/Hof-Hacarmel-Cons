@@ -113,6 +113,41 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
     return true;
   });
 
+  const grouped = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const r of filtered as any[]) {
+      const arr = map.get(r.attendance_date) ?? [];
+      arr.push(r);
+      map.set(r.attendance_date, arr);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([date, items]) => ({ date, items }));
+  }, [filtered]);
+
+  const [deleteDate, setDeleteDate] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!schoolId || !deleteDate) return;
+      const { error } = await supabase
+        .from("teacher_attendance")
+        .delete()
+        .eq("school_music_school_id", schoolId)
+        .eq("attendance_date", deleteDate);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacher-attendance-list"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
+      toast.success("הדיווח נמחק");
+      setDeleteDate(null);
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה במחיקה"),
+  });
+
+
   const backPath = variant === "admin"
     ? `/admin/school-music-schools/${schoolId}`
     : `/teacher/school-music-schools/${schoolId}`;
