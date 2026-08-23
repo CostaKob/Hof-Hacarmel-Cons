@@ -297,11 +297,8 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   });
 
   const visibleMyRequests = useMemo(() => {
-    return myRequests.filter((r) => {
-      if (r.status === "pending") return true;
-      return !seenResolvedIds.has(r.id);
-    });
-  }, [myRequests, seenResolvedIds]);
+    return myRequests.filter((r) => r.status === "pending");
+  }, [myRequests]);
 
   // מסמנים בקשות שהוכרעו כ"נראו" — כך שלא יופיעו שוב בכניסה הבאה.
   useEffect(() => {
