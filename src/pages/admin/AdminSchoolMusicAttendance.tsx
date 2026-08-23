@@ -26,8 +26,8 @@ function clampDate(value: string, min: string, max: string) {
 function useAcademicDateRange() {
   const { activeYear } = useAcademicYear();
   const startYear = activeYear ? new Date(activeYear.start_date).getFullYear() : new Date().getFullYear();
-  const minDate = `${startYear}-09-01`;
-  const maxDate = `${startYear + 1}-06-30`;
+  const minDate = `${startYear}-08-01`;
+  const maxDate = `${startYear + 1}-08-31`;
   return { minDate, maxDate };
 }
 
