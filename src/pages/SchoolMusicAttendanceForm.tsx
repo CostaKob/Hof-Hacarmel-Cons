@@ -43,8 +43,10 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
+  const { minDate, maxDate } = useAcademicDateRange();
   const today = format(new Date(), "yyyy-MM-dd");
-  const initialDate = searchParams.get("date") || today;
+  const effectiveMaxDate = clampDate(today, minDate, maxDate);
+  const initialDate = clampDate(searchParams.get("date") || today, minDate, effectiveMaxDate);
 
   const [date, setDate] = useState(initialDate);
   const [rows, setRows] = useState<Record<string, Row>>({});
