@@ -13,11 +13,12 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ChevronLeft, AlertCircle, CalendarDays, Pencil, Trash2, ChevronDown } from "lucide-react";
+import { ChevronLeft, AlertCircle, CalendarDays, Pencil, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import PageTitle from "@/components/PageTitle";
 
+const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 const formatDate = (d: string) => format(parseISO(d), "dd/MM/yyyy");
 
 function clampDate(value: string, min: string, max: string) {
@@ -43,8 +44,6 @@ const STATUS_LABEL: Record<string, string> = {
   vacation: "חופשה",
 };
 
-const STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive" =>
-  s === "present" ? "default" : (s === "absent" || s === "unjustified_absence" ? "destructive" : "secondary");
 
 const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" }) => {
   const { id: schoolId } = useParams<{ id: string }>();
@@ -144,7 +143,6 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
   }, [filtered]);
 
   const [deleteDate, setDeleteDate] = useState<string | null>(null);
-  const [openDate, setOpenDate] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
@@ -254,7 +252,7 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
         ) : grouped.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">אין רשומות בטווח שנבחר</p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {grouped.map((g) => {
               const nameOf = (r: any) => {
                 const t = teacherById[r.teacher_id];
@@ -262,71 +260,81 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
               };
               const presentItems = g.items.filter((r: any) => r.status === "present" || r.status === "double_lesson");
               const absentItems = g.items.filter((r: any) => !(r.status === "present" || r.status === "double_lesson"));
-              const isOpen = openDate === g.date;
+              const d = parseISO(g.date);
+              const weekday = HEBREW_DAYS[d.getDay()];
               return (
-                <div key={g.date} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
-                  <div
-                    className="flex items-center gap-2 px-4 py-3 cursor-pointer active:bg-muted/50 transition-colors"
-                    onClick={() => setOpenDate(isOpen ? null : g.date)}
-                  >
-                    <CalendarDays className="h-4 w-4 text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-sm">{formatDate(g.date)}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {presentItems.length} הגיעו · {absentItems.length} לא הגיעו
-                      </div>
+                <div
+                  key={g.date}
+                  className="w-full rounded-2xl bg-card shadow-sm border border-border text-right transition-all hover:shadow-md overflow-hidden"
+                >
+                  {/* Card header */}
+                  <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CalendarDays className="h-5 w-5 text-primary shrink-0" />
+                      <span className="text-lg font-bold text-foreground">{formatDate(g.date)}</span>
+                      <span className="text-sm font-medium text-muted-foreground">({weekday})</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={(e) => { e.stopPropagation(); navigate(`${newPath}?date=${g.date}`); }}
-                      aria-label="עריכה"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="shrink-0 text-destructive"
-                      onClick={(e) => { e.stopPropagation(); setDeleteDate(g.date); }}
-                      aria-label="מחיקה"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
-                  </div>
-
-                  <div className="border-t border-border px-4 py-3 space-y-2 text-sm">
-                    <div className="flex gap-2">
-                      <span className="shrink-0 font-semibold text-emerald-700">הגיעו:</span>
-                      <span className="min-w-0 flex-1 text-foreground/80">
-                        {presentItems.length ? presentItems.map(nameOf).join(", ") : "—"}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <span className="shrink-0 font-semibold text-destructive">לא הגיעו:</span>
-                      <span className="min-w-0 flex-1 text-foreground/80">
-                        {absentItems.length ? absentItems.map(nameOf).join(", ") : "—"}
-                      </span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Badge variant="secondary" className="rounded-lg text-xs">{presentItems.length} הגיעו</Badge>
+                      {absentItems.length > 0 && (
+                        <Badge variant="destructive" className="rounded-lg text-xs">{absentItems.length} לא הגיעו</Badge>
+                      )}
                     </div>
                   </div>
 
-                  {isOpen && (
-                    <div className="border-t border-border divide-y divide-border">
-                      {g.items.map((r: any) => (
-                        <div key={r.id} className="flex items-center gap-2 px-4 py-2 text-sm">
-                          <span className="flex-1 min-w-0 truncate">{nameOf(r)}</span>
-                          {r.notes && <span className="text-xs text-muted-foreground truncate max-w-[40%]">{r.notes}</span>}
-                          <Badge variant={STATUS_VARIANT(r.status)} className="shrink-0">{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                  {/* Teacher rows */}
+                  <div className="border-t border-border px-4 py-2 space-y-2">
+                    {g.items.map((r: any) => {
+                      const isPresent = r.status === "present" || r.status === "double_lesson";
+                      return (
+                        <div key={r.id} className="flex items-start gap-2 text-sm">
+                          <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${isPresent ? "bg-emerald-500" : "bg-red-500"}`} />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-medium truncate">{nameOf(r)}</span>
+                              <span className={`text-xs shrink-0 ${isPresent ? "text-muted-foreground" : "text-destructive font-medium"}`}>
+                                {STATUS_LABEL[r.status] ?? r.status}
+                              </span>
+                            </div>
+                            {r.notes && (
+                              <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                                {r.notes}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      ))}
+                      );
+                    })}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="border-t border-border px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" />
+                      <span>{g.items.length} מורים</span>
                     </div>
-                  )}
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground font-medium flex items-center gap-1"
+                        onClick={() => navigate(`${newPath}?date=${g.date}`)}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        עריכה
+                      </button>
+                      <button
+                        type="button"
+                        className="text-xs text-destructive font-medium flex items-center gap-1"
+                        onClick={() => setDeleteDate(g.date)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        מחיקה
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
-
           </div>
         )}
       </main>
