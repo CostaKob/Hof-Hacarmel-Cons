@@ -216,7 +216,14 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
             </div>
             <div className="flex flex-wrap gap-1 mt-2">
               {missingDays.slice(0, 30).map((d) => (
-                <Badge key={d} variant="outline" className="border-amber-400 text-amber-900">{d}</Badge>
+                <Badge
+                  key={d}
+                  variant="outline"
+                  className="border-amber-400 text-amber-900 cursor-pointer hover:bg-amber-100"
+                  onClick={() => navigate(`${newPath}?date=${d}`)}
+                >
+                  {formatDate(d)}
+                </Badge>
               ))}
               {missingDays.length > 30 && <span className="text-xs text-amber-800">+{missingDays.length - 30}</span>}
             </div>
