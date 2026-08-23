@@ -183,38 +183,85 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
           </div>
         )}
 
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-right">תאריך</TableHead>
-                <TableHead className="text-right">מורה</TableHead>
-                <TableHead className="text-right">סטטוס</TableHead>
-                <TableHead className="text-right">הערות</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">טוען...</TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">אין רשומות בטווח שנבחר</TableCell></TableRow>
-              ) : (
-                filtered.map((r: any) => {
-                  const t = teacherById[r.teacher_id];
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.attendance_date}</TableCell>
-                      <TableCell>{t ? `${t.first_name} ${t.last_name}` : "—"}</TableCell>
-                      <TableCell><Badge variant={STATUS_VARIANT(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{r.notes || "—"}</TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : grouped.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">אין רשומות בטווח שנבחר</p>
+        ) : (
+          <div className="space-y-3">
+            {grouped.map((g) => {
+              const absentCount = g.items.filter((r: any) => r.status !== "present").length;
+              return (
+                <div key={g.date} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                  <div
+                    className="flex items-center gap-2 px-4 py-3 cursor-pointer active:bg-muted/50 transition-colors"
+                    onClick={() => navigate(`${newPath}?date=${g.date}`)}
+                  >
+                    <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-sm">{formatDate(g.date)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {g.items.length} מורים{absentCount > 0 ? ` · ${absentCount} לא נכחו` : " · כולם נכחו"}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={(e) => { e.stopPropagation(); navigate(`${newPath}?date=${g.date}`); }}
+                      aria-label="עריכה"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-destructive"
+                      onClick={(e) => { e.stopPropagation(); setDeleteDate(g.date); }}
+                      aria-label="מחיקה"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="border-t border-border divide-y divide-border">
+                    {g.items.map((r: any) => {
+                      const t = teacherById[r.teacher_id];
+                      return (
+                        <div key={r.id} className="flex items-center gap-2 px-4 py-2 text-sm">
+                          <span className="flex-1 min-w-0 truncate">{t ? `${t.first_name} ${t.last_name}` : "—"}</span>
+                          {r.notes && <span className="text-xs text-muted-foreground truncate max-w-[40%]">{r.notes}</span>}
+                          <Badge variant={STATUS_VARIANT(r.status)} className="shrink-0">{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
+
+      <AlertDialog open={!!deleteDate} onOpenChange={(o) => !o && setDeleteDate(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת דיווח נוכחות</AlertDialogTitle>
+            <AlertDialogDescription>
+              הדיווח לתאריך {deleteDate ? formatDate(deleteDate) : ""} יימחק לכל המורים. לא ניתן לשחזר.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="h-12 rounded-xl mt-0">ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              className="h-12 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => { e.preventDefault(); deleteMutation.mutate(); }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "מוחק..." : "מחיקה"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
