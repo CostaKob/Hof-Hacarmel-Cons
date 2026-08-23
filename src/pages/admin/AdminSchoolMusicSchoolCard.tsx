@@ -238,7 +238,7 @@ const StaffSection = ({ schoolId, isCoordinatorView }: { schoolId: string; isCoo
     },
   });
 
-  if (!isCoordinatorView) return null;
+  
   if (isLoading) return null;
   if (staff.length === 0) return null;
 
