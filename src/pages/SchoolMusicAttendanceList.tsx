@@ -193,11 +193,11 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-4">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
-            <DateInput value={startDate} onChange={(v) => setStartDate(v)} className="h-11 rounded-xl" />
+            <DateInput value={startDate} min={minDate} max={maxDate} onChange={(v) => setStartDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">עד תאריך</Label>
-            <DateInput value={endDate} onChange={(v) => setEndDate(v)} className="h-11 rounded-xl" />
+            <DateInput value={endDate} min={minDate} max={maxDate} onChange={(v) => setEndDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">מורה</Label>
