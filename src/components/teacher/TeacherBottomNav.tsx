@@ -15,7 +15,6 @@ const TeacherBottomNav = () => {
   const { data: ensembleStaff } = useTeacherEnsembleStaff(teacher?.id);
   const { data: schoolMusicSchools } = useTeacherSchoolMusicSchools(teacher?.id, selectedYearId);
   const { data: branchCoordinatorBranches } = useBranchCoordinatorBranches(teacher?.id);
-  const { data: isCalendarCoordinator } = useIsCalendarCoordinator(teacher?.id);
 
   const hasEnsembles = (ensembleStaff ?? []).length > 0;
   const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
