@@ -1564,25 +1564,19 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               <div className="grid min-w-0 gap-2">
-                <Label htmlFor="time">משעה</Label>
-                <Input
-                  id="time"
-                  type="time"
-                  dir="ltr"
+                <Label>משעה</Label>
+                <TimeSelect
+                  ariaLabel="משעה"
                   value={form.start_time}
-                  onChange={(e) => setForm({ ...form, start_time: e.target.value })}
-                  className="h-12 w-full min-w-0 rounded-xl px-2 py-0 text-center"
+                  onChange={(value) => setForm({ ...form, start_time: value })}
                 />
               </div>
               <div className="grid min-w-0 gap-2">
-                <Label htmlFor="end_time">עד שעה</Label>
-                <Input
-                  id="end_time"
-                  type="time"
-                  dir="ltr"
+                <Label>עד שעה</Label>
+                <TimeSelect
+                  ariaLabel="עד שעה"
                   value={form.end_time}
-                  onChange={(e) => setForm({ ...form, end_time: e.target.value })}
-                  className="h-12 w-full min-w-0 rounded-xl px-2 py-0 text-center"
+                  onChange={(value) => setForm({ ...form, end_time: value })}
                 />
               </div>
               <div className="col-span-2 grid min-w-0 gap-2 sm:col-span-1">
