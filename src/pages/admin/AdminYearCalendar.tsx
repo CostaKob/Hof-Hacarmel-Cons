@@ -1769,12 +1769,27 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
   if (isCoordinator || isViewer) {
     return (
-      <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-28">
-        <h1 className="mb-4 text-2xl font-bold">לוח שנה שנתי</h1>
-        {calendarContent}
+      <div dir="rtl" className="min-h-screen bg-background">
+        <header className="bg-primary px-5 pb-6 pt-5 text-primary-foreground">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => (window.location.href = "/teacher")}
+              className="rounded-xl p-2 transition-colors hover:bg-primary-foreground/10"
+              aria-label="חזרה"
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+            <h1 className="text-lg font-bold">לוח שנה שנתי</h1>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-[1600px] px-3 pb-28 pt-4">
+          {calendarContent}
+        </main>
       </div>
     );
   }
+
 
   return (
     <AdminLayout title="לוח שנה שנתי" fullWidth>
