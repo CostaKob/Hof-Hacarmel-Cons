@@ -284,7 +284,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   }, [isCoordinator]);
 
   /**
-   * בקשות שמוצגות בבאנר של הרכז — רך בקשות שעדיין ממתינות לאישור.
+   * בקשות שמוצגות בבאנר של הרכז — רק בקשות שעדיין ממתינות לאישור.
    */
   const visibleMyRequests = useMemo(() => {
     return myRequests.filter((r) => r.status === "pending");
