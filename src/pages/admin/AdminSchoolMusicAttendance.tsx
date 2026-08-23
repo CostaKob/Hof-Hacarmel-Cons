@@ -17,6 +17,20 @@ import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import PageTitle from "@/components/PageTitle";
 
+function clampDate(value: string, min: string, max: string) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+function useAcademicDateRange() {
+  const { activeYear } = useAcademicYear();
+  const startYear = activeYear ? new Date(activeYear.start_date).getFullYear() : new Date().getFullYear();
+  const minDate = `${startYear}-09-01`;
+  const maxDate = `${startYear + 1}-06-30`;
+  return { minDate, maxDate };
+}
+
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
   absent: "לא הגיע/ה",
@@ -31,12 +45,14 @@ const STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive" =>
 
 const AdminSchoolMusicAttendance = () => {
   const { activeYear } = useAcademicYear();
+  const { minDate, maxDate } = useAcademicDateRange();
   const navigate = useNavigate();
   const today = format(new Date(), "yyyy-MM-dd");
   const monthAgo = format(addDays(new Date(), -30), "yyyy-MM-dd");
+  const effectiveMaxDate = clampDate(today, minDate, maxDate);
 
-  const [startDate, setStartDate] = useState(monthAgo);
-  const [endDate, setEndDate] = useState(today);
+  const [startDate, setStartDate] = useState(clampDate(monthAgo, minDate, maxDate));
+  const [endDate, setEndDate] = useState(clampDate(today, minDate, maxDate));
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -44,7 +60,7 @@ const AdminSchoolMusicAttendance = () => {
   // Manual report dialog state
   const [manualOpen, setManualOpen] = useState(false);
   const [manualSchool, setManualSchool] = useState<string>("");
-  const [manualDate, setManualDate] = useState<string>(today);
+  const [manualDate, setManualDate] = useState<string>(effectiveMaxDate);
 
   const goReport = (schoolId: string, date: string) => {
     navigate(`/admin/school-music-schools/${schoolId}/attendance/new?date=${date}`);
@@ -123,20 +139,23 @@ const AdminSchoolMusicAttendance = () => {
     const out: { school: any; date: string }[] = [];
     const schoolsToCheck = schoolFilter === "all" ? schools : schools.filter((s) => s.id === schoolFilter);
     const reportedKey = new Set(rows.map((r: any) => `${r.school_music_school_id}::${r.attendance_date}`));
+    const rangeStart = clampDate(startDate, minDate, maxDate);
+    const rangeEnd = clampDate(endDate, minDate, maxDate);
     for (const s of schoolsToCheck) {
       const od: number[] = Array.isArray((s as any).operating_days) && (s as any).operating_days.length > 0
         ? (s as any).operating_days
         : ((s as any).day_of_week != null ? [(s as any).day_of_week] : []);
       if (od.length === 0) continue;
-      for (let d = parseISO(startDate); d <= parseISO(endDate) && d <= todayD; d = addDays(d, 1)) {
+      for (let d = parseISO(rangeStart); d <= parseISO(rangeEnd) && d <= todayD; d = addDays(d, 1)) {
         if (od.includes(d.getDay())) {
           const ds = format(d, "yyyy-MM-dd");
+          if (ds < minDate || ds > maxDate) continue;
           if (!reportedKey.has(`${s.id}::${ds}`)) out.push({ school: s, date: ds });
         }
       }
     }
     return out.sort((a, b) => b.date.localeCompare(a.date));
-  }, [schools, schoolFilter, rows, startDate, endDate, today, statusFilter, teacherFilter]);
+  }, [schools, schoolFilter, rows, startDate, endDate, today, statusFilter, teacherFilter, minDate, maxDate]);
 
   return (
     <AdminLayout title="נוכחות מורים — בתי ספר מנגנים" backPath="/admin">
@@ -163,7 +182,7 @@ const AdminSchoolMusicAttendance = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm">תאריך</Label>
-                  <DateInput max={today} value={manualDate} onChange={(v) => setManualDate(v)} className="h-11 rounded-xl" />
+                  <DateInput min={minDate} max={effectiveMaxDate} value={manualDate} onChange={(v) => setManualDate(clampDate(v, minDate, effectiveMaxDate))} className="h-11 rounded-xl" />
                 </div>
               </div>
               <DialogFooter>
@@ -176,11 +195,11 @@ const AdminSchoolMusicAttendance = () => {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
-            <DateInput value={startDate} onChange={(v) => setStartDate(v)} className="h-11 rounded-xl" />
+            <DateInput min={minDate} max={maxDate} value={startDate} onChange={(v) => setStartDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">עד תאריך</Label>
-            <DateInput value={endDate} onChange={(v) => setEndDate(v)} className="h-11 rounded-xl" />
+            <DateInput min={minDate} max={maxDate} value={endDate} onChange={(v) => setEndDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">בית ספר</Label>

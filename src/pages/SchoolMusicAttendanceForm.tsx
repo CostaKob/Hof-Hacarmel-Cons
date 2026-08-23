@@ -15,6 +15,20 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import PageTitle from "@/components/PageTitle";
 
+function clampDate(value: string, min: string, max: string) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+function useAcademicDateRange() {
+  const { activeYear } = useAcademicYear();
+  const startYear = activeYear ? new Date(activeYear.start_date).getFullYear() : new Date().getFullYear();
+  const minDate = `${startYear}-09-01`;
+  const maxDate = `${startYear + 1}-06-30`;
+  return { minDate, maxDate };
+}
+
 type Status = "present" | "absent" | "vacation";
 interface Row { status: Status; notes: string }
 
@@ -29,8 +43,10 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { activeYear } = useAcademicYear();
+  const { minDate, maxDate } = useAcademicDateRange();
   const today = format(new Date(), "yyyy-MM-dd");
-  const initialDate = searchParams.get("date") || today;
+  const effectiveMaxDate = clampDate(today, minDate, maxDate);
+  const initialDate = clampDate(searchParams.get("date") || today, minDate, effectiveMaxDate);
 
   const [date, setDate] = useState(initialDate);
   const [rows, setRows] = useState<Record<string, Row>>({});
@@ -162,7 +178,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3">
           <div className="space-y-1.5">
             <Label className="text-sm">תאריך הדיווח</Label>
-            <DateInput value={date} max={today} onChange={(v) => setDate(v)} className="h-12 rounded-xl" />
+            <DateInput value={date} min={minDate} max={effectiveMaxDate} onChange={(v) => setDate(clampDate(v, minDate, effectiveMaxDate))} className="h-12 rounded-xl" />
           </div>
           <Button type="button" variant="outline" onClick={markAllPresent} disabled={loadingTeachers || teachers.length === 0 || dayCancelled} className="w-full h-11 rounded-xl">
             <CheckCheck className="h-4 w-4 ml-1" />

@@ -20,6 +20,20 @@ import PageTitle from "@/components/PageTitle";
 
 const formatDate = (d: string) => format(parseISO(d), "dd/MM/yyyy");
 
+function clampDate(value: string, min: string, max: string) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+function useAcademicDateRange() {
+  const { activeYear } = useAcademicYear();
+  const startYear = activeYear ? new Date(activeYear.start_date).getFullYear() : new Date().getFullYear();
+  const minDate = `${startYear}-09-01`;
+  const maxDate = `${startYear + 1}-06-30`;
+  return { minDate, maxDate };
+}
+
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
   absent: "לא הגיע/ה",
@@ -36,12 +50,13 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
   const { id: schoolId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeYear } = useAcademicYear();
+  const { minDate, maxDate } = useAcademicDateRange();
 
   const today = format(new Date(), "yyyy-MM-dd");
   const monthAgo = format(addDays(new Date(), -30), "yyyy-MM-dd");
 
-  const [startDate, setStartDate] = useState(monthAgo);
-  const [endDate, setEndDate] = useState(today);
+  const [startDate, setStartDate] = useState(clampDate(monthAgo, minDate, maxDate));
+  const [endDate, setEndDate] = useState(clampDate(today, minDate, maxDate));
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -95,17 +110,20 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
     if (operatingDays.length === 0) return [];
     const reportedDates = new Set(rows.map((r: any) => r.attendance_date));
     const out: string[] = [];
-    const start = parseISO(startDate);
-    const end = parseISO(endDate);
+    const rangeStart = clampDate(startDate, minDate, maxDate);
+    const rangeEnd = clampDate(endDate, minDate, maxDate);
+    const start = parseISO(rangeStart);
+    const end = parseISO(rangeEnd);
     const todayD = parseISO(today);
     for (let d = new Date(start); d <= end && d <= todayD; d = addDays(d, 1)) {
       if (operatingDays.includes(d.getDay())) {
         const ds = format(d, "yyyy-MM-dd");
+        if (ds < minDate || ds > maxDate) continue;
         if (!reportedDates.has(ds)) out.push(ds);
       }
     }
     return out.sort().reverse();
-  }, [operatingDays, rows, startDate, endDate, today]);
+  }, [operatingDays, rows, startDate, endDate, today, minDate, maxDate]);
 
   const filtered = rows.filter((r: any) => {
     if (teacherFilter !== "all" && r.teacher_id !== teacherFilter) return false;
@@ -178,11 +196,11 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-4">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
-            <DateInput value={startDate} onChange={(v) => setStartDate(v)} className="h-11 rounded-xl" />
+            <DateInput value={startDate} min={minDate} max={maxDate} onChange={(v) => setStartDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">עד תאריך</Label>
-            <DateInput value={endDate} onChange={(v) => setEndDate(v)} className="h-11 rounded-xl" />
+            <DateInput value={endDate} min={minDate} max={maxDate} onChange={(v) => setEndDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">מורה</Label>
