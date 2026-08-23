@@ -28,7 +28,7 @@ const TeacherBottomNav = () => {
     ...(hasEnsembles ? [{ path: "/teacher/ensembles", label: "הרכבים", icon: Music }] : []),
     ...(hasSchoolMusic ? [{ path: "/teacher/school-music-schools", label: "מנגנים", icon: School }] : []),
     ...(hasBranches ? [{ path: "/teacher/branches", label: "שלוחות", icon: Building2 }] : []),
-    ...(isCalendarCoordinator ? [{ path: "/teacher/year-calendar", label: "לוח שנה", icon: CalendarDays }] : []),
+    { path: "/teacher/year-calendar", label: "לוח שנה", icon: CalendarDays },
   ];
 
   return (
