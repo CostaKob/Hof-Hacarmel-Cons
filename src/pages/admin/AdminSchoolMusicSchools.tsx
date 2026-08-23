@@ -175,12 +175,18 @@ const AdminSchoolMusicSchools = () => {
     queryKey: ["school-music-groups-with-teachers"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("school_music_groups")
-        .select("school_music_school_id, instrument_id, teacher_id, teachers(first_name, last_name)");
+        .from("school_music_class_groups" as any)
+        .select("instrument_id, teacher_id, teachers(first_name, last_name), school_music_classes!inner(school_music_school_id)");
       if (error) throw error;
-      return data ?? [];
+      return ((data ?? []) as any[]).map((g: any) => ({
+        school_music_school_id: g.school_music_classes?.school_music_school_id,
+        instrument_id: g.instrument_id,
+        teacher_id: g.teacher_id,
+        teachers: g.teachers,
+      })).filter((g) => g.school_music_school_id);
     },
   });
+
 
   // ── Class groups for edit filtering ──
   const { data: allClassGroups = [] } = useQuery({

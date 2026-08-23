@@ -149,24 +149,8 @@ const StructureCloningSection = ({ activeYear, nextYear }: Props) => {
         }
       }
 
-      // 6. Clone school_music_groups
-      const { data: sourceSmGroups, error: smgErr } = await supabase
-        .from("school_music_groups")
-        .select("*")
-        .in("school_music_school_id", oldSchoolIds);
-      if (smgErr) throw smgErr;
+      // 6. Legacy school_music_groups is archive-only — intentionally not cloned.
 
-      const newSmGroups = (sourceSmGroups || []).map((g) => ({
-        school_music_school_id: schoolIdMap.get(g.school_music_school_id)!,
-        teacher_id: g.teacher_id,
-        instrument_id: g.instrument_id,
-        weekly_hours: g.weekly_hours,
-      })).filter((g) => g.school_music_school_id);
-
-      if (newSmGroups.length > 0) {
-        const { error: insertErr } = await supabase.from("school_music_groups").insert(newSmGroups);
-        if (insertErr) throw insertErr;
-      }
 
       return { schools: sourceSchools.length, classes: sourceClasses?.length ?? 0 };
     },
