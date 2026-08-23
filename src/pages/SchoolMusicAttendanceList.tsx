@@ -50,12 +50,13 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
   const { id: schoolId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeYear } = useAcademicYear();
+  const { minDate, maxDate } = useAcademicDateRange();
 
   const today = format(new Date(), "yyyy-MM-dd");
   const monthAgo = format(addDays(new Date(), -30), "yyyy-MM-dd");
 
-  const [startDate, setStartDate] = useState(monthAgo);
-  const [endDate, setEndDate] = useState(today);
+  const [startDate, setStartDate] = useState(clampDate(monthAgo, minDate, maxDate));
+  const [endDate, setEndDate] = useState(clampDate(today, minDate, maxDate));
   const [teacherFilter, setTeacherFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
