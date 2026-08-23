@@ -284,27 +284,33 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
 
                   {/* Teacher rows */}
                   <div className="border-t border-border px-4 py-2 space-y-2">
-                    {g.items.map((r: any) => {
-                      const isPresent = r.status === "present" || r.status === "double_lesson";
-                      return (
-                        <div key={r.id} className="flex items-start gap-2 text-sm">
-                          <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${isPresent ? "bg-emerald-500" : "bg-red-500"}`} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-medium truncate">{nameOf(r)}</span>
-                              <span className={`text-xs shrink-0 ${isPresent ? "text-muted-foreground" : "text-destructive font-medium"}`}>
-                                {STATUS_LABEL[r.status] ?? r.status}
-                              </span>
-                            </div>
-                            {r.notes && (
-                              <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
-                                {r.notes}
+                    {[...g.items]
+                      .sort((a: any, b: any) => {
+                        const aPresent = a.status === "present" || a.status === "double_lesson";
+                        const bPresent = b.status === "present" || b.status === "double_lesson";
+                        return Number(bPresent) - Number(aPresent);
+                      })
+                      .map((r: any) => {
+                        const isPresent = r.status === "present" || r.status === "double_lesson";
+                        return (
+                          <div key={r.id} className="flex items-start gap-2 text-sm">
+                            <span className={`mt-1.5 h-2 w-2 rounded-full shrink-0 ${isPresent ? "bg-emerald-500" : "bg-red-500"}`} />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-medium truncate">{nameOf(r)}</span>
+                                <span className={`text-xs shrink-0 ${isPresent ? "text-muted-foreground" : "text-destructive font-medium"}`}>
+                                  {STATUS_LABEL[r.status] ?? r.status}
+                                </span>
                               </div>
-                            )}
+                              {r.notes && (
+                                <div className="text-xs text-muted-foreground whitespace-pre-wrap break-words">
+                                  {r.notes}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
 
                   {/* Footer */}
