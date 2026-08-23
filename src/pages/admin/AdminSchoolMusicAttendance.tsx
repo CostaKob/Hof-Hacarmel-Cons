@@ -139,20 +139,23 @@ const AdminSchoolMusicAttendance = () => {
     const out: { school: any; date: string }[] = [];
     const schoolsToCheck = schoolFilter === "all" ? schools : schools.filter((s) => s.id === schoolFilter);
     const reportedKey = new Set(rows.map((r: any) => `${r.school_music_school_id}::${r.attendance_date}`));
+    const rangeStart = clampDate(startDate, minDate, maxDate);
+    const rangeEnd = clampDate(endDate, minDate, maxDate);
     for (const s of schoolsToCheck) {
       const od: number[] = Array.isArray((s as any).operating_days) && (s as any).operating_days.length > 0
         ? (s as any).operating_days
         : ((s as any).day_of_week != null ? [(s as any).day_of_week] : []);
       if (od.length === 0) continue;
-      for (let d = parseISO(startDate); d <= parseISO(endDate) && d <= todayD; d = addDays(d, 1)) {
+      for (let d = parseISO(rangeStart); d <= parseISO(rangeEnd) && d <= todayD; d = addDays(d, 1)) {
         if (od.includes(d.getDay())) {
           const ds = format(d, "yyyy-MM-dd");
+          if (ds < minDate || ds > maxDate) continue;
           if (!reportedKey.has(`${s.id}::${ds}`)) out.push({ school: s, date: ds });
         }
       }
     }
     return out.sort((a, b) => b.date.localeCompare(a.date));
-  }, [schools, schoolFilter, rows, startDate, endDate, today, statusFilter, teacherFilter]);
+  }, [schools, schoolFilter, rows, startDate, endDate, today, statusFilter, teacherFilter, minDate, maxDate]);
 
   return (
     <AdminLayout title="נוכחות מורים — בתי ספר מנגנים" backPath="/admin">
