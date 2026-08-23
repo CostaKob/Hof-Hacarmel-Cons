@@ -17,6 +17,20 @@ import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import PageTitle from "@/components/PageTitle";
 
+function clampDate(value: string, min: string, max: string) {
+  if (value < min) return min;
+  if (value > max) return max;
+  return value;
+}
+
+function useAcademicDateRange() {
+  const { activeYear } = useAcademicYear();
+  const startYear = activeYear ? new Date(activeYear.start_date).getFullYear() : new Date().getFullYear();
+  const minDate = `${startYear}-09-01`;
+  const maxDate = `${startYear + 1}-06-30`;
+  return { minDate, maxDate };
+}
+
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
   absent: "לא הגיע/ה",
