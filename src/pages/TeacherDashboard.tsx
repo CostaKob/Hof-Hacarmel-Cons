@@ -4,7 +4,6 @@ import { useTeacherMonthReports } from "@/hooks/useTeacherDashboardData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
 import { useBranchCoordinatorBranches } from "@/hooks/useBranchCoordinator";
-import { useIsCalendarCoordinator } from "@/hooks/useCalendarAccess";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
@@ -51,7 +50,6 @@ const TeacherDashboard = () => {
   const hasSchoolMusic = (schoolMusicSchools ?? []).length > 0;
   const { data: branchCoordinatorBranches } = useBranchCoordinatorBranches(teacher?.id);
   const hasBranches = (branchCoordinatorBranches ?? []).length > 0;
-  const { data: isCalendarCoordinator } = useIsCalendarCoordinator(teacher?.id);
 
   const uniqueStudents = new Set(enrollments?.map((e) => e.student_id)).size;
   const activeCount = enrollments?.length ?? 0;
