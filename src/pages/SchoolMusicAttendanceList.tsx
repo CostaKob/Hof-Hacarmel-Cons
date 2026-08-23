@@ -1,19 +1,24 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useSchoolMusicTeachers } from "@/hooks/useSchoolMusicTeachers";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ChevronLeft, AlertCircle, CalendarDays, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import PageTitle from "@/components/PageTitle";
+
+const formatDate = (d: string) => format(parseISO(d), "dd/MM/yyyy");
 
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
