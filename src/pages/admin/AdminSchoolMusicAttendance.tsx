@@ -179,7 +179,7 @@ const AdminSchoolMusicAttendance = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm">תאריך</Label>
-                  <DateInput max={today} value={manualDate} onChange={(v) => setManualDate(v)} className="h-11 rounded-xl" />
+                  <DateInput min={minDate} max={effectiveMaxDate} value={manualDate} onChange={(v) => setManualDate(clampDate(v, minDate, effectiveMaxDate))} className="h-11 rounded-xl" />
                 </div>
               </div>
               <DialogFooter>
@@ -192,11 +192,11 @@ const AdminSchoolMusicAttendance = () => {
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm grid gap-3 sm:grid-cols-5">
           <div className="space-y-1">
             <Label className="text-xs">מתאריך</Label>
-            <DateInput value={startDate} onChange={(v) => setStartDate(v)} className="h-11 rounded-xl" />
+            <DateInput min={minDate} max={maxDate} value={startDate} onChange={(v) => setStartDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">עד תאריך</Label>
-            <DateInput value={endDate} onChange={(v) => setEndDate(v)} className="h-11 rounded-xl" />
+            <DateInput min={minDate} max={maxDate} value={endDate} onChange={(v) => setEndDate(clampDate(v, minDate, maxDate))} className="h-11 rounded-xl" />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">בית ספר</Label>
