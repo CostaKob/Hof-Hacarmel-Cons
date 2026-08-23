@@ -229,11 +229,13 @@ type UndoEntry =
   | { kind: "delete"; row: any }
   | { kind: "lane"; monthKey: string };
 
-export type YearCalendarMode = "admin" | "coordinator";
+export type YearCalendarMode = "admin" | "coordinator" | "viewer";
 
 const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   /** במצב רכז אין כתיבה ישירה — כל שינוי נשלח כבקשה לאישור מנהל. */
   const isCoordinator = mode === "coordinator";
+  /** מצב צפייה בלבד — מורה רגיל: אין עריכה, אין בקשות שינוי. */
+  const isViewer = mode === "viewer";
 
   const [tracks, setTracks] = useState<Track[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -254,6 +256,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   const { user } = useAuth();
   const canUseCalendarTools =
     !isCoordinator &&
+    !isViewer &&
     CALENDAR_TOOLS_EMAILS.includes((user?.email ?? "").toLowerCase());
 
   /* ---------------- בקשות שינוי (רכזים ← מנהל) ---------------- */
@@ -278,10 +281,11 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   };
 
   useEffect(() => {
+    if (isViewer) return;
     if (isCoordinator) loadMyRequests();
     else loadPendingRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isCoordinator]);
+  }, [isCoordinator, isViewer]);
 
   /**
    * בקשות שמוצגות בבאנר של הרכז — רק בקשות שעדיין ממתינות לאישור.
@@ -503,6 +507,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     day: number,
     laneIndex: number
   ) => {
+    if (isViewer) return;
     const track = tracks.find((t) => t.id === trackId);
     const date = isoDate(monthDef.year, monthDef.month, day);
     const isAvailability = track?.key === "availability";
@@ -521,6 +526,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   };
 
   const openEditDialog = (item: CalendarItem) => {
+    if (isViewer) return;
     setEditingId(item.id);
     setForm(rowToForm(item));
     setDialogOpen(true);
@@ -762,6 +768,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
    * כדי שהמורה יראה מיד את מה שביקש עם הכיתוב "ממתין לאישור".
    */
   const displayItems = useMemo(() => {
+    if (isViewer) return items;
     const source = isCoordinator ? myRequests : pendingRequests;
     const pending = source.filter((r) => r.status === "pending");
     if (pending.length === 0) return items;
@@ -806,7 +813,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     });
 
     return [...merged, ...creates] as CalendarItem[];
-  }, [items, myRequests, pendingRequests, isCoordinator, tracks]);
+  }, [items, myRequests, pendingRequests, isCoordinator, isViewer, tracks]);
 
   /** פריטים חתוכים לגבולות חודש: שורות ידניות + זמינות בתחתית. */
   const itemsByMonth = useMemo(() => {
@@ -1153,6 +1160,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
         <span>
           {m.label} {m.year}
         </span>
+        {!isViewer && (
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <button
             type="button"
@@ -1184,6 +1192,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
             − שורה
           </button>
         </div>
+        )}
 
       </div>
     );
@@ -1758,7 +1767,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     </>
   );
 
-  if (isCoordinator) {
+  if (isCoordinator || isViewer) {
     return (
       <div className="mx-auto w-full max-w-[1600px] px-3 py-4 pb-28">
         <h1 className="mb-4 text-2xl font-bold">לוח שנה שנתי</h1>
