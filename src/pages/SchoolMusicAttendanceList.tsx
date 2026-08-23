@@ -1,19 +1,24 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useSchoolMusicTeachers } from "@/hooks/useSchoolMusicTeachers";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DateInput } from "@/components/ui/date-input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ChevronLeft, AlertCircle, CalendarDays, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import PageTitle from "@/components/PageTitle";
+
+const formatDate = (d: string) => format(parseISO(d), "dd/MM/yyyy");
 
 const STATUS_LABEL: Record<string, string> = {
   present: "הגיע/ה",
@@ -108,6 +113,41 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
     return true;
   });
 
+  const grouped = useMemo(() => {
+    const map = new Map<string, any[]>();
+    for (const r of filtered as any[]) {
+      const arr = map.get(r.attendance_date) ?? [];
+      arr.push(r);
+      map.set(r.attendance_date, arr);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => b[0].localeCompare(a[0]))
+      .map(([date, items]) => ({ date, items }));
+  }, [filtered]);
+
+  const [deleteDate, setDeleteDate] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!schoolId || !deleteDate) return;
+      const { error } = await supabase
+        .from("teacher_attendance")
+        .delete()
+        .eq("school_music_school_id", schoolId)
+        .eq("attendance_date", deleteDate);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["teacher-attendance-list"] });
+      queryClient.invalidateQueries({ queryKey: ["teacher-attendance"] });
+      toast.success("הדיווח נמחק");
+      setDeleteDate(null);
+    },
+    onError: (e: any) => toast.error(e.message || "שגיאה במחיקה"),
+  });
+
+
   const backPath = variant === "admin"
     ? `/admin/school-music-schools/${schoolId}`
     : `/teacher/school-music-schools/${schoolId}`;
@@ -176,45 +216,99 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
             </div>
             <div className="flex flex-wrap gap-1 mt-2">
               {missingDays.slice(0, 30).map((d) => (
-                <Badge key={d} variant="outline" className="border-amber-400 text-amber-900">{d}</Badge>
+                <Badge
+                  key={d}
+                  variant="outline"
+                  className="border-amber-400 text-amber-900 cursor-pointer hover:bg-amber-100"
+                  onClick={() => navigate(`${newPath}?date=${d}`)}
+                >
+                  {formatDate(d)}
+                </Badge>
               ))}
               {missingDays.length > 30 && <span className="text-xs text-amber-800">+{missingDays.length - 30}</span>}
             </div>
           </div>
         )}
 
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-right">תאריך</TableHead>
-                <TableHead className="text-right">מורה</TableHead>
-                <TableHead className="text-right">סטטוס</TableHead>
-                <TableHead className="text-right">הערות</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">טוען...</TableCell></TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground py-8">אין רשומות בטווח שנבחר</TableCell></TableRow>
-              ) : (
-                filtered.map((r: any) => {
-                  const t = teacherById[r.teacher_id];
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell>{r.attendance_date}</TableCell>
-                      <TableCell>{t ? `${t.first_name} ${t.last_name}` : "—"}</TableCell>
-                      <TableCell><Badge variant={STATUS_VARIANT(r.status)}>{STATUS_LABEL[r.status] ?? r.status}</Badge></TableCell>
-                      <TableCell className="text-muted-foreground text-xs">{r.notes || "—"}</TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        {isLoading ? (
+          <p className="text-center text-muted-foreground py-8">טוען...</p>
+        ) : grouped.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">אין רשומות בטווח שנבחר</p>
+        ) : (
+          <div className="space-y-3">
+            {grouped.map((g) => {
+              const absentCount = g.items.filter((r: any) => r.status !== "present").length;
+              return (
+                <div key={g.date} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
+                  <div
+                    className="flex items-center gap-2 px-4 py-3 cursor-pointer active:bg-muted/50 transition-colors"
+                    onClick={() => navigate(`${newPath}?date=${g.date}`)}
+                  >
+                    <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-sm">{formatDate(g.date)}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {g.items.length} מורים{absentCount > 0 ? ` · ${absentCount} לא נכחו` : " · כולם נכחו"}
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={(e) => { e.stopPropagation(); navigate(`${newPath}?date=${g.date}`); }}
+                      aria-label="עריכה"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0 text-destructive"
+                      onClick={(e) => { e.stopPropagation(); setDeleteDate(g.date); }}
+                      aria-label="מחיקה"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="border-t border-border divide-y divide-border">
+                    {g.items.map((r: any) => {
+                      const t = teacherById[r.teacher_id];
+                      return (
+                        <div key={r.id} className="flex items-center gap-2 px-4 py-2 text-sm">
+                          <span className="flex-1 min-w-0 truncate">{t ? `${t.first_name} ${t.last_name}` : "—"}</span>
+                          {r.notes && <span className="text-xs text-muted-foreground truncate max-w-[40%]">{r.notes}</span>}
+                          <Badge variant={STATUS_VARIANT(r.status)} className="shrink-0">{STATUS_LABEL[r.status] ?? r.status}</Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
+
+      <AlertDialog open={!!deleteDate} onOpenChange={(o) => !o && setDeleteDate(null)}>
+        <AlertDialogContent dir="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת דיווח נוכחות</AlertDialogTitle>
+            <AlertDialogDescription>
+              הדיווח לתאריך {deleteDate ? formatDate(deleteDate) : ""} יימחק לכל המורים. לא ניתן לשחזר.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="h-12 rounded-xl mt-0">ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              className="h-12 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={(e) => { e.preventDefault(); deleteMutation.mutate(); }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "מוחק..." : "מחיקה"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
