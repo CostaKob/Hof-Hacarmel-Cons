@@ -13,7 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ChevronLeft, AlertCircle, CalendarDays, Pencil, Trash2 } from "lucide-react";
+import { ChevronLeft, AlertCircle, CalendarDays, Pencil, Trash2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { format, addDays, parseISO } from "date-fns";
 import PageTitle from "@/components/PageTitle";
@@ -126,6 +126,7 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
   }, [filtered]);
 
   const [deleteDate, setDeleteDate] = useState<string | null>(null);
+  const [openDate, setOpenDate] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
