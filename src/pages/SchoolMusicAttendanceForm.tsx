@@ -244,7 +244,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
         </div>
         )}
 
-        <div className="fixed bottom-0 inset-x-0 bg-background/95 backdrop-blur border-t border-border p-4">
+        <div className="fixed bottom-[76px] md:bottom-0 inset-x-0 z-40 bg-background/95 backdrop-blur border-t border-border p-4 safe-area-pb">
           <div className="mx-auto max-w-2xl flex gap-2">
             <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || teachers.length === 0} className="flex-1 h-12 rounded-xl">
               {saveMutation.isPending ? "שומר..." : "שמירת דיווח"}
