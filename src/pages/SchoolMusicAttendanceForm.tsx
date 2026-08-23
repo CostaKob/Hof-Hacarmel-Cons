@@ -158,7 +158,7 @@ const SchoolMusicAttendanceForm = ({ variant = "teacher" }: Props) => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-5 -mt-3 pb-32 space-y-4">
+      <main className="mx-auto max-w-2xl px-5 -mt-3 pb-52 md:pb-32 space-y-4">
         <div className="rounded-2xl border border-border bg-card p-4 shadow-sm space-y-3">
           <div className="space-y-1.5">
             <Label className="text-sm">תאריך הדיווח</Label>
