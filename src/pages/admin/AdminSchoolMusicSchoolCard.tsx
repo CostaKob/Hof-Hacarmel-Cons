@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, ChevronLeft, Music, Copy, Users, User, MapPin } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone, ChevronDown, ChevronUp, ChevronLeft, Music, Copy, Users, User, MapPin, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
@@ -655,6 +655,13 @@ const AdminSchoolMusicSchoolCard = ({ variant = "admin" }: { variant?: "admin" |
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">פרטי בית הספר</CardTitle>
             <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="h-11 rounded-xl"
+                onClick={() => navigate(isCoordinatorView ? `/teacher/school-music-schools/${id}/attendance` : `/admin/school-music-schools/${id}/attendance`)}
+              >
+                <ClipboardList className="h-4 w-4" /> נוכחות
+              </Button>
               {!isCoordinatorView && (
                 <Button variant="outline" size="icon" className="h-11 w-11 rounded-xl text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteSchool(true)}>
                   <Trash2 className="h-4 w-4" />
