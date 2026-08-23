@@ -4,7 +4,6 @@ import { useTeacherProfile } from "@/hooks/useTeacherData";
 import { useTeacherEnsembleStaff } from "@/hooks/useTeacherEnsembles";
 import { useTeacherSchoolMusicSchools } from "@/hooks/useTeacherSchoolMusic";
 import { useBranchCoordinatorBranches } from "@/hooks/useBranchCoordinator";
-import { useIsCalendarCoordinator } from "@/hooks/useCalendarAccess";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 
 const TeacherBottomNav = () => {
