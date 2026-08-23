@@ -546,6 +546,16 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     if (!form.title_he.trim() || !form.track_id || !form.start_date || !form.end_date) {
       return;
     }
+
+    // אירוע רגיל/יום זיכרון ללא שעה — כנראה שכחו למלא. מוודאים לפני שמירה.
+    const trackKey = tracks.find((t) => t.id === form.track_id)?.key;
+    if (
+      (trackKey === "regular" || trackKey === "memorial") &&
+      !form.start_time &&
+      !window.confirm("לא נבחרה שעת התחלה. לשמור את האירוע כאירוע יום שלם?")
+    ) {
+      return;
+    }
     try {
       setSaving(true);
 
