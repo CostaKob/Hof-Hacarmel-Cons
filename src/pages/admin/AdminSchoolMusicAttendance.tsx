@@ -45,12 +45,14 @@ const STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive" =>
 
 const AdminSchoolMusicAttendance = () => {
   const { activeYear } = useAcademicYear();
+  const { minDate, maxDate } = useAcademicDateRange();
   const navigate = useNavigate();
   const today = format(new Date(), "yyyy-MM-dd");
   const monthAgo = format(addDays(new Date(), -30), "yyyy-MM-dd");
+  const effectiveMaxDate = clampDate(today, minDate, maxDate);
 
-  const [startDate, setStartDate] = useState(monthAgo);
-  const [endDate, setEndDate] = useState(today);
+  const [startDate, setStartDate] = useState(clampDate(monthAgo, minDate, maxDate));
+  const [endDate, setEndDate] = useState(clampDate(today, minDate, maxDate));
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [teacherFilter, setTeacherFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -58,7 +60,7 @@ const AdminSchoolMusicAttendance = () => {
   // Manual report dialog state
   const [manualOpen, setManualOpen] = useState(false);
   const [manualSchool, setManualSchool] = useState<string>("");
-  const [manualDate, setManualDate] = useState<string>(today);
+  const [manualDate, setManualDate] = useState<string>(effectiveMaxDate);
 
   const goReport = (schoolId: string, date: string) => {
     navigate(`/admin/school-music-schools/${schoolId}/attendance/new?date=${date}`);
