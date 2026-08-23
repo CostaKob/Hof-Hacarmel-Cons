@@ -284,33 +284,10 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   }, [isCoordinator]);
 
   /**
-   * בקשות שמוצגות בבאנר של הרכז:
-   * ממתינות — תמיד; מאושרות/נדחות — מוצגות פעם אחת בלבד (בכניסה הראשונה אחרי ההכרעה).
+   * בקשות שמוצגות בבאנר של הרכז — רך בקשות שעדיין ממתינות לאישור.
    */
-  const SEEN_KEY = "calendar_seen_resolved_requests";
-  const [seenResolvedIds] = useState<Set<string>>(() => {
-    try {
-      return new Set<string>(JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"));
-    } catch {
-      return new Set<string>();
-    }
-  });
-
   const visibleMyRequests = useMemo(() => {
     return myRequests.filter((r) => r.status === "pending");
-  }, [myRequests]);
-
-  // מסמנים בקשות שהוכרעו כ"נראו" — כך שלא יופיעו שוב בכניסה הבאה.
-  useEffect(() => {
-    const resolved = myRequests.filter((r) => r.status !== "pending").map((r) => r.id);
-    if (resolved.length === 0) return;
-    try {
-      const stored: string[] = JSON.parse(localStorage.getItem(SEEN_KEY) || "[]");
-      const merged = Array.from(new Set([...stored, ...resolved]));
-      localStorage.setItem(SEEN_KEY, JSON.stringify(merged.slice(-200)));
-    } catch {
-      /* ignore */
-    }
   }, [myRequests]);
 
 
