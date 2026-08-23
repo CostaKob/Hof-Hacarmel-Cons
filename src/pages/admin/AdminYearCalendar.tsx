@@ -1370,13 +1370,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                       ? ` — ${r.payload?.title_he ?? r.snapshot?.title_he}`
                       : ""}
                   </span>
-                  <span className="shrink-0 font-medium">
-                    {r.status === "pending"
-                      ? "ממתין לאישור"
-                      : r.status === "approved"
-                        ? "אושר"
-                        : "נדחה"}
-                  </span>
+                  <span className="shrink-0 font-medium">ממתין לאישור</span>
                 </div>
               ))}
             </div>
