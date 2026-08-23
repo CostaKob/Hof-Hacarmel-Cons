@@ -110,17 +110,20 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
     if (operatingDays.length === 0) return [];
     const reportedDates = new Set(rows.map((r: any) => r.attendance_date));
     const out: string[] = [];
-    const start = parseISO(startDate);
-    const end = parseISO(endDate);
+    const rangeStart = clampDate(startDate, minDate, maxDate);
+    const rangeEnd = clampDate(endDate, minDate, maxDate);
+    const start = parseISO(rangeStart);
+    const end = parseISO(rangeEnd);
     const todayD = parseISO(today);
     for (let d = new Date(start); d <= end && d <= todayD; d = addDays(d, 1)) {
       if (operatingDays.includes(d.getDay())) {
         const ds = format(d, "yyyy-MM-dd");
+        if (ds < minDate || ds > maxDate) continue;
         if (!reportedDates.has(ds)) out.push(ds);
       }
     }
     return out.sort().reverse();
-  }, [operatingDays, rows, startDate, endDate, today]);
+  }, [operatingDays, rows, startDate, endDate, today, minDate, maxDate]);
 
   const filtered = rows.filter((r: any) => {
     if (teacherFilter !== "all" && r.teacher_id !== teacherFilter) return false;
