@@ -237,18 +237,24 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
         ) : (
           <div className="space-y-3">
             {grouped.map((g) => {
-              const absentCount = g.items.filter((r: any) => r.status !== "present").length;
+              const nameOf = (r: any) => {
+                const t = teacherById[r.teacher_id];
+                return t ? `${t.first_name} ${t.last_name}` : "—";
+              };
+              const presentItems = g.items.filter((r: any) => r.status === "present" || r.status === "double_lesson");
+              const absentItems = g.items.filter((r: any) => !(r.status === "present" || r.status === "double_lesson"));
+              const isOpen = openDate === g.date;
               return (
                 <div key={g.date} className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden">
                   <div
                     className="flex items-center gap-2 px-4 py-3 cursor-pointer active:bg-muted/50 transition-colors"
-                    onClick={() => navigate(`${newPath}?date=${g.date}`)}
+                    onClick={() => setOpenDate(isOpen ? null : g.date)}
                   >
                     <CalendarDays className="h-4 w-4 text-primary shrink-0" />
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-sm">{formatDate(g.date)}</div>
                       <div className="text-xs text-muted-foreground">
-                        {g.items.length} מורים{absentCount > 0 ? ` · ${absentCount} לא נכחו` : " · כולם נכחו"}
+                        {presentItems.length} הגיעו · {absentItems.length} לא הגיעו
                       </div>
                     </div>
                     <Button
@@ -269,22 +275,39 @@ const SchoolMusicAttendanceList = ({ variant = "teacher" as "teacher" | "admin" 
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </div>
-                  <div className="border-t border-border divide-y divide-border">
-                    {g.items.map((r: any) => {
-                      const t = teacherById[r.teacher_id];
-                      return (
+
+                  <div className="border-t border-border px-4 py-3 space-y-2 text-sm">
+                    <div className="flex gap-2">
+                      <span className="shrink-0 font-semibold text-emerald-700">הגיעו:</span>
+                      <span className="min-w-0 flex-1 text-foreground/80">
+                        {presentItems.length ? presentItems.map(nameOf).join(", ") : "—"}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <span className="shrink-0 font-semibold text-destructive">לא הגיעו:</span>
+                      <span className="min-w-0 flex-1 text-foreground/80">
+                        {absentItems.length ? absentItems.map(nameOf).join(", ") : "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {isOpen && (
+                    <div className="border-t border-border divide-y divide-border">
+                      {g.items.map((r: any) => (
                         <div key={r.id} className="flex items-center gap-2 px-4 py-2 text-sm">
-                          <span className="flex-1 min-w-0 truncate">{t ? `${t.first_name} ${t.last_name}` : "—"}</span>
+                          <span className="flex-1 min-w-0 truncate">{nameOf(r)}</span>
                           {r.notes && <span className="text-xs text-muted-foreground truncate max-w-[40%]">{r.notes}</span>}
                           <Badge variant={STATUS_VARIANT(r.status)} className="shrink-0">{STATUS_LABEL[r.status] ?? r.status}</Badge>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })}
+
           </div>
         )}
       </main>
