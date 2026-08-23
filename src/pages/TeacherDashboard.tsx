@@ -148,9 +148,7 @@ const TeacherDashboard = () => {
           {hasBranches && (
             <StatCard icon={Building2} label="השלוחות שלי" value={branchCoordinatorBranches!.length} onClick={() => navigate("/teacher/branches")} />
           )}
-          {isCalendarCoordinator && (
-            <StatCard icon={CalendarDays} label="לוח שנה שנתי" value="צפייה" small onClick={() => navigate("/teacher/year-calendar")} />
-          )}
+          <StatCard icon={CalendarDays} label="לוח שנה שנתי" value="צפייה" small onClick={() => navigate("/teacher/year-calendar")} />
         </div>
 
         {/* Primary action */}
