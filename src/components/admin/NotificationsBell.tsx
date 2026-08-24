@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications, type NotificationRow } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import { PAYMENT_SOUNDS } from "@/lib/notificationSound";
+import { PAYMENT_SOUNDS, type PaymentSoundCategory } from "@/lib/notificationSound";
 
 const ICONS: Record<string, { icon: typeof Bell; className: string }> = {
   registration: { icon: ClipboardList, className: "text-primary" },
@@ -37,6 +37,9 @@ const NotificationsBell = ({ className }: { className?: string }) => {
     paymentSound, setPaymentSound, previewPaymentSound,
   } = useNotifications();
   const [soundPanel, setSoundPanel] = useState(false);
+  const [soundCategory, setSoundCategory] = useState<PaymentSoundCategory>(
+    PAYMENT_SOUNDS.find((s) => s.id === paymentSound)?.category ?? "register"
+  );
 
   if (!enabled) return null;
 
@@ -110,30 +113,51 @@ const NotificationsBell = ({ className }: { className?: string }) => {
           </div>
         </div>
         {soundPanel && (
-          <div className="border-b bg-muted/40 px-4 py-3 space-y-1.5 max-h-[18rem] overflow-y-auto">
+          <div className="border-b bg-muted/40 px-4 py-3 space-y-2 max-h-[22rem] overflow-y-auto">
             <p className="text-[11px] text-muted-foreground">בחר את הצליל שיושמע כשמתקבל תשלום</p>
-            {PAYMENT_SOUNDS.map((s) => (
-              <div key={s.id} className="flex items-center gap-2">
-                <Button
-                  variant={paymentSound === s.id ? "default" : "outline"}
-                  size="sm"
-                  className="h-8 flex-1 justify-start rounded-lg text-xs"
-                  onClick={() => setPaymentSound(s.id)}
+            <div className="flex gap-1 rounded-lg bg-muted p-1">
+              {[
+                { id: "register", label: "קופה" },
+                { id: "coins", label: "מטבעות" },
+              ].map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSoundCategory(cat.id as PaymentSoundCategory)}
+                  className={cn(
+                    "flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
+                    soundCategory === cat.id
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {paymentSound === s.id && <Check className="h-3.5 w-3.5 ml-1" />}
-                  {s.label}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`השמע ${s.label}`}
-                  className="h-8 w-8 shrink-0"
-                  onClick={() => previewPaymentSound(s.id)}
-                >
-                  <Play className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ))}
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-1.5">
+              {PAYMENT_SOUNDS.filter((s) => s.category === soundCategory).map((s) => (
+                <div key={s.id} className="flex items-center gap-2">
+                  <Button
+                    variant={paymentSound === s.id ? "default" : "outline"}
+                    size="sm"
+                    className="h-8 flex-1 justify-start rounded-lg text-xs"
+                    onClick={() => setPaymentSound(s.id)}
+                  >
+                    {paymentSound === s.id && <Check className="h-3.5 w-3.5 ml-1" />}
+                    {s.label}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`השמע ${s.label}`}
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => previewPaymentSound(s.id)}
+                  >
+                    <Play className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
         <ScrollArea className="max-h-[26rem]">

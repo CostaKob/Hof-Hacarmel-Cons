@@ -89,19 +89,33 @@ const PAYMENT_SOUND_KEY = "notifications:paymentSound";
 
 export type PaymentSoundId =
   | "register1" | "register2" | "register3" | "register4" | "register5"
-  | "register6" | "register7" | "register8" | "register9" | "register10";
+  | "register6" | "register7" | "register8" | "register9" | "register10"
+  | "coin1" | "coin2" | "coin3" | "coin4" | "coin5"
+  | "coin6" | "coin7" | "coin8" | "coin9" | "coin10";
 
-export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string }[] = [
-  { id: "register1", label: "1 · קופה קלאסית — פעמון + מגירה" },
-  { id: "register2", label: "2 · צ׳ה־צ׳ינג בהיר" },
-  { id: "register3", label: "3 · פעמון עתיק כבד" },
-  { id: "register4", label: "4 · קופה + זרם מטבעות" },
-  { id: "register5", label: "5 · צ׳ינג כפול מהיר" },
-  { id: "register6", label: "6 · פעמון קטן ועדין" },
-  { id: "register7", label: "7 · קופה מכנית (מנוף + פעמון)" },
-  { id: "register8", label: "8 · קופה דיגיטלית (ביפ + צ׳ינג)" },
-  { id: "register9", label: "9 · פעמון גדול עם הד" },
-  { id: "register10", label: "10 · קופה + מגירה נפתחת ונסגרת" },
+export type PaymentSoundCategory = "register" | "coins";
+
+export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string; category: PaymentSoundCategory }[] = [
+  { id: "register1", label: "1 · קופה קלאסית — פעמון + מגירה", category: "register" },
+  { id: "register2", label: "2 · צ׳ה־צ׳ינג בהיר", category: "register" },
+  { id: "register3", label: "3 · פעמון עתיק כבד", category: "register" },
+  { id: "register4", label: "4 · קופה + זרם מטבעות", category: "register" },
+  { id: "register5", label: "5 · צ׳ינג כפול מהיר", category: "register" },
+  { id: "register6", label: "6 · פעמון קטן ועדין", category: "register" },
+  { id: "register7", label: "7 · קופה מכנית (מנוף + פעמון)", category: "register" },
+  { id: "register8", label: "8 · קופה דיגיטלית (ביפ + צ׳ינג)", category: "register" },
+  { id: "register9", label: "9 · פעמון גדול עם הד", category: "register" },
+  { id: "register10", label: "10 · קופה + מגירה נפתחת ונסגרת", category: "register" },
+  { id: "coin1", label: "1 · מטבע אחד נופל", category: "coins" },
+  { id: "coin2", label: "2 · שני מטבעות", category: "coins" },
+  { id: "coin3", label: "3 · מטבעות נופלים זה אחרי זה", category: "coins" },
+  { id: "coin4", label: "4 · מטבע מסתובב", category: "coins" },
+  { id: "coin5", label: "5 · מטבעות נופלים בקופה", category: "coins" },
+  { id: "coin6", label: "6 · מטבע כבד (מטאלי עמוק)", category: "coins" },
+  { id: "coin7", label: "7 · מטבעות קטנים וקלים", category: "coins" },
+  { id: "coin8", label: "8 · נחיתה עם רטט", category: "coins" },
+  { id: "coin9", label: "9 · מטבעות מרוחקים", category: "coins" },
+  { id: "coin10", label: "10 · מטבעות מהירים", category: "coins" },
 ];
 
 export function getPaymentSound(): PaymentSoundId {
@@ -230,6 +244,100 @@ function thud(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: n
   osc.stop(at + 0.2);
 }
 
+/* -------------------------------------------------------------
+ * Coin-specific synthesis helpers.
+ * ----------------------------------------------------------- */
+
+/** Short bright coin ping with a tiny metallic chirp. */
+function coinPing(
+  c: AudioContext,
+  dest: AudioNode,
+  at: number,
+  freq: number,
+  vol: number,
+  dur = 0.18,
+) {
+  const bus = c.createGain();
+  bus.gain.value = vol;
+  bus.connect(dest);
+
+  const osc = c.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, at);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.65, at + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  osc.connect(g).connect(bus);
+  osc.start(at);
+  osc.stop(at + dur + 0.02);
+
+  // metallic chirp partial
+  const chirp = c.createOscillator();
+  chirp.type = "triangle";
+  chirp.frequency.setValueAtTime(freq * 2.4, at);
+  chirp.frequency.exponentialRampToValueAtTime(freq * 1.9, at + dur * 0.5);
+  const cg = c.createGain();
+  cg.gain.setValueAtTime(0.0001, at);
+  cg.gain.exponentialRampToValueAtTime(vol * 0.35, at + 0.002);
+  cg.gain.exponentialRampToValueAtTime(0.0001, at + dur * 0.5);
+  chirp.connect(cg).connect(bus);
+  chirp.start(at);
+  chirp.stop(at + dur * 0.55);
+
+  // tiny impact click
+  noise(c, bus, at, 0.015, vol * 0.4, "highpass", 4500);
+}
+
+/** Coin spinning/wobbling on a surface before settling. */
+function coinSpin(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: number) {
+  const osc = c.createOscillator();
+  osc.type = "sine";
+  const g = c.createGain();
+  osc.connect(g).connect(dest);
+
+  const start = at;
+  const steps = 22;
+  const stepDur = 0.035;
+  for (let i = 0; i < steps; i++) {
+    const t = start + i * stepDur;
+    const f = freq * (1 - i / steps * 0.7);
+    osc.frequency.setValueAtTime(f, t);
+    const v = vol * Math.pow(1 - i / steps, 1.4);
+    g.gain.setValueAtTime(v, t);
+    g.gain.exponentialRampToValueAtTime(v * 0.3, t + stepDur * 0.8);
+  }
+  osc.start(start);
+  osc.stop(start + steps * stepDur + 0.05);
+}
+
+/** Coin landing and rattling against other coins/tray. */
+function coinRattle(c: AudioContext, dest: AudioNode, at: number, vol: number, count = 5) {
+  for (let i = 0; i < count; i++) {
+    const t = at + i * (0.02 + Math.random() * 0.025);
+    const f = 2800 + Math.random() * 1800;
+    coinPing(c, dest, t, f, vol * (0.9 - i * 0.12), 0.08 + Math.random() * 0.06);
+  }
+}
+
+/** Cascade of multiple coins dropping one after another. */
+function coinCascade(c: AudioContext, dest: AudioNode, at: number, vol: number, count = 8) {
+  for (let i = 0; i < count; i++) {
+    const t = at + i * (0.04 + Math.random() * 0.04);
+    const f = 3000 + Math.random() * 1600;
+    coinPing(c, dest, t, f, vol * (0.8 - i * 0.06), 0.1 + Math.random() * 0.08);
+  }
+}
+
+/** Low "heavy" coin impact. */
+function heavyCoin(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: number) {
+  const bus = makeBus(c, 0.12, 0.07, 0.22);
+  bus.connect(dest);
+  strikeBell(c, bus, at, freq, 0.55, vol, [1, 2.8, 5.2]);
+  noise(c, bus, at, 0.03, vol * 0.4, "highpass", 1800);
+}
+
 function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
   switch (id) {
     case "register1": {
@@ -323,6 +431,76 @@ function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
       thud(c, bus, t + 0.5, 150, 0.14);
       noise(c, bus, t + 0.75, 0.18, 0.05, "bandpass", 900);
       thud(c, bus, t + 0.93, 110, 0.18);
+      break;
+    }
+    case "coin1": {
+      // Single coin dropped on a counter.
+      const bus = makeBus(c, 0.15, 0.06, 0.28);
+      coinPing(c, bus, t, 3600, 0.32, 0.22);
+      break;
+    }
+    case "coin2": {
+      // Two coins landing.
+      const bus = makeBus(c, 0.16, 0.07, 0.26);
+      coinPing(c, bus, t, 3800, 0.28, 0.18);
+      coinPing(c, bus, t + 0.12, 3200, 0.24, 0.18);
+      break;
+    }
+    case "coin3": {
+      // Coins dropping one after another.
+      const bus = makeBus(c, 0.18, 0.08, 0.24);
+      coinCascade(c, bus, t, 0.22, 7);
+      break;
+    }
+    case "coin4": {
+      // Spinning coin on a surface.
+      const bus = makeBus(c, 0.12, 0.05, 0.2);
+      coinSpin(c, bus, t, 2500, 0.28);
+      coinPing(c, bus, t + 0.82, 3100, 0.18, 0.15);
+      break;
+    }
+    case "coin5": {
+      // Coins landing in a tray / register.
+      const bus = makeBus(c, 0.2, 0.09, 0.22);
+      coinPing(c, bus, t, 3500, 0.26, 0.16);
+      coinRattle(c, bus, t + 0.08, 0.2, 6);
+      break;
+    }
+    case "coin6": {
+      // Heavy metallic coin.
+      const bus = makeBus(c, 0.14, 0.07, 0.26);
+      heavyCoin(c, bus, t, 1800, 0.32);
+      break;
+    }
+    case "coin7": {
+      // Small, light coins (like small change).
+      const bus = makeBus(c, 0.15, 0.05, 0.2);
+      [0, 0.05, 0.1, 0.16, 0.22].forEach((d, i) => {
+        coinPing(c, bus, t + d, 4200 + i * 200, 0.2 - i * 0.02, 0.12);
+      });
+      break;
+    }
+    case "coin8": {
+      // Landing with a rattle.
+      const bus = makeBus(c, 0.18, 0.07, 0.3);
+      coinPing(c, bus, t, 3400, 0.28, 0.18);
+      coinRattle(c, bus, t + 0.06, 0.18, 8);
+      break;
+    }
+    case "coin9": {
+      // Distant coins (softer, slightly filtered).
+      const bus = makeBus(c, 0.12, 0.1, 0.35);
+      const out = c.createGain();
+      out.gain.value = 0.6;
+      out.connect(bus);
+      coinPing(c, out, t, 3000, 0.22, 0.2);
+      coinRattle(c, out, t + 0.12, 0.14, 5);
+      break;
+    }
+    case "coin10": {
+      // Fast cascade of coins.
+      const bus = makeBus(c, 0.16, 0.05, 0.18);
+      coinCascade(c, bus, t, 0.26, 12);
       break;
     }
   }
