@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
-import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
+import { useTeacherEnsembleDetail, useEnsembleStudentInstruments } from "@/hooks/useTeacherEnsembles";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { ENSEMBLE_STAFF_ROLE_LABELS, DAYS_OF_WEEK_LABELS } from "@/lib/ensembleConstants";
 import { ArrowRight, Music, MapPin, Clock, CalendarDays, School, StickyNote, ChevronLeft } from "lucide-react";
@@ -20,6 +20,12 @@ const TeacherEnsembleCard = () => {
   // Find the logged-in teacher's role in this ensemble
   const myStaff = (ensemble?.ensemble_staff ?? []).find(
     (s: any) => s.teacher_id === teacher?.id
+  );
+
+  const participantIds = (ensemble?.ensemble_students ?? []).map((es: any) => es.student_id).filter(Boolean);
+  const { data: instrumentsByStudent } = useEnsembleStudentInstruments(
+    participantIds,
+    (ensemble as any)?.academic_year_id ?? selectedYearId
   );
 
   if (isLoading) {
@@ -101,7 +107,8 @@ const TeacherEnsembleCard = () => {
             <div className="divide-y divide-border">
               {students.map((s: any) => {
                 const enrollment = (allEnrollments ?? []).find((e: any) => e.student_id === s.id);
-                const instrumentName = enrollment?.instruments?.name;
+                const instrumentName =
+                  (instrumentsByStudent?.[s.id] ?? []).join(" · ") || enrollment?.instruments?.name;
 
                 return (
                   <button

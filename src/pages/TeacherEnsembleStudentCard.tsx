@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
-import { useTeacherEnsembleDetail } from "@/hooks/useTeacherEnsembles";
+import { useTeacherEnsembleDetail, useEnsembleStudentInstruments } from "@/hooks/useTeacherEnsembles";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { DAYS_OF_WEEK_LABELS, ENSEMBLE_STAFF_ROLE_LABELS } from "@/lib/ensembleConstants";
 import { ArrowRight, CalendarDays, ChevronLeft, Clock, MapPin, Music, Phone, School, User } from "lucide-react";
@@ -21,7 +21,12 @@ const TeacherEnsembleStudentCard = () => {
   const participant = (ensemble?.ensemble_students ?? []).find((entry: any) => entry.student_id === studentId);
   const student = participant?.students;
   const myEnrollment = (allEnrollments ?? []).find((enrollment: any) => enrollment.student_id === studentId);
-  const instrumentName = myEnrollment?.instruments?.name;
+  const { data: instrumentsByStudent } = useEnsembleStudentInstruments(
+    studentId ? [studentId] : [],
+    (ensemble as any)?.academic_year_id ?? selectedYearId
+  );
+  const instrumentName =
+    (instrumentsByStudent?.[studentId ?? ""] ?? []).join(" · ") || myEnrollment?.instruments?.name;
 
   if (isLoading) {
     return (
@@ -64,7 +69,7 @@ const TeacherEnsembleStudentCard = () => {
             פרטי תלמיד
           </h2>
           <InfoRow label="שם מלא" value={`${student.first_name} ${student.last_name}`} />
-          {instrumentName && <InfoRow label="כלי נגינה" value={instrumentName} />}
+          {instrumentName && <InfoRow label="כלי נגינה" value={instrumentName} icon={<Music className="h-4 w-4 text-muted-foreground" />} />}
           {student.phone && (
             <div className="flex items-center gap-2 text-sm">
               <Phone className="h-4 w-4 text-muted-foreground" />
