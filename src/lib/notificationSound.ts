@@ -244,6 +244,100 @@ function thud(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: n
   osc.stop(at + 0.2);
 }
 
+/* -------------------------------------------------------------
+ * Coin-specific synthesis helpers.
+ * ----------------------------------------------------------- */
+
+/** Short bright coin ping with a tiny metallic chirp. */
+function coinPing(
+  c: AudioContext,
+  dest: AudioNode,
+  at: number,
+  freq: number,
+  vol: number,
+  dur = 0.18,
+) {
+  const bus = c.createGain();
+  bus.gain.value = vol;
+  bus.connect(dest);
+
+  const osc = c.createOscillator();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(freq, at);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.65, at + dur);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  osc.connect(g).connect(bus);
+  osc.start(at);
+  osc.stop(at + dur + 0.02);
+
+  // metallic chirp partial
+  const chirp = c.createOscillator();
+  chirp.type = "triangle";
+  chirp.frequency.setValueAtTime(freq * 2.4, at);
+  chirp.frequency.exponentialRampToValueAtTime(freq * 1.9, at + dur * 0.5);
+  const cg = c.createGain();
+  cg.gain.setValueAtTime(0.0001, at);
+  cg.gain.exponentialRampToValueAtTime(vol * 0.35, at + 0.002);
+  cg.gain.exponentialRampToValueAtTime(0.0001, at + dur * 0.5);
+  chirp.connect(cg).connect(bus);
+  chirp.start(at);
+  chirp.stop(at + dur * 0.55);
+
+  // tiny impact click
+  noise(c, bus, at, 0.015, vol * 0.4, "highpass", 4500);
+}
+
+/** Coin spinning/wobbling on a surface before settling. */
+function coinSpin(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: number) {
+  const osc = c.createOscillator();
+  osc.type = "sine";
+  const g = c.createGain();
+  osc.connect(g).connect(dest);
+
+  const start = at;
+  const steps = 22;
+  const stepDur = 0.035;
+  for (let i = 0; i < steps; i++) {
+    const t = start + i * stepDur;
+    const f = freq * (1 - i / steps * 0.7);
+    osc.frequency.setValueAtTime(f, t);
+    const v = vol * Math.pow(1 - i / steps, 1.4);
+    g.gain.setValueAtTime(v, t);
+    g.gain.exponentialRampToValueAtTime(v * 0.3, t + stepDur * 0.8);
+  }
+  osc.start(start);
+  osc.stop(start + steps * stepDur + 0.05);
+}
+
+/** Coin landing and rattling against other coins/tray. */
+function coinRattle(c: AudioContext, dest: AudioNode, at: number, vol: number, count = 5) {
+  for (let i = 0; i < count; i++) {
+    const t = at + i * (0.02 + Math.random() * 0.025);
+    const f = 2800 + Math.random() * 1800;
+    coinPing(c, dest, t, f, vol * (0.9 - i * 0.12), 0.08 + Math.random() * 0.06);
+  }
+}
+
+/** Cascade of multiple coins dropping one after another. */
+function coinCascade(c: AudioContext, dest: AudioNode, at: number, vol: number, count = 8) {
+  for (let i = 0; i < count; i++) {
+    const t = at + i * (0.04 + Math.random() * 0.04);
+    const f = 3000 + Math.random() * 1600;
+    coinPing(c, dest, t, f, vol * (0.8 - i * 0.06), 0.1 + Math.random() * 0.08);
+  }
+}
+
+/** Low "heavy" coin impact. */
+function heavyCoin(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: number) {
+  const bus = makeBus(c, 0.12, 0.07, 0.22);
+  bus.connect(dest);
+  strikeBell(c, bus, at, freq, 0.55, vol, [1, 2.8, 5.2]);
+  noise(c, bus, at, 0.03, vol * 0.4, "highpass", 1800);
+}
+
 function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
   switch (id) {
     case "register1": {
