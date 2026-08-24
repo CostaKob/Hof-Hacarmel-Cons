@@ -1,6 +1,28 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export const FAMILY_ASSIGNMENT_TEMPLATE_KEY = "family_assignment";
+export const ASSIGNMENT_NOTE_KEY = "assignment_default_note";
+export const FALLBACK_ASSIGNMENT_NOTE = "השיעורים יתחילו בספטמבר עם תחילת שנת הלימודים";
+
+/** ההערה שמופיעה כברירת מחדל בחלון שליחת ההודעה להורה */
+export async function fetchDefaultAssignmentNote(): Promise<string> {
+  const { data } = await supabase
+    .from("message_templates")
+    .select("body")
+    .eq("key", ASSIGNMENT_NOTE_KEY)
+    .maybeSingle();
+  return data?.body || FALLBACK_ASSIGNMENT_NOTE;
+}
+
+export async function saveDefaultAssignmentNote(note: string): Promise<void> {
+  const { error } = await supabase
+    .from("message_templates")
+    .upsert(
+      { key: ASSIGNMENT_NOTE_KEY, name: "הערה ברירת מחדל לתחילת השיעורים", subject: "", body: note },
+      { onConflict: "key" },
+    );
+  if (error) throw error;
+}
 
 export interface MessageTemplate {
   key: string;

@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FAMILY_ASSIGNMENT_TEMPLATE_KEY,
+  FALLBACK_ASSIGNMENT_NOTE,
+  fetchDefaultAssignmentNote,
+  saveDefaultAssignmentNote,
   fetchMessageTemplate,
   renderTemplate,
   prepareWhatsAppText,
@@ -136,13 +139,31 @@ const SendFamilyAssignmentMessage = ({
   enrollments,
   pendingPayments,
 }: Props) => {
-  const defaultNote = useMemo(() => {
-    return new Date().getMonth() < 8
-      ? "השיעורים יתחילו בספטמבר עם תחילת שנת הלימודים"
-      : "השיעורים יתחילו בהקדם האפשרי";
-  }, []);
+  const { data: defaultNote, refetch: refetchNote } = useQuery({
+    queryKey: ["assignment-default-note"],
+    queryFn: fetchDefaultAssignmentNote,
+    initialData: FALLBACK_ASSIGNMENT_NOTE,
+  });
 
   const [extraNote, setExtraNote] = useState(defaultNote);
+  const [savingNote, setSavingNote] = useState(false);
+
+  useEffect(() => {
+    if (open) setExtraNote(defaultNote);
+  }, [open, defaultNote]);
+
+  const saveNoteAsDefault = async () => {
+    setSavingNote(true);
+    try {
+      await saveDefaultAssignmentNote(extraNote.trim());
+      await refetchNote();
+      toast.success("ההערה נשמרה כברירת מחדל");
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בשמירה");
+    } finally {
+      setSavingNote(false);
+    }
+  };
   const [message, setMessage] = useState("");
   const [subject, setSubject] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -299,7 +320,21 @@ const SendFamilyAssignmentMessage = ({
             </div>
           )}
           <div className="space-y-1">
-            <Label className="text-xs">הערה לתחילת השיעורים</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">הערה לתחילת השיעורים</Label>
+              {extraNote.trim() !== (defaultNote ?? "").trim() && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 rounded-lg px-2 text-xs"
+                  disabled={savingNote}
+                  onClick={saveNoteAsDefault}
+                >
+                  {savingNote ? "שומר..." : "שמור כברירת מחדל"}
+                </Button>
+              )}
+            </div>
             <Textarea
               value={extraNote}
               onChange={(e) => setExtraNote(e.target.value)}
