@@ -70,10 +70,13 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
           .from("profiles")
           .select("id, full_name")
           .in("id", authorIds);
-        const byId = new Map((profs ?? []).map((p: any) => [p.id, p.full_name]));
+        const byId = new Map<string, string | null>(
+          (profs ?? []).map((p: any) => [p.id as string, (p.full_name ?? null) as string | null]),
+        );
         rows.forEach((r) => {
           r.profiles = { full_name: byId.get(r.author_user_id ?? "") ?? null };
         });
+
       }
       return rows;
     },
