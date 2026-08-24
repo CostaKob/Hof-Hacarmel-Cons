@@ -91,7 +91,7 @@ const PAYMENT_SOUND_KEY = "notifications:paymentSound";
 export type PaymentSoundId = "kaching" | "coins" | "fanfare" | "soft";
 
 export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string }[] = [
-  { id: "kaching", label: "קופה רושמת (קה־צ׳ינג)" },
+  { id: "kaching", label: "קופה רושמת — צ׳ינג צ׳ינג" },
   { id: "coins", label: "מטבעות נופלים" },
   { id: "fanfare", label: "פאנפרה קצרה" },
   { id: "soft", label: "צליל עדין" },
@@ -143,13 +143,24 @@ function noiseBurst(c: AudioContext, start: number, duration: number, gainPeak =
 
 function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
   switch (id) {
-    case "kaching":
-      // metallic drawer "ka" then bright "ching" pair
-      noiseBurst(c, t, 0.08, 0.14);
-      bell(c, 1046.5, t + 0.01, 0.18, 0.2);
-      bell(c, 1567.98, t + 0.12, 0.55, 0.22);
-      bell(c, 2093, t + 0.13, 0.5, 0.14);
+    case "kaching": {
+      // Real cash-register: two metallic bell strikes ("ching-ching")
+      // with inharmonic partials, then the drawer sliding open.
+      const strike = (at: number, base: number, dur: number, vol: number) => {
+        const partials = [1, 2.76, 5.4, 8.93, 13.34];
+        const vols = [1, 0.6, 0.42, 0.28, 0.16];
+        partials.forEach((mult, i) => {
+          bell(c, base * mult, at, dur * (1 - i * 0.12), vol * vols[i], "sine");
+        });
+        noiseBurst(c, at, 0.035, 0.09); // metal "tick" of the hammer
+      };
+      strike(t, 1200, 0.85, 0.22);
+      strike(t + 0.16, 1500, 1.1, 0.2);
+      // drawer sliding open + soft thud at the end
+      noiseBurst(c, t + 0.3, 0.28, 0.05);
+      bell(c, 140, t + 0.52, 0.16, 0.14, "triangle");
       break;
+    }
     case "coins":
       [0, 0.07, 0.15, 0.24].forEach((d, i) => {
         noiseBurst(c, t + d, 0.05, 0.1);
