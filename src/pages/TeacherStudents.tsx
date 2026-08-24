@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
+import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap, UserX } from "lucide-react";
 import PageTitle from "@/components/PageTitle";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { isInactiveStudentStatus } from "@/lib/constants";
