@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageCircle, Send } from "lucide-react";
+import { Mail, MessageCircle, Send, List } from "lucide-react";
 import { toast } from "sonner";
 import { shortenUrl } from "@/lib/shortLink";
 import { openWhatsApp } from "@/lib/whatsapp";
@@ -86,6 +87,18 @@ function buildMessage(student: any, enrollments: any[], pendingPayment: any | nu
 }
 
 const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments, selectedYearId }: Props) => {
+  const navigate = useNavigate();
+  const returnUrl = useMemo(() => {
+    try {
+      return sessionStorage.getItem("admin-students-return-url") || "/admin/students";
+    } catch {
+      return "/admin/students";
+    }
+  }, []);
+  const goBackToStudentsList = () => {
+    onOpenChange(false);
+    navigate(returnUrl);
+  };
   const { data: pendingPayment } = useQuery({
     queryKey: ["admin-student-pending-payment", student?.id, selectedYearId],
     queryFn: async () => {
@@ -294,6 +307,15 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={goBackToStudentsList}
+            className="h-11 rounded-xl"
+          >
+            <List className="h-4 w-4" />
+            חזרה לרשימת התלמידים
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 rounded-xl">
             ביטול
           </Button>

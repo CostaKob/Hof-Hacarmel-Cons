@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -26,7 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Mail, MessageCircle } from "lucide-react";
+import { Mail, MessageCircle, List } from "lucide-react";
 import { toast } from "sonner";
 
 interface FamilyLike {
@@ -140,6 +141,18 @@ const SendFamilyAssignmentMessage = ({
   enrollments,
   pendingPayments,
 }: Props) => {
+  const navigate = useNavigate();
+  const returnUrl = useMemo(() => {
+    try {
+      return sessionStorage.getItem("admin-students-return-url") || "/admin/students";
+    } catch {
+      return "/admin/students";
+    }
+  }, []);
+  const goBackToStudentsList = () => {
+    onOpenChange(false);
+    navigate(returnUrl);
+  };
   const { data: defaultNote, refetch: refetchNote } = useQuery({
     queryKey: ["assignment-default-note"],
     queryFn: fetchDefaultAssignmentNote,
@@ -400,6 +413,15 @@ const SendFamilyAssignmentMessage = ({
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={goBackToStudentsList}
+            className="h-11 rounded-xl"
+          >
+            <List className="h-4 w-4" />
+            חזרה לרשימת התלמידים
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 rounded-xl">
             ביטול
           </Button>
