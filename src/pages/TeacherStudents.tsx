@@ -17,6 +17,7 @@ import { isInactiveStudentStatus } from "@/lib/constants";
 const TeacherStudents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { selectedYearId, years, activeYear } = useAcademicYear();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id, selectedYearId);
@@ -26,6 +27,7 @@ const TeacherStudents = () => {
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("active");
+  const [markingId, setMarkingId] = useState<string | null>(null);
 
   // ── Previous year = newest year that is NOT active (e.g. תשפ"ו when תשפ"ז is active) ──
   const previousYear = useMemo(() => {
