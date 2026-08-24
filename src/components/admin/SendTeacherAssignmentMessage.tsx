@@ -9,6 +9,11 @@ import { Mail, MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import { shortenUrl } from "@/lib/shortLink";
 import { openWhatsApp } from "@/lib/whatsapp";
+import {
+  FALLBACK_ASSIGNMENT_NOTE,
+  fetchDefaultAssignmentNote,
+  saveDefaultAssignmentNote,
+} from "@/lib/messageTemplates";
 
 interface Props {
   open: boolean;
