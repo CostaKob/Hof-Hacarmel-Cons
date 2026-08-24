@@ -91,7 +91,7 @@ const PAYMENT_SOUND_KEY = "notifications:paymentSound";
 export type PaymentSoundId = "kaching" | "coins" | "fanfare" | "soft";
 
 export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string }[] = [
-  { id: "kaching", label: "קופה רושמת — צ׳ינג צ׳ינג" },
+  { id: "kaching", label: "צ׳ה־צ׳ינג (סגנון שופיפיי)" },
   { id: "coins", label: "מטבעות נופלים" },
   { id: "fanfare", label: "פאנפרה קצרה" },
   { id: "soft", label: "צליל עדין" },
@@ -144,21 +144,56 @@ function noiseBurst(c: AudioContext, start: number, duration: number, gainPeak =
 function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
   switch (id) {
     case "kaching": {
-      // Real cash-register: two metallic bell strikes ("ching-ching")
-      // with inharmonic partials, then the drawer sliding open.
-      const strike = (at: number, base: number, dur: number, vol: number) => {
-        const partials = [1, 2.76, 5.4, 8.93, 13.34];
-        const vols = [1, 0.6, 0.42, 0.28, 0.16];
-        partials.forEach((mult, i) => {
-          bell(c, base * mult, at, dur * (1 - i * 0.12), vol * vols[i], "sine");
-        });
-        noiseBurst(c, at, 0.035, 0.09); // metal "tick" of the hammer
+      // Shopify/Etsy-style "cha-ching": a bright, clean two-note bell hit
+      // (short grace note into a shimmering major chord) with a reverb tail.
+      const out = c.createGain();
+      out.gain.value = 1;
+      out.connect(c.destination);
+
+      // simple shimmer/reverb tail via feedback delay
+      const delay = c.createDelay(1);
+      delay.delayTime.value = 0.075;
+      const fb = c.createGain();
+      fb.gain.value = 0.32;
+      const wet = c.createGain();
+      wet.gain.value = 0.28;
+      const hp = c.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.value = 900;
+      out.connect(delay);
+      delay.connect(fb).connect(delay);
+      delay.connect(hp).connect(wet).connect(c.destination);
+
+      const ping = (freq: number, at: number, dur: number, vol: number) => {
+        // FM bell: carrier + metallic modulator for the "ching" sparkle
+        const carrier = c.createOscillator();
+        carrier.type = "sine";
+        carrier.frequency.value = freq;
+        const mod = c.createOscillator();
+        mod.type = "sine";
+        mod.frequency.value = freq * 3.5;
+        const modGain = c.createGain();
+        modGain.gain.setValueAtTime(freq * 2.2, at);
+        modGain.gain.exponentialRampToValueAtTime(1, at + dur * 0.6);
+        mod.connect(modGain).connect(carrier.frequency);
+
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.0001, at);
+        g.gain.exponentialRampToValueAtTime(vol, at + 0.006);
+        g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+        carrier.connect(g).connect(out);
+        mod.start(at);
+        carrier.start(at);
+        mod.stop(at + dur + 0.05);
+        carrier.stop(at + dur + 0.05);
       };
-      strike(t, 1200, 0.85, 0.22);
-      strike(t + 0.16, 1500, 1.1, 0.2);
-      // drawer sliding open + soft thud at the end
-      noiseBurst(c, t + 0.3, 0.28, 0.05);
-      bell(c, 140, t + 0.52, 0.16, 0.14, "triangle");
+
+      // "cha" – short grace note
+      ping(1174.7, t, 0.13, 0.16);          // D6
+      // "ching" – bright major triad, longer, shimmering
+      ping(1567.98, t + 0.09, 1.1, 0.2);    // G6
+      ping(1975.5, t + 0.095, 0.95, 0.11);  // B6
+      ping(2349.3, t + 0.1, 0.8, 0.07);     // D7
       break;
     }
     case "coins":
