@@ -501,22 +501,50 @@ const AdminStudents = () => {
     return map;
   }, [yearPayments]);
 
-  const hasActiveLink = useCallback((r: any) => {
-    const sid = r?.students?.id;
-    return !!sid && activeLinkByStudent.has(sid);
-  }, [activeLinkByStudent]);
+  // Family-level links: shown for every sibling of the paying family
+  const activeLinkByFamily = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of yearPayments as any[]) {
+      const fam = p.family_parent_national_id ? String(p.family_parent_national_id).trim() : "";
+      if (!fam) continue;
+      if (p.payment_status !== "pending") continue;
+      if (!p.payment_link_url) continue;
+      const existing = map.get(fam);
+      const created = p.created_at || p.payment_date;
+      if (!existing || new Date(created) > new Date(existing)) {
+        map.set(fam, created);
+      }
+    }
+    return map;
+  }, [yearPayments]);
+
+  const getActiveLinkCreated = useCallback((r: any): string | null => {
+    const s = r?.students;
+    if (!s?.id) return null;
+    const dates: string[] = [];
+    const own = activeLinkByStudent.get(s.id);
+    if (own) dates.push(own);
+    [s.parent_national_id, s.parent_national_id_2].forEach((nid: string | null) => {
+      const key = nid ? String(nid).trim() : "";
+      const d = key ? activeLinkByFamily.get(key) : undefined;
+      if (d) dates.push(d);
+    });
+    if (!dates.length) return null;
+    return dates.sort((a, b) => +new Date(b) - +new Date(a))[0];
+  }, [activeLinkByStudent, activeLinkByFamily]);
+
+  const hasActiveLink = useCallback((r: any) => !!getActiveLinkCreated(r), [getActiveLinkCreated]);
 
   const getActiveLinkDate = useCallback((r: any) => {
-    const sid = r?.students?.id;
-    if (!sid) return null;
-    const created = activeLinkByStudent.get(sid);
+    const created = getActiveLinkCreated(r);
     if (!created) return null;
     try {
       return format(new Date(created), "dd/MM/yyyy");
     } catch {
       return null;
     }
-  }, [activeLinkByStudent]);
+  }, [getActiveLinkCreated]);
+
 
   const getPaymentBalance = useCallback((r: any) => {
     const sid = r?.students?.id;
