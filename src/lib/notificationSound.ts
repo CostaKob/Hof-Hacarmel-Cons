@@ -433,6 +433,76 @@ function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
       thud(c, bus, t + 0.93, 110, 0.18);
       break;
     }
+    case "coin1": {
+      // Single coin dropped on a counter.
+      const bus = makeBus(c, 0.15, 0.06, 0.28);
+      coinPing(c, bus, t, 3600, 0.32, 0.22);
+      break;
+    }
+    case "coin2": {
+      // Two coins landing.
+      const bus = makeBus(c, 0.16, 0.07, 0.26);
+      coinPing(c, bus, t, 3800, 0.28, 0.18);
+      coinPing(c, bus, t + 0.12, 3200, 0.24, 0.18);
+      break;
+    }
+    case "coin3": {
+      // Coins dropping one after another.
+      const bus = makeBus(c, 0.18, 0.08, 0.24);
+      coinCascade(c, bus, t, 0.22, 7);
+      break;
+    }
+    case "coin4": {
+      // Spinning coin on a surface.
+      const bus = makeBus(c, 0.12, 0.05, 0.2);
+      coinSpin(c, bus, t, 2500, 0.28);
+      coinPing(c, bus, t + 0.82, 3100, 0.18, 0.15);
+      break;
+    }
+    case "coin5": {
+      // Coins landing in a tray / register.
+      const bus = makeBus(c, 0.2, 0.09, 0.22);
+      coinPing(c, bus, t, 3500, 0.26, 0.16);
+      coinRattle(c, bus, t + 0.08, 0.2, 6);
+      break;
+    }
+    case "coin6": {
+      // Heavy metallic coin.
+      const bus = makeBus(c, 0.14, 0.07, 0.26);
+      heavyCoin(c, bus, t, 1800, 0.32);
+      break;
+    }
+    case "coin7": {
+      // Small, light coins (like small change).
+      const bus = makeBus(c, 0.15, 0.05, 0.2);
+      [0, 0.05, 0.1, 0.16, 0.22].forEach((d, i) => {
+        coinPing(c, bus, t + d, 4200 + i * 200, 0.2 - i * 0.02, 0.12);
+      });
+      break;
+    }
+    case "coin8": {
+      // Landing with a rattle.
+      const bus = makeBus(c, 0.18, 0.07, 0.3);
+      coinPing(c, bus, t, 3400, 0.28, 0.18);
+      coinRattle(c, bus, t + 0.06, 0.18, 8);
+      break;
+    }
+    case "coin9": {
+      // Distant coins (softer, slightly filtered).
+      const bus = makeBus(c, 0.12, 0.1, 0.35);
+      const out = c.createGain();
+      out.gain.value = 0.6;
+      out.connect(bus);
+      coinPing(c, out, t, 3000, 0.22, 0.2);
+      coinRattle(c, out, t + 0.12, 0.14, 5);
+      break;
+    }
+    case "coin10": {
+      // Fast cascade of coins.
+      const bus = makeBus(c, 0.16, 0.05, 0.18);
+      coinCascade(c, bus, t, 0.26, 12);
+      break;
+    }
   }
 }
 
