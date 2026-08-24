@@ -89,19 +89,33 @@ const PAYMENT_SOUND_KEY = "notifications:paymentSound";
 
 export type PaymentSoundId =
   | "register1" | "register2" | "register3" | "register4" | "register5"
-  | "register6" | "register7" | "register8" | "register9" | "register10";
+  | "register6" | "register7" | "register8" | "register9" | "register10"
+  | "coin1" | "coin2" | "coin3" | "coin4" | "coin5"
+  | "coin6" | "coin7" | "coin8" | "coin9" | "coin10";
 
-export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string }[] = [
-  { id: "register1", label: "1 · קופה קלאסית — פעמון + מגירה" },
-  { id: "register2", label: "2 · צ׳ה־צ׳ינג בהיר" },
-  { id: "register3", label: "3 · פעמון עתיק כבד" },
-  { id: "register4", label: "4 · קופה + זרם מטבעות" },
-  { id: "register5", label: "5 · צ׳ינג כפול מהיר" },
-  { id: "register6", label: "6 · פעמון קטן ועדין" },
-  { id: "register7", label: "7 · קופה מכנית (מנוף + פעמון)" },
-  { id: "register8", label: "8 · קופה דיגיטלית (ביפ + צ׳ינג)" },
-  { id: "register9", label: "9 · פעמון גדול עם הד" },
-  { id: "register10", label: "10 · קופה + מגירה נפתחת ונסגרת" },
+export type PaymentSoundCategory = "register" | "coins";
+
+export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string; category: PaymentSoundCategory }[] = [
+  { id: "register1", label: "1 · קופה קלאסית — פעמון + מגירה", category: "register" },
+  { id: "register2", label: "2 · צ׳ה־צ׳ינג בהיר", category: "register" },
+  { id: "register3", label: "3 · פעמון עתיק כבד", category: "register" },
+  { id: "register4", label: "4 · קופה + זרם מטבעות", category: "register" },
+  { id: "register5", label: "5 · צ׳ינג כפול מהיר", category: "register" },
+  { id: "register6", label: "6 · פעמון קטן ועדין", category: "register" },
+  { id: "register7", label: "7 · קופה מכנית (מנוף + פעמון)", category: "register" },
+  { id: "register8", label: "8 · קופה דיגיטלית (ביפ + צ׳ינג)", category: "register" },
+  { id: "register9", label: "9 · פעמון גדול עם הד", category: "register" },
+  { id: "register10", label: "10 · קופה + מגירה נפתחת ונסגרת", category: "register" },
+  { id: "coin1", label: "1 · מטבע אחד נופל", category: "coins" },
+  { id: "coin2", label: "2 · שני מטבעות", category: "coins" },
+  { id: "coin3", label: "3 · מטבעות נופלים זה אחרי זה", category: "coins" },
+  { id: "coin4", label: "4 · מטבע מסתובב", category: "coins" },
+  { id: "coin5", label: "5 · מטבעות נופלים בקופה", category: "coins" },
+  { id: "coin6", label: "6 · מטבע כבד (מטאלי עמוק)", category: "coins" },
+  { id: "coin7", label: "7 · מטבעות קטנים וקלים", category: "coins" },
+  { id: "coin8", label: "8 · נחיתה עם רטט", category: "coins" },
+  { id: "coin9", label: "9 · מטבעות מרוחקים", category: "coins" },
+  { id: "coin10", label: "10 · מטבעות מהירים", category: "coins" },
 ];
 
 export function getPaymentSound(): PaymentSoundId {
