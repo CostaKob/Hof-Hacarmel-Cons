@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications, type NotificationRow } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import { PAYMENT_SOUNDS } from "@/lib/notificationSound";
+import { PAYMENT_SOUNDS, type PaymentSoundCategory } from "@/lib/notificationSound";
 
 const ICONS: Record<string, { icon: typeof Bell; className: string }> = {
   registration: { icon: ClipboardList, className: "text-primary" },
