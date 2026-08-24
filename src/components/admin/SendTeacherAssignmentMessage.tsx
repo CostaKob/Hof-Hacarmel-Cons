@@ -254,7 +254,21 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
             </div>
           )}
           <div className="space-y-1">
-            <Label className="text-xs">הערה לתחילת השיעורים</Label>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">הערה לתחילת השיעורים</Label>
+              {extraNote.trim() !== (defaultNote ?? "").trim() && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 rounded-lg px-2 text-xs"
+                  disabled={savingNote}
+                  onClick={saveNoteAsDefault}
+                >
+                  {savingNote ? "שומר..." : "שמור כברירת מחדל"}
+                </Button>
+              )}
+            </div>
             <Textarea
               value={extraNote}
               onChange={(e) => setExtraNote(e.target.value)}
