@@ -3647,6 +3647,10 @@ export type Database = {
         Args: { _national_id: string }
         Returns: Json
       }
+      mark_student_not_continuing: {
+        Args: { _student_id: string }
+        Returns: boolean
+      }
       merge_duplicate_parents: {
         Args: { _keep_national_id: string; _remove_national_id: string }
         Returns: Json
