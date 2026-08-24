@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import UnifyParentDetailsDialog from "@/components/admin/UnifyParentDetailsDialog";
+import FamilyNotesSection from "@/components/admin/FamilyNotesSection";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { Badge } from "@/components/ui/badge";
