@@ -125,7 +125,7 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
-        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url")
+        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url, family_parent_national_id")
         .eq("academic_year_id", selectedYearId)
         .order("payment_date", { ascending: false })
         .order("created_at", { ascending: false });
