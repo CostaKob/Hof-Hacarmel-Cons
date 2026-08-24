@@ -114,51 +114,91 @@ const NotificationsBell = ({ className }: { className?: string }) => {
           </div>
         </div>
         {soundPanel && (
-          <div className="border-b bg-muted/40 px-4 py-3 space-y-2 max-h-[22rem] overflow-y-auto">
-            <p className="text-[11px] text-muted-foreground">בחר את הצליל שיושמע כשמתקבל תשלום</p>
-            <div className="flex gap-1 rounded-lg bg-muted p-1">
-              {[
-                { id: "register", label: "קופה" },
-                { id: "coins", label: "מטבעות" },
-              ].map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSoundCategory(cat.id as PaymentSoundCategory)}
-                  className={cn(
-                    "flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
-                    soundCategory === cat.id
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
+          <div className="border-b bg-muted/40 px-4 py-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-muted-foreground">צליל תשלום נבחר</p>
+                <p className="truncate text-sm font-medium">
+                  {PAYMENT_SOUNDS.find((s) => s.id === paymentSound)?.label ?? ""}
+                </p>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="השמע צליל תשלום"
+                  className="h-8 w-8 shrink-0"
+                  onClick={() => previewPaymentSound(paymentSound)}
                 >
-                  {cat.label}
-                </button>
-              ))}
+                  <Play className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-2 text-xs text-muted-foreground"
+                  onClick={() => setSoundEditorOpen((v) => !v)}
+                >
+                  {soundEditorOpen ? (
+                    <>
+                      <ChevronUp className="h-3.5 w-3.5 ml-1" />
+                      סגור
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                      שנה
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              {PAYMENT_SOUNDS.filter((s) => s.category === soundCategory).map((s) => (
-                <div key={s.id} className="flex items-center gap-2">
-                  <Button
-                    variant={paymentSound === s.id ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 flex-1 justify-start rounded-lg text-xs"
-                    onClick={() => setPaymentSound(s.id)}
-                  >
-                    {paymentSound === s.id && <Check className="h-3.5 w-3.5 ml-1" />}
-                    {s.label}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label={`השמע ${s.label}`}
-                    className="h-8 w-8 shrink-0"
-                    onClick={() => previewPaymentSound(s.id)}
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                  </Button>
+            {soundEditorOpen && (
+              <div className="space-y-2 pt-1 max-h-[18rem] overflow-y-auto">
+                <div className="flex gap-1 rounded-lg bg-muted p-1">
+                  {[
+                    { id: "register", label: "קופה" },
+                    { id: "coins", label: "מטבעות" },
+                  ].map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setSoundCategory(cat.id as PaymentSoundCategory)}
+                      className={cn(
+                        "flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors",
+                        soundCategory === cat.id
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </div>
+                <div className="space-y-1.5">
+                  {PAYMENT_SOUNDS.filter((s) => s.category === soundCategory).map((s) => (
+                    <div key={s.id} className="flex items-center gap-2">
+                      <Button
+                        variant={paymentSound === s.id ? "default" : "outline"}
+                        size="sm"
+                        className="h-8 flex-1 justify-start rounded-lg text-xs"
+                        onClick={() => setPaymentSound(s.id)}
+                      >
+                        {paymentSound === s.id && <Check className="h-3.5 w-3.5 ml-1" />}
+                        {s.label}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label={`השמע ${s.label}`}
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => previewPaymentSound(s.id)}
+                      >
+                        <Play className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
         <ScrollArea className="max-h-[26rem]">
