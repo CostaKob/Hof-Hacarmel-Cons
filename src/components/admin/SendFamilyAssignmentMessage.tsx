@@ -9,6 +9,7 @@ import {
   fetchMessageTemplate,
   renderTemplate,
   prepareWhatsAppText,
+  boldNoteForWhatsApp,
   parseInlineLinks,
 } from "@/lib/messageTemplates";
 import { shortenUrls } from "@/lib/shortLink";
@@ -253,7 +254,10 @@ const SendFamilyAssignmentMessage = ({
       toast.error("אין מספר טלפון להורה");
       return;
     }
-    openWhatsApp(`972${parentWa}`, prepareWhatsAppText(message));
+    openWhatsApp(
+      `972${parentWa}`,
+      boldNoteForWhatsApp(prepareWhatsAppText(message), extraNote.trim()),
+    );
   };
 
   const sendEmail = async () => {

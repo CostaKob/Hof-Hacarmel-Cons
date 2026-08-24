@@ -13,6 +13,7 @@ import {
   FALLBACK_ASSIGNMENT_NOTE,
   fetchDefaultAssignmentNote,
   saveDefaultAssignmentNote,
+  boldNoteForWhatsApp,
 } from "@/lib/messageTemplates";
 
 interface Props {
@@ -189,7 +190,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
       toast.error("אין מספר טלפון להורה");
       return;
     }
-    openWhatsApp(`972${parentWa}`, message);
+    openWhatsApp(`972${parentWa}`, boldNoteForWhatsApp(message, extraNote.trim()));
   };
 
   const sendEmail = async () => {
