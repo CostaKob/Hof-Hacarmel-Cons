@@ -82,25 +82,32 @@ export function playNotificationSound() {
 }
 
 /* ---------------------------------------------------------------
- * Payment ("ka-ching") sounds — a separate, selectable sound that
- * plays when a payment notification arrives.
+ * Payment sounds — cash-register variants, selectable per user.
  * ------------------------------------------------------------- */
 
 const PAYMENT_SOUND_KEY = "notifications:paymentSound";
 
-export type PaymentSoundId = "kaching" | "coins" | "fanfare" | "soft";
+export type PaymentSoundId =
+  | "register1" | "register2" | "register3" | "register4" | "register5"
+  | "register6" | "register7" | "register8" | "register9" | "register10";
 
 export const PAYMENT_SOUNDS: { id: PaymentSoundId; label: string }[] = [
-  { id: "kaching", label: "צ׳ה־צ׳ינג (סגנון שופיפיי)" },
-  { id: "coins", label: "מטבעות נופלים" },
-  { id: "fanfare", label: "פאנפרה קצרה" },
-  { id: "soft", label: "צליל עדין" },
+  { id: "register1", label: "1 · קופה קלאסית — פעמון + מגירה" },
+  { id: "register2", label: "2 · צ׳ה־צ׳ינג בהיר" },
+  { id: "register3", label: "3 · פעמון עתיק כבד" },
+  { id: "register4", label: "4 · קופה + זרם מטבעות" },
+  { id: "register5", label: "5 · צ׳ינג כפול מהיר" },
+  { id: "register6", label: "6 · פעמון קטן ועדין" },
+  { id: "register7", label: "7 · קופה מכנית (מנוף + פעמון)" },
+  { id: "register8", label: "8 · קופה דיגיטלית (ביפ + צ׳ינג)" },
+  { id: "register9", label: "9 · פעמון גדול עם הד" },
+  { id: "register10", label: "10 · קופה + מגירה נפתחת ונסגרת" },
 ];
 
 export function getPaymentSound(): PaymentSoundId {
-  if (typeof localStorage === "undefined") return "kaching";
+  if (typeof localStorage === "undefined") return "register1";
   const v = localStorage.getItem(PAYMENT_SOUND_KEY) as PaymentSoundId | null;
-  return PAYMENT_SOUNDS.some((s) => s.id === v) ? (v as PaymentSoundId) : "kaching";
+  return PAYMENT_SOUNDS.some((s) => s.id === v) ? (v as PaymentSoundId) : "register1";
 }
 
 export function setPaymentSound(id: PaymentSoundId) {
@@ -111,106 +118,213 @@ export function setPaymentSound(id: PaymentSoundId) {
   }
 }
 
-function bell(c: AudioContext, freq: number, start: number, duration: number, gainPeak = 0.22, type: OscillatorType = "triangle") {
-  const osc = c.createOscillator();
-  const g = c.createGain();
-  osc.type = type;
-  osc.frequency.setValueAtTime(freq, start);
-  g.gain.setValueAtTime(0.0001, start);
-  g.gain.exponentialRampToValueAtTime(gainPeak, start + 0.008);
-  g.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  osc.connect(g).connect(c.destination);
-  osc.start(start);
-  osc.stop(start + duration + 0.02);
+/* ---- synthesis helpers ---- */
+
+function makeBus(c: AudioContext, wetAmount: number, delayTime = 0.09, feedback = 0.3) {
+  const out = c.createGain();
+  out.gain.value = 1;
+  out.connect(c.destination);
+  if (wetAmount > 0) {
+    const delay = c.createDelay(1);
+    delay.delayTime.value = delayTime;
+    const fb = c.createGain();
+    fb.gain.value = feedback;
+    const hp = c.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 800;
+    const wet = c.createGain();
+    wet.gain.value = wetAmount;
+    out.connect(delay);
+    delay.connect(fb).connect(delay);
+    delay.connect(hp).connect(wet).connect(c.destination);
+  }
+  return out;
 }
 
-function noiseBurst(c: AudioContext, start: number, duration: number, gainPeak = 0.12) {
-  const frames = Math.max(1, Math.floor(c.sampleRate * duration));
+/** Struck metal bell built from inharmonic partials (real register bell). */
+function strikeBell(
+  c: AudioContext,
+  dest: AudioNode,
+  at: number,
+  base: number,
+  dur: number,
+  vol: number,
+  partials: number[] = [1, 2.76, 5.4, 8.93],
+) {
+  const vols = [1, 0.55, 0.35, 0.22, 0.14, 0.09];
+  partials.forEach((mult, i) => {
+    const osc = c.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = base * mult;
+    const g = c.createGain();
+    const d = dur * (1 - i * 0.13);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol * (vols[i] ?? 0.08)), at + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + Math.max(0.05, d));
+    osc.connect(g).connect(dest);
+    osc.start(at);
+    osc.stop(at + d + 0.05);
+  });
+}
+
+/** FM "ching" — bright, glassy, Shopify-like. */
+function fmPing(c: AudioContext, dest: AudioNode, at: number, freq: number, dur: number, vol: number, ratio = 3.5) {
+  const carrier = c.createOscillator();
+  carrier.type = "sine";
+  carrier.frequency.value = freq;
+  const mod = c.createOscillator();
+  mod.type = "sine";
+  mod.frequency.value = freq * ratio;
+  const modGain = c.createGain();
+  modGain.gain.setValueAtTime(freq * 2, at);
+  modGain.gain.exponentialRampToValueAtTime(1, at + dur * 0.6);
+  mod.connect(modGain).connect(carrier.frequency);
+  const g = c.createGain();
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.exponentialRampToValueAtTime(vol, at + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  carrier.connect(g).connect(dest);
+  mod.start(at);
+  carrier.start(at);
+  mod.stop(at + dur + 0.05);
+  carrier.stop(at + dur + 0.05);
+}
+
+/** Filtered noise — drawer slide, mechanical clicks, coin scatter. */
+function noise(
+  c: AudioContext,
+  dest: AudioNode,
+  at: number,
+  dur: number,
+  vol: number,
+  type: BiquadFilterType = "highpass",
+  freq = 2500,
+) {
+  const frames = Math.max(1, Math.floor(c.sampleRate * dur));
   const buf = c.createBuffer(1, frames, c.sampleRate);
   const data = buf.getChannelData(0);
   for (let i = 0; i < frames; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / frames);
   const src = c.createBufferSource();
   src.buffer = buf;
   const filter = c.createBiquadFilter();
-  filter.type = "highpass";
-  filter.frequency.value = 2500;
+  filter.type = type;
+  filter.frequency.value = freq;
   const g = c.createGain();
-  g.gain.setValueAtTime(gainPeak, start);
-  g.gain.exponentialRampToValueAtTime(0.0001, start + duration);
-  src.connect(filter).connect(g).connect(c.destination);
-  src.start(start);
+  g.gain.setValueAtTime(vol, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+  src.connect(filter).connect(g).connect(dest);
+  src.start(at);
+}
+
+/** Low wooden/metal thud — drawer hitting its stop. */
+function thud(c: AudioContext, dest: AudioNode, at: number, freq: number, vol: number) {
+  const osc = c.createOscillator();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, at);
+  osc.frequency.exponentialRampToValueAtTime(freq * 0.5, at + 0.12);
+  const g = c.createGain();
+  g.gain.setValueAtTime(vol, at);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.16);
+  osc.connect(g).connect(dest);
+  osc.start(at);
+  osc.stop(at + 0.2);
 }
 
 function renderPaymentSound(c: AudioContext, id: PaymentSoundId, t: number) {
   switch (id) {
-    case "kaching": {
-      // Shopify/Etsy-style "cha-ching": a bright, clean two-note bell hit
-      // (short grace note into a shimmering major chord) with a reverb tail.
-      const out = c.createGain();
-      out.gain.value = 1;
-      out.connect(c.destination);
-
-      // simple shimmer/reverb tail via feedback delay
-      const delay = c.createDelay(1);
-      delay.delayTime.value = 0.075;
-      const fb = c.createGain();
-      fb.gain.value = 0.32;
-      const wet = c.createGain();
-      wet.gain.value = 0.28;
-      const hp = c.createBiquadFilter();
-      hp.type = "highpass";
-      hp.frequency.value = 900;
-      out.connect(delay);
-      delay.connect(fb).connect(delay);
-      delay.connect(hp).connect(wet).connect(c.destination);
-
-      const ping = (freq: number, at: number, dur: number, vol: number) => {
-        // FM bell: carrier + metallic modulator for the "ching" sparkle
-        const carrier = c.createOscillator();
-        carrier.type = "sine";
-        carrier.frequency.value = freq;
-        const mod = c.createOscillator();
-        mod.type = "sine";
-        mod.frequency.value = freq * 3.5;
-        const modGain = c.createGain();
-        modGain.gain.setValueAtTime(freq * 2.2, at);
-        modGain.gain.exponentialRampToValueAtTime(1, at + dur * 0.6);
-        mod.connect(modGain).connect(carrier.frequency);
-
-        const g = c.createGain();
-        g.gain.setValueAtTime(0.0001, at);
-        g.gain.exponentialRampToValueAtTime(vol, at + 0.006);
-        g.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-        carrier.connect(g).connect(out);
-        mod.start(at);
-        carrier.start(at);
-        mod.stop(at + dur + 0.05);
-        carrier.stop(at + dur + 0.05);
-      };
-
-      // "cha" – short grace note
-      ping(1174.7, t, 0.13, 0.16);          // D6
-      // "ching" – bright major triad, longer, shimmering
-      ping(1567.98, t + 0.09, 1.1, 0.2);    // G6
-      ping(1975.5, t + 0.095, 0.95, 0.11);  // B6
-      ping(2349.3, t + 0.1, 0.8, 0.07);     // D7
+    case "register1": {
+      // Classic till: single bright bell strike, drawer slides open, soft stop.
+      const bus = makeBus(c, 0.18);
+      noise(c, bus, t, 0.03, 0.12, "bandpass", 4000);
+      strikeBell(c, bus, t, 1320, 1.1, 0.24);
+      noise(c, bus, t + 0.14, 0.3, 0.05, "bandpass", 1200);
+      thud(c, bus, t + 0.45, 160, 0.16);
       break;
     }
-    case "coins":
-      [0, 0.07, 0.15, 0.24].forEach((d, i) => {
-        noiseBurst(c, t + d, 0.05, 0.1);
-        bell(c, 1800 + i * 220, t + d, 0.22, 0.16, "sine");
+    case "register2": {
+      // Bright "cha-ching": grace note into shimmering triad.
+      const bus = makeBus(c, 0.3, 0.075, 0.32);
+      fmPing(c, bus, t, 1174.7, 0.13, 0.16);
+      fmPing(c, bus, t + 0.09, 1568, 1.1, 0.2);
+      fmPing(c, bus, t + 0.095, 1975.5, 0.9, 0.1);
+      break;
+    }
+    case "register3": {
+      // Heavy antique bell: low fundamental, long metallic ring.
+      const bus = makeBus(c, 0.22, 0.13, 0.28);
+      noise(c, bus, t, 0.04, 0.14, "bandpass", 3000);
+      strikeBell(c, bus, t, 660, 1.8, 0.26, [1, 2.4, 4.2, 6.8, 10.1]);
+      thud(c, bus, t + 0.5, 120, 0.14);
+      break;
+    }
+    case "register4": {
+      // Register bell then a cascade of coins.
+      const bus = makeBus(c, 0.2);
+      strikeBell(c, bus, t, 1400, 0.8, 0.22);
+      [0.18, 0.24, 0.29, 0.35, 0.42, 0.5].forEach((d, i) => {
+        noise(c, bus, t + d, 0.05, 0.08, "highpass", 3000);
+        strikeBell(c, bus, t + d, 1700 + i * 180, 0.25, 0.1, [1, 2.7]);
       });
       break;
-    case "fanfare":
-      [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
-        bell(c, f, t + i * 0.09, i === 3 ? 0.5 : 0.2, 0.2, "square");
-      });
+    }
+    case "register5": {
+      // Quick double "ching-ching".
+      const bus = makeBus(c, 0.24, 0.06, 0.25);
+      strikeBell(c, bus, t, 1500, 0.6, 0.22);
+      strikeBell(c, bus, t + 0.11, 1880, 0.9, 0.2);
       break;
-    case "soft":
-      bell(c, 784, t, 0.3, 0.18, "sine");
-      bell(c, 1174.7, t + 0.12, 0.5, 0.16, "sine");
+    }
+    case "register6": {
+      // Small, gentle counter bell.
+      const bus = makeBus(c, 0.16);
+      strikeBell(c, bus, t, 2093, 0.7, 0.16, [1, 2.9, 5.1]);
       break;
+    }
+    case "register7": {
+      // Mechanical: lever crank, bell, drawer.
+      const bus = makeBus(c, 0.14);
+      noise(c, bus, t, 0.09, 0.1, "bandpass", 1800);
+      thud(c, bus, t + 0.05, 220, 0.12);
+      strikeBell(c, bus, t + 0.12, 1250, 1.0, 0.22);
+      noise(c, bus, t + 0.28, 0.26, 0.06, "bandpass", 1000);
+      thud(c, bus, t + 0.56, 140, 0.15);
+      break;
+    }
+    case "register8": {
+      // Modern POS: short beep then digital ching.
+      const bus = makeBus(c, 0.2, 0.07, 0.28);
+      const beep = c.createOscillator();
+      beep.type = "square";
+      beep.frequency.value = 1046.5;
+      const bg = c.createGain();
+      bg.gain.setValueAtTime(0.0001, t);
+      bg.gain.exponentialRampToValueAtTime(0.12, t + 0.01);
+      bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+      beep.connect(bg).connect(bus);
+      beep.start(t);
+      beep.stop(t + 0.12);
+      fmPing(c, bus, t + 0.12, 1760, 0.8, 0.2, 2.5);
+      fmPing(c, bus, t + 0.125, 2637, 0.6, 0.08, 2.5);
+      break;
+    }
+    case "register9": {
+      // Big bell with a long echo tail.
+      const bus = makeBus(c, 0.4, 0.16, 0.42);
+      noise(c, bus, t, 0.035, 0.12, "bandpass", 3500);
+      strikeBell(c, bus, t, 990, 1.6, 0.24, [1, 2.76, 5.4, 8.93, 13.3]);
+      break;
+    }
+    case "register10": {
+      // Full drawer cycle: ching, drawer out, pause, drawer shut.
+      const bus = makeBus(c, 0.18);
+      strikeBell(c, bus, t, 1450, 0.9, 0.22);
+      strikeBell(c, bus, t + 0.1, 1150, 0.7, 0.14);
+      noise(c, bus, t + 0.22, 0.3, 0.06, "bandpass", 1100);
+      thud(c, bus, t + 0.5, 150, 0.14);
+      noise(c, bus, t + 0.75, 0.18, 0.05, "bandpass", 900);
+      thud(c, bus, t + 0.93, 110, 0.18);
+      break;
+    }
   }
 }
 
