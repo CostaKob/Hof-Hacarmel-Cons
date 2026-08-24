@@ -106,9 +106,12 @@ export const SAMPLE_VARIABLE_VALUES: Record<string, Record<string, string>> = {
   },
 };
 
-/** Converts markdown links to a WhatsApp/plain-text friendly form: "טקסט: url" */
+/** Converts markdown links to a WhatsApp/plain-text friendly form: "טקסט: url" on one line. */
 export function markdownLinksToPlain(text: string): string {
-  return text.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, "$1:\n$2");
+  return text.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, linkText, url) => {
+    const display = linkText === "לחצו כאן לתשלום" ? `*${linkText}*` : linkText;
+    return `${display}: ${url}`;
+  });
 }
 
 /**
@@ -116,7 +119,7 @@ export function markdownLinksToPlain(text: string): string {
  * - drops bare wa.me links of teachers/office (the phone number is already shown as text),
  *   so the only remaining link is the payment link — this prevents WhatsApp from
  *   generating a preview/tap-target for the first link in the message.
- * - converts markdown links to "text:\nurl"
+ * - converts markdown links to "text: url" on a single line
  */
 export function prepareWhatsAppText(text: string): string {
   const cleaned = text
