@@ -1008,7 +1008,7 @@ const AdminStudents = () => {
               {filteredAll.length} תלמידים · {activeStudentsCount} פעילים בסך הכול
             </p>
             <div className="space-y-2">
-              {filteredAll.map((s: any, index: number) => {
+              {visibleAll.map((s: any, index: number) => {
                 const stopped = !s.is_active || isInactiveStudentStatus(s.student_status);
                 const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
                 const isRegistered = hasActiveEnrollment || registeredStudentIds.has(s.id) || (s.national_id && registeredNationalIds.has(String(s.national_id).trim()));
@@ -1082,6 +1082,11 @@ const AdminStudents = () => {
                 );
               })}
             </div>
+            {hasMore && (
+              <div ref={sentinelRef} className="py-6 text-center text-sm text-muted-foreground">
+                טוען עוד...
+              </div>
+            )}
           </>
         )
       ) : isLoading ? (
@@ -1096,7 +1101,7 @@ const AdminStudents = () => {
         <>
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>
           <div className="space-y-2">
-            {filtered.map((r: any, index: number) => {
+            {visibleRows.map((r: any, index: number) => {
               const payStatus = getPaymentStatus(r);
               const payBalance = getPaymentBalance(r);
               const payCredit = getCreditAmount(r);
@@ -1225,6 +1230,11 @@ const AdminStudents = () => {
               );
             })}
           </div>
+          {hasMore && (
+            <div ref={sentinelRef} className="py-6 text-center text-sm text-muted-foreground">
+              טוען עוד...
+            </div>
+          )}
         </>
       )}
     </AdminLayout>
