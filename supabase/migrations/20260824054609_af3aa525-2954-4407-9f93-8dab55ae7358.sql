@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.user_shares_ensemble_with_student(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.user_shares_ensemble_with_student(uuid, uuid) TO authenticated, service_role;
