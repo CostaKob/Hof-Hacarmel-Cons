@@ -468,6 +468,21 @@ const TeacherStudents = () => {
                               {r.city && <><span>·</span><span>{r.city}</span></>}
                             </div>
                           )}
+                          {!isGraduated && !r.isRegistered && (
+                            <div className="pt-1.5">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={markingId === r.studentId}
+                                onClick={(ev) => { ev.stopPropagation(); markWontContinue(r.studentId, `${r.firstName} ${r.lastName}`); }}
+                                className="h-9 rounded-xl text-xs gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10"
+                              >
+                                <UserX className="h-3.5 w-3.5" />
+                                {markingId === r.studentId ? "מעדכן..." : "לא יירשם"}
+                              </Button>
+                            </div>
+                          )}
                         </div>
                         <Badge
                           variant="outline"
