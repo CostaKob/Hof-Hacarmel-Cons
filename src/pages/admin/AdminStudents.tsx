@@ -106,7 +106,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track, educational_school), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, parent_national_id, parent_national_id_2, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track, educational_school), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -125,7 +125,7 @@ const AdminStudents = () => {
       if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("student_payments")
-        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url")
+        .select("student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url, family_parent_national_id")
         .eq("academic_year_id", selectedYearId)
         .order("payment_date", { ascending: false })
         .order("created_at", { ascending: false });
@@ -501,22 +501,50 @@ const AdminStudents = () => {
     return map;
   }, [yearPayments]);
 
-  const hasActiveLink = useCallback((r: any) => {
-    const sid = r?.students?.id;
-    return !!sid && activeLinkByStudent.has(sid);
-  }, [activeLinkByStudent]);
+  // Family-level links: shown for every sibling of the paying family
+  const activeLinkByFamily = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of yearPayments as any[]) {
+      const fam = p.family_parent_national_id ? String(p.family_parent_national_id).trim() : "";
+      if (!fam) continue;
+      if (p.payment_status !== "pending") continue;
+      if (!p.payment_link_url) continue;
+      const existing = map.get(fam);
+      const created = p.created_at || p.payment_date;
+      if (!existing || new Date(created) > new Date(existing)) {
+        map.set(fam, created);
+      }
+    }
+    return map;
+  }, [yearPayments]);
+
+  const getActiveLinkCreated = useCallback((r: any): string | null => {
+    const s = r?.students;
+    if (!s?.id) return null;
+    const dates: string[] = [];
+    const own = activeLinkByStudent.get(s.id);
+    if (own) dates.push(own);
+    [s.parent_national_id, s.parent_national_id_2].forEach((nid: string | null) => {
+      const key = nid ? String(nid).trim() : "";
+      const d = key ? activeLinkByFamily.get(key) : undefined;
+      if (d) dates.push(d);
+    });
+    if (!dates.length) return null;
+    return dates.sort((a, b) => +new Date(b) - +new Date(a))[0];
+  }, [activeLinkByStudent, activeLinkByFamily]);
+
+  const hasActiveLink = useCallback((r: any) => !!getActiveLinkCreated(r), [getActiveLinkCreated]);
 
   const getActiveLinkDate = useCallback((r: any) => {
-    const sid = r?.students?.id;
-    if (!sid) return null;
-    const created = activeLinkByStudent.get(sid);
+    const created = getActiveLinkCreated(r);
     if (!created) return null;
     try {
       return format(new Date(created), "dd/MM/yyyy");
     } catch {
       return null;
     }
-  }, [activeLinkByStudent]);
+  }, [getActiveLinkCreated]);
+
 
   const getPaymentBalance = useCallback((r: any) => {
     const sid = r?.students?.id;
