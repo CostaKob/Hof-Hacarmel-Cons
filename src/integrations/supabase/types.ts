@@ -954,6 +954,47 @@ export type Database = {
         }
         Relationships: []
       }
+      family_notes: {
+        Row: {
+          academic_year_id: string | null
+          author_user_id: string | null
+          content: string
+          created_at: string
+          id: string
+          parent_national_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id?: string | null
+          author_user_id?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          parent_national_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string | null
+          author_user_id?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          parent_national_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "family_notes_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       google_calendar_sync_state: {
         Row: {
           calendar_id: string
