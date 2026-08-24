@@ -263,6 +263,10 @@ const SendFamilyAssignmentMessage = ({
     }
     setSendingEmail(true);
     try {
+      const noteText = extraNote.trim();
+      const emailBody = noteText
+        ? message.split("\n").map((l) => (noteText.split("\n").some((n) => n.trim() && l.trim() === n.trim()) ? `[[HL]]${l}` : l)).join("\n")
+        : message;
       const { error } = await supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "plain-text",
@@ -270,7 +274,7 @@ const SendFamilyAssignmentMessage = ({
           replyTo: "musichof@gmail.com",
           templateData: {
             subject: subject.trim() || "שיוך מורה",
-            body: message,
+            body: emailBody,
           },
         },
       });

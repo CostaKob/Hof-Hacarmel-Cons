@@ -51,11 +51,15 @@ const Email = ({ body = '' }: Props) => (
     <Preview>{(body || '').slice(0, 120)}</Preview>
     <Body style={main}>
       <Container style={container} dir="rtl">
-        {body.split('\n').map((line, i) => (
-          <Text key={i} style={lineStyle} dir="rtl">
-            {line.length === 0 ? '\u00A0' : renderLine(line)}
-          </Text>
-        ))}
+        {body.split('\n').map((line, i) => {
+          const hl = line.startsWith('[[HL]]')
+          const text = hl ? line.slice(6) : line
+          return (
+            <Text key={i} style={hl ? highlightStyle : lineStyle} dir="rtl">
+              {text.length === 0 ? '\u00A0' : renderLine(text)}
+            </Text>
+          )
+        })}
       </Container>
     </Body>
   </Html>
@@ -71,5 +75,6 @@ export const template = {
 const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif', direction: 'rtl' as const, textAlign: 'right' as const }
 const container = { padding: '20px 25px', direction: 'rtl' as const, textAlign: 'right' as const, maxWidth: '600px', margin: '0 auto' }
 const lineStyle = { margin: '0', fontSize: '14px', lineHeight: '22px', color: '#1f2937', textAlign: 'right' as const, direction: 'rtl' as const, unicodeBidi: 'plaintext' as const }
+const highlightStyle = { margin: '0', fontSize: '17px', lineHeight: '26px', color: '#dc2626', fontWeight: 'bold' as const, textAlign: 'right' as const, direction: 'rtl' as const, unicodeBidi: 'plaintext' as const }
 const linkStyle = { color: '#0f766e', fontWeight: 'bold' as const, textDecoration: 'underline', fontSize: '14px' }
 const paymentLinkStyle = { color: '#0f766e', fontWeight: 'bold' as const, textDecoration: 'underline', fontSize: '18px' }
