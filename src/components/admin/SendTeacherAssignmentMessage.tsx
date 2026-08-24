@@ -87,6 +87,18 @@ function buildMessage(student: any, enrollments: any[], pendingPayment: any | nu
 }
 
 const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments, selectedYearId }: Props) => {
+  const navigate = useNavigate();
+  const returnUrl = useMemo(() => {
+    try {
+      return sessionStorage.getItem("admin-students-return-url") || "/admin/students";
+    } catch {
+      return "/admin/students";
+    }
+  }, []);
+  const goBackToStudentsList = () => {
+    onOpenChange(false);
+    navigate(returnUrl);
+  };
   const { data: pendingPayment } = useQuery({
     queryKey: ["admin-student-pending-payment", student?.id, selectedYearId],
     queryFn: async () => {
