@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useTeacherProfile, useTeacherAllEnrollments } from "@/hooks/useTeacherData";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap } from "lucide-react";
+import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationCap, UserX } from "lucide-react";
 import PageTitle from "@/components/PageTitle";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { isInactiveStudentStatus } from "@/lib/constants";
@@ -17,6 +17,7 @@ import { isInactiveStudentStatus } from "@/lib/constants";
 const TeacherStudents = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { selectedYearId, years, activeYear } = useAcademicYear();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id, selectedYearId);
@@ -26,6 +27,7 @@ const TeacherStudents = () => {
   const [schoolFilter, setSchoolFilter] = useState("all");
   const [instrumentFilter, setInstrumentFilter] = useState("all");
   const [activeFilter, setActiveFilter] = useState("active");
+  const [markingId, setMarkingId] = useState<string | null>(null);
 
   // ── Previous year = newest year that is NOT active (e.g. תשפ"ו when תשפ"ז is active) ──
   const previousYear = useMemo(() => {
@@ -92,6 +94,29 @@ const TeacherStudents = () => {
     });
     return set;
   }, [registeredFromForms, activeYearEnrollmentNids]);
+
+  const markWontContinue = async (studentId: string, studentName: string) => {
+    setMarkingId(studentId);
+    try {
+      const { error } = await supabase.rpc("mark_student_not_continuing", {
+        _student_id: studentId,
+      });
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["teacher-prev-year-enrollments", teacher?.id, previousYear?.id] });
+      toast({
+        title: "עודכן בהצלחה",
+        description: `${studentName} סומן כ"לא ימשיך"`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "שגיאה",
+        description: err.message || "לא ניתן לעדכן את סטטוס התלמיד",
+        variant: "destructive",
+      });
+    } finally {
+      setMarkingId(null);
+    }
+  };
 
   // ── Unique students from PREVIOUS-year enrollments (active only) ──
   const previousYearStudents = useMemo(() => {
@@ -441,6 +466,21 @@ const TeacherStudents = () => {
                               {r.parentName && <span>{r.parentName}</span>}
                               {r.parentPhone && <><span>·</span><PhoneDisplay phone={r.parentPhone} showIcon textClassName="text-xs" /></>}
                               {r.city && <><span>·</span><span>{r.city}</span></>}
+                            </div>
+                          )}
+                          {!isGraduated && !r.isRegistered && (
+                            <div className="pt-1.5">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                disabled={markingId === r.studentId}
+                                onClick={(ev) => { ev.stopPropagation(); markWontContinue(r.studentId, `${r.firstName} ${r.lastName}`); }}
+                                className="h-9 rounded-xl text-xs gap-1.5 text-destructive border-destructive/40 hover:bg-destructive/10"
+                              >
+                                <UserX className="h-3.5 w-3.5" />
+                                {markingId === r.studentId ? "מעדכן..." : "לא יירשם"}
+                              </Button>
                             </div>
                           )}
                         </div>
