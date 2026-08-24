@@ -3,6 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
   FAMILY_ASSIGNMENT_TEMPLATE_KEY,
+  FALLBACK_ASSIGNMENT_NOTE,
+  fetchDefaultAssignmentNote,
+  saveDefaultAssignmentNote,
   fetchMessageTemplate,
   renderTemplate,
   prepareWhatsAppText,
