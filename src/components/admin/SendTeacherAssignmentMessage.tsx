@@ -199,6 +199,10 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
     }
     setSendingEmail(true);
     try {
+      const noteText = extraNote.trim();
+      const emailBody = noteText
+        ? message.split("\n").map((l) => (noteText.split("\n").some((n) => n.trim() && l.trim() === n.trim()) ? `[[HL]]${l}` : l)).join("\n")
+        : message;
       const { error } = await supabase.functions.invoke("send-transactional-email", {
         body: {
           templateName: "plain-text",
@@ -206,7 +210,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
           replyTo: "musichof@gmail.com",
           templateData: {
             subject: `שיוך מורה — ${student.first_name} ${student.last_name}`,
-            body: message,
+            body: emailBody,
           },
         },
       });
