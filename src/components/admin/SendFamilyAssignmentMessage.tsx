@@ -136,13 +136,31 @@ const SendFamilyAssignmentMessage = ({
   enrollments,
   pendingPayments,
 }: Props) => {
-  const defaultNote = useMemo(() => {
-    return new Date().getMonth() < 8
-      ? "השיעורים יתחילו בספטמבר עם תחילת שנת הלימודים"
-      : "השיעורים יתחילו בהקדם האפשרי";
-  }, []);
+  const { data: defaultNote, refetch: refetchNote } = useQuery({
+    queryKey: ["assignment-default-note"],
+    queryFn: fetchDefaultAssignmentNote,
+    initialData: FALLBACK_ASSIGNMENT_NOTE,
+  });
 
   const [extraNote, setExtraNote] = useState(defaultNote);
+  const [savingNote, setSavingNote] = useState(false);
+
+  useEffect(() => {
+    if (open) setExtraNote(defaultNote);
+  }, [open, defaultNote]);
+
+  const saveNoteAsDefault = async () => {
+    setSavingNote(true);
+    try {
+      await saveDefaultAssignmentNote(extraNote.trim());
+      await refetchNote();
+      toast.success("ההערה נשמרה כברירת מחדל");
+    } catch (e: any) {
+      toast.error(e?.message || "שגיאה בשמירה");
+    } finally {
+      setSavingNote(false);
+    }
+  };
   const [message, setMessage] = useState("");
   const [subject, setSubject] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
