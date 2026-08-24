@@ -9,6 +9,7 @@ import {
   fetchMessageTemplate,
   renderTemplate,
   prepareWhatsAppText,
+  boldNoteForWhatsApp,
   parseInlineLinks,
 } from "@/lib/messageTemplates";
 import { shortenUrls } from "@/lib/shortLink";
