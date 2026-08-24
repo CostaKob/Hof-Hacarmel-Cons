@@ -107,6 +107,12 @@
     direction: rtl;
   }
 
+  /* Prevent iOS Safari rubber-band overscroll at the end of the page */
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
+
   body {
     @apply text-foreground;
     background-color: hsl(var(--background));
@@ -116,8 +122,9 @@
       radial-gradient(at 78% 92%, hsl(215 80% 78% / 0.45) 0px, transparent 55%),
       radial-gradient(at 18% 88%, hsl(225 75% 82% / 0.4) 0px, transparent 55%);
     background-attachment: fixed;
-    min-height: 100vh;
+    min-height: 100dvh;
   }
+
 
   .dark body {
     background-image:
