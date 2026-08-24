@@ -3702,6 +3702,10 @@ export type Database = {
         Args: { _ensemble_id: string; _user_id: string }
         Returns: boolean
       }
+      user_shares_ensemble_with_student: {
+        Args: { _student_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "teacher" | "secretary"
