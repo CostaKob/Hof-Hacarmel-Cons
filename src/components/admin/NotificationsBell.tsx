@@ -110,7 +110,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
           </div>
         </div>
         {soundPanel && (
-          <div className="border-b bg-muted/40 px-4 py-3 space-y-1.5">
+          <div className="border-b bg-muted/40 px-4 py-3 space-y-1.5 max-h-[18rem] overflow-y-auto">
             <p className="text-[11px] text-muted-foreground">בחר את הצליל שיושמע כשמתקבל תשלום</p>
             {PAYMENT_SOUNDS.map((s) => (
               <div key={s.id} className="flex items-center gap-2">
