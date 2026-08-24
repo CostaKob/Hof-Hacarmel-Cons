@@ -105,7 +105,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   );
 
   return (
-    <div dir="rtl" className="min-h-[100dvh] bg-background">
+    <div dir="rtl" className="min-h-[100svh] bg-background">
       <header className="bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
         <div className="mx-auto max-w-5xl">
           {/* Utility row: logo/title and year/theme/logout */}
