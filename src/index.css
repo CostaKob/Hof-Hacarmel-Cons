@@ -107,10 +107,15 @@
     direction: rtl;
   }
 
-  /* Prevent iOS Safari rubber-band overscroll at the end of the page */
+  /* Prevent mobile rubber-band / phantom scroll space at the end of the page */
   html,
   body {
     overscroll-behavior-y: none;
+  }
+
+  html {
+    height: 100%;
+    background-color: hsl(var(--background));
   }
 
   body {
@@ -122,8 +127,9 @@
       radial-gradient(at 78% 92%, hsl(215 80% 78% / 0.45) 0px, transparent 55%),
       radial-gradient(at 18% 88%, hsl(225 75% 82% / 0.4) 0px, transparent 55%);
     background-attachment: fixed;
-    min-height: 100dvh;
+    min-height: 100svh;
   }
+
 
 
   .dark body {
