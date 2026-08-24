@@ -37,6 +37,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
     paymentSound, setPaymentSound, previewPaymentSound,
   } = useNotifications();
   const [soundPanel, setSoundPanel] = useState(false);
+  const [soundEditorOpen, setSoundEditorOpen] = useState(false);
   const [soundCategory, setSoundCategory] = useState<PaymentSoundCategory>(
     PAYMENT_SOUNDS.find((s) => s.id === paymentSound)?.category ?? "register"
   );
