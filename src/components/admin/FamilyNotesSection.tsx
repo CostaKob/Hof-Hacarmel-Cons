@@ -59,13 +59,26 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("family_notes")
-        .select("*, profiles:author_user_id(full_name)")
+        .select("*")
         .eq("parent_national_id", parentNationalId)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as FamilyNoteRow[];
+      const rows = (data ?? []) as FamilyNoteRow[];
+      const authorIds = [...new Set(rows.map((r) => r.author_user_id).filter(Boolean))] as string[];
+      if (authorIds.length) {
+        const { data: profs } = await (supabase as any)
+          .from("profiles")
+          .select("id, full_name")
+          .in("id", authorIds);
+        const byId = new Map((profs ?? []).map((p: any) => [p.id, p.full_name]));
+        rows.forEach((r) => {
+          r.profiles = { full_name: byId.get(r.author_user_id ?? "") ?? null };
+        });
+      }
+      return rows;
     },
   });
+
 
   const openAdd = () => {
     setEditing(null);
