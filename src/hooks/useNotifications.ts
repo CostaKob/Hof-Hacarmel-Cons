@@ -6,8 +6,15 @@ import {
   initNotificationSound,
   isNotificationSoundEnabled,
   playNotificationSound,
+  playPaymentSound,
   setNotificationSoundEnabled,
+  getPaymentSound,
+  setPaymentSound,
+  previewPaymentSound,
+  type PaymentSoundId,
 } from "@/lib/notificationSound";
+
+const isPaymentType = (t?: string | null) => !!t && t.startsWith("payment");
 
 
 export interface NotificationRow {
@@ -56,6 +63,7 @@ export function useNotifications() {
 
   // Realtime: refresh + chime when a new notification is inserted
   const [soundEnabled, setSoundEnabledState] = useState(isNotificationSoundEnabled);
+  const [paymentSound, setPaymentSoundState] = useState<PaymentSoundId>(getPaymentSound);
 
   useEffect(() => {
     initNotificationSound();
@@ -68,8 +76,10 @@ export function useNotifications() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications" },
-        () => {
-          playNotificationSound();
+        (payload) => {
+          const t = (payload.new as { type?: string } | null)?.type;
+          if (isPaymentType(t)) playPaymentSound();
+          else playNotificationSound();
           queryClient.invalidateQueries({ queryKey: ["notifications"] });
         }
       )
@@ -122,8 +132,10 @@ export function useNotifications() {
     }
     if (latestId !== lastSeenId) {
       setLastSeenId(latestId);
-      playNotificationSound();
+      if (isPaymentType(items[0]?.type)) playPaymentSound();
+      else playNotificationSound();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [latestId, lastSeenId]);
 
   return {
@@ -137,6 +149,13 @@ export function useNotifications() {
       setSoundEnabledState(v);
       if (v) playNotificationSound();
     },
+    paymentSound,
+    setPaymentSound: (id: PaymentSoundId) => {
+      setPaymentSound(id);
+      setPaymentSoundState(id);
+      previewPaymentSound(id);
+    },
+    previewPaymentSound,
 
     markRead: (ids: string[]) => markRead.mutate(ids),
     markAllRead: () => markRead.mutate(items.filter((n) => !n.isRead).map((n) => n.id)),
