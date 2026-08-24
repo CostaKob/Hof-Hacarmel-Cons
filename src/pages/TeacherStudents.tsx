@@ -95,6 +95,29 @@ const TeacherStudents = () => {
     return set;
   }, [registeredFromForms, activeYearEnrollmentNids]);
 
+  const markWontContinue = async (studentId: string, studentName: string) => {
+    setMarkingId(studentId);
+    try {
+      const { error } = await supabase.rpc("mark_student_not_continuing", {
+        _student_id: studentId,
+      });
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["teacher-prev-year-enrollments", teacher?.id, previousYear?.id] });
+      toast({
+        title: "עודכן בהצלחה",
+        description: `${studentName} סומן כ"לא ימשיך"`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "שגיאה",
+        description: err.message || "לא ניתן לעדכן את סטטוס התלמיד",
+        variant: "destructive",
+      });
+    } finally {
+      setMarkingId(null);
+    }
+  };
+
   // ── Unique students from PREVIOUS-year enrollments (active only) ──
   const previousYearStudents = useMemo(() => {
     if (!previousYearEnrollments) return [];
