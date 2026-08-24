@@ -141,6 +141,18 @@ const SendFamilyAssignmentMessage = ({
   enrollments,
   pendingPayments,
 }: Props) => {
+  const navigate = useNavigate();
+  const returnUrl = useMemo(() => {
+    try {
+      return sessionStorage.getItem("admin-students-return-url") || "/admin/students";
+    } catch {
+      return "/admin/students";
+    }
+  }, []);
+  const goBackToStudentsList = () => {
+    onOpenChange(false);
+    navigate(returnUrl);
+  };
   const { data: defaultNote, refetch: refetchNote } = useQuery({
     queryKey: ["assignment-default-note"],
     queryFn: fetchDefaultAssignmentNote,
