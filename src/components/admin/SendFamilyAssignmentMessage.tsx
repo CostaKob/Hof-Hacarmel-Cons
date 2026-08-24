@@ -413,6 +413,15 @@ const SendFamilyAssignmentMessage = ({
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={goBackToStudentsList}
+            className="h-11 rounded-xl"
+          >
+            <List className="h-4 w-4" />
+            חזרה לרשימת התלמידים
+          </Button>
           <Button variant="outline" onClick={() => onOpenChange(false)} className="h-11 rounded-xl">
             ביטול
           </Button>
