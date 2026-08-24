@@ -55,7 +55,6 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   const [uploading, setUploading] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const isDashboard = location.pathname === "/admin";
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -108,11 +107,9 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   return (
     <div
       dir="rtl"
-      className={`min-h-[100svh] bg-background ${
-        isDashboard ? "max-md:flex max-md:h-[100dvh] max-md:min-h-0 max-md:flex-col max-md:overflow-hidden" : ""
-      }`}
+      className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background"
     >
-      <header className={`bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md ${isDashboard ? "max-md:shrink-0" : ""}`}>
+      <header className="shrink-0 bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
         <div className="mx-auto max-w-5xl">
           {/* Utility row: logo/title and year/theme/logout */}
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -209,9 +206,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
       </header>
 
       <main
-        className={`mx-auto px-4 py-5 -mt-2 pb-28 md:pb-6 ${
-          isDashboard ? "max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:overscroll-contain" : ""
-        } ${
+        className={`mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-4 py-5 -mt-2 pb-28 md:pb-6 ${
           fullWidth ? "max-w-none" : "max-w-5xl"
         }`}
       >
