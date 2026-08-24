@@ -652,6 +652,8 @@ const AdminFamilyCard = () => {
             children={children}
           />
 
+          <FamilyNotesSection parentNationalId={parentNationalId} yearId={yearId} />
+
           {/* Per-child breakdown */}
           {children.map((c) => {
             const t = perChild.get(c.id);
