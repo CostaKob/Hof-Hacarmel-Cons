@@ -127,6 +127,23 @@ export function prepareWhatsAppText(text: string): string {
   return markdownLinksToPlain(cleaned).trim();
 }
 
+/** Wraps the lines of `note` inside `text` with WhatsApp bold markers (*...*) */
+export function boldNoteForWhatsApp(text: string, note: string): string {
+  const noteLines = note
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+  if (!noteLines.length) return text;
+  return text
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("*")) return line;
+      return noteLines.some((n) => n === trimmed) ? `*${trimmed}*` : line;
+    })
+    .join("\n");
+}
+
 /** Splits a line into text/link segments for preview rendering */
 export function parseInlineLinks(
   line: string,
