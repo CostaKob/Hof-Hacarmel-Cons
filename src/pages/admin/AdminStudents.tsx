@@ -714,6 +714,36 @@ const AdminStudents = () => {
     return true;
   });
 
+  // ---- רינדור מדורג: מונע קריסת הדפדפן בנייד ברשימות ארוכות ----
+  const PAGE_SIZE = 50;
+  const totalItems = view === "all" ? filteredAll.length : filtered.length;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const filtersKey = `${view}::${searchParams.toString()}`;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filtersKey]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || visibleCount >= totalItems) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, totalItems));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visibleCount, totalItems, filtersKey]);
+
+  const visibleAll = filteredAll.slice(0, visibleCount);
+  const visibleRows = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < totalItems;
+
   return (
     <AdminLayout title="תלמידים" backPath="/admin">
       <PageTitle title="ניהול תלמידים" />
