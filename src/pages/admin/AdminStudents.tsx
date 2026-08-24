@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -714,6 +714,36 @@ const AdminStudents = () => {
     return true;
   });
 
+  // ---- רינדור מדורג: מונע קריסת הדפדפן בנייד ברשימות ארוכות ----
+  const PAGE_SIZE = 50;
+  const totalItems = view === "all" ? filteredAll.length : filtered.length;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const filtersKey = `${view}::${searchParams.toString()}`;
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filtersKey]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || visibleCount >= totalItems) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisibleCount((c) => Math.min(c + PAGE_SIZE, totalItems));
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visibleCount, totalItems, filtersKey]);
+
+  const visibleAll = filteredAll.slice(0, visibleCount);
+  const visibleRows = filtered.slice(0, visibleCount);
+  const hasMore = visibleCount < totalItems;
+
   return (
     <AdminLayout title="תלמידים" backPath="/admin">
       <PageTitle title="ניהול תלמידים" />
@@ -978,7 +1008,7 @@ const AdminStudents = () => {
               {filteredAll.length} תלמידים · {activeStudentsCount} פעילים בסך הכול
             </p>
             <div className="space-y-2">
-              {filteredAll.map((s: any, index: number) => {
+              {visibleAll.map((s: any, index: number) => {
                 const stopped = !s.is_active || isInactiveStudentStatus(s.student_status);
                 const hasActiveEnrollment = selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0;
                 const isRegistered = hasActiveEnrollment || registeredStudentIds.has(s.id) || (s.national_id && registeredNationalIds.has(String(s.national_id).trim()));
@@ -1052,6 +1082,11 @@ const AdminStudents = () => {
                 );
               })}
             </div>
+            {hasMore && (
+              <div ref={sentinelRef} className="py-6 text-center text-sm text-muted-foreground">
+                טוען עוד...
+              </div>
+            )}
           </>
         )
       ) : isLoading ? (
@@ -1066,7 +1101,7 @@ const AdminStudents = () => {
         <>
           <p className="text-sm text-muted-foreground mb-2">{filtered.length} תלמידים</p>
           <div className="space-y-2">
-            {filtered.map((r: any, index: number) => {
+            {visibleRows.map((r: any, index: number) => {
               const payStatus = getPaymentStatus(r);
               const payBalance = getPaymentBalance(r);
               const payCredit = getCreditAmount(r);
@@ -1195,6 +1230,11 @@ const AdminStudents = () => {
               );
             })}
           </div>
+          {hasMore && (
+            <div ref={sentinelRef} className="py-6 text-center text-sm text-muted-foreground">
+              טוען עוד...
+            </div>
+          )}
         </>
       )}
     </AdminLayout>
