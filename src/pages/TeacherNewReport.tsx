@@ -70,9 +70,13 @@ const TeacherNewReport = () => {
   const [schoolId, setSchoolId] = useState<string>("");
   const [reportDate, setReportDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [kilometers, setKilometers] = useState<string>("0");
+  const [kilometers, setKilometers] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [kmError, setKmError] = useState<string>("");
+
+  const enteredKm = Number(kilometers) || 0;
+  const isOverMax = enteredKm > MAX_DAILY_KM;
 
   const dateStr = format(reportDate, "yyyy-MM-dd");
   const { data: usedKm } = useKilometersForDate(teacher?.id, dateStr);

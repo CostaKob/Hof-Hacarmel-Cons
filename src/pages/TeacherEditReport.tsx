@@ -85,10 +85,14 @@ const TeacherEditReport = () => {
   const { data: allEnrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
 
   const [editDate, setEditDate] = useState<Date>(new Date());
-  const [kilometers, setKilometers] = useState<string>("0");
+  const [kilometers, setKilometers] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [kmError, setKmError] = useState<string>("");
+
+  const enteredKm = Number(kilometers) || 0;
+  const isOverMax = enteredKm > MAX_DAILY_KM;
 
   // Initialize form fields from the primary report
   useEffect(() => {
