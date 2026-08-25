@@ -35,7 +35,7 @@ const AdminPrivatePayments = () => {
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("families");
-  const [recentPaymentsOpen, setRecentPaymentsOpen] = useState(false);
+  const [showRecentPayments, setShowRecentPayments] = useState(false);
 
 
   const { data: year } = useQuery({
