@@ -33,6 +33,8 @@ const AdminPrivatePayments = () => {
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("families");
+  const [sortBy, setSortBy] = useState<"alphabetical" | "recent_payment">("alphabetical");
+
 
   const { data: year } = useQuery({
     queryKey: ["priv-payments-year", yearId],
