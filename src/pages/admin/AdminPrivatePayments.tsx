@@ -329,6 +329,7 @@ const AdminPrivatePayments = () => {
       const status: StatusFilter =
         totalDue > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
       const first = members[0].student;
+      const lastPaymentAt = Math.max(...members.map((m) => m.lastPaymentAt || 0)) || null;
       fams.push({
         familyKey: k,
         parentNationalId: first.parent_national_id || first.parent_national_id_2 || null,
@@ -337,11 +338,17 @@ const AdminPrivatePayments = () => {
         members,
         enrollments: members.flatMap((m) => m.enrollments),
         totalDue, grossPotential, discountsAmount, paid, refunds, net, balance, status, activeLinks,
+        lastPaymentAt,
       });
     }
-    fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
+    if (sortBy === "recent_payment") {
+      fams.sort((a, b) => (b.lastPaymentAt || 0) - (a.lastPaymentAt || 0));
+    } else {
+      fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
+    }
     return { rowsWithFamily: withFamily, familyRows: fams };
-  }, [rows]);
+  }, [rows, sortBy]);
+
 
   const schoolOptions = useMemo(() => {
     const m = new Map<string, string>();
