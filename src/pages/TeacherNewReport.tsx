@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowRight, CalendarIcon, Save } from "lucide-react";
+import { ArrowRight, CalendarIcon, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
@@ -297,6 +297,23 @@ const TeacherNewReport = () => {
                 }}
               >
                 ✓ כולם נוכחים
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={() => {
+                  setLines((prev) => {
+                    const updated: Record<string, LineState> = {};
+                    for (const [id, line] of Object.entries(prev)) {
+                      updated[id] = { ...line, selected: false, status: "present", notes: "" };
+                    }
+                    return updated;
+                  });
+                }}
+              >
+                <X className="ml-1.5 h-3.5 w-3.5" />
+                נקה הכל
               </Button>
               {selectedCount > 0 && (
                 <Badge variant="default" className="rounded-lg">{selectedCount} נבחרו</Badge>
