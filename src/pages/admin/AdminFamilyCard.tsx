@@ -710,6 +710,14 @@ const AdminFamilyCard = () => {
                         </span>
                       </>
                     )}
+                    {childMethodSummary.length > 0 && (
+                      <>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">
+                          {childMethodSummary.join(" · ")}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 
