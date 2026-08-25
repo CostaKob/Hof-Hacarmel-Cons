@@ -1038,6 +1038,9 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
             const startRadius = item.clippedStart ? 0 : radius;
             const endRadius = item.clippedEnd ? 0 : radius;
             const showText = !compact || span * COL_WIDTH >= 60;
+            /** אירוע שכבר הסתיים — מוצג עמום ומעט מוחלש בצבע. */
+            const isPastEvent = !!item.raw.end_date && item.raw.end_date < todayISO;
+
             const pendingLabel =
               item.pending === "create"
                 ? "ממתין לאישור"
