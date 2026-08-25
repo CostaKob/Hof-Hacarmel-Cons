@@ -383,6 +383,16 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
             {totalPending > 0 && <> · ממתין לתשלום: <span className="font-semibold text-amber-600">₪{totalPending.toLocaleString()}</span></>}
           </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="h-10 w-auto min-w-[160px] rounded-xl gap-2" dir="rtl">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="payment_date">תאריך תשלום</SelectItem>
+              <SelectItem value="paid_at">תאריך ושעה</SelectItem>
+            </SelectContent>
+          </Select>
           {!hasPending && (
             <Button
               size="sm"
