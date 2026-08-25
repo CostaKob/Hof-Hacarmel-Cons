@@ -995,7 +995,9 @@ const AdminFamilyCard = () => {
                           <p className="font-medium text-foreground text-sm">
                             {isGroup
                               ? `${format(new Date(p.payment_date), "dd/MM/yyyy")} – ${format(new Date(lastRow.payment_date), "dd/MM/yyyy")}`
-                              : format(new Date(p.payment_date), "dd/MM/yyyy")}
+                              : paymentSortBy === "paid_at" && p.paid_at
+                                ? `${format(new Date(p.paid_at), "dd/MM/yyyy · HH:mm")}`
+                                : format(new Date(p.payment_date), "dd/MM/yyyy")}
                             {p.academic_years?.name && (
                               <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
                             )}
