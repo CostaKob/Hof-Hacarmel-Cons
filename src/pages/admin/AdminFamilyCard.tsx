@@ -661,6 +661,9 @@ const AdminFamilyCard = () => {
               .filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid")
               .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
             const childBalance = Math.max(0, Math.round((childTotal - childPaid) * 100) / 100);
+            const childMethodSummary = summarizePaymentMethods(
+              payments.filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid"),
+            );
 
             return (
               <div
