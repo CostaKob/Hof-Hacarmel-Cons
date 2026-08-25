@@ -377,9 +377,44 @@ const TeacherEditReport = () => {
         <div className="rounded-2xl bg-card p-5 shadow-sm border border-border space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-foreground text-base">דיווח</h2>
-            {selectedCount > 0 && (
-              <Badge variant="default" className="rounded-lg">{selectedCount} נבחרו</Badge>
-            )}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={() => {
+                  setLines((prev) => {
+                    const updated: Record<string, LineState> = {};
+                    for (const [id, line] of Object.entries(prev)) {
+                      updated[id] = { ...line, selected: true, status: "present" };
+                    }
+                    return updated;
+                  });
+                }}
+              >
+                ✓ כולם נוכחים
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={() => {
+                  setLines((prev) => {
+                    const updated: Record<string, LineState> = {};
+                    for (const [id, line] of Object.entries(prev)) {
+                      updated[id] = { ...line, selected: false, status: "present", notes: "" };
+                    }
+                    return updated;
+                  });
+                }}
+              >
+                <X className="ml-1.5 h-3.5 w-3.5" />
+                נקה הכל
+              </Button>
+              {selectedCount > 0 && (
+                <Badge variant="default" className="rounded-lg">{selectedCount} נבחרו</Badge>
+              )}
+            </div>
           </div>
 
           {displayRows.length === 0 ? (
