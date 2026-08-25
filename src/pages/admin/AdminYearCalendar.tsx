@@ -365,6 +365,30 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
   const calendarContainerRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef<{ windowY: number; containerX: number } | null>(null);
 
+  /* --------- אינדיקטור "היום" --------- */
+  const [todayISO, setTodayISO] = useState(localTodayISO);
+  useEffect(() => {
+    const t = window.setInterval(() => setTodayISO(localTodayISO()), 60_000);
+    return () => window.clearInterval(t);
+  }, []);
+  const todayMonthKey = todayISO.slice(0, 7);
+  const todayDay = Number(todayISO.slice(8, 10));
+  const todayInRange = todayISO >= RANGE_START && todayISO <= RANGE_END;
+  const todayCellRef = useRef<HTMLDivElement>(null);
+  const didAutoScrollRef = useRef(false);
+
+  /** גלילה לחודש הנוכחי ולעמודת היום. */
+  const scrollToToday = (smooth = true) => {
+    const el = todayCellRef.current;
+    if (!el) return;
+    el.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+      block: "center",
+      inline: "center",
+    });
+  };
+
+
   const captureScroll = () => {
     pendingScrollRef.current = {
       windowY: window.scrollY,
