@@ -76,7 +76,6 @@ const TeacherNewReport = () => {
   const [kmError, setKmError] = useState<string>("");
 
   const enteredKm = Number(kilometers) || 0;
-  const isOverMax = enteredKm > MAX_DAILY_KM;
 
   const dateStr = format(reportDate, "yyyy-MM-dd");
   const { data: usedKm } = useKilometersForDate(teacher?.id, dateStr);

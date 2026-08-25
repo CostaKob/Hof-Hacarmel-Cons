@@ -92,7 +92,6 @@ const TeacherEditReport = () => {
   const [kmError, setKmError] = useState<string>("");
 
   const enteredKm = Number(kilometers) || 0;
-  const isOverMax = enteredKm > MAX_DAILY_KM;
 
   // Initialize form fields from the primary report
   useEffect(() => {
