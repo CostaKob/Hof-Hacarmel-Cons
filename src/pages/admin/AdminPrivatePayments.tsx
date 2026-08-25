@@ -254,6 +254,14 @@ const AdminPrivatePayments = () => {
       else if (net > 0 && balance > 0.01) status = "partial";
       else status = "unpaid";
 
+      const lastPaymentAt = stuPayments.length
+        ? Math.max(
+            ...stuPayments.map((p: any) =>
+              new Date(p.paid_at || p.payment_date || p.created_at || 0).getTime()
+            )
+          )
+        : null;
+
       result.push({
         studentId,
         student,
@@ -269,11 +277,16 @@ const AdminPrivatePayments = () => {
         activeLinks,
         hasSpecialCourse: (student.has_music_production_course || student.has_recital_track),
         specialRevenue: specialBase,
+        lastPaymentAt,
       });
     }
 
+    if (sortBy === "recent_payment") {
+      return result.sort((a, b) => (b.lastPaymentAt || 0) - (a.lastPaymentAt || 0));
+    }
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, drafts, year, settings, discountTypes]);
+  }, [enrollments, payments, drafts, year, settings, discountTypes, sortBy]);
+
 
   // Family grouping — payments are managed at the family level
   const { rowsWithFamily, familyRows } = useMemo(() => {
