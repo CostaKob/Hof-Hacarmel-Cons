@@ -11,6 +11,7 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   bank_transfer: "העברה בנקאית",
   cheque: "צ׳ק",
   check: "צ׳ק",
+  bit: "ביט",
   other: "אחר",
 };
 
