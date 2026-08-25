@@ -1028,9 +1028,8 @@ const AdminFamilyCard = () => {
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {isCredit ? "זיכוי" : "תשלום"}
-                          {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] || p.payment_method}`}
-                          {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
-                          {!isGroup && p.reference_number && ` · ${p.payment_method === "check" ? "צ׳ק מס׳" : "אסמכתא"} ${p.reference_number}`}
+                          {p.payment_method && ` · ${formatPaymentMethodWithCount(p.payment_method, p.installments)}`}
+                          {!isGroup && p.reference_number && ` · ${isCheckMethod(p.payment_method) ? "צ׳ק מס׳" : "אסמכתא"} ${p.reference_number}`}
                           {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                           {p.month_reference && ` · ${p.month_reference}`}
                           {p.family_payment_group_id
