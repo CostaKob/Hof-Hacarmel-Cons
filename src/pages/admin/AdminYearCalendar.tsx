@@ -120,6 +120,16 @@ const isoDate = (year: number, month: number, day: number) =>
   `${year}-${pad2(month)}-${pad2(day)}`;
 const daysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate();
 
+/** התאריך של היום בפורמט ISO מקומי (ללא הסטת אזור זמן). */
+const localTodayISO = () => {
+  const d = new Date();
+  return isoDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+};
+
+/** צבע ההדגשה של "היום" (אדום עדין, כמו ביומני Google/Apple). */
+const TODAY_ACCENT = "#E11D48";
+
+
 type MonthDef = {
   key: string;
   year: number;
