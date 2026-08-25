@@ -741,6 +741,13 @@ const AdminPrivatePayments = () => {
             <div className="space-y-2">
               {filteredFamilies.map((f: any, idx: number) => {
                 const latestPayment = latestPaymentByFamily.get(f.familyKey);
+                const familyPayments = payments.filter((p: any) =>
+                  f.members.some((m: any) => m.studentId === p.student_id) &&
+                  p.transaction_type === "payment" &&
+                  p.payment_status === "paid" &&
+                  Number(p.amount) > 0
+                );
+                const familyMethods = summarizePaymentMethods(familyPayments);
                 const statusBadge =
                   f.status === "paid" ? { label: "שולם", variant: "default" as const } :
                   f.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
@@ -760,11 +767,6 @@ const AdminPrivatePayments = () => {
                           </p>
                           <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
                           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                          {f.paid > 0.01 && (
-                            <Badge className="gap-1 bg-green-500/10 text-green-700 border-green-500/30 hover:bg-green-500/10">
-                              שולם {fmt(f.paid)} ₪
-                            </Badge>
-                          )}
                           {f.refunds > 0.01 && (
                             <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
                           )}
@@ -776,14 +778,16 @@ const AdminPrivatePayments = () => {
                         {f.parentPhone && (
                           <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
                         )}
-                        {latestPayment && (
+                        {f.paid > 0.01 && (
                           <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-                            <span className="font-medium text-foreground">תשלום אחרון:</span>
-                            <span dir="ltr">{format(new Date(latestPayment.paidAt), "dd/MM/yyyy · HH:mm")}</span>
-                            <span>·</span>
-                            <span>{formatPaymentMethodWithCount(latestPayment.payment_method, latestPayment.installments)}</span>
-                            <span>·</span>
-                            <span className="font-semibold text-green-600">{fmt(Number(latestPayment.amount))} ₪</span>
+                            <span className="font-semibold text-green-600">שולם {fmt(f.paid)} ₪</span>
+                            {familyMethods.length > 0 && <><span>·</span><span>{familyMethods.join(" · ")}</span></>}
+                            {latestPayment?.paidAt && (
+                              <>
+                                <span>·</span>
+                                <span dir="ltr">{format(new Date(latestPayment.paidAt), "dd/MM/yyyy HH:mm")}</span>
+                              </>
+                            )}
                           </div>
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
@@ -794,7 +798,8 @@ const AdminPrivatePayments = () => {
                             p.payment_status === "paid" &&
                             Number(p.amount) > 0
                           );
-                          const methodSummary = summarizePaymentMethods(memberPayments);
+                          const memberMethods = f.members.length > 1 ? summarizePaymentMethods(memberPayments) : [];
+                          const memberBalance = m.totalDue - m.paid;
                           return (
                             <div key={m.studentId} className="text-sm text-foreground flex flex-wrap items-baseline gap-x-2">
                               <span className="text-muted-foreground">•</span>
@@ -802,12 +807,13 @@ const AdminPrivatePayments = () => {
                               <span className="text-xs text-muted-foreground">
                                 {Array.from(new Set(m.enrollments.map((e: any) => e.instruments?.name).filter(Boolean))).join(" · ")}
                               </span>
-                              <span className="text-xs text-muted-foreground">
-                                {fmt(m.totalDue)} ₪ · שולם {fmt(m.paid)} ₪
-                              </span>
-                              {methodSummary.length > 0 && (
+                              <span className="text-xs text-muted-foreground">{fmt(m.totalDue)} ₪</span>
+                              {memberBalance > 0.01 && (
+                                <span className="text-xs text-amber-600">יתרה {fmt(memberBalance)} ₪</span>
+                              )}
+                              {memberMethods.length > 0 && (
                                 <span className="text-[11px] text-muted-foreground leading-tight">
-                                  {methodSummary.join(" · ")}
+                                  {memberMethods.join(" · ")}
                                 </span>
                               )}
                             </div>
@@ -825,25 +831,24 @@ const AdminPrivatePayments = () => {
                             </p>
                           )}
                         </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">שולם</p>
-                          <p className="text-sm font-semibold text-green-600 leading-tight">{fmt(f.paid)} ₪</p>
-                        </div>
                         {f.refunds > 0.01 && (
                           <div>
                             <p className="text-[10px] text-muted-foreground">הוחזר</p>
                             <p className="text-sm font-semibold text-red-600 leading-tight">−{fmt(f.refunds)} ₪</p>
                           </div>
                         )}
-                        <div>
-                          <p className="text-[10px] text-muted-foreground">יתרה</p>
-                          <p className={`text-sm font-semibold leading-tight ${f.balance > 0.01 ? "text-amber-600" : "text-muted-foreground"}`}>{fmt(Math.max(0, f.balance))} ₪</p>
-                        </div>
+                        {f.balance > 0.01 && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">יתרה</p>
+                            <p className="text-sm font-semibold leading-tight text-amber-600">{fmt(f.balance)} ₪</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 );
               })}
+
             </div>
           )
         ) : filtered.length === 0 ? (
