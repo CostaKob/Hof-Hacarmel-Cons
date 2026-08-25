@@ -852,15 +852,33 @@ const AdminPrivatePayments = () => {
                         {r.student.parent_phone && <PhoneDisplay phone={r.student.parent_phone} />}
                       </div>
                       <div className="mt-2 flex flex-col gap-0.5">
-                        {r.enrollments.map((e: any) => (
-                          <div key={e.id} className="text-sm text-foreground">
-                            <span className="text-muted-foreground">•</span>{" "}
-                            {e.instruments?.name ?? "—"}
-                            {e.teachers && <span className="text-muted-foreground"> · {e.teachers.first_name} {e.teachers.last_name}</span>}
-                            {e.schools?.name && <span className="text-muted-foreground"> · {e.schools.name}</span>}
-                            {e.lesson_duration_minutes && <span className="text-muted-foreground"> · {e.lesson_duration_minutes} דק׳</span>}
-                          </div>
-                        ))}
+                        {(() => {
+                          const studentPayments = payments.filter((p: any) =>
+                            p.student_id === r.studentId &&
+                            p.transaction_type === "payment" &&
+                            p.payment_status === "paid" &&
+                            Number(p.amount) > 0
+                          );
+                          const methodSummary = summarizePaymentMethods(studentPayments);
+                          return (
+                            <>
+                              {r.enrollments.map((e: any) => (
+                                <div key={e.id} className="text-sm text-foreground">
+                                  <span className="text-muted-foreground">•</span>{" "}
+                                  {e.instruments?.name ?? "—"}
+                                  {e.teachers && <span className="text-muted-foreground"> · {e.teachers.first_name} {e.teachers.last_name}</span>}
+                                  {e.schools?.name && <span className="text-muted-foreground"> · {e.schools.name}</span>}
+                                  {e.lesson_duration_minutes && <span className="text-muted-foreground"> · {e.lesson_duration_minutes} דק׳</span>}
+                                </div>
+                              ))}
+                              {methodSummary.length > 0 && (
+                                <div className="text-[11px] text-muted-foreground leading-tight mt-1">
+                                  {methodSummary.join(" · ")}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                         {r.hasSpecialCourse && (
                           <div className="text-sm text-foreground">
                             <span className="text-muted-foreground">•</span>{" "}
