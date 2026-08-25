@@ -892,6 +892,18 @@ const AdminFamilyCard = () => {
               <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
                 <Receipt className="h-4 w-4" /> תשלומי משפחה ({payments.length})
               </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={paymentSortBy} onValueChange={(v) => setPaymentSortBy(v as any)}>
+                  <SelectTrigger className="h-10 w-auto min-w-[160px] rounded-xl gap-2" dir="rtl">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="payment_date">תאריך תשלום</SelectItem>
+                    <SelectItem value="paid_at">תאריך ושעה</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             {payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">אין תשלומים בשנה זו.</p>
