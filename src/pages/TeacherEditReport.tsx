@@ -179,6 +179,13 @@ const TeacherEditReport = () => {
         .reduce((s, r) => s + Number(r.kilometers), 0) ?? 0;
 
     const enteredKm = Number(kilometers) || 0;
+
+    if (enteredKm > MAX_DAILY_KM) {
+      toast.error(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
+      setSubmitting(false);
+      return;
+    }
+
     let finalKm = enteredKm;
 
     if (otherKm >= MAX_DAILY_KM) {
@@ -194,6 +201,17 @@ const TeacherEditReport = () => {
     }
 
     const selectedEntries = Object.entries(lines).filter(([, l]) => l.selected);
+
+    // Validate that unjustified absence has a note
+    const unjustifiedWithoutNote = selectedEntries.filter(
+      ([, l]) => l.status === "unjustified_absence" && !l.notes.trim()
+    );
+    if (unjustifiedWithoutNote.length > 0) {
+      toast.error("חובה להוסיף הערה להיעדרות בלתי מוצדקת");
+      setSubmitting(false);
+      return;
+    }
+
 
     // Delete all existing report lines for this workday
     const existingLineIdsToDelete = allDayLines?.map((l) => l.id) ?? [];
