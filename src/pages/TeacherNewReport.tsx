@@ -119,20 +119,17 @@ const TeacherNewReport = () => {
       .eq("report_date", dateStr);
 
     const currentUsedKm = freshKmData?.reduce((s, r) => s + Number(r.kilometers), 0) ?? 0;
-    const enteredKm = Number(kilometers) || 0;
+    const finalKm = enteredKm;
 
-    if (enteredKm > MAX_DAILY_KM) {
+    if (finalKm > MAX_DAILY_KM) {
       toast.error(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
       setSubmitting(false);
       return;
     }
 
-    let finalKm = enteredKm;
-
     if (currentUsedKm >= MAX_DAILY_KM) {
       toast.warning("כבר דווחו 55 ק״מ עבור תאריך זה. הדיווח יישמר עם 0 ק״מ.");
-      finalKm = 0;
-    } else if (currentUsedKm + enteredKm > MAX_DAILY_KM) {
+    } else if (currentUsedKm + finalKm > MAX_DAILY_KM) {
       const remaining = MAX_DAILY_KM - currentUsedKm;
       toast.error(
         `לא ניתן לשמור את מספר הק״מ הזה. בתאריך זה כבר דווחו ${currentUsedKm} ק״מ, ולכן ניתן להוסיף עד ${remaining} ק״מ בלבד.`
@@ -151,6 +148,7 @@ const TeacherNewReport = () => {
       setSubmitting(false);
       return;
     }
+
 
 
     const { data: report, error: reportError } = await supabase
