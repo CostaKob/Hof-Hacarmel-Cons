@@ -450,7 +450,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                     {sortBy === "paid_at" && p.paid_at
                       ? `שולם: ${new Date(p.paid_at).toLocaleDateString("he-IL")} · ${new Date(p.paid_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}`
                       : `תאריך: ${new Date(p.payment_date || p.created_at).toLocaleDateString("he-IL")}`}
-                    {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] ?? p.payment_method}`}
+                    {p.payment_method && ` · ${formatPaymentMethodWithCount(p.payment_method, p.installments)}`}
                     {p.transaction_reference && ` · אסמכתא ${p.transaction_reference}`}
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
