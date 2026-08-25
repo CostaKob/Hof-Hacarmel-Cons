@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
@@ -9,11 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Undo2, Link2, Users, User } from "lucide-react";
+import { Search, Download, Undo2, Link2, Users, User, Clock } from "lucide-react";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+
 
 const ALL = "__all__";
 
@@ -31,6 +33,8 @@ const AdminPrivatePayments = () => {
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("families");
+  const [sortBy, setSortBy] = useState<"alphabetical" | "recent_payment">("alphabetical");
+
 
   const { data: year } = useQuery({
     queryKey: ["priv-payments-year", yearId],
@@ -84,13 +88,14 @@ const AdminPrivatePayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_payments")
-        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown, created_at, icount_doc_number")
+        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown, created_at, paid_at, payment_date, icount_doc_number")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       // Ignore the 9-shekel test transaction (documents 1113/1114)
       return (data as any[]).filter((p) => !["1113", "1114"].includes(p.icount_doc_number));
     },
   });
+
 
   const { data: drafts = [] } = useQuery({
     queryKey: ["priv-payments-drafts", yearId],
@@ -249,6 +254,14 @@ const AdminPrivatePayments = () => {
       else if (net > 0 && balance > 0.01) status = "partial";
       else status = "unpaid";
 
+      const lastPaymentAt = stuPayments.length
+        ? Math.max(
+            ...stuPayments.map((p: any) =>
+              new Date(p.paid_at || p.payment_date || p.created_at || 0).getTime()
+            )
+          )
+        : null;
+
       result.push({
         studentId,
         student,
@@ -264,11 +277,16 @@ const AdminPrivatePayments = () => {
         activeLinks,
         hasSpecialCourse: (student.has_music_production_course || student.has_recital_track),
         specialRevenue: specialBase,
+        lastPaymentAt,
       });
     }
 
+    if (sortBy === "recent_payment") {
+      return result.sort((a, b) => (b.lastPaymentAt || 0) - (a.lastPaymentAt || 0));
+    }
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, drafts, year, settings, discountTypes]);
+  }, [enrollments, payments, drafts, year, settings, discountTypes, sortBy]);
+
 
   // Family grouping — payments are managed at the family level
   const { rowsWithFamily, familyRows } = useMemo(() => {
@@ -311,6 +329,7 @@ const AdminPrivatePayments = () => {
       const status: StatusFilter =
         totalDue > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
       const first = members[0].student;
+      const lastPaymentAt = Math.max(...members.map((m) => m.lastPaymentAt || 0)) || null;
       fams.push({
         familyKey: k,
         parentNationalId: first.parent_national_id || first.parent_national_id_2 || null,
@@ -319,11 +338,17 @@ const AdminPrivatePayments = () => {
         members,
         enrollments: members.flatMap((m) => m.enrollments),
         totalDue, grossPotential, discountsAmount, paid, refunds, net, balance, status, activeLinks,
+        lastPaymentAt,
       });
     }
-    fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
+    if (sortBy === "recent_payment") {
+      fams.sort((a, b) => (b.lastPaymentAt || 0) - (a.lastPaymentAt || 0));
+    } else {
+      fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
+    }
     return { rowsWithFamily: withFamily, familyRows: fams };
-  }, [rows]);
+  }, [rows, sortBy]);
+
 
   const schoolOptions = useMemo(() => {
     const m = new Map<string, string>();
@@ -642,7 +667,18 @@ const AdminPrivatePayments = () => {
               {instrumentOptions.map(([id, name]) => (<SelectItem key={id} value={id}>{name}</SelectItem>))}
             </SelectContent>
           </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as "alphabetical" | "recent_payment")}>
+            <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl gap-2" dir="rtl">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="alphabetical">א״ב</SelectItem>
+              <SelectItem value="recent_payment">תשלום אחרון (תאריך+שעה)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2">
@@ -698,6 +734,11 @@ const AdminPrivatePayments = () => {
                           </p>
                           <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
                           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                          {sortBy === "recent_payment" && f.lastPaymentAt && (
+                            <Badge variant="outline" className="text-xs font-normal">
+                              תשלום אחרון: {format(new Date(f.lastPaymentAt), "dd/MM/yyyy · HH:mm")}
+                            </Badge>
+                          )}
                           {f.refunds > 0.01 && (
                             <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
                           )}
@@ -705,6 +746,7 @@ const AdminPrivatePayments = () => {
                             <Badge variant="outline" className="text-blue-600 border-blue-300">🔗 {f.activeLinks} קישור פעיל</Badge>
                           )}
                         </div>
+
                         {f.parentPhone && (
                           <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
                         )}
@@ -775,6 +817,11 @@ const AdminPrivatePayments = () => {
                         <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
                         <p className="font-semibold text-foreground">{r.student.first_name} {r.student.last_name}</p>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                        {sortBy === "recent_payment" && r.lastPaymentAt && (
+                          <Badge variant="outline" className="text-xs font-normal">
+                            תשלום אחרון: {format(new Date(r.lastPaymentAt), "dd/MM/yyyy · HH:mm")}
+                          </Badge>
+                        )}
                         {r.refunds > 0.01 && (
                           <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(r.refunds)} ₪</Badge>
                         )}
@@ -785,6 +832,7 @@ const AdminPrivatePayments = () => {
                         )}
                         {r.student.grade && <span className="text-xs text-muted-foreground">כיתה {r.student.grade}</span>}
                       </div>
+
 
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1">
                         {r.student.parent_name && <span>הורה: {r.student.parent_name}</span>}
