@@ -388,6 +388,16 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     });
   };
 
+  // גלילה אוטומטית חד־פעמית לתאריך של היום בטעינה הראשונה
+  useEffect(() => {
+    if (loading || didAutoScrollRef.current || !todayInRange) return;
+    didAutoScrollRef.current = true;
+    const t = window.setTimeout(() => scrollToToday(false), 120);
+    return () => window.clearTimeout(t);
+  }, [loading, todayInRange]);
+
+
+
 
   const captureScroll = () => {
     pendingScrollRef.current = {
