@@ -734,6 +734,11 @@ const AdminPrivatePayments = () => {
                           </p>
                           <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
                           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                          {sortBy === "recent_payment" && f.lastPaymentAt && (
+                            <Badge variant="outline" className="text-xs font-normal">
+                              תשלום אחרון: {format(new Date(f.lastPaymentAt), "dd/MM/yyyy · HH:mm")}
+                            </Badge>
+                          )}
                           {f.refunds > 0.01 && (
                             <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
                           )}
@@ -741,6 +746,7 @@ const AdminPrivatePayments = () => {
                             <Badge variant="outline" className="text-blue-600 border-blue-300">🔗 {f.activeLinks} קישור פעיל</Badge>
                           )}
                         </div>
+
                         {f.parentPhone && (
                           <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
                         )}
