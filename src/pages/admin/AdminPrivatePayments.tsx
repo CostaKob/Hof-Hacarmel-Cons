@@ -677,9 +677,14 @@ const AdminPrivatePayments = () => {
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={() => setRecentPaymentsOpen(true)}>
+          <Button
+            variant={showRecentPayments ? "default" : "outline"}
+            size="sm"
+            className="h-9 rounded-xl gap-1"
+            onClick={() => setShowRecentPayments((v) => !v)}
+          >
             <Clock className="h-3.5 w-3.5" />
-            רשימת תשלומים אחרונים
+            {showRecentPayments ? "הסתר תשלומים אחרונים" : "תשלומים אחרונים"}
           </Button>
           <Button
             variant={statusFilter === "refunded" ? "default" : "outline"}
