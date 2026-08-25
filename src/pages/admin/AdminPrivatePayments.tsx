@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Download, Undo2, Link2, Users, User, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -33,7 +34,7 @@ const AdminPrivatePayments = () => {
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("families");
-  const [sortBy, setSortBy] = useState<"alphabetical" | "recent_payment">("alphabetical");
+  const [recentPaymentsOpen, setRecentPaymentsOpen] = useState(false);
 
 
   const { data: year } = useQuery({
@@ -254,14 +255,6 @@ const AdminPrivatePayments = () => {
       else if (net > 0 && balance > 0.01) status = "partial";
       else status = "unpaid";
 
-      const lastPaymentAt = stuPayments.length
-        ? Math.max(
-            ...stuPayments.map((p: any) =>
-              new Date(p.paid_at || p.payment_date || p.created_at || 0).getTime()
-            )
-          )
-        : null;
-
       result.push({
         studentId,
         student,
@@ -277,15 +270,11 @@ const AdminPrivatePayments = () => {
         activeLinks,
         hasSpecialCourse: (student.has_music_production_course || student.has_recital_track),
         specialRevenue: specialBase,
-        lastPaymentAt,
       });
     }
 
-    if (sortBy === "recent_payment") {
-      return result.sort((a, b) => (b.lastPaymentAt || 0) - (a.lastPaymentAt || 0));
-    }
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, drafts, year, settings, discountTypes, sortBy]);
+  }, [enrollments, payments, drafts, year, settings, discountTypes]);
 
 
   // Family grouping — payments are managed at the family level
@@ -329,7 +318,6 @@ const AdminPrivatePayments = () => {
       const status: StatusFilter =
         totalDue > 0 && balance <= 0.01 ? "paid" : net > 0 && balance > 0.01 ? "partial" : "unpaid";
       const first = members[0].student;
-      const lastPaymentAt = Math.max(...members.map((m) => m.lastPaymentAt || 0)) || null;
       fams.push({
         familyKey: k,
         parentNationalId: first.parent_national_id || first.parent_national_id_2 || null,
@@ -338,16 +326,32 @@ const AdminPrivatePayments = () => {
         members,
         enrollments: members.flatMap((m) => m.enrollments),
         totalDue, grossPotential, discountsAmount, paid, refunds, net, balance, status, activeLinks,
-        lastPaymentAt,
       });
     }
-    if (sortBy === "recent_payment") {
-      fams.sort((a, b) => (b.lastPaymentAt || 0) - (a.lastPaymentAt || 0));
-    } else {
-      fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
-    }
+    fams.sort((a, b) => String(a.parentName ?? "").localeCompare(String(b.parentName ?? ""), "he"));
     return { rowsWithFamily: withFamily, familyRows: fams };
-  }, [rows, sortBy]);
+  }, [rows]);
+
+  const recentPayments = useMemo(() => {
+    const rowByStudentId = new Map(rows.map((row) => [row.studentId, row]));
+    const studentIdByEnrollmentId = new Map<string, string>();
+    for (const enrollment of enrollments) studentIdByEnrollmentId.set(enrollment.id, enrollment.student_id);
+
+    return payments
+      .filter((payment: any) =>
+        payment.payment_status === "paid" &&
+        payment.transaction_type === "payment" &&
+        Number(payment.amount) > 0
+      )
+      .map((payment: any) => {
+        const studentId = payment.student_id ?? studentIdByEnrollmentId.get(payment.enrollment_id);
+        const row = studentId ? rowByStudentId.get(studentId) : undefined;
+        const paidAt = payment.paid_at || payment.payment_date || payment.created_at;
+        return { ...payment, studentId, row, paidAt };
+      })
+      .filter((payment: any) => payment.row && payment.paidAt)
+      .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
+  }, [payments, enrollments, rows]);
 
 
   const schoolOptions = useMemo(() => {
@@ -667,21 +671,15 @@ const AdminPrivatePayments = () => {
               {instrumentOptions.map(([id, name]) => (<SelectItem key={id} value={id}>{name}</SelectItem>))}
             </SelectContent>
           </Select>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as "alphabetical" | "recent_payment")}>
-            <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl gap-2" dir="rtl">
-              <Clock className="h-4 w-4 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent dir="rtl">
-              <SelectItem value="alphabetical">א״ב</SelectItem>
-              <SelectItem value="recent_payment">תשלום אחרון (תאריך+שעה)</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={() => setRecentPaymentsOpen(true)}>
+            <Clock className="h-3.5 w-3.5" />
+            רשימת תשלומים אחרונים
+          </Button>
           <Button
             variant={statusFilter === "refunded" ? "default" : "outline"}
             size="sm"
@@ -734,11 +732,6 @@ const AdminPrivatePayments = () => {
                           </p>
                           <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
                           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                          {sortBy === "recent_payment" && f.lastPaymentAt && (
-                            <Badge variant="outline" className="text-xs font-normal">
-                              תשלום אחרון: {format(new Date(f.lastPaymentAt), "dd/MM/yyyy · HH:mm")}
-                            </Badge>
-                          )}
                           {f.refunds > 0.01 && (
                             <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
                           )}
@@ -817,11 +810,6 @@ const AdminPrivatePayments = () => {
                         <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
                         <p className="font-semibold text-foreground">{r.student.first_name} {r.student.last_name}</p>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
-                        {sortBy === "recent_payment" && r.lastPaymentAt && (
-                          <Badge variant="outline" className="text-xs font-normal">
-                            תשלום אחרון: {format(new Date(r.lastPaymentAt), "dd/MM/yyyy · HH:mm")}
-                          </Badge>
-                        )}
                         {r.refunds > 0.01 && (
                           <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(r.refunds)} ₪</Badge>
                         )}
@@ -896,6 +884,48 @@ const AdminPrivatePayments = () => {
             : `מציג ${filtered.length} תלמידים`} · הפוטנציאל מחושב לפי מחירון השיעורים והשיוכים; להנחות ולהתאמות אישיות ייעשה שימוש בטיוטת החישוב השמורה בכרטיס התלמיד
         </p>
       </div>
+
+      <Dialog open={recentPaymentsOpen} onOpenChange={setRecentPaymentsOpen}>
+        <DialogContent dir="rtl" className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto overscroll-contain text-right">
+          <DialogHeader className="text-right sm:text-right">
+            <DialogTitle>תשלומים אחרונים</DialogTitle>
+            <DialogDescription>תשלומים ששולמו, מהחדש לישן</DialogDescription>
+          </DialogHeader>
+          {recentPayments.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">לא נמצאו תשלומים ששולמו בשנת הלימודים הזו</p>
+          ) : (
+            <div className="divide-y divide-border rounded-xl border border-border">
+              {recentPayments.map((payment: any) => {
+                const student = payment.row.student;
+                const isFull = payment.row.status === "paid";
+                return (
+                  <Button
+                    key={payment.id}
+                    type="button"
+                    variant="ghost"
+                    className="h-auto w-full justify-between gap-3 rounded-none p-4 text-right first:rounded-t-xl last:rounded-b-xl"
+                    onClick={() => {
+                      setRecentPaymentsOpen(false);
+                      navigate(`/admin/students/${payment.studentId}`);
+                    }}
+                  >
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-foreground">{student.first_name} {student.last_name}</span>
+                        <Badge variant={isFull ? "default" : "secondary"}>{isFull ? "שולם במלואו" : "שולם חלקית"}</Badge>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
+                        {format(new Date(payment.paidAt), "dd/MM/yyyy · HH:mm")}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-base font-bold text-green-600">{fmt(Number(payment.amount))} ₪</span>
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };
