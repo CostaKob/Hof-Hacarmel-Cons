@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
+import { formatPaymentMethodWithCount } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 
