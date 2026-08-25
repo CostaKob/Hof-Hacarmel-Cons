@@ -100,7 +100,7 @@ const TeacherEditReport = () => {
       setEditDate(parseISO(report.report_date));
       // Sum km across all reports for this date
       const totalKm = allDayReports.reduce((s, r) => s + Number(r.kilometers), 0);
-      setKilometers(String(totalKm));
+      setKilometers(totalKm > 0 ? String(totalKm) : "");
       setNotes(report.notes ?? "");
       setInitialized(true);
     }
