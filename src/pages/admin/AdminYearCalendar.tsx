@@ -1074,8 +1074,10 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                     : item.bordered && !compact
                       ? "1px solid #9CA3AF"
                       : "none",
-                  opacity: item.pending === "delete" ? 0.55 : 1,
+                  opacity: item.pending === "delete" ? 0.55 : isPastEvent ? 0.45 : 1,
+                  filter: isPastEvent && !item.pending ? "grayscale(0.55)" : undefined,
                   textDecoration: item.pending === "delete" ? "line-through" : undefined,
+
                   borderStartStartRadius: startRadius,
                   borderEndStartRadius: startRadius,
                   borderStartEndRadius: endRadius,
