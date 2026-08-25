@@ -75,6 +75,7 @@ import AdminMessageTemplates from "./pages/admin/AdminMessageTemplates";
 import AdminBroadcastArchive from "./pages/admin/AdminBroadcastArchive";
 
 import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
+import AdminTravelReport from "./pages/admin/AdminTravelReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
 import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
