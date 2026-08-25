@@ -182,20 +182,17 @@ const TeacherEditReport = () => {
         ?.filter((r) => !thisDayIds.has(r.id))
         .reduce((s, r) => s + Number(r.kilometers), 0) ?? 0;
 
-    const enteredKm = Number(kilometers) || 0;
+    const finalKm = enteredKm;
 
-    if (enteredKm > MAX_DAILY_KM) {
+    if (finalKm > MAX_DAILY_KM) {
       toast.error(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
       setSubmitting(false);
       return;
     }
 
-    let finalKm = enteredKm;
-
     if (otherKm >= MAX_DAILY_KM) {
       toast.warning("כבר דווחו 55 ק״מ עבור תאריך זה. הדיווח יישמר עם 0 ק״מ.");
-      finalKm = 0;
-    } else if (otherKm + enteredKm > MAX_DAILY_KM) {
+    } else if (otherKm + finalKm > MAX_DAILY_KM) {
       const remaining = MAX_DAILY_KM - otherKm;
       toast.error(
         `לא ניתן לשמור את מספר הק״מ הזה. בתאריך זה כבר דווחו ${otherKm} ק״מ, ולכן ניתן להוסיף עד ${remaining} ק״מ בלבד.`
