@@ -51,6 +51,7 @@ import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/
 import ChequeCancellationTracking from "@/components/admin/ChequeCancellationTracking";
 import { createChequeWithdrawalRequest, parseChequeMeta, openLetter } from "@/lib/chequeCancellation";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import { formatPaymentMethodWithCount, isCheckMethod, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 
 
 
@@ -58,14 +59,6 @@ const STATUS_LABELS: Record<string, string> = {
   paid: "שולם",
   pending: "ממתין",
   failed: "נכשל",
-};
-
-const METHOD_LABELS: Record<string, string> = {
-  credit_card: "אשראי",
-  cash: "מזומן",
-  check: "צ׳ק",
-  transfer: "העברה",
-  other: "אחר",
 };
 
 const HEBREW_YEAR_MAP: Record<string, string> = {
@@ -668,6 +661,9 @@ const AdminFamilyCard = () => {
               .filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid")
               .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
             const childBalance = Math.max(0, Math.round((childTotal - childPaid) * 100) / 100);
+            const childMethodSummary = summarizePaymentMethods(
+              payments.filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid"),
+            );
 
             return (
               <div
@@ -711,6 +707,14 @@ const AdminFamilyCard = () => {
                         <span className="text-muted-foreground">יתרה:</span>
                         <span className="font-bold text-amber-600">
                           {fmt(childBalance)}
+                        </span>
+                      </>
+                    )}
+                    {childMethodSummary.length > 0 && (
+                      <>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-[11px] text-muted-foreground leading-tight">
+                          {childMethodSummary.join(" · ")}
                         </span>
                       </>
                     )}
@@ -1035,9 +1039,8 @@ const AdminFamilyCard = () => {
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {isCredit ? "זיכוי" : "תשלום"}
-                          {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] || p.payment_method}`}
-                          {!isGroup && p.installments > 1 && ` · ${p.installments} תשלומים`}
-                          {!isGroup && p.reference_number && ` · ${p.payment_method === "check" ? "צ׳ק מס׳" : "אסמכתא"} ${p.reference_number}`}
+                          {p.payment_method && ` · ${formatPaymentMethodWithCount(p.payment_method, p.installments)}`}
+                          {!isGroup && p.reference_number && ` · ${isCheckMethod(p.payment_method) ? "צ׳ק מס׳" : "אסמכתא"} ${p.reference_number}`}
                           {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                           {p.month_reference && ` · ${p.month_reference}`}
                           {p.family_payment_group_id
@@ -1174,7 +1177,7 @@ const AdminFamilyCard = () => {
                             .filter((x: any) => x.refund_of_payment_id === r.id)
                             .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                           const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
-                          const rIsCheck = r.payment_method === "check";
+                          const rIsCheck = isCheckMethod(r.payment_method);
                           const cStatus: string = r.cheque_status ?? "pending";
                           const isCancelled = cStatus === "cancelled";
                           const isCleared = cStatus === "cleared";

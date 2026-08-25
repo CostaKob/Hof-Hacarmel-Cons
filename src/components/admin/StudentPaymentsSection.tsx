@@ -4,15 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: "מזומן",
-  credit_card: "אשראי",
-  bank_transfer: "העברה בנקאית",
-  cheque: "צ׳ק",
-  check: "צ׳ק",
-  other: "אחר",
-};
+import { formatPaymentMethodWithCount, isCheckMethod } from "@/lib/paymentMethodLabel";
 
 interface StudentPaymentsSectionProps {
   studentId: string;
@@ -191,7 +183,7 @@ const StudentPaymentsSection = ({
             }
 
             const lastRow = rows[rows.length - 1];
-            const isCheck = p.payment_method === "check" || p.payment_method === "צ׳ק" || p.payment_method === "צ'ק";
+            const isCheck = isCheckMethod(p.payment_method);
             const refLabel = isCheck ? "צ׳ק מס׳" : "אסמכתא";
 
             return (
@@ -220,13 +212,7 @@ const StudentPaymentsSection = ({
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {isCredit ? "זיכוי" : "תשלום"}
-                    {p.payment_method && ` · ${PAYMENT_METHOD_LABELS[p.payment_method as string] ?? p.payment_method}`}
-                    {!isGroup && p.payment_method === "credit_card" && (
-                      Number(p.installments) > 1
-                        ? ` · ${p.installments} תשלומים`
-                        : " · תשלום אחד"
-                    )}
-                    {!isGroup && p.payment_method !== "credit_card" && Number(p.installments) > 1 && ` · ${p.installments} תשלומים`}
+                    {p.payment_method && ` · ${formatPaymentMethodWithCount(p.payment_method, p.installments)}`}
                     {!isGroup && p.reference_number && ` · ${refLabel} ${p.reference_number}`}
                     {p.icount_doc_number && ` · קבלה ${p.icount_doc_number}`}
                     {p.month_reference && ` · ${p.month_reference}`}

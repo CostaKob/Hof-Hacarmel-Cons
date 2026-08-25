@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
+import { formatPaymentMethodWithCount, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 
 
@@ -749,7 +750,15 @@ const AdminPrivatePayments = () => {
                           <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
-                          {f.members.map((m: any) => (
+                        {f.members.map((m: any) => {
+                          const memberPayments = payments.filter((p: any) =>
+                            p.student_id === m.studentId &&
+                            p.transaction_type === "payment" &&
+                            p.payment_status === "paid" &&
+                            Number(p.amount) > 0
+                          );
+                          const methodSummary = summarizePaymentMethods(memberPayments);
+                          return (
                             <div key={m.studentId} className="text-sm text-foreground flex flex-wrap items-baseline gap-x-2">
                               <span className="text-muted-foreground">•</span>
                               <span className="font-medium">{m.student.first_name} {m.student.last_name}</span>
@@ -759,8 +768,14 @@ const AdminPrivatePayments = () => {
                               <span className="text-xs text-muted-foreground">
                                 {fmt(m.totalDue)} ₪ · שולם {fmt(m.paid)} ₪
                               </span>
+                              {methodSummary.length > 0 && (
+                                <span className="text-[11px] text-muted-foreground leading-tight">
+                                  {methodSummary.join(" · ")}
+                                </span>
+                              )}
                             </div>
-                          ))}
+                          );
+                        })}
                         </div>
                       </div>
                       <div className="text-left shrink-0 space-y-0.5">
@@ -837,15 +852,33 @@ const AdminPrivatePayments = () => {
                         {r.student.parent_phone && <PhoneDisplay phone={r.student.parent_phone} />}
                       </div>
                       <div className="mt-2 flex flex-col gap-0.5">
-                        {r.enrollments.map((e: any) => (
-                          <div key={e.id} className="text-sm text-foreground">
-                            <span className="text-muted-foreground">•</span>{" "}
-                            {e.instruments?.name ?? "—"}
-                            {e.teachers && <span className="text-muted-foreground"> · {e.teachers.first_name} {e.teachers.last_name}</span>}
-                            {e.schools?.name && <span className="text-muted-foreground"> · {e.schools.name}</span>}
-                            {e.lesson_duration_minutes && <span className="text-muted-foreground"> · {e.lesson_duration_minutes} דק׳</span>}
-                          </div>
-                        ))}
+                        {(() => {
+                          const studentPayments = payments.filter((p: any) =>
+                            p.student_id === r.studentId &&
+                            p.transaction_type === "payment" &&
+                            p.payment_status === "paid" &&
+                            Number(p.amount) > 0
+                          );
+                          const methodSummary = summarizePaymentMethods(studentPayments);
+                          return (
+                            <>
+                              {r.enrollments.map((e: any) => (
+                                <div key={e.id} className="text-sm text-foreground">
+                                  <span className="text-muted-foreground">•</span>{" "}
+                                  {e.instruments?.name ?? "—"}
+                                  {e.teachers && <span className="text-muted-foreground"> · {e.teachers.first_name} {e.teachers.last_name}</span>}
+                                  {e.schools?.name && <span className="text-muted-foreground"> · {e.schools.name}</span>}
+                                  {e.lesson_duration_minutes && <span className="text-muted-foreground"> · {e.lesson_duration_minutes} דק׳</span>}
+                                </div>
+                              ))}
+                              {methodSummary.length > 0 && (
+                                <div className="text-[11px] text-muted-foreground leading-tight mt-1">
+                                  {methodSummary.join(" · ")}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
                         {r.hasSpecialCourse && (
                           <div className="text-sm text-foreground">
                             <span className="text-muted-foreground">•</span>{" "}
@@ -926,6 +959,7 @@ const AdminPrivatePayments = () => {
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
                         {format(new Date(payment.paidAt), "dd/MM/yyyy · HH:mm")}
+                        {payment.payment_method && ` · ${formatPaymentMethodWithCount(payment.payment_method, payment.installments)}`}
                       </p>
                     </div>
                     <span className="shrink-0 text-base font-bold text-green-600">{fmt(Number(payment.amount))} ₪</span>

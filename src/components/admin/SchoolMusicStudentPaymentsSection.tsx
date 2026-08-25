@@ -1,5 +1,6 @@
 import { shortenUrl } from "@/lib/shortLink";
 import { openWhatsApp } from "@/lib/whatsapp";
+import { formatPaymentMethodWithCount } from "@/lib/paymentMethodLabel";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,16 +44,6 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   failed: "destructive",
   cancelled: "outline",
 };
-
-const METHOD_LABELS: Record<string, string> = {
-  cash: "מזומן",
-  credit_card: "כרטיס אשראי",
-  bank_transfer: "העברה בנקאית",
-  cheque: "צ׳ק",
-  bit: "ביט",
-  other: "אחר",
-};
-
 
 const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, academicYearId, defaultAmount }: Props) => {
   const qc = useQueryClient();
@@ -459,7 +450,7 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                     {sortBy === "paid_at" && p.paid_at
                       ? `שולם: ${new Date(p.paid_at).toLocaleDateString("he-IL")} · ${new Date(p.paid_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}`
                       : `תאריך: ${new Date(p.payment_date || p.created_at).toLocaleDateString("he-IL")}`}
-                    {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] ?? p.payment_method}`}
+                    {p.payment_method && ` · ${formatPaymentMethodWithCount(p.payment_method, p.installments)}`}
                     {p.transaction_reference && ` · אסמכתא ${p.transaction_reference}`}
                   </p>
                   {p.notes && <p className="text-xs text-muted-foreground mt-0.5">{p.notes}</p>}
