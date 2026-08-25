@@ -36,6 +36,7 @@ import {
   CheckCircle2,
   Ban,
   Loader2,
+  Clock,
 } from "lucide-react";
 
 import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
