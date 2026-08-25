@@ -85,10 +85,13 @@ const TeacherEditReport = () => {
   const { data: allEnrollments } = useTeacherEnrollments(teacher?.id, selectedYearId);
 
   const [editDate, setEditDate] = useState<Date>(new Date());
-  const [kilometers, setKilometers] = useState<string>("0");
+  const [kilometers, setKilometers] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [kmError, setKmError] = useState<string>("");
+
+  const enteredKm = Number(kilometers) || 0;
 
   // Initialize form fields from the primary report
   useEffect(() => {
@@ -96,7 +99,7 @@ const TeacherEditReport = () => {
       setEditDate(parseISO(report.report_date));
       // Sum km across all reports for this date
       const totalKm = allDayReports.reduce((s, r) => s + Number(r.kilometers), 0);
-      setKilometers(String(totalKm));
+      setKilometers(totalKm > 0 ? String(totalKm) : "");
       setNotes(report.notes ?? "");
       setInitialized(true);
     }
@@ -178,20 +181,17 @@ const TeacherEditReport = () => {
         ?.filter((r) => !thisDayIds.has(r.id))
         .reduce((s, r) => s + Number(r.kilometers), 0) ?? 0;
 
-    const enteredKm = Number(kilometers) || 0;
+    const finalKm = enteredKm;
 
-    if (enteredKm > MAX_DAILY_KM) {
+    if (finalKm > MAX_DAILY_KM) {
       toast.error(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
       setSubmitting(false);
       return;
     }
 
-    let finalKm = enteredKm;
-
     if (otherKm >= MAX_DAILY_KM) {
       toast.warning("כבר דווחו 55 ק״מ עבור תאריך זה. הדיווח יישמר עם 0 ק״מ.");
-      finalKm = 0;
-    } else if (otherKm + enteredKm > MAX_DAILY_KM) {
+    } else if (otherKm + finalKm > MAX_DAILY_KM) {
       const remaining = MAX_DAILY_KM - otherKm;
       toast.error(
         `לא ניתן לשמור את מספר הק״מ הזה. בתאריך זה כבר דווחו ${otherKm} ק״מ, ולכן ניתן להוסיף עד ${remaining} ק״מ בלבד.`
@@ -373,9 +373,21 @@ const TeacherEditReport = () => {
                 type="number"
                 min="0"
                 value={kilometers}
-                onChange={(e) => setKilometers(e.target.value)}
-                className="h-12 rounded-xl text-base"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setKilometers(val);
+                  const num = Number(val) || 0;
+                  if (num > MAX_DAILY_KM) {
+                    setKmError(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
+                  } else {
+                    setKmError("");
+                  }
+                }}
+                className={cn("h-12 rounded-xl text-base", kmError && "border-destructive focus-visible:ring-destructive")}
               />
+              {kmError && (
+                <p className="text-xs text-destructive">{kmError}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">

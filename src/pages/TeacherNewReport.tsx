@@ -70,9 +70,12 @@ const TeacherNewReport = () => {
   const [schoolId, setSchoolId] = useState<string>("");
   const [reportDate, setReportDate] = useState<Date>(new Date());
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const [kilometers, setKilometers] = useState<string>("0");
+  const [kilometers, setKilometers] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [kmError, setKmError] = useState<string>("");
+
+  const enteredKm = Number(kilometers) || 0;
 
   const dateStr = format(reportDate, "yyyy-MM-dd");
   const { data: usedKm } = useKilometersForDate(teacher?.id, dateStr);
@@ -115,20 +118,17 @@ const TeacherNewReport = () => {
       .eq("report_date", dateStr);
 
     const currentUsedKm = freshKmData?.reduce((s, r) => s + Number(r.kilometers), 0) ?? 0;
-    const enteredKm = Number(kilometers) || 0;
+    const finalKm = enteredKm;
 
-    if (enteredKm > MAX_DAILY_KM) {
+    if (finalKm > MAX_DAILY_KM) {
       toast.error(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
       setSubmitting(false);
       return;
     }
 
-    let finalKm = enteredKm;
-
     if (currentUsedKm >= MAX_DAILY_KM) {
       toast.warning("כבר דווחו 55 ק״מ עבור תאריך זה. הדיווח יישמר עם 0 ק״מ.");
-      finalKm = 0;
-    } else if (currentUsedKm + enteredKm > MAX_DAILY_KM) {
+    } else if (currentUsedKm + finalKm > MAX_DAILY_KM) {
       const remaining = MAX_DAILY_KM - currentUsedKm;
       toast.error(
         `לא ניתן לשמור את מספר הק״מ הזה. בתאריך זה כבר דווחו ${currentUsedKm} ק״מ, ולכן ניתן להוסיף עד ${remaining} ק״מ בלבד.`
@@ -147,6 +147,7 @@ const TeacherNewReport = () => {
       setSubmitting(false);
       return;
     }
+
 
 
     const { data: report, error: reportError } = await supabase
@@ -250,12 +251,22 @@ const TeacherNewReport = () => {
                   type="number"
                   min="0"
                   value={kilometers}
-                  onChange={(e) => setKilometers(e.target.value)}
-                  onFocus={() => { if (kilometers === "0") setKilometers(""); }}
-                  onBlur={() => { if (kilometers === "") setKilometers("0"); }}
-                  className="h-12 rounded-xl text-base"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setKilometers(val);
+                    const num = Number(val) || 0;
+                    if (num > MAX_DAILY_KM) {
+                      setKmError(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
+                    } else {
+                      setKmError("");
+                    }
+                  }}
+                  className={cn("h-12 rounded-xl text-base", kmError && "border-destructive focus-visible:ring-destructive")}
                 />
-                {usedKm !== undefined && usedKm > 0 && (
+                {kmError && (
+                  <p className="text-xs text-destructive">{kmError}</p>
+                )}
+                {usedKm !== undefined && usedKm > 0 && !kmError && (
                   <p className="text-xs text-muted-foreground">
                     נוצלו {usedKm}/{MAX_DAILY_KM} ק״מ
                   </p>
