@@ -374,9 +374,21 @@ const TeacherEditReport = () => {
                 type="number"
                 min="0"
                 value={kilometers}
-                onChange={(e) => setKilometers(e.target.value)}
-                className="h-12 rounded-xl text-base"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setKilometers(val);
+                  const num = Number(val) || 0;
+                  if (num > MAX_DAILY_KM) {
+                    setKmError(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
+                  } else {
+                    setKmError("");
+                  }
+                }}
+                className={cn("h-12 rounded-xl text-base", kmError && "border-destructive focus-visible:ring-destructive")}
               />
+              {kmError && (
+                <p className="text-xs text-destructive">{kmError}</p>
+              )}
             </div>
 
             <div className="space-y-1.5">
