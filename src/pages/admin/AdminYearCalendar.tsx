@@ -1542,7 +1542,25 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       )}
 
 
+      {todayInRange && !loading && (
+        <div className="mb-3 flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => scrollToToday(true)}
+            className="h-10 rounded-xl"
+            title="קפיצה לתאריך של היום"
+          >
+            <span
+              className="me-2 inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: TODAY_ACCENT }}
+            />
+            היום
+          </Button>
+        </div>
+      )}
+
       {canUseCalendarTools && (
+
         <div className="mb-4 flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"
