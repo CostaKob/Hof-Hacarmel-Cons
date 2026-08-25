@@ -933,16 +933,17 @@ const AdminPrivatePayments = () => {
         </p>
       </div>
 
-      <Dialog open={recentPaymentsOpen} onOpenChange={setRecentPaymentsOpen}>
-        <DialogContent dir="rtl" className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto overscroll-contain text-right">
-          <DialogHeader className="text-right sm:text-right">
-            <DialogTitle>תשלומים אחרונים</DialogTitle>
-            <DialogDescription>תשלומים ששולמו, מהחדש לישן</DialogDescription>
-          </DialogHeader>
+      {showRecentPayments && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold text-foreground">תשלומים אחרונים</h2>
+            <span className="text-xs text-muted-foreground">מהחדש לישן</span>
+          </div>
           {recentPayments.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">לא נמצאו תשלומים ששולמו בשנת הלימודים הזו</p>
+            <p className="py-6 text-center text-sm text-muted-foreground rounded-xl border border-border bg-card">לא נמצאו תשלומים ששולמו בשנת הלימודים הזו</p>
           ) : (
-            <div className="divide-y divide-border rounded-xl border border-border">
+            <div className="divide-y divide-border rounded-xl border border-border bg-card">
               {recentPayments.map((payment: any) => {
                 const student = payment.row.student;
                 const isFull = payment.row.status === "paid";
@@ -952,10 +953,7 @@ const AdminPrivatePayments = () => {
                     type="button"
                     variant="ghost"
                     className="h-auto w-full justify-between gap-3 rounded-none p-4 text-right first:rounded-t-xl last:rounded-b-xl"
-                    onClick={() => {
-                      setRecentPaymentsOpen(false);
-                      navigate(`/admin/students/${payment.studentId}`);
-                    }}
+                    onClick={() => navigate(`/admin/students/${payment.studentId}`)}
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -973,8 +971,8 @@ const AdminPrivatePayments = () => {
               })}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </AdminLayout>
   );
 };
