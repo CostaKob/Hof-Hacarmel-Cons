@@ -817,6 +817,11 @@ const AdminPrivatePayments = () => {
                         <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
                         <p className="font-semibold text-foreground">{r.student.first_name} {r.student.last_name}</p>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                        {sortBy === "recent_payment" && r.lastPaymentAt && (
+                          <Badge variant="outline" className="text-xs font-normal">
+                            תשלום אחרון: {format(new Date(r.lastPaymentAt), "dd/MM/yyyy · HH:mm")}
+                          </Badge>
+                        )}
                         {r.refunds > 0.01 && (
                           <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(r.refunds)} ₪</Badge>
                         )}
@@ -827,6 +832,7 @@ const AdminPrivatePayments = () => {
                         )}
                         {r.student.grade && <span className="text-xs text-muted-foreground">כיתה {r.student.grade}</span>}
                       </div>
+
 
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-1">
                         {r.student.parent_name && <span>הורה: {r.student.parent_name}</span>}
