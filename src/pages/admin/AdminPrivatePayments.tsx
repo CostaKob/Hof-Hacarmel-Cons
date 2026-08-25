@@ -90,7 +90,7 @@ const AdminPrivatePayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_payments")
-        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown, created_at, paid_at, payment_date, icount_doc_number")
+        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_method, installments, payment_group_id, enrollment_breakdown, created_at, paid_at, payment_date, icount_doc_number")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       // Ignore the 9-shekel test transaction (documents 1113/1114)
@@ -334,7 +334,7 @@ const AdminPrivatePayments = () => {
   }, [rows]);
 
   const recentPayments = useMemo(() => {
-    const rowByStudentId = new Map(rows.map((row) => [row.studentId, row]));
+    const rowByStudentId = new Map(rowsWithFamily.map((row) => [row.studentId, row]));
     const studentIdByEnrollmentId = new Map<string, string>();
     for (const enrollment of enrollments) studentIdByEnrollmentId.set(enrollment.id, enrollment.student_id);
 
@@ -352,7 +352,16 @@ const AdminPrivatePayments = () => {
       })
       .filter((payment: any) => payment.row && payment.paidAt)
       .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
-  }, [payments, enrollments, rows]);
+  }, [payments, enrollments, rowsWithFamily]);
+
+  const latestPaymentByFamily = useMemo(() => {
+    const latest = new Map<string, any>();
+    for (const payment of recentPayments) {
+      const familyKey = payment.row?.familyKey;
+      if (familyKey && !latest.has(familyKey)) latest.set(familyKey, payment);
+    }
+    return latest;
+  }, [recentPayments]);
 
 
   const schoolOptions = useMemo(() => {
@@ -398,7 +407,8 @@ const AdminPrivatePayments = () => {
   }, [rowsWithFamily, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
 
   const filteredFamilies = useMemo(() => {
-    return familyRows.filter((f) => {
+    const list = familyRows.filter((f) => {
+      if (showRecentPayments && !latestPaymentByFamily.has(f.familyKey)) return false;
       if (statusFilter === "refunded") {
         if (!(f.refunds > 0.01)) return false;
       } else if (statusFilter === "active_links") {
@@ -415,7 +425,15 @@ const AdminPrivatePayments = () => {
       }
       return true;
     });
-  }, [familyRows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search]);
+    if (showRecentPayments) {
+      list.sort((a, b) => {
+        const aPaidAt = latestPaymentByFamily.get(a.familyKey)?.paidAt;
+        const bPaidAt = latestPaymentByFamily.get(b.familyKey)?.paidAt;
+        return new Date(bPaidAt).getTime() - new Date(aPaidAt).getTime();
+      });
+    }
+    return list;
+  }, [familyRows, statusFilter, schoolFilter, teacherFilter, instrumentFilter, search, showRecentPayments, latestPaymentByFamily]);
 
   const statRows = useMemo(
     () => (viewMode === "families" ? filteredFamilies.flatMap((f: any) => f.members) : filtered),
@@ -681,10 +699,13 @@ const AdminPrivatePayments = () => {
             variant={showRecentPayments ? "default" : "outline"}
             size="sm"
             className="h-9 rounded-xl gap-1"
-            onClick={() => setShowRecentPayments((v) => !v)}
+            onClick={() => {
+              setViewMode("families");
+              setShowRecentPayments((v) => !v);
+            }}
           >
             <Clock className="h-3.5 w-3.5" />
-            {showRecentPayments ? "הסתר תשלומים אחרונים" : "תשלומים אחרונים"}
+            {showRecentPayments ? "בטל סינון תשלומים אחרונים" : "תשלומים אחרונים"}
           </Button>
           <Button
             variant={statusFilter === "refunded" ? "default" : "outline"}
@@ -719,6 +740,7 @@ const AdminPrivatePayments = () => {
           ) : (
             <div className="space-y-2">
               {filteredFamilies.map((f: any, idx: number) => {
+                const latestPayment = latestPaymentByFamily.get(f.familyKey);
                 const statusBadge =
                   f.status === "paid" ? { label: "שולם", variant: "default" as const } :
                   f.status === "partial" ? { label: "שולם חלקית", variant: "secondary" as const } :
@@ -753,6 +775,16 @@ const AdminPrivatePayments = () => {
 
                         {f.parentPhone && (
                           <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
+                        )}
+                        {latestPayment && (
+                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground">תשלום אחרון:</span>
+                            <span dir="ltr">{format(new Date(latestPayment.paidAt), "dd/MM/yyyy · HH:mm")}</span>
+                            <span>·</span>
+                            <span>{formatPaymentMethodWithCount(latestPayment.payment_method, latestPayment.installments)}</span>
+                            <span>·</span>
+                            <span className="font-semibold text-green-600">{fmt(Number(latestPayment.amount))} ₪</span>
+                          </div>
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
                         {f.members.map((m: any) => {
@@ -933,46 +965,6 @@ const AdminPrivatePayments = () => {
         </p>
       </div>
 
-      {showRecentPayments && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <h2 className="font-semibold text-foreground">תשלומים אחרונים</h2>
-            <span className="text-xs text-muted-foreground">מהחדש לישן</span>
-          </div>
-          {recentPayments.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground rounded-xl border border-border bg-card">לא נמצאו תשלומים ששולמו בשנת הלימודים הזו</p>
-          ) : (
-            <div className="divide-y divide-border rounded-xl border border-border bg-card">
-              {recentPayments.map((payment: any) => {
-                const student = payment.row.student;
-                const isFull = payment.row.status === "paid";
-                return (
-                  <Button
-                    key={payment.id}
-                    type="button"
-                    variant="ghost"
-                    className="h-auto w-full justify-between gap-3 rounded-none p-4 text-right first:rounded-t-xl last:rounded-b-xl"
-                    onClick={() => navigate(`/admin/students/${payment.studentId}`)}
-                  >
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-foreground">{student.first_name} {student.last_name}</span>
-                        <Badge variant={isFull ? "default" : "secondary"}>{isFull ? "שולם במלואו" : "שולם חלקית"}</Badge>
-                      </div>
-                      <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
-                        {format(new Date(payment.paidAt), "dd/MM/yyyy · HH:mm")}
-                        {payment.payment_method && ` · ${formatPaymentMethodWithCount(payment.payment_method, payment.installments)}`}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-base font-bold text-green-600">{fmt(Number(payment.amount))} ₪</span>
-                  </Button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
     </AdminLayout>
   );
 };
