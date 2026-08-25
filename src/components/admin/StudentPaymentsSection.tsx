@@ -4,15 +4,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: "מזומן",
-  credit_card: "אשראי",
-  bank_transfer: "העברה בנקאית",
-  cheque: "צ׳ק",
-  check: "צ׳ק",
-  other: "אחר",
-};
+import { formatPaymentMethodWithCount, isCheckMethod } from "@/lib/paymentMethodLabel";
 
 interface StudentPaymentsSectionProps {
   studentId: string;
