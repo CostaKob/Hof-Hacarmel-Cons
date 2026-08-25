@@ -103,6 +103,7 @@ const AdminFamilyCard = () => {
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [paymentSortBy, setPaymentSortBy] = useState<"payment_date" | "paid_at">("payment_date");
+  const [selectedCheques, setSelectedCheques] = useState<Record<string, boolean>>({});
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
   const [invoiceNote, setInvoiceNote] = useState("");
   const [scheduleOpen, setScheduleOpen] = useState(false);
