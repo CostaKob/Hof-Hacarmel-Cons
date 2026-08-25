@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle } from "lucide-react";
+import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "מזומן",
