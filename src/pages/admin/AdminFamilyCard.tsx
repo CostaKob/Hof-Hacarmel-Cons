@@ -1166,7 +1166,7 @@ const AdminFamilyCard = () => {
                             .filter((x: any) => x.refund_of_payment_id === r.id)
                             .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                           const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
-                          const rIsCheck = r.payment_method === "check";
+                          const rIsCheck = isCheckMethod(r.payment_method);
                           const cStatus: string = r.cheque_status ?? "pending";
                           const isCancelled = cStatus === "cancelled";
                           const isCleared = cStatus === "cleared";
