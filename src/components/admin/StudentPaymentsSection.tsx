@@ -91,6 +91,16 @@ const StudentPaymentsSection = ({
               {overallStatus.label}
             </span>
           )}
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="h-10 w-auto min-w-[160px] rounded-xl gap-2" dir="rtl">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="payment_date">תאריך תשלום</SelectItem>
+              <SelectItem value="paid_at">תאריך ושעה</SelectItem>
+            </SelectContent>
+          </Select>
           {extraHeaderActions}
         </div>
       </div>
