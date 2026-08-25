@@ -116,6 +116,13 @@ const TeacherNewReport = () => {
 
     const currentUsedKm = freshKmData?.reduce((s, r) => s + Number(r.kilometers), 0) ?? 0;
     const enteredKm = Number(kilometers) || 0;
+
+    if (enteredKm > MAX_DAILY_KM) {
+      toast.error(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
+      setSubmitting(false);
+      return;
+    }
+
     let finalKm = enteredKm;
 
     if (currentUsedKm >= MAX_DAILY_KM) {
@@ -130,8 +137,17 @@ const TeacherNewReport = () => {
       return;
     }
 
-    // Create a single report for this workday
+    // Validate that unjustified absence has a note
     const selectedEntries = Object.entries(lines).filter(([, l]) => l.selected);
+    const unjustifiedWithoutNote = selectedEntries.filter(
+      ([, l]) => l.status === "unjustified_absence" && !l.notes.trim()
+    );
+    if (unjustifiedWithoutNote.length > 0) {
+      toast.error("חובה להוסיף הערה להיעדרות בלתי מוצדקת");
+      setSubmitting(false);
+      return;
+    }
+
 
     const { data: report, error: reportError } = await supabase
       .from("reports")
