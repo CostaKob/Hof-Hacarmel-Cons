@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Search, Download, Undo2, Link2, Users, User, Clock } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -35,7 +35,7 @@ const AdminPrivatePayments = () => {
   const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("families");
-  const [recentPaymentsOpen, setRecentPaymentsOpen] = useState(false);
+  const [showRecentPayments, setShowRecentPayments] = useState(false);
 
 
   const { data: year } = useQuery({
@@ -677,9 +677,14 @@ const AdminPrivatePayments = () => {
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={() => setRecentPaymentsOpen(true)}>
+          <Button
+            variant={showRecentPayments ? "default" : "outline"}
+            size="sm"
+            className="h-9 rounded-xl gap-1"
+            onClick={() => setShowRecentPayments((v) => !v)}
+          >
             <Clock className="h-3.5 w-3.5" />
-            רשימת תשלומים אחרונים
+            {showRecentPayments ? "הסתר תשלומים אחרונים" : "תשלומים אחרונים"}
           </Button>
           <Button
             variant={statusFilter === "refunded" ? "default" : "outline"}
@@ -928,16 +933,17 @@ const AdminPrivatePayments = () => {
         </p>
       </div>
 
-      <Dialog open={recentPaymentsOpen} onOpenChange={setRecentPaymentsOpen}>
-        <DialogContent dir="rtl" className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto overscroll-contain text-right">
-          <DialogHeader className="text-right sm:text-right">
-            <DialogTitle>תשלומים אחרונים</DialogTitle>
-            <DialogDescription>תשלומים ששולמו, מהחדש לישן</DialogDescription>
-          </DialogHeader>
+      {showRecentPayments && (
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <h2 className="font-semibold text-foreground">תשלומים אחרונים</h2>
+            <span className="text-xs text-muted-foreground">מהחדש לישן</span>
+          </div>
           {recentPayments.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">לא נמצאו תשלומים ששולמו בשנת הלימודים הזו</p>
+            <p className="py-6 text-center text-sm text-muted-foreground rounded-xl border border-border bg-card">לא נמצאו תשלומים ששולמו בשנת הלימודים הזו</p>
           ) : (
-            <div className="divide-y divide-border rounded-xl border border-border">
+            <div className="divide-y divide-border rounded-xl border border-border bg-card">
               {recentPayments.map((payment: any) => {
                 const student = payment.row.student;
                 const isFull = payment.row.status === "paid";
@@ -947,10 +953,7 @@ const AdminPrivatePayments = () => {
                     type="button"
                     variant="ghost"
                     className="h-auto w-full justify-between gap-3 rounded-none p-4 text-right first:rounded-t-xl last:rounded-b-xl"
-                    onClick={() => {
-                      setRecentPaymentsOpen(false);
-                      navigate(`/admin/students/${payment.studentId}`);
-                    }}
+                    onClick={() => navigate(`/admin/students/${payment.studentId}`)}
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -968,8 +971,8 @@ const AdminPrivatePayments = () => {
               })}
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </AdminLayout>
   );
 };
