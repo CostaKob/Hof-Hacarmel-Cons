@@ -252,12 +252,22 @@ const TeacherNewReport = () => {
                   type="number"
                   min="0"
                   value={kilometers}
-                  onChange={(e) => setKilometers(e.target.value)}
-                  onFocus={() => { if (kilometers === "0") setKilometers(""); }}
-                  onBlur={() => { if (kilometers === "") setKilometers("0"); }}
-                  className="h-12 rounded-xl text-base"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setKilometers(val);
+                    const num = Number(val) || 0;
+                    if (num > MAX_DAILY_KM) {
+                      setKmError(`המקסימום היומי הוא ${MAX_DAILY_KM} ק״מ`);
+                    } else {
+                      setKmError("");
+                    }
+                  }}
+                  className={cn("h-12 rounded-xl text-base", kmError && "border-destructive focus-visible:ring-destructive")}
                 />
-                {usedKm !== undefined && usedKm > 0 && (
+                {kmError && (
+                  <p className="text-xs text-destructive">{kmError}</p>
+                )}
+                {usedKm !== undefined && usedKm > 0 && !kmError && (
                   <p className="text-xs text-muted-foreground">
                     נוצלו {usedKm}/{MAX_DAILY_KM} ק״מ
                   </p>
