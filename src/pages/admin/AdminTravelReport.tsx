@@ -28,6 +28,7 @@ interface Row {
 }
 
 const AdminTravelReport = () => {
+  const navigate = useNavigate();
   const now = new Date();
   const [selectedYear, setSelectedYear] = useState(now.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
