@@ -45,16 +45,6 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive" | "
   cancelled: "outline",
 };
 
-const METHOD_LABELS: Record<string, string> = {
-  cash: "מזומן",
-  credit_card: "כרטיס אשראי",
-  bank_transfer: "העברה בנקאית",
-  cheque: "צ׳ק",
-  bit: "ביט",
-  other: "אחר",
-};
-
-
 const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, academicYearId, defaultAmount }: Props) => {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
