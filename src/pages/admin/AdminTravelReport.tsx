@@ -185,7 +185,13 @@ const AdminTravelReport = () => {
             </div>
             {rows.map((r) => (
               <div key={r.teacherId} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 border-b border-border px-4 py-3 text-sm last:border-0">
-                <span className="truncate font-medium text-foreground">{r.name}</span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/admin/teachers/${r.teacherId}`)}
+                  className="truncate text-right font-medium text-primary underline-offset-4 hover:underline"
+                >
+                  {r.name}
+                </button>
                 <span className="w-16 text-center text-muted-foreground">{r.days}</span>
                 <span className="w-20 text-center font-semibold text-foreground">{r.km.toLocaleString()}</span>
                 <span className="w-24 text-center text-muted-foreground">
