@@ -57,6 +57,7 @@ const METHOD_LABELS: Record<string, string> = {
 const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, academicYearId, defaultAmount }: Props) => {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"payment_date" | "paid_at">("payment_date");
   const [amount, setAmount] = useState<string>(String(defaultAmount ?? ""));
   const [method, setMethod] = useState("cash");
   const [reference, setReference] = useState("");
