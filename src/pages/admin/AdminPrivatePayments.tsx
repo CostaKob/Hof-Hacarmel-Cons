@@ -667,7 +667,18 @@ const AdminPrivatePayments = () => {
               {instrumentOptions.map(([id, name]) => (<SelectItem key={id} value={id}>{name}</SelectItem>))}
             </SelectContent>
           </Select>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as "alphabetical" | "recent_payment")}>
+            <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl gap-2" dir="rtl">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="alphabetical">א״ב</SelectItem>
+              <SelectItem value="recent_payment">תשלום אחרון (תאריך+שעה)</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2">
