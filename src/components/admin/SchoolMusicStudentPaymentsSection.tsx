@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, MessageCircle, Loader2 } from "lucide-react";
+import { Plus, FileDown, CreditCard, Trash2, Undo2, Copy, ExternalLink, Link2, MessageCircle, Loader2, Clock } from "lucide-react";
 import { DateInput } from "@/components/ui/date-input";
 import BankBranchPicker from "@/components/admin/BankBranchPicker";
 import { toast } from "sonner";
@@ -57,6 +57,7 @@ const METHOD_LABELS: Record<string, string> = {
 const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, academicYearId, defaultAmount }: Props) => {
   const qc = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"payment_date" | "paid_at">("payment_date");
   const [amount, setAmount] = useState<string>(String(defaultAmount ?? ""));
   const [method, setMethod] = useState("cash");
   const [reference, setReference] = useState("");
@@ -382,6 +383,16 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
             סה״כ שולם: <span className="font-semibold text-foreground">₪{totalPaid.toLocaleString()}</span>
             {totalPending > 0 && <> · ממתין לתשלום: <span className="font-semibold text-amber-600">₪{totalPending.toLocaleString()}</span></>}
           </div>
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="h-10 w-auto min-w-[160px] rounded-xl gap-2" dir="rtl">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="payment_date">תאריך תשלום</SelectItem>
+              <SelectItem value="paid_at">תאריך ושעה</SelectItem>
+            </SelectContent>
+          </Select>
           {!hasPending && (
             <Button
               size="sm"
@@ -411,9 +422,18 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
 
       ) : (
         <div className="space-y-2">
-          {[...payments].sort((a: any, b: any) =>
-            new Date(b.created_at || b.paid_at || b.payment_date).getTime() - new Date(a.created_at || a.paid_at || a.payment_date).getTime()
-          ).map((p) => {
+          {[...payments].sort((a: any, b: any) => {
+            if (sortBy === "paid_at") {
+              return (
+                new Date(b.paid_at || b.created_at || b.payment_date).getTime() -
+                new Date(a.paid_at || a.created_at || a.payment_date).getTime()
+              );
+            }
+            return (
+              new Date(b.payment_date || b.created_at).getTime() -
+              new Date(a.payment_date || a.created_at).getTime()
+            );
+          }).map((p) => {
             const isRefund = !!p.refund_of_payment_id || Number(p.amount) < 0;
             const hasDoc = !!(p.icount_doc_id || p.icount_doc_number);
             const hasUrl = !!p.invoice_url;
@@ -436,8 +456,9 @@ const SchoolMusicStudentPaymentsSection = ({ studentId, schoolMusicSchoolId, aca
                     {p.icount_doc_number && <Badge variant="outline">קבלה {p.icount_doc_number}</Badge>}
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    נוצר: {new Date(p.created_at).toLocaleDateString("he-IL")}
-                    {p.paid_at && ` · שולם: ${new Date(p.paid_at).toLocaleDateString("he-IL")}`}
+                    {sortBy === "paid_at" && p.paid_at
+                      ? `שולם: ${new Date(p.paid_at).toLocaleDateString("he-IL")} · ${new Date(p.paid_at).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}`
+                      : `תאריך: ${new Date(p.payment_date || p.created_at).toLocaleDateString("he-IL")}`}
                     {p.payment_method && ` · ${METHOD_LABELS[p.payment_method] ?? p.payment_method}`}
                     {p.transaction_reference && ` · אסמכתא ${p.transaction_reference}`}
                   </p>

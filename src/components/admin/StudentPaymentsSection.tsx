@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle } from "lucide-react";
+import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle, Clock } from "lucide-react";
 import { format } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "מזומן",
@@ -46,6 +47,7 @@ const StudentPaymentsSection = ({
   familyParentNationalId,
 }: StudentPaymentsSectionProps) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [sortBy, setSortBy] = useState<"payment_date" | "paid_at">("payment_date");
 
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
@@ -89,6 +91,16 @@ const StudentPaymentsSection = ({
               {overallStatus.label}
             </span>
           )}
+          <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <SelectTrigger className="h-10 w-auto min-w-[160px] rounded-xl gap-2" dir="rtl">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent dir="rtl">
+              <SelectItem value="payment_date">תאריך תשלום</SelectItem>
+              <SelectItem value="paid_at">תאריך ושעה</SelectItem>
+            </SelectContent>
+          </Select>
           {extraHeaderActions}
         </div>
       </div>
@@ -131,10 +143,18 @@ const StudentPaymentsSection = ({
               );
               return { key, head: sorted[0], rows: sorted };
             });
-            entries.sort((a, b) =>
-              new Date(b.head.created_at || b.head.payment_date).getTime() -
-              new Date(a.head.created_at || a.head.payment_date).getTime()
-            );
+            entries.sort((a, b) => {
+              if (sortBy === "paid_at") {
+                return (
+                  new Date(b.head.paid_at || b.head.created_at || b.head.payment_date).getTime() -
+                  new Date(a.head.paid_at || a.head.created_at || a.head.payment_date).getTime()
+                );
+              }
+              return (
+                new Date(b.head.payment_date || b.head.created_at).getTime() -
+                new Date(a.head.payment_date || a.head.created_at).getTime()
+              );
+            });
             return entries;
           })().map(({ key, head, rows }) => {
             const p = head;
@@ -182,7 +202,9 @@ const StudentPaymentsSection = ({
                     <p className="font-medium text-foreground text-sm">
                       {isGroup
                         ? `${format(new Date(p.payment_date), "dd/MM/yyyy")} – ${format(new Date(lastRow.payment_date), "dd/MM/yyyy")}`
-                        : format(new Date(p.payment_date), "dd/MM/yyyy")}
+                        : sortBy === "paid_at" && p.paid_at
+                          ? `${format(new Date(p.paid_at), "dd/MM/yyyy · HH:mm")}`
+                          : format(new Date(p.payment_date), "dd/MM/yyyy")}
                       {showYear && p.academic_years?.name && (
                         <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
                       )}

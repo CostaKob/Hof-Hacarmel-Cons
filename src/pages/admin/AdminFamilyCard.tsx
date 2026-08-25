@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import {
   Users,
@@ -35,6 +36,7 @@ import {
   CheckCircle2,
   Ban,
   Loader2,
+  Clock,
 } from "lucide-react";
 
 import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
@@ -100,6 +102,7 @@ const AdminFamilyCard = () => {
   const [refundTarget, setRefundTarget] = useState<any>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [paymentSortBy, setPaymentSortBy] = useState<"payment_date" | "paid_at">("payment_date");
   const [selectedCheques, setSelectedCheques] = useState<Record<string, boolean>>({});
   const [pendingInvoiceParams, setPendingInvoiceParams] = useState<{ paymentId?: string; groupId?: string; isCredit?: boolean } | null>(null);
   const [invoiceNote, setInvoiceNote] = useState("");
@@ -889,6 +892,18 @@ const AdminFamilyCard = () => {
               <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
                 <Receipt className="h-4 w-4" /> תשלומי משפחה ({payments.length})
               </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select value={paymentSortBy} onValueChange={(v) => setPaymentSortBy(v as any)}>
+                  <SelectTrigger className="h-10 w-auto min-w-[160px] rounded-xl gap-2" dir="rtl">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent dir="rtl">
+                    <SelectItem value="payment_date">תאריך תשלום</SelectItem>
+                    <SelectItem value="paid_at">תאריך ושעה</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             {payments.length === 0 ? (
               <p className="text-sm text-muted-foreground">אין תשלומים בשנה זו.</p>
@@ -907,9 +922,18 @@ const AdminFamilyCard = () => {
                       new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime());
                     return { key, head: sorted[0], rows: sorted };
                   });
-                  entries.sort((a, b) =>
-                    new Date(b.head.created_at || b.head.payment_date).getTime() -
-                    new Date(a.head.created_at || a.head.payment_date).getTime());
+                  entries.sort((a, b) => {
+                    if (paymentSortBy === "paid_at") {
+                      return (
+                        new Date(b.head.paid_at || b.head.created_at || b.head.payment_date).getTime() -
+                        new Date(a.head.paid_at || a.head.created_at || a.head.payment_date).getTime()
+                      );
+                    }
+                    return (
+                      new Date(b.head.created_at || b.head.payment_date).getTime() -
+                      new Date(a.head.created_at || a.head.payment_date).getTime()
+                    );
+                  });
                   return entries;
                 })().map(({ key: groupKey, head: p, rows }) => {
                   const isGroup = rows.length > 1;
@@ -971,7 +995,9 @@ const AdminFamilyCard = () => {
                           <p className="font-medium text-foreground text-sm">
                             {isGroup
                               ? `${format(new Date(p.payment_date), "dd/MM/yyyy")} – ${format(new Date(lastRow.payment_date), "dd/MM/yyyy")}`
-                              : format(new Date(p.payment_date), "dd/MM/yyyy")}
+                              : paymentSortBy === "paid_at" && p.paid_at
+                                ? `${format(new Date(p.paid_at), "dd/MM/yyyy · HH:mm")}`
+                                : format(new Date(p.payment_date), "dd/MM/yyyy")}
                             {p.academic_years?.name && (
                               <span className="text-muted-foreground font-normal"> · {p.academic_years.name}</span>
                             )}
