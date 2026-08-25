@@ -88,13 +88,14 @@ const AdminPrivatePayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_payments")
-        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown, created_at, icount_doc_number")
+        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, enrollment_breakdown, created_at, paid_at, payment_date, icount_doc_number")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       // Ignore the 9-shekel test transaction (documents 1113/1114)
       return (data as any[]).filter((p) => !["1113", "1114"].includes(p.icount_doc_number));
     },
   });
+
 
   const { data: drafts = [] } = useQuery({
     queryKey: ["priv-payments-drafts", yearId],
