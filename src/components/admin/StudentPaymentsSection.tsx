@@ -47,6 +47,7 @@ const StudentPaymentsSection = ({
   familyParentNationalId,
 }: StudentPaymentsSectionProps) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [sortBy, setSortBy] = useState<"payment_date" | "paid_at">("payment_date");
 
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
