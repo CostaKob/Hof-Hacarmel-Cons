@@ -750,7 +750,15 @@ const AdminPrivatePayments = () => {
                           <div className="text-xs text-muted-foreground mt-1"><PhoneDisplay phone={f.parentPhone} /></div>
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
-                          {f.members.map((m: any) => (
+                        {f.members.map((m: any) => {
+                          const memberPayments = payments.filter((p: any) =>
+                            p.student_id === m.studentId &&
+                            p.transaction_type === "payment" &&
+                            p.payment_status === "paid" &&
+                            Number(p.amount) > 0
+                          );
+                          const methodSummary = summarizePaymentMethods(memberPayments);
+                          return (
                             <div key={m.studentId} className="text-sm text-foreground flex flex-wrap items-baseline gap-x-2">
                               <span className="text-muted-foreground">•</span>
                               <span className="font-medium">{m.student.first_name} {m.student.last_name}</span>
@@ -760,8 +768,14 @@ const AdminPrivatePayments = () => {
                               <span className="text-xs text-muted-foreground">
                                 {fmt(m.totalDue)} ₪ · שולם {fmt(m.paid)} ₪
                               </span>
+                              {methodSummary.length > 0 && (
+                                <span className="text-[11px] text-muted-foreground leading-tight">
+                                  {methodSummary.join(" · ")}
+                                </span>
+                              )}
                             </div>
-                          ))}
+                          );
+                        })}
                         </div>
                       </div>
                       <div className="text-left shrink-0 space-y-0.5">
