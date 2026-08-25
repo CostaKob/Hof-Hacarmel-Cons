@@ -899,10 +899,11 @@ const AdminPrivatePayments = () => {
                 const student = payment.row.student;
                 const isFull = payment.row.status === "paid";
                 return (
-                  <button
+                  <Button
                     key={payment.id}
                     type="button"
-                    className="flex w-full items-center justify-between gap-3 p-4 text-right transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-accent/50"
+                    variant="ghost"
+                    className="h-auto w-full justify-between gap-3 rounded-none p-4 text-right first:rounded-t-xl last:rounded-b-xl"
                     onClick={() => {
                       setRecentPaymentsOpen(false);
                       navigate(`/admin/students/${payment.studentId}`);
@@ -918,7 +919,7 @@ const AdminPrivatePayments = () => {
                       </p>
                     </div>
                     <span className="shrink-0 text-base font-bold text-green-600">{fmt(Number(payment.amount))} ₪</span>
-                  </button>
+                  </Button>
                 );
               })}
             </div>
