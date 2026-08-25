@@ -120,6 +120,16 @@ const isoDate = (year: number, month: number, day: number) =>
   `${year}-${pad2(month)}-${pad2(day)}`;
 const daysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate();
 
+/** התאריך של היום בפורמט ISO מקומי (ללא הסטת אזור זמן). */
+const localTodayISO = () => {
+  const d = new Date();
+  return isoDate(d.getFullYear(), d.getMonth() + 1, d.getDate());
+};
+
+/** צבע ההדגשה של "היום" (אדום עדין, כמו ביומני Google/Apple). */
+const TODAY_ACCENT = "#E11D48";
+
+
 type MonthDef = {
   key: string;
   year: number;
@@ -354,6 +364,40 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
   const calendarContainerRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef<{ windowY: number; containerX: number } | null>(null);
+
+  /* --------- אינדיקטור "היום" --------- */
+  const [todayISO, setTodayISO] = useState(localTodayISO);
+  useEffect(() => {
+    const t = window.setInterval(() => setTodayISO(localTodayISO()), 60_000);
+    return () => window.clearInterval(t);
+  }, []);
+  const todayMonthKey = todayISO.slice(0, 7);
+  const todayDay = Number(todayISO.slice(8, 10));
+  const todayInRange = todayISO >= RANGE_START && todayISO <= RANGE_END;
+  const todayCellRef = useRef<HTMLDivElement>(null);
+  const didAutoScrollRef = useRef(false);
+
+  /** גלילה לחודש הנוכחי ולעמודת היום. */
+  const scrollToToday = (smooth = true) => {
+    const el = todayCellRef.current;
+    if (!el) return;
+    el.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto",
+      block: "center",
+      inline: "center",
+    });
+  };
+
+  // גלילה אוטומטית חד־פעמית לתאריך של היום בטעינה הראשונה
+  useEffect(() => {
+    if (loading || didAutoScrollRef.current || !todayInRange) return;
+    didAutoScrollRef.current = true;
+    const t = window.setTimeout(() => scrollToToday(false), 120);
+    return () => window.clearTimeout(t);
+  }, [loading, todayInRange]);
+
+
+
 
   const captureScroll = () => {
     pendingScrollRef.current = {
@@ -967,6 +1011,9 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     const days = Array.from({ length: m.dayCount }, (_, i) => i + 1);
     const weekdayOf = (day: number) => new Date(m.year, m.month - 1, day).getDay();
     const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
+    const isTodayCol = (day: number) => m.key === todayMonthKey && day === todayDay;
+    const isPastDay = (day: number) => isoDate(m.year, m.month, day) < todayISO;
+
     const monthData = itemsByMonth[m.key] ?? { general: [], availability: [] };
     const laneCount = laneCountByMonth[m.key] ?? 3;
 
@@ -1001,6 +1048,9 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
             const startRadius = item.clippedStart ? 0 : radius;
             const endRadius = item.clippedEnd ? 0 : radius;
             const showText = !compact || span * COL_WIDTH >= 60;
+            /** אירוע שכבר הסתיים — מוצג עמום ומעט מוחלש בצבע. */
+            const isPastEvent = !!item.raw.end_date && item.raw.end_date < todayISO;
+
             const pendingLabel =
               item.pending === "create"
                 ? "ממתין לאישור"
@@ -1034,8 +1084,10 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                     : item.bordered && !compact
                       ? "1px solid #9CA3AF"
                       : "none",
-                  opacity: item.pending === "delete" ? 0.55 : 1,
+                  opacity: item.pending === "delete" ? 0.55 : isPastEvent ? 0.45 : 1,
+                  filter: isPastEvent && !item.pending ? "grayscale(0.55)" : undefined,
                   textDecoration: item.pending === "delete" ? "line-through" : undefined,
+
                   borderStartStartRadius: startRadius,
                   borderEndStartRadius: startRadius,
                   borderStartEndRadius: endRadius,
@@ -1261,22 +1313,50 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
           >
             {/* מספרי ימים */}
             <div style={{ ...gridStyle, backgroundColor: COLORS.dayNumbers }}>
-              {days.map((d) => (
-                <div
-                  key={d}
-                  style={{
-                    minWidth: 0,
-                    borderInlineStart: `1px solid ${COLORS.grid}`,
-                    textAlign: "center",
-                    padding: "4px 0",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#4B2E27",
-                  }}
-                >
-                  {d}
-                </div>
-              ))}
+              {days.map((d) => {
+                const today = isTodayCol(d);
+                return (
+                  <div
+                    key={d}
+                    ref={today ? todayCellRef : undefined}
+                    style={{
+                      minWidth: 0,
+                      borderInlineStart: `1px solid ${COLORS.grid}`,
+                      textAlign: "center",
+                      padding: "4px 0",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#4B2E27",
+                      opacity: !today && isPastDay(d) ? 0.5 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {today ? (
+                      <span
+                        title="היום"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: 22,
+                          height: 22,
+                          paddingInline: 4,
+                          borderRadius: 999,
+                          backgroundColor: TODAY_ACCENT,
+                          color: "#FFFFFF",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {d}
+                      </span>
+                    ) : (
+                      d
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* ימי שבוע */}
@@ -1290,8 +1370,14 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                     textAlign: "center",
                     padding: "3px 0",
                     fontSize: 12,
-                    color: "#374151",
-                    backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
+                    color: isTodayCol(d) ? TODAY_ACCENT : "#374151",
+                    fontWeight: isTodayCol(d) ? 700 : 400,
+                    opacity: !isTodayCol(d) && isPastDay(d) ? 0.55 : 1,
+                    backgroundColor: isTodayCol(d)
+                      ? "rgba(225,29,72,0.10)"
+                      : isWeekend(d)
+                        ? COLORS.weekend
+                        : "transparent",
                   }}
                 >
                   {HEB_WEEKDAYS[weekdayOf(d)]}
@@ -1316,12 +1402,24 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                     key={d}
                     style={{
                       minWidth: 0,
-                      borderInlineStart: `1px solid ${COLORS.grid}`,
-                      backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
+                      borderInlineStart: isTodayCol(d)
+                        ? `2px solid ${TODAY_ACCENT}`
+                        : `1px solid ${COLORS.grid}`,
+                      borderInlineEnd: isTodayCol(d) ? `2px solid ${TODAY_ACCENT}` : undefined,
+                      backgroundColor: isTodayCol(d)
+                        ? "rgba(225,29,72,0.07)"
+                        : isWeekend(d)
+                          ? COLORS.weekend
+                          : "transparent",
+                      backgroundImage:
+                        !isTodayCol(d) && isPastDay(d)
+                          ? "linear-gradient(rgba(15,23,42,0.05), rgba(15,23,42,0.05))"
+                          : undefined,
                     }}
                   />
                 ))}
               </div>
+
 
               {Array.from({ length: laneCount }, (_, laneIndex) => {
                 const inLane = (monthData.general ?? []).filter(
@@ -1454,7 +1552,25 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
       )}
 
 
+      {todayInRange && !loading && (
+        <div className="mb-3 flex justify-end">
+          <Button
+            variant="outline"
+            onClick={() => scrollToToday(true)}
+            className="h-10 rounded-xl"
+            title="קפיצה לתאריך של היום"
+          >
+            <span
+              className="me-2 inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: TODAY_ACCENT }}
+            />
+            היום
+          </Button>
+        </div>
+      )}
+
       {canUseCalendarTools && (
+
         <div className="mb-4 flex flex-wrap justify-end gap-2">
           <Button
             variant="outline"
