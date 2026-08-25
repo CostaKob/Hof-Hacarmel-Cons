@@ -927,6 +927,7 @@ const AdminPrivatePayments = () => {
                       </div>
                       <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
                         {format(new Date(payment.paidAt), "dd/MM/yyyy · HH:mm")}
+                        {payment.payment_method && ` · ${formatPaymentMethodWithCount(payment.payment_method, payment.installments)}`}
                       </p>
                     </div>
                     <span className="shrink-0 text-base font-bold text-green-600">{fmt(Number(payment.amount))} ₪</span>
