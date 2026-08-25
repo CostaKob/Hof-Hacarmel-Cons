@@ -664,6 +664,10 @@ const AdminFamilyCard = () => {
             const childSpecials = specialsByChild.get(c.id) ?? [];
             const childSpecialsTotal = childSpecials.reduce((s, x) => s + x.price, 0);
             const childTotal = (t?.net ?? 0) + childSpecialsTotal;
+            const childPaid = payments
+              .filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid")
+              .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+            const childBalance = Math.max(0, Math.round((childTotal - childPaid) * 100) / 100);
 
             return (
               <div
@@ -687,11 +691,29 @@ const AdminFamilyCard = () => {
                       </span>
                     )}
                   </button>
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-3 text-sm flex-wrap">
                     <span className="text-muted-foreground">סה"כ לילד:</span>
                     <span className="font-bold text-foreground">
                       {fmt(childTotal)}
                     </span>
+                    {childPaid > 0.01 && (
+                      <>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-muted-foreground">שולם:</span>
+                        <span className="font-bold text-emerald-600">
+                          {fmt(childPaid)}
+                        </span>
+                      </>
+                    )}
+                    {childBalance > 0.01 && childPaid > 0.01 && (
+                      <>
+                        <span className="text-muted-foreground">·</span>
+                        <span className="text-muted-foreground">יתרה:</span>
+                        <span className="font-bold text-amber-600">
+                          {fmt(childBalance)}
+                        </span>
+                      </>
+                    )}
                   </div>
                 </div>
 

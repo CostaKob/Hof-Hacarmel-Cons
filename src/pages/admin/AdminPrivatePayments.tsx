@@ -732,6 +732,11 @@ const AdminPrivatePayments = () => {
                           </p>
                           <Badge variant="secondary" className="gap-1"><Users className="h-3 w-3" /> {f.members.length} ילדים</Badge>
                           <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                          {f.paid > 0.01 && (
+                            <Badge className="gap-1 bg-green-500/10 text-green-700 border-green-500/30 hover:bg-green-500/10">
+                              שולם {fmt(f.paid)} ₪
+                            </Badge>
+                          )}
                           {f.refunds > 0.01 && (
                             <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(f.refunds)} ₪</Badge>
                           )}
@@ -810,6 +815,11 @@ const AdminPrivatePayments = () => {
                         <span className="text-sm text-muted-foreground font-mono">{idx + 1}.</span>
                         <p className="font-semibold text-foreground">{r.student.first_name} {r.student.last_name}</p>
                         <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+                        {r.paid > 0.01 && (
+                          <Badge className="gap-1 bg-green-500/10 text-green-700 border-green-500/30 hover:bg-green-500/10">
+                            שולם {fmt(r.paid)} ₪
+                          </Badge>
+                        )}
                         {r.refunds > 0.01 && (
                           <Badge variant="destructive" className="gap-1"><Undo2 className="h-3 w-3" /> החזר {fmt(r.refunds)} ₪</Badge>
                         )}
