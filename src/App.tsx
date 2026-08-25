@@ -75,6 +75,7 @@ import AdminMessageTemplates from "./pages/admin/AdminMessageTemplates";
 import AdminBroadcastArchive from "./pages/admin/AdminBroadcastArchive";
 
 import AdminSalaryReport from "./pages/admin/AdminSalaryReport";
+import AdminTravelReport from "./pages/admin/AdminTravelReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
 import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
@@ -205,6 +206,7 @@ const App = () => (
 
 
               <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
+              <Route path="/admin/travel-report" element={<AdminRoute><AdminTravelReport /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
               <Route path="/admin/ensembles/:id" element={<AdminRoute><AdminEnsembleCard /></AdminRoute>} />

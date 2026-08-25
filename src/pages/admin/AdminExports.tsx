@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard, FileSpreadsheet, TrendingUp } from "lucide-react";
+import { Download, Users, GraduationCap, ClipboardList, BarChart3, Loader2, CreditCard, FileSpreadsheet, TrendingUp, Car } from "lucide-react";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import PageTitle from "@/components/PageTitle";
@@ -296,6 +296,21 @@ const AdminExports = () => {
               </p>
             </div>
             <Button variant="outline" className="rounded-xl h-11 gap-2" onClick={() => navigate("/admin/cashflow")}>
+              פתיחה
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+            <div className="rounded-xl bg-accent p-3.5">
+              <Car className="h-6 w-6 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-foreground text-base">דוח נסיעות מורים</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                כמה ק״מ דיווח כל מורה בחודש נבחר, כולל החזר משוער וייצוא לאקסל
+              </p>
+            </div>
+            <Button variant="outline" className="rounded-xl h-11 gap-2" onClick={() => navigate("/admin/travel-report")}>
               פתיחה
             </Button>
           </div>
