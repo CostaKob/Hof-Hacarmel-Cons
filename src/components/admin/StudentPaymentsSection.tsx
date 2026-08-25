@@ -143,10 +143,18 @@ const StudentPaymentsSection = ({
               );
               return { key, head: sorted[0], rows: sorted };
             });
-            entries.sort((a, b) =>
-              new Date(b.head.created_at || b.head.payment_date).getTime() -
-              new Date(a.head.created_at || a.head.payment_date).getTime()
-            );
+            entries.sort((a, b) => {
+              if (sortBy === "paid_at") {
+                return (
+                  new Date(b.head.paid_at || b.head.created_at || b.head.payment_date).getTime() -
+                  new Date(a.head.paid_at || a.head.created_at || a.head.payment_date).getTime()
+                );
+              }
+              return (
+                new Date(b.head.payment_date || b.head.created_at).getTime() -
+                new Date(a.head.payment_date || a.head.created_at).getTime()
+              );
+            });
             return entries;
           })().map(({ key, head, rows }) => {
             const p = head;
