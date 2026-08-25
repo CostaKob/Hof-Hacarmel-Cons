@@ -1295,22 +1295,50 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
           >
             {/* מספרי ימים */}
             <div style={{ ...gridStyle, backgroundColor: COLORS.dayNumbers }}>
-              {days.map((d) => (
-                <div
-                  key={d}
-                  style={{
-                    minWidth: 0,
-                    borderInlineStart: `1px solid ${COLORS.grid}`,
-                    textAlign: "center",
-                    padding: "4px 0",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    color: "#4B2E27",
-                  }}
-                >
-                  {d}
-                </div>
-              ))}
+              {days.map((d) => {
+                const today = isTodayCol(d);
+                return (
+                  <div
+                    key={d}
+                    ref={today ? todayCellRef : undefined}
+                    style={{
+                      minWidth: 0,
+                      borderInlineStart: `1px solid ${COLORS.grid}`,
+                      textAlign: "center",
+                      padding: "4px 0",
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#4B2E27",
+                      opacity: !today && isPastDay(d) ? 0.5 : 1,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {today ? (
+                      <span
+                        title="היום"
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          minWidth: 22,
+                          height: 22,
+                          paddingInline: 4,
+                          borderRadius: 999,
+                          backgroundColor: TODAY_ACCENT,
+                          color: "#FFFFFF",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {d}
+                      </span>
+                    ) : (
+                      d
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {/* ימי שבוע */}
@@ -1324,8 +1352,14 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                     textAlign: "center",
                     padding: "3px 0",
                     fontSize: 12,
-                    color: "#374151",
-                    backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
+                    color: isTodayCol(d) ? TODAY_ACCENT : "#374151",
+                    fontWeight: isTodayCol(d) ? 700 : 400,
+                    opacity: !isTodayCol(d) && isPastDay(d) ? 0.55 : 1,
+                    backgroundColor: isTodayCol(d)
+                      ? "rgba(225,29,72,0.10)"
+                      : isWeekend(d)
+                        ? COLORS.weekend
+                        : "transparent",
                   }}
                 >
                   {HEB_WEEKDAYS[weekdayOf(d)]}
@@ -1350,12 +1384,24 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                     key={d}
                     style={{
                       minWidth: 0,
-                      borderInlineStart: `1px solid ${COLORS.grid}`,
-                      backgroundColor: isWeekend(d) ? COLORS.weekend : "transparent",
+                      borderInlineStart: isTodayCol(d)
+                        ? `2px solid ${TODAY_ACCENT}`
+                        : `1px solid ${COLORS.grid}`,
+                      borderInlineEnd: isTodayCol(d) ? `2px solid ${TODAY_ACCENT}` : undefined,
+                      backgroundColor: isTodayCol(d)
+                        ? "rgba(225,29,72,0.07)"
+                        : isWeekend(d)
+                          ? COLORS.weekend
+                          : "transparent",
+                      backgroundImage:
+                        !isTodayCol(d) && isPastDay(d)
+                          ? "linear-gradient(rgba(15,23,42,0.05), rgba(15,23,42,0.05))"
+                          : undefined,
                     }}
                   />
                 ))}
               </div>
+
 
               {Array.from({ length: laneCount }, (_, laneIndex) => {
                 const inLane = (monthData.general ?? []).filter(
