@@ -1,6 +1,6 @@
 export interface PaymentSummaryEntry {
   payment_method: string | null | undefined;
-  installments: number | string | null | undefined;
+  installments?: number | string | null | undefined;
   payment_group_id?: string | null;
   amount?: number | string | null;
 }
