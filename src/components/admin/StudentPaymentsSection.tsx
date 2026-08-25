@@ -183,7 +183,7 @@ const StudentPaymentsSection = ({
             }
 
             const lastRow = rows[rows.length - 1];
-            const isCheck = p.payment_method === "check" || p.payment_method === "צ׳ק" || p.payment_method === "צ'ק";
+            const isCheck = isCheckMethod(p.payment_method);
             const refLabel = isCheck ? "צ׳ק מס׳" : "אסמכתא";
 
             return (
