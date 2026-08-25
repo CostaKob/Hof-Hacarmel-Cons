@@ -51,6 +51,7 @@ import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/
 import ChequeCancellationTracking from "@/components/admin/ChequeCancellationTracking";
 import { createChequeWithdrawalRequest, parseChequeMeta, openLetter } from "@/lib/chequeCancellation";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import { formatPaymentMethodWithCount, isCheckMethod } from "@/lib/paymentMethodLabel";
 
 
 
@@ -58,14 +59,6 @@ const STATUS_LABELS: Record<string, string> = {
   paid: "שולם",
   pending: "ממתין",
   failed: "נכשל",
-};
-
-const METHOD_LABELS: Record<string, string> = {
-  credit_card: "אשראי",
-  cash: "מזומן",
-  check: "צ׳ק",
-  transfer: "העברה",
-  other: "אחר",
 };
 
 const HEBREW_YEAR_MAP: Record<string, string> = {
