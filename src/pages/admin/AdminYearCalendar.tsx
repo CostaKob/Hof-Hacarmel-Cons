@@ -1001,6 +1001,9 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
     const days = Array.from({ length: m.dayCount }, (_, i) => i + 1);
     const weekdayOf = (day: number) => new Date(m.year, m.month - 1, day).getDay();
     const isWeekend = (day: number) => weekdayOf(day) === 5 || weekdayOf(day) === 6;
+    const isTodayCol = (day: number) => m.key === todayMonthKey && day === todayDay;
+    const isPastDay = (day: number) => isoDate(m.year, m.month, day) < todayISO;
+
     const monthData = itemsByMonth[m.key] ?? { general: [], availability: [] };
     const laneCount = laneCountByMonth[m.key] ?? 3;
 
