@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronRight, Car, CalendarDays } from "lucide-react";
