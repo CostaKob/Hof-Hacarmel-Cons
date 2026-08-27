@@ -47,6 +47,15 @@ const TeacherTravelSummary = () => {
     "month",
     `${initialDate.getFullYear()}-${initialDate.getMonth()}`,
   );
+  // An explicit ?month= offset in the URL wins over the saved selection.
+  const urlMonthKey = searchParams.get("month")
+    ? `${initialDate.getFullYear()}-${initialDate.getMonth()}`
+    : null;
+  useEffect(() => {
+    if (urlMonthKey && urlMonthKey !== selected) setSelected(urlMonthKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlMonthKey]);
+
   const [selYear, selMonth] = selected.split("-").map(Number);
 
   const { data: reports } = useTeacherReportsByMonth(teacher?.id, selYear, selMonth);
