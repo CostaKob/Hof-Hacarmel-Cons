@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect } from "react";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronRight, Car, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
@@ -40,7 +41,22 @@ const TeacherTravelSummary = () => {
   const monthOffset = Number(searchParams.get("month") ?? 0);
   const initialDate = new Date();
   initialDate.setMonth(initialDate.getMonth() + monthOffset);
-  const [selected, setSelected] = useState(`${initialDate.getFullYear()}-${initialDate.getMonth()}`);
+  const routeKey = "/teacher/travel-summary";
+  useListStatePreservation(routeKey);
+  const [selected, setSelected] = usePersistedState(
+    routeKey,
+    "month",
+    `${initialDate.getFullYear()}-${initialDate.getMonth()}`,
+  );
+  // An explicit ?month= offset in the URL wins over the saved selection.
+  const urlMonthKey = searchParams.get("month")
+    ? `${initialDate.getFullYear()}-${initialDate.getMonth()}`
+    : null;
+  useEffect(() => {
+    if (urlMonthKey && urlMonthKey !== selected) setSelected(urlMonthKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlMonthKey]);
+
   const [selYear, selMonth] = selected.split("-").map(Number);
 
   const { data: reports } = useTeacherReportsByMonth(teacher?.id, selYear, selMonth);
