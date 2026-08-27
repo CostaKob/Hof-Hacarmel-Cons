@@ -1825,13 +1825,13 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
             </div>
           </div>
 
-          <DialogFooter className="flex-col gap-2 sm:flex-row-reverse">
+          <DialogFooter className="shrink-0 flex-col gap-2 border-t border-border bg-background pt-3 sm:flex-row-reverse sm:border-0 sm:pt-0">
             {editingId && (
               <Button
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={saving}
-                className="h-12 rounded-xl"
+                className="order-4 h-12 rounded-xl sm:order-none"
               >
                 מחק
               </Button>
@@ -1841,18 +1841,18 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                 variant="secondary"
                 onClick={handleDuplicate}
                 disabled={saving}
-                className="h-12 rounded-xl"
+                className="order-3 h-12 rounded-xl sm:order-none"
               >
                 שכפל אירוע
               </Button>
             )}
 
-            <div className="flex-1" />
+            <div className="hidden flex-1 sm:block" />
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}
               disabled={saving}
-              className="h-12 rounded-xl"
+              className="order-2 h-12 rounded-xl sm:order-none"
             >
               ביטול
             </Button>
@@ -1865,7 +1865,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
                 !form.start_date ||
                 !form.end_date
               }
-              className="h-12 rounded-xl"
+              className="order-1 h-12 rounded-xl sm:order-none"
             >
               {saving ? "שומר…" : editingId ? "שמור שינויים" : "הוסף אירוע"}
             </Button>
