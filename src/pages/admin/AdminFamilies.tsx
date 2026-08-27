@@ -318,7 +318,8 @@ const AdminFamilies = () => {
               </div>
 
             </div>
-          ))}
+            );
+          })}
           {!isLoading && filtered.length === 0 && (
             <div className="col-span-full text-center text-muted-foreground py-12">
               לא נמצאו משפחות
