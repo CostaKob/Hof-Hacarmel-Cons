@@ -12,6 +12,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import MultiSelectFilter from "@/components/MultiSelectFilter";
+import BulkStudentSearchAdd from "@/components/admin/BulkStudentSearchAdd";
 import {
   Select,
   SelectContent,
