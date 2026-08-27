@@ -29,6 +29,7 @@ const AdminFamilies = () => {
   const [onlyMulti, setOnlyMulti] = usePersistedState(routeKey, "multi", false);
   const [onlyDup, setOnlyDup] = usePersistedState(routeKey, "duplicates", false);
   const [onlyRefund, setOnlyRefund] = usePersistedState(routeKey, "refunds", false);
+  const [payStatus, setPayStatus] = usePersistedState<string>(routeKey, "payStatus", "all");
   const { data: refundProcesses } = useOpenRefundProcesses(yearId);
   const refundByFamily = refundProcesses?.byFamily;
   const { dismissed, dismissPairs } = useFamilyDupDismissals();
@@ -166,6 +167,8 @@ const AdminFamilies = () => {
             const pay = paymentSummary.get((f.parent_national_id || "").trim());
             const hasCredit = !!pay && pay.credit > 0.01;
             const fullyPaid = !!pay && !hasCredit && pay.totalDue > 0 && pay.balance <= 0.01;
+            const partiallyPaid = !!pay && !hasCredit && !fullyPaid && pay.net > 0 && pay.balance > 0.01;
+            const unpaid = !!pay && !hasCredit && !fullyPaid && pay.net <= 0.01 && pay.totalDue > 0;
             return (
             <div
               key={f.parent_national_id}
