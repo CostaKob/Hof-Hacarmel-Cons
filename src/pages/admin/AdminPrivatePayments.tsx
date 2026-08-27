@@ -17,6 +17,7 @@ import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { formatPaymentMethodWithCount, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { allocatePayment } from "@/lib/familyPaymentAllocation";
 
 
 const ALL = "__all__";

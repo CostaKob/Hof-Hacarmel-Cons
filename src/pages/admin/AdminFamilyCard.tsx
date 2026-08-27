@@ -51,6 +51,7 @@ import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/
 import ChequeCancellationTracking from "@/components/admin/ChequeCancellationTracking";
 import { createChequeWithdrawalRequest, parseChequeMeta, openLetter } from "@/lib/chequeCancellation";
 import { useAppLogo } from "@/hooks/useAppLogo";
+import { studentShareOfPayment } from "@/lib/familyPaymentAllocation";
 import { formatPaymentMethodWithCount, isCheckMethod, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 
 
@@ -657,12 +658,16 @@ const AdminFamilyCard = () => {
             const childSpecials = specialsByChild.get(c.id) ?? [];
             const childSpecialsTotal = childSpecials.reduce((s, x) => s + x.price, 0);
             const childTotal = (t?.net ?? 0) + childSpecialsTotal;
-            const childPaid = payments
-              .filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid")
-              .reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+            // Family payments are stored on one anchor child; split them by the
+            // line items so each sibling is credited with their own share.
+            const childPaidRows = payments
+              .filter((p: any) => p.transaction_type === "payment" && p.payment_status === "paid")
+              .map((p: any) => ({ p, share: studentShareOfPayment(p, c.id, children) }))
+              .filter((x: any) => Math.abs(x.share) > 0.005);
+            const childPaid = childPaidRows.reduce((s: number, x: any) => s + x.share, 0);
             const childBalance = Math.max(0, Math.round((childTotal - childPaid) * 100) / 100);
             const childMethodSummary = summarizePaymentMethods(
-              payments.filter((p: any) => p.student_id === c.id && p.transaction_type === "payment" && p.payment_status === "paid"),
+              childPaidRows.map((x: any) => ({ ...x.p, amount: x.share })),
             );
 
             return (
