@@ -27,6 +27,7 @@ import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
+import { studentShareOfPayment } from "@/lib/familyPaymentAllocation";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
@@ -272,9 +273,10 @@ const AdminStudentCard = () => {
 
       return rows
         .map((p: any) => {
-          if (p.student_id === studentId) return p;
           const share = studentShareOfPayment(p, studentId!, siblings);
           if (Math.abs(share) < 0.005) return null;
+          const own = Math.round(Number(p.amount || 0) * 100) / 100;
+          if (p.student_id === studentId && Math.abs(share - own) < 0.005) return p;
           return { ...p, amount: share, _familyShare: true };
         })
         .filter(Boolean) as any[];
