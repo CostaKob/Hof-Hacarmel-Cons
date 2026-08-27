@@ -58,3 +58,27 @@ describe("allocatePayment", () => {
     expect(alloc.get("a")).toBeCloseTo(500, 2);
   });
 });
+
+describe("summarizePaymentMethods", () => {
+  it("does not double-count installments for split family payment copies", () => {
+    const original = {
+      id: "pay-1",
+      payment_method: "credit_card",
+      installments: 10,
+      amount: 9880,
+    };
+    const splitRows = [
+      { ...original, student_id: "a", amount: 4940, _splitFromPaymentId: "pay-1" },
+      { ...original, student_id: "y", amount: 4940, _splitFromPaymentId: "pay-1" },
+    ];
+    expect(summarizePaymentMethods(splitRows)).toEqual(["אשראי · 10 תשלומים"]);
+  });
+
+  it("still sums installments across distinct transactions", () => {
+    const rows = [
+      { id: "pay-1", payment_method: "credit_card", installments: 5, amount: 1000 },
+      { id: "pay-2", payment_method: "credit_card", installments: 3, amount: 800 },
+    ];
+    expect(summarizePaymentMethods(rows)).toEqual(["אשראי · 8 תשלומים"]);
+  });
+});
