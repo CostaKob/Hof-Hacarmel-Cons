@@ -61,7 +61,24 @@ export function allocatePayment(
   }
   const known = new Set(children.map((c) => c.id));
 
-  const lines = linesOf(payment.enrollment_breakdown);
+  let lines = linesOf(payment.enrollment_breakdown);
+  // A credit / refund carries no breakdown of its own: mirror the split of the
+  // original payment so the two cancel each other out per child.
+  if (!lines.length && payment.refund_of_payment_id && relatedRows?.length) {
+    let ref: string | null | undefined = payment.refund_of_payment_id;
+    const seen = new Set<string>();
+    for (let i = 0; i < 5 && ref && !seen.has(ref); i++) {
+      seen.add(ref);
+      const src = relatedRows.find((r) => r.id === ref);
+      if (!src) break;
+      const srcLines = linesOf(src.enrollment_breakdown);
+      if (srcLines.length) {
+        lines = srcLines;
+        break;
+      }
+      ref = src.refund_of_payment_id;
+    }
+  }
   if (!lines.length) return fallback();
 
   const raw = new Map<string, number>();
