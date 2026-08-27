@@ -23,6 +23,7 @@ const AdminFamilies = () => {
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
   const { data: families = [], isLoading } = useFamiliesList(yearId);
+  const paymentSummary = useFamilyPaymentSummary(yearId);
   const routeKey = "/admin/families";
   const [q, setQ] = usePersistedState(routeKey, "search", "");
   const [onlyMulti, setOnlyMulti] = usePersistedState(routeKey, "multi", false);
