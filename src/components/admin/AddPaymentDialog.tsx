@@ -750,9 +750,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
 
       const hebrewYear = activeYear?.name ? (HEBREW_YEAR_MAP[activeYear.name] ?? activeYear.name) : "";
 
+      // `student_id` keeps each line attributable to its child, so a family
+      // payment can be split back per sibling in reports and family cards.
       const lines = entries.map(({ id, amt, item }) => ({
         description: lineDescription(id, item),
         amount: Math.round(amt * 100) / 100,
+        student_id: item?.studentId ?? studentId,
       }));
 
       const anchorStudentId = familyContext?.anchorStudentId ?? studentId;
@@ -893,6 +896,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const baseLines = baseEntries.map(({ id, amt, item }) => ({
         description: lineDescription(id, item),
         amount: Math.round(amt * 100) / 100,
+        student_id: item?.studentId ?? studentId,
       }));
 
       const familyTitleName = familyContext
@@ -921,6 +925,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         const scaled = baseLines.map((l) => ({
           description: l.description,
           amount: Math.round(l.amount * ratio * 100) / 100,
+          student_id: l.student_id,
         }));
         const drift = Math.round((p.amount - scaled.reduce((s, l) => s + l.amount, 0)) * 100) / 100;
         if (scaled.length > 0 && Math.abs(drift) >= 0.01) {
