@@ -742,12 +742,33 @@ const AdminStudents = () => {
   // ---- רינדור מדורג: מונע קריסת הדפדפן בנייד ברשימות ארוכות ----
   const PAGE_SIZE = 50;
   const totalItems = view === "all" ? filteredAll.length : filtered.length;
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Persisted so returning from a student card restores the same list length
+  // (and thus the same scroll height) — otherwise scroll restoration fails.
+  const [visibleCount, setVisibleCount] = useState<number>(() => {
+    try {
+      const saved = window.sessionStorage.getItem("admin-students-visible-count");
+      const n = saved ? Number(saved) : 0;
+      return n >= PAGE_SIZE ? n : PAGE_SIZE;
+    } catch {
+      return PAGE_SIZE;
+    }
+  });
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const filtersKey = `${view}::${searchParams.toString()}`;
+  const lastFiltersKeyRef = useRef(filtersKey);
 
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
+    try {
+      window.sessionStorage.setItem("admin-students-visible-count", String(visibleCount));
+    } catch { /* storage unavailable */ }
+  }, [visibleCount]);
+
+  useEffect(() => {
+    // Reset pagination only when filters actually change (not on mount/back-nav)
+    if (lastFiltersKeyRef.current !== filtersKey) {
+      lastFiltersKeyRef.current = filtersKey;
+      setVisibleCount(PAGE_SIZE);
+    }
   }, [filtersKey]);
 
   useEffect(() => {
