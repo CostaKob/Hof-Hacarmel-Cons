@@ -61,7 +61,8 @@ export const isCheckMethod = (method: string | null | undefined) => {
 
 /**
  * Summarises payment methods used across a list of payments.
- * Groups by payment_group_id when present so each group counts as one unit.
+ * Groups by payment_group_id (cheque splits) OR by _splitFromPaymentId (family
+ * allocation copies) so one logical transaction is never counted more than once.
  * Example: ["אשראי · 8 תשלומים", "צ׳ק · 3 צ׳קים"]
  */
 export const summarizePaymentMethods = (payments: PaymentSummaryEntry[]): string[] => {
@@ -69,7 +70,7 @@ export const summarizePaymentMethods = (payments: PaymentSummaryEntry[]): string
   const standalone: PaymentSummaryEntry[] = [];
 
   for (const p of payments) {
-    const groupId = p.payment_group_id;
+    const groupId = p.payment_group_id || p._splitFromPaymentId || null;
     if (groupId) {
       if (!groupMap.has(groupId)) groupMap.set(groupId, p);
     } else {
@@ -79,7 +80,7 @@ export const summarizePaymentMethods = (payments: PaymentSummaryEntry[]): string
 
   const grouped = Array.from(groupMap.values()).concat(standalone);
 
-  // For the method summary we show each method's total count
+  // For the method summary we show each method's total count across distinct transactions
   const countsByMethod: Map<string, { count: number; installments: number }> = new Map();
   for (const p of grouped) {
     const method = p.payment_method || "other";
