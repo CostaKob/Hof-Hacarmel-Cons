@@ -372,8 +372,23 @@ const AdminStudents = () => {
   }, [selectedYearId, yearPayments, draftByStudent]);
 
 
-  // Net paid summed at student level (paid/credit only; pending links do not reduce debt)
+  // Net paid summed at student level (paid/credit only; pending links do not reduce debt).
+  // Family payment links are stored on one "anchor" child, so split them across
+  // the siblings their line items actually cover.
   const paidByStudent = useMemo(() => {
+    const studentsById = new Map<string, any>();
+    for (const e of rows as any[]) {
+      if (e.students?.id) studentsById.set(e.students.id, e.students);
+    }
+    const familyByNid = new Map<string, any[]>();
+    for (const s of studentsById.values()) {
+      const nid = (s.parent_national_id || "").trim();
+      if (!nid) continue;
+      const arr = familyByNid.get(nid) ?? [];
+      arr.push(s);
+      familyByNid.set(nid, arr);
+    }
+
     const map = new Map<string, number>();
     for (const p of yearPayments as any[]) {
       if (!p.student_id) continue;
@@ -384,10 +399,18 @@ const AdminStudents = () => {
         : p.transaction_type === "credit"
           ? -Math.abs(amount)
           : amount;
-      map.set(p.student_id, (map.get(p.student_id) ?? 0) + netAmount);
+      const anchor = studentsById.get(p.student_id);
+      const sibs = anchor ? (familyByNid.get((anchor.parent_national_id || "").trim()) ?? [anchor]) : [];
+      const alloc = allocatePayment({ ...p, amount: netAmount }, sibs);
+      if (alloc.size > 1) {
+        for (const [sid, amt] of alloc) map.set(sid, (map.get(sid) ?? 0) + amt);
+      } else {
+        map.set(p.student_id, (map.get(p.student_id) ?? 0) + netAmount);
+      }
     }
     return map;
-  }, [yearPayments]);
+  }, [yearPayments, rows]);
+
 
   const balanceByStudent = useMemo(() => {
     const map = new Map<string, number>();
