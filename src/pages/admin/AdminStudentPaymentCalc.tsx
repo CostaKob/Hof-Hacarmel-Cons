@@ -22,6 +22,8 @@ import { toast } from "sonner";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
 import SendTeacherAssignmentMessage from "@/components/admin/SendTeacherAssignmentMessage";
+import { studentShareOfPayment } from "@/lib/familyPaymentAllocation";
+
 
 const HEBREW_YEAR_MAP: Record<string, string> = {
   "2024-2025": "תשפ״ה",
