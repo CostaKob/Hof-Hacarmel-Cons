@@ -1649,7 +1649,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
             <DialogTitle>{editingId ? "עריכת אירוע" : "הוספת אירוע"}</DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
+          <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto overscroll-contain py-4">
             {selectedTrack?.key !== "availability" && (
               <div className="grid gap-2">
                 <Label htmlFor="title">כותרת ראשית</Label>
