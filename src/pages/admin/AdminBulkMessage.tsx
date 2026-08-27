@@ -34,14 +34,17 @@ import { Send, Users, Mail, Loader2, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 
-type Source = "registrations" | "enrollments" | "school_music" | "unregistered_students";
+type Source = "registrations" | "enrollments" | "school_music" | "both" | "unregistered_students";
 
 const SOURCE_LABELS: Record<Source, string> = {
   registrations: "הורים שנרשמו (טופס הרשמה)",
-  enrollments: "הורים של תלמידים עם שיוך פעיל",
-  school_music: "הורים בבית ספר מנגן",
+  enrollments: "תלמידים פרטניים",
+  school_music: "בית ספר מנגן",
+  both: "פרטניים + בית ספר מנגן",
   unregistered_students: "תלמידים שלא נרשמו לשנה הנוכחית",
 };
+
+const FILTERABLE: Source[] = ["enrollments", "school_music", "both"];
 
 
 interface Recipient {
@@ -50,6 +53,14 @@ interface Recipient {
   studentName: string;
   siblingCount?: number;
 }
+
+interface RecipientRow extends Recipient {
+  grade?: string | null;
+  schoolKey?: string | null;
+  teacherIds: string[];
+  ensembleIds: string[];
+}
+
 
 const firstNameOf = (full: string) => (full || "").trim().split(/\s+/)[0] || "";
 
