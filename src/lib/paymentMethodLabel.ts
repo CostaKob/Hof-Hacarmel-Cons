@@ -1,7 +1,10 @@
 export interface PaymentSummaryEntry {
+  id?: string | null;
   payment_method: string | null | undefined;
   installments?: number | string | null | undefined;
   payment_group_id?: string | null;
+  /** Internal marker from familyPaymentAllocation.ts — identifies split copies of one original payment. */
+  _splitFromPaymentId?: string | null;
   amount?: number | string | null;
 }
 
