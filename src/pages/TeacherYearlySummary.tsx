@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
@@ -13,6 +13,7 @@ import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySumma
 import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 import AppLogo from "@/components/AppLogo";
 import PageTitle from "@/components/PageTitle";
+import { usePersistedState } from "@/hooks/useListStatePreservation";
 
 function useTeacherEnrollmentsByYear(teacherId: string | undefined, yearId: string | null) {
   return useQuery({
