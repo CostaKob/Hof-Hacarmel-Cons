@@ -10,9 +10,12 @@
 //   3. Fallback: the whole amount stays on `payment.student_id`.
 
 export interface AllocatablePayment {
+  id?: string | null;
   student_id?: string | null;
   amount: number | string | null;
   enrollment_breakdown?: any;
+  /** Credits / refunds point back at the payment they cancel. */
+  refund_of_payment_id?: string | null;
 }
 
 export interface AllocationChild {
