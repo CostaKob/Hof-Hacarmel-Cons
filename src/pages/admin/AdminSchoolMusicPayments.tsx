@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import PageTitle from "@/components/PageTitle";
+import { usePersistedState } from "@/hooks/useListStatePreservation";
 
 const ALL = "__all__";
 
@@ -39,12 +40,13 @@ const AdminSchoolMusicPayments = () => {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { selectedYearId } = useAcademicYear();
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [schoolFilter, setSchoolFilter] = useState<string>(ALL);
-  const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
-  const [classFilter, setClassFilter] = useState<string>(ALL);
-  const [staffFilter, setStaffFilter] = useState<string>(ALL);
+  const routeKey = "/admin/school-music-payments";
+  const [search, setSearch] = usePersistedState(routeKey, "search", "");
+  const [statusFilter, setStatusFilter] = usePersistedState<StatusFilter>(routeKey, "status", "all");
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string>(routeKey, "school", ALL);
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string>(routeKey, "instrument", ALL);
+  const [classFilter, setClassFilter] = usePersistedState<string>(routeKey, "class", ALL);
+  const [staffFilter, setStaffFilter] = usePersistedState<string>(routeKey, "staff", ALL);
   const [markPaidId, setMarkPaidId] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [reference, setReference] = useState("");

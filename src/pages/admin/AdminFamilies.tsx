@@ -290,9 +290,10 @@ const AdminFamilies = () => {
                 <Button
                   type="button"
                   className="h-11 rounded-xl w-full sm:flex-1"
-                  onClick={() =>
-                    navigate(`/admin/families/${encodeURIComponent(f.parent_national_id)}`)
-                  }
+                  onClick={() => {
+                    saveListScrollPosition(routeKey);
+                    navigate(`/admin/families/${encodeURIComponent(f.parent_national_id)}`);
+                  }}
                 >
                   פתח כרטיס <ArrowLeft className="h-4 w-4 ms-1" />
                 </Button>
