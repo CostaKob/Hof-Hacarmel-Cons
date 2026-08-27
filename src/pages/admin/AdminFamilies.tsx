@@ -5,6 +5,7 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle, RotateCcw, CheckCircle2, Coins } from "lucide-react";
 import { useFamilyPaymentSummary } from "@/hooks/useFamilyPaymentSummary";
 import { useFamiliesList } from "@/hooks/useFamilies";
@@ -171,6 +172,18 @@ const AdminFamilies = () => {
             בתהליך זיכוי
             <Badge variant="secondary" className="ms-2">{refundCount}</Badge>
           </Button>
+          <Select value={payStatus} onValueChange={setPayStatus}>
+            <SelectTrigger className="h-12 rounded-xl w-full sm:w-[170px]">
+              <SelectValue placeholder="סטטוס תשלום" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">כל הסטטוסים</SelectItem>
+              <SelectItem value="paid">שולם במלואו</SelectItem>
+              <SelectItem value="partial">שולם חלקית</SelectItem>
+              <SelectItem value="unpaid">טרם שולם</SelectItem>
+              <SelectItem value="credit">קיים זיכוי</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="text-sm text-muted-foreground">
