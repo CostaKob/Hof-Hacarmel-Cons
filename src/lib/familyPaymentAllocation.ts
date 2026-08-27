@@ -119,8 +119,9 @@ export function studentShareOfPayment(
   payment: AllocatablePayment,
   studentId: string,
   children: AllocationChild[],
+  relatedRows?: AllocatablePayment[],
 ): number {
-  return allocatePayment(payment, children).get(studentId) ?? 0;
+  return allocatePayment(payment, children, relatedRows).get(studentId) ?? 0;
 }
 
 /** True when the row's money is shared between several children. */
