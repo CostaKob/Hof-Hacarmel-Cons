@@ -5,7 +5,8 @@ import PageTitle from "@/components/PageTitle";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle, RotateCcw } from "lucide-react";
+import { Users, Search, ArrowLeft, Phone, Mail, Merge, AlertTriangle, RotateCcw, CheckCircle2, Coins } from "lucide-react";
+import { useFamilyPaymentSummary } from "@/hooks/useFamilyPaymentSummary";
 import { useFamiliesList } from "@/hooks/useFamilies";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
@@ -22,6 +23,7 @@ const AdminFamilies = () => {
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
   const { data: families = [], isLoading } = useFamiliesList(yearId);
+  const paymentSummary = useFamilyPaymentSummary(yearId);
   const routeKey = "/admin/families";
   const [q, setQ] = usePersistedState(routeKey, "search", "");
   const [onlyMulti, setOnlyMulti] = usePersistedState(routeKey, "multi", false);
@@ -160,7 +162,11 @@ const AdminFamilies = () => {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {filtered.map((f) => (
+          {filtered.map((f) => {
+            const pay = paymentSummary.get((f.parent_national_id || "").trim());
+            const hasCredit = !!pay && pay.credit > 0.01;
+            const fullyPaid = !!pay && !hasCredit && pay.totalDue > 0 && pay.balance <= 0.01;
+            return (
             <div
               key={f.parent_national_id}
               className="text-right rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-all"
@@ -181,6 +187,18 @@ const AdminFamilies = () => {
                   <Badge variant={f.children_count > 1 ? "default" : "secondary"}>
                     {f.children_count} {f.children_count === 1 ? "ילד" : "ילדים"}
                   </Badge>
+                  {fullyPaid && (
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3 w-3" />
+                      שולם במלואו
+                    </span>
+                  )}
+                  {hasCredit && (
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                      <Coins className="h-3 w-3" />
+                      קיים זיכוי למשפחה ₪{pay!.credit.toLocaleString("he-IL")}
+                    </span>
+                  )}
                   {refundByFamily?.has(f.parent_national_id) && (
                     <span
                       className={`text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap ${refundByFamily.get(f.parent_national_id)!.className}`}
@@ -300,7 +318,8 @@ const AdminFamilies = () => {
               </div>
 
             </div>
-          ))}
+            );
+          })}
           {!isLoading && filtered.length === 0 && (
             <div className="col-span-full text-center text-muted-foreground py-12">
               לא נמצאו משפחות
