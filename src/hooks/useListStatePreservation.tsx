@@ -5,10 +5,39 @@ import { useLocation } from "react-router-dom";
  * Preserves scroll position of a list page across navigation.
  * On mount, restores scroll if returning from a child page.
  * On unmount, saves scroll position keyed by route path.
+ *
+ * Admin pages scroll inside the <main data-scroll-container> element rather
+ * than the window, so this hook uses that element when present.
  */
 const scrollPositions = new Map<string, number>();
 const lockedScrollKeys = new Set<string>();
 const SESSION_PREFIX = "list-scroll::";
+
+const getScrollContainer = () => {
+  if (typeof document === "undefined") return null;
+  return document.querySelector<HTMLElement>("[data-scroll-container]");
+};
+
+const getScrollTop = () => {
+  const el = getScrollContainer();
+  if (el) return el.scrollTop;
+  return window.scrollY;
+};
+
+const getMaxScroll = () => {
+  const el = getScrollContainer();
+  if (el) return Math.max(0, el.scrollHeight - el.clientHeight);
+  return Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+};
+
+const scrollToY = (y: number) => {
+  const el = getScrollContainer();
+  if (el) {
+    el.scrollTop = y;
+  } else {
+    window.scrollTo(0, y);
+  }
+};
 
 const readSavedScroll = (key: string) => {
   const memoryValue = scrollPositions.get(key);
@@ -33,8 +62,8 @@ const writeSavedScroll = (key: string, value: number) => {
   }
 };
 
-export const saveListScrollPosition = (key: string, value = window.scrollY) => {
-  writeSavedScroll(key, value);
+export const saveListScrollPosition = (key: string, value?: number) => {
+  writeSavedScroll(key, value ?? getScrollTop());
   lockedScrollKeys.add(key);
 };
 
@@ -52,23 +81,23 @@ export const useListStatePreservation = (key?: string) => {
       // Some browsers expose scrollRestoration as read-only.
     }
 
+    const scroller = getScrollContainer();
     const saved = readSavedScroll(storageKey);
     let cancelled = false;
 
     if (saved != null && saved > 0 && !restored.current) {
       restored.current = true;
-      // Poll until the document is tall enough to reach the saved position
+      // Poll until the container is tall enough to reach the saved position
       // (lists fetch async, so content height grows after mount).
       const start = performance.now();
       const tryRestore = () => {
         if (cancelled) return;
-        const maxScroll =
-          document.documentElement.scrollHeight - window.innerHeight;
+        const maxScroll = getMaxScroll();
         if (maxScroll >= saved - 2) {
-          window.scrollTo(0, saved);
+          scrollToY(saved);
           // Re-assert on the next frame in case layout shifts again
           requestAnimationFrame(() => {
-            if (!cancelled) window.scrollTo(0, saved);
+            if (!cancelled) scrollToY(saved);
             lockedScrollKeys.delete(storageKey);
           });
           return;
@@ -77,7 +106,7 @@ export const useListStatePreservation = (key?: string) => {
           requestAnimationFrame(tryRestore);
         } else {
           // Give up gracefully — scroll as far as possible
-          window.scrollTo(0, Math.min(saved, Math.max(maxScroll, 0)));
+          scrollToY(Math.min(saved, Math.max(maxScroll, 0)));
           lockedScrollKeys.delete(storageKey);
         }
       };
@@ -88,16 +117,17 @@ export const useListStatePreservation = (key?: string) => {
 
     const handleScroll = () => {
       if (!lockedScrollKeys.has(storageKey)) {
-        scrollPositions.set(storageKey, window.scrollY);
+        scrollPositions.set(storageKey, getScrollTop());
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    const target = scroller || window;
+    target.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       cancelled = true;
-      window.removeEventListener("scroll", handleScroll);
+      target.removeEventListener("scroll", handleScroll);
       if (!lockedScrollKeys.has(storageKey)) {
-        writeSavedScroll(storageKey, window.scrollY);
+        writeSavedScroll(storageKey, getScrollTop());
       }
       try {
         window.history.scrollRestoration = prevRestoration;
