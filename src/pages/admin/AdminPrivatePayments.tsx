@@ -99,6 +99,40 @@ const AdminPrivatePayments = () => {
   });
 
 
+  // A family payment link is stored as one row on the "anchor" child even when
+  // its line items cover several siblings. Split such rows into per-child
+  // shares so every sibling is credited with what was actually paid for them.
+  const allocatedPayments = useMemo(() => {
+    const studentsById = new Map<string, any>();
+    for (const e of enrollments as any[]) {
+      if (e.students?.id) studentsById.set(e.students.id, e.students);
+    }
+    const familyByNid = new Map<string, any[]>();
+    for (const s of studentsById.values()) {
+      const nid = (s.parent_national_id || "").trim();
+      if (!nid) continue;
+      const arr = familyByNid.get(nid) ?? [];
+      arr.push(s);
+      familyByNid.set(nid, arr);
+    }
+    const out: any[] = [];
+    for (const p of payments as any[]) {
+      const anchor = p.student_id ? studentsById.get(p.student_id) : null;
+      const sibs = anchor
+        ? (familyByNid.get((anchor.parent_national_id || "").trim()) ?? [anchor])
+        : [];
+      const alloc = allocatePayment(p, sibs);
+      if (alloc.size < 2) {
+        out.push(p);
+        continue;
+      }
+      for (const [sid, amt] of alloc) {
+        out.push({ ...p, student_id: sid, amount: amt, _splitFromPaymentId: p.id });
+      }
+    }
+    return out;
+  }, [payments, enrollments]);
+
   const { data: drafts = [] } = useQuery({
     queryKey: ["priv-payments-drafts", yearId],
     enabled: !!yearId,
