@@ -41,6 +41,8 @@ function linesOf(breakdown: any): any[] {
 export function allocatePayment(
   payment: AllocatablePayment,
   children: AllocationChild[],
+  /** All rows in scope — lets credits inherit the split of the payment they cancel. */
+  relatedRows?: AllocatablePayment[],
 ): Map<string, number> {
   const total = Math.round((Number(payment.amount) || 0) * 100) / 100;
   const out = new Map<string, number>();
