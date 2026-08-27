@@ -17,6 +17,7 @@ import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { formatPaymentMethodWithCount, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
+import { allocatePayment } from "@/lib/familyPaymentAllocation";
 
 
 const ALL = "__all__";
@@ -99,6 +100,40 @@ const AdminPrivatePayments = () => {
   });
 
 
+  // A family payment link is stored as one row on the "anchor" child even when
+  // its line items cover several siblings. Split such rows into per-child
+  // shares so every sibling is credited with what was actually paid for them.
+  const allocatedPayments = useMemo(() => {
+    const studentsById = new Map<string, any>();
+    for (const e of enrollments as any[]) {
+      if (e.students?.id) studentsById.set(e.students.id, e.students);
+    }
+    const familyByNid = new Map<string, any[]>();
+    for (const s of studentsById.values()) {
+      const nid = (s.parent_national_id || "").trim();
+      if (!nid) continue;
+      const arr = familyByNid.get(nid) ?? [];
+      arr.push(s);
+      familyByNid.set(nid, arr);
+    }
+    const out: any[] = [];
+    for (const p of payments as any[]) {
+      const anchor = p.student_id ? studentsById.get(p.student_id) : null;
+      const sibs = anchor
+        ? (familyByNid.get((anchor.parent_national_id || "").trim()) ?? [anchor])
+        : [];
+      const alloc = allocatePayment(p, sibs);
+      if (alloc.size < 2) {
+        out.push(p);
+        continue;
+      }
+      for (const [sid, amt] of alloc) {
+        out.push({ ...p, student_id: sid, amount: amt, _splitFromPaymentId: p.id });
+      }
+    }
+    return out;
+  }, [payments, enrollments]);
+
   const { data: drafts = [] } = useQuery({
     queryKey: ["priv-payments-drafts", yearId],
     enabled: !!yearId,
@@ -120,10 +155,10 @@ const AdminPrivatePayments = () => {
 
     // Ignore inactive enrollments / inactive students unless money was actually moved on them
     const enrollmentIdsWithPayments = new Set<string>(
-      (payments as any[]).map((p) => p.enrollment_id).filter(Boolean),
+      (allocatedPayments as any[]).map((p) => p.enrollment_id).filter(Boolean),
     );
     const studentIdsWithPayments = new Set<string>(
-      (payments as any[]).map((p) => p.student_id).filter(Boolean),
+      (allocatedPayments as any[]).map((p) => p.student_id).filter(Boolean),
     );
     const relevantEnrollments = (enrollments as any[]).filter((e) => {
       if (enrollmentIdsWithPayments.has(e.id) || studentIdsWithPayments.has(e.student_id)) return true;
@@ -142,7 +177,7 @@ const AdminPrivatePayments = () => {
     for (const e of enrollments) enrollmentToStudent.set(e.id, e.student_id);
 
     const paymentsByStudent = new Map<string, any[]>();
-    for (const p of payments) {
+    for (const p of allocatedPayments) {
       const sid = p.student_id ?? (p.enrollment_id ? enrollmentToStudent.get(p.enrollment_id) : null);
       if (!sid) continue;
       const arr = paymentsByStudent.get(sid) ?? [];
@@ -275,7 +310,7 @@ const AdminPrivatePayments = () => {
     }
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, payments, drafts, year, settings, discountTypes]);
+  }, [enrollments, allocatedPayments, drafts, year, settings, discountTypes]);
 
 
   // Family grouping — payments are managed at the family level
@@ -338,7 +373,7 @@ const AdminPrivatePayments = () => {
     const studentIdByEnrollmentId = new Map<string, string>();
     for (const enrollment of enrollments) studentIdByEnrollmentId.set(enrollment.id, enrollment.student_id);
 
-    return payments
+    return allocatedPayments
       .filter((payment: any) =>
         payment.payment_status === "paid" &&
         payment.transaction_type === "payment" &&
@@ -352,7 +387,7 @@ const AdminPrivatePayments = () => {
       })
       .filter((payment: any) => payment.row && payment.paidAt)
       .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
-  }, [payments, enrollments, rowsWithFamily]);
+  }, [allocatedPayments, enrollments, rowsWithFamily]);
 
   const latestPaymentByFamily = useMemo(() => {
     const latest = new Map<string, any>();
@@ -741,7 +776,7 @@ const AdminPrivatePayments = () => {
             <div className="space-y-2">
               {filteredFamilies.map((f: any, idx: number) => {
                 const latestPayment = latestPaymentByFamily.get(f.familyKey);
-                const familyPayments = payments.filter((p: any) =>
+                const familyPayments = allocatedPayments.filter((p: any) =>
                   f.members.some((m: any) => m.studentId === p.student_id) &&
                   p.transaction_type === "payment" &&
                   p.payment_status === "paid" &&
@@ -792,7 +827,7 @@ const AdminPrivatePayments = () => {
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
                         {f.members.map((m: any) => {
-                          const memberPayments = payments.filter((p: any) =>
+                          const memberPayments = allocatedPayments.filter((p: any) =>
                             p.student_id === m.studentId &&
                             p.transaction_type === "payment" &&
                             p.payment_status === "paid" &&
@@ -895,7 +930,7 @@ const AdminPrivatePayments = () => {
                       </div>
                       <div className="mt-2 flex flex-col gap-0.5">
                         {(() => {
-                          const studentPayments = payments.filter((p: any) =>
+                          const studentPayments = allocatedPayments.filter((p: any) =>
                             p.student_id === r.studentId &&
                             p.transaction_type === "payment" &&
                             p.payment_status === "paid" &&

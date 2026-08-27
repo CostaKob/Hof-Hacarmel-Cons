@@ -27,6 +27,7 @@ import EnrollmentHistory from "@/components/teacher/EnrollmentHistory";
 import StudentInstrumentLoansSection from "@/components/admin/StudentInstrumentLoansSection";
 import AddPaymentDialog from "@/components/admin/AddPaymentDialog";
 import StudentPaymentsSection from "@/components/admin/StudentPaymentsSection";
+import { studentShareOfPayment } from "@/lib/familyPaymentAllocation";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import StudentNotesSection from "@/components/StudentNotesSection";
 import RegistrationApprovalSection from "@/components/admin/RegistrationApprovalSection";
@@ -235,10 +236,23 @@ const AdminStudentCard = () => {
   });
 
   const { data: payments = [] } = useQuery({
-    queryKey: ["admin-student-payments", studentId],
+    queryKey: ["admin-student-payments", studentId, student?.parent_national_id ?? null],
     queryFn: async () => {
       const { data: enrs } = await supabase.from("enrollments").select("id").eq("student_id", studentId!);
       const ids = (enrs ?? []).map((e) => e.id);
+
+      // Siblings — a family payment is stored on one anchor child only, so we
+      // also read their rows and keep this student's share of them.
+      const nid = (student as any)?.parent_national_id?.trim() || null;
+      let siblings: any[] = [];
+      if (nid) {
+        const { data: sibs } = await supabase
+          .from("students")
+          .select("id, first_name, last_name")
+          .or(`parent_national_id.eq.${nid},parent_national_id_2.eq.${nid}`);
+        siblings = sibs ?? [];
+      }
+      const sibIds = siblings.map((s) => s.id).filter((id) => id !== studentId);
 
       const query = supabase
         .from("student_payments")
@@ -247,14 +261,27 @@ const AdminStudentCard = () => {
         .order("payment_date", { ascending: true })
         .order("created_at", { ascending: true });
 
-      const { data, error } = ids.length > 0
-        ? await query.or(`student_id.eq.${studentId},enrollment_id.in.(${ids.join(",")})`)
-        : await query.eq("student_id", studentId!);
+      const orParts = [`student_id.eq.${studentId}`];
+      if (ids.length > 0) orParts.push(`enrollment_id.in.(${ids.join(",")})`);
+      if (sibIds.length > 0) orParts.push(`student_id.in.(${sibIds.join(",")})`);
+
+      const { data, error } = await query.or(orParts.join(","));
 
       if (error) throw error;
-      return data ?? [];
+      const rows = data ?? [];
+      if (siblings.length < 2) return rows;
+
+      return rows
+        .map((p: any) => {
+          const share = studentShareOfPayment(p, studentId!, siblings);
+          if (Math.abs(share) < 0.005) return null;
+          const own = Math.round(Number(p.amount || 0) * 100) / 100;
+          if (p.student_id === studentId && Math.abs(share - own) < 0.005) return p;
+          return { ...p, amount: share, _familyShare: true };
+        })
+        .filter(Boolean) as any[];
     },
-    enabled: !!studentId,
+    enabled: !!studentId && !!student,
   });
 
   if (isLoading) return <AdminLayout title="כרטיס תלמיד" backPath="/admin/students"><PageTitle title="כרטיס תלמיד" /><p className="text-center text-muted-foreground py-8">טוען...</p></AdminLayout>;
