@@ -18,6 +18,7 @@ import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { formatPaymentMethodWithCount, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { allocatePayment } from "@/lib/familyPaymentAllocation";
+import { saveListScrollPosition, usePersistedState } from "@/hooks/useListStatePreservation";
 
 
 const ALL = "__all__";
@@ -30,13 +31,14 @@ const AdminPrivatePayments = () => {
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id;
 
-  const [search, setSearch] = useState("");
-  const [schoolFilter, setSchoolFilter] = useState<string>(ALL);
-  const [teacherFilter, setTeacherFilter] = useState<string>(ALL);
-  const [instrumentFilter, setInstrumentFilter] = useState<string>(ALL);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [viewMode, setViewMode] = useState<ViewMode>("families");
-  const [showRecentPayments, setShowRecentPayments] = useState(false);
+  const routeKey = "/admin/private-payments";
+  const [search, setSearch] = usePersistedState(routeKey, "search", "");
+  const [schoolFilter, setSchoolFilter] = usePersistedState<string>(routeKey, "school", ALL);
+  const [teacherFilter, setTeacherFilter] = usePersistedState<string>(routeKey, "teacher", ALL);
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState<string>(routeKey, "instrument", ALL);
+  const [statusFilter, setStatusFilter] = usePersistedState<StatusFilter>(routeKey, "status", "all");
+  const [viewMode, setViewMode] = usePersistedState<ViewMode>(routeKey, "view", "families");
+  const [showRecentPayments, setShowRecentPayments] = usePersistedState(routeKey, "recent", false);
 
 
   const { data: year } = useQuery({
@@ -791,7 +793,11 @@ const AdminPrivatePayments = () => {
                   <div
                     key={f.familyKey}
                     className={`rounded-xl border border-border bg-card p-4 shadow-sm transition-colors ${f.parentNationalId ? "cursor-pointer hover:bg-accent/50" : ""}`}
-                    onClick={() => f.parentNationalId && navigate(`/admin/families/${f.parentNationalId}`)}
+                    onClick={() => {
+                      if (!f.parentNationalId) return;
+                      saveListScrollPosition(routeKey);
+                      navigate(`/admin/families/${f.parentNationalId}`);
+                    }}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -899,7 +905,10 @@ const AdminPrivatePayments = () => {
                 <div
                   key={r.studentId}
                   className="rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer hover:bg-accent/50 transition-colors"
-                  onClick={() => navigate(`/admin/students/${r.studentId}`)}
+                  onClick={() => {
+                    saveListScrollPosition(routeKey);
+                    navigate(`/admin/students/${r.studentId}`);
+                  }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
