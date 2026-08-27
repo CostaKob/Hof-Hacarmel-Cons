@@ -1590,8 +1590,9 @@ const AdminStudentPaymentCalc = () => {
                       </Button>
                     </>
                   )}
-                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10" title="בטל קישור ממתין"
-                    disabled={deletingPendingId === p.id}
+                  <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg text-destructive hover:bg-destructive/10"
+                    title={p._familyShare ? "קישור משפחתי — ניתן לבטל מכרטיס המשפחה" : "בטל קישור ממתין"}
+                    disabled={deletingPendingId === p.id || !!p._familyShare}
                     onClick={async () => {
                       if (deletingPendingId) return;
                       if (!confirm("לבטל את קישור התשלום הממתין? דף הסליקה יימחק מ-iCount.")) return;
