@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { allocatePayment, studentShareOfPayment } from "@/lib/familyPaymentAllocation";
+import { summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 
 const yaara = { id: "y", first_name: "יערה", last_name: "טויטו" };
 const adva = { id: "a", first_name: "אדוה", last_name: "טויטו" };
