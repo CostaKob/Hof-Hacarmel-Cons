@@ -162,7 +162,11 @@ const AdminFamilies = () => {
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          {filtered.map((f) => (
+          {filtered.map((f) => {
+            const pay = paymentSummary.get((f.parent_national_id || "").trim());
+            const hasCredit = !!pay && pay.credit > 0.01;
+            const fullyPaid = !!pay && !hasCredit && pay.totalDue > 0 && pay.balance <= 0.01;
+            return (
             <div
               key={f.parent_national_id}
               className="text-right rounded-2xl border border-border bg-card p-4 shadow-sm hover:shadow-md transition-all"
