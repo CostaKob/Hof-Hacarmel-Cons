@@ -206,6 +206,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
       </header>
 
       <main
+        data-scroll-container
         className={`mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-4 py-5 -mt-2 pb-28 md:pb-6 ${
           fullWidth ? "max-w-none" : "max-w-5xl"
         }`}
