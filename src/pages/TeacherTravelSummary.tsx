@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronRight, Car, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
@@ -40,7 +40,13 @@ const TeacherTravelSummary = () => {
   const monthOffset = Number(searchParams.get("month") ?? 0);
   const initialDate = new Date();
   initialDate.setMonth(initialDate.getMonth() + monthOffset);
-  const [selected, setSelected] = useState(`${initialDate.getFullYear()}-${initialDate.getMonth()}`);
+  const routeKey = "/teacher/travel-summary";
+  useListStatePreservation(routeKey);
+  const [selected, setSelected] = usePersistedState(
+    routeKey,
+    "month",
+    `${initialDate.getFullYear()}-${initialDate.getMonth()}`,
+  );
   const [selYear, selMonth] = selected.split("-").map(Number);
 
   const { data: reports } = useTeacherReportsByMonth(teacher?.id, selYear, selMonth);
