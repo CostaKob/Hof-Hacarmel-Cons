@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import MultiSelectFilter from "@/components/MultiSelectFilter";
 import {
   Select,
   SelectContent,
@@ -450,7 +451,7 @@ const AdminBulkMessage = () => {
         }
       }
     };
-    addAll(recipients);
+    addAll(filteredRows);
     addAll(manualRecipients);
 
     const joinHe = (names: string[]) => {
@@ -470,7 +471,7 @@ const AdminBulkMessage = () => {
         siblingCount: g.studentNames.length,
       }))
       .sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
-  }, [recipients, manualRecipients]);
+  }, [filteredRows, manualRecipients]);
 
   // Default: all selected
   const allSelectedInitial = useMemo(() => {
@@ -791,9 +792,9 @@ const AdminBulkMessage = () => {
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold">נמענים</h2>
               <Badge variant="outline">{selectedEmails.length} / {uniqueRecipients.length}</Badge>
-              {recipients.length > uniqueRecipients.length && (
+              {filteredRows.length > uniqueRecipients.length && (
                 <span className="text-xs text-muted-foreground">
-                  ({uniqueRecipients.length} מיילים ייחודיים מתוך {recipients.length} רשומות — אותו מייל הורה משמש כמה תלמידים)
+                  ({uniqueRecipients.length} מיילים ייחודיים מתוך {filteredRows.length} רשומות — אותו מייל הורה משמש כמה תלמידים)
                 </span>
               )}
             </div>
