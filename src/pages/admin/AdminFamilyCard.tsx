@@ -660,11 +660,23 @@ const AdminFamilyCard = () => {
             const childTotal = (t?.net ?? 0) + childSpecialsTotal;
             // Family payments are stored on one anchor child; split them by the
             // line items so each sibling is credited with their own share.
-            const childPaidRows = payments
-              .filter((p: any) => p.transaction_type === "payment" && p.payment_status === "paid")
-              .map((p: any) => ({ p, share: studentShareOfPayment(p, c.id, children) }))
+            const childSettledRows = payments
+              .filter(
+                (p: any) =>
+                  p.payment_status === "paid" &&
+                  (p.transaction_type === "payment" || p.transaction_type === "credit"),
+              )
+              .map((p: any) => ({
+                p,
+                share: studentShareOfPayment(p, c.id, children, payments as any[]),
+              }))
               .filter((x: any) => Math.abs(x.share) > 0.005);
-            const childPaid = childPaidRows.reduce((s: number, x: any) => s + x.share, 0);
+            // Credits (refunds) are stored as negative amounts and cancel out the
+            // matching share of the original payment for the very same child.
+            const childPaidRows = childSettledRows.filter(
+              (x: any) => x.p.transaction_type === "payment",
+            );
+            const childPaid = childSettledRows.reduce((s: number, x: any) => s + x.share, 0);
             const childBalance = Math.max(0, Math.round((childTotal - childPaid) * 100) / 100);
             const childMethodSummary = summarizePaymentMethods(
               childPaidRows.map((x: any) => ({ ...x.p, amount: x.share })),

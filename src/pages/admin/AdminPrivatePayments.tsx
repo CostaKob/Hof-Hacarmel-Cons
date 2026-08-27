@@ -124,7 +124,7 @@ const AdminPrivatePayments = () => {
       const sibs = anchor
         ? (familyByNid.get((anchor.parent_national_id || "").trim()) ?? [anchor])
         : [];
-      const alloc = allocatePayment(p, sibs);
+      const alloc = allocatePayment(p, sibs, payments as any[]);
       if (alloc.size < 2) {
         out.push(p);
         continue;

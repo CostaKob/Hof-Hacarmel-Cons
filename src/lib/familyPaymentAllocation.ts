@@ -10,9 +10,12 @@
 //   3. Fallback: the whole amount stays on `payment.student_id`.
 
 export interface AllocatablePayment {
+  id?: string | null;
   student_id?: string | null;
   amount: number | string | null;
   enrollment_breakdown?: any;
+  /** Credits / refunds point back at the payment they cancel. */
+  refund_of_payment_id?: string | null;
 }
 
 export interface AllocationChild {
@@ -38,6 +41,8 @@ function linesOf(breakdown: any): any[] {
 export function allocatePayment(
   payment: AllocatablePayment,
   children: AllocationChild[],
+  /** All rows in scope — lets credits inherit the split of the payment they cancel. */
+  relatedRows?: AllocatablePayment[],
 ): Map<string, number> {
   const total = Math.round((Number(payment.amount) || 0) * 100) / 100;
   const out = new Map<string, number>();
@@ -56,7 +61,24 @@ export function allocatePayment(
   }
   const known = new Set(children.map((c) => c.id));
 
-  const lines = linesOf(payment.enrollment_breakdown);
+  let lines = linesOf(payment.enrollment_breakdown);
+  // A credit / refund carries no breakdown of its own: mirror the split of the
+  // original payment so the two cancel each other out per child.
+  if (!lines.length && payment.refund_of_payment_id && relatedRows?.length) {
+    let ref: string | null | undefined = payment.refund_of_payment_id;
+    const seen = new Set<string>();
+    for (let i = 0; i < 5 && ref && !seen.has(ref); i++) {
+      seen.add(ref);
+      const src = relatedRows.find((r) => r.id === ref);
+      if (!src) break;
+      const srcLines = linesOf(src.enrollment_breakdown);
+      if (srcLines.length) {
+        lines = srcLines;
+        break;
+      }
+      ref = src.refund_of_payment_id;
+    }
+  }
   if (!lines.length) return fallback();
 
   const raw = new Map<string, number>();
@@ -97,8 +119,9 @@ export function studentShareOfPayment(
   payment: AllocatablePayment,
   studentId: string,
   children: AllocationChild[],
+  relatedRows?: AllocatablePayment[],
 ): number {
-  return allocatePayment(payment, children).get(studentId) ?? 0;
+  return allocatePayment(payment, children, relatedRows).get(studentId) ?? 0;
 }
 
 /** True when the row's money is shared between several children. */

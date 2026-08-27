@@ -403,7 +403,7 @@ const AdminStudents = () => {
           : amount;
       const anchor = studentsById.get(p.student_id);
       const sibs = anchor ? (familyByNid.get((anchor.parent_national_id || "").trim()) ?? [anchor]) : [];
-      const alloc = allocatePayment({ ...p, amount: netAmount }, sibs);
+      const alloc = allocatePayment({ ...p, amount: netAmount }, sibs, yearPayments as any[]);
       if (alloc.size > 1) {
         for (const [sid, amt] of alloc) map.set(sid, (map.get(sid) ?? 0) + amt);
       } else {
