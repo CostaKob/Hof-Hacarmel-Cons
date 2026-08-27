@@ -602,12 +602,13 @@ const AdminBulkMessage = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">קהל יעד</Label>
-              <Select value={source} onValueChange={(v) => { setSource(v as Source); setSelected({}); }}>
+              <Select value={source} onValueChange={(v) => { setSource(v as Source); setSelected({}); resetFilters(); }}>
                 <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="enrollments">תלמידים פרטניים</SelectItem>
+                  <SelectItem value="school_music">בית ספר מנגן</SelectItem>
+                  <SelectItem value="both">פרטניים + בית ספר מנגן</SelectItem>
                   <SelectItem value="registrations">הורים שנרשמו (טופס הרשמה)</SelectItem>
-                  <SelectItem value="enrollments">הורים של תלמידים עם שיוך פעיל</SelectItem>
-                  <SelectItem value="school_music">הורים בבית ספר מנגן</SelectItem>
                   <SelectItem value="unregistered_students">תלמידים שלא נרשמו לשנה הנוכחית</SelectItem>
                 </SelectContent>
               </Select>
@@ -633,6 +634,53 @@ const AdminBulkMessage = () => {
               </div>
             )}
           </div>
+
+          {FILTERABLE.includes(source) && (
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-xs">סינון מתקדם (ריק = הכול)</Label>
+                {(gradeFilter.length || schoolFilter.length || ensembleFilter.length || teacherFilter.length) > 0 && (
+                  <Button type="button" variant="ghost" size="sm" className="h-7 rounded-lg text-xs" onClick={resetFilters}>
+                    נקה סינון
+                  </Button>
+                )}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <MultiSelectFilter
+                  options={filterOptions.grades}
+                  value={gradeFilter}
+                  onChange={(v) => { setGradeFilter(v); setSelected({}); }}
+                  allLabel="כל הכיתות"
+                  className="w-full"
+                />
+                <MultiSelectFilter
+                  options={filterOptions.schools}
+                  value={schoolFilter}
+                  onChange={(v) => { setSchoolFilter(v); setSelected({}); }}
+                  allLabel="כל בתי הספר"
+                  renderLabel={(k) => filterMeta?.schoolLabels[k] ?? k}
+                  className="w-full"
+                />
+                <MultiSelectFilter
+                  options={filterOptions.ensembles}
+                  value={ensembleFilter}
+                  onChange={(v) => { setEnsembleFilter(v); setSelected({}); }}
+                  allLabel="כל ההרכבים"
+                  renderLabel={(k) => filterMeta?.ensembleLabels[k] ?? k}
+                  className="w-full"
+                />
+                <MultiSelectFilter
+                  options={filterOptions.teachers}
+                  value={teacherFilter}
+                  onChange={(v) => { setTeacherFilter(v); setSelected({}); }}
+                  allLabel="כל המורים"
+                  renderLabel={(k) => filterMeta?.teacherLabels[k] ?? k}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+
 
           <div className="space-y-1">
             <Label className="text-xs">נושא</Label>
