@@ -91,6 +91,21 @@ const AdminFamilies = () => {
     if (onlyMulti) list = list.filter((f) => f.children_count > 1);
     if (onlyDup) list = list.filter((f) => dupIds.has(f.parent_national_id));
     if (onlyRefund) list = list.filter((f) => refundByFamily?.has(f.parent_national_id));
+    if (payStatus !== "all") {
+      list = list.filter((f) => {
+        const p = paymentSummary.get((f.parent_national_id || "").trim());
+        if (!p) return false;
+        const credit = p.credit > 0.01;
+        const full = !credit && p.totalDue > 0 && p.balance <= 0.01;
+        const partial = !credit && !full && p.net > 0 && p.balance > 0.01;
+        const un = !credit && !full && p.net <= 0.01 && p.totalDue > 0;
+        if (payStatus === "paid") return full;
+        if (payStatus === "partial") return partial;
+        if (payStatus === "unpaid") return un;
+        if (payStatus === "credit") return credit;
+        return true;
+      });
+    }
     if (term) {
       list = list.filter((f) => {
         return (
@@ -106,7 +121,7 @@ const AdminFamilies = () => {
       if (b.children_count !== a.children_count) return b.children_count - a.children_count;
       return cmpHe(a.parent_name || "", b.parent_name || "");
     });
-  }, [families, q, onlyMulti, onlyDup, onlyRefund, dupIds, refundByFamily]);
+  }, [families, q, onlyMulti, onlyDup, onlyRefund, payStatus, dupIds, refundByFamily, paymentSummary]);
 
   const multiCount = families.filter((f) => f.children_count > 1).length;
   const refundCount = families.filter((f) => refundByFamily?.has(f.parent_national_id)).length;
@@ -200,6 +215,16 @@ const AdminFamilies = () => {
                     <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
                       <Coins className="h-3 w-3" />
                       קיים זיכוי למשפחה ₪{pay!.credit.toLocaleString("he-IL")}
+                    </span>
+                  )}
+                  {partiallyPaid && (
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-blue-500/40 bg-blue-500/10 text-blue-700 dark:text-blue-400">
+                      שולם חלקית · יתרה ₪{pay!.balance.toLocaleString("he-IL")}
+                    </span>
+                  )}
+                  {unpaid && (
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-red-500/40 bg-red-500/10 text-red-700 dark:text-red-400">
+                      טרם שולם
                     </span>
                   )}
                   {refundByFamily?.has(f.parent_national_id) && (
