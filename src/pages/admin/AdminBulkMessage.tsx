@@ -12,6 +12,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import MultiSelectFilter from "@/components/MultiSelectFilter";
+import BulkStudentSearchAdd from "@/components/admin/BulkStudentSearchAdd";
 import {
   Select,
   SelectContent,
@@ -146,6 +147,25 @@ const AdminBulkMessage = () => {
     setManualEntries((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
   };
   const addManualEntry = () => setManualEntries((prev) => [...prev, { email: "", parentName: "", studentName: "" }]);
+  const addFoundRecipients = (found: Recipient[]) => {
+    let added = 0;
+    setManualEntries((prev) => {
+      const existing = new Set(prev.map((e) => (e.email || "").trim().toLowerCase()));
+      const next = [...prev];
+      for (const r of found) {
+        const email = (r.email || "").trim().toLowerCase();
+        if (!email || existing.has(email)) continue;
+        existing.add(email);
+        next.push({ email, parentName: r.parentName, studentName: r.studentName });
+        added++;
+      }
+      return next;
+    });
+    setTimeout(() => {
+      if (added > 0) toast.success(`נוספו ${added} נמענים`);
+      else toast.info("כל הנמענים כבר ברשימה");
+    }, 0);
+  };
   const removeManualEntry = (idx: number) => setManualEntries((prev) => prev.filter((_, i) => i !== idx));
   const [previewOpen, setPreviewOpen] = useState(false);
 
@@ -802,6 +822,8 @@ const AdminBulkMessage = () => {
               {allFilteredChecked ? "בטל בחירה" : search ? "בחר את המסוננים" : "בחר הכול"}
             </Button>
           </div>
+
+          <BulkStudentSearchAdd onAdd={addFoundRecipients} />
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
