@@ -187,6 +187,18 @@ const AdminFamilies = () => {
                   <Badge variant={f.children_count > 1 ? "default" : "secondary"}>
                     {f.children_count} {f.children_count === 1 ? "ילד" : "ילדים"}
                   </Badge>
+                  {fullyPaid && (
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-emerald-500/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                      <CheckCircle2 className="h-3 w-3" />
+                      שולם במלואו
+                    </span>
+                  )}
+                  {hasCredit && (
+                    <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap border-amber-500/40 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                      <Coins className="h-3 w-3" />
+                      קיים זיכוי למשפחה ₪{pay!.credit.toLocaleString("he-IL")}
+                    </span>
+                  )}
                   {refundByFamily?.has(f.parent_national_id) && (
                     <span
                       className={`text-[11px] px-2 py-0.5 rounded-md border font-medium whitespace-nowrap ${refundByFamily.get(f.parent_national_id)!.className}`}
