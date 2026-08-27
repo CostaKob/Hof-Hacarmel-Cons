@@ -117,7 +117,7 @@ export const useListStatePreservation = (key?: string) => {
 
     const handleScroll = () => {
       if (!lockedScrollKeys.has(storageKey)) {
-        scrollPositions.set(storageKey, getScrollTop());
+        writeSavedScroll(storageKey, getScrollTop());
       }
     };
 
@@ -126,9 +126,6 @@ export const useListStatePreservation = (key?: string) => {
     return () => {
       cancelled = true;
       target.removeEventListener("scroll", handleScroll);
-      if (!lockedScrollKeys.has(storageKey)) {
-        writeSavedScroll(storageKey, getScrollTop());
-      }
       try {
         window.history.scrollRestoration = prevRestoration;
       } catch {

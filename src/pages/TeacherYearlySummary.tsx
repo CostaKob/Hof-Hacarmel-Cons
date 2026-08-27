@@ -54,9 +54,10 @@ const TeacherYearlySummary = () => {
   const { data: schools } = useTeacherSchools(teacher?.id);
   const { data: lines, isLoading: lLoading } = useTeacherReportLinesByYear(teacher?.id, selectedYearId);
 
-  const [search, setSearch] = useState("");
-  const [schoolFilter, setSchoolFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("active");
+  const routeKey = "/teacher/yearly-summary";
+  const [search, setSearch] = usePersistedState(routeKey, "search", "");
+  const [schoolFilter, setSchoolFilter] = usePersistedState(routeKey, "school", "all");
+  const [activeFilter, setActiveFilter] = usePersistedState(routeKey, "active", "active");
 
   const rows = useMemo<EnrollmentSummaryRow[]>(() => {
     if (!enrollments || !lines) return [];
