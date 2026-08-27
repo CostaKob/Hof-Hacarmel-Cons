@@ -82,3 +82,30 @@ describe("summarizePaymentMethods", () => {
     expect(summarizePaymentMethods(rows)).toEqual(["אשראי · 8 תשלומים"]);
   });
 });
+
+describe("credits mirror the original payment split", () => {
+  const children = [
+    { id: "a", first_name: "אברהם", last_name: "אבינו" },
+    { id: "b", first_name: "רבקה", last_name: "אבינו" },
+  ];
+  const payment = {
+    id: "p1",
+    student_id: "a",
+    amount: 9,
+    enrollment_breakdown: {
+      lines: [
+        { amount: 5, description: "אברהם אבינו · שכר לימוד" },
+        { amount: 4, description: "רבקה אבינו · שכר לימוד" },
+      ],
+    },
+  };
+  const credit = { id: "c1", student_id: "a", amount: -9, refund_of_payment_id: "p1" };
+
+  it("nets out per child", () => {
+    const rows = [payment, credit];
+    const pay = allocatePayment(payment, children, rows);
+    const cred = allocatePayment(credit, children, rows);
+    expect(pay.get("a")! + cred.get("a")!).toBe(0);
+    expect(pay.get("b")! + cred.get("b")!).toBe(0);
+  });
+});
