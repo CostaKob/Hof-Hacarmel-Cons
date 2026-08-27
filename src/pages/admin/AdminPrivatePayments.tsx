@@ -93,7 +93,7 @@ const AdminPrivatePayments = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_payments")
-        .select("id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_method, installments, payment_group_id, enrollment_breakdown, created_at, paid_at, payment_date, icount_doc_number")
+        .select("id, refund_of_payment_id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_method, installments, payment_group_id, enrollment_breakdown, created_at, paid_at, payment_date, icount_doc_number")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       // Ignore the 9-shekel test transaction (documents 1113/1114)
