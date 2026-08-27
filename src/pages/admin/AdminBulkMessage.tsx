@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import MultiSelectFilter from "@/components/MultiSelectFilter";
 import {
   Select,
   SelectContent,
@@ -34,14 +35,17 @@ import { Send, Users, Mail, Loader2, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 
-type Source = "registrations" | "enrollments" | "school_music" | "unregistered_students";
+type Source = "registrations" | "enrollments" | "school_music" | "both" | "unregistered_students";
 
 const SOURCE_LABELS: Record<Source, string> = {
   registrations: "הורים שנרשמו (טופס הרשמה)",
-  enrollments: "הורים של תלמידים עם שיוך פעיל",
-  school_music: "הורים בבית ספר מנגן",
+  enrollments: "תלמידים פרטניים",
+  school_music: "בית ספר מנגן",
+  both: "פרטניים + בית ספר מנגן",
   unregistered_students: "תלמידים שלא נרשמו לשנה הנוכחית",
 };
+
+const FILTERABLE: Source[] = ["enrollments", "school_music", "both"];
 
 
 interface Recipient {
@@ -50,6 +54,14 @@ interface Recipient {
   studentName: string;
   siblingCount?: number;
 }
+
+interface RecipientRow extends Recipient {
+  grade?: string | null;
+  schoolKey?: string | null;
+  teacherIds: string[];
+  ensembleIds: string[];
+}
+
 
 const firstNameOf = (full: string) => (full || "").trim().split(/\s+/)[0] || "";
 
@@ -205,10 +217,33 @@ const AdminBulkMessage = () => {
 
   const yearName = years?.find((y) => y.id === selectedYearId)?.name;
 
+  // Label maps for the filters (branches, school-music schools, ensembles, teachers)
+  const { data: filterMeta } = useQuery({
+    queryKey: ["bulk-filter-meta", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const [schools, smSchools, ensembles, teachers] = await Promise.all([
+        supabase.from("schools").select("id, name"),
+        supabase.from("school_music_schools").select("id, school_name").eq("academic_year_id", selectedYearId!),
+        supabase.from("ensembles").select("id, name").eq("academic_year_id", selectedYearId!),
+        supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true),
+      ]);
+      const schoolLabels: Record<string, string> = {};
+      for (const s of schools.data ?? []) schoolLabels[`branch:${s.id}`] = `שלוחה — ${s.name}`;
+      for (const s of smSchools.data ?? []) schoolLabels[`sm:${s.id}`] = `בי״ס מנגן — ${s.school_name}`;
+      const ensembleLabels: Record<string, string> = {};
+      for (const e of ensembles.data ?? []) ensembleLabels[e.id] = e.name;
+      const teacherLabels: Record<string, string> = {};
+      for (const t of teachers.data ?? []) teacherLabels[t.id] = `${t.first_name} ${t.last_name}`.trim();
+      return { schoolLabels, ensembleLabels, teacherLabels };
+    },
+  });
+
   const { data: recipients = [], isLoading } = useQuery({
     queryKey: ["bulk-recipients", source, selectedYearId, regStatus],
     enabled: !!selectedYearId,
-    queryFn: async (): Promise<Recipient[]> => {
+    queryFn: async (): Promise<RecipientRow[]> => {
+      const empty = { grade: null, schoolKey: null, teacherIds: [] as string[], ensembleIds: [] as string[] };
       if (source === "registrations") {
         let q = supabase
           .from("registrations")
@@ -220,46 +255,96 @@ const AdminBulkMessage = () => {
         return (data ?? [])
           .filter((r: any) => r.parent_email)
           .map((r: any) => ({
+            ...empty,
             email: String(r.parent_email).trim().toLowerCase(),
             parentName: r.parent_name ?? "",
             studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
           }));
       }
-      if (source === "enrollments") {
-        const { data, error } = await supabase
-          .from("enrollments")
-          .select("student_id, students!inner(parent_email, parent_name, parent_email_2, parent_name_2, first_name, last_name)")
-          .eq("academic_year_id", selectedYearId!)
-          .eq("is_active", true);
-        if (error) throw error;
-        const rows: Recipient[] = [];
-        for (const e of (data as any[]) ?? []) {
-          const s = e.students;
-          const name = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
-          if (s?.parent_email) rows.push({ email: String(s.parent_email).trim().toLowerCase(), parentName: s.parent_name ?? "", studentName: name });
-          if (s?.parent_email_2) rows.push({ email: String(s.parent_email_2).trim().toLowerCase(), parentName: s.parent_name_2 ?? "", studentName: name });
+
+      if (source === "enrollments" || source === "school_music" || source === "both") {
+        const rows: RecipientRow[] = [];
+
+        if (source !== "school_music") {
+          const [{ data: enr, error }, { data: yearEnsembles }] = await Promise.all([
+            supabase
+              .from("enrollments")
+              .select(
+                "student_id, school_id, teacher_id, students!inner(parent_email, parent_name, parent_email_2, parent_name_2, first_name, last_name, grade)",
+              )
+              .eq("academic_year_id", selectedYearId!)
+              .eq("is_active", true),
+            supabase.from("ensembles").select("id").eq("academic_year_id", selectedYearId!),
+          ]);
+          if (error) throw error;
+
+          const ensembleIds = (yearEnsembles ?? []).map((e: any) => e.id);
+          const studentEnsembles = new Map<string, string[]>();
+          if (ensembleIds.length > 0) {
+            const { data: es } = await supabase
+              .from("ensemble_students")
+              .select("ensemble_id, student_id")
+              .in("ensemble_id", ensembleIds);
+            for (const row of (es as any[]) ?? []) {
+              const list = studentEnsembles.get(row.student_id) ?? [];
+              list.push(row.ensemble_id);
+              studentEnsembles.set(row.student_id, list);
+            }
+          }
+
+          for (const e of (enr as any[]) ?? []) {
+            const s = e.students;
+            const name = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
+            const meta = {
+              grade: s?.grade ?? null,
+              schoolKey: e.school_id ? `branch:${e.school_id}` : null,
+              teacherIds: e.teacher_id ? [e.teacher_id] : [],
+              ensembleIds: studentEnsembles.get(e.student_id) ?? [],
+            };
+            if (s?.parent_email)
+              rows.push({ ...meta, email: String(s.parent_email).trim().toLowerCase(), parentName: s.parent_name ?? "", studentName: name });
+            if (s?.parent_email_2)
+              rows.push({ ...meta, email: String(s.parent_email_2).trim().toLowerCase(), parentName: s.parent_name_2 ?? "", studentName: name });
+          }
         }
+
+        if (source !== "enrollments") {
+          const [{ data: sm, error }, { data: groups }] = await Promise.all([
+            supabase
+              .from("school_music_students")
+              .select(
+                "parent_email, parent_name, student_first_name, student_last_name, class_name, school_music_school_id, school_music_class_group_id",
+              )
+              .eq("academic_year_id", selectedYearId!),
+            supabase.from("school_music_class_groups").select("id, teacher_id"),
+          ]);
+          if (error) throw error;
+          const groupTeacher = new Map<string, string>();
+          for (const g of (groups as any[]) ?? []) if (g.teacher_id) groupTeacher.set(g.id, g.teacher_id);
+
+          for (const r of (sm as any[]) ?? []) {
+            if (!r.parent_email) continue;
+            const teacherId = r.school_music_class_group_id ? groupTeacher.get(r.school_music_class_group_id) : undefined;
+            rows.push({
+              email: String(r.parent_email).trim().toLowerCase(),
+              parentName: r.parent_name ?? "",
+              studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
+              grade: r.class_name ?? null,
+              schoolKey: r.school_music_school_id ? `sm:${r.school_music_school_id}` : null,
+              teacherIds: teacherId ? [teacherId] : [],
+              ensembleIds: [],
+            });
+          }
+        }
+
         return rows;
       }
-      if (source === "school_music") {
-        const { data, error } = await supabase
-          .from("school_music_students")
-          .select("parent_email, parent_name, student_first_name, student_last_name")
-          .eq("academic_year_id", selectedYearId!);
-        if (error) throw error;
-        return (data ?? [])
-          .filter((r: any) => r.parent_email)
-          .map((r: any) => ({
-            email: String(r.parent_email).trim().toLowerCase(),
-            parentName: r.parent_name ?? "",
-            studentName: `${r.student_first_name ?? ""} ${r.student_last_name ?? ""}`.trim(),
-          }));
-      }
+
       // unregistered_students: active students with no registration and no active enrollment for the selected year
       const [{ data: allStudents, error: studentsError }, { data: registered, error: regError }, { data: enrolled, error: enrError }] = await Promise.all([
         supabase
           .from("students")
-          .select("id, national_id, parent_email, parent_name, parent_email_2, parent_name_2, first_name, last_name")
+          .select("id, national_id, parent_email, parent_name, parent_email_2, parent_name_2, first_name, last_name, grade")
           .eq("is_active", true),
         supabase
           .from("registrations")
@@ -279,18 +364,70 @@ const AdminBulkMessage = () => {
       const registeredIds = new Set((registered ?? []).map((r: any) => String(r.student_national_id).trim()));
       const enrolledStudentIds = new Set((enrolled ?? []).map((e: any) => e.student_id));
 
-      const rows: Recipient[] = [];
+      const rows: RecipientRow[] = [];
       for (const s of (allStudents as any[]) ?? []) {
         const nid = s.national_id ? String(s.national_id).trim() : "";
         if (nid && registeredIds.has(nid)) continue;
         if (enrolledStudentIds.has(s.id)) continue;
         const name = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
-        if (s?.parent_email) rows.push({ email: String(s.parent_email).trim().toLowerCase(), parentName: s.parent_name ?? "", studentName: name });
-        if (s?.parent_email_2) rows.push({ email: String(s.parent_email_2).trim().toLowerCase(), parentName: s.parent_name_2 ?? "", studentName: name });
+        const meta = { ...empty, grade: s.grade ?? null };
+        if (s?.parent_email) rows.push({ ...meta, email: String(s.parent_email).trim().toLowerCase(), parentName: s.parent_name ?? "", studentName: name });
+        if (s?.parent_email_2) rows.push({ ...meta, email: String(s.parent_email_2).trim().toLowerCase(), parentName: s.parent_name_2 ?? "", studentName: name });
       }
       return rows;
     },
   });
+
+  // ---- Audience filters ----
+  const [gradeFilter, setGradeFilter] = useState<string[]>([]);
+  const [schoolFilter, setSchoolFilter] = useState<string[]>([]);
+  const [ensembleFilter, setEnsembleFilter] = useState<string[]>([]);
+  const [teacherFilter, setTeacherFilter] = useState<string[]>([]);
+
+  const resetFilters = () => {
+    setGradeFilter([]);
+    setSchoolFilter([]);
+    setEnsembleFilter([]);
+    setTeacherFilter([]);
+  };
+
+  const filterOptions = useMemo(() => {
+    const grades = new Set<string>();
+    const schools = new Set<string>();
+    const ensembles = new Set<string>();
+    const teachers = new Set<string>();
+    for (const r of recipients) {
+      if (r.grade) grades.add(r.grade);
+      if (r.schoolKey) schools.add(r.schoolKey);
+      for (const e of r.ensembleIds) ensembles.add(e);
+      for (const t of r.teacherIds) teachers.add(t);
+    }
+    const he = (a: string, b: string) => a.localeCompare(b, "he");
+    return {
+      grades: Array.from(grades).sort(he),
+      schools: Array.from(schools).sort((a, b) =>
+        he(filterMeta?.schoolLabels[a] ?? a, filterMeta?.schoolLabels[b] ?? b),
+      ),
+      ensembles: Array.from(ensembles).sort((a, b) =>
+        he(filterMeta?.ensembleLabels[a] ?? a, filterMeta?.ensembleLabels[b] ?? b),
+      ),
+      teachers: Array.from(teachers).sort((a, b) =>
+        he(filterMeta?.teacherLabels[a] ?? a, filterMeta?.teacherLabels[b] ?? b),
+      ),
+    };
+  }, [recipients, filterMeta]);
+
+  const filteredRows = useMemo(() => {
+    if (!FILTERABLE.includes(source)) return recipients;
+    return recipients.filter((r) => {
+      if (gradeFilter.length > 0 && !(r.grade && gradeFilter.includes(r.grade))) return false;
+      if (schoolFilter.length > 0 && !(r.schoolKey && schoolFilter.includes(r.schoolKey))) return false;
+      if (ensembleFilter.length > 0 && !r.ensembleIds.some((e) => ensembleFilter.includes(e))) return false;
+      if (teacherFilter.length > 0 && !r.teacherIds.some((t) => teacherFilter.includes(t))) return false;
+      return true;
+    });
+  }, [recipients, source, gradeFilter, schoolFilter, ensembleFilter, teacherFilter]);
+
 
   const uniqueRecipients = useMemo(() => {
     // Group by email but merge sibling student names so one message per
@@ -314,7 +451,7 @@ const AdminBulkMessage = () => {
         }
       }
     };
-    addAll(recipients);
+    addAll(filteredRows);
     addAll(manualRecipients);
 
     const joinHe = (names: string[]) => {
@@ -334,7 +471,7 @@ const AdminBulkMessage = () => {
         siblingCount: g.studentNames.length,
       }))
       .sort((a, b) => a.parentName.localeCompare(b.parentName, "he"));
-  }, [recipients, manualRecipients]);
+  }, [filteredRows, manualRecipients]);
 
   // Default: all selected
   const allSelectedInitial = useMemo(() => {
@@ -466,12 +603,13 @@ const AdminBulkMessage = () => {
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-1">
               <Label className="text-xs">קהל יעד</Label>
-              <Select value={source} onValueChange={(v) => { setSource(v as Source); setSelected({}); }}>
+              <Select value={source} onValueChange={(v) => { setSource(v as Source); setSelected({}); resetFilters(); }}>
                 <SelectTrigger className="h-11 rounded-xl"><SelectValue /></SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="enrollments">תלמידים פרטניים</SelectItem>
+                  <SelectItem value="school_music">בית ספר מנגן</SelectItem>
+                  <SelectItem value="both">פרטניים + בית ספר מנגן</SelectItem>
                   <SelectItem value="registrations">הורים שנרשמו (טופס הרשמה)</SelectItem>
-                  <SelectItem value="enrollments">הורים של תלמידים עם שיוך פעיל</SelectItem>
-                  <SelectItem value="school_music">הורים בבית ספר מנגן</SelectItem>
                   <SelectItem value="unregistered_students">תלמידים שלא נרשמו לשנה הנוכחית</SelectItem>
                 </SelectContent>
               </Select>
@@ -497,6 +635,53 @@ const AdminBulkMessage = () => {
               </div>
             )}
           </div>
+
+          {FILTERABLE.includes(source) && (
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Label className="text-xs">סינון מתקדם (ריק = הכול)</Label>
+                {(gradeFilter.length || schoolFilter.length || ensembleFilter.length || teacherFilter.length) > 0 && (
+                  <Button type="button" variant="ghost" size="sm" className="h-7 rounded-lg text-xs" onClick={resetFilters}>
+                    נקה סינון
+                  </Button>
+                )}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <MultiSelectFilter
+                  options={filterOptions.grades}
+                  value={gradeFilter}
+                  onChange={(v) => { setGradeFilter(v); setSelected({}); }}
+                  allLabel="כל הכיתות"
+                  className="w-full"
+                />
+                <MultiSelectFilter
+                  options={filterOptions.schools}
+                  value={schoolFilter}
+                  onChange={(v) => { setSchoolFilter(v); setSelected({}); }}
+                  allLabel="כל בתי הספר"
+                  renderLabel={(k) => filterMeta?.schoolLabels[k] ?? k}
+                  className="w-full"
+                />
+                <MultiSelectFilter
+                  options={filterOptions.ensembles}
+                  value={ensembleFilter}
+                  onChange={(v) => { setEnsembleFilter(v); setSelected({}); }}
+                  allLabel="כל ההרכבים"
+                  renderLabel={(k) => filterMeta?.ensembleLabels[k] ?? k}
+                  className="w-full"
+                />
+                <MultiSelectFilter
+                  options={filterOptions.teachers}
+                  value={teacherFilter}
+                  onChange={(v) => { setTeacherFilter(v); setSelected({}); }}
+                  allLabel="כל המורים"
+                  renderLabel={(k) => filterMeta?.teacherLabels[k] ?? k}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
+
 
           <div className="space-y-1">
             <Label className="text-xs">נושא</Label>
@@ -607,9 +792,9 @@ const AdminBulkMessage = () => {
               <Users className="h-5 w-5 text-primary" />
               <h2 className="text-lg font-semibold">נמענים</h2>
               <Badge variant="outline">{selectedEmails.length} / {uniqueRecipients.length}</Badge>
-              {recipients.length > uniqueRecipients.length && (
+              {filteredRows.length > uniqueRecipients.length && (
                 <span className="text-xs text-muted-foreground">
-                  ({uniqueRecipients.length} מיילים ייחודיים מתוך {recipients.length} רשומות — אותו מייל הורה משמש כמה תלמידים)
+                  ({uniqueRecipients.length} מיילים ייחודיים מתוך {filteredRows.length} רשומות — אותו מייל הורה משמש כמה תלמידים)
                 </span>
               )}
             </div>
