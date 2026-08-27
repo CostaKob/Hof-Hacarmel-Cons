@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { parseISO } from "date-fns";
 import { useTeacherProfile, useTeacherReports } from "@/hooks/useTeacherData";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Plus, CalendarDays, Navigation, Users, Pencil } from "lucide-react";
 import PageTitle from "@/components/PageTitle";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const HEBREW_DAYS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
@@ -42,7 +43,9 @@ const TeacherReports = () => {
   const { data: reports, isLoading: reportsLoading } = useTeacherReports(teacher?.id);
 
   const now = new Date();
-  const [monthFilter, setMonthFilter] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+  const routeKey = "/teacher/reports";
+  useListStatePreservation(routeKey);
+  const [monthFilter, setMonthFilter] = usePersistedState(routeKey, "month", `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
 
   const monthOptions = useMemo(() => {
     const months = new Set<string>();

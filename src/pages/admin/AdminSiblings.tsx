@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
@@ -13,6 +13,7 @@ import {
   useDismissSiblingPair,
   useAutoLinkSiblings,
 } from "@/hooks/useSiblings";
+import { saveListScrollPosition, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const AdminSiblings = () => {
   const navigate = useNavigate();
@@ -22,7 +23,8 @@ const AdminSiblings = () => {
   const linkMut = useLinkSiblings();
   const dismissMut = useDismissSiblingPair();
   const autoMut = useAutoLinkSiblings();
-  const [q, setQ] = useState("");
+  const routeKey = "/admin/siblings";
+  const [q, setQ] = usePersistedState(routeKey, "search", "");
   const autoRan = useRef<string | null>(null);
 
   // Certain matches (same parent ID) are linked automatically on entry
@@ -68,7 +70,10 @@ const AdminSiblings = () => {
       <div className="grid gap-2 sm:grid-cols-2 text-xs text-muted-foreground">
         <button
           type="button"
-          onClick={() => navigate(`/admin/students/${p.student_a_id}`)}
+          onClick={() => {
+            saveListScrollPosition(routeKey);
+            navigate(`/admin/students/${p.student_a_id}`);
+          }}
           className="text-right rounded-xl border border-border p-2 hover:bg-muted/50"
         >
           <div className="text-foreground font-medium">{p.student_a_name}</div>
@@ -80,7 +85,10 @@ const AdminSiblings = () => {
         </button>
         <button
           type="button"
-          onClick={() => navigate(`/admin/students/${p.student_b_id}`)}
+          onClick={() => {
+            saveListScrollPosition(routeKey);
+            navigate(`/admin/students/${p.student_b_id}`);
+          }}
           className="text-right rounded-xl border border-border p-2 hover:bg-muted/50"
         >
           <div className="text-foreground font-medium">{p.student_b_name}</div>

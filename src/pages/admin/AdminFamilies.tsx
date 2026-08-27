@@ -12,6 +12,7 @@ import { cmpHe } from "@/lib/sortHebrew";
 import MergeFamiliesDialog from "@/components/admin/MergeFamiliesDialog";
 import { useFamilyDupDismissals, dupPairKey } from "@/hooks/useFamilyDupDismissals";
 import { useOpenRefundProcesses } from "@/hooks/useRefundProcess";
+import { saveListScrollPosition, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const norm = (s?: string | null) => (s || "").trim().toLowerCase();
 const pairKey = dupPairKey;
@@ -21,10 +22,11 @@ const AdminFamilies = () => {
   const { selectedYearId, activeYear } = useAcademicYear();
   const yearId = selectedYearId ?? activeYear?.id ?? null;
   const { data: families = [], isLoading } = useFamiliesList(yearId);
-  const [q, setQ] = useState("");
-  const [onlyMulti, setOnlyMulti] = useState(false);
-  const [onlyDup, setOnlyDup] = useState(false);
-  const [onlyRefund, setOnlyRefund] = useState(false);
+  const routeKey = "/admin/families";
+  const [q, setQ] = usePersistedState(routeKey, "search", "");
+  const [onlyMulti, setOnlyMulti] = usePersistedState(routeKey, "multi", false);
+  const [onlyDup, setOnlyDup] = usePersistedState(routeKey, "duplicates", false);
+  const [onlyRefund, setOnlyRefund] = usePersistedState(routeKey, "refunds", false);
   const { data: refundProcesses } = useOpenRefundProcesses(yearId);
   const refundByFamily = refundProcesses?.byFamily;
   const { dismissed, dismissPairs } = useFamilyDupDismissals();
@@ -288,9 +290,10 @@ const AdminFamilies = () => {
                 <Button
                   type="button"
                   className="h-11 rounded-xl w-full sm:flex-1"
-                  onClick={() =>
-                    navigate(`/admin/families/${encodeURIComponent(f.parent_national_id)}`)
-                  }
+                  onClick={() => {
+                    saveListScrollPosition(routeKey);
+                    navigate(`/admin/families/${encodeURIComponent(f.parent_national_id)}`);
+                  }}
                 >
                   פתח כרטיס <ArrowLeft className="h-4 w-4 ms-1" />
                 </Button>

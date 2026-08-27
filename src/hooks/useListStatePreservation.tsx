@@ -117,7 +117,7 @@ export const useListStatePreservation = (key?: string) => {
 
     const handleScroll = () => {
       if (!lockedScrollKeys.has(storageKey)) {
-        scrollPositions.set(storageKey, getScrollTop());
+        writeSavedScroll(storageKey, getScrollTop());
       }
     };
 
@@ -126,9 +126,6 @@ export const useListStatePreservation = (key?: string) => {
     return () => {
       cancelled = true;
       target.removeEventListener("scroll", handleScroll);
-      if (!lockedScrollKeys.has(storageKey)) {
-        writeSavedScroll(storageKey, getScrollTop());
-      }
       try {
         window.history.scrollRestoration = prevRestoration;
       } catch {
@@ -143,6 +140,28 @@ export const useListStatePreservation = (key?: string) => {
  * unmount/remount when navigating to a child page and back.
  */
 const stateStore = new Map<string, Record<string, unknown>>();
+const STATE_SESSION_PREFIX = "list-state::";
+
+const readPersistedValue = <T,>(fullKey: string): T | undefined => {
+  const memoryValue = stateStore.get(fullKey)?.value as T | undefined;
+  if (memoryValue !== undefined) return memoryValue;
+
+  try {
+    const stored = window.sessionStorage.getItem(`${STATE_SESSION_PREFIX}${fullKey}`);
+    return stored == null ? undefined : (JSON.parse(stored) as T);
+  } catch {
+    return undefined;
+  }
+};
+
+const writePersistedValue = <T,>(fullKey: string, value: T) => {
+  stateStore.set(fullKey, { value });
+  try {
+    window.sessionStorage.setItem(`${STATE_SESSION_PREFIX}${fullKey}`, JSON.stringify(value));
+  } catch {
+    // Ignore storage failures; in-memory persistence still works.
+  }
+};
 
 export const getPersistedState = <T extends Record<string, unknown>>(
   key: string,
@@ -170,11 +189,11 @@ export const usePersistedState = <T,>(
   initial: T,
 ): [T, (v: T | ((prev: T) => T)) => void] => {
   const fullKey = `${routeKey}::${field}`;
-  const saved = stateStore.get(fullKey)?.value as T | undefined;
+  const saved = readPersistedValue<T>(fullKey);
   const [value, setValue] = useState<T>(saved !== undefined ? saved : initial);
 
   useEffect(() => {
-    stateStore.set(fullKey, { value });
+    writePersistedValue(fullKey, value);
   }, [fullKey, value]);
 
   return [value, setValue];

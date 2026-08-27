@@ -13,6 +13,7 @@ import { ArrowRight, Search, ChevronLeft, Copy, CheckCircle2, Clock, GraduationC
 import PageTitle from "@/components/PageTitle";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { isInactiveStudentStatus } from "@/lib/constants";
+import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
@@ -21,12 +22,14 @@ const TeacherStudents = () => {
   const { selectedYearId, years, activeYear } = useAcademicYear();
   const { data: teacher, isLoading: teacherLoading } = useTeacherProfile();
   const { data: enrollments, isLoading: enrollmentsLoading } = useTeacherAllEnrollments(teacher?.id, selectedYearId);
+  const routeKey = "/teacher/students";
+  useListStatePreservation(routeKey);
 
-  const [tab, setTab] = useState<"current" | "registration">("current");
-  const [search, setSearch] = useState("");
-  const [schoolFilter, setSchoolFilter] = useState("all");
-  const [instrumentFilter, setInstrumentFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("active");
+  const [tab, setTab] = usePersistedState<"current" | "registration">(routeKey, "tab", "current");
+  const [search, setSearch] = usePersistedState(routeKey, "search", "");
+  const [schoolFilter, setSchoolFilter] = usePersistedState(routeKey, "school", "all");
+  const [instrumentFilter, setInstrumentFilter] = usePersistedState(routeKey, "instrument", "all");
+  const [activeFilter, setActiveFilter] = usePersistedState(routeKey, "active", "active");
   const [markingId, setMarkingId] = useState<string | null>(null);
 
   // ── Previous year = newest year that is NOT active (e.g. תשפ"ו when תשפ"ז is active) ──

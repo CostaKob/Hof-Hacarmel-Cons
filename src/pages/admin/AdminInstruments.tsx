@@ -19,11 +19,12 @@ import {
 import { toast } from "sonner";
 import { sortByName } from "@/lib/sortHebrew";
 import PageTitle from "@/components/PageTitle";
+import { usePersistedState } from "@/hooks/useListStatePreservation";
 
 const AdminInstruments = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = usePersistedState("/admin/instruments", "search", "");
   const [toDelete, setToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const { data: instruments = [], isLoading } = useQuery({

@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -9,6 +9,7 @@ import YearlySummaryTable, { YearlySummaryCards } from "@/components/YearlySumma
 import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummaryRow, type StatusCounts } from "@/lib/lessonCounts";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import PageTitle from "@/components/PageTitle";
+import { usePersistedState } from "@/hooks/useListStatePreservation";
 
 function useAllEnrollments(yearId: string | null) {
   return useQuery({
@@ -45,10 +46,11 @@ const AdminYearlySummary = () => {
   const { data: enrollments, isLoading: eLoading } = useAllEnrollments(selectedYearId);
   const { data: lines, isLoading: lLoading } = useAllReportLines(selectedYearId);
 
-  const [search, setSearch] = useState("");
-  const [teacherFilter, setTeacherFilter] = useState("all");
-  const [schoolFilter, setSchoolFilter] = useState("all");
-  const [activeFilter, setActiveFilter] = useState("active");
+  const routeKey = "/admin/yearly-summary";
+  const [search, setSearch] = usePersistedState(routeKey, "search", "");
+  const [teacherFilter, setTeacherFilter] = usePersistedState(routeKey, "teacher", "all");
+  const [schoolFilter, setSchoolFilter] = usePersistedState(routeKey, "school", "all");
+  const [activeFilter, setActiveFilter] = usePersistedState(routeKey, "active", "active");
 
   const rows = useMemo<EnrollmentSummaryRow[]>(() => {
     if (!enrollments || !lines) return [];

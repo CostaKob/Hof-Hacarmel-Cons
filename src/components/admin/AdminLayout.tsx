@@ -13,6 +13,7 @@ import ArchiveYearBanner from "./ArchiveYearBanner";
 import FamilyIcon from "@/components/icons/FamilyIcon";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import NotificationsBell from "./NotificationsBell";
+import { useListStatePreservation } from "@/hooks/useListStatePreservation";
 
 type IconComponent = ComponentType<{ className?: string }>;
 
@@ -49,6 +50,7 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  useListStatePreservation(location.pathname);
   const { signOut } = useAuth();
   const { logoUrl, refreshLogo } = useAppLogo();
   const { years, selectedYearId, setSelectedYearId, isLoading: yearsLoading } = useAcademicYear();
