@@ -31,6 +31,22 @@ export type CalendarFormValues = {
   status: "confirmed" | "tentative" | "cancelled";
 };
 
+export const validateCalendarFormValues = (values: CalendarFormValues): string | null => {
+  if (values.end_date < values.start_date) return "תאריך הסיום חייב להיות אחרי תאריך ההתחלה";
+  if ((values.start_time && !values.end_time) || (!values.start_time && values.end_time)) {
+    return "יש לבחור גם שעת התחלה וגם שעת סיום";
+  }
+  if (
+    values.start_date === values.end_date &&
+    values.start_time &&
+    values.end_time &&
+    values.end_time <= values.start_time
+  ) {
+    return "שעת הסיום חייבת להיות אחרי שעת ההתחלה";
+  }
+  return null;
+};
+
 /** טוען את כל הנתונים לטווח תאריכים אחד (שאילתה אחת לכל השנה). */
 export const fetchCalendarData = async (rangeStart: string, rangeEnd: string) => {
   const [tracksRes, branchesRes, peopleRes, itemsRes] = await Promise.all([
@@ -84,6 +100,8 @@ const toPayload = (values: CalendarFormValues) => ({
 });
 
 export const createCalendarItem = async (values: CalendarFormValues) => {
+  const validationError = validateCalendarFormValues(values);
+  if (validationError) throw new Error(validationError);
   const insert: CalendarItemInsert = toPayload(values);
 
   const { data, error } = await supabase.from("calendar_items").insert(insert).select().single();
@@ -92,6 +110,8 @@ export const createCalendarItem = async (values: CalendarFormValues) => {
 };
 
 export const updateCalendarItem = async (id: string, values: CalendarFormValues) => {
+  const validationError = validateCalendarFormValues(values);
+  if (validationError) throw new Error(validationError);
   const update: CalendarItemUpdate = toPayload(values);
 
   const { data, error } = await supabase
