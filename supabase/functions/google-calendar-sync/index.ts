@@ -60,19 +60,18 @@ function itemToEvent(item: Json): Json {
   // אירוע עם שעה — נשלח כאירוע ממוקד בזמן ולא כאירוע יום שלם
   if (item.start_time) {
     const startTime = String(item.start_time).slice(0, 5);
+    let normalizedStartTime = startTime;
     let endTime = item.end_time ? String(item.end_time).slice(0, 5) : addHour(startTime);
-    let endDate = String(item.end_date);
 
     // Google rejects a timed event whose end is not after its start. Old rows may
-    // contain reversed same-day times, so keep sync resilient while the UI blocks
-    // any new invalid values.
-    if (endDate === String(item.start_date) && endTime <= startTime) {
-      endDate = addDays(endDate, 1);
+    // contain swapped same-day times, so normalize them while the UI blocks new ones.
+    if (String(item.end_date) === String(item.start_date) && endTime <= normalizedStartTime) {
+      [normalizedStartTime, endTime] = [endTime, normalizedStartTime];
     }
     return {
       ...base,
-      start: { dateTime: `${item.start_date}T${startTime}:00`, timeZone: TZ },
-      end: { dateTime: `${endDate}T${endTime}:00`, timeZone: TZ },
+      start: { dateTime: `${item.start_date}T${normalizedStartTime}:00`, timeZone: TZ },
+      end: { dateTime: `${item.end_date}T${endTime}:00`, timeZone: TZ },
     };
   }
 
