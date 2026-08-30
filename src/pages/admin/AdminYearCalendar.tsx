@@ -31,6 +31,7 @@ import {
   updateCalendarItem,
   deleteCalendarItem,
   restoreCalendarItem,
+  validateCalendarFormValues,
   type CalendarItem,
   type CalendarFormValues,
   type Track,
@@ -588,6 +589,12 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
   const handleSave = async () => {
     if (!form.title_he.trim() || !form.track_id || !form.start_date || !form.end_date) {
+      return;
+    }
+
+    const validationError = validateCalendarFormValues(form);
+    if (validationError) {
+      toast.error(validationError);
       return;
     }
 
