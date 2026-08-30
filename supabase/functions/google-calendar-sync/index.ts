@@ -188,8 +188,11 @@ Deno.serve(async (req) => {
         nextSyncToken = page.nextSyncToken ?? nextSyncToken;
       } while (pageToken);
     } catch (e: any) {
-      if (e.status === 410) {
-        // אסימון פג — סנכרון מלא
+      const msg = String(e?.message ?? "");
+      // אסימון פג (410) או פגום — גוגל מחזיר לפעמים 400 timeRangeEmpty על syncToken ישן
+      if (e.status === 410 || (e.status === 400 && msg.includes("timeRangeEmpty"))) {
+        // אסימון פג — סנכרון מלא ואיפוס האסימון השמור
+        await supabase.from("google_calendar_sync_state").delete().eq("calendar_id", CALENDAR_ID);
         syncToken = undefined;
         pageToken = undefined;
         events.length = 0;
