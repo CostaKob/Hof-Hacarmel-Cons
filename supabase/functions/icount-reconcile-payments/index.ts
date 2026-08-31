@@ -71,22 +71,40 @@ Deno.serve(async (req: Request) => {
       });
     }
 
-    const search = await icount("doc/search", {
-      doctype: "receipt",
-      from_date: from,
-      to_date: to,
-      max_results: 500,
-    });
-    const listRaw = search?.data ?? search?.docs ?? search?.results ?? [];
-    const list: any[] = Array.isArray(listRaw) ? listRaw : Object.values(listRaw || {});
+    const compact = (d: string) => d.replace(/-/g, "");
+    const list: any[] = [];
+    for (let offset = 0; offset < 2000; offset += 100) {
+      const search = await icount("doc/search", {
+        doctype: "receipt",
+        start_date: compact(from),
+        end_date: compact(to),
+        from_date: from,
+        to_date: to,
+        detail_level: 10,
+        max_results: 100,
+        limit: 100,
+        offset,
+      });
+      if (search?.status === false) break;
+      const page: any[] = search?.results_list ?? search?.docs ?? search?.results ?? search?.data ?? [];
+      const arr = Array.isArray(page) ? page : Object.values(page || {});
+      list.push(...arr);
+      if (arr.length < 100) break;
+    }
+
+    const pendingAmounts = new Set([...byPage.values()].map((v) => Math.round(v.amount)));
 
     const matched: any[] = [];
     for (const doc of list) {
       const docnum = doc.docnum ?? doc.doc_number;
       if (!docnum) continue;
+      if (Number(doc.is_cancelled) || Number(doc.is_cancellation)) continue;
+      const total = Math.round(Number(doc.total ?? doc.doc_total ?? 0));
+      if (total > 0 && !pendingAmounts.has(total)) continue;
       const info = await icount("doc/info", { doctype: "receipt", docnum: Number(docnum) || docnum });
       const di = info?.doc_info ?? {};
       if (di.is_cancelled === true || di.is_cancellation === true) continue;
+
       const pageId = String(di?.custom?.cc_page_id ?? "");
       if (!pageId) continue;
       const target = byPage.get(pageId);
