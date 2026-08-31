@@ -1,16 +1,18 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
+import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Search, Download, Undo2, Link2, Users, User, Clock } from "lucide-react";
+import { Search, Download, Undo2, Link2, Users, User, Clock, RefreshCw } from "lucide-react";
+
 
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { calcEnrollment } from "@/lib/paymentCalc";
@@ -39,6 +41,30 @@ const AdminPrivatePayments = () => {
   const [statusFilter, setStatusFilter] = usePersistedState<StatusFilter>(routeKey, "status", "all");
   const [viewMode, setViewMode] = usePersistedState<ViewMode>(routeKey, "view", "families");
   const [showRecentPayments, setShowRecentPayments] = usePersistedState(routeKey, "recent", false);
+  const [reconciling, setReconciling] = useState(false);
+
+  // Safety net: pulls receipts from iCount and closes pending payment links
+  // whose payment did go through but whose IPN never reached us.
+  const runReconcile = async () => {
+    setReconciling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("icount-reconcile-payments", {
+        body: { dryRun: false },
+      });
+      if (error) throw error;
+      const matched = (data as any)?.matched?.length ?? 0;
+      toast.success(matched > 0
+        ? `נסגרו ${matched} תשלומים שהתקבלו ולא נרשמו`
+        : "לא נמצאו תשלומים חסרים — הכל מסונכרן");
+      if (matched > 0) window.location.reload();
+    } catch (e: any) {
+      toast.error(e?.message ?? "הסנכרון נכשל");
+    } finally {
+      setReconciling(false);
+    }
+  };
+
+
 
 
   const { data: year } = useQuery({
@@ -762,6 +788,17 @@ const AdminPrivatePayments = () => {
             <Link2 className="h-3.5 w-3.5" />
             {statusFilter === "active_links" ? "בטל סינון קישורים" : "קישורי תשלום פעילים (משפחה)"}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-xl gap-1"
+            onClick={runReconcile}
+            disabled={reconciling}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${reconciling ? "animate-spin" : ""}`} />
+            {reconciling ? "מסנכרן..." : "סנכרון תשלומים מאייקאונט"}
+          </Button>
+
           <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={exportCsv}>
             <Download className="h-3.5 w-3.5" />
             ייצוא לאקסל

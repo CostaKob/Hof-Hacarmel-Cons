@@ -25,12 +25,34 @@ Deno.serve(async (req: Request) => {
   if (authFail) return authFail;
 
   try {
-    const { paymentId } = await req.json();
+    const body = await req.json();
+    const { paymentId } = body;
+    const rawDocnum = body?.docnum;
+
+    // Direct lookup by document number (no stored payment row) — admin diagnostics.
+    if (!paymentId && rawDocnum) {
+      const auth = getAuth();
+      const res = await fetch(`${ICOUNT_BASE}/doc/info`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...auth,
+          doctype: body.doctype || "receipt",
+          docnum: Number(rawDocnum) || rawDocnum,
+        }),
+      });
+      const info = await res.json().catch(() => ({}));
+      return new Response(JSON.stringify(info), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!paymentId) {
       return new Response(JSON.stringify({ error: "paymentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
