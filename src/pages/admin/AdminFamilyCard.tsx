@@ -37,6 +37,7 @@ import {
   Ban,
   Loader2,
   Clock,
+  Link2,
 } from "lucide-react";
 
 import StopEnrollmentDialog from "@/components/admin/StopEnrollmentDialog";
@@ -105,6 +106,22 @@ const AdminFamilyCard = () => {
   const [refundSuccess, setRefundSuccess] = useState<RefundSuccessInfo | null>(null);
   const [refundMethod, setRefundMethod] = useState<"bank_transfer" | "credit_card" | "receipt">("bank_transfer");
   const [owedByGroup, setOwedByGroup] = useState<Record<string, string>>({});
+  const [fetchingInvoiceId, setFetchingInvoiceId] = useState<string | null>(null);
+
+  const fetchInvoiceUrl = async (paymentId: string) => {
+    setFetchingInvoiceId(paymentId);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("icount-get-doc-url", {
+        body: { paymentId },
+      });
+      if (error || !res?.url) throw new Error(res?.error || error?.message || "לא נמצא קישור לקבלה");
+      queryClient.invalidateQueries({ queryKey: ["family-details"] });
+    } catch (e: any) {
+      toast.error(e?.message || "שליפת הקבלה נכשלה");
+    } finally {
+      setFetchingInvoiceId(null);
+    }
+  };
 
 
 
@@ -986,7 +1003,7 @@ const AdminFamilyCard = () => {
                   const isCredit = p.transaction_type === "credit";
                   const isPending = p.payment_status === "pending";
                   const hasInvoice = !!p.invoice_url;
-                  const hasDoc = !!p.icount_doc_id;
+                  const hasDoc = !!p.icount_doc_id || !!p.icount_doc_number;
                   const refundedSoFar = payments
                     .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
                     .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
@@ -1132,7 +1149,15 @@ const AdminFamilyCard = () => {
                             <FileDown className="h-4 w-4" />
                           </Button>
                         )}
-                        {isCredit && !hasDoc && (
+                         {hasDoc && !hasInvoice && !isPending && (
+                           <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg"
+                             title="שלוף קישור לקבלה מאייקאונט"
+                             disabled={fetchingInvoiceId === p.id}
+                             onClick={() => fetchInvoiceUrl(p.id)}>
+                             {fetchingInvoiceId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                           </Button>
+                         )}
+                         {isCredit && !hasDoc && (
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
                             onClick={() => { setInvoiceNote(""); setPendingInvoiceParams({ paymentId: p.id, isCredit: true }); }}>
