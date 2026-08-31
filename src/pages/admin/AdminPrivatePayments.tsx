@@ -788,6 +788,17 @@ const AdminPrivatePayments = () => {
             <Link2 className="h-3.5 w-3.5" />
             {statusFilter === "active_links" ? "בטל סינון קישורים" : "קישורי תשלום פעילים (משפחה)"}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 rounded-xl gap-1"
+            onClick={runReconcile}
+            disabled={reconciling}
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${reconciling ? "animate-spin" : ""}`} />
+            {reconciling ? "מסנכרן..." : "סנכרון תשלומים מאייקאונט"}
+          </Button>
+
           <Button variant="outline" size="sm" className="h-9 rounded-xl gap-1" onClick={exportCsv}>
             <Download className="h-3.5 w-3.5" />
             ייצוא לאקסל
