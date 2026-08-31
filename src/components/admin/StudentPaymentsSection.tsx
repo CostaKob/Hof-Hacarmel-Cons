@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle, Clock } from "lucide-react";
+import { FileDown, ChevronDown, ChevronUp, Wallet, AlertCircle, Clock, Link2, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPaymentMethodWithCount, isCheckMethod } from "@/lib/paymentMethodLabel";
@@ -40,6 +42,23 @@ const StudentPaymentsSection = ({
 }: StudentPaymentsSectionProps) => {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [sortBy, setSortBy] = useState<"payment_date" | "paid_at">("payment_date");
+  const [fetchedUrls, setFetchedUrls] = useState<Record<string, string>>({});
+  const [fetchingUrlId, setFetchingUrlId] = useState<string | null>(null);
+
+  const fetchInvoiceUrl = async (paymentId: string) => {
+    setFetchingUrlId(paymentId);
+    try {
+      const { data, error } = await supabase.functions.invoke("icount-get-doc-url", {
+        body: { paymentId },
+      });
+      if (error || !data?.url) throw new Error(data?.error || error?.message || "לא נמצא קישור לקבלה");
+      setFetchedUrls((s) => ({ ...s, [paymentId]: data.url }));
+    } catch (e: any) {
+      toast.error(e?.message || "שליפת הקבלה נכשלה");
+    } finally {
+      setFetchingUrlId(null);
+    }
+  };
 
   const totalPaid = payments.reduce((s: number, p: any) => {
     const amount = Number(p.amount || 0);
@@ -154,7 +173,8 @@ const StudentPaymentsSection = ({
             const groupTotal = rows.reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
             const isExpanded = !!expanded[key];
             const isCredit = p.transaction_type !== "payment";
-            const hasInvoice = !!p.invoice_url;
+            const invoiceUrl = p.invoice_url || fetchedUrls[p.id];
+            const hasInvoice = !!invoiceUrl;
             const refundedSoFar = payments
               .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
               .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
@@ -244,13 +264,20 @@ const StudentPaymentsSection = ({
                       {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                     </Button>
                   )}
-                  {hasInvoice && (
+                  {hasInvoice ? (
                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg"
                       title={isCredit ? "הורד קבלת זיכוי" : "הורד קבלה"}
-                      onClick={(e) => { e.stopPropagation(); window.open(p.invoice_url, "_blank"); }}>
+                      onClick={(e) => { e.stopPropagation(); window.open(invoiceUrl, "_blank"); }}>
                       <FileDown className="h-4 w-4" />
                     </Button>
-                  )}
+                  ) : p.icount_doc_number ? (
+                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-lg"
+                      title="שלוף קישור לקבלה מאייקאונט"
+                      disabled={fetchingUrlId === p.id}
+                      onClick={(e) => { e.stopPropagation(); fetchInvoiceUrl(p.id); }}>
+                      {fetchingUrlId === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+                    </Button>
+                  ) : null}
                   <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
                     {isCredit ? `−₪${Math.abs(groupTotal).toLocaleString()}` : `₪${Math.abs(groupTotal).toLocaleString()}`}
                   </span>
