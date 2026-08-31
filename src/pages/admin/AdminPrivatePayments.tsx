@@ -369,7 +369,7 @@ const AdminPrivatePayments = () => {
     }
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, allocatedPayments, drafts, year, settings, discountTypes]);
+  }, [enrollments, visiblePayments, drafts, year, settings, discountTypes]);
 
 
   // Family grouping — payments are managed at the family level
@@ -846,7 +846,7 @@ const AdminPrivatePayments = () => {
             <div className="space-y-2">
               {filteredFamilies.map((f: any, idx: number) => {
                 const latestPayment = latestPaymentByFamily.get(f.familyKey);
-                const familyPayments = allocatedPayments.filter((p: any) =>
+                const familyPayments = visiblePayments.filter((p: any) =>
                   f.members.some((m: any) => m.studentId === p.student_id) &&
                   p.transaction_type === "payment" &&
                   p.payment_status === "paid" &&
@@ -901,7 +901,7 @@ const AdminPrivatePayments = () => {
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
                         {f.members.map((m: any) => {
-                          const memberPayments = allocatedPayments.filter((p: any) =>
+                          const memberPayments = visiblePayments.filter((p: any) =>
                             p.student_id === m.studentId &&
                             p.transaction_type === "payment" &&
                             p.payment_status === "paid" &&
@@ -1007,7 +1007,7 @@ const AdminPrivatePayments = () => {
                       </div>
                       <div className="mt-2 flex flex-col gap-0.5">
                         {(() => {
-                          const studentPayments = allocatedPayments.filter((p: any) =>
+                          const studentPayments = visiblePayments.filter((p: any) =>
                             p.student_id === r.studentId &&
                             p.transaction_type === "payment" &&
                             p.payment_status === "paid" &&
