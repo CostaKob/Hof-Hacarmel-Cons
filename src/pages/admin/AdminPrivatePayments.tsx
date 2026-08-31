@@ -20,6 +20,7 @@ import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { formatPaymentMethodWithCount, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { allocatePayment } from "@/lib/familyPaymentAllocation";
+import { isNoTeacherEnrollment } from "@/lib/constants";
 import { saveListScrollPosition, usePersistedState } from "@/hooks/useListStatePreservation";
 
 
@@ -219,7 +220,9 @@ const AdminPrivatePayments = () => {
     const studentIdsWithPayments = new Set<string>(
       (allocatedPayments as any[]).map((p) => p.student_id).filter(Boolean),
     );
+    // שיוכי "ללא מורה" = תלמידי חוץ בהרכבים בלבד — מתעלמים מהם כספית לחלוטין
     const relevantEnrollments = (enrollments as any[]).filter((e) => {
+      if (isNoTeacherEnrollment(e)) return false;
       if (enrollmentIdsWithPayments.has(e.id) || studentIdsWithPayments.has(e.student_id)) return true;
       return e.is_active !== false && e.students?.is_active !== false;
     });

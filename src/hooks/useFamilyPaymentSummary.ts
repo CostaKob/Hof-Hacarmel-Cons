@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { allocatePayment } from "@/lib/familyPaymentAllocation";
+import { isNoTeacherEnrollment } from "@/lib/constants";
 
 export interface FamilyPaymentSummary {
   totalDue: number;
@@ -57,7 +58,7 @@ export function useFamilyPaymentSummary(yearId: string | null | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
-        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, students!inner(id, parent_national_id, has_music_production_course, has_recital_track, is_active)")
+        .select("id, student_id, lesson_duration_minutes, start_date, end_date, price_per_lesson, is_active, teachers(id, first_name, last_name), students!inner(id, parent_national_id, has_music_production_course, has_recital_track, is_active)")
         .eq("academic_year_id", yearId!);
       if (error) throw error;
       return data as any[];
@@ -127,7 +128,9 @@ export function useFamilyPaymentSummary(yearId: string | null | undefined) {
 
     const enrollmentIdsWithPayments = new Set<string>(allocated.map((p) => p.enrollment_id).filter(Boolean));
     const studentIdsWithPayments = new Set<string>(allocated.map((p) => p.student_id).filter(Boolean));
+    // שיוכי "ללא מורה" = תלמידי חוץ בהרכבים בלבד — מתעלמים מהם כספית לחלוטין
     const relevantEnrollments = (enrollments as any[]).filter((e) => {
+      if (isNoTeacherEnrollment(e)) return false;
       if (enrollmentIdsWithPayments.has(e.id) || studentIdsWithPayments.has(e.student_id)) return true;
       return e.is_active !== false && e.students?.is_active !== false;
     });
