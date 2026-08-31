@@ -249,6 +249,15 @@ Deno.serve(async (req: Request) => {
       return !Number(d.is_cancelled) && !Number(d.is_cancellation) &&
         !isExcludedDoc(dn);
     });
+    // Cancelled documents and their cancellation receipts net to zero and are
+    // intentionally excluded from the cashflow — don't report them as gaps.
+    const cancelledDocNums = new Set<string>();
+    for (const d of list) {
+      if (Number(d.is_cancelled) || Number(d.is_cancellation)) {
+        const dn = String(d.docnum ?? d.doc_number ?? "").trim();
+        if (dn) cancelledDocNums.add(dn);
+      }
+    }
 
     let rows: Omit<Row, "source">[] = [];
     const unparsed: string[] = [];
@@ -354,7 +363,7 @@ Deno.serve(async (req: Request) => {
     }
     const missing_in_icount: { doc_number: string; amount: number; source: string }[] = [];
     for (const [docNum, sys] of systemByDoc) {
-      if (!icountByDoc.has(docNum)) missing_in_icount.push({ doc_number: docNum, amount: sys.total, source: sys.source });
+      if (!icountByDoc.has(docNum) && !cancelledDocNums.has(docNum)) missing_in_icount.push({ doc_number: docNum, amount: sys.total, source: sys.source });
     }
     const sum = (ns: number[]) => Math.round(ns.reduce((a, b) => a + b, 0) * 100) / 100;
     const reconciliation = {
