@@ -38,3 +38,12 @@ export function calcYearsOfPlaying(instrumentStartDate: string | null | undefine
   const diff = (now.getTime() - start.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
   return Math.max(0, Math.floor(diff));
 }
+
+/** שם המורה הוירטואלי עבור תלמידי חוץ המשתתפים בהרכבים בלבד (ללא שיעור פרטי). */
+export const NO_TEACHER_NAME = "ללא מורה";
+
+/** שיוך למורה "ללא מורה" — תלמיד חוץ בהרכב; מתעלמים ממנו בדוחות כספיים. */
+export function isNoTeacherEnrollment(e: any): boolean {
+  const t = e?.teachers;
+  return !!t && `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim() === NO_TEACHER_NAME;
+}

@@ -16,6 +16,7 @@ import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
+import { isNoTeacherEnrollment } from "@/lib/constants";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { isInactiveStudentStatus } from "@/lib/constants";
 import { format } from "date-fns";
@@ -441,7 +442,9 @@ const AdminStudents = () => {
     for (const [sid, studentRows] of enrollmentRowsByStudent.entries()) {
       const discounts = getSavedDiscountState(sid);
       const startDateOverrides = discounts?.startDateOverrides && typeof discounts.startDateOverrides === "object" ? discounts.startDateOverrides : {};
-      const calcRows = studentRows.map((e: any) => calcEnrollment(
+      // שיוכי "ללא מורה" = תלמידי חוץ בהרכבים בלבד — לא נכנסים לחישוב כספי
+      const financialRows = studentRows.filter((e: any) => !isNoTeacherEnrollment(e));
+      const calcRows = financialRows.map((e: any) => calcEnrollment(
         {
           id: e.id,
           duration: e.lesson_duration_minutes,
