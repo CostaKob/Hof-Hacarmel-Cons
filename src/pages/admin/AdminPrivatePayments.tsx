@@ -162,6 +162,37 @@ const AdminPrivatePayments = () => {
     return out;
   }, [payments, enrollments]);
 
+  // Fully-cancelled transactions: a receipt whose credit note(s) cover it
+  // entirely nets to zero (e.g. a charge refunded via the credit company).
+  // Hide both sides so the report reflects real money only.
+  const cancelledPairIds = useMemo(() => {
+    const refundSum = new Map<string, number>();
+    for (const p of payments as any[]) {
+      const ref = p.refund_of_payment_id;
+      if (!ref) continue;
+      refundSum.set(ref, (refundSum.get(ref) ?? 0) + Math.abs(Number(p.amount) || 0));
+    }
+    const ids = new Set<string>();
+    for (const p of payments as any[]) {
+      if (!p.id || p.payment_status === "pending") continue;
+      const amt = Number(p.amount) || 0;
+      if (amt <= 0 || p.transaction_type !== "payment") continue;
+      if ((refundSum.get(p.id) ?? 0) >= amt - 0.005) ids.add(p.id);
+    }
+    return ids;
+  }, [payments]);
+
+  const visiblePayments = useMemo(
+    () =>
+      (allocatedPayments as any[]).filter((p) => {
+        const srcId = p._splitFromPaymentId ?? p.id;
+        if (srcId && cancelledPairIds.has(srcId)) return false;
+        if (p.refund_of_payment_id && cancelledPairIds.has(p.refund_of_payment_id)) return false;
+        return true;
+      }),
+    [allocatedPayments, cancelledPairIds],
+  );
+
   const { data: drafts = [] } = useQuery({
     queryKey: ["priv-payments-drafts", yearId],
     enabled: !!yearId,
@@ -205,7 +236,7 @@ const AdminPrivatePayments = () => {
     for (const e of enrollments) enrollmentToStudent.set(e.id, e.student_id);
 
     const paymentsByStudent = new Map<string, any[]>();
-    for (const p of allocatedPayments) {
+    for (const p of visiblePayments) {
       const sid = p.student_id ?? (p.enrollment_id ? enrollmentToStudent.get(p.enrollment_id) : null);
       if (!sid) continue;
       const arr = paymentsByStudent.get(sid) ?? [];
@@ -338,7 +369,7 @@ const AdminPrivatePayments = () => {
     }
 
     return result.sort((a, b) => `${a.student.first_name} ${a.student.last_name}`.localeCompare(`${b.student.first_name} ${b.student.last_name}`, "he"));
-  }, [enrollments, allocatedPayments, drafts, year, settings, discountTypes]);
+  }, [enrollments, visiblePayments, drafts, year, settings, discountTypes]);
 
 
   // Family grouping — payments are managed at the family level
@@ -401,7 +432,7 @@ const AdminPrivatePayments = () => {
     const studentIdByEnrollmentId = new Map<string, string>();
     for (const enrollment of enrollments) studentIdByEnrollmentId.set(enrollment.id, enrollment.student_id);
 
-    return allocatedPayments
+    return visiblePayments
       .filter((payment: any) =>
         payment.payment_status === "paid" &&
         payment.transaction_type === "payment" &&
@@ -415,7 +446,7 @@ const AdminPrivatePayments = () => {
       })
       .filter((payment: any) => payment.row && payment.paidAt)
       .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
-  }, [allocatedPayments, enrollments, rowsWithFamily]);
+  }, [visiblePayments, enrollments, rowsWithFamily]);
 
   const latestPaymentByFamily = useMemo(() => {
     const latest = new Map<string, any>();
@@ -815,7 +846,7 @@ const AdminPrivatePayments = () => {
             <div className="space-y-2">
               {filteredFamilies.map((f: any, idx: number) => {
                 const latestPayment = latestPaymentByFamily.get(f.familyKey);
-                const familyPayments = allocatedPayments.filter((p: any) =>
+                const familyPayments = visiblePayments.filter((p: any) =>
                   f.members.some((m: any) => m.studentId === p.student_id) &&
                   p.transaction_type === "payment" &&
                   p.payment_status === "paid" &&
@@ -870,7 +901,7 @@ const AdminPrivatePayments = () => {
                         )}
                         <div className="mt-2 flex flex-col gap-0.5">
                         {f.members.map((m: any) => {
-                          const memberPayments = allocatedPayments.filter((p: any) =>
+                          const memberPayments = visiblePayments.filter((p: any) =>
                             p.student_id === m.studentId &&
                             p.transaction_type === "payment" &&
                             p.payment_status === "paid" &&
@@ -976,7 +1007,7 @@ const AdminPrivatePayments = () => {
                       </div>
                       <div className="mt-2 flex flex-col gap-0.5">
                         {(() => {
-                          const studentPayments = allocatedPayments.filter((p: any) =>
+                          const studentPayments = visiblePayments.filter((p: any) =>
                             p.student_id === r.studentId &&
                             p.transaction_type === "payment" &&
                             p.payment_status === "paid" &&
