@@ -236,7 +236,7 @@ const AdminPrivatePayments = () => {
     for (const e of enrollments) enrollmentToStudent.set(e.id, e.student_id);
 
     const paymentsByStudent = new Map<string, any[]>();
-    for (const p of allocatedPayments) {
+    for (const p of visiblePayments) {
       const sid = p.student_id ?? (p.enrollment_id ? enrollmentToStudent.get(p.enrollment_id) : null);
       if (!sid) continue;
       const arr = paymentsByStudent.get(sid) ?? [];
