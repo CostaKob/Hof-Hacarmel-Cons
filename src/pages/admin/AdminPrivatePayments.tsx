@@ -162,6 +162,37 @@ const AdminPrivatePayments = () => {
     return out;
   }, [payments, enrollments]);
 
+  // Fully-cancelled transactions: a receipt whose credit note(s) cover it
+  // entirely nets to zero (e.g. a charge refunded via the credit company).
+  // Hide both sides so the report reflects real money only.
+  const cancelledPairIds = useMemo(() => {
+    const refundSum = new Map<string, number>();
+    for (const p of payments as any[]) {
+      const ref = p.refund_of_payment_id;
+      if (!ref) continue;
+      refundSum.set(ref, (refundSum.get(ref) ?? 0) + Math.abs(Number(p.amount) || 0));
+    }
+    const ids = new Set<string>();
+    for (const p of payments as any[]) {
+      if (!p.id || p.payment_status === "pending") continue;
+      const amt = Number(p.amount) || 0;
+      if (amt <= 0 || p.transaction_type !== "payment") continue;
+      if ((refundSum.get(p.id) ?? 0) >= amt - 0.005) ids.add(p.id);
+    }
+    return ids;
+  }, [payments]);
+
+  const visiblePayments = useMemo(
+    () =>
+      (allocatedPayments as any[]).filter((p) => {
+        const srcId = p._splitFromPaymentId ?? p.id;
+        if (srcId && cancelledPairIds.has(srcId)) return false;
+        if (p.refund_of_payment_id && cancelledPairIds.has(p.refund_of_payment_id)) return false;
+        return true;
+      }),
+    [allocatedPayments, cancelledPairIds],
+  );
+
   const { data: drafts = [] } = useQuery({
     queryKey: ["priv-payments-drafts", yearId],
     enabled: !!yearId,
