@@ -16,6 +16,7 @@ import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
+import { isNoTeacherEnrollment } from "@/lib/constants";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { isInactiveStudentStatus } from "@/lib/constants";
 import { format } from "date-fns";
