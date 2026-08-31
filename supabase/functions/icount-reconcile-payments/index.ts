@@ -31,8 +31,13 @@ async function icount(path: string, payload: Record<string, unknown>) {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  const authFail = await requireAdminOrSecretary(req, corsHeaders);
-  if (authFail) return authFail;
+  // Scheduled runs authenticate with a shared secret header instead of a user JWT.
+  const cronSecret = Deno.env.get("RECONCILE_CRON_SECRET");
+  const isCron = cronSecret && req.headers.get("x-cron-secret") === cronSecret;
+  if (!isCron) {
+    const authFail = await requireAdminOrSecretary(req, corsHeaders);
+    if (authFail) return authFail;
+  }
 
   try {
     const body = await req.json().catch(() => ({}));
