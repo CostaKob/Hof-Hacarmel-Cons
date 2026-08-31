@@ -41,6 +41,30 @@ const AdminPrivatePayments = () => {
   const [statusFilter, setStatusFilter] = usePersistedState<StatusFilter>(routeKey, "status", "all");
   const [viewMode, setViewMode] = usePersistedState<ViewMode>(routeKey, "view", "families");
   const [showRecentPayments, setShowRecentPayments] = usePersistedState(routeKey, "recent", false);
+  const [reconciling, setReconciling] = useState(false);
+
+  // Safety net: pulls receipts from iCount and closes pending payment links
+  // whose payment did go through but whose IPN never reached us.
+  const runReconcile = async () => {
+    setReconciling(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("icount-reconcile-payments", {
+        body: { dryRun: false },
+      });
+      if (error) throw error;
+      const matched = (data as any)?.matched?.length ?? 0;
+      toast.success(matched > 0
+        ? `נסגרו ${matched} תשלומים שהתקבלו ולא נרשמו`
+        : "לא נמצאו תשלומים חסרים — הכל מסונכרן");
+      if (matched > 0) window.location.reload();
+    } catch (e: any) {
+      toast.error(e?.message ?? "הסנכרון נכשל");
+    } finally {
+      setReconciling(false);
+    }
+  };
+
+
 
 
   const { data: year } = useQuery({
