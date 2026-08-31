@@ -432,7 +432,7 @@ const AdminPrivatePayments = () => {
     const studentIdByEnrollmentId = new Map<string, string>();
     for (const enrollment of enrollments) studentIdByEnrollmentId.set(enrollment.id, enrollment.student_id);
 
-    return allocatedPayments
+    return visiblePayments
       .filter((payment: any) =>
         payment.payment_status === "paid" &&
         payment.transaction_type === "payment" &&
@@ -446,7 +446,7 @@ const AdminPrivatePayments = () => {
       })
       .filter((payment: any) => payment.row && payment.paidAt)
       .sort((a: any, b: any) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
-  }, [allocatedPayments, enrollments, rowsWithFamily]);
+  }, [visiblePayments, enrollments, rowsWithFamily]);
 
   const latestPaymentByFamily = useMemo(() => {
     const latest = new Map<string, any>();
