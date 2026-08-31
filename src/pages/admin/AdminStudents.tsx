@@ -441,7 +441,9 @@ const AdminStudents = () => {
     for (const [sid, studentRows] of enrollmentRowsByStudent.entries()) {
       const discounts = getSavedDiscountState(sid);
       const startDateOverrides = discounts?.startDateOverrides && typeof discounts.startDateOverrides === "object" ? discounts.startDateOverrides : {};
-      const calcRows = studentRows.map((e: any) => calcEnrollment(
+      // שיוכי "ללא מורה" = תלמידי חוץ בהרכבים בלבד — לא נכנסים לחישוב כספי
+      const financialRows = studentRows.filter((e: any) => !isNoTeacherEnrollment(e));
+      const calcRows = financialRows.map((e: any) => calcEnrollment(
         {
           id: e.id,
           duration: e.lesson_duration_minutes,
