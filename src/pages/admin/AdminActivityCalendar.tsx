@@ -261,7 +261,7 @@ const AdminActivityCalendar = () => {
       row.total += lessons.length;
       row.attended += lessons.filter((l) => ATTENDED.has(l.status)).length;
       lessons.forEach((l) => row.students.add(l.studentId ?? l.studentName));
-      if (schoolName) row.schools.add(schoolName);
+      lessons.forEach((l) => l.schoolName && row.schools.add(l.schoolName));
       map.set(key, row);
     }
     return Array.from(map.values()).sort((a, b) => b.total - a.total || cmpHe(a.teacherName, b.teacherName));
