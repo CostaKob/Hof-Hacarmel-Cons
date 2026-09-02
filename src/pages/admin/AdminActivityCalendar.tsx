@@ -71,6 +71,7 @@ interface TeacherBlock {
 
 const AdminActivityCalendar = () => {
   const navigate = useNavigate();
+  const { selectedYearId } = useAcademicYear();
 
   const [weekStartStr, setWeekStartStr] = usePersistedState<string>(
     ROUTE_KEY,
