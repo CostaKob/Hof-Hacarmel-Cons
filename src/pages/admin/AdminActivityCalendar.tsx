@@ -96,6 +96,7 @@ const AdminActivityCalendar = () => {
     queryKey: ["activity-calendar", selectedYearId, from, to],
     enabled: !!selectedYearId,
     queryFn: async () => {
+      if (!selectedYearId) return [];
       const { data, error } = await supabase
         .from("reports")
         .select(
@@ -109,9 +110,36 @@ const AdminActivityCalendar = () => {
         )
         .gte("report_date", from)
         .lte("report_date", to)
-        .eq("academic_year_id", selectedYearId!);
+        .eq("academic_year_id", selectedYearId);
       if (error) throw error;
       return (data ?? []) as any[];
+    },
+  });
+
+  const { data: allTeachers = [] } = useQuery({
+    queryKey: ["activity-calendar-teachers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("teachers").select("first_name, last_name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: allSchools = [] } = useQuery({
+    queryKey: ["activity-calendar-schools"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("schools").select("name");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: allInstruments = [] } = useQuery({
+    queryKey: ["activity-calendar-instruments"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("instruments").select("name");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -130,11 +158,17 @@ const AdminActivityCalendar = () => {
       }
     }
     return {
-      teacherOptions: Array.from(t).sort(cmpHe),
-      schoolOptions: Array.from(s).sort(cmpHe),
-      instrumentOptions: Array.from(i).sort(cmpHe),
+      teacherOptions: Array.from(
+        new Set(allTeachers.map((teacher: any) => `${teacher.first_name ?? ""} ${teacher.last_name ?? ""}`.trim()).filter(Boolean)),
+      ).sort(cmpHe),
+      schoolOptions: Array.from(
+        new Set(allSchools.map((school: any) => school.name).filter(Boolean)),
+      ).sort(cmpHe),
+      instrumentOptions: Array.from(
+        new Set(allInstruments.map((instrument: any) => instrument.name).filter(Boolean)),
+      ).sort(cmpHe),
     };
-  }, [reports]);
+  }, [reports, allTeachers, allSchools, allInstruments]);
 
   // ─── קיבוץ לפי יום ← מורה ───
   const byDay = useMemo(() => {
