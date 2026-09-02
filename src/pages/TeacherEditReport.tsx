@@ -303,21 +303,23 @@ const TeacherEditReport = () => {
 
   const enrollmentLookup = new Map((allEnrollments ?? []).map((e) => [e.id, e]));
 
-  const displayRows = Array.from(allEnrollmentIdSet).map((eid) => {
-    const enrollment = enrollmentLookup.get(eid);
-    const existingLine = allDayLines?.find((l) => l.enrollment_id === eid);
-    return {
-      enrollmentId: eid,
-      studentName: enrollment
-        ? `${enrollment.students?.first_name} ${enrollment.students?.last_name}`
-        : existingLine?.enrollments
-          ? `${existingLine.enrollments.students?.first_name} ${existingLine.enrollments.students?.last_name}`
-          : "תלמיד",
-      instrumentName: enrollment?.instruments?.name ?? existingLine?.enrollments?.instruments?.name ?? "",
-      duration: enrollment?.lesson_duration_minutes ?? existingLine?.enrollments?.lesson_duration_minutes ?? 0,
-      schoolName: enrollment?.schools?.name ?? existingLine?.enrollments?.schools?.name ?? "",
-    };
-  });
+  const displayRows = Array.from(allEnrollmentIdSet)
+    .map((eid) => {
+      const enrollment = enrollmentLookup.get(eid);
+      const existingLine = allDayLines?.find((l) => l.enrollment_id === eid);
+      return {
+        enrollmentId: eid,
+        studentName: enrollment
+          ? `${enrollment.students?.first_name} ${enrollment.students?.last_name}`
+          : existingLine?.enrollments
+            ? `${existingLine.enrollments.students?.first_name} ${existingLine.enrollments.students?.last_name}`
+            : "תלמיד",
+        instrumentName: enrollment?.instruments?.name ?? existingLine?.enrollments?.instruments?.name ?? "",
+        duration: enrollment?.lesson_duration_minutes ?? existingLine?.enrollments?.lesson_duration_minutes ?? 0,
+        schoolName: enrollment?.schools?.name ?? existingLine?.enrollments?.schools?.name ?? "",
+      };
+    })
+    .sort((a, b) => cmpHe(a.studentName, b.studentName));
 
   const dayOfWeek = HEBREW_DAYS[editDate.getDay()];
 

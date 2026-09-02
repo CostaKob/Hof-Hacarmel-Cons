@@ -83,8 +83,13 @@ const TeacherNewReport = () => {
 
   const enrollments = useMemo(() => {
     if (!allEnrollments) return [];
-    if (!schoolId || schoolId === "all") return allEnrollments;
-    return allEnrollments.filter((e) => e.school_id === schoolId);
+    const list = !schoolId || schoolId === "all" ? allEnrollments : allEnrollments.filter((e) => e.school_id === schoolId);
+    return [...list].sort((a, b) =>
+      cmpHe(
+        `${a.students?.first_name || ""} ${a.students?.last_name || ""}`,
+        `${b.students?.first_name || ""} ${b.students?.last_name || ""}`,
+      ),
+    );
   }, [allEnrollments, schoolId]);
 
   const [lines, setLines] = useState<Record<string, LineState>>({});
