@@ -587,7 +587,7 @@ const AdminActivityCalendar = () => {
                                 ) : null;
                               })()}
                               <div className="mt-1 flex flex-col gap-0.5">
-                                {lessons.slice(0, 6).map((l) => (
+                                {lessons.slice(0, 10).map((l) => (
                                   <div
                                     key={l.lineId}
                                     className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
@@ -598,9 +598,9 @@ const AdminActivityCalendar = () => {
                                     )}
                                   </div>
                                 ))}
-                                {lessons.length > 6 && (
+                                {lessons.length > 10 && (
                                   <span className="text-[10px] text-muted-foreground text-center">
-                                    +{lessons.length - 6} נוספים
+                                    +{lessons.length - 10} נוספים
                                   </span>
                                 )}
                               </div>
