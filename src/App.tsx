@@ -28,6 +28,7 @@ import AdminTeachers from "./pages/admin/AdminTeachers";
 import AdminTeacherForm from "./pages/admin/AdminTeacherForm";
 import AdminTeacherCard from "./pages/admin/AdminTeacherCard";
 import AdminTeacherReports from "./pages/admin/AdminTeacherReports";
+import AdminActivityCalendar from "./pages/admin/AdminActivityCalendar";
 import AdminSchools from "./pages/admin/AdminSchools";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
 import AdminEnrollmentForm from "./pages/admin/AdminEnrollmentForm";
@@ -207,6 +208,7 @@ const App = () => (
 
               <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/travel-report" element={<AdminRoute><AdminTravelReport /></AdminRoute>} />
+              <Route path="/admin/activity-calendar" element={<AdminRoute><AdminActivityCalendar /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
               <Route path="/admin/ensembles/:id" element={<AdminRoute><AdminEnsembleCard /></AdminRoute>} />
