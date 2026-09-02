@@ -152,10 +152,10 @@ const AdminActivityCalendar = () => {
           `id, report_date, teacher_id, academic_year_id,
            teachers(first_name, last_name),
            schools(name),
-           report_lines(
-             id, status, notes,
-             enrollments(student_id, students(first_name, last_name), instruments(name))
-           )`,
+            report_lines(
+              id, status, notes,
+              enrollments(student_id, students(first_name, last_name), instruments(name), schools(name))
+            )`,
         )
         .gte("report_date", from)
         .lte("report_date", to)
@@ -217,9 +217,8 @@ const AdminActivityCalendar = () => {
     const map = new Map<string, TeacherRow>();
     for (const r of reports) {
       const teacherName = `${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""}`.trim() || "—";
-      const schoolName = r.schools?.name ?? "";
+      const reportSchool = r.schools?.name ?? "";
       if (teacherFilter.length && !teacherFilter.includes(teacherName)) continue;
-      if (schoolFilter.length && !schoolFilter.includes(schoolName)) continue;
 
       const lessons: LessonEntry[] = [];
       for (const line of r.report_lines ?? []) {
@@ -227,6 +226,8 @@ const AdminActivityCalendar = () => {
         if (statusFilter.length && !statusFilter.includes(line.status)) continue;
         if (instrumentFilter.length && !instrumentFilter.includes(inst)) continue;
         const st = line.enrollments?.students;
+        const schoolName = reportSchool || line.enrollments?.schools?.name || "";
+        if (schoolFilter.length && !schoolFilter.includes(schoolName)) continue;
         lessons.push({
           lineId: line.id,
           studentName: `${st?.first_name ?? ""} ${st?.last_name ?? ""}`.trim() || "—",
@@ -260,7 +261,7 @@ const AdminActivityCalendar = () => {
       row.total += lessons.length;
       row.attended += lessons.filter((l) => ATTENDED.has(l.status)).length;
       lessons.forEach((l) => row.students.add(l.studentId ?? l.studentName));
-      if (schoolName) row.schools.add(schoolName);
+      lessons.forEach((l) => l.schoolName && row.schools.add(l.schoolName));
       map.set(key, row);
     }
     return Array.from(map.values()).sort((a, b) => b.total - a.total || cmpHe(a.teacherName, b.teacherName));
