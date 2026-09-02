@@ -518,6 +518,95 @@ const AdminActivityCalendar = () => {
           <div className="rounded-2xl border bg-card py-16 text-center text-muted-foreground">
             אין דיווחים בטווח זה
           </div>
+        ) : viewMode === "week" ? (
+          /* ─── תצוגת שבוע: עמודה לכל יום, ריבוע לכל מורה ─── */
+          <div className="rounded-2xl border bg-card overflow-hidden">
+            <div className="overflow-x-auto overscroll-contain">
+              <div className="grid" style={{ gridTemplateColumns: `repeat(7, minmax(${DAY_W}px, 1fr))`, minWidth: 7 * DAY_W }}>
+                {days.map((d) => {
+                  const key = fmt(d);
+                  const isToday = key === todayStr;
+                  const isWeekend = d.getDay() === 6;
+                  const count = stats.perDay.get(key) ?? 0;
+                  const dayTeachers = rows
+                    .map((row) => ({ row, lessons: row.byDate.get(key) ?? [] }))
+                    .filter((t) => t.lessons.length > 0)
+                    .sort((a, b) => b.lessons.length - a.lessons.length || cmpHe(a.row.teacherName, b.row.teacherName));
+                  return (
+                    <div
+                      key={key}
+                      className={`border-e last:border-e-0 flex flex-col min-h-[220px] ${
+                        isToday ? "bg-primary/5" : isWeekend ? "bg-muted/30" : ""
+                      }`}
+                    >
+                      <div
+                        className={`sticky top-0 z-10 px-2 py-2 text-center border-b text-[11px] leading-tight backdrop-blur ${
+                          isToday ? "bg-primary/15 text-primary font-bold" : isWeekend ? "bg-muted/80" : `bg-muted/60 ${heatClass(count)}`
+                        }`}
+                      >
+                        <div className="font-semibold">
+                          יום {HEBREW_DAYS_LONG[d.getDay()]} · {dmy(d)}
+                        </div>
+                        <div className="opacity-70">
+                          {dayTeachers.length} מורים · {count} שיעורים
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2 p-2">
+                        {dayTeachers.map(({ row, lessons }) => {
+                          const attended = lessons.filter((l) => ATTENDED.has(l.status)).length;
+                          const worstStatus = lessons.some((l) => l.status === "unjustified_absence")
+                            ? "unjustified_absence"
+                            : lessons.some((l) => l.status.endsWith("absence"))
+                              ? "justified_absence"
+                              : lessons.some((l) => l.status === "vacation")
+                                ? "vacation"
+                                : lessons.some((l) => l.status === "double_lesson")
+                                  ? "double_lesson"
+                                  : "present";
+                          return (
+                            <button
+                              key={row.teacherId ?? row.teacherName}
+                              type="button"
+                              onClick={() => openDetail(row, key, lessons)}
+                              className={`rounded-xl border p-2 text-start shadow-sm hover:shadow transition-shadow bg-card ${STATUS_STYLES[worstStatus].split(" ").filter((c) => c.startsWith("border")).join(" ")}`}
+                            >
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="font-semibold text-xs truncate">{row.teacherName}</span>
+                                <span className="text-[10px] text-muted-foreground shrink-0">
+                                  {attended}/{lessons.length}
+                                </span>
+                              </div>
+                              <div className="mt-1 flex flex-col gap-0.5">
+                                {lessons.slice(0, 6).map((l) => (
+                                  <div
+                                    key={l.lineId}
+                                    className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
+                                  >
+                                    <span className="block truncate font-medium">{l.studentName}</span>
+                                    {l.instrument && (
+                                      <span className="block truncate opacity-70">{l.instrument}</span>
+                                    )}
+                                  </div>
+                                ))}
+                                {lessons.length > 6 && (
+                                  <span className="text-[10px] text-muted-foreground text-center">
+                                    +{lessons.length - 6} נוספים
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                        {dayTeachers.length === 0 && (
+                          <div className="py-6 text-center text-[11px] text-muted-foreground">אין דיווחים</div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         ) : (
           <div className="rounded-2xl border bg-card overflow-hidden">
             <div className="overflow-x-auto overscroll-contain">
@@ -544,12 +633,10 @@ const AdminActivityCalendar = () => {
                         style={{ width: DAY_W, minWidth: DAY_W }}
                       >
                         <div className="font-semibold">
-                          {viewMode === "week" ? `${HEBREW_DAYS_LONG[d.getDay()]} ${dmy(d)}` : d.getDate()}
+                          {d.getDate()}
                         </div>
                         <div className="opacity-70">
-                          {viewMode === "week"
-                            ? `${count} שיעורים`
-                            : `${HEBREW_DAYS_SHORT[d.getDay()]}${count ? ` · ${count}` : ""}`}
+                          {`${HEBREW_DAYS_SHORT[d.getDay()]}${count ? ` · ${count}` : ""}`}
                         </div>
                       </div>
                     );
@@ -587,7 +674,7 @@ const AdminActivityCalendar = () => {
                       const lessons = row.byDate.get(key) ?? [];
                       const isToday = key === todayStr;
                       const isWeekend = d.getDay() === 6;
-                      const shown = viewMode === "week" ? lessons : lessons.slice(0, 4);
+                      const shown = lessons.slice(0, 4);
                       return (
                         <div
                           key={key}
@@ -604,17 +691,11 @@ const AdminActivityCalendar = () => {
                                 title={`${l.studentName}${l.instrument ? ` · ${l.instrument}` : ""}${
                                   l.schoolName ? ` · ${l.schoolName}` : ""
                                 } · ${STATUS_LABELS[l.status] ?? l.status}${l.notes ? ` · ${l.notes}` : ""}`}
-                                className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight ${
-                                  viewMode === "week" ? "text-start" : "text-center"
-                                } ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
+                                className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight text-center ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
                               >
                                 <span className="block truncate font-medium">{l.studentName}</span>
-                                {(l.instrument || (viewMode === "week" && l.schoolName)) && (
-                                  <span className="block truncate opacity-70">
-                                    {[l.instrument, viewMode === "week" ? l.schoolName : ""]
-                                      .filter(Boolean)
-                                      .join(" · ")}
-                                  </span>
+                                {l.instrument && (
+                                  <span className="block truncate opacity-70">{l.instrument}</span>
                                 )}
                               </div>
                             ))}
