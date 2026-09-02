@@ -41,12 +41,14 @@ const TeacherTravelSummary = () => {
   const routeKey = "/teacher/travel-summary";
   useListStatePreservation(routeKey);
 
-  // Default is always the CURRENT month; an explicit ?month= offset (from
-  // dashboard links) overrides it. We intentionally do not persist the
-  // selection across visits so a new month never shows stale data.
-  const currentMonthKey = useMemo(() => {
+  // Default is the PREVIOUS month (salary is paid for the previous month's
+  // work). An explicit ?month= offset (from dashboard links) overrides it.
+  // We intentionally do not persist the selection across visits so a new
+  // month never shows stale data.
+  const defaultMonthKey = useMemo(() => {
     const now = new Date();
-    return `${now.getFullYear()}-${now.getMonth()}`;
+    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return `${d.getFullYear()}-${d.getMonth()}`;
   }, []);
   const urlMonthKey = useMemo(() => {
     if (!searchParams.get("month")) return null;
@@ -55,7 +57,7 @@ const TeacherTravelSummary = () => {
     return `${d.getFullYear()}-${d.getMonth()}`;
   }, [searchParams]);
 
-  const [selected, setSelected] = useState(urlMonthKey ?? currentMonthKey);
+  const [selected, setSelected] = useState(urlMonthKey ?? defaultMonthKey);
   useEffect(() => {
     if (urlMonthKey && urlMonthKey !== selected) setSelected(urlMonthKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
