@@ -41,13 +41,13 @@ const TeacherTravelSummary = () => {
   const routeKey = "/teacher/travel-summary";
   useListStatePreservation(routeKey);
 
-  // Default is the PREVIOUS month (salary is paid for the previous month's
-  // work). An explicit ?month= offset (from dashboard links) overrides it.
+  // This route represents current-month travel by default. The salary card
+  // passes ?month=-1 explicitly for the previous month.
   // We intentionally do not persist the selection across visits so a new
   // month never shows stale data.
   const defaultMonthKey = useMemo(() => {
     const now = new Date();
-    const d = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const d = new Date(now.getFullYear(), now.getMonth(), 1);
     return `${d.getFullYear()}-${d.getMonth()}`;
   }, []);
   const urlMonthKey = useMemo(() => {
