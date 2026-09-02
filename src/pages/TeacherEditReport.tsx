@@ -31,6 +31,7 @@ import {
 import { ArrowRight, CalendarIcon, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { cmpHe } from "@/lib/sortHebrew";
 import type { Database } from "@/integrations/supabase/types";
 import PageTitle from "@/components/PageTitle";
 
