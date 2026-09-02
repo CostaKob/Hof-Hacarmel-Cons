@@ -50,7 +50,7 @@ const TOOLS_SECTIONS: DashboardItem[] = [
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
   { path: "/admin/cashflow", label: "דוח תזרים", description: "תזרים אמיתי מאייקאונט לפי תאריכי פרעון — שיקים, אשראי בתשלומים וזיכויים", icon: TrendingUp },
   { path: "/admin/travel-report", label: "דוח נסיעות מורים", description: "סיכום קילומטרים והחזרי נסיעות לפי חודש", icon: Car },
-  { path: "/admin/activity-calendar", label: "לוח פעילות מורים", description: "מי לימד, מתי ואת מי — לפי דיווחי המורים", icon: CalendarDays }
+  { path: "/admin/activity-calendar", label: "לוח פעילות מורים", description: "מי לימד, מתי ואת מי — לפי דיווחי המורים", icon: CalendarDays },
   { path: "/admin/exports", label: "דוחות וייצוא", description: "ייצוא תלמידים, מורים, דיווחים וסיכומים לאקסל", icon: FileDown },
   { path: "/admin/messaging", label: "שליחת הודעות להורים", description: "רשימת תפוצה, נוסח הודעת השיוך ולוח בקרת מיילים", icon: Mail },
 ];
