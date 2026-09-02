@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
+import { useEffect, useMemo, useState } from "react";
+import { useListStatePreservation } from "@/hooks/useListStatePreservation";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronRight, Car, CalendarDays } from "lucide-react";
 import { useTeacherProfile } from "@/hooks/useTeacherData";
