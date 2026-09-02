@@ -633,12 +633,10 @@ const AdminActivityCalendar = () => {
                         style={{ width: DAY_W, minWidth: DAY_W }}
                       >
                         <div className="font-semibold">
-                          {viewMode === "week" ? `${HEBREW_DAYS_LONG[d.getDay()]} ${dmy(d)}` : d.getDate()}
+                          {d.getDate()}
                         </div>
                         <div className="opacity-70">
-                          {viewMode === "week"
-                            ? `${count} שיעורים`
-                            : `${HEBREW_DAYS_SHORT[d.getDay()]}${count ? ` · ${count}` : ""}`}
+                          {`${HEBREW_DAYS_SHORT[d.getDay()]}${count ? ` · ${count}` : ""}`}
                         </div>
                       </div>
                     );
@@ -676,7 +674,7 @@ const AdminActivityCalendar = () => {
                       const lessons = row.byDate.get(key) ?? [];
                       const isToday = key === todayStr;
                       const isWeekend = d.getDay() === 6;
-                      const shown = viewMode === "week" ? lessons : lessons.slice(0, 4);
+                      const shown = lessons.slice(0, 4);
                       return (
                         <div
                           key={key}
@@ -693,17 +691,11 @@ const AdminActivityCalendar = () => {
                                 title={`${l.studentName}${l.instrument ? ` · ${l.instrument}` : ""}${
                                   l.schoolName ? ` · ${l.schoolName}` : ""
                                 } · ${STATUS_LABELS[l.status] ?? l.status}${l.notes ? ` · ${l.notes}` : ""}`}
-                                className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight ${
-                                  viewMode === "week" ? "text-start" : "text-center"
-                                } ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
+                                className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight text-center ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
                               >
                                 <span className="block truncate font-medium">{l.studentName}</span>
-                                {(l.instrument || (viewMode === "week" && l.schoolName)) && (
-                                  <span className="block truncate opacity-70">
-                                    {[l.instrument, viewMode === "week" ? l.schoolName : ""]
-                                      .filter(Boolean)
-                                      .join(" · ")}
-                                  </span>
+                                {l.instrument && (
+                                  <span className="block truncate opacity-70">{l.instrument}</span>
                                 )}
                               </div>
                             ))}
