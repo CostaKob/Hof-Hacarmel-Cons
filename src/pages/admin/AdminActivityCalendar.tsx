@@ -576,6 +576,15 @@ const AdminActivityCalendar = () => {
                                   {attended}/{lessons.length}
                                 </span>
                               </div>
+                              {(() => {
+                                const schools = Array.from(new Set(lessons.map((l) => l.schoolName).filter(Boolean)));
+                                return schools.length > 0 ? (
+                                  <div className="mt-0.5 flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <MapPin className="h-2.5 w-2.5 shrink-0" />
+                                    <span className="truncate">{schools.join(" · ")}</span>
+                                  </div>
+                                ) : null;
+                              })()}
                               <div className="mt-1 flex flex-col gap-0.5">
                                 {lessons.slice(0, 6).map((l) => (
                                   <div
