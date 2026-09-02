@@ -684,7 +684,7 @@ const AdminActivityCalendar = () => {
                       const lessons = row.byDate.get(key) ?? [];
                       const isToday = key === todayStr;
                       const isWeekend = d.getDay() === 6;
-                      const shown = lessons.slice(0, 4);
+                      const shown = lessons.slice(0, 10);
                       return (
                         <div
                           key={key}
