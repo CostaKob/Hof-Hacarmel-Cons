@@ -152,10 +152,10 @@ const AdminActivityCalendar = () => {
           `id, report_date, teacher_id, academic_year_id,
            teachers(first_name, last_name),
            schools(name),
-           report_lines(
-             id, status, notes,
-             enrollments(student_id, students(first_name, last_name), instruments(name))
-           )`,
+            report_lines(
+              id, status, notes,
+              enrollments(student_id, students(first_name, last_name), instruments(name), schools(name))
+            )`,
         )
         .gte("report_date", from)
         .lte("report_date", to)
