@@ -217,9 +217,8 @@ const AdminActivityCalendar = () => {
     const map = new Map<string, TeacherRow>();
     for (const r of reports) {
       const teacherName = `${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""}`.trim() || "—";
-      const schoolName = r.schools?.name ?? "";
+      const reportSchool = r.schools?.name ?? "";
       if (teacherFilter.length && !teacherFilter.includes(teacherName)) continue;
-      if (schoolFilter.length && !schoolFilter.includes(schoolName)) continue;
 
       const lessons: LessonEntry[] = [];
       for (const line of r.report_lines ?? []) {
@@ -227,6 +226,8 @@ const AdminActivityCalendar = () => {
         if (statusFilter.length && !statusFilter.includes(line.status)) continue;
         if (instrumentFilter.length && !instrumentFilter.includes(inst)) continue;
         const st = line.enrollments?.students;
+        const schoolName = reportSchool || line.enrollments?.schools?.name || "";
+        if (schoolFilter.length && !schoolFilter.includes(schoolName)) continue;
         lessons.push({
           lineId: line.id,
           studentName: `${st?.first_name ?? ""} ${st?.last_name ?? ""}`.trim() || "—",
