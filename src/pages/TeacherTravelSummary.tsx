@@ -38,20 +38,24 @@ const TeacherTravelSummary = () => {
   const [searchParams] = useSearchParams();
   const { data: teacher, isLoading } = useTeacherProfile();
 
-  const monthOffset = Number(searchParams.get("month") ?? 0);
-  const initialDate = new Date();
-  initialDate.setMonth(initialDate.getMonth() + monthOffset);
   const routeKey = "/teacher/travel-summary";
   useListStatePreservation(routeKey);
-  const [selected, setSelected] = usePersistedState(
-    routeKey,
-    "month",
-    `${initialDate.getFullYear()}-${initialDate.getMonth()}`,
-  );
-  // An explicit ?month= offset in the URL wins over the saved selection.
-  const urlMonthKey = searchParams.get("month")
-    ? `${initialDate.getFullYear()}-${initialDate.getMonth()}`
-    : null;
+
+  // Default is always the CURRENT month; an explicit ?month= offset (from
+  // dashboard links) overrides it. We intentionally do not persist the
+  // selection across visits so a new month never shows stale data.
+  const currentMonthKey = useMemo(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${now.getMonth()}`;
+  }, []);
+  const urlMonthKey = useMemo(() => {
+    if (!searchParams.get("month")) return null;
+    const d = new Date();
+    d.setMonth(d.getMonth() + Number(searchParams.get("month")));
+    return `${d.getFullYear()}-${d.getMonth()}`;
+  }, [searchParams]);
+
+  const [selected, setSelected] = useState(urlMonthKey ?? currentMonthKey);
   useEffect(() => {
     if (urlMonthKey && urlMonthKey !== selected) setSelected(urlMonthKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
