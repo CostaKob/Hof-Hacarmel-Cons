@@ -27,6 +27,7 @@ import {
 import { ArrowRight, CalendarIcon, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { cmpHe } from "@/lib/sortHebrew";
 import type { Database } from "@/integrations/supabase/types";
 import PageTitle from "@/components/PageTitle";
 
@@ -82,8 +83,13 @@ const TeacherNewReport = () => {
 
   const enrollments = useMemo(() => {
     if (!allEnrollments) return [];
-    if (!schoolId || schoolId === "all") return allEnrollments;
-    return allEnrollments.filter((e) => e.school_id === schoolId);
+    const list = !schoolId || schoolId === "all" ? allEnrollments : allEnrollments.filter((e) => e.school_id === schoolId);
+    return [...list].sort((a, b) =>
+      cmpHe(
+        `${a.students?.first_name || ""} ${a.students?.last_name || ""}`,
+        `${b.students?.first_name || ""} ${b.students?.last_name || ""}`,
+      ),
+    );
   }, [allEnrollments, schoolId]);
 
   const [lines, setLines] = useState<Record<string, LineState>>({});
