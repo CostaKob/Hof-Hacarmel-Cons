@@ -14,7 +14,7 @@ import { ChevronRight, ChevronLeft, CalendarDays, Users } from "lucide-react";
 
 const ROUTE_KEY = "admin-activity-calendar";
 
-const HEBREW_DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
+const HEBREW_DAYS_SHORT = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
 const MONTH_NAMES = [
   "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
   "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר",
@@ -39,19 +39,9 @@ const STATUS_STYLES: Record<string, string> = {
 const fmt = (d: Date) =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/** ראשון של השבוע המכיל את התאריך */
-const startOfWeek = (d: Date) => {
-  const s = new Date(d);
-  s.setHours(0, 0, 0, 0);
-  s.setDate(s.getDate() - s.getDay());
-  return s;
-};
-
-const addDays = (d: Date, n: number) => {
-  const x = new Date(d);
-  x.setDate(x.getDate() + n);
-  return x;
-};
+const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
+const daysInMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
 
 interface LessonEntry {
   lineId: string;
@@ -59,38 +49,45 @@ interface LessonEntry {
   instrument: string;
   status: string;
   notes: string | null;
+  schoolName: string;
 }
 
-interface TeacherBlock {
+interface TeacherRow {
   teacherId: string;
   teacherName: string;
-  schoolName: string;
-  reportId: string;
-  lessons: LessonEntry[];
+  /** dateStr -> lessons */
+  byDate: Map<string, LessonEntry[]>;
+  total: number;
 }
 
 const AdminActivityCalendar = () => {
   const navigate = useNavigate();
   const { selectedYearId } = useAcademicYear();
 
-  const [weekStartStr, setWeekStartStr] = usePersistedState<string>(
+  const [monthStr, setMonthStr] = usePersistedState<string>(
     ROUTE_KEY,
-    "weekStart",
-    fmt(startOfWeek(new Date())),
+    "month",
+    fmt(startOfMonth(new Date())),
   );
   const [teacherFilter, setTeacherFilter] = usePersistedState<string[]>(ROUTE_KEY, "teachers", []);
   const [schoolFilter, setSchoolFilter] = usePersistedState<string[]>(ROUTE_KEY, "schools", []);
   const [statusFilter, setStatusFilter] = usePersistedState<string[]>(ROUTE_KEY, "statuses", []);
   const [instrumentFilter, setInstrumentFilter] = usePersistedState<string[]>(ROUTE_KEY, "instruments", []);
 
-  const weekStart = useMemo(() => {
-    const [y, m, d] = weekStartStr.split("-").map(Number);
-    return startOfWeek(new Date(y, (m ?? 1) - 1, d ?? 1));
-  }, [weekStartStr]);
+  const monthDate = useMemo(() => {
+    const [y, m] = monthStr.split("-").map(Number);
+    return new Date(y, (m ?? 1) - 1, 1);
+  }, [monthStr]);
 
-  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+  const days = useMemo(
+    () =>
+      Array.from({ length: daysInMonth(monthDate) }, (_, i) =>
+        new Date(monthDate.getFullYear(), monthDate.getMonth(), i + 1),
+      ),
+    [monthDate],
+  );
   const from = fmt(days[0]);
-  const to = fmt(days[6]);
+  const to = fmt(days[days.length - 1]);
 
   const { data: reports = [], isLoading } = useQuery({
     queryKey: ["activity-calendar", selectedYearId, from, to],
@@ -143,36 +140,29 @@ const AdminActivityCalendar = () => {
     },
   });
 
-  // ─── אפשרויות סינון מתוך נתוני השבוע ───
-  const { teacherOptions, schoolOptions, instrumentOptions } = useMemo(() => {
-    const t = new Set<string>();
-    const s = new Set<string>();
-    const i = new Set<string>();
-    for (const r of reports) {
-      const name = `${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""}`.trim();
-      if (name) t.add(name);
-      if (r.schools?.name) s.add(r.schools.name);
-      for (const line of r.report_lines ?? []) {
-        const inst = line.enrollments?.instruments?.name;
-        if (inst) i.add(inst);
-      }
-    }
-    return {
-      teacherOptions: Array.from(
-        new Set(allTeachers.map((teacher: any) => `${teacher.first_name ?? ""} ${teacher.last_name ?? ""}`.trim()).filter(Boolean)),
+  const teacherOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          allTeachers
+            .map((t: any) => `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim())
+            .filter(Boolean),
+        ),
       ).sort(cmpHe),
-      schoolOptions: Array.from(
-        new Set(allSchools.map((school: any) => school.name).filter(Boolean)),
-      ).sort(cmpHe),
-      instrumentOptions: Array.from(
-        new Set(allInstruments.map((instrument: any) => instrument.name).filter(Boolean)),
-      ).sort(cmpHe),
-    };
-  }, [reports, allTeachers, allSchools, allInstruments]);
+    [allTeachers],
+  );
+  const schoolOptions = useMemo(
+    () => Array.from(new Set(allSchools.map((s: any) => s.name).filter(Boolean))).sort(cmpHe),
+    [allSchools],
+  );
+  const instrumentOptions = useMemo(
+    () => Array.from(new Set(allInstruments.map((i: any) => i.name).filter(Boolean))).sort(cmpHe),
+    [allInstruments],
+  );
 
-  // ─── קיבוץ לפי יום ← מורה ───
-  const byDay = useMemo(() => {
-    const map = new Map<string, TeacherBlock[]>();
+  // ─── קיבוץ: מורה (שורה) × יום (עמודה) ───
+  const rows = useMemo(() => {
+    const map = new Map<string, TeacherRow>();
     for (const r of reports) {
       const teacherName = `${r.teachers?.first_name ?? ""} ${r.teachers?.last_name ?? ""}`.trim() || "—";
       const schoolName = r.schools?.name ?? "";
@@ -191,42 +181,37 @@ const AdminActivityCalendar = () => {
           instrument: inst,
           status: line.status,
           notes: line.notes,
+          schoolName,
         });
       }
       if (lessons.length === 0) continue;
       lessons.sort((a, b) => cmpHe(a.studentName, b.studentName));
 
-      const list = map.get(r.report_date) ?? [];
-      list.push({
-        teacherId: r.teacher_id,
-        teacherName,
-        schoolName,
-        reportId: r.id,
-        lessons,
-      });
-      map.set(r.report_date, list);
+      const key = r.teacher_id ?? teacherName;
+      const row =
+        map.get(key) ??
+        ({ teacherId: r.teacher_id, teacherName, byDate: new Map(), total: 0 } as TeacherRow);
+      const existing = row.byDate.get(r.report_date) ?? [];
+      row.byDate.set(r.report_date, [...existing, ...lessons]);
+      row.total += lessons.length;
+      map.set(key, row);
     }
-    for (const list of map.values()) list.sort((a, b) => cmpHe(a.teacherName, b.teacherName));
-    return map;
+    return Array.from(map.values()).sort((a, b) => cmpHe(a.teacherName, b.teacherName));
   }, [reports, teacherFilter, schoolFilter, statusFilter, instrumentFilter]);
 
-  const weekTotals = useMemo(() => {
-    let lessons = 0;
-    const teachers = new Set<string>();
-    for (const blocks of byDay.values()) {
-      for (const b of blocks) {
-        lessons += b.lessons.length;
-        teachers.add(b.teacherId);
-      }
-    }
-    return { lessons, teachers: teachers.size };
-  }, [byDay]);
+  const totals = useMemo(
+    () => ({ teachers: rows.length, lessons: rows.reduce((s, r) => s + r.total, 0) }),
+    [rows],
+  );
 
   const todayStr = fmt(new Date());
-  const rangeLabel = `${days[0].getDate()} ${MONTH_NAMES[days[0].getMonth()]} – ${days[6].getDate()} ${MONTH_NAMES[days[6].getMonth()]} ${days[6].getFullYear()}`;
+  const monthLabel = `${MONTH_NAMES[monthDate.getMonth()]} ${monthDate.getFullYear()}`;
 
   const hasFilters =
     teacherFilter.length || schoolFilter.length || statusFilter.length || instrumentFilter.length;
+
+  const DAY_W = 116;
+  const NAME_W = 168;
 
   return (
     <AdminLayout title="לוח פעילות מורים" fullWidth>
@@ -247,24 +232,24 @@ const AdminActivityCalendar = () => {
               variant="outline"
               size="icon"
               className="h-11 w-11 rounded-xl"
-              aria-label="שבוע הבא"
-              onClick={() => setWeekStartStr(fmt(addDays(weekStart, 7)))}
+              aria-label="חודש הבא"
+              onClick={() => setMonthStr(fmt(addMonths(monthDate, 1)))}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
               className="h-11 rounded-xl"
-              onClick={() => setWeekStartStr(fmt(startOfWeek(new Date())))}
+              onClick={() => setMonthStr(fmt(startOfMonth(new Date())))}
             >
-              השבוע
+              החודש
             </Button>
             <Button
               variant="outline"
               size="icon"
               className="h-11 w-11 rounded-xl"
-              aria-label="שבוע קודם"
-              onClick={() => setWeekStartStr(fmt(addDays(weekStart, -7)))}
+              aria-label="חודש קודם"
+              onClick={() => setMonthStr(fmt(addMonths(monthDate, -1)))}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>
@@ -273,10 +258,10 @@ const AdminActivityCalendar = () => {
 
         <div className="rounded-2xl border bg-card p-4 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-semibold">{rangeLabel}</span>
+            <span className="font-semibold">{monthLabel}</span>
             <span className="text-sm text-muted-foreground flex items-center gap-1.5">
               <Users className="h-4 w-4" />
-              {weekTotals.teachers} מורים · {weekTotals.lessons} שיעורים
+              {totals.teachers} מורים · {totals.lessons} שיעורים
             </span>
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -334,64 +319,100 @@ const AdminActivityCalendar = () => {
 
         {isLoading ? (
           <div className="py-12 text-center text-muted-foreground">טוען…</div>
+        ) : rows.length === 0 ? (
+          <div className="rounded-2xl border bg-card py-16 text-center text-muted-foreground">
+            אין דיווחים בחודש זה
+          </div>
         ) : (
-          <div className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-7">
-            {days.map((day) => {
-              const key = fmt(day);
-              const blocks = byDay.get(key) ?? [];
-              const isToday = key === todayStr;
-              return (
-                <div
-                  key={key}
-                  className={`rounded-2xl border bg-card overflow-hidden ${isToday ? "border-primary ring-1 ring-primary/30" : ""}`}
-                >
-                  <div className={`px-3 py-2 border-b text-sm font-semibold flex items-center justify-between ${isToday ? "bg-primary/10 text-primary" : "bg-muted/40"}`}>
-                    <span>{HEBREW_DAYS[day.getDay()]}</span>
-                    <span className="text-xs font-normal opacity-70">
-                      {day.getDate()}/{day.getMonth() + 1}
-                    </span>
+          <div className="rounded-2xl border bg-card overflow-hidden">
+            <div className="overflow-x-auto overscroll-contain">
+              <div style={{ minWidth: NAME_W + days.length * DAY_W }}>
+                {/* כותרת ימים */}
+                <div className="flex sticky top-0 z-20 bg-muted/60 backdrop-blur border-b">
+                  <div
+                    className="sticky end-auto start-0 z-30 bg-muted/80 border-e px-3 py-2 text-xs font-semibold flex items-center"
+                    style={{ width: NAME_W, minWidth: NAME_W, insetInlineStart: 0, position: "sticky" }}
+                  >
+                    מורה
                   </div>
-                  <div className="p-2 space-y-2">
-                    {blocks.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-4">אין דיווחים</p>
-                    ) : (
-                      blocks.map((b) => (
-                        <div key={b.reportId} className="rounded-xl border bg-background p-2">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/admin/teachers/${b.teacherId}/reports`)}
-                            className="w-full text-right"
-                          >
-                            <span className="text-sm font-semibold text-primary hover:underline block truncate">
-                              {b.teacherName}
-                            </span>
-                            {b.schoolName && (
-                              <span className="text-[11px] text-muted-foreground block truncate">
-                                {b.schoolName} · {b.lessons.length} שיעורים
-                              </span>
-                            )}
-                          </button>
-                          <ul className="mt-1.5 space-y-1">
-                            {b.lessons.map((l) => (
-                              <li
+                  {days.map((d) => {
+                    const key = fmt(d);
+                    const isToday = key === todayStr;
+                    const isWeekend = d.getDay() === 6;
+                    return (
+                      <div
+                        key={key}
+                        className={`px-1 py-2 text-center border-e text-[11px] leading-tight ${
+                          isToday ? "bg-primary/15 text-primary font-bold" : isWeekend ? "bg-muted/80" : ""
+                        }`}
+                        style={{ width: DAY_W, minWidth: DAY_W }}
+                      >
+                        <div className="font-semibold">{d.getDate()}</div>
+                        <div className="opacity-70">{HEBREW_DAYS_SHORT[d.getDay()]}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* שורות מורים */}
+                {rows.map((row, idx) => (
+                  <div
+                    key={row.teacherId ?? row.teacherName}
+                    className={`flex border-b last:border-b-0 ${idx % 2 ? "bg-muted/20" : ""}`}
+                  >
+                    <div
+                      className="sticky z-10 bg-card border-e px-3 py-2 flex flex-col justify-center"
+                      style={{ width: NAME_W, minWidth: NAME_W, insetInlineStart: 0, position: "sticky" }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/admin/teachers/${row.teacherId}/reports`)}
+                        className="text-right text-sm font-semibold text-primary hover:underline truncate"
+                      >
+                        {row.teacherName}
+                      </button>
+                      <span className="text-[11px] text-muted-foreground">
+                        {row.total} שיעורים
+                      </span>
+                    </div>
+                    {days.map((d) => {
+                      const key = fmt(d);
+                      const lessons = row.byDate.get(key) ?? [];
+                      const isToday = key === todayStr;
+                      const isWeekend = d.getDay() === 6;
+                      return (
+                        <div
+                          key={key}
+                          className={`border-e p-1 align-top ${
+                            isToday ? "bg-primary/5" : isWeekend ? "bg-muted/30" : ""
+                          }`}
+                          style={{ width: DAY_W, minWidth: DAY_W }}
+                        >
+                          <div className="flex flex-col gap-1">
+                            {lessons.map((l) => (
+                              <div
                                 key={l.lineId}
-                                title={`${l.studentName}${l.instrument ? ` · ${l.instrument}` : ""} · ${STATUS_LABELS[l.status] ?? l.status}${l.notes ? ` · ${l.notes}` : ""}`}
-                                className={`rounded-lg border px-2 py-1 text-[11px] leading-tight ${STATUS_STYLES[l.status] ?? "bg-muted"}`}
+                                title={`${l.studentName}${l.instrument ? ` · ${l.instrument}` : ""}${
+                                  l.schoolName ? ` · ${l.schoolName}` : ""
+                                } · ${STATUS_LABELS[l.status] ?? l.status}${l.notes ? ` · ${l.notes}` : ""}`}
+                                className={`rounded-md border px-1.5 py-0.5 text-[10px] leading-tight text-center ${
+                                  STATUS_STYLES[l.status] ?? "bg-muted"
+                                }`}
                               >
                                 <span className="block truncate font-medium">{l.studentName}</span>
                                 {l.instrument && (
                                   <span className="block truncate opacity-70">{l.instrument}</span>
                                 )}
-                              </li>
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         </div>
-                      ))
-                    )}
+                      );
+                    })}
                   </div>
-                </div>
-              );
-            })}
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
