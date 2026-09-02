@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -28,11 +29,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  present: "bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-900",
-  double_lesson: "bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-200 dark:border-sky-900",
-  justified_absence: "bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900",
-  unjustified_absence: "bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-900",
-  vacation: "bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:text-purple-200 dark:border-purple-900",
+  present: "bg-accent text-accent-foreground border-primary/30",
+  double_lesson: "bg-secondary text-secondary-foreground border-primary/20",
+  justified_absence: "bg-muted text-muted-foreground border-border",
+  unjustified_absence: "bg-destructive/10 text-destructive border-destructive/30",
+  vacation: "bg-primary/10 text-primary border-primary/30",
 };
 
 const fmt = (d: Date) =>
@@ -91,12 +92,13 @@ const AdminActivityCalendar = () => {
   const to = fmt(days[6]);
 
   const { data: reports = [], isLoading } = useQuery({
-    queryKey: ["activity-calendar", from, to],
+    queryKey: ["activity-calendar", selectedYearId, from, to],
+    enabled: !!selectedYearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reports")
         .select(
-          `id, report_date, teacher_id,
+          `id, report_date, teacher_id, academic_year_id,
            teachers(first_name, last_name),
            schools(name),
            report_lines(
@@ -105,7 +107,8 @@ const AdminActivityCalendar = () => {
            )`,
         )
         .gte("report_date", from)
-        .lte("report_date", to);
+        .lte("report_date", to)
+        .eq("academic_year_id", selectedYearId!);
       if (error) throw error;
       return (data ?? []) as any[];
     },
@@ -191,7 +194,7 @@ const AdminActivityCalendar = () => {
     teacherFilter.length || schoolFilter.length || statusFilter.length || instrumentFilter.length;
 
   return (
-    <AdminLayout>
+    <AdminLayout title="לוח פעילות מורים" fullWidth>
       <PageTitle title="לוח פעילות מורים" />
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
