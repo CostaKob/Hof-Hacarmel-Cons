@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { usePersistedState } from "@/hooks/useListStatePreservation";
 import { cmpHe } from "@/lib/sortHebrew";
-import { isNoTeacherEnrollment } from "@/lib/constants";
+
 import {
   ChevronRight,
   ChevronLeft,
