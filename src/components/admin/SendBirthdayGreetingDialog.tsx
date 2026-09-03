@@ -60,7 +60,7 @@ const SendBirthdayGreetingDialog = ({
         <DialogHeader>
           <DialogTitle>שליחת ברכת יום הולדת</DialogTitle>
           <DialogDescription>
-            {waPhone ? `הברכה תישלח בוואטסאפ למספר ${phone}` : "אין מספר טלפון למורה — ניתן לבחור נמען בוואטסאפ"}
+            הברכה תיפתח בוואטסאפ — בחרו את קבוצת המורים כנמען
           </DialogDescription>
         </DialogHeader>
 
