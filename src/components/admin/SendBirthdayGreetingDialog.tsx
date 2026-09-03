@@ -12,7 +12,9 @@ import { toast } from "sonner";
 
 function normalizeWaPhone(phone?: string | null): string {
   if (!phone) return "";
-  return String(phone).replace(/\D/g, "").replace(/^0/, "");
+  const digits = String(phone).replace(/\D/g, "");
+  if (digits.startsWith("972")) return digits.slice(3);
+  return digits.replace(/^0/, "");
 }
 
 export function buildBirthdayGreeting(teacherName: string): string {
