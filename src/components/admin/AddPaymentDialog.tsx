@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
+import { allocatePayment } from "@/lib/familyPaymentAllocation";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 import BankBranchPicker from "@/components/admin/BankBranchPicker";
 
