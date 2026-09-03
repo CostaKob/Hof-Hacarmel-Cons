@@ -1462,8 +1462,6 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
               </div>
             )}
 
-              </div>
-            )}
 
             {(isEdit || paymentMethod !== "credit_card") && (
               <div>
