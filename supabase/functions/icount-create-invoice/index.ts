@@ -196,7 +196,7 @@ Deno.serve(async (req: Request) => {
       const e = ref.enrollment_id ? enrollMap[ref.enrollment_id] : null;
       const prefix = isCreditDoc ? "זיכוי" : "שכר לימוד";
       const headerLine = `${prefix} — ${studentFullName}${ref.month_reference ? ` (${ref.month_reference})` : ""}`;
-      if (!e) return headerLine;
+      if (!e) return ref.label ? `${ref.label}${ref.month_reference ? ` (${ref.month_reference})` : ""}` : headerLine;
       const parts = [
         (e as any).schools?.name && `שלוחה: ${(e as any).schools.name}`,
         (e as any).instruments?.name && `כלי: ${(e as any).instruments.name}`,
