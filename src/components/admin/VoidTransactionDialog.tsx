@@ -91,6 +91,7 @@ export default function VoidTransactionDialog({
       return null;
     },
     onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ["family-details"] });
       queryClient.invalidateQueries({ queryKey: ["family-payments"] });
       queryClient.invalidateQueries({ queryKey: ["student-payments"] });
       queryClient.invalidateQueries({ queryKey: ["private-payments"] });
