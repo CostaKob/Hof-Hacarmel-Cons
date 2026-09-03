@@ -270,12 +270,15 @@ Deno.serve(async (req: Request) => {
       .select()
       .single();
 
-    if (insErr) {
+    if (insErr || !credit) {
       console.error("[insert credit row]", insErr);
+      return new Response(JSON.stringify({ error: "קבלת הזיכוי הופקה, אך רישום הזיכוי במערכת נכשל", details: insErr }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     return new Response(JSON.stringify({
-      ok: true, doc_id: docId, doc_number: docNumber, url: docUrl, credit_payment_id: credit?.id,
+      ok: true, doc_id: docId, doc_number: docNumber, url: docUrl, credit_payment_id: credit.id,
       sent_to_email: email || null, refund_amount: Math.abs(refundAmount),
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {

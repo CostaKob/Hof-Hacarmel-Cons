@@ -50,6 +50,7 @@ import SendFamilyAssignmentMessage from "@/components/admin/SendFamilyAssignment
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 import RefundSuccessDialog, { type RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
 import ChequeCancellationTracking from "@/components/admin/ChequeCancellationTracking";
+import VoidTransactionDialog, { type VoidTarget } from "@/components/admin/VoidTransactionDialog";
 import { createChequeWithdrawalRequest, parseChequeMeta, openLetter } from "@/lib/chequeCancellation";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import { studentShareOfPayment } from "@/lib/familyPaymentAllocation";
@@ -95,6 +96,7 @@ const AdminFamilyCard = () => {
   const [editingPayment, setEditingPayment] = useState<any>(null);
   const [familyCtx, setFamilyCtx] = useState<FamilyPaymentContext | null>(null);
   const [refundTarget, setRefundTarget] = useState<any>(null);
+  const [voidTarget, setVoidTarget] = useState<VoidTarget | null>(null);
   const [refundAmount, setRefundAmount] = useState<string>("");
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [paymentSortBy, setPaymentSortBy] = useState<"payment_date" | "paid_at">("payment_date");
@@ -1008,6 +1010,11 @@ const AdminFamilyCard = () => {
                     .filter((x: any) => rows.some((r: any) => r.id === x.refund_of_payment_id))
                     .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
                   const remaining = Math.max(0, groupTotal - refundedSoFar);
+                  const isVoided = payments.some(
+                    (x: any) =>
+                      rows.some((r: any) => r.id === x.refund_of_payment_id) &&
+                      String(x.notes ?? "").startsWith("ביטול עסקה"),
+                  );
                   // Refunds are performed only from the family payment dialog.
 
 
@@ -1026,7 +1033,7 @@ const AdminFamilyCard = () => {
                     statusLabel = "ממתין לתשלום";
                     statusClass = "bg-amber-500/10 text-amber-700 border-amber-500/30";
                   } else if (refundedSoFar >= groupTotal - 0.005 && refundedSoFar > 0) {
-                    statusLabel = "זוכה במלואו";
+                    statusLabel = isVoided ? "עסקה מבוטלת" : "זוכה במלואו";
                     statusClass = "bg-muted text-muted-foreground border-border";
                   } else if (refundedSoFar > 0) {
                     statusLabel = "זוכה חלקית";
@@ -1196,6 +1203,28 @@ const AdminFamilyCard = () => {
                                 : <Trash2 className="h-4 w-4" />}
                             </Button>
                           </>
+                        )}
+
+                        {!isCredit && hasDoc && !isPending && remaining > 0.005 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 rounded-lg text-xs text-destructive border-destructive/30 hover:bg-destructive/10"
+                            title="ביטול עסקה — זיכוי מלא והסתרה מהדוחות"
+                            onClick={() =>
+                              setVoidTarget({
+                                paymentId: p.id,
+                                studentId: p.student_id ?? null,
+                                academicYearId: p.academic_year_id ?? null,
+                                paymentMethod: p.payment_method ?? null,
+                                docNumber: p.icount_doc_number ?? null,
+                                amount: remaining,
+                                studentName: p.student_id ? nameById.get(p.student_id) : null,
+                              })
+                            }
+                          >
+                            <Ban className="h-3.5 w-3.5 ms-1" />בטל עסקה
+                          </Button>
                         )}
 
                         <span className={`font-semibold text-sm whitespace-nowrap ${isCredit ? "text-destructive" : "text-primary"}`} dir="ltr">
@@ -1684,6 +1713,7 @@ const AdminFamilyCard = () => {
       />
 
       <RefundSuccessDialog info={refundSuccess} onClose={() => setRefundSuccess(null)} />
+      <VoidTransactionDialog target={voidTarget} onClose={() => setVoidTarget(null)} />
 
 
       <StopEnrollmentDialog
