@@ -200,10 +200,12 @@ Deno.serve(async (req: Request) => {
     };
 
     // Merge identical descriptions (e.g. a cheque split repeats the same tuition line per cheque)
+    // Keep the sign of each breakdown line (discounts are negative) so the items
+    // total matches the actual payment amount.
     const mergedItems = new Map<string, number>();
     for (const ref of lineRefs) {
       const desc = buildItemDescription(ref);
-      mergedItems.set(desc, (mergedItems.get(desc) ?? 0) + Math.abs(Number(ref.amount || 0)));
+      mergedItems.set(desc, (mergedItems.get(desc) ?? 0) + Number(ref.amount || 0));
     }
     const items = [...mergedItems.entries()].map(([description, amount]) => ({
       description,
