@@ -116,6 +116,7 @@ Deno.serve(async (req: Request) => {
       splitInfo,
       forceNewPaypage,
       pageTitleName,
+      note,
     } = await req.json().catch(() => ({}));
 
 
