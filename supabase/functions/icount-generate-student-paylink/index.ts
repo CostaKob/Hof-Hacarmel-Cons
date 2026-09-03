@@ -233,6 +233,7 @@ Deno.serve(async (req: Request) => {
         yearName: academicYearName ?? null,
         splitInfo: splitInfo ?? null,
         pageTitleName: pageTitleName ?? null,
+        note: note ?? null,
       });
 
       baseUrl = created.url;
