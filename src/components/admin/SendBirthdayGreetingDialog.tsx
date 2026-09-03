@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -20,6 +22,7 @@ export function buildBirthdayGreeting(teacherName: string): string {
 interface Props {
   teacherName: string;
   phone?: string | null;
+  teacherId?: string | null;
   triggerVariant?: "default" | "outline" | "secondary" | "ghost";
   triggerClassName?: string;
   triggerLabel?: string;
@@ -28,18 +31,29 @@ interface Props {
 const SendBirthdayGreetingDialog = ({
   teacherName,
   phone,
+  teacherId,
   triggerVariant = "outline",
   triggerClassName = "h-11 rounded-xl",
   triggerLabel = "שלח ברכה",
 }: Props) => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState(buildBirthdayGreeting(teacherName));
+  const { data: teacher } = useQuery({
+    queryKey: ["birthday-greeting-teacher", teacherId],
+    enabled: open && !!teacherId && !phone,
+    queryFn: async () => {
+      if (!teacherId) return null;
+      const { data, error } = await supabase.from("teachers").select("phone").eq("id", teacherId).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   useEffect(() => {
     if (open) setMessage(buildBirthdayGreeting(teacherName));
   }, [open, teacherName]);
 
-  const waPhone = normalizeWaPhone(phone);
+  const waPhone = normalizeWaPhone(phone ?? teacher?.phone);
 
   const sendWhatsApp = () => {
     const text = encodeURIComponent(message);
