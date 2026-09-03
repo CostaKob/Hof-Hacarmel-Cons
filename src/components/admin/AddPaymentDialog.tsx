@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
+import { allocatePayment } from "@/lib/familyPaymentAllocation";
 import BankTransferRefundDialog, { type BankRefundDefaults } from "@/components/admin/BankTransferRefundDialog";
 import BankBranchPicker from "@/components/admin/BankBranchPicker";
 
@@ -434,23 +435,83 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return items;
   }, [familyContext, activeEnrollments, yearFull, settings, discountTypes, draft, student, studentId]);
 
+  // ---- Remaining-balance defaults ----
+  // If part of the tuition was already paid (e.g. one parent paid half), the
+  // pre-filled amounts should reflect only what's still owed — not the full sum.
+  const itemStudentIds = useMemo(
+    () => [...new Set(paymentItems.map((it) => it.studentId).filter(Boolean))].sort(),
+    [paymentItems],
+  );
+
+  const { data: priorPayments = [], isFetched: priorPaymentsFetched } = useQuery({
+    queryKey: ["addpay-prior-payments", academicYearId, itemStudentIds],
+    enabled: open && !!academicYearId && itemStudentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payments")
+        .select("id, student_id, amount, payment_status, transaction_type, refund_of_payment_id, enrollment_breakdown")
+        .in("student_id", itemStudentIds)
+        .eq("academic_year_id", academicYearId!);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  // paymentItems with defaultAmount scaled down to the remaining balance per child.
+  const displayItems: PaymentItem[] = useMemo(() => {
+    if (!priorPaymentsFetched || priorPayments.length === 0) return paymentItems;
+
+    // Net paid per child (payments minus credits), splitting family payments
+    // across siblings the same way the reports do.
+    const children = itemStudentIds.map((id) => {
+      const name = (familyContext?.childrenNames?.[id] ??
+        (id === studentId && student ? `${student.first_name ?? ""} ${student.last_name ?? ""}` : "")
+      ).trim();
+      const sp = name.indexOf(" ");
+      return { id, first_name: sp > 0 ? name.slice(0, sp) : name, last_name: sp > 0 ? name.slice(sp + 1) : "" };
+    });
+    const paidByStudent = new Map<string, number>();
+    for (const p of priorPayments) {
+      if (p.payment_status === "pending") continue;
+      const alloc = allocatePayment(p, children, priorPayments);
+      for (const [sid, share] of alloc) {
+        paidByStudent.set(sid, (paidByStudent.get(sid) ?? 0) + share);
+      }
+    }
+
+    // Scale each child's lines (charges and discounts alike) so their sum
+    // equals the remaining balance rather than the full tuition.
+    return paymentItems.map((it) => {
+      const paid = paidByStudent.get(it.studentId) ?? 0;
+      if (paid <= 0) return it;
+      const sibs = paymentItems.filter((x) => x.studentId === it.studentId);
+      const totalDue = sibs.reduce((s, x) => s + x.defaultAmount, 0);
+      if (totalDue <= 0) return it;
+      const remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
+      const scale = Math.min(1, remaining / totalDue);
+      return { ...it, defaultAmount: Math.round(it.defaultAmount * scale * 100) / 100 };
+    });
+  }, [paymentItems, priorPayments, priorPaymentsFetched, itemStudentIds, familyContext, studentId, student]);
+
   // Auto-fill selectedAmounts with defaults on open (new mode only, and once per open).
   const [defaultsApplied, setDefaultsApplied] = useState(false);
   useEffect(() => {
     if (!open) { setDefaultsApplied(false); return; }
     if (isEdit) return;
     if (defaultsApplied) return;
-    if (paymentItems.length === 0) return;
+    if (displayItems.length === 0) return;
     // Wait for calc-based defaults before applying, unless we're in family mode
     // where items are pre-computed by the caller.
     if (!familyContext && (!yearFull || !settings)) return;
+    // Wait for prior payments so defaults reflect the remaining balance.
+    if (!priorPaymentsFetched) return;
     const next: Record<string, string> = {};
-    for (const it of paymentItems) {
+    for (const it of displayItems) {
       if (it.defaultAmount !== 0) next[it.id] = String(it.defaultAmount);
     }
     setSelectedAmounts(next);
     setDefaultsApplied(true);
-  }, [open, isEdit, paymentItems, yearFull, settings, defaultsApplied, familyContext]);
+  }, [open, isEdit, displayItems, yearFull, settings, defaultsApplied, familyContext, priorPaymentsFetched]);
 
 
 
