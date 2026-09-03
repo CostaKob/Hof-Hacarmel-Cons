@@ -1139,7 +1139,12 @@ const AdminFamilyCard = () => {
                           <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs"
                             disabled={createInvoiceMutation.isPending}
                             onClick={() => {
-                              setInvoiceNote("");
+                              // תשלום חלקי: אם נשארה יתרה לגבייה — נציע הערה אוטומטית לקבלה
+                              setInvoiceNote(
+                                balance > 0
+                                  ? `תשלום חלקי — יתרה לתשלום: ₪${balance.toLocaleString("he-IL")}`
+                                  : "",
+                              );
                               setPendingInvoiceParams(
                                 p.payment_group_id ? { groupId: p.payment_group_id } : { paymentId: p.id },
                               );
