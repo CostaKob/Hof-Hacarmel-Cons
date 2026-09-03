@@ -153,16 +153,24 @@ Deno.serve(async (req: Request) => {
     // - Combined single-row payment with `enrollment_breakdown`: one item per breakdown entry.
     // - Group of payments (legacy): one item per payment row.
     // - Single payment: one item.
-    type LineRef = { enrollment_id: string | null; amount: number; month_reference?: string | null };
+    type LineRef = {
+      enrollment_id: string | null;
+      amount: number;
+      month_reference?: string | null;
+      label?: string | null;
+    };
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const lineRefs: LineRef[] = [];
     for (const p of payments) {
       const breakdown = Array.isArray(p.enrollment_breakdown) ? p.enrollment_breakdown : null;
       if (breakdown && breakdown.length > 0) {
         for (const b of breakdown) {
+          const eid = typeof b.enrollment_id === "string" && UUID_RE.test(b.enrollment_id) ? b.enrollment_id : null;
           lineRefs.push({
-            enrollment_id: b.enrollment_id ?? null,
+            enrollment_id: eid,
             amount: Number(b.amount || 0),
             month_reference: p.month_reference,
+            label: typeof b.label === "string" ? b.label : null,
           });
         }
       } else {
@@ -174,7 +182,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const enrollmentIds = lineRefs.map((l) => l.enrollment_id).filter(Boolean) as string[];
+    const enrollmentIds = [...new Set(lineRefs.map((l) => l.enrollment_id).filter((id): id is string => !!id && UUID_RE.test(id)))];
     const enrollMap: Record<string, any> = {};
     if (enrollmentIds.length > 0) {
       const { data: ens } = await supabase
