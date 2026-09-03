@@ -886,6 +886,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
+      // If the admin collects less than the remaining balance, surface the
+      // unpaid amount on the iCount payment page so the parent sees the full picture.
+      const totalDue = displayItems.reduce((s, it) => s + it.defaultAmount, 0);
+      const paylinkNote = totalSelected < totalDue - 0.01
+        ? `תשלום חלקי — יתרה לתשלום: ₪${Math.round((totalDue - totalSelected) * 100) / 100}`
+        : undefined;
+
       // When the student/family has two parents — or when an extra payer was
       // entered manually — bill that payer explicitly (overrides the family payer).
       const chosenParentPayer = (hasTwoParents || isCustomPayer) && selectedPayerParent?.name
