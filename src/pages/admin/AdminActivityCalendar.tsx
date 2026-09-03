@@ -522,7 +522,7 @@ const AdminActivityCalendar = () => {
         ) : viewMode === "week" ? (
           /* ─── תצוגת שבוע: עמודה לכל יום, ריבוע לכל מורה ─── */
           <div className="rounded-2xl border bg-card overflow-hidden">
-            <div className="overflow-x-auto overscroll-contain">
+            <div className="overflow-x-auto overscroll-x-contain">
               <div className="grid" style={{ gridTemplateColumns: `repeat(7, minmax(${DAY_W}px, 1fr))`, minWidth: 7 * DAY_W }}>
                 {days.map((d) => {
                   const key = fmt(d);
@@ -619,7 +619,7 @@ const AdminActivityCalendar = () => {
           </div>
         ) : (
           <div className="rounded-2xl border bg-card overflow-hidden">
-            <div className="overflow-x-auto overscroll-contain">
+            <div className="overflow-x-auto overscroll-x-contain">
               <div style={{ minWidth: NAME_W + days.length * DAY_W }}>
                 {/* כותרת ימים */}
                 <div className="flex sticky top-0 z-20 bg-muted/60 backdrop-blur border-b">
