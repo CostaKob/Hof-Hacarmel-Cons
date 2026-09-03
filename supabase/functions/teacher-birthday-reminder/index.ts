@@ -68,6 +68,29 @@ Deno.serve(async (req) => {
       })
     }
 
+    // In-app weekly heads-up: one notification listing upcoming birthdays
+    // (so admins also see it inside the app, not only by email)
+    if (upcoming.length > 0) {
+      const fmt = (d: Date) => d.toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' })
+      const body = upcoming.map((t: any) => `• ${t.first_name} ${t.last_name} — ${fmt(t.date)}`).join('\n')
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('type', 'teacher_birthday_upcoming')
+        .gte('created_at', new Date(nowIsrael.getFullYear(), nowIsrael.getMonth(), nowIsrael.getDate()).toISOString())
+        .limit(1)
+      if (!existing || existing.length === 0) {
+        await supabase.rpc('create_notification', {
+          _type: 'teacher_birthday_upcoming',
+          _title: `🎂 ימי הולדת של מורים בשבוע הקרוב (${upcoming.length})`,
+          _body: body,
+          _link_path: '/admin/teachers',
+          _entity_id: null,
+          _year_id: yearId,
+        })
+      }
+    }
+
     // Email to admin (only when there is something to report)
     if (todayBirthdays.length > 0 || upcoming.length > 0) {
       const fmt = (d: Date) => d.toLocaleDateString('he-IL', { weekday: 'long', day: '2-digit', month: '2-digit' })
