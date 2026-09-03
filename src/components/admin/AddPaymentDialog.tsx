@@ -519,6 +519,44 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return Object.values(selectedAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
   }, [selectedAmounts]);
 
+  // ---- Proportional split of a partial amount across all selected lines ----
+  // The admin types the amount actually being paid now (e.g. half in cash),
+  // and every line (charges and discounts alike) is scaled proportionally so
+  // the receipt keeps showing all enrollments and discounts.
+  const [targetTotal, setTargetTotal] = useState("");
+
+  const applyTargetTotal = () => {
+    const target = parseFloat(targetTotal);
+    if (!isFinite(target) || target <= 0) {
+      toast.error("יש להזין סכום כולל חיובי");
+      return;
+    }
+    const entries = Object.entries(selectedAmounts).map(([id, v]) => [id, parseFloat(v) || 0] as const);
+    const current = entries.reduce((s, [, v]) => s + v, 0);
+    if (current <= 0) {
+      toast.error("אין שורות לחלוקה");
+      return;
+    }
+    const scale = target / current;
+    const next: Record<string, string> = {};
+    for (const [id, v] of entries) next[id] = String(Math.round(v * scale * 100) / 100);
+    // Fix rounding drift on the largest positive line.
+    const sum = Object.values(next).reduce((s, v) => s + (parseFloat(v) || 0), 0);
+    const drift = Math.round((target - sum) * 100) / 100;
+    if (drift !== 0) {
+      let biggestId: string | null = null;
+      let biggest = 0;
+      for (const [id, v] of Object.entries(next)) {
+        const n = parseFloat(v) || 0;
+        if (n > biggest) { biggest = n; biggestId = id; }
+      }
+      if (biggestId) next[biggestId] = String(Math.round((biggest + drift) * 100) / 100);
+    }
+    setSelectedAmounts(next);
+    toast.success(`הסכום חולק יחסית בין ${entries.length} שורות`);
+  };
+
+
   // In credit mode the amounts are refund amounts — never pre-fill them with the
   // full charge of the enrollment (that confuses the user).
   const initialAmountFor = (it: PaymentItem) =>
@@ -1099,12 +1137,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setPaymentDate(today);
     setPaymentMethod("credit_card");
     setInstallments("1");
-    setNotes("");
-    setCheckNumber("");
-    setTransactionType("payment");
-    setSelectedAmounts({});
-    setDescOverrides({});
-    setEditingDescIds([]);
+     setNotes("");
+     setCheckNumber("");
+     setTransactionType("payment");
+     setSelectedAmounts({});
+     setTargetTotal("");
+     setDescOverrides({});
+     setEditingDescIds([]);
     setEditEnrollmentId("");
     setEditAmount("");
     setPayerChoice("p1");
@@ -1390,10 +1429,40 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         סה״כ: ₪{totalSelected.toLocaleString()}
                       </p>
                     )}
+
+                    {transactionType === "payment" && Object.keys(selectedAmounts).length > 0 && (
+                      <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                        <div>
+                          <Label className="text-sm">תשלום חלקי · חלוקה יחסית</Label>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            הזינו את הסכום שמשולם עכשיו (למשל חלק במזומן) — כל השיוכים וההנחות יישארו בקבלה ויחולקו יחסית.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={targetTotal}
+                            onChange={(e) => setTargetTotal(e.target.value)}
+                            placeholder="סכום כולל לחיוב"
+                            className="h-10 w-36"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-10 rounded-xl"
+                            onClick={applyTargetTotal}
+                          >
+                            חלק יחסית
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             )}
+
 
             {(isEdit || paymentMethod !== "credit_card") && (
               <div>
