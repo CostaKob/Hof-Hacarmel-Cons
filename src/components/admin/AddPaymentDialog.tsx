@@ -479,20 +479,16 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       }
     }
 
+    // Scale each child's lines (charges and discounts alike) so their sum
+    // equals the remaining balance rather than the full tuition.
     return paymentItems.map((it) => {
       const paid = paidByStudent.get(it.studentId) ?? 0;
       if (paid <= 0) return it;
       const sibs = paymentItems.filter((x) => x.studentId === it.studentId);
-      const positiveTotal = sibs.filter((x) => x.defaultAmount > 0).reduce((s, x) => s + x.defaultAmount, 0);
-      const discountTotal = sibs.filter((x) => x.defaultAmount < 0).reduce((s, x) => s - x.defaultAmount, 0);
-      const totalDue = positiveTotal - discountTotal;
+      const totalDue = sibs.reduce((s, x) => s + x.defaultAmount, 0);
+      if (totalDue <= 0) return it;
       const remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
-      if (it.defaultAmount < 0) {
-        // Keep the discount proportional to the remaining balance.
-        const scale = totalDue > 0 ? remaining / totalDue : 0;
-        return { ...it, defaultAmount: -Math.round(-it.defaultAmount * scale * 100) / 100 };
-      }
-      const scale = positiveTotal > 0 ? Math.min(1, (remaining + Math.round(discountTotal * (totalDue > 0 ? remaining / totalDue : 0) * 100) / 100) / positiveTotal) : 0;
+      const scale = Math.min(1, remaining / totalDue);
       return { ...it, defaultAmount: Math.round(it.defaultAmount * scale * 100) / 100 };
     });
   }, [paymentItems, priorPayments, priorPaymentsFetched, itemStudentIds, familyContext, studentId, student]);
