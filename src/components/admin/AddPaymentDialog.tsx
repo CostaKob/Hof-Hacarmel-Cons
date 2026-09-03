@@ -1074,6 +1074,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             },
             forceNewPaypage: true,
             ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
+            ...(partNote ? { note: partNote } : {}),
           },
         });
 
