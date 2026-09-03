@@ -59,8 +59,8 @@ const monthLabel = (m: string) => {
   return `${mm}-${y}`;
 };
 
-// ברירת מחדל: שנת הלימודים 1.9.2026 – 31.8.2027
-const DEFAULT_START = "2026-09-01";
+// ברירת מחדל: מתחילת שנת הפעילות הכספית — 30.8.2026 (כדי שצ׳ק התאריך הזה ייכנס בדוח)
+const DEFAULT_START = "2026-08-30";
 const DEFAULT_END = "2027-08-31";
 
 interface Reconciliation {
