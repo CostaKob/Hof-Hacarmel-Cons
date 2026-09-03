@@ -35,8 +35,10 @@ async function createPaypage(opts: {
   schoolName: string;
   amount: number;
   paymentId: string;
+  note?: string | null;
 }): Promise<{ url: string; paypageId: string | null }> {
-  const itemDesc = `בי"ס מנגן - ${opts.studentName} - ${opts.schoolName}`;
+  const noteSuffix = opts.note ? ` — ${opts.note}` : "";
+  const itemDesc = `בי"ס מנגן - ${opts.studentName} - ${opts.schoolName}${noteSuffix}`;
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
@@ -96,7 +98,7 @@ Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { studentId, paymentId: incomingPaymentId, amount: amountOverride } = await req.json().catch(() => ({}));
+    const { studentId, paymentId: incomingPaymentId, amount: amountOverride, note } = await req.json().catch(() => ({}));
     if (!studentId) {
       return new Response(JSON.stringify({ error: "studentId required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -205,6 +207,7 @@ Deno.serve(async (req: Request) => {
         schoolName: schoolName || "בית ספר",
         amount,
         paymentId: paymentId ?? studentId,
+        note: note ?? null,
       });
       baseUrl = created.url;
       paypageId = created.paypageId;

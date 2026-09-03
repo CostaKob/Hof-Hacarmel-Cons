@@ -886,6 +886,13 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
+      // If the admin collects less than the remaining balance, surface the
+      // unpaid amount on the iCount payment page so the parent sees the full picture.
+      const totalDue = displayItems.reduce((s, it) => s + it.defaultAmount, 0);
+      const paylinkNote = totalSelected < totalDue - 0.01
+        ? `תשלום חלקי — יתרה לתשלום: ₪${Math.round((totalDue - totalSelected) * 100) / 100}`
+        : undefined;
+
       // When the student/family has two parents — or when an extra payer was
       // entered manually — bill that payer explicitly (overrides the family payer).
       const chosenParentPayer = (hasTwoParents || isCustomPayer) && selectedPayerParent?.name
@@ -922,6 +929,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             payerDetails: chosenParentPayer,
           } : {}),
           ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
+          ...(paylinkNote ? { note: paylinkNote } : {}),
         },
       });
 
@@ -1014,6 +1022,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
           })()
         : null;
 
+      const totalDue = displayItems.reduce((s, it) => s + it.defaultAmount, 0);
 
       const partsCount = parts.length;
       const results: Array<{ label: string; url: string; amount: number; firstName: string; lastName: string; email: string; phone: string }> = [];
@@ -1035,6 +1044,12 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         // (see `splitInfo` below) since iCount filters zero-amount line items.
         const sharePct = Math.round(ratio * 100);
         const finalLines = scaled;
+
+        const cumulative = Math.round(parts.slice(0, idx + 1).reduce((s, part) => s + part.amount, 0) * 100) / 100;
+        const remaining = Math.max(0, Math.round((totalDue - cumulative) * 100) / 100);
+        const partNote = remaining > 0.01
+          ? `תשלום חלקי — יתרה לתשלום: ₪${remaining.toLocaleString()}`
+          : `תשלום חלקי — חלק אחרון`;
 
         const { data, error } = await supabase.functions.invoke("icount-generate-student-paylink", {
           body: {
@@ -1059,6 +1074,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             },
             forceNewPaypage: true,
             ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
+            ...(partNote ? { note: partNote } : {}),
           },
         });
 
