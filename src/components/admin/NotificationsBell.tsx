@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2, Volume2, VolumeX, CalendarClock, Play, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Bell, Cake, ClipboardList, CreditCard, AlertTriangle, Users, CheckCheck, Loader2, Trash2, Volume2, VolumeX, CalendarClock, Play, Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNotifications, type NotificationRow } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { PAYMENT_SOUNDS, type PaymentSoundCategory } from "@/lib/notificationSound";
+import SendBirthdayGreetingDialog from "@/components/admin/SendBirthdayGreetingDialog";
 
 const ICONS: Record<string, { icon: typeof Bell; className: string }> = {
   registration: { icon: ClipboardList, className: "text-primary" },
@@ -14,6 +15,8 @@ const ICONS: Record<string, { icon: typeof Bell; className: string }> = {
   payment_failed: { icon: AlertTriangle, className: "text-destructive" },
   sibling_candidate: { icon: Users, className: "text-amber-600" },
   calendar_change_request: { icon: CalendarClock, className: "text-sky-600" },
+  teacher_birthday: { icon: Cake, className: "text-amber-600" },
+  teacher_birthday_upcoming: { icon: Cake, className: "text-amber-600" },
 };
 
 function timeAgo(iso: string) {
@@ -211,6 +214,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
               {items.map((n) => {
                 const meta = ICONS[n.type] ?? { icon: Bell, className: "text-muted-foreground" };
                 const Icon = meta.icon;
+                const birthdayName = n.type === "teacher_birthday" ? n.title.replace("🎂 יום הולדת היום: ", "") : "";
                 return (
                   <li key={n.id} className="group flex items-start gap-2">
                     <button
@@ -227,11 +231,18 @@ const NotificationsBell = ({ className }: { className?: string }) => {
                         <span className={cn("block text-sm text-foreground", !n.isRead && "font-semibold")}>
                           {n.title}
                         </span>
-                        {n.body && <span className="block text-xs text-muted-foreground mt-0.5">{n.body}</span>}
+                        {n.body && <span className="block text-xs text-muted-foreground mt-0.5 whitespace-pre-line">{n.body}</span>}
                         <span className="block text-[11px] text-muted-foreground mt-1">{timeAgo(n.created_at)}</span>
                       </span>
                       {!n.isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-destructive" />}
                     </button>
+                    {n.type === "teacher_birthday" && n.entity_id && (
+                      <SendBirthdayGreetingDialog
+                        teacherId={n.entity_id}
+                        teacherName={birthdayName}
+                        triggerClassName="h-8 shrink-0 rounded-lg px-2 text-xs mt-2"
+                      />
+                    )}
                     <div className="shrink-0 pt-2 pl-1 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
                       <Button
                         variant="ghost"

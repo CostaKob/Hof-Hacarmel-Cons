@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
+import SendBirthdayGreetingDialog from "@/components/admin/SendBirthdayGreetingDialog";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
 import {
@@ -387,6 +388,10 @@ const AdminTeacherCard = () => {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
+            <SendBirthdayGreetingDialog
+              teacherName={`${teacher.first_name ?? ""} ${teacher.last_name ?? ""}`.trim()}
+              phone={teacher.phone}
+            />
             <Button variant="outline" className="h-11 rounded-xl" onClick={() => navigate(`/admin/teachers/${teacherId}/edit`)}>
               <Pencil className="h-4 w-4" /> עריכה
             </Button>
