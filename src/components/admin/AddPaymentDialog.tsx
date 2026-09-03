@@ -499,17 +499,19 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     if (!open) { setDefaultsApplied(false); return; }
     if (isEdit) return;
     if (defaultsApplied) return;
-    if (paymentItems.length === 0) return;
+    if (displayItems.length === 0) return;
     // Wait for calc-based defaults before applying, unless we're in family mode
     // where items are pre-computed by the caller.
     if (!familyContext && (!yearFull || !settings)) return;
+    // Wait for prior payments so defaults reflect the remaining balance.
+    if (!priorPaymentsFetched) return;
     const next: Record<string, string> = {};
-    for (const it of paymentItems) {
+    for (const it of displayItems) {
       if (it.defaultAmount !== 0) next[it.id] = String(it.defaultAmount);
     }
     setSelectedAmounts(next);
     setDefaultsApplied(true);
-  }, [open, isEdit, paymentItems, yearFull, settings, defaultsApplied, familyContext]);
+  }, [open, isEdit, displayItems, yearFull, settings, defaultsApplied, familyContext, priorPaymentsFetched]);
 
 
 
