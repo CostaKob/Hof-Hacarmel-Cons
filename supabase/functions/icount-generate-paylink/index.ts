@@ -207,6 +207,7 @@ Deno.serve(async (req: Request) => {
         schoolName: schoolName || "בית ספר",
         amount,
         paymentId: paymentId ?? studentId,
+        note: note ?? null,
       });
       baseUrl = created.url;
       paypageId = created.paypageId;
