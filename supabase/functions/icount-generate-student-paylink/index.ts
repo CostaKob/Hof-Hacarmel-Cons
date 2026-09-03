@@ -38,15 +38,22 @@ async function createPaypage(opts: {
   yearName?: string | null;
   splitInfo?: { partIndex: number; partsCount: number; grossTotal: number; sharePct: number } | null;
   pageTitleName?: string | null;
+  note?: string | null;
 }): Promise<{ url: string; paypageId: string | null }> {
+  const noteSuffix = opts.note ? ` — ${opts.note}` : "";
+  let noteApplied = false;
   const items = opts.lines
     .filter((l) => Number(l.amount) !== 0)
-    .map((l) => ({
-      description: l.description,
-      unitprice: Math.round(Number(l.amount) * 100) / 100,
-      quantity: 1,
-      tax_exempt: 1,
-    }));
+    .map((l) => {
+      const applyNote = opts.note && !noteApplied && Number(l.amount) > 0;
+      if (applyNote) noteApplied = true;
+      return {
+        description: applyNote ? `${l.description}${noteSuffix}` : l.description,
+        unitprice: Math.round(Number(l.amount) * 100) / 100,
+        quantity: 1,
+        tax_exempt: 1,
+      };
+    });
   const yearSuffix = opts.yearName ? ` ${opts.yearName}` : "";
   const splitSuffix = opts.splitInfo
     ? ` — חלק ${opts.splitInfo.partIndex}/${opts.splitInfo.partsCount} (${opts.splitInfo.sharePct}% מתוך ₪${opts.splitInfo.grossTotal.toLocaleString()})`
