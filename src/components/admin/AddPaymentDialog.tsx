@@ -539,10 +539,11 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     }
     const scale = target / current;
     const next: Record<string, string> = {};
-    for (const [id, v] of entries) next[id] = String(Math.round(v * scale * 100) / 100);
-    // Fix rounding drift on the largest positive line.
+    // Round each line to a whole shekel so the receipt shows clean amounts.
+    for (const [id, v] of entries) next[id] = String(Math.round(v * scale));
+    // Fix rounding drift (in whole shekels) on the largest positive line.
     const sum = Object.values(next).reduce((s, v) => s + (parseFloat(v) || 0), 0);
-    const drift = Math.round((target - sum) * 100) / 100;
+    const drift = Math.round(target - sum);
     if (drift !== 0) {
       let biggestId: string | null = null;
       let biggest = 0;
@@ -550,7 +551,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         const n = parseFloat(v) || 0;
         if (n > biggest) { biggest = n; biggestId = id; }
       }
-      if (biggestId) next[biggestId] = String(Math.round((biggest + drift) * 100) / 100);
+      if (biggestId) next[biggestId] = String(biggest + drift);
     }
     setSelectedAmounts(next);
     toast.success(`הסכום חולק יחסית בין ${entries.length} שורות`);
