@@ -929,6 +929,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
             payerDetails: chosenParentPayer,
           } : {}),
           ...(familyTitleName ? { pageTitleName: familyTitleName } : {}),
+          ...(paylinkNote ? { note: paylinkNote } : {}),
         },
       });
 
