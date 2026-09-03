@@ -24,8 +24,6 @@ interface Props {
 
 const SendBirthdayGreetingDialog = ({
   teacherName,
-  phone,
-  teacherId,
   triggerVariant = "outline",
   triggerClassName = "h-11 rounded-xl",
   triggerLabel = "שלח ברכה",
