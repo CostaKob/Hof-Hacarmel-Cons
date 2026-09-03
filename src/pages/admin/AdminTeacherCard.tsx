@@ -17,6 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import TeacherInstrumentsSection from "@/components/admin/TeacherInstrumentsSection";
+import SendBirthdayGreetingDialog from "@/components/admin/SendBirthdayGreetingDialog";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { toast } from "sonner";
 import {
