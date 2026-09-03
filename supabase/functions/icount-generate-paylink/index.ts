@@ -35,8 +35,10 @@ async function createPaypage(opts: {
   schoolName: string;
   amount: number;
   paymentId: string;
+  note?: string | null;
 }): Promise<{ url: string; paypageId: string | null }> {
-  const itemDesc = `בי"ס מנגן - ${opts.studentName} - ${opts.schoolName}`;
+  const noteSuffix = opts.note ? ` — ${opts.note}` : "";
+  const itemDesc = `בי"ס מנגן - ${opts.studentName} - ${opts.schoolName}${noteSuffix}`;
   const body = {
     cid: Deno.env.get("ICOUNT_COMPANY_ID"),
     user: Deno.env.get("ICOUNT_USERNAME"),
