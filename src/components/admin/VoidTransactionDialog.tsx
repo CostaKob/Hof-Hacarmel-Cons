@@ -92,6 +92,7 @@ export default function VoidTransactionDialog({
     },
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["family-details"] });
+      queryClient.invalidateQueries({ queryKey: ["families-list"] });
       queryClient.invalidateQueries({ queryKey: ["family-payments"] });
       queryClient.invalidateQueries({ queryKey: ["student-payments"] });
       queryClient.invalidateQueries({ queryKey: ["private-payments"] });
@@ -155,17 +156,18 @@ export default function VoidTransactionDialog({
               { key: "auto" as const, title: "הפק קבלת זיכוי אוטומטית", desc: "המערכת תפיק קבלה במינוס באייקאונט ותרשום את הזיכוי" },
               { key: "manual" as const, title: "הביטול כבר בוצע באייקאונט", desc: "רק רישום הזיכוי במערכת לפי מספר קבלת הזיכוי" },
             ]).map((opt) => (
-              <button
+              <Button
                 key={opt.key}
                 type="button"
+                variant={mode === opt.key ? "secondary" : "outline"}
                 onClick={() => setMode(opt.key)}
-                className={`w-full text-right rounded-xl border p-3 transition ${
-                  mode === opt.key ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"
-                }`}
+                className="w-full h-auto min-h-[68px] justify-start text-right rounded-xl p-3 whitespace-normal"
               >
-                <p className="text-sm font-medium text-foreground">{opt.title}</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{opt.desc}</p>
-              </button>
+                <span>
+                  <span className="block text-sm font-medium text-foreground">{opt.title}</span>
+                  <span className="block text-[11px] text-muted-foreground mt-0.5">{opt.desc}</span>
+                </span>
+              </Button>
             ))}
           </div>
 

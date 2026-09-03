@@ -165,20 +165,33 @@ const AdminPrivatePayments = () => {
 
   // Fully-cancelled transactions: a receipt whose credit note(s) cover it
   // entirely nets to zero (e.g. a charge refunded via the credit company).
-  // Hide both sides so the report reflects real money only.
+  // A spread transaction is one logical transaction, so hide every installment
+  // when its linked credit covers the whole group — not only the first row.
   const cancelledPairIds = useMemo(() => {
-    const refundSum = new Map<string, number>();
+    const sourceById = new Map<string, any>();
+    const groupRows = new Map<string, any[]>();
+    for (const p of payments as any[]) {
+      if (p?.id) sourceById.set(p.id, p);
+      if (p?.transaction_type !== "payment" || p?.payment_status === "pending") continue;
+      const groupKey = p.payment_group_id || p.id;
+      groupRows.set(groupKey, [...(groupRows.get(groupKey) ?? []), p]);
+    }
+
+    const refundByGroup = new Map<string, number>();
     for (const p of payments as any[]) {
       const ref = p.refund_of_payment_id;
       if (!ref) continue;
-      refundSum.set(ref, (refundSum.get(ref) ?? 0) + Math.abs(Number(p.amount) || 0));
+      const source = sourceById.get(ref);
+      const groupKey = source?.payment_group_id || ref;
+      refundByGroup.set(groupKey, (refundByGroup.get(groupKey) ?? 0) + Math.abs(Number(p.amount) || 0));
     }
+
     const ids = new Set<string>();
-    for (const p of payments as any[]) {
-      if (!p.id || p.payment_status === "pending") continue;
-      const amt = Number(p.amount) || 0;
-      if (amt <= 0 || p.transaction_type !== "payment") continue;
-      if ((refundSum.get(p.id) ?? 0) >= amt - 0.005) ids.add(p.id);
+    for (const [groupKey, rows] of groupRows) {
+      const groupTotal = rows.reduce((sum, row) => sum + Math.abs(Number(row.amount) || 0), 0);
+      if (groupTotal > 0 && (refundByGroup.get(groupKey) ?? 0) >= groupTotal - 0.005) {
+        for (const row of rows) if (row.id) ids.add(row.id);
+      }
     }
     return ids;
   }, [payments]);
