@@ -1428,8 +1428,40 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         סה״כ: ₪{totalSelected.toLocaleString()}
                       </p>
                     )}
+
+                    {transactionType === "payment" && Object.keys(selectedAmounts).length > 0 && (
+                      <div className="rounded-xl border border-border bg-muted/30 p-3 space-y-2">
+                        <div>
+                          <Label className="text-sm">תשלום חלקי · חלוקה יחסית</Label>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">
+                            הזינו את הסכום שמשולם עכשיו (למשל חלק במזומן) — כל השיוכים וההנחות יישארו בקבלה ויחולקו יחסית.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={targetTotal}
+                            onChange={(e) => setTargetTotal(e.target.value)}
+                            placeholder="סכום כולל לחיוב"
+                            className="h-10 w-36"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="h-10 rounded-xl"
+                            onClick={applyTargetTotal}
+                          >
+                            חלק יחסית
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
+              </div>
+            )}
+
               </div>
             )}
 
