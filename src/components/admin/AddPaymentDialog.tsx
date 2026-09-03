@@ -435,6 +435,68 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     return items;
   }, [familyContext, activeEnrollments, yearFull, settings, discountTypes, draft, student, studentId]);
 
+  // ---- Remaining-balance defaults ----
+  // If part of the tuition was already paid (e.g. one parent paid half), the
+  // pre-filled amounts should reflect only what's still owed — not the full sum.
+  const itemStudentIds = useMemo(
+    () => [...new Set(paymentItems.map((it) => it.studentId).filter(Boolean))].sort(),
+    [paymentItems],
+  );
+
+  const { data: priorPayments = [], isFetched: priorPaymentsFetched } = useQuery({
+    queryKey: ["addpay-prior-payments", academicYearId, itemStudentIds],
+    enabled: open && !!academicYearId && itemStudentIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("student_payments")
+        .select("id, student_id, amount, payment_status, transaction_type, refund_of_payment_id, enrollment_breakdown")
+        .in("student_id", itemStudentIds)
+        .eq("academic_year_id", academicYearId!);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  // paymentItems with defaultAmount scaled down to the remaining balance per child.
+  const displayItems: PaymentItem[] = useMemo(() => {
+    if (!priorPaymentsFetched || priorPayments.length === 0) return paymentItems;
+
+    // Net paid per child (payments minus credits), splitting family payments
+    // across siblings the same way the reports do.
+    const children = itemStudentIds.map((id) => {
+      const name = (familyContext?.childrenNames?.[id] ??
+        (id === studentId && student ? `${student.first_name ?? ""} ${student.last_name ?? ""}` : "") ?? ""
+      ).trim();
+      const sp = name.indexOf(" ");
+      return { id, first_name: sp > 0 ? name.slice(0, sp) : name, last_name: sp > 0 ? name.slice(sp + 1) : "" };
+    });
+    const paidByStudent = new Map<string, number>();
+    for (const p of priorPayments) {
+      if (p.payment_status === "pending") continue;
+      const alloc = allocatePayment(p, children, priorPayments);
+      for (const [sid, share] of alloc) {
+        paidByStudent.set(sid, (paidByStudent.get(sid) ?? 0) + share);
+      }
+    }
+
+    return paymentItems.map((it) => {
+      const paid = paidByStudent.get(it.studentId) ?? 0;
+      if (paid <= 0) return it;
+      const sibs = paymentItems.filter((x) => x.studentId === it.studentId);
+      const positiveTotal = sibs.filter((x) => x.defaultAmount > 0).reduce((s, x) => s + x.defaultAmount, 0);
+      const discountTotal = sibs.filter((x) => x.defaultAmount < 0).reduce((s, x) => s - x.defaultAmount, 0);
+      const totalDue = positiveTotal - discountTotal;
+      const remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
+      if (it.defaultAmount < 0) {
+        // Keep the discount proportional to the remaining balance.
+        const scale = totalDue > 0 ? remaining / totalDue : 0;
+        return { ...it, defaultAmount: -Math.round(-it.defaultAmount * scale * 100) / 100 };
+      }
+      const scale = positiveTotal > 0 ? Math.min(1, (remaining + Math.round(discountTotal * (totalDue > 0 ? remaining / totalDue : 0) * 100) / 100) / positiveTotal) : 0;
+      return { ...it, defaultAmount: Math.round(it.defaultAmount * scale * 100) / 100 };
+    });
+  }, [paymentItems, priorPayments, priorPaymentsFetched, itemStudentIds, familyContext, studentId, student]);
+
   // Auto-fill selectedAmounts with defaults on open (new mode only, and once per open).
   const [defaultsApplied, setDefaultsApplied] = useState(false);
   useEffect(() => {
