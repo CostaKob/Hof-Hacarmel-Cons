@@ -465,7 +465,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     // across siblings the same way the reports do.
     const children = itemStudentIds.map((id) => {
       const name = (familyContext?.childrenNames?.[id] ??
-        (id === studentId && student ? `${student.first_name ?? ""} ${student.last_name ?? ""}` : "") ?? ""
+        (id === studentId && student ? `${student.first_name ?? ""} ${student.last_name ?? ""}` : "")
       ).trim();
       const sp = name.indexOf(" ");
       return { id, first_name: sp > 0 ? name.slice(0, sp) : name, last_name: sp > 0 ? name.slice(sp + 1) : "" };
