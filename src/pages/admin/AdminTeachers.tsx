@@ -91,7 +91,7 @@ const AdminTeachers = () => {
     const d = new Date(iso);
     const date = d.toLocaleDateString("he-IL", { day: "2-digit", month: "2-digit", year: "numeric" });
     const time = d.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" });
-    return `כניסה אחרונה: ${date} ${time}`;
+    return `פעילות אחרונה: ${date} ${time}`;
   };
 
 

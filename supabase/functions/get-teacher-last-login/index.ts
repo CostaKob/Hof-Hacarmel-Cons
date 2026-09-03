@@ -50,7 +50,10 @@ Deno.serve(async (req) => {
       if (error) throw error;
       const users = data?.users ?? [];
       for (const u of users) {
-        logins[u.id] = u.last_sign_in_at ?? null;
+        const signIn = u.last_sign_in_at ? new Date(u.last_sign_in_at).getTime() : 0;
+        const updated = (u as any).updated_at ? new Date((u as any).updated_at).getTime() : 0;
+        const latest = Math.max(signIn, updated);
+        logins[u.id] = latest > 0 ? new Date(latest).toISOString() : null;
       }
       if (users.length < 1000) break;
       page++;
