@@ -34,29 +34,15 @@ const SendBirthdayGreetingDialog = ({
 }: Props) => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState(buildBirthdayGreeting(teacherName));
-  const { data: teacher } = useQuery({
-    queryKey: ["birthday-greeting-teacher", teacherId],
-    enabled: open && !!teacherId && !phone,
-    queryFn: async () => {
-      if (!teacherId) return null;
-      const { data, error } = await supabase.from("teachers").select("phone").eq("id", teacherId).maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
 
   useEffect(() => {
     if (open) setMessage(buildBirthdayGreeting(teacherName));
   }, [open, teacherName]);
 
-  const waPhone = normalizeWaPhone(phone ?? teacher?.phone);
-
   const sendWhatsApp = () => {
     const text = encodeURIComponent(message);
-    const url = waPhone
-      ? `https://wa.me/972${waPhone}?text=${text}`
-      : `https://wa.me/?text=${text}`;
-    window.open(url, "_blank");
+    // opens WhatsApp share picker — user picks the teachers group
+    window.open(`https://wa.me/?text=${text}`, "_blank");
     setOpen(false);
   };
 
