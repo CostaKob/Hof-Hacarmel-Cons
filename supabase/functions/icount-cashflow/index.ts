@@ -92,7 +92,16 @@ const num = (v: unknown) => {
 function asArray(v: unknown): any[] {
   if (!v) return [];
   if (Array.isArray(v)) return v;
-  if (typeof v === "object") return Object.values(v as Record<string, unknown>);
+  if (typeof v === "object") {
+    const obj = v as Record<string, unknown>;
+    // iCount returns a single payment either as a keyed map of payment objects
+    // ({"0": {...}}) or as one flat payment object ({sum: 2470, date: ...}).
+    // A flat object must stay one record — splitting it into its values loses
+    // the sum, and the document silently drops out of the cashflow.
+    const values = Object.values(obj);
+    const looksFlat = values.some((x) => x === null || typeof x !== "object");
+    return looksFlat ? [obj] : values;
+  }
   return [];
 }
 
