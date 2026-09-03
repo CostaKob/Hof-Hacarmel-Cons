@@ -10,15 +10,9 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
-function normalizeWaPhone(phone?: string | null): string {
-  if (!phone) return "";
-  const digits = String(phone).replace(/\D/g, "");
-  if (digits.startsWith("972")) return digits.slice(3);
-  return digits.replace(/^0/, "");
-}
-
 export function buildBirthdayGreeting(teacherName: string): string {
-  return `${teacherName} היקר! המון המון מזל טוב! מאחלים לך בריאות ואושר, באהבה ענקית צוות אולפן המוסיקה!`;
+  const firstName = (teacherName ?? "").trim().split(/\s+/)[0] ?? teacherName;
+  return `${firstName} היקר! המון המון מזל טוב! מאחלים לך בריאות ואושר, באהבה ענקית צוות אולפן המוסיקה!`;
 }
 
 interface Props {
