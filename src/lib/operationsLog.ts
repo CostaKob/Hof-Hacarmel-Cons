@@ -2,7 +2,8 @@
 export const OPERATIONS_LOG_ALLOWED_USER_IDS = [
   "d377196f-e607-4d2f-9b3c-4519916c1d81", // עמיר (amirstoler@gmail.com)
   "d55feb36-b9d2-4214-8d86-ca23eb36e6b0", // קורין (korinpeer7711@gmail.com)
-  "6493579c-523d-4397-b84d-917f6d6f9c98", // קוסטין (costakob / betrey@gmail.com)
+  "0bf8c428-593e-4b62-93c6-628b813a287e", // קוסטין (costakob@gmail.com)
+  "6493579c-523d-4397-b84d-917f6d6f9c98", // קוסטין (betrey@gmail.com)
 ];
 
 export interface OperationsLogEntry {
