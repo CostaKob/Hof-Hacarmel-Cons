@@ -86,6 +86,13 @@ const AdminTeachers = () => {
     },
   });
 
+  const isBirthdayToday = (birthDate: string | null | undefined) => {
+    if (!birthDate) return false;
+    const d = new Date(birthDate);
+    const today = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Jerusalem" }));
+    return d.getUTCMonth() === today.getMonth() && d.getUTCDate() === today.getDate();
+  };
+
   const formatLastLogin = (iso: string | null | undefined) => {
     if (!iso) return "מעולם לא התחבר";
     const d = new Date(iso);
