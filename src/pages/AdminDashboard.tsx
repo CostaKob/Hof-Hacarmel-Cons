@@ -2,7 +2,8 @@ import { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
-import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic, Car } from "lucide-react";
+import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic, Car, ScrollText } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardItem {
   path: string;
@@ -95,6 +96,10 @@ const SectionCard = ({ item, navigate }: { item: DashboardItem; navigate: (path:
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { user, hasRole } = useAuth();
+  const toolsSections: DashboardItem[] = !!user && hasRole("owner")
+    ? [...TOOLS_SECTIONS, { path: "/admin/operations-log", label: "יומן חריגות", description: "תיעוד פעולות חריגות, ביטולים ידניים ותיקוני באגים", icon: ScrollText }]
+    : TOOLS_SECTIONS;
 
   return (
     <AdminLayout title="פאנל ניהול">
@@ -160,7 +165,7 @@ const AdminDashboard = () => {
             <h2 className="text-sm font-semibold text-destructive admin-section-title">כלים ודוחות</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {TOOLS_SECTIONS.map((s) => (
+            {toolsSections.map((s) => (
               <SectionCard key={s.path} item={s} navigate={navigate} />
             ))}
           </div>
