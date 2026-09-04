@@ -8,7 +8,8 @@ import { useNavigate } from "react-router-dom";
 import PageTitle from "@/components/PageTitle";
 
 
-const ROLE_CONFIG: Record<AppRole, { label: string; path: string; icon: React.ReactNode; description: string }> = {
+// "owner" הוא תפקיד הרשאה מלאה (משולב עם admin) — לא אזור נפרד, לכן לא מופיע בבחירה
+const ROLE_CONFIG: Partial<Record<AppRole, { label: string; path: string; icon: React.ReactNode; description: string }>> = {
   admin: { label: "מנהל", path: "/admin", icon: <Shield className="h-6 w-6" />, description: "ניהול המערכת, משתמשים ונתונים" },
   teacher: { label: "מורה", path: "/teacher", icon: <GraduationCap className="h-6 w-6" />, description: "תלמידים, דיווחים ושיעורים" },
   secretary: { label: "מזכירה", path: "/secretary", icon: <ClipboardList className="h-6 w-6" />, description: "תלמידים, רישומים ותשלומים" },
@@ -31,7 +32,9 @@ const Index = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (roles.length === 0) {
+  const areaRoles = roles.filter((role) => ROLE_CONFIG[role]);
+
+  if (areaRoles.length === 0) {
     return (
       <div dir="rtl" className="flex min-h-screen flex-col items-center justify-center gap-2 bg-background">
         <h1 className="text-2xl font-bold text-foreground">אין הרשאה</h1>
@@ -41,8 +44,8 @@ const Index = () => {
   }
 
   // Single role — redirect immediately
-  if (roles.length === 1) {
-    return <Navigate to={ROLE_CONFIG[roles[0]].path} replace />;
+  if (areaRoles.length === 1) {
+    return <Navigate to={ROLE_CONFIG[areaRoles[0]]!.path} replace />;
   }
 
   // Multiple roles — show chooser
@@ -56,8 +59,8 @@ const Index = () => {
           <p className="text-sm text-muted-foreground">יש לך מספר תפקידים במערכת. לאן תרצה להיכנס?</p>
         </div>
         <div className="space-y-3">
-          {roles.map((role) => {
-            const config = ROLE_CONFIG[role];
+          {areaRoles.map((role) => {
+            const config = ROLE_CONFIG[role]!;
             return (
               <Card
                 key={role}
