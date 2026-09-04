@@ -17,7 +17,11 @@ const AdminOperationsLog = () => {
   const { user, loading } = useAuth();
 
   if (loading) return null;
-  if (!user || !OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id)) {
+  if (
+    !user ||
+    (!OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id) &&
+      (!user.email || !OPERATIONS_LOG_ALLOWED_EMAILS.includes(user.email)))
+  ) {
     return <Navigate to="/admin" replace />;
   }
 
