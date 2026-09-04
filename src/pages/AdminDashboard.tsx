@@ -165,7 +165,7 @@ const AdminDashboard = () => {
             <h2 className="text-sm font-semibold text-destructive admin-section-title">כלים ודוחות</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {TOOLS_SECTIONS.map((s) => (
+            {toolsSections.map((s) => (
               <SectionCard key={s.path} item={s} navigate={navigate} />
             ))}
           </div>
