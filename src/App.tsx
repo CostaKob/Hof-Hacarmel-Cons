@@ -134,6 +134,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ViewportHeightSync />
         <ScrollToTop />
         <AuthProvider>
           <ThemeProvider>
