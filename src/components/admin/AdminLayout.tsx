@@ -2,7 +2,8 @@ import { ReactNode, useState, useRef, ComponentType } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, Wallet, BarChart3, LucideIcon } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, Wallet, BarChart3, LucideIcon, ScrollText } from "lucide-react";
+import { OPERATIONS_LOG_ALLOWED_USER_IDS } from "@/lib/operationsLog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -39,6 +40,8 @@ const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
   (item) => item.path !== "/admin/families" && item.path !== "/admin/yearly-summary"
 );
 
+const OPERATIONS_LOG_ITEM: NavItem = { path: "/admin/operations-log", label: "יומן חריגות", icon: ScrollText };
+
 interface AdminLayoutProps {
   children: ReactNode;
   title: string;
@@ -51,7 +54,10 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   const navigate = useNavigate();
   const location = useLocation();
   useListStatePreservation(location.pathname);
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
+  const showOperationsLog = !!user && OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id);
+  const navItems = showOperationsLog ? [...NAV_ITEMS, OPERATIONS_LOG_ITEM] : NAV_ITEMS;
+  const mobileNavItems = showOperationsLog ? [...MOBILE_NAV_ITEMS, OPERATIONS_LOG_ITEM] : MOBILE_NAV_ITEMS;
   const { logoUrl, refreshLogo } = useAppLogo();
   const { years, selectedYearId, setSelectedYearId, isLoading: yearsLoading } = useAcademicYear();
   const [uploading, setUploading] = useState(false);
@@ -198,8 +204,8 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
 
           {/* Desktop / tablet navigation — one row */}
           <nav className="mt-3 hidden md:block">
-            <div className="grid grid-cols-9 gap-1">
-              {NAV_ITEMS.map((item) => (
+            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}>
+              {navItems.map((item) => (
                 <NavButton key={item.path} item={item} />
               ))}
             </div>
@@ -219,7 +225,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
 
       {/* Mobile / tablet bottom navigation */}
       <nav className="fixed bottom-3 left-3 right-3 z-10 flex rounded-full border border-border bg-card/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl md:hidden safe-area-pb">
-        {MOBILE_NAV_ITEMS.map((item) => (
+        {mobileNavItems.map((item) => (
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
