@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, Wallet, BarChart3, LucideIcon, ScrollText } from "lucide-react";
-import { OPERATIONS_LOG_ALLOWED_USER_IDS } from "@/lib/operationsLog";
+import { OPERATIONS_LOG_ALLOWED_EMAILS, OPERATIONS_LOG_ALLOWED_USER_IDS } from "@/lib/operationsLog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -55,7 +55,10 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   const location = useLocation();
   useListStatePreservation(location.pathname);
   const { signOut, user } = useAuth();
-  const showOperationsLog = !!user && OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id);
+  const showOperationsLog =
+    !!user &&
+    (OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id) ||
+      (!!user.email && OPERATIONS_LOG_ALLOWED_EMAILS.includes(user.email)));
   const navItems = showOperationsLog ? [...NAV_ITEMS, OPERATIONS_LOG_ITEM] : NAV_ITEMS;
   const mobileNavItems = showOperationsLog ? [...MOBILE_NAV_ITEMS, OPERATIONS_LOG_ITEM] : MOBILE_NAV_ITEMS;
   const { logoUrl, refreshLogo } = useAppLogo();

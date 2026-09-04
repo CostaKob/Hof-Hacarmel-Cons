@@ -6,6 +6,13 @@ export const OPERATIONS_LOG_ALLOWED_USER_IDS = [
   "6493579c-523d-4397-b84d-917f6d6f9c98", // קוסטין (betrey@gmail.com)
 ];
 
+export const OPERATIONS_LOG_ALLOWED_EMAILS = [
+  "amirstoler@gmail.com",
+  "korinpeer7711@gmail.com",
+  "costakob@gmail.com",
+  "betrey@gmail.com",
+];
+
 export interface OperationsLogEntry {
   date: string;
   title: string;
