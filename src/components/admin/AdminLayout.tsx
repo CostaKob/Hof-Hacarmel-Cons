@@ -2,7 +2,8 @@ import { ReactNode, useState, useRef, ComponentType } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, Wallet, BarChart3, LucideIcon } from "lucide-react";
+import { ArrowRight, Home, Users, GraduationCap, Music2, Music4, ClipboardList, LogOut, Upload, Loader2, CalendarDays, Wallet, BarChart3, LucideIcon, ScrollText } from "lucide-react";
+import { OPERATIONS_LOG_ALLOWED_USER_IDS } from "@/lib/operationsLog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppLogo } from "@/hooks/useAppLogo";
@@ -38,6 +39,8 @@ const NAV_ITEMS: NavItem[] = [
 const MOBILE_NAV_ITEMS = NAV_ITEMS.filter(
   (item) => item.path !== "/admin/families" && item.path !== "/admin/yearly-summary"
 );
+
+const OPERATIONS_LOG_ITEM: NavItem = { path: "/admin/operations-log", label: "יומן חריגות", icon: ScrollText };
 
 interface AdminLayoutProps {
   children: ReactNode;
