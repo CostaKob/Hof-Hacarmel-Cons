@@ -350,7 +350,7 @@ const AdminTeacherCard = () => {
       <PageTitle title={`כרטיס מורה — ${teacher.first_name} ${teacher.last_name}`} />
       <div className="space-y-5">
 
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="flex items-center gap-3">
             <Switch
               id="teacher-active"
@@ -362,7 +362,7 @@ const AdminTeacherCard = () => {
               {teacher.is_active ? "פעיל" : "לא פעיל"}
             </Label>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" className="h-11 rounded-xl text-destructive hover:text-destructive">
