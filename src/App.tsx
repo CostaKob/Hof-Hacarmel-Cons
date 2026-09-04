@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { AcademicYearProvider } from "@/hooks/useAcademicYear";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import ViewportHeightSync from "@/components/ViewportHeightSync";
 import Index from "./pages/Index";
 import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 import Landing from "./pages/Landing";
