@@ -430,6 +430,11 @@ input[type="time"]::-webkit-datetime-edit {
 
 /* מובייל: 100vh מודד את ה-viewport הגדול (ללא סרגלי הדפדפן) ויוצר גלילה ריקה בסוף העמוד.
    מחליפים גלובלית ל-svh בכל המסכים. */
+:root {
+  /* מתעדכן ב-JS (ViewportHeightSync) לפי הגובה הנראה בפועל — פותר רווח ריק
+     בכרום iOS כש-svh/dvh קצרים מהאזור הנראה */
+  --app-height: 100svh;
+}
 @supports (min-height: 100svh) {
   .min-h-screen {
     min-height: 100svh;
@@ -437,9 +442,12 @@ input[type="time"]::-webkit-datetime-edit {
   .h-screen {
     height: 100svh;
   }
-  /* dvh במובייל (בעיקר iOS Safari) משתנה עם הופעת/היעלמות סרגל הדפדפן
-     ויוצר רווח ריק בתחתית — מחליפים גלובלית ל-svh היציב */
+  /* dvh/svh במובייל (בעיקר iOS) עלולים ליצור רווח ריק בתחתית —
+     מחליפים גלובלית למשתנה שמסונכרן לגובה האמיתי */
   .h-\[100dvh\] {
-    height: 100svh;
+    height: var(--app-height, 100svh);
+  }
+  .h-\[100svh\] {
+    height: var(--app-height, 100svh);
   }
 }
