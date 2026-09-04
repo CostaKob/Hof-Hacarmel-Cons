@@ -117,7 +117,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => (
 );
 const TeacherRoute = ({ children }: { children: React.ReactNode }) => (
   <ProtectedRoute allowedRoles={["teacher"]}>
-    <div dir="rtl" className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background">
+    <div dir="rtl" className="flex h-[100svh] min-h-0 flex-col overflow-hidden bg-background">
       <div data-scroll-container className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         {children}
         <div className="h-24 md:hidden" aria-hidden />

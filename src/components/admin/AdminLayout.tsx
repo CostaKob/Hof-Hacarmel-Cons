@@ -109,7 +109,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   return (
     <div
       dir="rtl"
-      className="flex h-[100dvh] min-h-0 flex-col overflow-hidden bg-background"
+      className="flex h-[100svh] min-h-0 flex-col overflow-hidden bg-background"
     >
       <header className="shrink-0 bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
         <div className="mx-auto max-w-5xl">

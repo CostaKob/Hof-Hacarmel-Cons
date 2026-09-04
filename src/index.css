@@ -437,4 +437,9 @@ input[type="time"]::-webkit-datetime-edit {
   .h-screen {
     height: 100svh;
   }
+  /* dvh במובייל (בעיקר iOS Safari) משתנה עם הופעת/היעלמות סרגל הדפדפן
+     ויוצר רווח ריק בתחתית — מחליפים גלובלית ל-svh היציב */
+  .h-\[100dvh\] {
+    height: 100svh;
+  }
 }
