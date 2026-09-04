@@ -54,11 +54,8 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
   const navigate = useNavigate();
   const location = useLocation();
   useListStatePreservation(location.pathname);
-  const { signOut, user } = useAuth();
-  const showOperationsLog =
-    !!user &&
-    (OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id) ||
-      (!!user.email && OPERATIONS_LOG_ALLOWED_EMAILS.includes(user.email)));
+  const { signOut, user, hasRole } = useAuth();
+  const showOperationsLog = !!user && hasRole("owner");
   const navItems = showOperationsLog ? [...NAV_ITEMS, OPERATIONS_LOG_ITEM] : NAV_ITEMS;
   const mobileNavItems = showOperationsLog ? [...MOBILE_NAV_ITEMS, OPERATIONS_LOG_ITEM] : MOBILE_NAV_ITEMS;
   const { logoUrl, refreshLogo } = useAppLogo();

@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
 import { useAuth } from "@/hooks/useAuth";
-import { OPERATIONS_LOG, OPERATIONS_LOG_ALLOWED_EMAILS, OPERATIONS_LOG_ALLOWED_USER_IDS } from "@/lib/operationsLog";
+import { OPERATIONS_LOG } from "@/lib/operationsLog";
 import { Badge } from "@/components/ui/badge";
 import { ScrollText } from "lucide-react";
 
@@ -14,14 +14,10 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const AdminOperationsLog = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, hasRole } = useAuth();
 
   if (loading) return null;
-  if (
-    !user ||
-    (!OPERATIONS_LOG_ALLOWED_USER_IDS.includes(user.id) &&
-      (!user.email || !OPERATIONS_LOG_ALLOWED_EMAILS.includes(user.email)))
-  ) {
+  if (!user || !hasRole("owner")) {
     return <Navigate to="/admin" replace />;
   }
 
