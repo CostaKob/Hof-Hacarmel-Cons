@@ -26,11 +26,10 @@ const DAYS = [
   { idx: 4, label: "חמישי" },
 ];
 
-const START_MIN = 8 * 60; // 08:00
-const END_MIN = 17 * 60; // 17:00
+const DEFAULT_START_MIN = 8 * 60; // 08:00
+const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
 const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
-const ROWS = (END_MIN - START_MIN) / STEP;
 const EXPORT_ROW_H = 34; // גובה שורה בתצוגת הייצוא
 
 
@@ -109,6 +108,24 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const [exporting, setExporting] = useState(false);
   // שיבוץ/עריכה ידנית — שעה חופשית (כל דקה)
   const [manual, setManual] = useState<{ enrollmentId: string; day: number; time: string } | null>(null);
+
+  const { data: schoolTimes } = useQuery({
+    queryKey: ["school-schedule-times", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("schools")
+        .select("schedule_start_minutes, schedule_end_minutes")
+        .eq("id", schoolId)
+        .single();
+      if (error) return null;
+      return data as { schedule_start_minutes: number | null; schedule_end_minutes: number | null };
+    },
+  });
+
+  const START_MIN = schoolTimes?.schedule_start_minutes ?? DEFAULT_START_MIN;
+  const END_MIN = schoolTimes?.schedule_end_minutes ?? DEFAULT_END_MIN;
+  const ROWS = (END_MIN - START_MIN) / STEP;
 
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
     queryKey: ["branch-schedule-enrollments", schoolId, selectedYearId],
