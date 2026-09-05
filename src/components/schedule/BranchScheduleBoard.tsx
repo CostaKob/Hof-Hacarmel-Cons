@@ -743,7 +743,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 19,
+                  fontSize: 22,
                   fontWeight: 800,
                   color: "hsl(204 60% 35%)",
                   background: "hsl(204 70% 95%)",
