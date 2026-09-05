@@ -799,9 +799,9 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 15,
+                            fontSize: 18,
                             fontWeight: 800,
-                            lineHeight: "18px",
+                            lineHeight: "22px",
                             color: "hsl(215 30% 20%)",
                             whiteSpace: "nowrap",
                           }}
@@ -814,8 +814,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 12,
-                            lineHeight: "15px",
+                            fontSize: 14,
+                            lineHeight: "18px",
                             color: "hsl(215 25% 35% / 0.85)",
                             whiteSpace: "nowrap",
                           }}
@@ -825,8 +825,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 12,
-                            lineHeight: "15px",
+                            fontSize: 14,
+                            lineHeight: "18px",
                             color: "hsl(215 25% 35% / 0.85)",
                             whiteSpace: "nowrap",
                           }}
