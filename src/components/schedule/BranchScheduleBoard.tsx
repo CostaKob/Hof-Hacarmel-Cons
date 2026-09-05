@@ -747,7 +747,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   border: `2px solid ${c.border}`,
                   borderRadius: 999,
                   padding: "8px 16px",
-                  fontSize: 17,
+                  fontSize: 19,
                   fontWeight: 700,
                   color: "hsl(215 30% 25%)",
                 }}
@@ -787,7 +787,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                 <div
                   style={{
                     padding: "18px 26px",
-                    fontSize: 34,
+                    fontSize: 36,
                     lineHeight: 1.2,
                     fontWeight: 800,
                     color: "hsl(204 60% 32%)",
@@ -799,7 +799,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                 </div>
 
                 {daySlots.length === 0 ? (
-                  <p style={{ margin: 0, padding: "24px 28px", fontSize: 26, color: "hsl(215 15% 48%)" }}>
+                  <p style={{ margin: 0, padding: "24px 28px", fontSize: 28, color: "hsl(215 15% 48%)" }}>
                     אין שיעורים משובצים
                   </p>
                 ) : (
@@ -825,24 +825,39 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           }}
                         >
                           <div style={{ textAlign: "center", borderInlineEnd: "2px solid hsl(215 20% 40% / 0.18)" }}>
-                            <p dir="ltr" style={{ margin: 0, fontSize: 34, lineHeight: 1.15, fontWeight: 800, color: "hsl(215 30% 20%)" }}>
+                            <p dir="ltr" style={{ margin: 0, fontSize: 36, lineHeight: 1.15, fontWeight: 800, color: "hsl(215 30% 20%)" }}>
                               {fmt(slot.start_minutes)}
                             </p>
-                            <p style={{ margin: "7px 0 0", fontSize: 22, lineHeight: 1.2, color: "hsl(215 25% 34%)" }}>
+                            <p style={{ margin: "7px 0 0", fontSize: 24, lineHeight: 1.2, color: "hsl(215 25% 34%)" }}>
                               {slot.duration_minutes} דקות
                             </p>
                           </div>
                           <div style={{ minWidth: 0, paddingInlineStart: 28 }}>
-                            <p style={{ margin: 0, fontSize: 36, lineHeight: 1.2, fontWeight: 800, color: "hsl(215 30% 18%)", overflowWrap: "anywhere" }}>
+                            <p style={{ margin: 0, fontSize: 38, lineHeight: 1.2, fontWeight: 800, color: "hsl(215 30% 18%)", overflowWrap: "anywhere" }}>
                               {enrollment.students?.first_name} {enrollment.students?.last_name}
                               {enrollment.students?.grade ? (
                                 <span style={{ fontWeight: 500, color: "hsl(215 22% 36%)" }}> · {enrollment.students.grade}</span>
                               ) : null}
                             </p>
-                            <p style={{ margin: "9px 0 0", fontSize: 27, lineHeight: 1.35, color: "hsl(215 25% 30%)", overflowWrap: "anywhere" }}>
+                            <p style={{ margin: "11px 0 0", fontSize: 29, lineHeight: 1.35, color: "hsl(215 25% 30%)", overflowWrap: "anywhere" }}>
                               {enrollment.instruments?.name} · {enrollment.teachers?.first_name} {enrollment.teachers?.last_name}
-                              {enrollment.teachers?.phone ? <span dir="ltr"> · {enrollment.teachers.phone}</span> : null}
                             </p>
+                            {enrollment.teachers?.phone && (
+                              <p
+                                dir="ltr"
+                                style={{
+                                  margin: "7px 0 0",
+                                  fontSize: 26,
+                                  lineHeight: 1.35,
+                                  color: "hsl(215 25% 35%)",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                }}
+                              >
+                                {enrollment.teachers.phone}
+                              </p>
+                            )}
                           </div>
                         </div>
                       );
@@ -857,9 +872,9 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         {/* כותרת תחתונה */}
         <div
           style={{
-            marginTop: 28,
+            marginTop: 32,
             textAlign: "center",
-            fontSize: 18,
+            fontSize: 21,
             color: "hsl(215 20% 40%)",
             fontWeight: 600,
             lineHeight: 1.7,
@@ -876,8 +891,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           </p>
           <p
             style={{
-              margin: "8px 0 0",
-              fontSize: 16,
+              margin: "10px 0 0",
+              fontSize: 19,
               color: "hsl(215 20% 50%)",
             }}
           >
