@@ -411,7 +411,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   {hourLabels.map((m, i) => (
                     <div
                       key={m}
-                      className="absolute inset-x-0 text-[10px] text-muted-foreground text-center"
+                      className="absolute inset-x-0 text-[11px] text-muted-foreground text-center"
                       style={{
                         top: i * ROW_H,
                         transform: "translateY(-50%)",
