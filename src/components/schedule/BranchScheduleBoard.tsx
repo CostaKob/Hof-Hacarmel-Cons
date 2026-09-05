@@ -357,15 +357,19 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     {hourLabels.map((m, i) => (
                       <div
                         key={m}
-                        className="absolute inset-x-0 border-b"
+                        className="absolute inset-x-0 border-t"
                         style={{
                           top: i * ROW_H,
-                          height: ROW_H,
                           borderColor:
                             m % 60 === 0 ? "hsl(var(--border))" : "hsl(var(--border) / 0.4)",
                         }}
                       />
                     ))}
+                    {/* קו תחתון אחרון */}
+                    <div
+                      className="absolute inset-x-0 border-t border-border"
+                      style={{ top: ROWS * ROW_H }}
+                    />
                     {slots
                       .filter((s) => s.day_of_week === d.idx)
                       .map((s) => {
