@@ -355,6 +355,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         const e = enrollmentMap.get(s.enrollment_id);
                         if (!e) return null;
                         const c = e.teacher_id ? teacherColor.get(e.teacher_id) : undefined;
+                        const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
+                        const widthPct = 100 / lay.cols;
                         return (
                           <div
                             key={s.id}
@@ -364,16 +366,21 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ev.dataTransfer.setData("text/plain", e.id);
                             }}
                             onDragEnd={() => setDragId(null)}
-                            className="group absolute inset-x-0.5 cursor-grab overflow-hidden rounded-md border px-1.5 py-0.5 text-[11px] shadow-sm active:cursor-grabbing"
+                            className="group absolute cursor-grab overflow-hidden rounded-md border px-1.5 py-0.5 text-[11px] shadow-sm active:cursor-grabbing"
                             style={{
                               top: ((s.start_minutes - START_MIN) / STEP) * ROW_H,
                               height: (s.duration_minutes / STEP) * ROW_H - 2,
+                              insetInlineStart: `calc(${lay.col * widthPct}% + 2px)`,
+                              width: `calc(${widthPct}% - 4px)`,
                               backgroundColor: c?.bg ?? "hsl(var(--muted))",
                               borderColor: c?.border ?? "hsl(var(--border))",
                             }}
                           >
                             <p className="truncate font-bold text-foreground">
                               {e.students?.first_name} {e.students?.last_name}
+                              {e.students?.grade ? (
+                                <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
+                              ) : null}
                             </p>
                             <p className="truncate text-[10px] text-foreground/70">
                               {fmt(s.start_minutes)} · {e.instruments?.name} ·{" "}
