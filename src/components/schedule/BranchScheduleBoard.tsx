@@ -29,7 +29,7 @@ const DAYS = [
 const DEFAULT_START_MIN = 8 * 60; // 08:00
 const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
-const ROW_H = 36; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
+const ROW_H = 40; // px לכל 15 דקות — משאיר מקום לכל שורות הכרטיס גם בשיעור של 30 דקות
 const EXPORT_ROW_H = 56; // גובה שורה בתצוגת הייצוא — מוגדל לקריאות
 
 
@@ -415,17 +415,17 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* הלוח */}
-        <div className="w-[90%] mx-auto">
+        <div className="mx-auto w-[90%] min-w-0">
           <div
-            ref={boardRef}
-            className="w-full bg-background"
+            className="w-full overflow-x-auto overscroll-x-contain rounded-lg border border-border/60 bg-background pb-2 [scrollbar-gutter:stable]"
+            dir="rtl"
           >
             <p className="mb-2 text-center text-xl font-bold text-foreground">
               לוח שבועי — {schoolName}
             </p>
-            <div className="flex">
+            <div ref={boardRef} className="flex min-w-max">
               {/* עמודת שעות */}
-              <div className="w-14 shrink-0">
+              <div className="sticky right-0 z-20 w-14 shrink-0 bg-background shadow-[-4px_0_8px_-8px_hsl(var(--foreground))]">
                 <div className="h-8" />
                 <div className="relative" style={{ height: ROWS * ROW_H }}>
                   {hourLabels.map((m, i) => (
@@ -447,8 +447,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
               {DAYS.map((d) => (
                 <div
                   key={d.idx}
-                  className="border-s border-border"
-                  style={{ flexGrow: dayFlexGrow.get(d.idx) ?? 1, flexBasis: 0, minWidth: 0 }}
+                  className="shrink-0 border-s border-border"
+                  style={{ width: Math.max(170, (dayFlexGrow.get(d.idx) ?? 1) * 150) }}
                 >
                   <div className="h-8 border-b border-border text-center text-base font-bold leading-8">
                     {d.label}
