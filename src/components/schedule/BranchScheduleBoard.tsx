@@ -38,11 +38,41 @@ const TEACHER_COLORS = [
 const fmt = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
+/** מחלק שיעורים חופפים באותו יום לעמודות זה לצד זה */
+function layoutDaySlots(daySlots: SlotRow[]) {
+  const sorted = [...daySlots].sort(
+    (a, b) => a.start_minutes - b.start_minutes || b.duration_minutes - a.duration_minutes,
+  );
+  const result = new Map<string, { col: number; cols: number }>();
+  let cluster: SlotRow[] = [];
+  let clusterEnd = -1;
+  const flush = () => {
+    const cols: SlotRow[][] = [];
+    for (const s of cluster) {
+      const existing = cols.find(
+        (col) => col[col.length - 1].start_minutes + col[col.length - 1].duration_minutes <= s.start_minutes,
+      );
+      if (existing) existing.push(s);
+      else cols.push([s]);
+    }
+    cols.forEach((col, ci) => col.forEach((s) => result.set(s.id, { col: ci, cols: cols.length })));
+    cluster = [];
+    clusterEnd = -1;
+  };
+  for (const s of sorted) {
+    if (cluster.length && s.start_minutes >= clusterEnd) flush();
+    cluster.push(s);
+    clusterEnd = Math.max(clusterEnd, s.start_minutes + s.duration_minutes);
+  }
+  if (cluster.length) flush();
+  return result;
+}
+
 type EnrollmentRow = {
   id: string;
   lesson_duration_minutes: number | null;
   teacher_id: string | null;
-  students: { first_name: string; last_name: string } | null;
+  students: { first_name: string; last_name: string; grade: string | null } | null;
   teachers: { first_name: string; last_name: string } | null;
   instruments: { name: string } | null;
 };
@@ -74,7 +104,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(
-          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name)",
+          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name, grade), teachers(first_name, last_name), instruments(name)",
         )
         .eq("school_id", schoolId)
         .eq("academic_year_id", selectedYearId!)
@@ -112,6 +142,14 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   }, [enrollments]);
 
   const placedIds = useMemo(() => new Set(slots.map((s) => s.enrollment_id)), [slots]);
+
+  const dayLayouts = useMemo(() => {
+    const map = new Map<number, Map<string, { col: number; cols: number }>>();
+    for (const d of DAYS) {
+      map.set(d.idx, layoutDaySlots(slots.filter((s) => s.day_of_week === d.idx)));
+    }
+    return map;
+  }, [slots]);
   const unplaced = useMemo(
     () =>
       enrollments
@@ -250,6 +288,9 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                 >
                   <p className="font-semibold text-foreground">
                     {e.students?.first_name} {e.students?.last_name}
+                    {e.students?.grade ? (
+                      <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
+                    ) : null}
                   </p>
                   <p className="text-[11px] text-foreground/70">
                     {e.instruments?.name} · {e.teachers?.first_name} {e.teachers?.last_name} ·{" "}
@@ -271,19 +312,21 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
               {/* עמודת שעות */}
               <div className="w-14 shrink-0">
                 <div className="h-8" />
-                {hourLabels.map((m) => (
-                  <div
-                    key={m}
-                    className="text-[10px] text-muted-foreground text-center"
-                    style={{
-                      height: ROW_H,
-                      lineHeight: `${ROW_H}px`,
-                      fontWeight: m % 60 === 0 ? 700 : 400,
-                    }}
-                  >
-                    {m % 60 === 0 ? fmt(m) : ""}
-                  </div>
-                ))}
+                <div className="relative" style={{ height: ROWS * ROW_H }}>
+                  {hourLabels.map((m, i) => (
+                    <div
+                      key={m}
+                      className="absolute inset-x-0 text-[10px] text-muted-foreground text-center"
+                      style={{
+                        top: i * ROW_H,
+                        transform: "translateY(-50%)",
+                        fontWeight: m % 60 === 0 ? 700 : 400,
+                      }}
+                    >
+                      {m % 60 === 0 ? fmt(m) : ""}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {DAYS.map((d) => (
@@ -315,6 +358,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         const e = enrollmentMap.get(s.enrollment_id);
                         if (!e) return null;
                         const c = e.teacher_id ? teacherColor.get(e.teacher_id) : undefined;
+                        const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
+                        const widthPct = 100 / lay.cols;
                         return (
                           <div
                             key={s.id}
@@ -324,16 +369,21 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ev.dataTransfer.setData("text/plain", e.id);
                             }}
                             onDragEnd={() => setDragId(null)}
-                            className="group absolute inset-x-0.5 cursor-grab overflow-hidden rounded-md border px-1.5 py-0.5 text-[11px] shadow-sm active:cursor-grabbing"
+                            className="group absolute cursor-grab overflow-hidden rounded-md border px-1.5 py-0.5 text-[11px] shadow-sm active:cursor-grabbing"
                             style={{
                               top: ((s.start_minutes - START_MIN) / STEP) * ROW_H,
                               height: (s.duration_minutes / STEP) * ROW_H - 2,
+                              insetInlineStart: `calc(${lay.col * widthPct}% + 2px)`,
+                              width: `calc(${widthPct}% - 4px)`,
                               backgroundColor: c?.bg ?? "hsl(var(--muted))",
                               borderColor: c?.border ?? "hsl(var(--border))",
                             }}
                           >
                             <p className="truncate font-bold text-foreground">
                               {e.students?.first_name} {e.students?.last_name}
+                              {e.students?.grade ? (
+                                <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
+                              ) : null}
                             </p>
                             <p className="truncate text-[10px] text-foreground/70">
                               {fmt(s.start_minutes)} · {e.instruments?.name} ·{" "}
