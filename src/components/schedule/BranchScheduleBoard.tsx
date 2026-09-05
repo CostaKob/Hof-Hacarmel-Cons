@@ -22,7 +22,7 @@ const END_MIN = 16 * 60; // 16:00
 const STEP = 15; // דקות
 const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
 const ROWS = (END_MIN - START_MIN) / STEP;
-const LANE_WIDTH = 140; // רוחב מינימלי לעמודת שיעור — הלוח מתרחב רק כשיש שיעורים חופפים
+
 
 const TEACHER_COLORS = [
   { bg: "hsl(200 70% 92%)", border: "hsl(200 55% 62%)" },
@@ -163,10 +163,6 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     return map;
   }, [dayLayouts]);
 
-  const boardMinWidth = useMemo(
-    () => 56 + DAYS.reduce((sum, day) => sum + (dayFlexGrow.get(day.idx) ?? 1) * LANE_WIDTH, 0),
-    [dayFlexGrow],
-  );
   const unplaced = useMemo(
     () =>
       enrollments
@@ -334,11 +330,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* הלוח */}
-        <div className="overflow-x-auto overscroll-x-contain">
+        <div>
           <div
             ref={boardRef}
-            className="rounded-2xl border border-border bg-card p-3"
-            style={{ minWidth: boardMinWidth }}
+            className="w-full rounded-2xl border border-border bg-card p-3"
           >
             <p className="mb-2 text-center text-lg font-bold text-foreground">
               לוח שבועי — {schoolName}

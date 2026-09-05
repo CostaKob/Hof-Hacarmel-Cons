@@ -59,7 +59,7 @@ const TeacherBranchSchedule = () => {
     <div dir="rtl" className="min-h-screen bg-background">
       <PageTitle title={`לוח שבועי — ${schoolName}`} />
       <header className="bg-primary px-5 pb-6 pt-6 text-primary-foreground">
-        <div className="mx-auto flex max-w-6xl items-center gap-3">
+        <div className="flex w-full items-center gap-3">
           <Button
             variant="ghost"
             size="icon"
@@ -75,7 +75,7 @@ const TeacherBranchSchedule = () => {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 -mt-3 pb-24 pt-4">
+      <main className="w-full px-3 -mt-3 pb-24 pt-4">
         {schoolId && <BranchScheduleBoard schoolId={schoolId} schoolName={schoolName} />}
       </main>
     </div>
