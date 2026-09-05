@@ -372,7 +372,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     ev.dataTransfer.setData("text/plain", e.id);
                   }}
                   onDragEnd={() => setDragId(null)}
-                  className="cursor-grab rounded-lg border px-2 py-1.5 text-xs text-right active:cursor-grabbing"
+                  className="cursor-grab rounded-lg border px-2 py-1.5 text-sm text-right active:cursor-grabbing"
                   style={{
                     backgroundColor: c?.bg ?? "hsl(var(--muted))",
                     borderColor: c?.border ?? "hsl(var(--border))",
@@ -384,7 +384,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                       <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
                     ) : null}
                   </p>
-                  <p className="text-[11px] text-foreground/70">
+                  <p className="text-xs text-foreground/70">
                     {e.instruments?.name} · {e.teachers?.first_name} {e.teachers?.last_name} ·{" "}
                     {e.lesson_duration_minutes || 30}′
                   </p>
