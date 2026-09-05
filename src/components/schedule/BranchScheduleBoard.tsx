@@ -288,6 +288,9 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                 >
                   <p className="font-semibold text-foreground">
                     {e.students?.first_name} {e.students?.last_name}
+                    {e.students?.grade ? (
+                      <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
+                    ) : null}
                   </p>
                   <p className="text-[11px] text-foreground/70">
                     {e.instruments?.name} · {e.teachers?.first_name} {e.teachers?.last_name} ·{" "}
