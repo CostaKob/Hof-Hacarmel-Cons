@@ -17,6 +17,20 @@ const TeacherBranchSchedule = () => {
   const branch = branches.find((b) => b.school_id === schoolId);
   const isStaff = !!user && (hasRole("admin") || hasRole("secretary") || hasRole("owner"));
 
+  const { data: school } = useQuery({
+    queryKey: ["branch-schedule-school-name", schoolId],
+    enabled: !!schoolId && !branch && isStaff,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("schools")
+        .select("id, name")
+        .eq("id", schoolId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; name: string } | null;
+    },
+  });
+
   if (teacherLoading || branchesLoading) {
     return (
       <div dir="rtl" className="flex min-h-screen items-center justify-center bg-background">
