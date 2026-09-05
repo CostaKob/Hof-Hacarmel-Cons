@@ -400,7 +400,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             ref={boardRef}
             className="w-full bg-background"
           >
-            <p className="mb-2 text-center text-lg font-bold text-foreground">
+            <p className="mb-2 text-center text-xl font-bold text-foreground">
               לוח שבועי — {schoolName}
             </p>
             <div className="flex">
