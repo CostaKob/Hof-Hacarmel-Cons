@@ -105,6 +105,67 @@ export type Database = {
           },
         ]
       }
+      branch_schedule_slots: {
+        Row: {
+          academic_year_id: string
+          created_at: string
+          day_of_week: number
+          duration_minutes: number
+          enrollment_id: string
+          id: string
+          room: string | null
+          school_id: string
+          start_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          academic_year_id: string
+          created_at?: string
+          day_of_week: number
+          duration_minutes?: number
+          enrollment_id: string
+          id?: string
+          room?: string | null
+          school_id: string
+          start_minutes: number
+          updated_at?: string
+        }
+        Update: {
+          academic_year_id?: string
+          created_at?: string
+          day_of_week?: number
+          duration_minutes?: number
+          enrollment_id?: string
+          id?: string
+          room?: string | null
+          school_id?: string
+          start_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branch_schedule_slots_academic_year_id_fkey"
+            columns: ["academic_year_id"]
+            isOneToOne: false
+            referencedRelation: "academic_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_schedule_slots_enrollment_id_fkey"
+            columns: ["enrollment_id"]
+            isOneToOne: false
+            referencedRelation: "enrollments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "branch_schedule_slots_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           created_at: string
