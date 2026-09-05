@@ -5,17 +5,7 @@ import { toast } from "sonner";
 import { Download, Loader2, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
-import AdminLayout from "@/components/admin/AdminLayout";
-import PageTitle from "@/components/PageTitle";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 
@@ -65,37 +55,28 @@ type SlotRow = {
   duration_minutes: number;
 };
 
-const AdminBranchSchedule = () => {
+type Props = {
+  schoolId: string;
+  schoolName: string;
+};
+
+const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const { selectedYearId } = useAcademicYear();
   const qc = useQueryClient();
   const boardRef = useRef<HTMLDivElement>(null);
-  const [schoolId, setSchoolId] = useState<string | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
-  const { data: schools = [] } = useQuery({
-    queryKey: ["schools-for-schedule"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("schools").select("id, name").order("name");
-      if (error) throw error;
-      return data as { id: string; name: string }[];
-    },
-  });
-
-  const effectiveSchoolId =
-    schoolId ?? schools.find((s) => s.name === "מעגנים")?.id ?? schools[0]?.id ?? null;
-  const schoolName = schools.find((s) => s.id === effectiveSchoolId)?.name ?? "";
-
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
-    queryKey: ["branch-schedule-enrollments", effectiveSchoolId, selectedYearId],
-    enabled: !!effectiveSchoolId && !!selectedYearId,
+    queryKey: ["branch-schedule-enrollments", schoolId, selectedYearId],
+    enabled: !!schoolId && !!selectedYearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(
           "id, lesson_duration_minutes, teacher_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name)",
         )
-        .eq("school_id", effectiveSchoolId!)
+        .eq("school_id", schoolId)
         .eq("academic_year_id", selectedYearId!)
         .eq("is_active", true);
       if (error) throw error;
@@ -104,13 +85,13 @@ const AdminBranchSchedule = () => {
   });
 
   const { data: slots = [] } = useQuery({
-    queryKey: ["branch-schedule-slots", effectiveSchoolId, selectedYearId],
-    enabled: !!effectiveSchoolId && !!selectedYearId,
+    queryKey: ["branch-schedule-slots", schoolId, selectedYearId],
+    enabled: !!schoolId && !!selectedYearId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("branch_schedule_slots")
         .select("id, enrollment_id, day_of_week, start_minutes, duration_minutes")
-        .eq("school_id", effectiveSchoolId!)
+        .eq("school_id", schoolId)
         .eq("academic_year_id", selectedYearId!);
       if (error) throw error;
       return (data ?? []) as SlotRow[];
@@ -154,7 +135,7 @@ const AdminBranchSchedule = () => {
       const { error } = await supabase.from("branch_schedule_slots").upsert(
         {
           ...payload,
-          school_id: effectiveSchoolId!,
+          school_id: schoolId,
           academic_year_id: selectedYearId!,
         },
         { onConflict: "academic_year_id,enrollment_id" },
@@ -221,25 +202,8 @@ const AdminBranchSchedule = () => {
   const hourLabels = Array.from({ length: ROWS }, (_, i) => START_MIN + i * STEP);
 
   return (
-    <AdminLayout title="לוח שבועי לשלוחה" backPath="/admin">
-      <PageTitle title="לוח שבועי לשלוחה" />
-
-      <div className="flex flex-wrap items-end gap-3 mb-4">
-        <div className="min-w-[180px]">
-          <Label className="mb-1 block">שלוחה</Label>
-          <Select value={effectiveSchoolId ?? undefined} onValueChange={setSchoolId}>
-            <SelectTrigger className="h-11 rounded-xl">
-              <SelectValue placeholder="בחר שלוחה" />
-            </SelectTrigger>
-            <SelectContent>
-              {schools.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+    <div dir="rtl">
+      <div className="mb-4 flex flex-wrap items-end gap-3">
         <Button className="h-11 rounded-xl gap-2" onClick={exportPng} disabled={exporting}>
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           שמירה כתמונה
@@ -397,8 +361,8 @@ const AdminBranchSchedule = () => {
       <p className="mt-3 text-sm text-muted-foreground">
         גררו תלמיד מהרשימה אל המשבצת הרצויה. גרירה חזרה לרשימה מסירה אותו מהלוח.
       </p>
-    </AdminLayout>
+    </div>
   );
 };
 
-export default AdminBranchSchedule;
+export default BranchScheduleBoard;

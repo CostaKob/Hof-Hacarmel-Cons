@@ -25,6 +25,7 @@ import {
   X,
   MapPin,
   Music,
+  CalendarDays,
 } from "lucide-react";
 import { isInactiveStudentStatus } from "@/lib/constants";
 import {
@@ -323,6 +324,15 @@ const TeacherBranchCard = () => {
             <h1 className="text-lg font-bold truncate">{branch.schools?.name ?? branch.branch_name}</h1>
             <p className="text-xs text-primary-foreground/80">חשבון רכז שלוחה</p>
           </div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="ms-auto shrink-0 gap-1.5 rounded-xl"
+            onClick={() => navigate(`/teacher/branches/${schoolId}/schedule`)}
+          >
+            <CalendarDays className="h-4 w-4" />
+            לוח שבועי
+          </Button>
         </div>
       </header>
 

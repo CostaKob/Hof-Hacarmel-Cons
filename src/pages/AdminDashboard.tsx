@@ -49,7 +49,7 @@ const TOOLS_SECTIONS: DashboardItem[] = [
   { path: "/admin/academic-years", label: "שנות לימודים", description: "ניהול שנות לימודים, הגדרת שנה פעילה ומעבר שנה", icon: CalendarDays },
   { path: "/admin/year-calendar", label: "לוח שנה שנתי", description: "לוח גאנט שנתי — זמינות, חגים ואירועי סניפים", icon: CalendarDays },
   { path: "/admin/activity-calendar", label: "לוח פעילות מורים", description: "מי לימד, מתי ואת מי — לפי דיווחי המורים", icon: CalendarDays },
-  { path: "/admin/branch-schedule", label: "לוח שבועי לשלוחה", description: "שיבוץ תלמידים בגרירה לפי ימים ושעות, וייצוא תמונה", icon: CalendarDays },
+  
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
   { path: "/admin/cashflow", label: "דוח תזרים", description: "תזרים אמיתי מאייקאונט לפי תאריכי פרעון — שיקים, אשראי בתשלומים וזיכויים", icon: TrendingUp },
   { path: "/admin/travel-report", label: "דוח נסיעות מורים", description: "סיכום קילומטרים והחזרי נסיעות לפי חודש", icon: Car },
