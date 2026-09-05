@@ -109,6 +109,24 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   // שיבוץ/עריכה ידנית — שעה חופשית (כל דקה)
   const [manual, setManual] = useState<{ enrollmentId: string; day: number; time: string } | null>(null);
 
+  const { data: schoolTimes } = useQuery({
+    queryKey: ["school-schedule-times", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("schools")
+        .select("schedule_start_minutes, schedule_end_minutes")
+        .eq("id", schoolId)
+        .single();
+      if (error) return null;
+      return data as { schedule_start_minutes: number | null; schedule_end_minutes: number | null };
+    },
+  });
+
+  const START_MIN = schoolTimes?.schedule_start_minutes ?? DEFAULT_START_MIN;
+  const END_MIN = schoolTimes?.schedule_end_minutes ?? DEFAULT_END_MIN;
+  const ROWS = (END_MIN - START_MIN) / STEP;
+
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
     queryKey: ["branch-schedule-enrollments", schoolId, selectedYearId],
     enabled: !!schoolId && !!selectedYearId,
