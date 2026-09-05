@@ -21,8 +21,9 @@ const DAYS = [
 const START_MIN = 8 * 60; // 08:00
 const END_MIN = 16 * 60; // 16:00
 const STEP = 15; // דקות
-const ROW_H = 22; // px לכל 15 דקות
+const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
 const ROWS = (END_MIN - START_MIN) / STEP;
+const LANE_WIDTH = 142; // רוחב מינימלי לכל שיעור כשיש חפיפה
 
 const TEACHER_COLORS = [
   { bg: "hsl(200 70% 92%)", border: "hsl(200 55% 62%)" },
@@ -162,6 +163,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     }
     return map;
   }, [dayLayouts]);
+
+  const boardMinWidth = useMemo(
+    () => 56 + DAYS.reduce((sum, day) => sum + (dayFlexGrow.get(day.idx) ?? 1) * LANE_WIDTH, 0),
+    [dayFlexGrow],
+  );
   const unplaced = useMemo(
     () =>
       enrollments
@@ -330,7 +336,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
 
         {/* הלוח */}
         <div className="overflow-x-auto overscroll-x-contain">
-          <div ref={boardRef} className="min-w-[720px] rounded-2xl border border-border bg-card p-3">
+          <div
+            ref={boardRef}
+            className="rounded-2xl border border-border bg-card p-3"
+            style={{ minWidth: boardMinWidth }}
+          >
             <p className="mb-2 text-center text-lg font-bold text-foreground">
               לוח שבועי — {schoolName}
             </p>
@@ -395,7 +405,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
                         const widthPct = 100 / lay.cols;
                         const narrow = lay.cols >= 2;
-                        const phone = e.teachers?.phone?.replace(/^0/, "972") ?? null;
+                        const teacherPhone = e.teachers?.phone ?? null;
+                        const whatsappPhone = teacherPhone?.replace(/\D/g, "").replace(/^0/, "972") ?? null;
                         const fullName = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}${e.students?.grade ? ` · ${e.students.grade}` : ""}`;
                         const subLine = `${fmt(s.start_minutes)} · ${e.instruments?.name ?? ""} · ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`;
                         return (
@@ -408,7 +419,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                             }}
                             onDragEnd={() => setDragId(null)}
                             title={`${fullName} — ${subLine}`}
-                            className="group absolute flex cursor-grab flex-col items-center justify-center gap-0 overflow-hidden rounded-lg border px-1 text-center shadow-sm transition-shadow active:cursor-grabbing active:shadow-md"
+                            className="group absolute flex cursor-grab flex-col items-center justify-center overflow-hidden rounded-lg border px-1.5 py-0.5 text-center shadow-sm transition-shadow active:cursor-grabbing active:shadow-md"
                             style={{
                               top: ((s.start_minutes - START_MIN) / STEP) * ROW_H + 1,
                               height: (s.duration_minutes / STEP) * ROW_H - 3,
@@ -421,7 +432,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           >
                             {/* שורה 1: שם התלמיד וכיתה */}
                             <p
-                              className={`w-full font-bold leading-tight text-foreground line-clamp-2 break-words ${narrow ? "text-[11px]" : "text-[13px]"}`}
+                              className="w-full truncate text-[12px] font-bold leading-[14px] text-foreground"
                             >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
@@ -429,26 +440,26 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ) : null}
                             </p>
                             {/* שורה 2: שעה וכלי */}
-                            <p className={`w-full leading-tight text-foreground/70 line-clamp-1 ${narrow ? "text-[9px]" : "text-[10px]"}`}>
+                            <p className="w-full truncate text-[10px] leading-[12px] text-foreground/75">
                               {fmt(s.start_minutes)} · {e.instruments?.name}
                             </p>
                             {/* שורה 3: שם המורה */}
-                            <p className={`w-full leading-tight text-foreground/70 line-clamp-1 ${narrow ? "text-[9px]" : "text-[10px]"}`}>
+                            <p className="w-full truncate text-[10px] leading-[12px] text-foreground/75">
                               {e.teachers?.first_name} {e.teachers?.last_name}
                             </p>
                             {/* שורה 4: טלפון המורה */}
-                            {phone && (
+                            {teacherPhone && whatsappPhone && (
                               <a
-                                href={`https://wa.me/972${e.teachers!.phone!.replace(/\D/g, "").replace(/^0/, "")}`}
+                                href={`https://wa.me/${whatsappPhone}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(ev) => ev.stopPropagation()}
                                 onDragStart={(ev) => ev.preventDefault()}
-                                className={`flex items-center gap-1 leading-tight text-foreground/60 hover:text-primary ${narrow ? "text-[9px]" : "text-[10px]"}`}
+                                className="flex max-w-full items-center gap-1 text-[10px] leading-[12px] text-foreground/65 hover:text-primary"
                                 dir="ltr"
                               >
-                                <Phone className={narrow ? "h-2 w-2" : "h-2.5 w-2.5"} />
-                                {e.teachers!.phone}
+                                <Phone className="h-2.5 w-2.5 shrink-0" />
+                                <span className="truncate">{teacherPhone}</span>
                               </a>
                             )}
                             <button
