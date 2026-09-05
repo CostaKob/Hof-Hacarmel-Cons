@@ -404,7 +404,6 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         const c = e.teacher_id ? teacherColor.get(e.teacher_id) : undefined;
                         const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
                         const widthPct = 100 / lay.cols;
-                        const narrow = lay.cols >= 2;
                         const teacherPhone = e.teachers?.phone ?? null;
                         const whatsappPhone = teacherPhone?.replace(/\D/g, "").replace(/^0/, "972") ?? null;
                         const fullName = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}${e.students?.grade ? ` · ${e.students.grade}` : ""}`;
