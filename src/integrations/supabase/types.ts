@@ -2662,6 +2662,8 @@ export type Database = {
           id: string
           is_active: boolean
           name: string
+          schedule_end_minutes: number
+          schedule_start_minutes: number
         }
         Insert: {
           address?: string | null
@@ -2670,6 +2672,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name: string
+          schedule_end_minutes?: number
+          schedule_start_minutes?: number
         }
         Update: {
           address?: string | null
@@ -2678,6 +2682,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           name?: string
+          schedule_end_minutes?: number
+          schedule_start_minutes?: number
         }
         Relationships: []
       }
