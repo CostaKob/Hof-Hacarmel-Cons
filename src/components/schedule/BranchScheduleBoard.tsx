@@ -2,10 +2,19 @@ import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-import { Download, Loader2, Phone, Trash2, Users } from "lucide-react";
+import { Clock, Download, Loader2, Phone, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 
@@ -98,6 +107,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const exportRef = useRef<HTMLDivElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  // שיבוץ/עריכה ידנית — שעה חופשית (כל דקה)
+  const [manual, setManual] = useState<{ enrollmentId: string; day: number; time: string } | null>(null);
 
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
     queryKey: ["branch-schedule-enrollments", schoolId, selectedYearId],
@@ -235,6 +246,32 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     setDragId(null);
   };
 
+  /** שמירת שיבוץ ידני — שעה חופשית בכל דקה (למשל 14:05) */
+  const saveManual = () => {
+    if (!manual) return;
+    const enr = enrollmentMap.get(manual.enrollmentId);
+    if (!enr) return;
+    const m = manual.time.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) {
+      toast.error("יש להזין שעה בפורמט HH:MM");
+      return;
+    }
+    const duration = enr.lesson_duration_minutes || 30;
+    const start = Math.max(
+      START_MIN,
+      Math.min(Number(m[1]) * 60 + Number(m[2]), END_MIN - duration),
+    );
+    saveSlot.mutate(
+      {
+        enrollment_id: manual.enrollmentId,
+        day_of_week: manual.day,
+        start_minutes: start,
+        duration_minutes: duration,
+      },
+      { onSuccess: () => setManual(null) },
+    );
+  };
+
   const exportPng = async () => {
     const el = exportRef.current ?? boardRef.current;
     if (!el) return;
@@ -274,6 +311,15 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         <Button className="h-11 rounded-xl gap-2" onClick={exportPng} disabled={exporting}>
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           שמירה כתמונה
+        </Button>
+        <Button
+          variant="outline"
+          className="h-11 rounded-xl gap-2"
+          onClick={() => setManual({ enrollmentId: "", day: 0, time: "14:00" })}
+          disabled={enrollments.length === 0}
+        >
+          <Clock className="h-4 w-4" />
+          שיבוץ ידני לפי שעה
         </Button>
       </div>
 
@@ -413,7 +459,14 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ev.dataTransfer.setData("text/plain", e.id);
                             }}
                             onDragEnd={() => setDragId(null)}
-                            title={`${fullName} — ${subLine}`}
+                            onClick={() =>
+                              setManual({
+                                enrollmentId: e.id,
+                                day: s.day_of_week,
+                                time: fmt(s.start_minutes),
+                              })
+                            }
+                            title={`${fullName} — ${subLine} (לחיצה לעריכת שעה)`}
                             className="group absolute flex cursor-grab flex-col items-center justify-center overflow-hidden rounded-lg border px-1.5 py-0.5 text-center shadow-sm transition-shadow active:cursor-grabbing active:shadow-md"
                             style={{
                               top: ((s.start_minutes - START_MIN) / STEP) * ROW_H + 1,
@@ -459,7 +512,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                             )}
                             <button
                               type="button"
-                              onClick={() => removeSlot.mutate(e.id)}
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                removeSlot.mutate(e.id);
+                              }}
                               className="absolute end-0.5 top-0.5 hidden rounded bg-background/80 p-0.5 group-hover:block"
                               aria-label="הסרה מהלוח"
                             >
@@ -475,6 +531,78 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           </div>
         </div>
       </div>
+
+      {/* דיאלוג שיבוץ/עריכה ידנית — שעה חופשית בכל דקה */}
+      <Dialog open={!!manual} onOpenChange={(open) => !open && setManual(null)}>
+        <DialogContent dir="rtl" className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>שיבוץ ידני לפי שעה</DialogTitle>
+          </DialogHeader>
+          {manual && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">תלמיד</label>
+                <Select
+                  value={manual.enrollmentId || undefined}
+                  onValueChange={(v) => setManual({ ...manual, enrollmentId: v })}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="בחר תלמיד" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enrollments.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.students?.first_name} {e.students?.last_name}
+                        {e.students?.grade ? ` · ${e.students.grade}` : ""} — {e.teachers?.first_name}{" "}
+                        {e.teachers?.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">יום</label>
+                <Select
+                  value={String(manual.day)}
+                  onValueChange={(v) => setManual({ ...manual, day: Number(v) })}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DAYS.map((d) => (
+                      <SelectItem key={d.idx} value={String(d.idx)}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">שעת התחלה (כל דקה, למשל 14:05)</label>
+                <Input
+                  type="time"
+                  step={60}
+                  dir="ltr"
+                  className="h-12"
+                  value={manual.time}
+                  onChange={(e) => setManual({ ...manual, time: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  בין {fmt(START_MIN)} ל־{fmt(END_MIN)}
+                </p>
+              </div>
+              <Button
+                className="h-12 w-full rounded-xl"
+                onClick={saveManual}
+                disabled={!manual.enrollmentId || saveSlot.isPending}
+              >
+                {saveSlot.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "שמירה"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* ===== תצוגת ייצוא מעוצבת (נסתרת) — נלכדת לתמונה בלבד ===== */}
       <div
