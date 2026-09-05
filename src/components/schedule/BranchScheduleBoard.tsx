@@ -309,19 +309,21 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
               {/* עמודת שעות */}
               <div className="w-14 shrink-0">
                 <div className="h-8" />
-                {hourLabels.map((m) => (
-                  <div
-                    key={m}
-                    className="text-[10px] text-muted-foreground text-center"
-                    style={{
-                      height: ROW_H,
-                      lineHeight: `${ROW_H}px`,
-                      fontWeight: m % 60 === 0 ? 700 : 400,
-                    }}
-                  >
-                    {m % 60 === 0 ? fmt(m) : ""}
-                  </div>
-                ))}
+                <div className="relative" style={{ height: ROWS * ROW_H }}>
+                  {hourLabels.map((m, i) => (
+                    <div
+                      key={m}
+                      className="absolute inset-x-0 text-[10px] text-muted-foreground text-center"
+                      style={{
+                        top: i * ROW_H,
+                        transform: "translateY(-50%)",
+                        fontWeight: m % 60 === 0 ? 700 : 400,
+                      }}
+                    >
+                      {m % 60 === 0 ? fmt(m) : ""}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {DAYS.map((d) => (
