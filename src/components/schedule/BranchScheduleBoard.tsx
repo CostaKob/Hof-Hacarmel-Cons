@@ -839,25 +839,26 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                                 <span style={{ fontWeight: 500, color: "hsl(215 22% 36%)" }}> · {enrollment.students.grade}</span>
                               ) : null}
                             </p>
-                            <p style={{ margin: "11px 0 0", fontSize: 29, lineHeight: 1.35, color: "hsl(215 25% 30%)", overflowWrap: "anywhere" }}>
+                            <p style={{ margin: "11px 0 0", fontSize: 32, lineHeight: 1.35, fontWeight: 700, color: "hsl(215 25% 26%)", overflowWrap: "anywhere" }}>
                               {enrollment.instruments?.name} · {enrollment.teachers?.first_name} {enrollment.teachers?.last_name}
                             </p>
                             {enrollment.teachers?.phone && (
                               <p
                                 dir="ltr"
                                 style={{
-                                  margin: "7px 0 0",
-                                  fontSize: 26,
+                                  margin: "10px 0 0",
+                                  fontSize: 31,
                                   lineHeight: 1.35,
-                                  color: "hsl(215 25% 35%)",
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
+                                  fontWeight: 700,
+                                  color: "hsl(215 25% 28%)",
+                                  textAlign: "right",
+                                  overflowWrap: "anywhere",
                                 }}
                               >
                                 {enrollment.teachers.phone}
                               </p>
                             )}
+
                           </div>
                         </div>
                       );
