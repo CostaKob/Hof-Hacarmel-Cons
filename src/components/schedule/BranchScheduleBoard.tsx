@@ -23,7 +23,7 @@ const END_MIN = 16 * 60; // 16:00
 const STEP = 15; // דקות
 const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
 const ROWS = (END_MIN - START_MIN) / STEP;
-const LANE_WIDTH = 142; // רוחב מינימלי לכל שיעור כשיש חפיפה
+const LANE_WIDTH = 220; // רוחב שמספיק לכל ארבע שורות הפרטים ללא חיתוך
 
 const TEACHER_COLORS = [
   { bg: "hsl(200 70% 92%)", border: "hsl(200 55% 62%)" },
@@ -431,7 +431,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           >
                             {/* שורה 1: שם התלמיד וכיתה */}
                             <p
-                              className="w-full truncate text-[12px] font-bold leading-[14px] text-foreground"
+                              className="w-full whitespace-nowrap text-[12px] font-bold leading-[14px] text-foreground"
                             >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
@@ -439,11 +439,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ) : null}
                             </p>
                             {/* שורה 2: שעה וכלי */}
-                            <p className="w-full truncate text-[10px] leading-[12px] text-foreground/75">
+                            <p className="w-full whitespace-nowrap text-[10px] leading-[12px] text-foreground/75">
                               {fmt(s.start_minutes)} · {e.instruments?.name}
                             </p>
                             {/* שורה 3: שם המורה */}
-                            <p className="w-full truncate text-[10px] leading-[12px] text-foreground/75">
+                            <p className="w-full whitespace-nowrap text-[10px] leading-[12px] text-foreground/75">
                               {e.teachers?.first_name} {e.teachers?.last_name}
                             </p>
                             {/* שורה 4: טלפון המורה */}
@@ -458,7 +458,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                                 dir="ltr"
                               >
                                 <Phone className="h-2.5 w-2.5 shrink-0" />
-                                <span className="truncate">{teacherPhone}</span>
+                                <span className="whitespace-nowrap">{teacherPhone}</span>
                               </a>
                             )}
                             <button
