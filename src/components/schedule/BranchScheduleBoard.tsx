@@ -459,7 +459,14 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ev.dataTransfer.setData("text/plain", e.id);
                             }}
                             onDragEnd={() => setDragId(null)}
-                            title={`${fullName} — ${subLine}`}
+                            onClick={() =>
+                              setManual({
+                                enrollmentId: e.id,
+                                day: s.day_of_week,
+                                time: fmt(s.start_minutes),
+                              })
+                            }
+                            title={`${fullName} — ${subLine} (לחיצה לעריכת שעה)`}
                             className="group absolute flex cursor-grab flex-col items-center justify-center overflow-hidden rounded-lg border px-1.5 py-0.5 text-center shadow-sm transition-shadow active:cursor-grabbing active:shadow-md"
                             style={{
                               top: ((s.start_minutes - START_MIN) / STEP) * ROW_H + 1,
