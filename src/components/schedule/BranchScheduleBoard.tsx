@@ -127,6 +127,21 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const END_MIN = schoolTimes?.schedule_end_minutes ?? DEFAULT_END_MIN;
   const ROWS = (END_MIN - START_MIN) / STEP;
 
+  const { data: coordinator } = useQuery({
+    queryKey: ["branch-schedule-coordinator", schoolId, selectedYearId],
+    enabled: !!schoolId && !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("branch_coordinators")
+        .select("id, teacher_id, teachers(first_name, last_name, phone)")
+        .eq("school_id", schoolId)
+        .eq("academic_year_id", selectedYearId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any)?.teachers as { first_name: string; last_name: string; phone: string | null } | null;
+    },
+  });
+
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
     queryKey: ["branch-schedule-enrollments", schoolId, selectedYearId],
     enabled: !!schoolId && !!selectedYearId,
@@ -869,17 +884,35 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* כותרת תחתונה */}
-        <p
+        <div
           style={{
-            marginTop: 22,
+            marginTop: 24,
             textAlign: "center",
-            fontSize: 14,
-            color: "hsl(215 20% 50%)",
+            fontSize: 15,
+            color: "hsl(215 20% 45%)",
             fontWeight: 500,
+            lineHeight: 1.6,
           }}
         >
-          אולפן ומגמת המוסיקה חוף הכרמל
-        </p>
+          {coordinator && (
+            <p style={{ margin: 0 }}>
+              רכז: {coordinator.first_name} {coordinator.last_name}
+              {coordinator.phone ? ` · ${coordinator.phone}` : ""}
+            </p>
+          )}
+          <p style={{ margin: 0 }}>
+            טלפון משרד: 04-6299711 · מייל: music.hof@gmail.com
+          </p>
+          <p
+            style={{
+              margin: "6px 0 0",
+              fontSize: 14,
+              color: "hsl(215 20% 50%)",
+            }}
+          >
+            אולפן ומגמת המוסיקה חוף הכרמל
+          </p>
+        </div>
       </div>
 
       <p className="mt-3 text-sm text-muted-foreground">
