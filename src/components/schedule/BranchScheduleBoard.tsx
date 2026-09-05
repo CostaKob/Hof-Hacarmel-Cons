@@ -395,7 +395,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* הלוח */}
-        <div>
+        <div className="w-[90%] mx-auto">
           <div
             ref={boardRef}
             className="w-full bg-background"
