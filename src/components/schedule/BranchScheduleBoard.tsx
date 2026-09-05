@@ -94,6 +94,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const { selectedYearId } = useAcademicYear();
   const qc = useQueryClient();
   const boardRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
