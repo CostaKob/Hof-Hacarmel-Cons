@@ -154,12 +154,16 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     () =>
       enrollments
         .filter((e) => !placedIds.has(e.id))
-        .sort((a, b) =>
-          cmpHe(
+        .sort((a, b) => {
+          const ta = `${a.teachers?.first_name ?? ""} ${a.teachers?.last_name ?? ""}`.trim();
+          const tb = `${b.teachers?.first_name ?? ""} ${b.teachers?.last_name ?? ""}`.trim();
+          const byTeacher = cmpHe(ta, tb);
+          if (byTeacher !== 0) return byTeacher;
+          return cmpHe(
             `${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`,
             `${b.students?.first_name ?? ""} ${b.students?.last_name ?? ""}`,
-          ),
-        ),
+          );
+        }),
     [enrollments, placedIds],
   );
 
@@ -280,7 +284,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     ev.dataTransfer.setData("text/plain", e.id);
                   }}
                   onDragEnd={() => setDragId(null)}
-                  className="cursor-grab rounded-lg border px-2 py-1.5 text-xs active:cursor-grabbing"
+                  className="cursor-grab rounded-lg border px-2 py-1.5 text-xs text-right active:cursor-grabbing"
                   style={{
                     backgroundColor: c?.bg ?? "hsl(var(--muted))",
                     borderColor: c?.border ?? "hsl(var(--border))",
