@@ -246,6 +246,32 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     setDragId(null);
   };
 
+  /** שמירת שיבוץ ידני — שעה חופשית בכל דקה (למשל 14:05) */
+  const saveManual = () => {
+    if (!manual) return;
+    const enr = enrollmentMap.get(manual.enrollmentId);
+    if (!enr) return;
+    const m = manual.time.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) {
+      toast.error("יש להזין שעה בפורמט HH:MM");
+      return;
+    }
+    const duration = enr.lesson_duration_minutes || 30;
+    const start = Math.max(
+      START_MIN,
+      Math.min(Number(m[1]) * 60 + Number(m[2]), END_MIN - duration),
+    );
+    saveSlot.mutate(
+      {
+        enrollment_id: manual.enrollmentId,
+        day_of_week: manual.day,
+        start_minutes: start,
+        duration_minutes: duration,
+      },
+      { onSuccess: () => setManual(null) },
+    );
+  };
+
   const exportPng = async () => {
     const el = exportRef.current ?? boardRef.current;
     if (!el) return;
@@ -285,6 +311,15 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         <Button className="h-11 rounded-xl gap-2" onClick={exportPng} disabled={exporting}>
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           שמירה כתמונה
+        </Button>
+        <Button
+          variant="outline"
+          className="h-11 rounded-xl gap-2"
+          onClick={() => setManual({ enrollmentId: "", day: 0, time: "14:00" })}
+          disabled={enrollments.length === 0}
+        >
+          <Clock className="h-4 w-4" />
+          שיבוץ ידני לפי שעה
         </Button>
       </div>
 
