@@ -27,7 +27,7 @@ const DAYS = [
 ];
 
 const START_MIN = 8 * 60; // 08:00
-const END_MIN = 16 * 60; // 16:00
+const END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
 const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
 const ROWS = (END_MIN - START_MIN) / STEP;
