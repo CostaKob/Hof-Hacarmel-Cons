@@ -374,6 +374,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         const c = e.teacher_id ? teacherColor.get(e.teacher_id) : undefined;
                         const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
                         const widthPct = 100 / lay.cols;
+                        const narrow = lay.cols >= 2;
+                        const veryNarrow = lay.cols >= 3;
+                        const fullName = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}${e.students?.grade ? ` · ${e.students.grade}` : ""}`;
+                        const subLine = `${fmt(s.start_minutes)} · ${e.instruments?.name ?? ""} · ${e.teachers?.first_name ?? ""}`;
                         return (
                           <div
                             key={s.id}
@@ -383,7 +387,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ev.dataTransfer.setData("text/plain", e.id);
                             }}
                             onDragEnd={() => setDragId(null)}
-                            className="group absolute cursor-grab overflow-hidden rounded-md border px-1.5 py-0.5 text-[11px] shadow-sm active:cursor-grabbing"
+                            title={`${fullName} — ${subLine}`}
+                            className={`group absolute cursor-grab overflow-hidden rounded-md border shadow-sm active:cursor-grabbing ${narrow ? "px-1 py-0.5 text-[10px]" : "px-1.5 py-0.5 text-[11px]"}`}
                             style={{
                               top: ((s.start_minutes - START_MIN) / STEP) * ROW_H,
                               height: (s.duration_minutes / STEP) * ROW_H - 2,
@@ -393,16 +398,19 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               borderColor: c?.border ?? "hsl(var(--border))",
                             }}
                           >
-                            <p className="truncate font-bold text-foreground">
+                            <p
+                              className={`font-bold leading-tight text-foreground ${narrow ? "line-clamp-2 break-words" : "truncate"}`}
+                            >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
                                 <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
                               ) : null}
                             </p>
-                            <p className="truncate text-[10px] text-foreground/70">
-                              {fmt(s.start_minutes)} · {e.instruments?.name} ·{" "}
-                              {e.teachers?.first_name}
-                            </p>
+                            {!veryNarrow && (
+                              <p className={`${narrow ? "line-clamp-2 break-words leading-tight" : "truncate"} text-[9px] text-foreground/70`}>
+                                {subLine}
+                              </p>
+                            )}
                             <button
                               type="button"
                               onClick={() => removeSlot.mutate(e.id)}
