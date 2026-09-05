@@ -154,12 +154,16 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     () =>
       enrollments
         .filter((e) => !placedIds.has(e.id))
-        .sort((a, b) =>
-          cmpHe(
+        .sort((a, b) => {
+          const ta = `${a.teachers?.first_name ?? ""} ${a.teachers?.last_name ?? ""}`.trim();
+          const tb = `${b.teachers?.first_name ?? ""} ${b.teachers?.last_name ?? ""}`.trim();
+          const byTeacher = cmpHe(ta, tb);
+          if (byTeacher !== 0) return byTeacher;
+          return cmpHe(
             `${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`,
             `${b.students?.first_name ?? ""} ${b.students?.last_name ?? ""}`,
-          ),
-        ),
+          );
+        }),
     [enrollments, placedIds],
   );
 
