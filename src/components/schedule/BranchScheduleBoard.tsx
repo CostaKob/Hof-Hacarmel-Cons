@@ -246,7 +246,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         useCORS: true,
         width: fullWidth,
         height: fullHeight,
-        windowWidth: fullWidth + 40,
+        windowWidth: fullWidth,
         x: 0,
         y: 0,
         scrollX: 0,
@@ -275,7 +275,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
+      <div className="grid gap-3 lg:grid-cols-[240px_1fr]">
         {/* תלמידים שטרם שובצו */}
         <div
           className="rounded-2xl border border-border bg-card p-3 shadow-sm lg:sticky lg:top-4 lg:max-h-[80vh] lg:overflow-y-auto overscroll-contain"
@@ -333,7 +333,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         <div>
           <div
             ref={boardRef}
-            className="w-full rounded-2xl border border-border bg-card p-3"
+            className="w-full bg-background"
           >
             <p className="mb-2 text-center text-lg font-bold text-foreground">
               לוח שבועי — {schoolName}
