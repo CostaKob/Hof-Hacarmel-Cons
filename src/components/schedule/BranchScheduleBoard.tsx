@@ -100,7 +100,8 @@ type Props = {
 };
 
 const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
-  const { selectedYearId } = useAcademicYear();
+  const { selectedYearId, years, activeYear } = useAcademicYear();
+  const selectedYear = years.find((y) => y.id === selectedYearId) ?? activeYear;
   const qc = useQueryClient();
   const boardRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
@@ -654,35 +655,38 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           fontFamily: "inherit",
         }}
       >
-        {/* לוגו */}
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+        {/* כותרת עם לוגו */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 28,
+            borderRadius: 24,
+            padding: "24px 32px",
+            background: "linear-gradient(135deg, hsl(204 70% 88%), hsl(190 60% 90%))",
+            color: "hsl(215 30% 22%)",
+            marginBottom: 28,
+            boxShadow: "0 12px 30px -12px hsl(204 60% 55% / 0.25)",
+          }}
+        >
           <img
             src="/logo.png"
             alt="אולפן ומגמת המוסיקה חוף הכרמל"
-            style={{ height: 96, width: "auto", objectFit: "contain" }}
+            style={{ height: 90, width: "auto", objectFit: "contain", flexShrink: 0 }}
           />
-        </div>
-
-        {/* כותרת */}
-        <div
-          style={{
-            borderRadius: 24,
-            padding: "30px 36px",
-            background: "linear-gradient(135deg, hsl(204 75% 42%), hsl(190 65% 50%))",
-            color: "#ffffff",
-            marginBottom: 28,
-            boxShadow: "0 12px 30px -12px hsl(204 75% 42% / 0.5)",
-          }}
-        >
-          <p style={{ fontSize: 15, fontWeight: 500, opacity: 0.85, margin: 0 }}>
-            אולפן ומגמת המוסיקה · חוף הכרמל
-          </p>
-          <p style={{ fontSize: 40, fontWeight: 800, margin: "6px 0 2px", lineHeight: 1.15 }}>
-            מערכת שבועית — {schoolName}
-          </p>
-          <p style={{ fontSize: 16, fontWeight: 500, opacity: 0.85, margin: 0 }}>
-            {new Date().toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })}
-          </p>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 15, fontWeight: 600, opacity: 0.75, margin: 0 }}>
+              אולפן ומגמת המוסיקה · חוף הכרמל
+            </p>
+            <p style={{ fontSize: 38, fontWeight: 800, margin: "4px 0 2px", lineHeight: 1.15 }}>
+              מערכת שבועית — {schoolName}
+            </p>
+            <p style={{ fontSize: 16, fontWeight: 600, opacity: 0.8, margin: 0 }}>
+              {selectedYear ? `שנת לימודים ${selectedYear.name}` : ""}
+              {selectedYear ? " · " : ""}
+              {new Date().toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })}
+            </p>
+          </div>
         </div>
 
         {/* מקרא מורים */}
