@@ -819,7 +819,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           insetInlineStart: `calc(${lay.col * widthPct}% + 3px)`,
                           width: `calc(${widthPct}% - 6px)`,
                           background: c?.bg ?? "hsl(210 30% 94%)",
-                          border: `2px solid ${c?.border ?? "hsl(214 20% 80%"}`,
+                          border: `2px solid ${c?.border ?? "hsl(214 20% 80%)"}`,
                           borderInlineStartWidth: 6,
                           borderRadius: 14,
                           boxShadow: "0 2px 8px -2px rgb(0 0 0 / 0.14)",
