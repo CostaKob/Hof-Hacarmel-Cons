@@ -30,10 +30,8 @@ const DEFAULT_START_MIN = 8 * 60; // 08:00
 const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
 const ROW_H = 40; // px לכל 15 דקות — משאיר מקום לכל שורות הכרטיס גם בשיעור של 30 דקות
-const EXPORT_ROW_H = 56; // גובה שורה בתצוגת הייצוא — מוגדל לקריאות
-const EXPORT_LANE_W = 290; // רוחב בטוח לכל שיעור מקביל — מונע חיתוך טקסט בייצוא
-const EXPORT_TIME_COL_W = 96;
-const EXPORT_SIDE_PADDING = 52;
+const EXPORT_WIDTH = 1080; // פורמט אנכי וקריא בטלפון
+const EXPORT_SIDE_PADDING = 54;
 
 
 const TEACHER_COLORS = [
@@ -78,24 +76,6 @@ function layoutDaySlots(daySlots: SlotRow[]) {
   }
   if (cluster.length) flush();
   return result;
-}
-
-/** מקטין רק שורות ארוכות עד שהן נכנסות בשלמותן לכרטיס הייצוא. */
-function fitExportText(root: HTMLElement) {
-  root.querySelectorAll<HTMLElement>("[data-fit-export]").forEach((line) => {
-    const preferred = Number(line.dataset.fitExport) || 16;
-    const minimum = Number(line.dataset.fitMin) || 10;
-    line.style.fontSize = `${preferred}px`;
-
-    const available = line.clientWidth;
-    if (!available) return;
-
-    let size = preferred;
-    while (line.scrollWidth > available && size > minimum) {
-      size -= 0.5;
-      line.style.fontSize = `${size}px`;
-    }
-  });
 }
 
 type EnrollmentRow = {
@@ -235,15 +215,6 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     return map;
   }, [dayLayouts]);
 
-  const exportDayWidths = useMemo(
-    () => new Map(DAYS.map((d) => [d.idx, Math.max(1, dayFlexGrow.get(d.idx) ?? 1) * EXPORT_LANE_W])),
-    [dayFlexGrow],
-  );
-  const exportWidth =
-    EXPORT_SIDE_PADDING * 2 +
-    EXPORT_TIME_COL_W +
-    DAYS.reduce((sum, d) => sum + (exportDayWidths.get(d.idx) ?? EXPORT_LANE_W), 0);
-
   const unplaced = useMemo(
     () =>
       enrollments
@@ -347,12 +318,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     try {
       await document.fonts.ready;
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      fitExportText(el);
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       const fullWidth = el.scrollWidth;
       const fullHeight = el.scrollHeight;
       const canvas = await html2canvas(el, {
-        scale: 2,
+        scale: 1,
         backgroundColor: "#ffffff",
         useCORS: true,
         width: fullWidth,
@@ -721,7 +690,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           position: "fixed",
           top: 0,
           left: -10000,
-          width: exportWidth,
+          width: EXPORT_WIDTH,
           background: "#ffffff",
           padding: `48px ${EXPORT_SIDE_PADDING}px 36px`,
           boxSizing: "border-box",
@@ -798,197 +767,91 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           })}
         </div>
 
-        {/* הלוח */}
-        <div
-          style={{
-            display: "flex",
-            border: "1px solid hsl(214 25% 88%)",
-            borderRadius: 20,
-            overflow: "hidden",
-          }}
-        >
-          {/* עמודת שעות */}
-          <div style={{ width: EXPORT_TIME_COL_W, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
-            <div style={{ height: 64 }} />
-            <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
-              {hourLabels.map((m, i) => (
-                <div
-                  key={m}
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    right: 0,
-                    top: i * EXPORT_ROW_H,
-                    transform: "translateY(-50%)",
-                    textAlign: "center",
-                    fontSize: 17,
-                    color: "hsl(215 20% 45%)",
-                    fontWeight: m % 60 === 0 ? 700 : 400,
-                  }}
-                >
-                  {m % 60 === 0 ? fmt(m) : ""}
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* גרסת טלפון: כל יום מוצג במלוא הרוחב, ללא כיווץ אופקי */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          {DAYS.map((d) => {
+            const daySlots = slots
+              .filter((slot) => slot.day_of_week === d.idx)
+              .sort((a, b) => a.start_minutes - b.start_minutes);
 
-          {DAYS.map((d) => (
-            <div
-              key={d.idx}
-              style={{
-                width: exportDayWidths.get(d.idx) ?? EXPORT_LANE_W,
-                flex: "0 0 auto",
-                borderInlineStart: "1px solid hsl(214 25% 88%)",
-              }}
-            >
-              <div
+            return (
+              <section
+                key={d.idx}
                 style={{
-                  height: 64,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  fontWeight: 800,
-                  color: "hsl(204 60% 35%)",
-                  background: "hsl(204 70% 95%)",
-                  borderBottom: "1px solid hsl(214 25% 88%)",
+                  border: "2px solid hsl(214 25% 86%)",
+                  borderRadius: 20,
+                  overflow: "hidden",
+                  background: "hsl(0 0% 100%)",
                 }}
               >
-                יום {d.label}
-              </div>
-              <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
-                {hourLabels.map((m, i) => (
-                  <div
-                    key={m}
-                    style={{
-                      position: "absolute",
-                      left: 0,
-                      right: 0,
-                      top: i * EXPORT_ROW_H,
-                      borderTop: `1px solid ${m % 60 === 0 ? "hsl(214 25% 88%)" : "hsl(214 25% 88% / 0.4)"}`,
-                    }}
-                  />
-                ))}
-                {slots
-                  .filter((s) => s.day_of_week === d.idx)
-                  .map((s) => {
-                    const e = enrollmentMap.get(s.enrollment_id);
-                    if (!e) return null;
-                    const c = e.teacher_id ? teacherColor.get(e.teacher_id) : undefined;
-                    const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
-                    const widthPct = 100 / lay.cols;
-                    return (
-                      <div
-                        key={s.id}
-                        style={{
-                          position: "absolute",
-                          top: ((s.start_minutes - START_MIN) / STEP) * EXPORT_ROW_H + 2,
-                          height: (s.duration_minutes / STEP) * EXPORT_ROW_H - 5,
-                          insetInlineStart: `calc(${lay.col * widthPct}% + 3px)`,
-                          width: `calc(${widthPct}% - 6px)`,
-                          background: c?.bg ?? "hsl(210 30% 94%)",
-                          border: `2px solid ${c?.border ?? "hsl(214 20% 80%)"}`,
-                          borderInlineStartWidth: 6,
-                          borderRadius: 14,
-                          boxShadow: "0 2px 8px -2px rgb(0 0 0 / 0.14)",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          textAlign: "center",
-                          padding: "4px 8px",
-                           boxSizing: "border-box",
-                          overflow: "hidden",
-                        }}
-                      >
-                        <p
-                           data-fit-export="22"
-                           data-fit-min="12"
+                <div
+                  style={{
+                    padding: "18px 26px",
+                    fontSize: 34,
+                    lineHeight: 1.2,
+                    fontWeight: 800,
+                    color: "hsl(204 60% 32%)",
+                    background: "hsl(204 70% 94%)",
+                    borderBottom: "2px solid hsl(214 25% 86%)",
+                  }}
+                >
+                  יום {d.label}
+                </div>
+
+                {daySlots.length === 0 ? (
+                  <p style={{ margin: 0, padding: "24px 28px", fontSize: 26, color: "hsl(215 15% 48%)" }}>
+                    אין שיעורים משובצים
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14, padding: 18 }}>
+                    {daySlots.map((slot) => {
+                      const enrollment = enrollmentMap.get(slot.enrollment_id);
+                      if (!enrollment) return null;
+                      const color = enrollment.teacher_id ? teacherColor.get(enrollment.teacher_id) : undefined;
+                      return (
+                        <div
+                          key={slot.id}
                           style={{
-                            margin: 0,
-                             width: "100%",
-                             minWidth: 0,
-                            fontSize: 22,
-                            fontWeight: 800,
-                            lineHeight: "26px",
-                            color: "hsl(215 30% 20%)",
-                            whiteSpace: "nowrap",
+                            display: "grid",
+                            gridTemplateColumns: "170px minmax(0, 1fr)",
+                            alignItems: "center",
+                            minHeight: 120,
+                            padding: "18px 26px",
+                            boxSizing: "border-box",
+                            border: `2px solid ${color?.border ?? "hsl(214 20% 80%)"}`,
+                            borderInlineStartWidth: 9,
+                            borderRadius: 14,
+                            background: color?.bg ?? "hsl(210 30% 94%)",
                           }}
                         >
-                          {e.students?.first_name} {e.students?.last_name}
-                          {e.students?.grade ? (
-                            <span style={{ fontWeight: 500, opacity: 0.7 }}> · {e.students.grade}</span>
-                          ) : null}
-                        </p>
-                        <p
-                           data-fit-export="15"
-                           data-fit-min="11"
-                          style={{
-                            margin: 0,
-                             width: "100%",
-                             minWidth: 0,
-                            fontSize: 15,
-                            lineHeight: "19px",
-                            color: "hsl(215 25% 35% / 0.65)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          יום {d.label}
-                        </p>
-                        <p
-                           data-fit-export="16"
-                           data-fit-min="11"
-                          style={{
-                            margin: 0,
-                             width: "100%",
-                             minWidth: 0,
-                            fontSize: 16,
-                            lineHeight: "20px",
-                            color: "hsl(215 25% 35% / 0.85)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {fmt(s.start_minutes)} · {e.instruments?.name}
-                        </p>
-                        <p
-                           data-fit-export="16"
-                           data-fit-min="11"
-                          style={{
-                            margin: 0,
-                             width: "100%",
-                             minWidth: 0,
-                            fontSize: 16,
-                            lineHeight: "20px",
-                            color: "hsl(215 25% 35% / 0.85)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {e.teachers?.first_name} {e.teachers?.last_name}
-                        </p>
-                         {e.teachers?.phone ? (
-                           <p
-                             dir="ltr"
-                             data-fit-export="15"
-                             data-fit-min="11"
-                             style={{
-                               margin: 0,
-                               width: "100%",
-                               minWidth: 0,
-                               fontSize: 15,
-                               lineHeight: "18px",
-                               color: "hsl(215 25% 35% / 0.78)",
-                               whiteSpace: "nowrap",
-                             }}
-                           >
-                             {e.teachers.phone}
-                           </p>
-                         ) : null}
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          ))}
+                          <div style={{ textAlign: "center", borderInlineEnd: "2px solid hsl(215 20% 40% / 0.18)" }}>
+                            <p dir="ltr" style={{ margin: 0, fontSize: 34, lineHeight: 1.15, fontWeight: 800, color: "hsl(215 30% 20%)" }}>
+                              {fmt(slot.start_minutes)}
+                            </p>
+                            <p style={{ margin: "7px 0 0", fontSize: 22, lineHeight: 1.2, color: "hsl(215 25% 34%)" }}>
+                              {slot.duration_minutes} דקות
+                            </p>
+                          </div>
+                          <div style={{ minWidth: 0, paddingInlineStart: 28 }}>
+                            <p style={{ margin: 0, fontSize: 36, lineHeight: 1.2, fontWeight: 800, color: "hsl(215 30% 18%)", overflowWrap: "anywhere" }}>
+                              {enrollment.students?.first_name} {enrollment.students?.last_name}
+                              {enrollment.students?.grade ? (
+                                <span style={{ fontWeight: 500, color: "hsl(215 22% 36%)" }}> · {enrollment.students.grade}</span>
+                              ) : null}
+                            </p>
+                            <p style={{ margin: "9px 0 0", fontSize: 27, lineHeight: 1.35, color: "hsl(215 25% 30%)", overflowWrap: "anywhere" }}>
+                              {enrollment.instruments?.name} · {enrollment.teachers?.first_name} {enrollment.teachers?.last_name}
+                              {enrollment.teachers?.phone ? <span dir="ltr"> · {enrollment.teachers.phone}</span> : null}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
 
         {/* כותרת תחתונה */}
