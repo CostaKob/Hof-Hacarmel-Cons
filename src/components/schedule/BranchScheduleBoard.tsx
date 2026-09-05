@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-import { Clock, Download, Loader2, Phone, Trash2, Users } from "lucide-react";
+import { Clock, Download, Loader2, Phone, Share2, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -128,6 +128,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const exportRef = useRef<HTMLDivElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [preparedImage, setPreparedImage] = useState<{ file: File; url: string } | null>(null);
   // שיבוץ/עריכה ידנית — שעה חופשית (כל דקה)
   const [manual, setManual] = useState<{ enrollmentId: string; day: number; time: string } | null>(null);
 
@@ -371,33 +372,40 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
       const fileName = `לוח_שבועי_${schoolName}.png`;
       const file = new File([blob], fileName, { type: "image/png" });
 
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `לוח שבועי ${schoolName}`,
-          });
-          toast.success("התמונה מוכנה לשמירה או לשליחה");
-        } catch (shareError) {
-          if (shareError instanceof DOMException && shareError.name === "AbortError") return;
-          throw shareError;
-        }
-      } else {
-        const objectUrl = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = fileName;
-        link.href = objectUrl;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
-        toast.success("התמונה נשמרה בתיקיית ההורדות");
-      }
+      const objectUrl = URL.createObjectURL(blob);
+      setPreparedImage((current) => {
+        if (current) URL.revokeObjectURL(current.url);
+        return { file, url: objectUrl };
+      });
+      toast.success("התמונה מוכנה");
     } catch (err: any) {
       toast.error(err.message || "שגיאה בייצוא");
     } finally {
       setExporting(false);
     }
+  };
+
+  const savePreparedImage = async () => {
+    if (!preparedImage) return;
+    if (navigator.share && navigator.canShare?.({ files: [preparedImage.file] })) {
+      try {
+        await navigator.share({
+          files: [preparedImage.file],
+          title: `לוח שבועי ${schoolName}`,
+        });
+        return;
+      } catch (shareError) {
+        if (shareError instanceof DOMException && shareError.name === "AbortError") return;
+      }
+    }
+
+    const link = document.createElement("a");
+    link.download = preparedImage.file.name;
+    link.href = preparedImage.url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    toast.success("התמונה נשמרה בתיקיית ההורדות");
   };
 
   const hourLabels = Array.from({ length: ROWS }, (_, i) => START_MIN + i * STEP);
@@ -1018,6 +1026,35 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
       <p className="mt-3 text-sm text-muted-foreground">
         גררו תלמיד מהרשימה אל המשבצת הרצויה. גרירה חזרה לרשימה מסירה אותו מהלוח.
       </p>
+
+      <Dialog
+        open={!!preparedImage}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPreparedImage((current) => {
+              if (current) URL.revokeObjectURL(current.url);
+              return null;
+            });
+          }
+        }}
+      >
+        <DialogContent dir="rtl" className="max-h-[92vh] max-w-lg overflow-y-auto overscroll-contain">
+          <DialogHeader>
+            <DialogTitle className="text-right">התמונה מוכנה</DialogTitle>
+          </DialogHeader>
+          {preparedImage && (
+            <img
+              src={preparedImage.url}
+              alt={`לוח שבועי ${schoolName}`}
+              className="h-auto w-full rounded-lg border border-border object-contain"
+            />
+          )}
+          <Button className="h-12 w-full gap-2 rounded-xl" onClick={savePreparedImage}>
+            <Share2 className="h-5 w-5" />
+            שמירה או שליחה
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
