@@ -529,6 +529,78 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
       </div>
 
+      {/* דיאלוג שיבוץ/עריכה ידנית — שעה חופשית בכל דקה */}
+      <Dialog open={!!manual} onOpenChange={(open) => !open && setManual(null)}>
+        <DialogContent dir="rtl" className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>שיבוץ ידני לפי שעה</DialogTitle>
+          </DialogHeader>
+          {manual && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">תלמיד</label>
+                <Select
+                  value={manual.enrollmentId || undefined}
+                  onValueChange={(v) => setManual({ ...manual, enrollmentId: v })}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue placeholder="בחר תלמיד" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {enrollments.map((e) => (
+                      <SelectItem key={e.id} value={e.id}>
+                        {e.students?.first_name} {e.students?.last_name}
+                        {e.students?.grade ? ` · ${e.students.grade}` : ""} — {e.teachers?.first_name}{" "}
+                        {e.teachers?.last_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">יום</label>
+                <Select
+                  value={String(manual.day)}
+                  onValueChange={(v) => setManual({ ...manual, day: Number(v) })}
+                >
+                  <SelectTrigger className="h-11">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DAYS.map((d) => (
+                      <SelectItem key={d.idx} value={String(d.idx)}>
+                        {d.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">שעת התחלה (כל דקה, למשל 14:05)</label>
+                <Input
+                  type="time"
+                  step={60}
+                  dir="ltr"
+                  className="h-12"
+                  value={manual.time}
+                  onChange={(e) => setManual({ ...manual, time: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  בין {fmt(START_MIN)} ל־{fmt(END_MIN)}
+                </p>
+              </div>
+              <Button
+                className="h-12 w-full rounded-xl"
+                onClick={saveManual}
+                disabled={!manual.enrollmentId || saveSlot.isPending}
+              >
+                {saveSlot.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "שמירה"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* ===== תצוגת ייצוא מעוצבת (נסתרת) — נלכדת לתמונה בלבד ===== */}
       <div
         ref={exportRef}
