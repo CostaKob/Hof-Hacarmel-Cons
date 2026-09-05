@@ -30,7 +30,7 @@ const DEFAULT_START_MIN = 8 * 60; // 08:00
 const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
 const ROW_H = 36; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
-const EXPORT_ROW_H = 42; // גובה שורה בתצוגת הייצוא
+const EXPORT_ROW_H = 56; // גובה שורה בתצוגת הייצוא — מוגדל לקריאות
 
 
 const TEACHER_COLORS = [
@@ -130,16 +130,20 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
 
   const { data: coordinator } = useQuery({
     queryKey: ["branch-schedule-coordinator", schoolId, selectedYearId],
-    enabled: !!schoolId && !!selectedYearId,
+    enabled: !!schoolId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("branch_coordinators")
-        .select("id, teacher_id, teachers(first_name, last_name, phone)")
-        .eq("school_id", schoolId)
-        .eq("academic_year_id", selectedYearId!)
-        .maybeSingle();
-      if (error) throw error;
-      return (data as any)?.teachers as { first_name: string; last_name: string; phone: string | null } | null;
+      if (!schoolId) return null;
+      const fetchOne = async (yearId?: string) => {
+        let q = supabase
+          .from("branch_coordinators")
+          .select("id, teacher_id, teachers(first_name, last_name, phone)")
+          .eq("school_id", schoolId);
+        if (yearId) q = q.eq("academic_year_id", yearId);
+        const { data, error } = await q.order("created_at", { ascending: false }).maybeSingle();
+        if (error) throw error;
+        return (data as any)?.teachers as { first_name: string; last_name: string; phone: string | null } | null;
+      };
+      return (await fetchOne(selectedYearId ?? undefined)) ?? (await fetchOne());
     },
   });
 
@@ -662,7 +666,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             alignItems: "center",
             gap: 28,
             borderRadius: 24,
-            padding: "24px 32px",
+            padding: "28px 36px",
             background: "linear-gradient(135deg, hsl(204 70% 88%), hsl(190 60% 90%))",
             color: "hsl(215 30% 22%)",
             marginBottom: 28,
@@ -672,16 +676,16 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           <img
             src="/logo.png"
             alt="אולפן ומגמת המוסיקה חוף הכרמל"
-            style={{ height: 90, width: "auto", objectFit: "contain", flexShrink: 0 }}
+            style={{ height: 100, width: "auto", objectFit: "contain", flexShrink: 0 }}
           />
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 15, fontWeight: 600, opacity: 0.75, margin: 0 }}>
+            <p style={{ fontSize: 17, fontWeight: 600, opacity: 0.75, margin: 0 }}>
               אולפן ומגמת המוסיקה · חוף הכרמל
             </p>
-            <p style={{ fontSize: 38, fontWeight: 800, margin: "4px 0 2px", lineHeight: 1.15 }}>
+            <p style={{ fontSize: 42, fontWeight: 800, margin: "6px 0 4px", lineHeight: 1.15 }}>
               מערכת שבועית — {schoolName}
             </p>
-            <p style={{ fontSize: 16, fontWeight: 600, opacity: 0.8, margin: 0 }}>
+            <p style={{ fontSize: 18, fontWeight: 600, opacity: 0.8, margin: 0 }}>
               {selectedYear ? `שנת לימודים ${selectedYear.name}` : ""}
               {selectedYear ? " · " : ""}
               {new Date().toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })}
@@ -690,7 +694,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* מקרא מורים */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 22 }}>
           {Array.from(teacherColor.entries()).map(([tid, c]) => {
             const t = enrollments.find((e) => e.teacher_id === tid)?.teachers;
             if (!t) return null;
@@ -700,20 +704,20 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
-                  gap: 8,
+                  gap: 10,
                   background: c.bg,
-                  border: `1.5px solid ${c.border}`,
+                  border: `2px solid ${c.border}`,
                   borderRadius: 999,
-                  padding: "6px 14px",
-                  fontSize: 15,
-                  fontWeight: 600,
+                  padding: "8px 16px",
+                  fontSize: 17,
+                  fontWeight: 700,
                   color: "hsl(215 30% 25%)",
                 }}
               >
                 <span
                   style={{
-                    width: 10,
-                    height: 10,
+                    width: 12,
+                    height: 12,
                     borderRadius: 999,
                     background: c.border,
                     display: "inline-block",
@@ -735,8 +739,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           }}
         >
           {/* עמודת שעות */}
-          <div style={{ width: 74, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
-            <div style={{ height: 52 }} />
+          <div style={{ width: 90, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
+            <div style={{ height: 64 }} />
             <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
               {hourLabels.map((m, i) => (
                 <div
@@ -748,7 +752,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     top: i * EXPORT_ROW_H,
                     transform: "translateY(-50%)",
                     textAlign: "center",
-                    fontSize: 15,
+                    fontSize: 17,
                     color: "hsl(215 20% 45%)",
                     fontWeight: m % 60 === 0 ? 700 : 400,
                   }}
@@ -771,11 +775,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             >
               <div
                 style={{
-                  height: 52,
+                  height: 64,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 22,
+                  fontSize: 24,
                   fontWeight: 800,
                   color: "hsl(204 60% 35%)",
                   background: "hsl(204 70% 95%)",
@@ -815,25 +819,25 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           insetInlineStart: `calc(${lay.col * widthPct}% + 3px)`,
                           width: `calc(${widthPct}% - 6px)`,
                           background: c?.bg ?? "hsl(210 30% 94%)",
-                          border: `1.5px solid ${c?.border ?? "hsl(214 20% 80%)"}`,
-                          borderInlineStartWidth: 5,
-                          borderRadius: 12,
-                          boxShadow: "0 2px 6px -2px rgb(0 0 0 / 0.12)",
+                          border: `2px solid ${c?.border ?? "hsl(214 20% 80%)"}`,
+                          borderInlineStartWidth: 6,
+                          borderRadius: 14,
+                          boxShadow: "0 2px 8px -2px rgb(0 0 0 / 0.14)",
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
                           textAlign: "center",
-                          padding: "2px 6px",
+                          padding: "4px 8px",
                           overflow: "hidden",
                         }}
                       >
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 18,
+                            fontSize: 22,
                             fontWeight: 800,
-                            lineHeight: "22px",
+                            lineHeight: "26px",
                             color: "hsl(215 30% 20%)",
                             whiteSpace: "nowrap",
                           }}
@@ -846,8 +850,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 13,
-                            lineHeight: "16px",
+                            fontSize: 15,
+                            lineHeight: "19px",
                             color: "hsl(215 25% 35% / 0.65)",
                             whiteSpace: "nowrap",
                           }}
@@ -857,8 +861,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 14,
-                            lineHeight: "18px",
+                            fontSize: 16,
+                            lineHeight: "20px",
                             color: "hsl(215 25% 35% / 0.85)",
                             whiteSpace: "nowrap",
                           }}
@@ -868,8 +872,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 14,
-                            lineHeight: "18px",
+                            fontSize: 16,
+                            lineHeight: "20px",
                             color: "hsl(215 25% 35% / 0.85)",
                             whiteSpace: "nowrap",
                           }}
@@ -890,12 +894,12 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         {/* כותרת תחתונה */}
         <div
           style={{
-            marginTop: 24,
+            marginTop: 28,
             textAlign: "center",
-            fontSize: 15,
-            color: "hsl(215 20% 45%)",
-            fontWeight: 500,
-            lineHeight: 1.6,
+            fontSize: 18,
+            color: "hsl(215 20% 40%)",
+            fontWeight: 600,
+            lineHeight: 1.7,
           }}
         >
           {coordinator && (
@@ -909,8 +913,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           </p>
           <p
             style={{
-              margin: "6px 0 0",
-              fontSize: 14,
+              margin: "8px 0 0",
+              fontSize: 16,
               color: "hsl(215 20% 50%)",
             }}
           >
