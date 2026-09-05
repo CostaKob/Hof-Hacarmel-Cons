@@ -213,7 +213,7 @@ const App = () => (
               <Route path="/admin/salary-report" element={<AdminRoute><AdminSalaryReport /></AdminRoute>} />
               <Route path="/admin/travel-report" element={<AdminRoute><AdminTravelReport /></AdminRoute>} />
 <Route path="/admin/activity-calendar" element={<AdminRoute><AdminActivityCalendar /></AdminRoute>} />
-              <Route path="/admin/branch-schedule" element={<AdminRoute><AdminBranchSchedule /></AdminRoute>} />
+              <Route path="/teacher/branches/:schoolId/schedule" element={<TeacherRoute><TeacherBranchSchedule /></TeacherRoute>} />
               <Route path="/admin/operations-log" element={<AdminRoute><AdminOperationsLog /></AdminRoute>} />
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
