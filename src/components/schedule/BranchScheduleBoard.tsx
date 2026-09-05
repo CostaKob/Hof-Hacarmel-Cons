@@ -224,10 +224,20 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     if (!boardRef.current) return;
     setExporting(true);
     try {
-      const canvas = await html2canvas(boardRef.current, {
+      const el = boardRef.current;
+      const fullWidth = el.scrollWidth;
+      const fullHeight = el.scrollHeight;
+      const canvas = await html2canvas(el, {
         scale: 2,
         backgroundColor: "#ffffff",
         useCORS: true,
+        width: fullWidth,
+        height: fullHeight,
+        windowWidth: fullWidth + 40,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
       });
       const link = document.createElement("a");
       link.download = `לוח_שבועי_${schoolName}.png`;
