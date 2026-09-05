@@ -22,6 +22,7 @@ const END_MIN = 16 * 60; // 16:00
 const STEP = 15; // דקות
 const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
 const ROWS = (END_MIN - START_MIN) / STEP;
+const EXPORT_ROW_H = 34; // גובה שורה בתצוגת הייצוא
 
 
 const TEACHER_COLORS = [
@@ -94,6 +95,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const { selectedYearId } = useAcademicYear();
   const qc = useQueryClient();
   const boardRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -234,10 +236,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   };
 
   const exportPng = async () => {
-    if (!boardRef.current) return;
+    const el = exportRef.current ?? boardRef.current;
+    if (!el) return;
     setExporting(true);
     try {
-      const el = boardRef.current;
       const fullWidth = el.scrollWidth;
       const fullHeight = el.scrollHeight;
       const canvas = await html2canvas(el, {
@@ -472,6 +474,243 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ===== תצוגת ייצוא מעוצבת (נסתרת) — נלכדת לתמונה בלבד ===== */}
+      <div
+        ref={exportRef}
+        dir="rtl"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: -10000,
+          width: 1600,
+          background: "#ffffff",
+          padding: "48px 52px 36px",
+          fontFamily: "inherit",
+        }}
+      >
+        {/* כותרת */}
+        <div
+          style={{
+            borderRadius: 24,
+            padding: "30px 36px",
+            background: "linear-gradient(135deg, hsl(204 75% 42%), hsl(190 65% 50%))",
+            color: "#ffffff",
+            marginBottom: 28,
+            boxShadow: "0 12px 30px -12px hsl(204 75% 42% / 0.5)",
+          }}
+        >
+          <p style={{ fontSize: 15, fontWeight: 500, opacity: 0.85, margin: 0 }}>
+            אולפן המוסיקה · חוף הכרמל
+          </p>
+          <p style={{ fontSize: 40, fontWeight: 800, margin: "6px 0 2px", lineHeight: 1.15 }}>
+            מערכת שבועית — {schoolName}
+          </p>
+          <p style={{ fontSize: 16, fontWeight: 500, opacity: 0.85, margin: 0 }}>
+            {new Date().toLocaleDateString("he-IL", { day: "numeric", month: "long", year: "numeric" })}
+          </p>
+        </div>
+
+        {/* מקרא מורים */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+          {Array.from(teacherColor.entries()).map(([tid, c]) => {
+            const t = enrollments.find((e) => e.teacher_id === tid)?.teachers;
+            if (!t) return null;
+            return (
+              <span
+                key={tid}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  background: c.bg,
+                  border: `1.5px solid ${c.border}`,
+                  borderRadius: 999,
+                  padding: "6px 14px",
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: "hsl(215 30% 25%)",
+                }}
+              >
+                <span
+                  style={{
+                    width: 10,
+                    height: 10,
+                    borderRadius: 999,
+                    background: c.border,
+                    display: "inline-block",
+                  }}
+                />
+                {t.first_name} {t.last_name}
+              </span>
+            );
+          })}
+        </div>
+
+        {/* הלוח */}
+        <div
+          style={{
+            display: "flex",
+            border: "1px solid hsl(214 25% 88%)",
+            borderRadius: 20,
+            overflow: "hidden",
+          }}
+        >
+          {/* עמודת שעות */}
+          <div style={{ width: 74, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
+            <div style={{ height: 52 }} />
+            <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
+              {hourLabels.map((m, i) => (
+                <div
+                  key={m}
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: i * EXPORT_ROW_H,
+                    transform: "translateY(-50%)",
+                    textAlign: "center",
+                    fontSize: 13,
+                    color: "hsl(215 20% 45%)",
+                    fontWeight: m % 60 === 0 ? 700 : 400,
+                  }}
+                >
+                  {m % 60 === 0 ? fmt(m) : ""}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {DAYS.map((d) => (
+            <div
+              key={d.idx}
+              style={{
+                flexGrow: dayFlexGrow.get(d.idx) ?? 1,
+                flexBasis: 0,
+                minWidth: 0,
+                borderInlineStart: "1px solid hsl(214 25% 88%)",
+              }}
+            >
+              <div
+                style={{
+                  height: 52,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 19,
+                  fontWeight: 800,
+                  color: "hsl(204 60% 35%)",
+                  background: "hsl(204 70% 95%)",
+                  borderBottom: "1px solid hsl(214 25% 88%)",
+                }}
+              >
+                יום {d.label}
+              </div>
+              <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
+                {hourLabels.map((m, i) => (
+                  <div
+                    key={m}
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      right: 0,
+                      top: i * EXPORT_ROW_H,
+                      borderTop: `1px solid ${m % 60 === 0 ? "hsl(214 25% 88%)" : "hsl(214 25% 88% / 0.4)"}`,
+                    }}
+                  />
+                ))}
+                {slots
+                  .filter((s) => s.day_of_week === d.idx)
+                  .map((s) => {
+                    const e = enrollmentMap.get(s.enrollment_id);
+                    if (!e) return null;
+                    const c = e.teacher_id ? teacherColor.get(e.teacher_id) : undefined;
+                    const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
+                    const widthPct = 100 / lay.cols;
+                    return (
+                      <div
+                        key={s.id}
+                        style={{
+                          position: "absolute",
+                          top: ((s.start_minutes - START_MIN) / STEP) * EXPORT_ROW_H + 2,
+                          height: (s.duration_minutes / STEP) * EXPORT_ROW_H - 5,
+                          insetInlineStart: `calc(${lay.col * widthPct}% + 3px)`,
+                          width: `calc(${widthPct}% - 6px)`,
+                          background: c?.bg ?? "hsl(210 30% 94%)",
+                          border: `1.5px solid ${c?.border ?? "hsl(214 20% 80%)"}`,
+                          borderInlineStartWidth: 5,
+                          borderRadius: 12,
+                          boxShadow: "0 2px 6px -2px rgb(0 0 0 / 0.12)",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          textAlign: "center",
+                          padding: "2px 6px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 15,
+                            fontWeight: 800,
+                            lineHeight: "18px",
+                            color: "hsl(215 30% 20%)",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {e.students?.first_name} {e.students?.last_name}
+                          {e.students?.grade ? (
+                            <span style={{ fontWeight: 500, opacity: 0.7 }}> · {e.students.grade}</span>
+                          ) : null}
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 12,
+                            lineHeight: "15px",
+                            color: "hsl(215 25% 35% / 0.85)",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {fmt(s.start_minutes)} · {e.instruments?.name}
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 12,
+                            lineHeight: "15px",
+                            color: "hsl(215 25% 35% / 0.85)",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {e.teachers?.first_name} {e.teachers?.last_name}
+                          {e.teachers?.phone ? (
+                            <span dir="ltr"> · {e.teachers.phone}</span>
+                          ) : null}
+                        </p>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* כותרת תחתונה */}
+        <p
+          style={{
+            marginTop: 22,
+            textAlign: "center",
+            fontSize: 14,
+            color: "hsl(215 20% 50%)",
+            fontWeight: 500,
+          }}
+        >
+          אולפן המוסיקה חוף הכרמל ♪ בהצלחה לכולנו!
+        </p>
       </div>
 
       <p className="mt-3 text-sm text-muted-foreground">
