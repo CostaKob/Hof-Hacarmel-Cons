@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-import { Download, Loader2, Trash2, Users } from "lucide-react";
+import { Download, Loader2, Phone, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ type EnrollmentRow = {
   lesson_duration_minutes: number | null;
   teacher_id: string | null;
   students: { first_name: string; last_name: string; grade: string | null } | null;
-  teachers: { first_name: string; last_name: string } | null;
+  teachers: { first_name: string; last_name: string; phone: string | null } | null;
   instruments: { name: string } | null;
 };
 
@@ -104,7 +104,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(
-          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name, grade), teachers(first_name, last_name), instruments(name)",
+          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name, grade), teachers(first_name, last_name, phone), instruments(name)",
         )
         .eq("school_id", schoolId)
         .eq("academic_year_id", selectedYearId!)
@@ -150,6 +150,18 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     }
     return map;
   }, [slots]);
+
+  /** רוחב יחסי לכל יום — יום עם שיעורים חופפים מקבל עמודה רחבה יותר */
+  const dayFlexGrow = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const d of DAYS) {
+      const lay = dayLayouts.get(d.idx);
+      let max = 1;
+      lay?.forEach((v) => { max = Math.max(max, v.cols); });
+      map.set(d.idx, max);
+    }
+    return map;
+  }, [dayLayouts]);
   const unplaced = useMemo(
     () =>
       enrollments
@@ -344,7 +356,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
               </div>
 
               {DAYS.map((d) => (
-                <div key={d.idx} className="flex-1 border-s border-border">
+                <div
+                  key={d.idx}
+                  className="border-s border-border"
+                  style={{ flexGrow: dayFlexGrow.get(d.idx) ?? 1, flexBasis: 0, minWidth: 0 }}
+                >
                   <div className="h-8 border-b border-border text-center text-sm font-bold leading-8">
                     {d.label}
                   </div>
@@ -379,9 +395,9 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         const lay = dayLayouts.get(d.idx)?.get(s.id) ?? { col: 0, cols: 1 };
                         const widthPct = 100 / lay.cols;
                         const narrow = lay.cols >= 2;
-                        const veryNarrow = lay.cols >= 3;
+                        const phone = e.teachers?.phone?.replace(/^0/, "972") ?? null;
                         const fullName = `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}${e.students?.grade ? ` · ${e.students.grade}` : ""}`;
-                        const subLine = `${fmt(s.start_minutes)} · ${e.instruments?.name ?? ""} · ${e.teachers?.first_name ?? ""}`;
+                        const subLine = `${fmt(s.start_minutes)} · ${e.instruments?.name ?? ""} · ${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`;
                         return (
                           <div
                             key={s.id}
@@ -392,28 +408,41 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                             }}
                             onDragEnd={() => setDragId(null)}
                             title={`${fullName} — ${subLine}`}
-                            className={`group absolute cursor-grab overflow-hidden rounded-md border shadow-sm active:cursor-grabbing ${narrow ? "px-1 py-0.5 text-[10px]" : "px-1.5 py-0.5 text-[11px]"}`}
+                            className="group absolute flex cursor-grab flex-col items-center justify-center gap-0 overflow-hidden rounded-lg border px-1 text-center shadow-sm transition-shadow active:cursor-grabbing active:shadow-md"
                             style={{
-                              top: ((s.start_minutes - START_MIN) / STEP) * ROW_H,
-                              height: (s.duration_minutes / STEP) * ROW_H - 2,
+                              top: ((s.start_minutes - START_MIN) / STEP) * ROW_H + 1,
+                              height: (s.duration_minutes / STEP) * ROW_H - 3,
                               insetInlineStart: `calc(${lay.col * widthPct}% + 2px)`,
                               width: `calc(${widthPct}% - 4px)`,
                               backgroundColor: c?.bg ?? "hsl(var(--muted))",
                               borderColor: c?.border ?? "hsl(var(--border))",
+                              borderInlineStartWidth: 3,
                             }}
                           >
                             <p
-                              className={`font-bold leading-tight text-foreground ${narrow ? "line-clamp-2 break-words" : "truncate"}`}
+                              className={`w-full font-bold leading-tight text-foreground ${narrow ? "line-clamp-2 break-words text-[11px]" : "truncate text-[13px]"}`}
                             >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
                                 <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
                               ) : null}
                             </p>
-                            {!veryNarrow && (
-                              <p className={`${narrow ? "line-clamp-2 break-words leading-tight" : "truncate"} text-[9px] text-foreground/70`}>
-                                {subLine}
-                              </p>
+                            <p className={`w-full leading-tight text-foreground/70 ${narrow ? "line-clamp-1 text-[9px]" : "truncate text-[10px]"}`}>
+                              {fmt(s.start_minutes)} · {e.instruments?.name} · {e.teachers?.first_name} {e.teachers?.last_name}
+                            </p>
+                            {phone && !narrow && (
+                              <a
+                                href={`https://wa.me/972${e.teachers!.phone!.replace(/\D/g, "").replace(/^0/, "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(ev) => ev.stopPropagation()}
+                                onDragStart={(ev) => ev.preventDefault()}
+                                className="mt-0.5 flex items-center gap-1 text-[10px] leading-tight text-foreground/60 hover:text-primary"
+                                dir="ltr"
+                              >
+                                <Phone className="h-2.5 w-2.5" />
+                                {e.teachers!.phone}
+                              </a>
                             )}
                             <button
                               type="button"
