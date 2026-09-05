@@ -15,7 +15,6 @@ const DAYS = [
   { idx: 2, label: "שלישי" },
   { idx: 3, label: "רביעי" },
   { idx: 4, label: "חמישי" },
-  { idx: 5, label: "שישי" },
 ];
 
 const START_MIN = 8 * 60; // 08:00
@@ -23,7 +22,7 @@ const END_MIN = 16 * 60; // 16:00
 const STEP = 15; // דקות
 const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
 const ROWS = (END_MIN - START_MIN) / STEP;
-const LANE_WIDTH = 220; // רוחב שמספיק לכל ארבע שורות הפרטים ללא חיתוך
+const LANE_WIDTH = 140; // רוחב מינימלי לעמודת שיעור — הלוח מתרחב רק כשיש שיעורים חופפים
 
 const TEACHER_COLORS = [
   { bg: "hsl(200 70% 92%)", border: "hsl(200 55% 62%)" },
