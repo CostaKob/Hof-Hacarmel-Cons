@@ -512,7 +512,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                             )}
                             <button
                               type="button"
-                              onClick={() => removeSlot.mutate(e.id)}
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                removeSlot.mutate(e.id);
+                              }}
                               className="absolute end-0.5 top-0.5 hidden rounded bg-background/80 p-0.5 group-hover:block"
                               aria-label="הסרה מהלוח"
                             >
