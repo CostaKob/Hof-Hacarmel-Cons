@@ -334,11 +334,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* הלוח */}
-        <div className="overflow-x-auto overscroll-x-contain">
+        <div>
           <div
             ref={boardRef}
-            className="rounded-2xl border border-border bg-card p-3"
-            style={{ minWidth: boardMinWidth }}
+            className="w-full rounded-2xl border border-border bg-card p-3"
           >
             <p className="mb-2 text-center text-lg font-bold text-foreground">
               לוח שבועי — {schoolName}
