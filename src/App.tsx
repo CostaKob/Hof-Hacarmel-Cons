@@ -30,7 +30,7 @@ import AdminTeacherForm from "./pages/admin/AdminTeacherForm";
 import AdminTeacherCard from "./pages/admin/AdminTeacherCard";
 import AdminTeacherReports from "./pages/admin/AdminTeacherReports";
 import AdminActivityCalendar from "./pages/admin/AdminActivityCalendar";
-import AdminBranchSchedule from "./pages/admin/AdminBranchSchedule";
+import TeacherBranchSchedule from "./pages/TeacherBranchSchedule";
 import AdminOperationsLog from "./pages/admin/AdminOperationsLog";
 import AdminSchools from "./pages/admin/AdminSchools";
 import AdminEnrollments from "./pages/admin/AdminEnrollments";
