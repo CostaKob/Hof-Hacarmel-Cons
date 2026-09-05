@@ -716,7 +716,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     top: i * EXPORT_ROW_H,
                     transform: "translateY(-50%)",
                     textAlign: "center",
-                    fontSize: 13,
+                    fontSize: 15,
                     color: "hsl(215 20% 45%)",
                     fontWeight: m % 60 === 0 ? 700 : 400,
                   }}
