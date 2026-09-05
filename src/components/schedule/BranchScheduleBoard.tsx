@@ -430,7 +430,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   className="border-s border-border"
                   style={{ flexGrow: dayFlexGrow.get(d.idx) ?? 1, flexBasis: 0, minWidth: 0 }}
                 >
-                  <div className="h-8 border-b border-border text-center text-sm font-bold leading-8">
+                  <div className="h-8 border-b border-border text-center text-base font-bold leading-8">
                     {d.label}
                   </div>
                   <div
