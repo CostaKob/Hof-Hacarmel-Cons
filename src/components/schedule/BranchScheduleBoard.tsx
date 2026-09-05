@@ -2,10 +2,19 @@ import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-import { Download, Loader2, Phone, Trash2, Users } from "lucide-react";
+import { Clock, Download, Loader2, Phone, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { cmpHe } from "@/lib/sortHebrew";
 
@@ -98,6 +107,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   const exportRef = useRef<HTMLDivElement>(null);
   const [dragId, setDragId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  // שיבוץ/עריכה ידנית — שעה חופשית (כל דקה)
+  const [manual, setManual] = useState<{ enrollmentId: string; day: number; time: string } | null>(null);
 
   const { data: enrollments = [], isLoading: loadingEnrollments } = useQuery({
     queryKey: ["branch-schedule-enrollments", schoolId, selectedYearId],
