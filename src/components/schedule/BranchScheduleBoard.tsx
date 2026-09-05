@@ -31,6 +31,9 @@ const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
 const ROW_H = 40; // px לכל 15 דקות — משאיר מקום לכל שורות הכרטיס גם בשיעור של 30 דקות
 const EXPORT_ROW_H = 56; // גובה שורה בתצוגת הייצוא — מוגדל לקריאות
+const EXPORT_LANE_W = 290; // רוחב בטוח לכל שיעור מקביל — מונע חיתוך טקסט בייצוא
+const EXPORT_TIME_COL_W = 96;
+const EXPORT_SIDE_PADDING = 52;
 
 
 const TEACHER_COLORS = [
@@ -75,6 +78,24 @@ function layoutDaySlots(daySlots: SlotRow[]) {
   }
   if (cluster.length) flush();
   return result;
+}
+
+/** מקטין רק שורות ארוכות עד שהן נכנסות בשלמותן לכרטיס הייצוא. */
+function fitExportText(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>("[data-fit-export]").forEach((line) => {
+    const preferred = Number(line.dataset.fitExport) || 16;
+    const minimum = Number(line.dataset.fitMin) || 10;
+    line.style.fontSize = `${preferred}px`;
+
+    const available = line.clientWidth;
+    if (!available) return;
+
+    let size = preferred;
+    while (line.scrollWidth > available && size > minimum) {
+      size -= 0.5;
+      line.style.fontSize = `${size}px`;
+    }
+  });
 }
 
 type EnrollmentRow = {
@@ -213,6 +234,15 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     return map;
   }, [dayLayouts]);
 
+  const exportDayWidths = useMemo(
+    () => new Map(DAYS.map((d) => [d.idx, Math.max(1, dayFlexGrow.get(d.idx) ?? 1) * EXPORT_LANE_W])),
+    [dayFlexGrow],
+  );
+  const exportWidth =
+    EXPORT_SIDE_PADDING * 2 +
+    EXPORT_TIME_COL_W +
+    DAYS.reduce((sum, d) => sum + (exportDayWidths.get(d.idx) ?? EXPORT_LANE_W), 0);
+
   const unplaced = useMemo(
     () =>
       enrollments
@@ -314,6 +344,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     if (!el) return;
     setExporting(true);
     try {
+      await document.fonts.ready;
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      fitExportText(el);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       const fullWidth = el.scrollWidth;
       const fullHeight = el.scrollHeight;
       const canvas = await html2canvas(el, {
@@ -653,9 +687,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           position: "fixed",
           top: 0,
           left: -10000,
-          width: 1600,
+          width: exportWidth,
           background: "#ffffff",
-          padding: "48px 52px 36px",
+          padding: `48px ${EXPORT_SIDE_PADDING}px 36px`,
+          boxSizing: "border-box",
           fontFamily: "inherit",
         }}
       >
@@ -739,7 +774,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           }}
         >
           {/* עמודת שעות */}
-          <div style={{ width: 90, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
+          <div style={{ width: EXPORT_TIME_COL_W, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
             <div style={{ height: 64 }} />
             <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
               {hourLabels.map((m, i) => (
@@ -767,9 +802,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             <div
               key={d.idx}
               style={{
-                flexGrow: dayFlexGrow.get(d.idx) ?? 1,
-                flexBasis: 0,
-                minWidth: 0,
+                width: exportDayWidths.get(d.idx) ?? EXPORT_LANE_W,
+                flex: "0 0 auto",
                 borderInlineStart: "1px solid hsl(214 25% 88%)",
               }}
             >
@@ -829,12 +863,17 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           justifyContent: "center",
                           textAlign: "center",
                           padding: "4px 8px",
+                           boxSizing: "border-box",
                           overflow: "hidden",
                         }}
                       >
                         <p
+                           data-fit-export="22"
+                           data-fit-min="12"
                           style={{
                             margin: 0,
+                             width: "100%",
+                             minWidth: 0,
                             fontSize: 22,
                             fontWeight: 800,
                             lineHeight: "26px",
@@ -848,8 +887,12 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           ) : null}
                         </p>
                         <p
+                           data-fit-export="15"
+                           data-fit-min="11"
                           style={{
                             margin: 0,
+                             width: "100%",
+                             minWidth: 0,
                             fontSize: 15,
                             lineHeight: "19px",
                             color: "hsl(215 25% 35% / 0.65)",
@@ -859,8 +902,12 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           יום {d.label}
                         </p>
                         <p
+                           data-fit-export="16"
+                           data-fit-min="11"
                           style={{
                             margin: 0,
+                             width: "100%",
+                             minWidth: 0,
                             fontSize: 16,
                             lineHeight: "20px",
                             color: "hsl(215 25% 35% / 0.85)",
@@ -870,8 +917,12 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           {fmt(s.start_minutes)} · {e.instruments?.name}
                         </p>
                         <p
+                           data-fit-export="16"
+                           data-fit-min="11"
                           style={{
                             margin: 0,
+                             width: "100%",
+                             minWidth: 0,
                             fontSize: 16,
                             lineHeight: "20px",
                             color: "hsl(215 25% 35% / 0.85)",
@@ -879,10 +930,25 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           }}
                         >
                           {e.teachers?.first_name} {e.teachers?.last_name}
-                          {e.teachers?.phone ? (
-                            <span dir="ltr"> · {e.teachers.phone}</span>
-                          ) : null}
                         </p>
+                         {e.teachers?.phone ? (
+                           <p
+                             dir="ltr"
+                             data-fit-export="15"
+                             data-fit-min="11"
+                             style={{
+                               margin: 0,
+                               width: "100%",
+                               minWidth: 0,
+                               fontSize: 15,
+                               lineHeight: "18px",
+                               color: "hsl(215 25% 35% / 0.78)",
+                               whiteSpace: "nowrap",
+                             }}
+                           >
+                             {e.teachers.phone}
+                           </p>
+                         ) : null}
                       </div>
                     );
                   })}
