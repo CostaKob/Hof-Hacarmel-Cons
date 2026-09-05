@@ -419,28 +419,35 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               borderInlineStartWidth: 3,
                             }}
                           >
+                            {/* שורה 1: שם התלמיד וכיתה */}
                             <p
-                              className={`w-full font-bold leading-tight text-foreground ${narrow ? "line-clamp-2 break-words text-[11px]" : "truncate text-[13px]"}`}
+                              className={`w-full font-bold leading-tight text-foreground line-clamp-2 break-words ${narrow ? "text-[11px]" : "text-[13px]"}`}
                             >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
                                 <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
                               ) : null}
                             </p>
-                            <p className={`w-full leading-tight text-foreground/70 ${narrow ? "line-clamp-1 text-[9px]" : "truncate text-[10px]"}`}>
-                              {fmt(s.start_minutes)} · {e.instruments?.name} · {e.teachers?.first_name} {e.teachers?.last_name}
+                            {/* שורה 2: שעה וכלי */}
+                            <p className={`w-full leading-tight text-foreground/70 line-clamp-1 ${narrow ? "text-[9px]" : "text-[10px]"}`}>
+                              {fmt(s.start_minutes)} · {e.instruments?.name}
                             </p>
-                            {phone && !narrow && (
+                            {/* שורה 3: שם המורה */}
+                            <p className={`w-full leading-tight text-foreground/70 line-clamp-1 ${narrow ? "text-[9px]" : "text-[10px]"}`}>
+                              {e.teachers?.first_name} {e.teachers?.last_name}
+                            </p>
+                            {/* שורה 4: טלפון המורה */}
+                            {phone && (
                               <a
                                 href={`https://wa.me/972${e.teachers!.phone!.replace(/\D/g, "").replace(/^0/, "")}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(ev) => ev.stopPropagation()}
                                 onDragStart={(ev) => ev.preventDefault()}
-                                className="mt-0.5 flex items-center gap-1 text-[10px] leading-tight text-foreground/60 hover:text-primary"
+                                className={`flex items-center gap-1 leading-tight text-foreground/60 hover:text-primary ${narrow ? "text-[9px]" : "text-[10px]"}`}
                                 dir="ltr"
                               >
-                                <Phone className="h-2.5 w-2.5" />
+                                <Phone className={narrow ? "h-2 w-2" : "h-2.5 w-2.5"} />
                                 {e.teachers!.phone}
                               </a>
                             )}
