@@ -29,8 +29,8 @@ const DAYS = [
 const DEFAULT_START_MIN = 8 * 60; // 08:00
 const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
-const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
-const EXPORT_ROW_H = 34; // גובה שורה בתצוגת הייצוא
+const ROW_H = 36; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
+const EXPORT_ROW_H = 42; // גובה שורה בתצוגת הייצוא
 
 
 const TEACHER_COLORS = [
@@ -352,7 +352,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             setDragId(null);
           }}
         >
-          <p className="mb-2 flex items-center gap-2 font-semibold">
+          <p className="mb-2 flex items-center gap-2 text-base font-semibold">
             <Users className="h-4 w-4 text-primary" />
             טרם שובצו ({unplaced.length})
           </p>
@@ -372,7 +372,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     ev.dataTransfer.setData("text/plain", e.id);
                   }}
                   onDragEnd={() => setDragId(null)}
-                  className="cursor-grab rounded-lg border px-2 py-1.5 text-xs text-right active:cursor-grabbing"
+                  className="cursor-grab rounded-lg border px-2 py-1.5 text-sm text-right active:cursor-grabbing"
                   style={{
                     backgroundColor: c?.bg ?? "hsl(var(--muted))",
                     borderColor: c?.border ?? "hsl(var(--border))",
@@ -384,7 +384,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                       <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
                     ) : null}
                   </p>
-                  <p className="text-[11px] text-foreground/70">
+                  <p className="text-xs text-foreground/70">
                     {e.instruments?.name} · {e.teachers?.first_name} {e.teachers?.last_name} ·{" "}
                     {e.lesson_duration_minutes || 30}′
                   </p>
@@ -395,12 +395,12 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         </div>
 
         {/* הלוח */}
-        <div>
+        <div className="w-[90%] mx-auto">
           <div
             ref={boardRef}
             className="w-full bg-background"
           >
-            <p className="mb-2 text-center text-lg font-bold text-foreground">
+            <p className="mb-2 text-center text-xl font-bold text-foreground">
               לוח שבועי — {schoolName}
             </p>
             <div className="flex">
@@ -411,7 +411,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   {hourLabels.map((m, i) => (
                     <div
                       key={m}
-                      className="absolute inset-x-0 text-[10px] text-muted-foreground text-center"
+                      className="absolute inset-x-0 text-[11px] text-muted-foreground text-center"
                       style={{
                         top: i * ROW_H,
                         transform: "translateY(-50%)",
@@ -430,7 +430,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   className="border-s border-border"
                   style={{ flexGrow: dayFlexGrow.get(d.idx) ?? 1, flexBasis: 0, minWidth: 0 }}
                 >
-                  <div className="h-8 border-b border-border text-center text-sm font-bold leading-8">
+                  <div className="h-8 border-b border-border text-center text-base font-bold leading-8">
                     {d.label}
                   </div>
                   <div
@@ -497,7 +497,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           >
                             {/* שורה 1: שם התלמיד וכיתה */}
                             <p
-                              className="w-full whitespace-nowrap text-[12px] font-bold leading-[14px] text-foreground"
+                              className="w-full whitespace-nowrap text-[14px] font-bold leading-[16px] text-foreground"
                             >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
@@ -505,11 +505,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ) : null}
                             </p>
                             {/* שורה 2: שעה וכלי */}
-                            <p className="w-full whitespace-nowrap text-[10px] leading-[12px] text-foreground/75">
+                            <p className="w-full whitespace-nowrap text-[12px] leading-[14px] text-foreground/75">
                               {fmt(s.start_minutes)} · {e.instruments?.name}
                             </p>
                             {/* שורה 3: שם המורה */}
-                            <p className="w-full whitespace-nowrap text-[10px] leading-[12px] text-foreground/75">
+                            <p className="w-full whitespace-nowrap text-[12px] leading-[14px] text-foreground/75">
                               {e.teachers?.first_name} {e.teachers?.last_name}
                             </p>
                             {/* שורה 4: טלפון המורה */}
@@ -520,10 +520,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                                 rel="noreferrer"
                                 onClick={(ev) => ev.stopPropagation()}
                                 onDragStart={(ev) => ev.preventDefault()}
-                                className="flex max-w-full items-center gap-1 text-[10px] leading-[12px] text-foreground/65 hover:text-primary"
+                                className="flex max-w-full items-center gap-1 text-[12px] leading-[14px] text-foreground/65 hover:text-primary"
                                 dir="ltr"
                               >
-                                <Phone className="h-2.5 w-2.5 shrink-0" />
+                                <Phone className="h-3 w-3 shrink-0" />
                                 <span className="whitespace-nowrap">{teacherPhone}</span>
                               </a>
                             )}
@@ -716,7 +716,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     top: i * EXPORT_ROW_H,
                     transform: "translateY(-50%)",
                     textAlign: "center",
-                    fontSize: 13,
+                    fontSize: 15,
                     color: "hsl(215 20% 45%)",
                     fontWeight: m % 60 === 0 ? 700 : 400,
                   }}
@@ -743,7 +743,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 19,
+                  fontSize: 22,
                   fontWeight: 800,
                   color: "hsl(204 60% 35%)",
                   background: "hsl(204 70% 95%)",
@@ -799,9 +799,9 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 15,
+                            fontSize: 18,
                             fontWeight: 800,
-                            lineHeight: "18px",
+                            lineHeight: "22px",
                             color: "hsl(215 30% 20%)",
                             whiteSpace: "nowrap",
                           }}
@@ -814,8 +814,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 12,
-                            lineHeight: "15px",
+                            fontSize: 14,
+                            lineHeight: "18px",
                             color: "hsl(215 25% 35% / 0.85)",
                             whiteSpace: "nowrap",
                           }}
@@ -825,8 +825,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
-                            fontSize: 12,
-                            lineHeight: "15px",
+                            fontSize: 14,
+                            lineHeight: "18px",
                             color: "hsl(215 25% 35% / 0.85)",
                             whiteSpace: "nowrap",
                           }}
