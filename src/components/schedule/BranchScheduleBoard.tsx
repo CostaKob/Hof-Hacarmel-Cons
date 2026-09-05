@@ -38,6 +38,36 @@ const TEACHER_COLORS = [
 const fmt = (m: number) =>
   `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
+/** מחלק שיעורים חופפים באותו יום לעמודות זה לצד זה */
+function layoutDaySlots(daySlots: SlotRow[]) {
+  const sorted = [...daySlots].sort(
+    (a, b) => a.start_minutes - b.start_minutes || b.duration_minutes - a.duration_minutes,
+  );
+  const result = new Map<string, { col: number; cols: number }>();
+  let cluster: SlotRow[] = [];
+  let clusterEnd = -1;
+  const flush = () => {
+    const cols: SlotRow[][] = [];
+    for (const s of cluster) {
+      const existing = cols.find(
+        (col) => col[col.length - 1].start_minutes + col[col.length - 1].duration_minutes <= s.start_minutes,
+      );
+      if (existing) existing.push(s);
+      else cols.push([s]);
+    }
+    cols.forEach((col, ci) => col.forEach((s) => result.set(s.id, { col: ci, cols: cols.length })));
+    cluster = [];
+    clusterEnd = -1;
+  };
+  for (const s of sorted) {
+    if (cluster.length && s.start_minutes >= clusterEnd) flush();
+    cluster.push(s);
+    clusterEnd = Math.max(clusterEnd, s.start_minutes + s.duration_minutes);
+  }
+  if (cluster.length) flush();
+  return result;
+}
+
 type EnrollmentRow = {
   id: string;
   lesson_duration_minutes: number | null;
@@ -112,6 +142,14 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   }, [enrollments]);
 
   const placedIds = useMemo(() => new Set(slots.map((s) => s.enrollment_id)), [slots]);
+
+  const dayLayouts = useMemo(() => {
+    const map = new Map<number, Map<string, { col: number; cols: number }>>();
+    for (const d of DAYS) {
+      map.set(d.idx, layoutDaySlots(slots.filter((s) => s.day_of_week === d.idx)));
+    }
+    return map;
+  }, [slots]);
   const unplaced = useMemo(
     () =>
       enrollments
