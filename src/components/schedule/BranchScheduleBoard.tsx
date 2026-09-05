@@ -362,11 +362,37 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         scrollX: 0,
         scrollY: 0,
       });
-      const link = document.createElement("a");
-      link.download = `לוח_שבועי_${schoolName}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-      toast.success("הלוח נשמר כתמונה");
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((result) => {
+          if (result) resolve(result);
+          else reject(new Error("לא ניתן היה ליצור את התמונה"));
+        }, "image/png");
+      });
+      const fileName = `לוח_שבועי_${schoolName}.png`;
+      const file = new File([blob], fileName, { type: "image/png" });
+
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `לוח שבועי ${schoolName}`,
+          });
+          toast.success("התמונה מוכנה לשמירה או לשליחה");
+        } catch (shareError) {
+          if (shareError instanceof DOMException && shareError.name === "AbortError") return;
+          throw shareError;
+        }
+      } else {
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = fileName;
+        link.href = objectUrl;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+        toast.success("התמונה נשמרה בתיקיית ההורדות");
+      }
     } catch (err: any) {
       toast.error(err.message || "שגיאה בייצוא");
     } finally {
