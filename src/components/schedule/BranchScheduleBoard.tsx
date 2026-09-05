@@ -639,6 +639,15 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           fontFamily: "inherit",
         }}
       >
+        {/* לוגו */}
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <img
+            src="/logo.png"
+            alt="אולפן ומגמת המוסיקה חוף הכרמל"
+            style={{ height: 96, width: "auto", objectFit: "contain" }}
+          />
+        </div>
+
         {/* כותרת */}
         <div
           style={{
@@ -651,7 +660,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           }}
         >
           <p style={{ fontSize: 15, fontWeight: 500, opacity: 0.85, margin: 0 }}>
-            אולפן המוסיקה · חוף הכרמל
+            אולפן ומגמת המוסיקה · חוף הכרמל
           </p>
           <p style={{ fontSize: 40, fontWeight: 800, margin: "6px 0 2px", lineHeight: 1.15 }}>
             מערכת שבועית — {schoolName}
@@ -869,7 +878,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             fontWeight: 500,
           }}
         >
-          אולפן המוסיקה חוף הכרמל ♪ בהצלחה לכולנו!
+          אולפן ומגמת המוסיקה חוף הכרמל
         </p>
       </div>
 
