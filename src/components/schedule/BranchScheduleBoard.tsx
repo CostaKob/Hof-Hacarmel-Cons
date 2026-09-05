@@ -739,8 +739,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           }}
         >
           {/* עמודת שעות */}
-          <div style={{ width: 74, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
-            <div style={{ height: 52 }} />
+          <div style={{ width: 90, flexShrink: 0, background: "hsl(210 40% 98%)" }}>
+            <div style={{ height: 64 }} />
             <div style={{ position: "relative", height: ROWS * EXPORT_ROW_H }}>
               {hourLabels.map((m, i) => (
                 <div
@@ -752,7 +752,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     top: i * EXPORT_ROW_H,
                     transform: "translateY(-50%)",
                     textAlign: "center",
-                    fontSize: 15,
+                    fontSize: 17,
                     color: "hsl(215 20% 45%)",
                     fontWeight: m % 60 === 0 ? 700 : 400,
                   }}
@@ -775,11 +775,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             >
               <div
                 style={{
-                  height: 52,
+                  height: 64,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 22,
+                  fontSize: 24,
                   fontWeight: 800,
                   color: "hsl(204 60% 35%)",
                   background: "hsl(204 70% 95%)",
@@ -894,12 +894,12 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
         {/* כותרת תחתונה */}
         <div
           style={{
-            marginTop: 24,
+            marginTop: 28,
             textAlign: "center",
-            fontSize: 15,
-            color: "hsl(215 20% 45%)",
-            fontWeight: 500,
-            lineHeight: 1.6,
+            fontSize: 18,
+            color: "hsl(215 20% 40%)",
+            fontWeight: 600,
+            lineHeight: 1.7,
           }}
         >
           {coordinator && (
@@ -913,8 +913,8 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
           </p>
           <p
             style={{
-              margin: "6px 0 0",
-              fontSize: 14,
+              margin: "8px 0 0",
+              fontSize: 16,
               color: "hsl(215 20% 50%)",
             }}
           >
