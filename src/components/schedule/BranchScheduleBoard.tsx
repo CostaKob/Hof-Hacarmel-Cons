@@ -818,6 +818,17 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                         <p
                           style={{
                             margin: 0,
+                            fontSize: 13,
+                            lineHeight: "16px",
+                            color: "hsl(215 25% 35% / 0.65)",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          יום {d.label}
+                        </p>
+                        <p
+                          style={{
+                            margin: 0,
                             fontSize: 14,
                             lineHeight: "18px",
                             color: "hsl(215 25% 35% / 0.85)",
