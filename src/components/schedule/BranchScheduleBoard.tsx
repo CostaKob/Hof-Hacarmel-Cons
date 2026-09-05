@@ -29,8 +29,8 @@ const DAYS = [
 const DEFAULT_START_MIN = 8 * 60; // 08:00
 const DEFAULT_END_MIN = 17 * 60; // 17:00
 const STEP = 15; // דקות
-const ROW_H = 30; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
-const EXPORT_ROW_H = 34; // גובה שורה בתצוגת הייצוא
+const ROW_H = 36; // px לכל 15 דקות — מאפשר להציג את כל פרטי השיעור גם בכרטיס של 30 דקות
+const EXPORT_ROW_H = 42; // גובה שורה בתצוגת הייצוא
 
 
 const TEACHER_COLORS = [
