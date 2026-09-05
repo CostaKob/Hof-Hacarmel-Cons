@@ -352,7 +352,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
             setDragId(null);
           }}
         >
-          <p className="mb-2 flex items-center gap-2 font-semibold">
+          <p className="mb-2 flex items-center gap-2 text-base font-semibold">
             <Users className="h-4 w-4 text-primary" />
             טרם שובצו ({unplaced.length})
           </p>
