@@ -284,7 +284,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                     ev.dataTransfer.setData("text/plain", e.id);
                   }}
                   onDragEnd={() => setDragId(null)}
-                  className="cursor-grab rounded-lg border px-2 py-1.5 text-xs active:cursor-grabbing"
+                  className="cursor-grab rounded-lg border px-2 py-1.5 text-xs text-right active:cursor-grabbing"
                   style={{
                     backgroundColor: c?.bg ?? "hsl(var(--muted))",
                     borderColor: c?.border ?? "hsl(var(--border))",
