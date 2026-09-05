@@ -75,7 +75,7 @@ const TeacherBranchSchedule = () => {
         </div>
       </header>
 
-      <main className="w-full px-3 -mt-3 pb-24 pt-4">
+      <main className="w-full -mt-3 pb-24 pt-4">
         {schoolId && <BranchScheduleBoard schoolId={schoolId} schoolName={schoolName} />}
       </main>
     </div>
