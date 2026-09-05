@@ -497,7 +497,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                           >
                             {/* שורה 1: שם התלמיד וכיתה */}
                             <p
-                              className="w-full whitespace-nowrap text-[12px] font-bold leading-[14px] text-foreground"
+                              className="w-full whitespace-nowrap text-[14px] font-bold leading-[16px] text-foreground"
                             >
                               {e.students?.first_name} {e.students?.last_name}
                               {e.students?.grade ? (
@@ -505,11 +505,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                               ) : null}
                             </p>
                             {/* שורה 2: שעה וכלי */}
-                            <p className="w-full whitespace-nowrap text-[10px] leading-[12px] text-foreground/75">
+                            <p className="w-full whitespace-nowrap text-[12px] leading-[14px] text-foreground/75">
                               {fmt(s.start_minutes)} · {e.instruments?.name}
                             </p>
                             {/* שורה 3: שם המורה */}
-                            <p className="w-full whitespace-nowrap text-[10px] leading-[12px] text-foreground/75">
+                            <p className="w-full whitespace-nowrap text-[12px] leading-[14px] text-foreground/75">
                               {e.teachers?.first_name} {e.teachers?.last_name}
                             </p>
                             {/* שורה 4: טלפון המורה */}
@@ -520,10 +520,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                                 rel="noreferrer"
                                 onClick={(ev) => ev.stopPropagation()}
                                 onDragStart={(ev) => ev.preventDefault()}
-                                className="flex max-w-full items-center gap-1 text-[10px] leading-[12px] text-foreground/65 hover:text-primary"
+                                className="flex max-w-full items-center gap-1 text-[12px] leading-[14px] text-foreground/65 hover:text-primary"
                                 dir="ltr"
                               >
-                                <Phone className="h-2.5 w-2.5 shrink-0" />
+                                <Phone className="h-3 w-3 shrink-0" />
                                 <span className="whitespace-nowrap">{teacherPhone}</span>
                               </a>
                             )}
