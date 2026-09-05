@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
-import { Download, Loader2, Trash2, Users } from "lucide-react";
+import { Download, Loader2, Phone, Trash2, Users } from "lucide-react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ type EnrollmentRow = {
   lesson_duration_minutes: number | null;
   teacher_id: string | null;
   students: { first_name: string; last_name: string; grade: string | null } | null;
-  teachers: { first_name: string; last_name: string } | null;
+  teachers: { first_name: string; last_name: string; phone: string | null } | null;
   instruments: { name: string } | null;
 };
 
@@ -104,7 +104,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(
-          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name, grade), teachers(first_name, last_name), instruments(name)",
+          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name, grade), teachers(first_name, last_name, phone), instruments(name)",
         )
         .eq("school_id", schoolId)
         .eq("academic_year_id", selectedYearId!)
