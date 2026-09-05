@@ -150,6 +150,18 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
     }
     return map;
   }, [slots]);
+
+  /** רוחב יחסי לכל יום — יום עם שיעורים חופפים מקבל עמודה רחבה יותר */
+  const dayFlexGrow = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const d of DAYS) {
+      const lay = dayLayouts.get(d.idx);
+      let max = 1;
+      lay?.forEach((v) => { max = Math.max(max, v.cols); });
+      map.set(d.idx, max);
+    }
+    return map;
+  }, [dayLayouts]);
   const unplaced = useMemo(
     () =>
       enrollments
@@ -344,7 +356,11 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
               </div>
 
               {DAYS.map((d) => (
-                <div key={d.idx} className="flex-1 border-s border-border">
+                <div
+                  key={d.idx}
+                  className="border-s border-border"
+                  style={{ flexGrow: dayFlexGrow.get(d.idx) ?? 1, flexBasis: 0, minWidth: 0 }}
+                >
                   <div className="h-8 border-b border-border text-center text-sm font-bold leading-8">
                     {d.label}
                   </div>
