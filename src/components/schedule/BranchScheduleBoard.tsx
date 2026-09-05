@@ -504,11 +504,15 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
                                 <span className="font-normal text-foreground/70"> · {e.students.grade}</span>
                               ) : null}
                             </p>
-                            {/* שורה 2: שעה וכלי */}
+                            {/* שורה 2: יום */}
+                            <p className="w-full whitespace-nowrap text-[11px] leading-[13px] text-foreground/60">
+                              יום {d.label}
+                            </p>
+                            {/* שורה 3: שעה וכלי */}
                             <p className="w-full whitespace-nowrap text-[12px] leading-[14px] text-foreground/75">
                               {fmt(s.start_minutes)} · {e.instruments?.name}
                             </p>
-                            {/* שורה 3: שם המורה */}
+                            {/* שורה 4: שם המורה */}
                             <p className="w-full whitespace-nowrap text-[12px] leading-[14px] text-foreground/75">
                               {e.teachers?.first_name} {e.teachers?.last_name}
                             </p>
