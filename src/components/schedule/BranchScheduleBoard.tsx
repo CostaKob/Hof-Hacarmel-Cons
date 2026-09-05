@@ -42,7 +42,7 @@ type EnrollmentRow = {
   id: string;
   lesson_duration_minutes: number | null;
   teacher_id: string | null;
-  students: { first_name: string; last_name: string } | null;
+  students: { first_name: string; last_name: string; grade: string | null } | null;
   teachers: { first_name: string; last_name: string } | null;
   instruments: { name: string } | null;
 };
@@ -74,7 +74,7 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
       const { data, error } = await supabase
         .from("enrollments")
         .select(
-          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name), teachers(first_name, last_name), instruments(name)",
+          "id, lesson_duration_minutes, teacher_id, students(first_name, last_name, grade), teachers(first_name, last_name), instruments(name)",
         )
         .eq("school_id", schoolId)
         .eq("academic_year_id", selectedYearId!)
