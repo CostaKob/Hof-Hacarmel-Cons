@@ -1,5 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
 
 import { Button } from "@/components/ui/button";
 import PageTitle from "@/components/PageTitle";
@@ -50,7 +53,7 @@ const TeacherBranchSchedule = () => {
     );
   }
 
-  const schoolName = branch?.schools?.name ?? branch?.branch_name ?? "שלוחה";
+  const schoolName = branch?.schools?.name ?? school?.name ?? branch?.branch_name ?? "שלוחה";
 
   return (
     <div dir="rtl" className="min-h-screen bg-background">
