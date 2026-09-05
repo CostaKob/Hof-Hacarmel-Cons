@@ -235,10 +235,10 @@ const BranchScheduleBoard = ({ schoolId, schoolName }: Props) => {
   };
 
   const exportPng = async () => {
-    if (!boardRef.current) return;
+    const el = exportRef.current ?? boardRef.current;
+    if (!el) return;
     setExporting(true);
     try {
-      const el = boardRef.current;
       const fullWidth = el.scrollWidth;
       const fullHeight = el.scrollHeight;
       const canvas = await html2canvas(el, {
