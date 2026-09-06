@@ -174,16 +174,24 @@ const AdminEnsembleContacts = () => {
         container.innerHTML = `${includeIntro ? introHtml : ""}<table style="border-collapse:collapse;width:100%;">${tableHeader}${rows.join("")}</table>`;
       };
 
-      for (const rowHtml of rowsHtml) {
-        const candidateRows = [...currentRows, rowHtml];
+      const isCityHeader = (html: string) => html.includes("data-city-row");
+
+      for (let i = 0; i < rowsHtml.length; i++) {
+        // כותרת יישוב נבדקת יחד עם השורה הראשונה שלה — לא מתחילים יישוב בסוף עמוד
+        const groupChunk =
+          isCityHeader(rowsHtml[i]) && i + 1 < rowsHtml.length
+            ? [rowsHtml[i], rowsHtml[i + 1]]
+            : [rowsHtml[i]];
+        const candidateRows = [...currentRows, ...groupChunk];
         setPageContent(candidateRows, isFirstPage);
         if (container.scrollHeight > maxPageHeightPx && currentRows.length > 0) {
           pages.push(currentRows);
-          currentRows = [rowHtml];
+          currentRows = groupChunk;
           isFirstPage = false;
         } else {
           currentRows = candidateRows;
         }
+        if (groupChunk.length === 2) i++;
       }
       if (currentRows.length > 0) pages.push(currentRows);
 
@@ -194,6 +202,13 @@ const AdminEnsembleContacts = () => {
         if (pageIndex > 0) pdf.addPage();
         pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, renderedHeight);
       }
+
+      // עמוד אחרון — סיכום יישובים להזמנת הסעות
+      container.innerHTML = summaryHtml;
+      const summaryCanvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+      const summaryHeight = (summaryCanvas.height * usableWidth) / summaryCanvas.width;
+      pdf.addPage();
+      pdf.addImage(summaryCanvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, summaryHeight);
 
       document.body.removeChild(container);
 
