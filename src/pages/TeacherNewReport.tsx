@@ -96,13 +96,19 @@ const TeacherNewReport = () => {
 
   const enrollmentIds = useMemo(() => enrollments.map((e) => e.id).join(","), [enrollments]);
 
-  useMemo(() => {
-    if (!enrollments.length && !allEnrollments?.length) return;
-    const newLines: Record<string, LineState> = {};
-    enrollments.forEach((e) => {
-      newLines[e.id] = lines[e.id] ?? { selected: false, status: "present", notes: "" };
+  useEffect(() => {
+    if (!enrollments.length) return;
+    setLines((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      enrollments.forEach((e) => {
+        if (!next[e.id]) {
+          next[e.id] = { selected: false, status: "present", notes: "" };
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
     });
-    setLines(newLines);
   }, [enrollmentIds]);
 
   const updateLine = (id: string, patch: Partial<LineState>) => {
