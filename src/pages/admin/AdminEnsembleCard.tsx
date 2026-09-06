@@ -36,15 +36,6 @@ const AdminEnsembleCard = () => {
     queryClient.invalidateQueries({ queryKey: ["ensemble-staff", id] });
   };
 
-  const copyContactsLink = async () => {
-    const url = `${SHORT_LINK_BASE}/ensemble/${id}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      toast.success("הקישור לדף הקשר הועתק — אפשר לפרסם להורים");
-    } catch {
-      toast.error(url, { duration: 10000 });
-    }
-  };
 
   const { data: ensemble, isLoading } = useQuery({
     queryKey: ["ensemble", id],
