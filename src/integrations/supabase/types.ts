@@ -3497,6 +3497,10 @@ export type Database = {
           match_reason: string
         }[]
       }
+      get_public_ensemble_contacts: {
+        Args: { _ensemble_id: string }
+        Returns: Json
+      }
       get_public_pricing: { Args: never; Returns: Json }
       get_public_school_music_school_by_slug: {
         Args: { _slug: string }

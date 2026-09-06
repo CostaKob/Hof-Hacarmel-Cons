@@ -11,6 +11,7 @@ import { ScrollToTop } from "@/components/ScrollToTop";
 import ViewportHeightSync from "@/components/ViewportHeightSync";
 import Index from "./pages/Index";
 import ShortLinkRedirect from "./pages/ShortLinkRedirect";
+import PublicEnsembleContacts from "./pages/PublicEnsembleContacts";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminYearCalendar from "./pages/admin/AdminYearCalendar";
@@ -147,6 +148,8 @@ const App = () => (
               <Route path="/" element={<Landing />} />
               <Route path="/teachers" element={<PublicTeachers />} />
               <Route path="/p/:code" element={<ShortLinkRedirect />} />
+              <Route path="/ensemble/:id" element={<PublicEnsembleContacts />} />
+              <Route path="/ensemble/:id/transport" element={<PublicEnsembleContacts transportOnly />} />
               <Route path="/dashboard" element={<Index />} />
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
