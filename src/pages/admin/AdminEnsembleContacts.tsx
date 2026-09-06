@@ -126,14 +126,15 @@ const AdminEnsembleContacts = () => {
       const yearName = (ensemble as any)?.academic_years?.name;
       if (yearName) introHtml += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
 
-      // סיכום לפי יישוב (להזמנת הסעות)
-      introHtml += `<table style="border-collapse:collapse;margin:0 auto 16px;min-width:320px;">`;
-      introHtml += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
+      // סיכום לפי יישוב (להזמנת הסעות) — יוצג כעמוד אחרון
+      let summaryHtml = `<h3 style="text-align:center;font-size:18px;margin:0 0 10px;">סיכום להזמנת הסעות</h3>`;
+      summaryHtml += `<table style="border-collapse:collapse;margin:0 auto;min-width:320px;">`;
+      summaryHtml += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
       for (const group of cityGroups) {
-        introHtml += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
+        summaryHtml += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
       }
-      introHtml += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
-      introHtml += `</table>`;
+      summaryHtml += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
+      summaryHtml += `</table>`;
 
       const rowsHtml: string[] = [];
       let idx = 0;
@@ -173,16 +174,24 @@ const AdminEnsembleContacts = () => {
         container.innerHTML = `${includeIntro ? introHtml : ""}<table style="border-collapse:collapse;width:100%;">${tableHeader}${rows.join("")}</table>`;
       };
 
-      for (const rowHtml of rowsHtml) {
-        const candidateRows = [...currentRows, rowHtml];
+      const isCityHeader = (html: string) => html.includes("data-city-row");
+
+      for (let i = 0; i < rowsHtml.length; i++) {
+        // כותרת יישוב נבדקת יחד עם השורה הראשונה שלה — לא מתחילים יישוב בסוף עמוד
+        const groupChunk =
+          isCityHeader(rowsHtml[i]) && i + 1 < rowsHtml.length
+            ? [rowsHtml[i], rowsHtml[i + 1]]
+            : [rowsHtml[i]];
+        const candidateRows = [...currentRows, ...groupChunk];
         setPageContent(candidateRows, isFirstPage);
         if (container.scrollHeight > maxPageHeightPx && currentRows.length > 0) {
           pages.push(currentRows);
-          currentRows = [rowHtml];
+          currentRows = groupChunk;
           isFirstPage = false;
         } else {
           currentRows = candidateRows;
         }
+        if (groupChunk.length === 2) i++;
       }
       if (currentRows.length > 0) pages.push(currentRows);
 
@@ -193,6 +202,13 @@ const AdminEnsembleContacts = () => {
         if (pageIndex > 0) pdf.addPage();
         pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, renderedHeight);
       }
+
+      // עמוד אחרון — סיכום יישובים להזמנת הסעות
+      container.innerHTML = summaryHtml;
+      const summaryCanvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+      const summaryHeight = (summaryCanvas.height * usableWidth) / summaryCanvas.width;
+      pdf.addPage();
+      pdf.addImage(summaryCanvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, summaryHeight);
 
       document.body.removeChild(container);
 
