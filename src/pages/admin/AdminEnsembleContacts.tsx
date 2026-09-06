@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import PhoneDisplay from "@/components/PhoneDisplay";
 import { cmpHe } from "@/lib/sortHebrew";
 import { Button } from "@/components/ui/button";
-import { FileDown, MapPin } from "lucide-react";
+import { FileDown, Link2, MapPin, Bus } from "lucide-react";
+import { SHORT_LINK_BASE } from "@/lib/shortLink";
 import { useState } from "react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
