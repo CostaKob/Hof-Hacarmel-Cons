@@ -268,10 +268,10 @@ const AdminEnsembleContacts = () => {
                 <Table className="w-full table-fixed">
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[26%]">תלמיד/ה</TableHead>
-                      <TableHead className="w-[20%]">כלי</TableHead>
+                      <TableHead className="w-[22%]">תלמיד/ה</TableHead>
+                      <TableHead className="w-[18%]">כלי</TableHead>
                       <TableHead className="w-[28%]">הורים</TableHead>
-                      <TableHead className="w-[26%]">טלפונים</TableHead>
+                      <TableHead className="w-[32%]">טלפונים</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
