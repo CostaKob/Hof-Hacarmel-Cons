@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Plus, X, Check } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
@@ -164,6 +164,13 @@ const AdminEnsembleCard = () => {
     return <AdminLayout title="לא נמצא" backPath="/admin/ensembles"><PageTitle title="כרטיס הרכב" /><p className="text-center text-muted-foreground py-8">ההרכב לא נמצא</p></AdminLayout>;
   }
 
+  const sortedStudents = [...ensembleStudents].sort((a: any, b: any) =>
+    `${a.students?.first_name ?? ""} ${a.students?.last_name ?? ""}`.localeCompare(
+      `${b.students?.first_name ?? ""} ${b.students?.last_name ?? ""}`,
+      "he"
+    )
+  );
+
   const existingEnrollmentIds = new Set(
     ensembleStudents.map((es: any) => es.enrollment_id).filter(Boolean)
   );
@@ -315,12 +322,15 @@ const AdminEnsembleCard = () => {
 
         {/* Students */}
         <Card>
-          <CardHeader className="pb-3">
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">משתתפים ({ensembleStudents.length})</CardTitle>
+            <Button size="sm" variant="outline" onClick={() => navigate(`/admin/ensembles/${id}/contacts`)}>
+              <Phone className="h-4 w-4 ml-1" /> דף קשר
+            </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
-              {ensembleStudents.map((es: any) => (
+              {sortedStudents.map((es: any) => (
                 <Badge
                   key={es.id}
                   variant="secondary"
