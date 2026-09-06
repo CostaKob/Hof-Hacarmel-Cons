@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Plus, X, Check, Phone, Link2 } from "lucide-react";
-import { SHORT_LINK_BASE } from "@/lib/shortLink";
+import { Pencil, Trash2, Plus, X, Check, Phone } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
@@ -327,9 +326,6 @@ const AdminEnsembleCard = () => {
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">משתתפים ({ensembleStudents.length})</CardTitle>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={copyContactsLink}>
-                <Link2 className="h-4 w-4 ml-1" /> העתק קישור
-              </Button>
               <Button size="sm" variant="outline" onClick={() => navigate(`/admin/ensembles/${id}/contacts`)}>
                 <Phone className="h-4 w-4 ml-1" /> דף קשר
               </Button>
