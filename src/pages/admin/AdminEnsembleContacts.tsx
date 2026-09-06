@@ -111,8 +111,16 @@ const AdminEnsembleContacts = () => {
       const headerStyle = `${cellStyle}font-weight:bold;background:#e8e8e8;text-align:center;`;
       const cityStyle = `${cellStyle}font-weight:bold;background:#dbeafe;text-align:right;font-size:15px;`;
 
+      const logoDataUrl = await loadImageDataUrl(logoUrl);
+
       let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
-      html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
+      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:10px;">`;
+      if (logoDataUrl) {
+        html += `<img src="${logoDataUrl}" style="height:64px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
+      }
+      html += `<div style="font-size:13px;color:#666;">אולפן ומגמת המוסיקה חוף הכרמל</div>`;
+      html += `</div>`;
+      html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;margin-top:0;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
       const yearName = (ensemble as any)?.academic_years?.name;
       if (yearName) html += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
       html += `<table style="border-collapse:collapse;width:100%;">`;
