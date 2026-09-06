@@ -226,11 +226,19 @@ const AdminEnsembleContacts = () => {
     <AdminLayout title={`דף קשר — ${ensemble?.name ?? "הרכב"}`} backPath={`/admin/ensembles/${id}`}>
       <PageTitle title={`דף קשר — ${ensemble?.name ?? "הרכב"}`} />
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-lg font-semibold">דף קשר להורים ({totalRows})</h2>
-          <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={exporting || totalRows === 0}>
-            <FileDown className="h-4 w-4 ml-1" /> {exporting ? "מייצא..." : "ייצוא PDF"}
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button size="sm" variant="outline" onClick={() => copyPublicLink("")}>
+              <Link2 className="h-4 w-4 ml-1" /> קישור להורים
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => copyPublicLink("/transport")}>
+              <Bus className="h-4 w-4 ml-1" /> קישור סיכום הסעות
+            </Button>
+            <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={exporting || totalRows === 0}>
+              <FileDown className="h-4 w-4 ml-1" /> {exporting ? "מייצא..." : "ייצוא PDF"}
+            </Button>
+          </div>
         </div>
 
         {isLoading ? (
