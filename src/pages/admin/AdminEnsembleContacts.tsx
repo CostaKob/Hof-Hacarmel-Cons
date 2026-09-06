@@ -110,100 +110,91 @@ const AdminEnsembleContacts = () => {
       const cellStyle = "border:1px solid #bbb;padding:6px 10px;text-align:right;font-size:14px;white-space:nowrap;";
       const headerStyle = `${cellStyle}font-weight:bold;background:#e8e8e8;text-align:center;`;
       const cityStyle = `${cellStyle}font-weight:bold;background:#dbeafe;text-align:right;font-size:15px;`;
+      const tableHeader = `<tr>${["#", "תלמיד/ה", "כלי", "הורה 1", "טלפון", "הורה 2", "טלפון"]
+        .map((heading) => `<th style="${headerStyle}">${heading}</th>`)
+        .join("")}</tr>`;
 
       const logoDataUrl = await loadImageDataUrl(logoUrl);
 
-      let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
-      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:10px;">`;
+      let introHtml = `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:10px;">`;
       if (logoDataUrl) {
-        html += `<img src="${logoDataUrl}" style="height:64px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
+        introHtml += `<img src="${logoDataUrl}" style="height:64px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
       }
-      html += `<div style="font-size:13px;color:#666;">אולפן ומגמת המוסיקה חוף הכרמל</div>`;
-      html += `</div>`;
-      html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;margin-top:0;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
+      introHtml += `<div style="font-size:13px;color:#666;">אולפן ומגמת המוסיקה חוף הכרמל</div>`;
+      introHtml += `</div>`;
+      introHtml += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;margin-top:0;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
       const yearName = (ensemble as any)?.academic_years?.name;
-      if (yearName) html += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
+      if (yearName) introHtml += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
 
       // סיכום לפי יישוב (להזמנת הסעות)
-      html += `<table style="border-collapse:collapse;margin:0 auto 16px;min-width:320px;">`;
-      html += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
+      introHtml += `<table style="border-collapse:collapse;margin:0 auto 16px;min-width:320px;">`;
+      introHtml += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
       for (const group of cityGroups) {
-        html += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
+        introHtml += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
       }
-      html += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
-      html += `</table>`;
+      introHtml += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
+      introHtml += `</table>`;
 
-      html += `<table style="border-collapse:collapse;width:100%;">`;
-      html += `<tr>`;
-      for (const h of ["#", "תלמיד/ה", "כלי", "הורה 1", "טלפון", "הורה 2", "טלפון"])
-        html += `<th style="${headerStyle}">${h}</th>`;
-      html += `</tr>`;
+      const rowsHtml: string[] = [];
       let idx = 0;
       for (const group of cityGroups) {
-        html += `<tr><td colspan="7" style="${cityStyle}">${group.city} (${group.rows.length})</td></tr>`;
+        rowsHtml.push(`<tr data-city-row><td colspan="7" style="${cityStyle}">${group.city} (${group.rows.length})</td></tr>`);
         group.rows.forEach((r, i) => {
           idx++;
           const rowBg = i % 2 === 1 ? "background:#fafafa;" : "";
-          html += `<tr style="${rowBg}">`;
-          html += `<td style="${cellStyle}color:#999;text-align:center;">${idx}</td>`;
-          html += `<td style="${cellStyle}font-weight:bold;">${r.studentName}</td>`;
-          html += `<td style="${cellStyle}">${r.instrument ?? ""}</td>`;
-          html += `<td style="${cellStyle}">${r.parent1Name ?? ""}</td>`;
-          html += `<td style="${cellStyle}" dir="ltr">${r.parent1Phone ?? ""}</td>`;
-          html += `<td style="${cellStyle}">${r.parent2Name ?? ""}</td>`;
-          html += `<td style="${cellStyle}" dir="ltr">${r.parent2Phone ?? ""}</td>`;
-          html += `</tr>`;
+          rowsHtml.push(`<tr style="${rowBg}">
+            <td style="${cellStyle}color:#999;text-align:center;">${idx}</td>
+            <td style="${cellStyle}font-weight:bold;">${r.studentName}</td>
+            <td style="${cellStyle}">${r.instrument ?? ""}</td>
+            <td style="${cellStyle}">${r.parent1Name ?? ""}</td>
+            <td style="${cellStyle}" dir="ltr">${r.parent1Phone ?? ""}</td>
+            <td style="${cellStyle}">${r.parent2Name ?? ""}</td>
+            <td style="${cellStyle}" dir="ltr">${r.parent2Phone ?? ""}</td>
+          </tr>`);
         });
       }
-      html += `</table></div>`;
 
       const container = document.createElement("div");
-      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1000px;background:#ffffff;padding:20px;";
-      container.innerHTML = html;
+      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1000px;background:#ffffff;padding:20px;box-sizing:border-box;font-family:Arial,sans-serif;";
+      container.dir = "rtl";
       document.body.appendChild(container);
-
-      const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
-
-      // Collect safe cut points (bottoms of table rows) so page breaks never split a row
-      const canvasScale = canvas.width / container.offsetWidth;
-      const containerTop = container.getBoundingClientRect().top;
-      const safeCuts = Array.from(container.querySelectorAll("tr")).map(
-        (tr) => (tr.getBoundingClientRect().bottom - containerTop) * canvasScale
-      );
-      document.body.removeChild(container);
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const margin = 8;
       const usableWidth = pageWidth - margin * 2;
-      const ratio = usableWidth / canvas.width;
-      const scaledHeight = canvas.height * ratio;
+      const maxPageHeightPx = ((pageHeight - margin * 2) * 1000) / usableWidth;
+      const pages: string[][] = [];
+      let currentRows: string[] = [];
+      let isFirstPage = true;
 
-      if (scaledHeight <= pageHeight - margin * 2) {
-        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, scaledHeight);
-      } else {
-        const sliceHeight = (pageHeight - margin * 2) / ratio;
-        let yOffset = 0;
-        while (yOffset < canvas.height) {
-          // Prefer cutting at a row boundary within this page
-          let end = Math.min(canvas.height, yOffset + sliceHeight);
-          const candidates = safeCuts.filter((c) => c > yOffset && c <= yOffset + sliceHeight - 4);
-          if (candidates.length > 0 && end < canvas.height) {
-            end = Math.max(...candidates);
-          }
-          const sliceCanvas = document.createElement("canvas");
-          sliceCanvas.width = canvas.width;
-          sliceCanvas.height = Math.round(end - yOffset);
-          const ctx = sliceCanvas.getContext("2d")!;
-          ctx.drawImage(canvas, 0, -yOffset);
-          const sliceImg = sliceCanvas.toDataURL("image/png");
-          const h = sliceCanvas.height * ratio;
-          pdf.addImage(sliceImg, "PNG", margin, margin, usableWidth, h);
-          yOffset = end;
-          if (yOffset < canvas.height) pdf.addPage();
+      const setPageContent = (rows: string[], includeIntro: boolean) => {
+        container.innerHTML = `${includeIntro ? introHtml : ""}<table style="border-collapse:collapse;width:100%;">${tableHeader}${rows.join("")}</table>`;
+      };
+
+      for (const rowHtml of rowsHtml) {
+        const candidateRows = [...currentRows, rowHtml];
+        setPageContent(candidateRows, isFirstPage);
+        if (container.scrollHeight > maxPageHeightPx && currentRows.length > 0) {
+          pages.push(currentRows);
+          currentRows = [rowHtml];
+          isFirstPage = false;
+        } else {
+          currentRows = candidateRows;
         }
       }
+      if (currentRows.length > 0) pages.push(currentRows);
+
+      for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
+        setPageContent(pages[pageIndex], pageIndex === 0);
+        const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+        const renderedHeight = (canvas.height * usableWidth) / canvas.width;
+        if (pageIndex > 0) pdf.addPage();
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, renderedHeight);
+      }
+
+      document.body.removeChild(container);
 
       pdf.save(`דף_קשר_${ensemble?.name ?? "הרכב"}.pdf`);
       toast.success("PDF יוצא בהצלחה");
