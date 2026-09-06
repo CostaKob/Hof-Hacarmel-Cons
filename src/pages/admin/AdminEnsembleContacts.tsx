@@ -163,9 +163,15 @@ const AdminEnsembleContacts = () => {
       document.body.appendChild(container);
 
       const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+
+      // Collect safe cut points (bottoms of table rows) so page breaks never split a row
+      const canvasScale = canvas.width / container.offsetWidth;
+      const containerTop = container.getBoundingClientRect().top;
+      const safeCuts = Array.from(container.querySelectorAll("tr")).map(
+        (tr) => (tr.getBoundingClientRect().bottom - containerTop) * canvasScale
+      );
       document.body.removeChild(container);
 
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -175,20 +181,26 @@ const AdminEnsembleContacts = () => {
       const scaledHeight = canvas.height * ratio;
 
       if (scaledHeight <= pageHeight - margin * 2) {
-        pdf.addImage(imgData, "PNG", margin, margin, usableWidth, scaledHeight);
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, scaledHeight);
       } else {
-        let yOffset = 0;
         const sliceHeight = (pageHeight - margin * 2) / ratio;
+        let yOffset = 0;
         while (yOffset < canvas.height) {
+          // Prefer cutting at a row boundary within this page
+          let end = Math.min(canvas.height, yOffset + sliceHeight);
+          const candidates = safeCuts.filter((c) => c > yOffset && c <= yOffset + sliceHeight - 4);
+          if (candidates.length > 0 && end < canvas.height) {
+            end = Math.max(...candidates);
+          }
           const sliceCanvas = document.createElement("canvas");
           sliceCanvas.width = canvas.width;
-          sliceCanvas.height = Math.min(sliceHeight, canvas.height - yOffset);
+          sliceCanvas.height = Math.round(end - yOffset);
           const ctx = sliceCanvas.getContext("2d")!;
           ctx.drawImage(canvas, 0, -yOffset);
           const sliceImg = sliceCanvas.toDataURL("image/png");
           const h = sliceCanvas.height * ratio;
           pdf.addImage(sliceImg, "PNG", margin, margin, usableWidth, h);
-          yOffset += sliceHeight;
+          yOffset = end;
           if (yOffset < canvas.height) pdf.addPage();
         }
       }
