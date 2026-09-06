@@ -324,9 +324,14 @@ const AdminEnsembleCard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">משתתפים ({ensembleStudents.length})</CardTitle>
-            <Button size="sm" variant="outline" onClick={() => navigate(`/admin/ensembles/${id}/contacts`)}>
-              <Phone className="h-4 w-4 ml-1" /> דף קשר
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={copyContactsLink}>
+                <Link2 className="h-4 w-4 ml-1" /> העתק קישור
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/admin/ensembles/${id}/contacts`)}>
+                <Phone className="h-4 w-4 ml-1" /> דף קשר
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
