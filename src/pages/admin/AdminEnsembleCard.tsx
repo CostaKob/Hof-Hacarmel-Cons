@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Plus, X, Check, Phone } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone, Link2 } from "lucide-react";
+import { SHORT_LINK_BASE } from "@/lib/shortLink";
 import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
@@ -33,6 +34,16 @@ const AdminEnsembleCard = () => {
     queryClient.invalidateQueries({ queryKey: ["ensemble", id] });
     queryClient.invalidateQueries({ queryKey: ["ensemble-students", id] });
     queryClient.invalidateQueries({ queryKey: ["ensemble-staff", id] });
+  };
+
+  const copyContactsLink = async () => {
+    const url = `${SHORT_LINK_BASE}/ensemble/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("הקישור לדף הקשר הועתק — אפשר לפרסם להורים");
+    } catch {
+      toast.error(url, { duration: 10000 });
+    }
   };
 
   const { data: ensemble, isLoading } = useQuery({
