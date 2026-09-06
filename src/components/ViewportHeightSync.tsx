@@ -1,28 +1,28 @@
 import { useEffect } from "react";
 
 /**
- * Keeps --app-height (px) in sync with the *actual* visible viewport height.
- * iOS Chrome (especially from a home-screen shortcut) sometimes reports
- * 100svh/100dvh shorter than the visible area, leaving an empty gap at the
- * bottom. window.innerHeight / visualViewport.height track the real area.
+ * Keeps --app-height (px) in sync with the actual app window height.
+ * iOS home-screen shortcuts can expose a stale visualViewport value during
+ * their first frames, so the app shell deliberately follows innerHeight.
  */
 const ViewportHeightSync = () => {
   useEffect(() => {
     const root = document.documentElement;
     const update = () => {
-      const h = window.visualViewport?.height ?? window.innerHeight;
-      root.style.setProperty("--app-height", `${Math.round(h)}px`);
+      root.style.setProperty("--app-height", `${Math.round(window.innerHeight)}px`);
     };
     update();
+    const frameId = window.requestAnimationFrame(update);
+    const settleTimers = [100, 300, 700].map((delay) => window.setTimeout(update, delay));
     window.addEventListener("resize", update);
     window.addEventListener("orientationchange", update);
     window.visualViewport?.addEventListener("resize", update);
-    window.visualViewport?.addEventListener("scroll", update);
     return () => {
+      window.cancelAnimationFrame(frameId);
+      settleTimers.forEach((timer) => window.clearTimeout(timer));
       window.removeEventListener("resize", update);
       window.removeEventListener("orientationchange", update);
       window.visualViewport?.removeEventListener("resize", update);
-      window.visualViewport?.removeEventListener("scroll", update);
     };
   }, []);
 
