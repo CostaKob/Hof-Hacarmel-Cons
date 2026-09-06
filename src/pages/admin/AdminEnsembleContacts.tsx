@@ -13,6 +13,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { useAppLogo } from "@/hooks/useAppLogo";
+
+async function loadImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
 
 type Row = {
   studentName: string;
@@ -29,6 +46,7 @@ const NO_CITY = "ללא יישוב";
 const AdminEnsembleContacts = () => {
   const { id } = useParams<{ id: string }>();
   const [exporting, setExporting] = useState(false);
+  const { logoUrl } = useAppLogo();
 
   const { data: ensemble } = useQuery({
     queryKey: ["ensemble", id],
