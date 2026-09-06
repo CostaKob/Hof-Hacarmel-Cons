@@ -289,7 +289,7 @@ const AdminEnsembleContacts = () => {
                             {r.parent2Name && <span>{r.parent2Name}</span>}
                           </div>
                         </TableCell>
-                        <TableCell className="break-all align-top">
+                        <TableCell className="whitespace-nowrap align-top">
                           <div className="flex flex-col gap-1">
                             {r.parent1Phone ? (
                               <PhoneDisplay phone={r.parent1Phone} />
