@@ -123,6 +123,16 @@ const AdminEnsembleContacts = () => {
       html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;margin-top:0;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
       const yearName = (ensemble as any)?.academic_years?.name;
       if (yearName) html += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
+
+      // סיכום לפי יישוב (להזמנת הסעות)
+      html += `<table style="border-collapse:collapse;margin:0 auto 16px;min-width:320px;">`;
+      html += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
+      for (const group of cityGroups) {
+        html += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
+      }
+      html += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
+      html += `</table>`;
+
       html += `<table style="border-collapse:collapse;width:100%;">`;
       html += `<tr>`;
       for (const h of ["#", "תלמיד/ה", "כלי", "הורה 1", "טלפון", "הורה 2", "טלפון"])
