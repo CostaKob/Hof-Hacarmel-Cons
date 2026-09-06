@@ -152,7 +152,7 @@ const PublicEnsembleContacts = ({ transportOnly = false }: { transportOnly?: boo
                             {r.parent2_name && <span>{r.parent2_name}</span>}
                           </div>
                         </TableCell>
-                        <TableCell className="break-all align-top">
+                        <TableCell className="whitespace-nowrap align-top">
                           <div className="flex flex-col gap-1">
                             {r.parent1_phone ? (
                               <PhoneDisplay phone={r.parent1_phone} />
