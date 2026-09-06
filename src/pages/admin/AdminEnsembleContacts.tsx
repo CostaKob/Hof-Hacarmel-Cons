@@ -197,18 +197,18 @@ const AdminEnsembleContacts = () => {
 
       for (let pageIndex = 0; pageIndex < pages.length; pageIndex++) {
         setPageContent(pages[pageIndex], pageIndex === 0);
-        const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+        const canvas = await html2canvas(container, { scale: 1.5, backgroundColor: "#ffffff" });
         const renderedHeight = (canvas.height * usableWidth) / canvas.width;
         if (pageIndex > 0) pdf.addPage();
-        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, renderedHeight);
+        pdf.addImage(canvas.toDataURL("image/jpeg", 0.7), "JPEG", margin, margin, usableWidth, renderedHeight);
       }
 
       // עמוד אחרון — סיכום יישובים להזמנת הסעות
       container.innerHTML = summaryHtml;
-      const summaryCanvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+      const summaryCanvas = await html2canvas(container, { scale: 1.5, backgroundColor: "#ffffff" });
       const summaryHeight = (summaryCanvas.height * usableWidth) / summaryCanvas.width;
       pdf.addPage();
-      pdf.addImage(summaryCanvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, summaryHeight);
+      pdf.addImage(summaryCanvas.toDataURL("image/jpeg", 0.7), "JPEG", margin, margin, usableWidth, summaryHeight);
 
       document.body.removeChild(container);
 
