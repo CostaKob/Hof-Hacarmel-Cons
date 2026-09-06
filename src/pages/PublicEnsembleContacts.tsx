@@ -21,6 +21,14 @@ type ContactRow = {
 
 const NO_CITY = "ללא יישוב";
 
+const getPageTitle = (ensembleName?: string, transportOnly = false) => {
+  if (!ensembleName) return transportOnly ? "סיכום הסעות" : "דף קשר הרכב";
+  const base = transportOnly ? "סיכום הסעות" : "דף קשר";
+  if (ensembleName.includes("מקהלה")) return `${base} מקהלה ייצוגית חוף הכרמל`;
+  if (ensembleName.includes("תזמורת")) return `${base} תזמורת ייצוגית חוף הכרמל`;
+  return `${base} — ${ensembleName}`;
+};
+
 const PublicEnsembleContacts = ({ transportOnly = false }: { transportOnly?: boolean }) => {
   const { id } = useParams<{ id: string }>();
 
@@ -35,6 +43,8 @@ const PublicEnsembleContacts = ({ transportOnly = false }: { transportOnly?: boo
       return data as unknown as { name: string; rows: ContactRow[] } | null;
     },
   });
+
+  const pageTitle = getPageTitle(data?.name, transportOnly);
 
   const cityGroups = (() => {
     const rows = data?.rows ?? [];
@@ -60,14 +70,12 @@ const PublicEnsembleContacts = ({ transportOnly = false }: { transportOnly?: boo
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
-      <PageTitle title={transportOnly ? `סיכום הסעות — ${data?.name ?? ""}` : `דף קשר — ${data?.name ?? ""}`} />
+      <PageTitle title={pageTitle} />
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
         <div className="flex flex-col items-center gap-2 text-center">
           <AppLogo size="lg" />
           <p className="text-sm text-muted-foreground">אולפן ומגמת המוסיקה חוף הכרמל</p>
-          <h1 className="text-xl font-semibold">
-            {transportOnly ? `סיכום הסעות — ${data?.name ?? "הרכב"}` : `דף קשר להורים — ${data?.name ?? "הרכב"}`}
-          </h1>
+          <h1 className="text-xl font-semibold">{pageTitle}</h1>
         </div>
 
         {isLoading ? (
@@ -120,32 +128,44 @@ const PublicEnsembleContacts = ({ transportOnly = false }: { transportOnly?: boo
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>תלמיד/ה</TableHead>
-                        <TableHead>כלי</TableHead>
-                        <TableHead>הורה 1</TableHead>
-                        <TableHead>טלפון</TableHead>
-                        <TableHead>הורה 2</TableHead>
-                        <TableHead>טלפון</TableHead>
+                <Table className="w-full table-fixed">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[22%]">תלמיד/ה</TableHead>
+                      <TableHead className="w-[18%]">כלי</TableHead>
+                      <TableHead className="w-[28%]">הורים</TableHead>
+                      <TableHead className="w-[32%]">טלפונים</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.rows.map((r, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium break-words align-top">{r.student_name}</TableCell>
+                        <TableCell className="break-words align-top">{r.instrument ?? "—"}</TableCell>
+                        <TableCell className="break-words align-top">
+                          <div className="flex flex-col gap-1">
+                            {r.parent1_name ? (
+                              <span>{r.parent1_name}</span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                            {r.parent2_name && <span>{r.parent2_name}</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap align-top">
+                          <div className="flex flex-col gap-1">
+                            {r.parent1_phone ? (
+                              <PhoneDisplay phone={r.parent1_phone} />
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                            {r.parent2_phone && <PhoneDisplay phone={r.parent2_phone} />}
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {group.rows.map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium">{r.student_name}</TableCell>
-                          <TableCell>{r.instrument ?? "—"}</TableCell>
-                          <TableCell>{r.parent1_name ?? "—"}</TableCell>
-                          <TableCell><PhoneDisplay phone={r.parent1_phone} /></TableCell>
-                          <TableCell>{r.parent2_name ?? "—"}</TableCell>
-                          <TableCell><PhoneDisplay phone={r.parent2_phone} /></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           ))

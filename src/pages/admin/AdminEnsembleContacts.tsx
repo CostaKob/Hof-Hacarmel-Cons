@@ -265,32 +265,44 @@ const AdminEnsembleContacts = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>תלמיד/ה</TableHead>
-                        <TableHead>כלי</TableHead>
-                        <TableHead>הורה 1</TableHead>
-                        <TableHead>טלפון</TableHead>
-                        <TableHead>הורה 2</TableHead>
-                        <TableHead>טלפון</TableHead>
+                <Table className="w-full table-fixed">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[22%]">תלמיד/ה</TableHead>
+                      <TableHead className="w-[18%]">כלי</TableHead>
+                      <TableHead className="w-[28%]">הורים</TableHead>
+                      <TableHead className="w-[32%]">טלפונים</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.rows.map((r, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium break-words align-top">{r.studentName}</TableCell>
+                        <TableCell className="break-words align-top">{r.instrument ?? "—"}</TableCell>
+                        <TableCell className="break-words align-top">
+                          <div className="flex flex-col gap-1">
+                            {r.parent1Name ? (
+                              <span>{r.parent1Name}</span>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                            {r.parent2Name && <span>{r.parent2Name}</span>}
+                          </div>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap align-top">
+                          <div className="flex flex-col gap-1">
+                            {r.parent1Phone ? (
+                              <PhoneDisplay phone={r.parent1Phone} />
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                            {r.parent2Phone && <PhoneDisplay phone={r.parent2Phone} />}
+                          </div>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {group.rows.map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-medium">{r.studentName}</TableCell>
-                          <TableCell>{r.instrument ?? "—"}</TableCell>
-                          <TableCell>{r.parent1Name ?? "—"}</TableCell>
-                          <TableCell><PhoneDisplay phone={r.parent1Phone} /></TableCell>
-                          <TableCell>{r.parent2Name ?? "—"}</TableCell>
-                          <TableCell><PhoneDisplay phone={r.parent2Phone} /></TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               </CardContent>
             </Card>
           ))
