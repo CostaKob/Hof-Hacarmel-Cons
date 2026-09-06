@@ -7,6 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PhoneDisplay from "@/components/PhoneDisplay";
 import { cmpHe } from "@/lib/sortHebrew";
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 type Row = {
   studentName: string;
@@ -19,6 +25,7 @@ type Row = {
 
 const AdminEnsembleContacts = () => {
   const { id } = useParams<{ id: string }>();
+  const [exporting, setExporting] = useState(false);
 
   const { data: ensemble } = useQuery({
     queryKey: ["ensemble", id],
@@ -58,12 +65,90 @@ const AdminEnsembleContacts = () => {
     enabled: !!id,
   });
 
+  const handleExportPdf = async () => {
+    setExporting(true);
+    try {
+      await document.fonts.ready;
+      const cellStyle = "border:1px solid #bbb;padding:6px 10px;text-align:right;font-size:14px;white-space:nowrap;";
+      const headerStyle = `${cellStyle}font-weight:bold;background:#e8e8e8;text-align:center;`;
+
+      let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
+      html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
+      const yearName = (ensemble as any)?.academic_years?.name;
+      if (yearName) html += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
+      html += `<table style="border-collapse:collapse;width:100%;">`;
+      html += `<tr>`;
+      for (const h of ["#", "תלמיד/ה", "כלי", "הורה 1", "טלפון", "הורה 2", "טלפון"])
+        html += `<th style="${headerStyle}">${h}</th>`;
+      html += `</tr>`;
+      rows.forEach((r, i) => {
+        const rowBg = i % 2 === 1 ? "background:#fafafa;" : "";
+        html += `<tr style="${rowBg}">`;
+        html += `<td style="${cellStyle}color:#999;text-align:center;">${i + 1}</td>`;
+        html += `<td style="${cellStyle}font-weight:bold;">${r.studentName}</td>`;
+        html += `<td style="${cellStyle}">${r.instrument ?? ""}</td>`;
+        html += `<td style="${cellStyle}">${r.parent1Name ?? ""}</td>`;
+        html += `<td style="${cellStyle}" dir="ltr">${r.parent1Phone ?? ""}</td>`;
+        html += `<td style="${cellStyle}">${r.parent2Name ?? ""}</td>`;
+        html += `<td style="${cellStyle}" dir="ltr">${r.parent2Phone ?? ""}</td>`;
+        html += `</tr>`;
+      });
+      html += `</table></div>`;
+
+      const container = document.createElement("div");
+      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1000px;background:#ffffff;padding:20px;";
+      container.innerHTML = html;
+      document.body.appendChild(container);
+
+      const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+      document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 8;
+      const usableWidth = pageWidth - margin * 2;
+      const ratio = usableWidth / canvas.width;
+      const scaledHeight = canvas.height * ratio;
+
+      if (scaledHeight <= pageHeight - margin * 2) {
+        pdf.addImage(imgData, "PNG", margin, margin, usableWidth, scaledHeight);
+      } else {
+        let yOffset = 0;
+        const sliceHeight = (pageHeight - margin * 2) / ratio;
+        while (yOffset < canvas.height) {
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = Math.min(sliceHeight, canvas.height - yOffset);
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.drawImage(canvas, 0, -yOffset);
+          const sliceImg = sliceCanvas.toDataURL("image/png");
+          const h = sliceCanvas.height * ratio;
+          pdf.addImage(sliceImg, "PNG", margin, margin, usableWidth, h);
+          yOffset += sliceHeight;
+          if (yOffset < canvas.height) pdf.addPage();
+        }
+      }
+
+      pdf.save(`דף_קשר_${ensemble?.name ?? "הרכב"}.pdf`);
+      toast.success("PDF יוצא בהצלחה");
+    } catch {
+      toast.error("שגיאה בייצוא PDF");
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <AdminLayout title={`דף קשר — ${ensemble?.name ?? "הרכב"}`} backPath={`/admin/ensembles/${id}`}>
       <PageTitle title={`דף קשר — ${ensemble?.name ?? "הרכב"}`} />
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-lg">דף קשר להורים ({rows.length})</CardTitle>
+          <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={exporting || rows.length === 0}>
+            <FileDown className="h-4 w-4 ml-1" /> {exporting ? "מייצא..." : "ייצוא PDF"}
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
