@@ -13,6 +13,23 @@ import { useState } from "react";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { useAppLogo } from "@/hooks/useAppLogo";
+
+async function loadImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
 
 type Row = {
   studentName: string;
@@ -29,6 +46,7 @@ const NO_CITY = "ללא יישוב";
 const AdminEnsembleContacts = () => {
   const { id } = useParams<{ id: string }>();
   const [exporting, setExporting] = useState(false);
+  const { logoUrl } = useAppLogo();
 
   const { data: ensemble } = useQuery({
     queryKey: ["ensemble", id],
@@ -93,10 +111,28 @@ const AdminEnsembleContacts = () => {
       const headerStyle = `${cellStyle}font-weight:bold;background:#e8e8e8;text-align:center;`;
       const cityStyle = `${cellStyle}font-weight:bold;background:#dbeafe;text-align:right;font-size:15px;`;
 
+      const logoDataUrl = await loadImageDataUrl(logoUrl);
+
       let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
-      html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
+      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:10px;">`;
+      if (logoDataUrl) {
+        html += `<img src="${logoDataUrl}" style="height:64px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
+      }
+      html += `<div style="font-size:13px;color:#666;">אולפן ומגמת המוסיקה חוף הכרמל</div>`;
+      html += `</div>`;
+      html += `<h2 style="text-align:center;font-size:20px;margin-bottom:4px;margin-top:0;">דף קשר להורים — ${ensemble?.name ?? "הרכב"}</h2>`;
       const yearName = (ensemble as any)?.academic_years?.name;
       if (yearName) html += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
+
+      // סיכום לפי יישוב (להזמנת הסעות)
+      html += `<table style="border-collapse:collapse;margin:0 auto 16px;min-width:320px;">`;
+      html += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
+      for (const group of cityGroups) {
+        html += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
+      }
+      html += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
+      html += `</table>`;
+
       html += `<table style="border-collapse:collapse;width:100%;">`;
       html += `<tr>`;
       for (const h of ["#", "תלמיד/ה", "כלי", "הורה 1", "טלפון", "הורה 2", "טלפון"])
@@ -127,9 +163,15 @@ const AdminEnsembleContacts = () => {
       document.body.appendChild(container);
 
       const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
+
+      // Collect safe cut points (bottoms of table rows) so page breaks never split a row
+      const canvasScale = canvas.width / container.offsetWidth;
+      const containerTop = container.getBoundingClientRect().top;
+      const safeCuts = Array.from(container.querySelectorAll("tr")).map(
+        (tr) => (tr.getBoundingClientRect().bottom - containerTop) * canvasScale
+      );
       document.body.removeChild(container);
 
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
@@ -139,20 +181,26 @@ const AdminEnsembleContacts = () => {
       const scaledHeight = canvas.height * ratio;
 
       if (scaledHeight <= pageHeight - margin * 2) {
-        pdf.addImage(imgData, "PNG", margin, margin, usableWidth, scaledHeight);
+        pdf.addImage(canvas.toDataURL("image/png"), "PNG", margin, margin, usableWidth, scaledHeight);
       } else {
-        let yOffset = 0;
         const sliceHeight = (pageHeight - margin * 2) / ratio;
+        let yOffset = 0;
         while (yOffset < canvas.height) {
+          // Prefer cutting at a row boundary within this page
+          let end = Math.min(canvas.height, yOffset + sliceHeight);
+          const candidates = safeCuts.filter((c) => c > yOffset && c <= yOffset + sliceHeight - 4);
+          if (candidates.length > 0 && end < canvas.height) {
+            end = Math.max(...candidates);
+          }
           const sliceCanvas = document.createElement("canvas");
           sliceCanvas.width = canvas.width;
-          sliceCanvas.height = Math.min(sliceHeight, canvas.height - yOffset);
+          sliceCanvas.height = Math.round(end - yOffset);
           const ctx = sliceCanvas.getContext("2d")!;
           ctx.drawImage(canvas, 0, -yOffset);
           const sliceImg = sliceCanvas.toDataURL("image/png");
           const h = sliceCanvas.height * ratio;
           pdf.addImage(sliceImg, "PNG", margin, margin, usableWidth, h);
-          yOffset += sliceHeight;
+          yOffset = end;
           if (yOffset < canvas.height) pdf.addPage();
         }
       }
