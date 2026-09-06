@@ -83,6 +83,7 @@ import AdminTravelReport from "./pages/admin/AdminTravelReport";
 import AdminEnsembles from "./pages/admin/AdminEnsembles";
 import AdminEnsembleForm from "./pages/admin/AdminEnsembleForm";
 import AdminEnsembleCard from "./pages/admin/AdminEnsembleCard";
+import AdminEnsembleContacts from "./pages/admin/AdminEnsembleContacts";
 import AdminSpecialTrackCard from "./pages/admin/AdminSpecialTrackCard";
 import AdminSchoolMusicSchools from "./pages/admin/AdminSchoolMusicSchools";
 import AdminSchoolMusicSchoolForm from "./pages/admin/AdminSchoolMusicSchoolForm";
@@ -218,6 +219,7 @@ const App = () => (
               <Route path="/admin/ensembles" element={<AdminRoute><AdminEnsembles /></AdminRoute>} />
               <Route path="/admin/ensembles/new" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
               <Route path="/admin/ensembles/:id" element={<AdminRoute><AdminEnsembleCard /></AdminRoute>} />
+              <Route path="/admin/ensembles/:id/contacts" element={<AdminRoute><AdminEnsembleContacts /></AdminRoute>} />
              <Route path="/admin/ensembles/:id/edit" element={<AdminRoute><AdminEnsembleForm /></AdminRoute>} />
              <Route path="/admin/special-tracks/:trackKey" element={<AdminRoute><AdminSpecialTrackCard /></AdminRoute>} />
               {/* School Music Schools */}
