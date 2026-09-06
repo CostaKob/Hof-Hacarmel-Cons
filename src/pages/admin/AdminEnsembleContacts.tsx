@@ -7,6 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import PhoneDisplay from "@/components/PhoneDisplay";
 import { cmpHe } from "@/lib/sortHebrew";
+import { Button } from "@/components/ui/button";
+import { FileDown } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 type Row = {
   studentName: string;
@@ -19,6 +25,7 @@ type Row = {
 
 const AdminEnsembleContacts = () => {
   const { id } = useParams<{ id: string }>();
+  const [exporting, setExporting] = useState(false);
 
   const { data: ensemble } = useQuery({
     queryKey: ["ensemble", id],
