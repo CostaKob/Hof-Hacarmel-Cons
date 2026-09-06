@@ -126,14 +126,15 @@ const AdminEnsembleContacts = () => {
       const yearName = (ensemble as any)?.academic_years?.name;
       if (yearName) introHtml += `<p style="text-align:center;font-size:14px;color:#666;margin-top:0;">${yearName}</p>`;
 
-      // סיכום לפי יישוב (להזמנת הסעות)
-      introHtml += `<table style="border-collapse:collapse;margin:0 auto 16px;min-width:320px;">`;
-      introHtml += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
+      // סיכום לפי יישוב (להזמנת הסעות) — יוצג כעמוד אחרון
+      let summaryHtml = `<h3 style="text-align:center;font-size:18px;margin:0 0 10px;">סיכום להזמנת הסעות</h3>`;
+      summaryHtml += `<table style="border-collapse:collapse;margin:0 auto;min-width:320px;">`;
+      summaryHtml += `<tr><th style="${headerStyle}">יישוב</th><th style="${headerStyle}">מספר ילדים</th></tr>`;
       for (const group of cityGroups) {
-        introHtml += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
+        summaryHtml += `<tr><td style="${cellStyle}font-weight:bold;">${group.city}</td><td style="${cellStyle}text-align:center;">${group.rows.length}</td></tr>`;
       }
-      introHtml += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
-      introHtml += `</table>`;
+      summaryHtml += `<tr><td style="${cellStyle}font-weight:bold;background:#f0f0f0;">סה״כ</td><td style="${cellStyle}text-align:center;font-weight:bold;background:#f0f0f0;">${totalRows}</td></tr>`;
+      summaryHtml += `</table>`;
 
       const rowsHtml: string[] = [];
       let idx = 0;
