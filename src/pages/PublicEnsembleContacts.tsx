@@ -127,45 +127,39 @@ const PublicEnsembleContacts = ({ transportOnly = false }: { transportOnly?: boo
                   <span className="text-muted-foreground font-normal">({group.rows.length})</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Table className="w-full table-fixed">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[22%]">תלמיד/ה</TableHead>
-                      <TableHead className="w-[18%]">כלי</TableHead>
-                      <TableHead className="w-[28%]">הורים</TableHead>
-                      <TableHead className="w-[32%]">טלפונים</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {group.rows.map((r, i) => (
-                      <TableRow key={i}>
-                        <TableCell className="font-medium break-words align-top">{r.student_name}</TableCell>
-                        <TableCell className="break-words align-top">{r.instrument ?? "—"}</TableCell>
-                        <TableCell className="break-words align-top">
-                          <div className="flex flex-col gap-1">
-                            {r.parent1_name ? (
-                              <span>{r.parent1_name}</span>
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                            {r.parent2_name && <span>{r.parent2_name}</span>}
-                          </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap align-top">
-                          <div className="flex flex-col gap-1">
-                            {r.parent1_phone ? (
-                              <PhoneDisplay phone={r.parent1_phone} />
-                            ) : (
-                              <span className="text-muted-foreground">—</span>
-                            )}
-                            {r.parent2_phone && <PhoneDisplay phone={r.parent2_phone} />}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <CardContent className="p-0">
+                <ul className="divide-y">
+                  {group.rows.map((r, i) => (
+                    <li key={i} className="px-4 py-3">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <span className="font-semibold text-[15px] leading-snug">{r.student_name}</span>
+                        {r.instrument && (
+                          <span className="text-xs text-muted-foreground shrink-0">{r.instrument}</span>
+                        )}
+                      </div>
+                      <div className="mt-2 space-y-1.5">
+                        {[
+                          { name: r.parent1_name, phone: r.parent1_phone },
+                          { name: r.parent2_name, phone: r.parent2_phone },
+                        ]
+                          .filter((p) => p.name || p.phone)
+                          .map((p, j) => (
+                            <div key={j} className="flex items-center justify-between gap-3 text-sm">
+                              <span className="text-muted-foreground truncate">{p.name ?? "הורה"}</span>
+                              {p.phone && (
+                                <span className="shrink-0">
+                                  <PhoneDisplay phone={p.phone} />
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        {!r.parent1_name && !r.parent1_phone && !r.parent2_name && !r.parent2_phone && (
+                          <div className="text-sm text-muted-foreground">אין פרטי קשר</div>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
               </CardContent>
             </Card>
           ))
