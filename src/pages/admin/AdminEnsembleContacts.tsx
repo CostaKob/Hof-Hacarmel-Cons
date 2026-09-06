@@ -222,6 +222,16 @@ const AdminEnsembleContacts = () => {
     }
   };
 
+  const copyPublicLink = async (suffix: string) => {
+    const url = `${SHORT_LINK_BASE}/ensemble/${id}${suffix}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("הקישור הועתק — אפשר לפרסם להורים");
+    } catch {
+      toast.error(url, { duration: 10000 });
+    }
+  };
+
   return (
     <AdminLayout title={`דף קשר — ${ensemble?.name ?? "הרכב"}`} backPath={`/admin/ensembles/${id}`}>
       <PageTitle title={`דף קשר — ${ensemble?.name ?? "הרכב"}`} />
