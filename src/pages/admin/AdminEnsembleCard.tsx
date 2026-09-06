@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Plus, X, Check, Phone } from "lucide-react";
+import { Pencil, Trash2, Plus, X, Check, Phone, Link2 } from "lucide-react";
+import { SHORT_LINK_BASE } from "@/lib/shortLink";
 import { supabase } from "@/integrations/supabase/client";
 import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES } from "@/lib/ensembleConstants";
 import { toast } from "sonner";
@@ -33,6 +34,16 @@ const AdminEnsembleCard = () => {
     queryClient.invalidateQueries({ queryKey: ["ensemble", id] });
     queryClient.invalidateQueries({ queryKey: ["ensemble-students", id] });
     queryClient.invalidateQueries({ queryKey: ["ensemble-staff", id] });
+  };
+
+  const copyContactsLink = async () => {
+    const url = `${SHORT_LINK_BASE}/ensemble/${id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("הקישור לדף הקשר הועתק — אפשר לפרסם להורים");
+    } catch {
+      toast.error(url, { duration: 10000 });
+    }
   };
 
   const { data: ensemble, isLoading } = useQuery({
@@ -324,9 +335,14 @@ const AdminEnsembleCard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-lg">משתתפים ({ensembleStudents.length})</CardTitle>
-            <Button size="sm" variant="outline" onClick={() => navigate(`/admin/ensembles/${id}/contacts`)}>
-              <Phone className="h-4 w-4 ml-1" /> דף קשר
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={copyContactsLink}>
+                <Link2 className="h-4 w-4 ml-1" /> העתק קישור
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => navigate(`/admin/ensembles/${id}/contacts`)}>
+                <Phone className="h-4 w-4 ml-1" /> דף קשר
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex flex-wrap gap-2">
