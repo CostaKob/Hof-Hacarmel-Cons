@@ -25,12 +25,21 @@ const Login = () => {
     setIsLoading(false);
 
     if (error) {
+      const raw = (error as { message?: string })?.message ?? "";
+      const isBadCredentials = /invalid login credentials/i.test(raw);
+      const isNetwork = /failed to fetch|networkerror|load failed/i.test(raw);
       toast.error("שגיאה בהתחברות", {
-        description: "אימייל או סיסמה שגויים",
+        description: isBadCredentials
+          ? "אימייל או סיסמה שגויים"
+          : isNetwork
+            ? "אין חיבור לשרת — ייתכן שהרשת או תוסף בדפדפן חוסמים את ההתחברות"
+            : raw || "שגיאה לא ידועה",
+        duration: 8000,
       });
     } else {
       navigate("/dashboard");
     }
+
   };
 
   return (
