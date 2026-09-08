@@ -352,7 +352,7 @@ const SendFamilyAssignmentMessage = ({
             <div className="space-y-1">
               <Label className="text-xs">שליחה אל</Label>
               <div className="grid gap-2 sm:grid-cols-2">
-                {recipients.map((r) => (
+                {recipients.map((r, i) => (
                   <button
                     key={r.key}
                     type="button"
@@ -363,7 +363,10 @@ const SendFamilyAssignmentMessage = ({
                         : "border-border hover:bg-muted/50"
                     }`}
                   >
-                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-sm font-medium">
+                      {`הורה ${i + 1}`}
+                      {r.label && !/^הורה \d+$/.test(r.label) ? ` — ${r.label}` : ""}
+                    </div>
                     <div className="text-xs text-muted-foreground" dir="ltr">
                       {r.phone || "—"}
                     </div>
@@ -373,8 +376,20 @@ const SendFamilyAssignmentMessage = ({
                   </button>
                 ))}
               </div>
+              {hasMultiplePayers && (
+                <label className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={perPayer}
+                    onChange={(e) => setPerPayer(e.target.checked)}
+                    className="h-4 w-4 accent-[hsl(var(--primary))]"
+                  />
+                  שלח לכל משלם הודעה נפרדת עם התשלום שלו בלבד
+                </label>
+              )}
             </div>
           )}
+
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <Label className="text-xs">הערה לתחילת השיעורים</Label>
