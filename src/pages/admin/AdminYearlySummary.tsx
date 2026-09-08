@@ -107,6 +107,12 @@ const AdminYearlySummary = () => {
     return Array.from(names).sort();
   }, [rows]);
 
+  const stats = useMemo(() => {
+    const started = filtered.filter((r) => r.totalLessons > 0);
+    const notStarted = filtered.filter((r) => r.totalLessons === 0);
+    return { started, notStarted };
+  }, [filtered]);
+
   const isLoading = eLoading || lLoading;
 
   return (
