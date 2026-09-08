@@ -30,8 +30,10 @@ function normalizeWaPhone(phone?: string | null): string {
   return String(phone).replace(/\D/g, "").replace(/^0/, "");
 }
 
-function buildMessage(student: any, enrollments: any[], pendingPayment: any | null, extraNote: string, payLink?: string): string {
-  const parentName = student.parent_name || "הורה יקר";
+function buildMessage(student: any, enrollments: any[], pendingPayment: any | null, extraNote: string, payLink?: string, recipientName?: string | null): string {
+  const cleanRecipient = (recipientName ?? "").trim();
+  const parentName = (cleanRecipient && !/^הורה \d+$/.test(cleanRecipient) ? cleanRecipient : "") || student.parent_name || "הורה יקר";
+
   const lines: string[] = [];
   lines.push(`שלום ${parentName},`);
   lines.push("");
