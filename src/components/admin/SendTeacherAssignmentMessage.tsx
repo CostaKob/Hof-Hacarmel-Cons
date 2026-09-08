@@ -193,8 +193,9 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
 
   useEffect(() => {
     if (!open) return;
-    setMessage(buildMessage(student, enrollments, pendingPayment, extraNote, payLink));
-  }, [open, student, enrollments, pendingPayment, extraNote, payLink]);
+    setMessage(buildMessage(student, enrollments, pendingPayment, extraNote, payLink, recipient?.label));
+  }, [open, student, enrollments, pendingPayment, extraNote, payLink, recipient?.label]);
+
 
   const parentWa = normalizeWaPhone(recipient?.phone);
 
