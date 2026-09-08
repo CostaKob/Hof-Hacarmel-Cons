@@ -97,7 +97,11 @@ const AdminYearlySummary = () => {
         if (activeFilter === "inactive" && r.isActive) return false;
         return true;
       })
-      .sort((a, b) => a.studentName.localeCompare(b.studentName, "he"));
+      .sort((a, b) => {
+        const teacherCmp = a.teacherName.localeCompare(b.teacherName, "he");
+        if (teacherCmp !== 0) return teacherCmp;
+        return a.studentName.localeCompare(b.studentName, "he");
+      });
   }, [rows, search, teacherFilter, schoolFilter, activeFilter]);
 
   const teacherOptions = useMemo(() => {
