@@ -162,6 +162,40 @@ const AdminYearlySummary = () => {
           <p className="text-center text-muted-foreground py-12">טוען...</p>
         ) : (
           <>
+            {/* Mini stats */}
+            <div className="grid grid-cols-3 gap-3 mb-2">
+              <div className="rounded-xl border bg-card p-3 text-center">
+                <p className="text-xs text-muted-foreground">סה״כ רישומים</p>
+                <p className="text-2xl font-semibold">{filtered.length}</p>
+              </div>
+              <div className="rounded-xl border bg-card p-3 text-center">
+                <p className="text-xs text-muted-foreground">כבר התחילו ללמוד</p>
+                <p className="text-2xl font-semibold text-green-600">{stats.started.length}</p>
+              </div>
+              <div className="rounded-xl border bg-card p-3 text-center">
+                <p className="text-xs text-muted-foreground">עוד לא התחילו</p>
+                <p className="text-2xl font-semibold text-red-500">{stats.notStarted.length}</p>
+              </div>
+            </div>
+
+            {stats.notStarted.length > 0 && (
+              <details className="rounded-xl border bg-card p-3">
+                <summary className="cursor-pointer text-sm font-medium">
+                  מי עוד לא התחיל ללמוד ({stats.notStarted.length})
+                </summary>
+                <ul className="mt-3 space-y-1 text-sm">
+                  {stats.notStarted.map((r) => (
+                    <li key={r.enrollmentId} className="flex flex-wrap gap-x-2 border-b border-border/50 pb-1">
+                      <span className="font-medium">{r.studentName}</span>
+                      <span className="text-muted-foreground">{r.instrumentName}</span>
+                      {r.teacherName && <span className="text-muted-foreground">· {r.teacherName}</span>}
+                      {r.schoolName && <span className="text-muted-foreground">· {r.schoolName}</span>}
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+
             <p className="text-sm text-muted-foreground mb-2">{filtered.length} רישומים</p>
             <div className="hidden md:block">
               <YearlySummaryTable rows={filtered} showTeacher />
