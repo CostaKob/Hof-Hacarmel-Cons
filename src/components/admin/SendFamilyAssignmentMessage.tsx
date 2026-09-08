@@ -202,12 +202,46 @@ const SendFamilyAssignmentMessage = ({
   );
 
   const [recipientKey, setRecipientKey] = useState<string>("parent");
+  // When each parent has their own payment link, send each of them only their own.
+  const [perPayer, setPerPayer] = useState(true);
 
   useEffect(() => {
     if (open) setRecipientKey(recipients[0]?.key ?? "parent");
   }, [open, recipients]);
 
   const recipient = recipients.find((r) => r.key === recipientKey) ?? recipients[0];
+
+  const normalizeName = (s?: string | null) =>
+    String(s ?? "").replace(/[^\u0590-\u05FFa-zA-Z]+/g, " ").trim().toLowerCase();
+
+  const payerLabels = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          pendingPayments
+            .map((p) => (p.enrollment_breakdown as any)?.payerLabel)
+            .filter((l: any) => typeof l === "string" && l.trim()),
+        ),
+      ) as string[],
+    [pendingPayments],
+  );
+
+  const hasMultiplePayers = payerLabels.length > 1;
+
+  // Payments that belong to the selected recipient (matched by payer label ↔ parent name).
+  const paymentsForRecipient = useMemo(() => {
+    if (!hasMultiplePayers || !perPayer || !recipient) return pendingPayments;
+    const target = normalizeName(recipient.label);
+    if (!target) return pendingPayments;
+    const targetParts = target.split(" ").filter(Boolean);
+    const matched = pendingPayments.filter((p) => {
+      const label = normalizeName((p.enrollment_breakdown as any)?.payerLabel);
+      if (!label) return false;
+      return label.includes(target) || targetParts.every((w) => label.includes(w));
+    });
+    return matched.length > 0 ? matched : pendingPayments;
+  }, [pendingPayments, recipient, perPayer, hasMultiplePayers]);
+
 
   const { data: template } = useQuery({
     queryKey: ["message-template", FAMILY_ASSIGNMENT_TEMPLATE_KEY],
