@@ -255,7 +255,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
             <div className="space-y-1">
               <Label className="text-xs">שליחה אל</Label>
               <div className="grid gap-2 sm:grid-cols-2">
-                {recipients.map((r) => (
+                {recipients.map((r, i) => (
                   <button
                     key={r.key}
                     type="button"
@@ -266,7 +266,11 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
                         : "border-border hover:bg-muted/50"
                     }`}
                   >
-                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-sm font-medium">
+                      {`הורה ${i + 1}`}
+                      {r.label && !/^הורה \d+$/.test(r.label) ? ` — ${r.label}` : ""}
+                    </div>
+
                     <div className="text-xs text-muted-foreground" dir="ltr">{r.phone || "—"}</div>
                     <div className="text-xs text-muted-foreground truncate" dir="ltr">{r.email || "—"}</div>
                   </button>
