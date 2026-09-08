@@ -275,14 +275,14 @@ const SendFamilyAssignmentMessage = ({
     if (!open || !template) return;
     setMessage(
       renderTemplate(template.body, {
-        parent_name: family.parent_name || "הורה יקר",
+        parent_name: recipient?.label || family.parent_name || "הורה יקר",
         children: childrenSubject,
         assignments: buildAssignmentsBlock(children, enrollments),
-        payments: buildPaymentsBlock(pendingPayments, shortLinks),
+        payments: buildPaymentsBlock(paymentsForRecipient, shortLinks),
         note: extraNote.trim(),
       }),
     );
-  }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject, shortLinks]);
+  }, [open, template, family, children, enrollments, paymentsForRecipient, extraNote, childrenSubject, shortLinks, recipient?.label]);
 
   const parentWa = normalizeWaPhone(recipient?.phone);
 
@@ -291,10 +291,11 @@ const SendFamilyAssignmentMessage = ({
     setSubject(
       renderTemplate(template?.subject || "שיוך מורה — {{children}}", {
         children: childrenSubject,
-        parent_name: family.parent_name || "",
+        parent_name: recipient?.label || family.parent_name || "",
       }),
     );
-  }, [open, template, childrenSubject, family.parent_name]);
+  }, [open, template, childrenSubject, family.parent_name, recipient?.label]);
+
 
   const sendWhatsApp = () => {
     if (!parentWa) {
