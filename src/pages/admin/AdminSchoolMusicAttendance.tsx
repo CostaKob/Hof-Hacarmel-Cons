@@ -147,9 +147,15 @@ const AdminSchoolMusicAttendance = () => {
         : ((s as any).day_of_week != null ? [(s as any).day_of_week] : []);
       if (od.length === 0) continue;
       for (let d = parseISO(rangeStart); d <= parseISO(rangeEnd) && d <= todayD; d = addDays(d, 1)) {
-        if (od.includes(d.getDay())) {
-          const ds = format(d, "yyyy-MM-dd");
-          if (ds < minDate || ds > maxDate) continue;
+        const ds = format(d, "yyyy-MM-dd");
+        if (ds < minDate || ds > maxDate) continue;
+
+        // August is mostly vacation; only the teachers' meeting on 25.8 needs a report
+        const isAug = format(d, "MM") === "08";
+        const isTeachersMeeting = isAug && d.getDate() === 25;
+        if (isAug && !isTeachersMeeting) continue;
+
+        if (isTeachersMeeting || od.includes(d.getDay())) {
           if (!reportedKey.has(`${s.id}::${ds}`)) out.push({ school: s, date: ds });
         }
       }
