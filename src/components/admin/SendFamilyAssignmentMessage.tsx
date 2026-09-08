@@ -202,12 +202,46 @@ const SendFamilyAssignmentMessage = ({
   );
 
   const [recipientKey, setRecipientKey] = useState<string>("parent");
+  // When each parent has their own payment link, send each of them only their own.
+  const [perPayer, setPerPayer] = useState(true);
 
   useEffect(() => {
     if (open) setRecipientKey(recipients[0]?.key ?? "parent");
   }, [open, recipients]);
 
   const recipient = recipients.find((r) => r.key === recipientKey) ?? recipients[0];
+
+  const normalizeName = (s?: string | null) =>
+    String(s ?? "").replace(/[^\u0590-\u05FFa-zA-Z]+/g, " ").trim().toLowerCase();
+
+  const payerLabels = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          pendingPayments
+            .map((p) => (p.enrollment_breakdown as any)?.payerLabel)
+            .filter((l: any) => typeof l === "string" && l.trim()),
+        ),
+      ) as string[],
+    [pendingPayments],
+  );
+
+  const hasMultiplePayers = payerLabels.length > 1;
+
+  // Payments that belong to the selected recipient (matched by payer label ↔ parent name).
+  const paymentsForRecipient = useMemo(() => {
+    if (!hasMultiplePayers || !perPayer || !recipient) return pendingPayments;
+    const target = normalizeName(recipient.label);
+    if (!target) return pendingPayments;
+    const targetParts = target.split(" ").filter(Boolean);
+    const matched = pendingPayments.filter((p) => {
+      const label = normalizeName((p.enrollment_breakdown as any)?.payerLabel);
+      if (!label) return false;
+      return label.includes(target) || targetParts.every((w) => label.includes(w));
+    });
+    return matched.length > 0 ? matched : pendingPayments;
+  }, [pendingPayments, recipient, perPayer, hasMultiplePayers]);
+
 
   const { data: template } = useQuery({
     queryKey: ["message-template", FAMILY_ASSIGNMENT_TEMPLATE_KEY],
@@ -241,14 +275,14 @@ const SendFamilyAssignmentMessage = ({
     if (!open || !template) return;
     setMessage(
       renderTemplate(template.body, {
-        parent_name: family.parent_name || "הורה יקר",
+        parent_name: recipient?.label || family.parent_name || "הורה יקר",
         children: childrenSubject,
         assignments: buildAssignmentsBlock(children, enrollments),
-        payments: buildPaymentsBlock(pendingPayments, shortLinks),
+        payments: buildPaymentsBlock(paymentsForRecipient, shortLinks),
         note: extraNote.trim(),
       }),
     );
-  }, [open, template, family, children, enrollments, pendingPayments, extraNote, childrenSubject, shortLinks]);
+  }, [open, template, family, children, enrollments, paymentsForRecipient, extraNote, childrenSubject, shortLinks, recipient?.label]);
 
   const parentWa = normalizeWaPhone(recipient?.phone);
 
@@ -257,10 +291,11 @@ const SendFamilyAssignmentMessage = ({
     setSubject(
       renderTemplate(template?.subject || "שיוך מורה — {{children}}", {
         children: childrenSubject,
-        parent_name: family.parent_name || "",
+        parent_name: recipient?.label || family.parent_name || "",
       }),
     );
-  }, [open, template, childrenSubject, family.parent_name]);
+  }, [open, template, childrenSubject, family.parent_name, recipient?.label]);
+
 
   const sendWhatsApp = () => {
     if (!parentWa) {
@@ -317,7 +352,7 @@ const SendFamilyAssignmentMessage = ({
             <div className="space-y-1">
               <Label className="text-xs">שליחה אל</Label>
               <div className="grid gap-2 sm:grid-cols-2">
-                {recipients.map((r) => (
+                {recipients.map((r, i) => (
                   <button
                     key={r.key}
                     type="button"
@@ -328,7 +363,10 @@ const SendFamilyAssignmentMessage = ({
                         : "border-border hover:bg-muted/50"
                     }`}
                   >
-                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-sm font-medium">
+                      {`הורה ${i + 1}`}
+                      {r.label && !/^הורה \d+$/.test(r.label) ? ` — ${r.label}` : ""}
+                    </div>
                     <div className="text-xs text-muted-foreground" dir="ltr">
                       {r.phone || "—"}
                     </div>
@@ -338,8 +376,20 @@ const SendFamilyAssignmentMessage = ({
                   </button>
                 ))}
               </div>
+              {hasMultiplePayers && (
+                <label className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={perPayer}
+                    onChange={(e) => setPerPayer(e.target.checked)}
+                    className="h-4 w-4 accent-[hsl(var(--primary))]"
+                  />
+                  שלח לכל משלם הודעה נפרדת עם התשלום שלו בלבד
+                </label>
+              )}
             </div>
           )}
+
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-2">
               <Label className="text-xs">הערה לתחילת השיעורים</Label>

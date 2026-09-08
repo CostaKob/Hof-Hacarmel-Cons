@@ -1112,15 +1112,26 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     onError: (err: any) => toast.error(err.message || "שגיאה ביצירת הקישורים"),
   });
 
-  // Autofill split parts (amount split + parent 1 details from student) on open.
+  // Autofill split parts (amount split + parent 1 / parent 2 details) on open.
   useEffect(() => {
     if (!splitOpen) return;
-    const parentName = (student?.parent_name ?? "").trim();
-    const [pFirst, ...pRest] = parentName.split(/\s+/);
-    const parent1First = pFirst ?? "";
-    const parent1Last = pRest.join(" ");
-    const parent1Email = student?.parent_email ?? "";
-    const parent1Phone = student?.parent_phone ?? "";
+    const splitName = (full?: string | null) => {
+      const [f, ...rest] = String(full ?? "").trim().split(/\s+/);
+      return { first: f ?? "", last: rest.join(" ") };
+    };
+    const p1 = {
+      ...splitName(student?.parent_name),
+      email: student?.parent_email ?? "",
+      phone: student?.parent_phone ?? "",
+      label: (student?.parent_name ?? "").trim(),
+    };
+    const p2 = {
+      ...splitName(student?.parent_name_2),
+      email: student?.parent_email_2 ?? "",
+      phone: student?.parent_phone_2 ?? "",
+      label: (student?.parent_name_2 ?? "").trim(),
+    };
+    const defaults = [p1, p2];
 
     setSplitParts((prev) => {
       const hasAmounts = prev.some((p) => parseFloat(p.amount) > 0);
@@ -1134,21 +1145,23 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
         }
       }
       return prev.map((p, i) => {
-        if (i === 0) {
-          return {
-            ...p,
-            amount: amounts[i],
-            firstName: p.firstName || parent1First,
-            lastName: p.lastName || parent1Last,
-            email: p.email || parent1Email,
-            phone: p.phone || parent1Phone,
-          };
-        }
-        return { ...p, amount: amounts[i] };
+        const d = defaults[i];
+        if (!d) return { ...p, amount: amounts[i] };
+        const isDefaultLabel = /^הורה \d+$/.test(p.label.trim());
+        return {
+          ...p,
+          amount: amounts[i],
+          label: isDefaultLabel && d.label ? d.label : p.label,
+          firstName: p.firstName || d.first,
+          lastName: p.lastName || d.last,
+          email: p.email || d.email,
+          phone: p.phone || d.phone,
+        };
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [splitOpen, student?.id]);
+
 
   const resetForm = () => {
     setPaymentDate(today);

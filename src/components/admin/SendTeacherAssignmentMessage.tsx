@@ -30,8 +30,10 @@ function normalizeWaPhone(phone?: string | null): string {
   return String(phone).replace(/\D/g, "").replace(/^0/, "");
 }
 
-function buildMessage(student: any, enrollments: any[], pendingPayment: any | null, extraNote: string, payLink?: string): string {
-  const parentName = student.parent_name || "הורה יקר";
+function buildMessage(student: any, enrollments: any[], pendingPayment: any | null, extraNote: string, payLink?: string, recipientName?: string | null): string {
+  const cleanRecipient = (recipientName ?? "").trim();
+  const parentName = (cleanRecipient && !/^הורה \d+$/.test(cleanRecipient) ? cleanRecipient : "") || student.parent_name || "הורה יקר";
+
   const lines: string[] = [];
   lines.push(`שלום ${parentName},`);
   lines.push("");
@@ -193,8 +195,9 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
 
   useEffect(() => {
     if (!open) return;
-    setMessage(buildMessage(student, enrollments, pendingPayment, extraNote, payLink));
-  }, [open, student, enrollments, pendingPayment, extraNote, payLink]);
+    setMessage(buildMessage(student, enrollments, pendingPayment, extraNote, payLink, recipient?.label));
+  }, [open, student, enrollments, pendingPayment, extraNote, payLink, recipient?.label]);
+
 
   const parentWa = normalizeWaPhone(recipient?.phone);
 
@@ -252,7 +255,7 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
             <div className="space-y-1">
               <Label className="text-xs">שליחה אל</Label>
               <div className="grid gap-2 sm:grid-cols-2">
-                {recipients.map((r) => (
+                {recipients.map((r, i) => (
                   <button
                     key={r.key}
                     type="button"
@@ -263,7 +266,11 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
                         : "border-border hover:bg-muted/50"
                     }`}
                   >
-                    <div className="text-sm font-medium">{r.label}</div>
+                    <div className="text-sm font-medium">
+                      {`הורה ${i + 1}`}
+                      {r.label && !/^הורה \d+$/.test(r.label) ? ` — ${r.label}` : ""}
+                    </div>
+
                     <div className="text-xs text-muted-foreground" dir="ltr">{r.phone || "—"}</div>
                     <div className="text-xs text-muted-foreground truncate" dir="ltr">{r.email || "—"}</div>
                   </button>
