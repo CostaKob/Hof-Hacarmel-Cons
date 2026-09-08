@@ -707,7 +707,11 @@ const AdminActivityCalendar = () => {
                                 {l.instrument && (
                                   <span className="block truncate opacity-70">{l.instrument}</span>
                                 )}
+                                {l.schoolName && (
+                                  <span className="block truncate opacity-60">{l.schoolName}</span>
+                                )}
                               </div>
+
                             ))}
                             {lessons.length > shown.length && (
                               <span className="text-[10px] text-muted-foreground text-center">
