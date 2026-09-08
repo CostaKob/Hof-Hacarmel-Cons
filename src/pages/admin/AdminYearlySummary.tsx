@@ -63,22 +63,24 @@ const AdminYearlySummary = () => {
       countsMap.set(l.enrollment_id, c);
     }
 
-    return enrollments.map((e: any) => {
-      const counts = countsMap.get(e.id) ?? emptyStatusCounts();
-      return {
-        enrollmentId: e.id,
-        studentName: `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}`.trim(),
-        teacherName: `${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim(),
-        instrumentName: e.instruments?.name ?? "",
-        schoolName: e.schools?.name ?? "",
-        lessonDuration: e.lesson_duration_minutes,
-        isActive: e.is_active,
-        counts,
-        totalLessons: calcTotal(counts),
-        expectedLessons: getExpectedLessons(e.start_date),
-        startDate: e.start_date,
-      } satisfies EnrollmentSummaryRow;
-    });
+    return enrollments
+      .filter((e: any) => !isNoTeacherEnrollment(e))
+      .map((e: any) => {
+        const counts = countsMap.get(e.id) ?? emptyStatusCounts();
+        return {
+          enrollmentId: e.id,
+          studentName: `${e.students?.first_name ?? ""} ${e.students?.last_name ?? ""}`.trim(),
+          teacherName: `${e.teachers?.first_name ?? ""} ${e.teachers?.last_name ?? ""}`.trim(),
+          instrumentName: e.instruments?.name ?? "",
+          schoolName: e.schools?.name ?? "",
+          lessonDuration: e.lesson_duration_minutes,
+          isActive: e.is_active,
+          counts,
+          totalLessons: calcTotal(counts),
+          expectedLessons: getExpectedLessons(e.start_date),
+          startDate: e.start_date,
+        } satisfies EnrollmentSummaryRow;
+      });
   }, [enrollments, lines]);
 
   const filtered = useMemo(() => {
