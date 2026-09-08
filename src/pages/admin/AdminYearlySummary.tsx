@@ -10,6 +10,7 @@ import { emptyStatusCounts, calcTotal, getExpectedLessons, type EnrollmentSummar
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import PageTitle from "@/components/PageTitle";
 import { usePersistedState } from "@/hooks/useListStatePreservation";
+import { isNoTeacherEnrollment } from "@/lib/constants";
 
 function useAllEnrollments(yearId: string | null) {
   return useQuery({
