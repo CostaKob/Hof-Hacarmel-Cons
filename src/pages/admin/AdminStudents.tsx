@@ -632,7 +632,9 @@ const AdminStudents = () => {
     const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
     const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
     window.open(url, "_blank");
-  }, [heldLessonsByEnrollment]);
+    const linkPayment = getActiveLinkPayment(r);
+    if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
+  }, [heldLessonsByEnrollment, getActiveLinkPayment, reminderMutation]);
 
   const getActiveLinkDate = useCallback((r: any) => {
     const created = getActiveLinkCreated(r);
