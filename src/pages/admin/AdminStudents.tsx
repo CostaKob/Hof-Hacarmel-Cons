@@ -628,11 +628,17 @@ const AdminStudents = () => {
       try { formatted = format(new Date(d), "dd/MM/yyyy"); } catch { /* keep raw */ }
       lines.push(count > 1 ? `${formatted} (שיעור כפול)` : formatted);
     }
+    const linkPayment = getActiveLinkPayment(r);
+    const paymentLink = linkPayment?.payment_link_url ? String(linkPayment.payment_link_url).trim() : "";
+    lines.push("");
+    lines.push("ניתן לשלם עד 10 תשלומים ללא ריבית בלינק כאן:");
+    lines.push(paymentLink || "[קישור לתשלום לא זמין]");
+    lines.push("");
+    lines.push("תודה מראש, קורין");
     const text = encodeURIComponent(lines.join("\n"));
     const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
     const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
     window.open(url, "_blank");
-    const linkPayment = getActiveLinkPayment(r);
     if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
   }, [heldLessonsByEnrollment, getActiveLinkPayment, reminderMutation]);
 
