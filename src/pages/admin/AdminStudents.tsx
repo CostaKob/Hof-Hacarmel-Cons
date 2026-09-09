@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
