@@ -57,11 +57,11 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  present: "bg-status-present/15 text-status-present border-status-present/40",
-  double_lesson: "bg-status-double/15 text-status-double border-status-double/40",
-  justified_absence: "bg-status-justified/15 text-status-justified border-status-justified/40",
-  unjustified_absence: "bg-status-unjustified/15 text-status-unjustified border-status-unjustified/40",
-  vacation: "bg-status-vacation/15 text-status-vacation border-status-vacation/40",
+  present: "bg-status-present/25 text-status-present border-status-present/55 font-semibold",
+  double_lesson: "bg-status-double/25 text-status-double border-status-double/55 font-semibold",
+  justified_absence: "bg-status-justified/25 text-status-justified border-status-justified/55 font-semibold",
+  unjustified_absence: "bg-status-unjustified/25 text-status-unjustified border-status-unjustified/55 font-semibold",
+  vacation: "bg-status-vacation/25 text-status-vacation border-status-vacation/55 font-semibold",
 };
 
 const STATUS_DOT_STYLES: Record<string, string> = {
