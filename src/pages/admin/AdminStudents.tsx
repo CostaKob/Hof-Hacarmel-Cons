@@ -21,6 +21,7 @@ import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { isInactiveStudentStatus } from "@/lib/constants";
 import { format } from "date-fns";
 import { allocatePayment } from "@/lib/familyPaymentAllocation";
+import { shortenUrl } from "@/lib/shortLink";
 
 
 const AdminStudents = () => {
