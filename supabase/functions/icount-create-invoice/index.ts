@@ -256,20 +256,36 @@ Deno.serve(async (req: Request) => {
         const account = t.match(/ח-ן:\s*([^\s·]+)/)?.[1] || "";
         return { bank, branch, account };
       };
-      payload.cheques = payments.map((p: any) => {
+      // One line per PHYSICAL cheque. A family payment split across siblings
+      // creates several rows for the same cheque — merge them by number+date+bank
+      // so the receipt looks exactly like a manual entry.
+      const chequeMap = new Map<string, any>();
+      for (const p of payments as any[]) {
         const meta = parseChequeMeta(p.notes);
         const num = String(p.reference_number || "");
-        return {
-          sum: sign * Math.abs(Number(p.amount || 0)),
-          date: p.payment_date || undefined,
-          bank: meta.bank,
-          branch: meta.branch,
-          account: meta.account,
-          num,
-          number: num,
-          cheque_num: num,
-        };
-      });
+        const date = p.payment_date || undefined;
+        const key = [num, date ?? "", meta.bank, meta.branch, meta.account].join("|");
+        const sum = sign * Math.abs(Number(p.amount || 0));
+        const prev = chequeMap.get(key);
+        if (prev) {
+          prev.sum = Math.round((prev.sum + sum) * 100) / 100;
+        } else {
+          chequeMap.set(key, {
+            sum,
+            date,
+            bank: meta.bank,
+            branch: meta.branch,
+            account: meta.account,
+            num,
+            number: num,
+            cheque_num: num,
+          });
+        }
+      }
+      payload.cheques = [...chequeMap.values()].sort(
+        (a, b) => String(a.date ?? "").localeCompare(String(b.date ?? "")),
+      );
+
 
     } else if (pm.type === 4) {
       payload.banktransfer = { sum: signedTotal, account: head.reference_number || "" };
