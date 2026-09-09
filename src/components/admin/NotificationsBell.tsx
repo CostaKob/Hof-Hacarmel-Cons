@@ -72,7 +72,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" dir="rtl" className="w-[22rem] p-0 max-w-[calc(100vw-1.5rem)]">
+      <PopoverContent align="end" dir="rtl" collisionPadding={8} className="flex max-h-[calc(100vh-2rem)] w-[22rem] flex-col p-0 max-w-[calc(100vw-1.5rem)]">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <div className="flex items-center gap-1">
             <p className="text-sm font-semibold">התראות</p>
