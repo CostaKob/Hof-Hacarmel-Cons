@@ -1195,11 +1195,15 @@ const PublicRegistration = () => {
 
                     const field = item.field;
                     const typeOverride = getFieldTypeOverride(field);
+                    const displayField =
+                      field.field_key === "grade" && activeYear?.name
+                        ? { ...field, label: `כיתה בשנת הלימודים ${activeYear.name}` }
+                        : field;
 
                       return (
                         <DynamicField
                           key={field.id}
-                          field={{ ...field, field_type: typeOverride }}
+                          field={{ ...displayField, field_type: typeOverride }}
                           value={formValues[field.field_key]}
                           onChange={(val) => setFieldValue(field.field_key, val)}
                           onBlur={() => validateField(field.field_key)}
@@ -1207,6 +1211,7 @@ const PublicRegistration = () => {
                           options={getOptionsForField(field)}
                         />
                       );
+
                   })}
                 </CardContent>
               </Card>
