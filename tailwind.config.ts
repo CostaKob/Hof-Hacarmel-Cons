@@ -58,11 +58,11 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
         status: {
-          present: "142 76% 36%",
-          double: "205 90% 45%",
-          justified: "35 92% 45%",
-          unjustified: "4 78% 52%",
-          vacation: "270 60% 55%",
+          present: "hsl(142 76% 36% / <alpha-value>)",
+          double: "hsl(205 90% 45% / <alpha-value>)",
+          justified: "hsl(35 92% 45% / <alpha-value>)",
+          unjustified: "hsl(4 78% 52% / <alpha-value>)",
+          vacation: "hsl(270 60% 55% / <alpha-value>)",
         },
       },
       borderRadius: {
