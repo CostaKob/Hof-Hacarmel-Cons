@@ -619,8 +619,8 @@ const AdminStudents = () => {
     const parentFirst = String(s?.parent_name ?? "").trim().split(" ")[0] || "";
     const studentName = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
     const lines: string[] = [];
-    lines.push(`שלום ${parentFirst}, מזכירים להסדיר את התשלום בהקדם,`);
-    lines.push(`התלמיד ${studentName} כבר החל את לימודיו.`);
+    lines.push(`שלום ${parentFirst}, מזכירים להסדיר את התשלום לאולפן המוסיקה,`);
+    lines.push(`התלמיד/ה ${studentName} כבר החל/ה את השיעורים באולפן.`);
     lines.push("השיעורים שכבר התקיימו הם:");
     const seen = new Map<string, number>();
     for (const d of dates) seen.set(d, (seen.get(d) ?? 0) + 1);
