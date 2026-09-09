@@ -236,6 +236,7 @@ const AdminPrivatePayments = () => {
     // שיוכי "ללא מורה" = תלמידי חוץ בהרכבים בלבד — מתעלמים מהם כספית לחלוטין
     const relevantEnrollments = (enrollments as any[]).filter((e) => {
       if (isNoTeacherEnrollment(e)) return false;
+      if (isTestStudent(e.students)) return false;
       if (enrollmentIdsWithPayments.has(e.id) || studentIdsWithPayments.has(e.student_id)) return true;
       return e.is_active !== false && e.students?.is_active !== false;
     });
