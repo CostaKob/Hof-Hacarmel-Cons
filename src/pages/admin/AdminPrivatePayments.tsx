@@ -20,7 +20,7 @@ import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
 import { formatPaymentMethodWithCount, summarizePaymentMethods } from "@/lib/paymentMethodLabel";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import { allocatePayment } from "@/lib/familyPaymentAllocation";
-import { isNoTeacherEnrollment } from "@/lib/constants";
+import { isNoTeacherEnrollment, isTestStudent } from "@/lib/constants";
 import { saveListScrollPosition, usePersistedState } from "@/hooks/useListStatePreservation";
 
 
