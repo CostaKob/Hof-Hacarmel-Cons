@@ -29,6 +29,7 @@ const AdminStudents = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
   const { selectedYearId, years } = useAcademicYear();
+  const queryClient = useQueryClient();
   useListStatePreservation("/admin/students");
 
   useEffect(() => {
@@ -514,7 +515,7 @@ const AdminStudents = () => {
 
   // Students with an active (pending) payment link that was generated for them
   const activeLinkByStudent = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, any>();
     for (const p of yearPayments as any[]) {
       if (!p.student_id) continue;
       if (p.payment_status !== "pending") continue;
@@ -522,8 +523,8 @@ const AdminStudents = () => {
       // Keep the most recent link creation date
       const existing = map.get(p.student_id);
       const created = p.created_at || p.payment_date;
-      if (!existing || new Date(created) > new Date(existing)) {
-        map.set(p.student_id, created);
+      if (!existing || new Date(created) > new Date(existing.created_at || existing.payment_date)) {
+        map.set(p.student_id, p);
       }
     }
     return map;
@@ -531,7 +532,7 @@ const AdminStudents = () => {
 
   // Family-level links: shown for every sibling of the paying family
   const activeLinkByFamily = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, any>();
     for (const p of yearPayments as any[]) {
       const fam = p.family_parent_national_id ? String(p.family_parent_national_id).trim() : "";
       if (!fam) continue;
@@ -539,8 +540,8 @@ const AdminStudents = () => {
       if (!p.payment_link_url) continue;
       const existing = map.get(fam);
       const created = p.created_at || p.payment_date;
-      if (!existing || new Date(created) > new Date(existing)) {
-        map.set(fam, created);
+      if (!existing || new Date(created) > new Date(existing.created_at || existing.payment_date)) {
+        map.set(fam, p);
       }
     }
     return map;
