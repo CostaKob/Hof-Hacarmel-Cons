@@ -632,9 +632,8 @@ const AdminStudents = () => {
     const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
     const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
     window.open(url, "_blank");
-    const linkPayment = getActiveLinkPayment(r);
-    if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
-  }, [heldLessonsByEnrollment, getActiveLinkPayment, reminderMutation]);
+    // We no longer auto-mark as sent; the user toggles this manually after confirming the message was actually sent.
+  }, [heldLessonsByEnrollment]);
 
   const getActiveLinkDate = useCallback((r: any) => {
     const created = getActiveLinkCreated(r);
@@ -1356,18 +1355,25 @@ const AdminStudents = () => {
                           )}
                           {(() => {
                             const lp = getActiveLinkPayment(r);
-                            if (!lp?.reminder_sent_at) return null;
+                            if (!lp?.id) return null;
+                            const isSent = !!lp.reminder_sent_at;
                             let d = "";
-                            try { d = format(new Date(lp.reminder_sent_at), "dd/MM"); } catch { /* keep empty */ }
+                            if (isSent) {
+                              try { d = format(new Date(lp.reminder_sent_at), "dd/MM"); } catch { /* keep empty */ }
+                            }
                             return (
                               <button
                                 type="button"
-                                title="נשלחה תזכורת — לחץ לביטול הסימון"
-                                className="inline-flex items-center gap-1 h-7 rounded-lg text-[11px] px-2 border border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
-                                onClick={(ev) => { ev.stopPropagation(); reminderMutation.mutate({ paymentId: lp.id, sent: false }); }}
+                                title={isSent ? "נשלחה תזכורת — לחץ לביטול הסימון" : "סמן שהתזכורת נשלחה בפועל"}
+                                className={`inline-flex items-center gap-1 h-7 rounded-lg text-[11px] px-2 border transition-colors ${
+                                  isSent
+                                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                                    : "border-muted-foreground/30 bg-muted/50 text-muted-foreground hover:bg-muted"
+                                }`}
+                                onClick={(ev) => { ev.stopPropagation(); reminderMutation.mutate({ paymentId: lp.id, sent: !isSent }); }}
                               >
-                                <Check className="h-3.5 w-3.5" />
-                                נשלחה תזכורת{d && ` · ${d}`}
+                                {isSent ? <Check className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5 inline-block rounded-sm border border-current" />}
+                                {isSent ? `נשלחה תזכורת${d ? ` · ${d}` : ""}` : "סמן שנשלחה"}
                               </button>
                             );
                           })()}
