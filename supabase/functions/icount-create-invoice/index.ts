@@ -297,13 +297,40 @@ Deno.serve(async (req: Request) => {
     }
 
 
-    const res = await fetch(`${ICOUNT_BASE}/doc/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    console.log("[icount doc/create]", JSON.stringify(data));
+    console.log("[icount req]", JSON.stringify({
+      rows: payments.length,
+      items: items.length,
+      cheques: payload.cheques?.length ?? 0,
+      total: signedTotal,
+      method: pm.label,
+    }));
+
+    let res: Response;
+    try {
+      res = await fetch(`${ICOUNT_BASE}/doc/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(60000),
+      });
+    } catch (fetchErr) {
+      console.error("[icount fetch failed]", String(fetchErr));
+      return new Response(JSON.stringify({
+        error: "לא התקבלה תשובה מ-iCount. בדקו ב-iCount אם נוצרה קבלה לפני ניסיון חוזר.",
+      }), { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    const raw = await res.text();
+    let data: any;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      console.error("[icount non-json]", res.status, raw.slice(0, 500));
+      return new Response(JSON.stringify({
+        error: `iCount החזיר תשובה לא תקינה (${res.status})`,
+      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+    console.log("[icount doc/create]", res.status, JSON.stringify(data));
 
     if (!data.status) {
       const reason = data.error_description || data.reason || data.message || data.status_description || "שגיאה לא ידועה מ-iCount";
