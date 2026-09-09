@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
@@ -562,6 +562,58 @@ const AdminStudents = () => {
   }, [activeLinkByStudent, activeLinkByFamily]);
 
   const hasActiveLink = useCallback((r: any) => !!getActiveLinkCreated(r), [getActiveLinkCreated]);
+
+  // Lessons that actually took place, per enrollment (for the payment reminder message)
+  const { data: heldLessonLines = [] } = useQuery({
+    queryKey: ["admin-students-held-lessons", selectedYearId],
+    enabled: !!selectedYearId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("report_lines")
+        .select("enrollment_id, status, reports!inner(report_date), enrollments!inner(academic_year_id)")
+        .eq("enrollments.academic_year_id", selectedYearId!);
+      if (error) throw error;
+      return (data ?? []) as any[];
+    },
+  });
+
+  const heldLessonsByEnrollment = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const line of heldLessonLines as any[]) {
+      if (!line.enrollment_id) continue;
+      if (line.status !== "present" && line.status !== "double_lesson") continue;
+      const date = (line.reports as any)?.report_date;
+      if (!date) continue;
+      const arr = map.get(line.enrollment_id) ?? [];
+      arr.push(date);
+      if (line.status === "double_lesson") arr.push(date);
+      map.set(line.enrollment_id, arr);
+    }
+    for (const [k, v] of map) map.set(k, v.sort());
+    return map;
+  }, [heldLessonLines]);
+
+  const sendPaymentReminder = useCallback((r: any) => {
+    const s = r?.students;
+    const dates = heldLessonsByEnrollment.get(r.id) ?? [];
+    const parentFirst = String(s?.parent_name ?? "").trim().split(" ")[0] || "";
+    const studentName = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
+    const lines: string[] = [];
+    lines.push(`שלום ${parentFirst}, מזכירים להסדיר את התשלום בהקדם, התלמיד ${studentName} כבר החל את לימודיו.`);
+    lines.push("");
+    lines.push("שיעורים שהתקיימו ב:");
+    const seen = new Map<string, number>();
+    for (const d of dates) seen.set(d, (seen.get(d) ?? 0) + 1);
+    for (const [d, count] of seen) {
+      let formatted = d;
+      try { formatted = format(new Date(d), "dd/MM/yyyy"); } catch { /* keep raw */ }
+      lines.push(count > 1 ? `${formatted} (שיעור כפול)` : formatted);
+    }
+    const text = encodeURIComponent(lines.join("\n"));
+    const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
+    const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+    window.open(url, "_blank");
+  }, [heldLessonsByEnrollment]);
 
   const getActiveLinkDate = useCallback((r: any) => {
     const created = getActiveLinkCreated(r);
@@ -1270,6 +1322,17 @@ const AdminStudents = () => {
                             🔗 נוצר לינק לתשלום ונשלח להורה
                             {getActiveLinkDate(r) && ` · ${getActiveLinkDate(r)}`}
                           </Badge>
+                          {payStatus !== "full" && payStatus !== "credit" && (heldLessonsByEnrollment.get(r.id)?.length ?? 0) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-lg text-[11px] px-2 gap-1 text-emerald-700 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20"
+                              onClick={(ev) => { ev.stopPropagation(); sendPaymentReminder(r); }}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              תזכורת בוואטסאפ
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
