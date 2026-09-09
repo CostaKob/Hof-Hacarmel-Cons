@@ -57,11 +57,19 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  present: "bg-accent text-accent-foreground border-primary/30",
-  double_lesson: "bg-secondary text-secondary-foreground border-primary/25",
-  justified_absence: "bg-muted text-muted-foreground border-border",
-  unjustified_absence: "bg-destructive/10 text-destructive border-destructive/30",
-  vacation: "bg-primary/10 text-primary border-primary/30",
+  present: "bg-status-present/10 text-status-present border-status-present/30",
+  double_lesson: "bg-status-double/10 text-status-double border-status-double/30",
+  justified_absence: "bg-status-justified/10 text-status-justified border-status-justified/30",
+  unjustified_absence: "bg-status-unjustified/10 text-status-unjustified border-status-unjustified/30",
+  vacation: "bg-status-vacation/10 text-status-vacation border-status-vacation/30",
+};
+
+const STATUS_DOT_STYLES: Record<string, string> = {
+  present: "bg-status-present border-status-present",
+  double_lesson: "bg-status-double border-status-double",
+  justified_absence: "bg-status-justified border-status-justified",
+  unjustified_absence: "bg-status-unjustified border-status-unjustified",
+  vacation: "bg-status-vacation border-status-vacation",
 };
 
 const ATTENDED = new Set(["present", "double_lesson"]);
