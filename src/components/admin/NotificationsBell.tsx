@@ -204,7 +204,7 @@ const NotificationsBell = ({ className }: { className?: string }) => {
             )}
           </div>
         )}
-        <ScrollArea className="max-h-[26rem]">
+        <ScrollArea className="min-h-0 flex-1" type="always">
           {isLoading ? (
             <p className="py-10 text-center text-sm text-muted-foreground">טוען...</p>
           ) : items.length === 0 ? (
