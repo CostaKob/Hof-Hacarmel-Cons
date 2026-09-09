@@ -251,10 +251,11 @@ Deno.serve(async (req: Request) => {
       // Cheques — one line per payment row (split cheques), each with its own date/number/bank details.
       const parseChequeMeta = (notes: string | null) => {
         const t = notes || "";
-        const bank = t.match(/בנק:\s*([^\s·]+)/)?.[1] || "";
-        const branch = t.match(/סניף:\s*([^\s·]+)/)?.[1] || "";
-        const account = t.match(/ח-ן:\s*([^\s·]+)/)?.[1] || "";
-        return { bank, branch, account };
+        // Values run until the next " · " separator, so multi-word bank names
+        // like "בנק הפועלים" are captured in full.
+        const grab = (label: string) =>
+          (t.match(new RegExp(`${label}:\\s*([^·]+)`))?.[1] || "").trim();
+        return { bank: grab("בנק"), branch: grab("סניף"), account: grab("ח-ן") };
       };
       // One line per PHYSICAL cheque. A family payment split across siblings
       // creates several rows for the same cheque — merge them by number+date+bank
