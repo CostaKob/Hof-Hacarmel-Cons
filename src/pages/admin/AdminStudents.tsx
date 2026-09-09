@@ -636,6 +636,8 @@ const AdminStudents = () => {
     lines.push("ניתן לשלם עד 10 תשלומים ללא ריבית בלינק כאן:");
     lines.push(paymentLink || "[קישור לתשלום לא זמין]");
     lines.push("");
+    lines.push("ניתן לחלק עד 10 תשלומים ללא ריבית.");
+    lines.push("");
     lines.push("");
     lines.push("תודה מראש, קורין");
     const text = encodeURIComponent(lines.join("\n"));
