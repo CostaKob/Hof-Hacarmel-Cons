@@ -613,7 +613,7 @@ const AdminStudents = () => {
     return map;
   }, [heldLessonLines]);
 
-  const sendPaymentReminder = useCallback((r: any) => {
+  const sendPaymentReminder = useCallback(async (r: any) => {
     const s = r?.students;
     const dates = heldLessonsByEnrollment.get(r.id) ?? [];
     const parentFirst = String(s?.parent_name ?? "").trim().split(" ")[0] || "";
@@ -630,10 +630,12 @@ const AdminStudents = () => {
       lines.push(count > 1 ? `${formatted} (שיעור כפול)` : formatted);
     }
     const linkPayment = getActiveLinkPayment(r);
-    const paymentLink = linkPayment?.payment_link_url ? String(linkPayment.payment_link_url).trim() : "";
+    const rawLink = linkPayment?.payment_link_url ? String(linkPayment.payment_link_url).trim() : "";
+    const paymentLink = rawLink ? await shortenUrl(rawLink) : "";
     lines.push("");
     lines.push("ניתן לשלם עד 10 תשלומים ללא ריבית בלינק כאן:");
     lines.push(paymentLink || "[קישור לתשלום לא זמין]");
+    lines.push("");
     lines.push("");
     lines.push("תודה מראש, קורין");
     const text = encodeURIComponent(lines.join("\n"));
