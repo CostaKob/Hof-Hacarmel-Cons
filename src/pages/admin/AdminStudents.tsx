@@ -633,7 +633,6 @@ const AdminStudents = () => {
     const rawLink = linkPayment?.payment_link_url ? String(linkPayment.payment_link_url).trim() : "";
     const paymentLink = rawLink ? await shortenUrl(rawLink) : "";
     lines.push("");
-    lines.push("ניתן לשלם עד 10 תשלומים ללא ריבית בלינק כאן:");
     lines.push(paymentLink || "[קישור לתשלום לא זמין]");
     lines.push("");
     lines.push("ניתן לחלק עד 10 תשלומים ללא ריבית.");
