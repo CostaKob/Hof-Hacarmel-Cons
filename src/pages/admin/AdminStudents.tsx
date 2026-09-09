@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { saveListScrollPosition, useListStatePreservation } from "@/hooks/useListStatePreservation";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
@@ -126,9 +126,9 @@ const AdminStudents = () => {
     queryKey: ["admin-year-payments", selectedYearId],
     queryFn: async () => {
       if (!selectedYearId) return [];
-      const { data, error } = await supabase
-        .from("student_payments")
-        .select("id, refund_of_payment_id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url, family_parent_national_id")
+      const { data, error } = await (supabase
+        .from("student_payments") as any)
+        .select("id, refund_of_payment_id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url, family_parent_national_id, reminder_sent_at")
         .eq("academic_year_id", selectedYearId)
         .order("payment_date", { ascending: false })
         .order("created_at", { ascending: false });
