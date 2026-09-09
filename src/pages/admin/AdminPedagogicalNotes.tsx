@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StickyNote, Search, X } from "lucide-react";
 import { format } from "date-fns";
-import { sortHebrew } from "@/lib/sortHebrew";
+import { cmpHe } from "@/lib/sortHebrew";
 
 interface NoteRow {
   id: string;
@@ -96,7 +96,7 @@ const AdminPedagogicalNotes = () => {
     rows.forEach((r) => {
       if (r.authorTeacherId) m.set(r.authorTeacherId, r.authorName);
     });
-    return [...m.entries()].sort((a, b) => sortHebrew(a[1], b[1]));
+    return [...m.entries()].sort((a, b) => cmpHe(a[1], b[1]));
   }, [rows]);
 
   const schoolOptions = useMemo(() => {
@@ -104,13 +104,13 @@ const AdminPedagogicalNotes = () => {
     rows.forEach((r) => {
       if (r.schoolIdVal && r.schoolName) m.set(r.schoolIdVal, r.schoolName);
     });
-    return [...m.entries()].sort((a, b) => sortHebrew(a[1], b[1]));
+    return [...m.entries()].sort((a, b) => cmpHe(a[1], b[1]));
   }, [rows]);
 
   const studentOptions = useMemo(() => {
     const m = new Map<string, string>();
     rows.forEach((r) => m.set(r.student_id, r.studentName));
-    return [...m.entries()].sort((a, b) => sortHebrew(a[1], b[1]));
+    return [...m.entries()].sort((a, b) => cmpHe(a[1], b[1]));
   }, [rows]);
 
   const filtered = useMemo(() => {
