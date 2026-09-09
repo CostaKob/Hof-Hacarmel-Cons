@@ -57,11 +57,19 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  present: "bg-accent text-accent-foreground border-primary/30",
-  double_lesson: "bg-secondary text-secondary-foreground border-primary/25",
-  justified_absence: "bg-muted text-muted-foreground border-border",
-  unjustified_absence: "bg-destructive/10 text-destructive border-destructive/30",
-  vacation: "bg-primary/10 text-primary border-primary/30",
+  present: "bg-status-present/30 text-status-present border-status-present/60 border-s-4 font-semibold",
+  double_lesson: "bg-status-double/30 text-status-double border-status-double/60 border-s-4 font-semibold",
+  justified_absence: "bg-status-justified/30 text-status-justified border-status-justified/60 border-s-4 font-semibold",
+  unjustified_absence: "bg-status-unjustified/30 text-status-unjustified border-status-unjustified/60 border-s-4 font-semibold",
+  vacation: "bg-status-vacation/30 text-status-vacation border-status-vacation/60 border-s-4 font-semibold",
+};
+
+const STATUS_DOT_STYLES: Record<string, string> = {
+  present: "bg-status-present border-status-present",
+  double_lesson: "bg-status-double border-status-double",
+  justified_absence: "bg-status-justified border-status-justified",
+  unjustified_absence: "bg-status-unjustified border-status-unjustified",
+  vacation: "bg-status-vacation border-status-vacation",
 };
 
 const ATTENDED = new Set(["present", "double_lesson"]);
@@ -506,7 +514,7 @@ const AdminActivityCalendar = () => {
           <div className="flex flex-wrap gap-3 pt-1">
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
               <span key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className={`h-2.5 w-2.5 rounded-full border ${STATUS_STYLES[key]}`} />
+                <span className={`h-2.5 w-2.5 rounded-full border ${STATUS_DOT_STYLES[key]}`} />
                 {label}
               </span>
             ))}

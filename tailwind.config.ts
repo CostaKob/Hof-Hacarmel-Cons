@@ -57,6 +57,13 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        status: {
+          present: "142 76% 36%",
+          double: "205 90% 45%",
+          justified: "35 92% 45%",
+          unjustified: "4 78% 52%",
+          vacation: "270 60% 55%",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
