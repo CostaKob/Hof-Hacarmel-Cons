@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { saveListScrollPosition, useListStatePreservation } from "@/hooks/useListStatePreservation";
@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
@@ -29,6 +29,7 @@ const AdminStudents = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [importOpen, setImportOpen] = useState(false);
   const { selectedYearId, years } = useAcademicYear();
+  const queryClient = useQueryClient();
   useListStatePreservation("/admin/students");
 
   useEffect(() => {
@@ -126,9 +127,9 @@ const AdminStudents = () => {
     queryKey: ["admin-year-payments", selectedYearId],
     queryFn: async () => {
       if (!selectedYearId) return [];
-      const { data, error } = await supabase
-        .from("student_payments")
-        .select("id, refund_of_payment_id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url, family_parent_national_id")
+      const { data, error } = await (supabase
+        .from("student_payments") as any)
+        .select("id, refund_of_payment_id, student_id, enrollment_id, amount, transaction_type, payment_status, payment_date, created_at, enrollment_breakdown, payment_link_url, family_parent_national_id, reminder_sent_at")
         .eq("academic_year_id", selectedYearId)
         .order("payment_date", { ascending: false })
         .order("created_at", { ascending: false });
@@ -514,7 +515,7 @@ const AdminStudents = () => {
 
   // Students with an active (pending) payment link that was generated for them
   const activeLinkByStudent = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, any>();
     for (const p of yearPayments as any[]) {
       if (!p.student_id) continue;
       if (p.payment_status !== "pending") continue;
@@ -522,8 +523,8 @@ const AdminStudents = () => {
       // Keep the most recent link creation date
       const existing = map.get(p.student_id);
       const created = p.created_at || p.payment_date;
-      if (!existing || new Date(created) > new Date(existing)) {
-        map.set(p.student_id, created);
+      if (!existing || new Date(created) > new Date(existing.created_at || existing.payment_date)) {
+        map.set(p.student_id, p);
       }
     }
     return map;
@@ -531,7 +532,7 @@ const AdminStudents = () => {
 
   // Family-level links: shown for every sibling of the paying family
   const activeLinkByFamily = useMemo(() => {
-    const map = new Map<string, string>();
+    const map = new Map<string, any>();
     for (const p of yearPayments as any[]) {
       const fam = p.family_parent_national_id ? String(p.family_parent_national_id).trim() : "";
       if (!fam) continue;
@@ -539,29 +540,47 @@ const AdminStudents = () => {
       if (!p.payment_link_url) continue;
       const existing = map.get(fam);
       const created = p.created_at || p.payment_date;
-      if (!existing || new Date(created) > new Date(existing)) {
-        map.set(fam, created);
+      if (!existing || new Date(created) > new Date(existing.created_at || existing.payment_date)) {
+        map.set(fam, p);
       }
     }
     return map;
   }, [yearPayments]);
 
-  const getActiveLinkCreated = useCallback((r: any): string | null => {
+  const getActiveLinkPayment = useCallback((r: any): any | null => {
     const s = r?.students;
     if (!s?.id) return null;
-    const dates: string[] = [];
+    const candidates: any[] = [];
     const own = activeLinkByStudent.get(s.id);
-    if (own) dates.push(own);
+    if (own) candidates.push(own);
     [s.parent_national_id, s.parent_national_id_2].forEach((nid: string | null) => {
       const key = nid ? String(nid).trim() : "";
-      const d = key ? activeLinkByFamily.get(key) : undefined;
-      if (d) dates.push(d);
+      const p = key ? activeLinkByFamily.get(key) : undefined;
+      if (p) candidates.push(p);
     });
-    if (!dates.length) return null;
-    return dates.sort((a, b) => +new Date(b) - +new Date(a))[0];
+    if (!candidates.length) return null;
+    return candidates.sort((a, b) => +new Date(b.created_at || b.payment_date) - +new Date(a.created_at || a.payment_date))[0];
   }, [activeLinkByStudent, activeLinkByFamily]);
 
+  const getActiveLinkCreated = useCallback((r: any): string | null => {
+    const p = getActiveLinkPayment(r);
+    return p ? (p.created_at || p.payment_date) : null;
+  }, [getActiveLinkPayment]);
+
   const hasActiveLink = useCallback((r: any) => !!getActiveLinkCreated(r), [getActiveLinkCreated]);
+
+  // Mark/unmark that a payment reminder was sent for the active link
+  const reminderMutation = useMutation({
+    mutationFn: async ({ paymentId, sent }: { paymentId: string; sent: boolean }) => {
+      const { error } = await (supabase.from("student_payments") as any)
+        .update({ reminder_sent_at: sent ? new Date().toISOString() : null })
+        .eq("id", paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-year-payments", selectedYearId] });
+    },
+  });
 
   // Lessons that actually took place, per enrollment (for the payment reminder message)
   const { data: heldLessonLines = [] } = useQuery({
@@ -613,7 +632,9 @@ const AdminStudents = () => {
     const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
     const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
     window.open(url, "_blank");
-  }, [heldLessonsByEnrollment]);
+    const linkPayment = getActiveLinkPayment(r);
+    if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
+  }, [heldLessonsByEnrollment, getActiveLinkPayment, reminderMutation]);
 
   const getActiveLinkDate = useCallback((r: any) => {
     const created = getActiveLinkCreated(r);
@@ -1333,6 +1354,23 @@ const AdminStudents = () => {
                               תזכורת בוואטסאפ
                             </Button>
                           )}
+                          {(() => {
+                            const lp = getActiveLinkPayment(r);
+                            if (!lp?.reminder_sent_at) return null;
+                            let d = "";
+                            try { d = format(new Date(lp.reminder_sent_at), "dd/MM"); } catch { /* keep empty */ }
+                            return (
+                              <button
+                                type="button"
+                                title="נשלחה תזכורת — לחץ לביטול הסימון"
+                                className="inline-flex items-center gap-1 h-7 rounded-lg text-[11px] px-2 border border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                                onClick={(ev) => { ev.stopPropagation(); reminderMutation.mutate({ paymentId: lp.id, sent: false }); }}
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                                נשלחה תזכורת{d && ` · ${d}`}
+                              </button>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>

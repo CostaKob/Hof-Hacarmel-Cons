@@ -2891,6 +2891,7 @@ export type Database = {
           payment_status: Database["public"]["Enums"]["student_payment_status"]
           reference_number: string | null
           refund_of_payment_id: string | null
+          reminder_sent_at: string | null
           student_id: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
@@ -2925,6 +2926,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["student_payment_status"]
           reference_number?: string | null
           refund_of_payment_id?: string | null
+          reminder_sent_at?: string | null
           student_id?: string | null
           transaction_type: Database["public"]["Enums"]["transaction_type"]
         }
@@ -2959,6 +2961,7 @@ export type Database = {
           payment_status?: Database["public"]["Enums"]["student_payment_status"]
           reference_number?: string | null
           refund_of_payment_id?: string | null
+          reminder_sent_at?: string | null
           student_id?: string | null
           transaction_type?: Database["public"]["Enums"]["transaction_type"]
         }
