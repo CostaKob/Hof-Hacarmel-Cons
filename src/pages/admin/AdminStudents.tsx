@@ -1322,6 +1322,17 @@ const AdminStudents = () => {
                             🔗 נוצר לינק לתשלום ונשלח להורה
                             {getActiveLinkDate(r) && ` · ${getActiveLinkDate(r)}`}
                           </Badge>
+                          {payStatus !== "full" && payStatus !== "credit" && (heldLessonsByEnrollment.get(r.id)?.length ?? 0) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 rounded-lg text-[11px] px-2 gap-1 text-emerald-700 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20"
+                              onClick={(ev) => { ev.stopPropagation(); sendPaymentReminder(r); }}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              תזכורת בוואטסאפ
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
