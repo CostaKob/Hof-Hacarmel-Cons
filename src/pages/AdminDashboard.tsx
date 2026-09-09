@@ -2,7 +2,7 @@ import { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
-import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic, Car, ScrollText } from "lucide-react";
+import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic, Car, ScrollText, StickyNote } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardItem {
@@ -53,6 +53,7 @@ const TOOLS_SECTIONS: DashboardItem[] = [
   { path: "/admin/payment-settings", label: "הגדרות תשלום", description: "מחירון שיעורים, מע\"מ ואחוזי הנחה", icon: Wallet },
   { path: "/admin/cashflow", label: "דוח תזרים", description: "תזרים אמיתי מאייקאונט לפי תאריכי פרעון — שיקים, אשראי בתשלומים וזיכויים", icon: TrendingUp },
   { path: "/admin/travel-report", label: "דוח נסיעות מורים", description: "סיכום קילומטרים והחזרי נסיעות לפי חודש", icon: Car },
+  { path: "/admin/pedagogical-notes", label: "הערות פדגוגיות", description: "כל ההערות שכתבו המורים — סינון לפי תלמיד, מורה ושלוחה", icon: StickyNote },
   { path: "/admin/exports", label: "דוחות וייצוא", description: "ייצוא תלמידים, מורים, דיווחים וסיכומים לאקסל", icon: FileDown },
   { path: "/admin/messaging", label: "שליחת הודעות להורים", description: "רשימת תפוצה, נוסח הודעת השיוך ולוח בקרת מיילים", icon: Mail },
 ];
