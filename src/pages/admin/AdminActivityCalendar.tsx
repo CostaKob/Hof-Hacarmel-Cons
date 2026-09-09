@@ -514,7 +514,7 @@ const AdminActivityCalendar = () => {
           <div className="flex flex-wrap gap-3 pt-1">
             {Object.entries(STATUS_LABELS).map(([key, label]) => (
               <span key={key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className={`h-2.5 w-2.5 rounded-full border ${STATUS_STYLES[key]}`} />
+                <span className={`h-2.5 w-2.5 rounded-full border ${STATUS_DOT_STYLES[key]}`} />
                 {label}
               </span>
             ))}
