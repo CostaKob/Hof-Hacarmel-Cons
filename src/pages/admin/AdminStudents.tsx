@@ -1354,6 +1354,23 @@ const AdminStudents = () => {
                               תזכורת בוואטסאפ
                             </Button>
                           )}
+                          {(() => {
+                            const lp = getActiveLinkPayment(r);
+                            if (!lp?.reminder_sent_at) return null;
+                            let d = "";
+                            try { d = format(new Date(lp.reminder_sent_at), "dd/MM"); } catch { /* keep empty */ }
+                            return (
+                              <button
+                                type="button"
+                                title="נשלחה תזכורת — לחץ לביטול הסימון"
+                                className="inline-flex items-center gap-1 h-7 rounded-lg text-[11px] px-2 border border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                                onClick={(ev) => { ev.stopPropagation(); reminderMutation.mutate({ paymentId: lp.id, sent: false }); }}
+                              >
+                                <Check className="h-3.5 w-3.5" />
+                                נשלחה תזכורת{d && ` · ${d}`}
+                              </button>
+                            );
+                          })()}
                         </div>
                       )}
                     </div>
