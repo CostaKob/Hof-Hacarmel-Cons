@@ -547,22 +547,40 @@ const AdminStudents = () => {
     return map;
   }, [yearPayments]);
 
-  const getActiveLinkCreated = useCallback((r: any): string | null => {
+  const getActiveLinkPayment = useCallback((r: any): any | null => {
     const s = r?.students;
     if (!s?.id) return null;
-    const dates: string[] = [];
+    const candidates: any[] = [];
     const own = activeLinkByStudent.get(s.id);
-    if (own) dates.push(own);
+    if (own) candidates.push(own);
     [s.parent_national_id, s.parent_national_id_2].forEach((nid: string | null) => {
       const key = nid ? String(nid).trim() : "";
-      const d = key ? activeLinkByFamily.get(key) : undefined;
-      if (d) dates.push(d);
+      const p = key ? activeLinkByFamily.get(key) : undefined;
+      if (p) candidates.push(p);
     });
-    if (!dates.length) return null;
-    return dates.sort((a, b) => +new Date(b) - +new Date(a))[0];
+    if (!candidates.length) return null;
+    return candidates.sort((a, b) => +new Date(b.created_at || b.payment_date) - +new Date(a.created_at || a.payment_date))[0];
   }, [activeLinkByStudent, activeLinkByFamily]);
 
+  const getActiveLinkCreated = useCallback((r: any): string | null => {
+    const p = getActiveLinkPayment(r);
+    return p ? (p.created_at || p.payment_date) : null;
+  }, [getActiveLinkPayment]);
+
   const hasActiveLink = useCallback((r: any) => !!getActiveLinkCreated(r), [getActiveLinkCreated]);
+
+  // Mark/unmark that a payment reminder was sent for the active link
+  const reminderMutation = useMutation({
+    mutationFn: async ({ paymentId, sent }: { paymentId: string; sent: boolean }) => {
+      const { error } = await (supabase.from("student_payments") as any)
+        .update({ reminder_sent_at: sent ? new Date().toISOString() : null })
+        .eq("id", paymentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-year-payments", selectedYearId] });
+    },
+  });
 
   // Lessons that actually took place, per enrollment (for the payment reminder message)
   const { data: heldLessonLines = [] } = useQuery({
