@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
         );
         result.deletedRemote++;
       } catch (e: any) {
-        if (!(e.status === 404 || e.status === 410)) result.errors.push(String(e.message));
+        if (!(e.status === 404 || e.status === 410 || e.status === 403)) result.errors.push(String(e.message));
       }
       await supabase.from("calendar_sync_deletions").delete().eq("id", del.id);
     }
