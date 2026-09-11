@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
         );
         result.deletedRemote++;
       } catch (e: any) {
-        if (!(e.status === 404 || e.status === 410)) result.errors.push(String(e.message));
+        if (!(e.status === 404 || e.status === 410 || e.status === 403)) result.errors.push(String(e.message));
       }
       await supabase.from("calendar_sync_deletions").delete().eq("id", del.id);
     }
@@ -154,6 +154,15 @@ Deno.serve(async (req) => {
           .eq("id", item.id);
         result.pushed++;
       } catch (e: any) {
+        // אירוע שנוצר בגוגל על ידי חשבון אחר — גוגל חוסם עריכה למי שאינו היוצר.
+        // מדלגים בשקט: נסמן כמסונכרן כדי שלא ינסה שוב בכל ריצה.
+        if (e.status === 403 && String(e.message).includes("forbiddenForNonOrganizer")) {
+          await supabase
+            .from("calendar_items")
+            .update({ google_synced_at: new Date().toISOString() })
+            .eq("id", item.id);
+          continue;
+        }
         result.errors.push(`push ${item.title_he}: ${e.message}`);
       }
     }
