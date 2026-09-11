@@ -154,6 +154,15 @@ Deno.serve(async (req) => {
           .eq("id", item.id);
         result.pushed++;
       } catch (e: any) {
+        // אירוע שנוצר בגוגל על ידי חשבון אחר — גוגל חוסם עריכה למי שאינו היוצר.
+        // מדלגים בשקט: נסמן כמסונכרן כדי שלא ינסה שוב בכל ריצה.
+        if (e.status === 403 && String(e.message).includes("forbiddenForNonOrganizer")) {
+          await supabase
+            .from("calendar_items")
+            .update({ google_synced_at: new Date().toISOString() })
+            .eq("id", item.id);
+          continue;
+        }
         result.errors.push(`push ${item.title_he}: ${e.message}`);
       }
     }
