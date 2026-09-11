@@ -1907,7 +1907,7 @@ const AdminYearCalendar = ({ mode = "admin" }: { mode?: YearCalendarMode }) => {
 
 
   return (
-    <AdminLayout title="לוח שנה שנתי" fullWidth>
+    <AdminLayout title="לוח שנה שנתי" fullWidth backPath="/admin">
       {calendarContent}
     </AdminLayout>
   );
