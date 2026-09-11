@@ -382,7 +382,7 @@ const AdminActivityCalendar = () => {
   ];
 
   return (
-    <AdminLayout title="לוח פעילות מורים" fullWidth>
+    <AdminLayout title="לוח פעילות מורים" fullWidth backPath="/admin">
       <PageTitle title="לוח פעילות מורים" />
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
