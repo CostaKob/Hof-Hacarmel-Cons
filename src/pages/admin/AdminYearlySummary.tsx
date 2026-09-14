@@ -192,7 +192,7 @@ const AdminYearlySummary = () => {
                 className={`rounded-xl border bg-card p-3 text-center transition hover:bg-muted/50 ${startedFilter === "all" ? "ring-2 ring-primary" : ""}`}
               >
                 <p className="text-xs text-muted-foreground">סה״כ רישומים</p>
-                <p className="text-2xl font-semibold">{filtered.length}</p>
+                <p className="text-2xl font-semibold">{baseFiltered.length}</p>
               </button>
               <button
                 type="button"
