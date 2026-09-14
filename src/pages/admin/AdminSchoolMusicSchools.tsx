@@ -478,7 +478,14 @@ const AdminSchoolMusicSchools = () => {
               תלמידי בית ספר מנגן
             </TabsTrigger>
             <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
+            <TabsTrigger value="teachers" className="flex-1">מורים</TabsTrigger>
         </TabsList>
+
+        {/* ── Teachers Tab ── */}
+        <TabsContent value="teachers">
+          <SchoolMusicTeachersTab />
+        </TabsContent>
+
 
         {/* ── Schools Tab ── */}
         <TabsContent value="schools">
