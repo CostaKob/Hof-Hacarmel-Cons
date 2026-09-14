@@ -1019,7 +1019,7 @@ export type Database = {
         Row: {
           academic_year_id: string | null
           author_user_id: string | null
-          content: string
+          content: string | null
           created_at: string
           id: string
           parent_national_id: string
@@ -1029,7 +1029,7 @@ export type Database = {
         Insert: {
           academic_year_id?: string | null
           author_user_id?: string | null
-          content: string
+          content?: string | null
           created_at?: string
           id?: string
           parent_national_id: string
@@ -1039,7 +1039,7 @@ export type Database = {
         Update: {
           academic_year_id?: string | null
           author_user_id?: string | null
-          content?: string
+          content?: string | null
           created_at?: string
           id?: string
           parent_national_id?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.family_notes ALTER COLUMN content DROP NOT NULL;
