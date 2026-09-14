@@ -2,7 +2,7 @@ import { ComponentType } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import PageTitle from "@/components/PageTitle";
-import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic, Car, ScrollText, StickyNote } from "lucide-react";
+import { Users, UsersRound, GraduationCap, School, Music, BarChart3, CalendarDays, ClipboardList, FileDown, Music2, Music4, Database, ExternalLink, MapPin, Guitar, Wallet, Mail, TrendingUp, Radio, FileMusic, Car, ScrollText, StickyNote, ContactRound } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface DashboardItem {
@@ -32,6 +32,7 @@ const ENSEMBLES_AND_TRACKS_SECTIONS: DashboardItem[] = [
 
 const SCHOOL_MUSIC_SECTIONS: DashboardItem[] = [
   { path: "/admin/school-music-schools", label: "בתי ספר מנגנים", description: "ניהול בתי ספר מנגנים, קבוצות ורכזים", icon: Music4 },
+  { path: "/admin/school-contacts", label: "דפי קשר בתי ספר", description: "פתיחה, שיתוף והדפסה של דפי צוות לפי שלוחה", icon: ContactRound },
   { path: "/admin/school-music-attendance", label: "נוכחות מורים", description: "דוח נוכחות מרוכז עם איתור דיווחים חסרים", icon: ClipboardList },
   { path: "/admin/school-music-payments", label: "תשלומים", description: "מעקב, סימון ידני וזיכוי תשלומים", icon: Wallet },
 ];

@@ -1,4 +1,5 @@
-import { useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
@@ -6,7 +7,8 @@ import PageTitle from "@/components/PageTitle";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PhoneDisplay from "@/components/PhoneDisplay";
-import { Loader2, Music2, GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Music2, GraduationCap, Printer } from "lucide-react";
 
 type StaffRow = {
   name: string;
@@ -25,9 +27,9 @@ const StaffList = ({ rows }: { rows: StaffRow[] }) => {
   if (rows.length === 0)
     return <p className="px-4 py-3 text-sm text-muted-foreground">אין מורים משובצים</p>;
   return (
-    <ul className="divide-y">
+    <ul className="divide-y branch-contact-list">
       {rows.map((r, i) => (
-        <li key={i} className="px-4 py-3">
+        <li key={i} className="px-4 py-3 branch-contact-person">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-[15px]">{r.name}</span>
             {r.roles.map((role) => (
@@ -52,6 +54,7 @@ const StaffList = ({ rows }: { rows: StaffRow[] }) => {
 
 const PublicBranchContacts = () => {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["public-branch-contacts", slug],
@@ -67,11 +70,22 @@ const PublicBranchContacts = () => {
 
   const pageTitle = data?.branch_name ? `דף קשר — ${data.branch_name}` : "דף קשר שלוחה";
 
+  useEffect(() => {
+    if (!data || searchParams.get("print") !== "1") return;
+    const timer = window.setTimeout(() => window.print(), 250);
+    return () => window.clearTimeout(timer);
+  }, [data, searchParams]);
+
   return (
-    <div className="min-h-screen bg-background" dir="rtl">
+    <div className="min-h-screen bg-background branch-contact-page" dir="rtl">
       <PageTitle title={pageTitle} />
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        <header className="flex flex-col items-center gap-2 text-center">
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-4 branch-contact-sheet">
+        <div className="flex justify-end branch-contact-actions">
+          <Button className="h-12 rounded-xl" onClick={() => window.print()}>
+            <Printer className="h-4 w-4" /> הדפסה / שמירה כ־PDF
+          </Button>
+        </div>
+        <header className="flex flex-col items-center gap-2 text-center branch-contact-header">
           <AppLogo size="lg" />
           <p className="text-sm text-muted-foreground">אולפן ומגמת המוסיקה חוף הכרמל</p>
           <h1 className="text-xl font-semibold">{pageTitle}</h1>
@@ -85,7 +99,7 @@ const PublicBranchContacts = () => {
           <p className="text-center text-muted-foreground py-12">העמוד לא נמצא</p>
         ) : (
           <>
-            <Card>
+            <Card className="branch-contact-section">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Music2 className="h-4 w-4 text-primary" />
@@ -98,7 +112,7 @@ const PublicBranchContacts = () => {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="branch-contact-section">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <GraduationCap className="h-4 w-4 text-primary" />

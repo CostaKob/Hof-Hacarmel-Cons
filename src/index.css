@@ -451,3 +451,89 @@ input[type="time"]::-webkit-datetime-edit {
     height: var(--app-height, 100svh);
   }
 }
+
+@page {
+  size: A4 portrait;
+  margin: 14mm;
+}
+
+@media print {
+  html,
+  body,
+  #root {
+    width: 100%;
+    min-height: auto;
+    background: hsl(0 0% 100%) !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .branch-contact-page,
+  .branch-contact-page * {
+    visibility: visible;
+  }
+
+  .branch-contact-page {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    min-height: auto;
+    color: hsl(0 0% 8%);
+    background: hsl(0 0% 100%) !important;
+  }
+
+  .branch-contact-sheet {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .branch-contact-actions {
+    display: none !important;
+  }
+
+  .branch-contact-header {
+    margin-block-end: 7mm;
+    break-after: avoid;
+  }
+
+  .branch-contact-header img {
+    max-height: 18mm;
+    width: auto;
+  }
+
+  .branch-contact-section {
+    margin-block-end: 6mm;
+    border: 1px solid hsl(0 0% 72%) !important;
+    border-radius: 2mm !important;
+    background: hsl(0 0% 100%) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    break-inside: auto;
+  }
+
+  .branch-contact-section [class*="CardHeader"],
+  .branch-contact-section [class*="CardContent"] {
+    background: transparent !important;
+  }
+
+  .branch-contact-list {
+    font-size: 10pt;
+  }
+
+  .branch-contact-person {
+    padding-block: 3mm;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .branch-contact-person a,
+  .branch-contact-person span,
+  .branch-contact-section h3,
+  .branch-contact-section p {
+    color: hsl(0 0% 8%) !important;
+  }
+}

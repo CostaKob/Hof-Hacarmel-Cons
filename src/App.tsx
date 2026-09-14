@@ -94,6 +94,7 @@ import AdminSchoolMusicSchoolCard from "./pages/admin/AdminSchoolMusicSchoolCard
 import AdminSchoolMusicStudentCard from "./pages/admin/AdminSchoolMusicStudentCard";
 import AdminSchoolMusicAttendance from "./pages/admin/AdminSchoolMusicAttendance";
 import AdminSchoolMusicPayments from "./pages/admin/AdminSchoolMusicPayments";
+import AdminSchoolContacts from "./pages/admin/AdminSchoolContacts";
 import SchoolMusicAttendanceForm from "./pages/SchoolMusicAttendanceForm";
 import SchoolMusicAttendanceList from "./pages/SchoolMusicAttendanceList";
 import PublicRegistration from "./pages/PublicRegistration";
@@ -237,6 +238,7 @@ const App = () => (
               <Route path="/admin/school-music-students/:studentId" element={<AdminRoute><AdminSchoolMusicStudentCard /></AdminRoute>} />
               <Route path="/admin/school-music-attendance" element={<AdminRoute><AdminSchoolMusicAttendance /></AdminRoute>} />
               <Route path="/admin/school-music-payments" element={<AdminRoute><AdminSchoolMusicPayments /></AdminRoute>} />
+              <Route path="/admin/school-contacts" element={<AdminRoute><AdminSchoolContacts /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/attendance" element={<AdminRoute><SchoolMusicAttendanceList variant="admin" /></AdminRoute>} />
               <Route path="/admin/school-music-schools/:id/attendance/new" element={<AdminRoute><SchoolMusicAttendanceForm variant="admin" /></AdminRoute>} />
               {/* Public */}
