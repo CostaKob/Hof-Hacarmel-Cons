@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check, StickyNote } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
@@ -1378,6 +1378,16 @@ const AdminStudents = () => {
                           return null;
                         })()}
                       </p>
+                      {(() => {
+                        const note = getFamilyNote(r.students);
+                        if (!note?.title) return null;
+                        return (
+                          <p className="text-sm font-bold text-foreground mt-1 flex items-center gap-1">
+                            <StickyNote className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                            {note.title}
+                          </p>
+                        );
+                      })()}
                       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         <span>{r.instruments?.name}</span>
                         <span>·</span>
