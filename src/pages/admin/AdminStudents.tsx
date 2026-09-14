@@ -841,8 +841,9 @@ const AdminStudents = () => {
       if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(r.students?.id)) return false;
-    if (startedFilter === "started" && !isEnrollmentStarted(r.id)) return false;
-    if (startedFilter === "not_started" && isEnrollmentStarted(r.id)) return false;
+    // Student-level: a student who started in any instrument counts as started
+    if (startedFilter === "started" && !startedStudentIds.has(r.students?.id)) return false;
+    if (startedFilter === "not_started" && startedStudentIds.has(r.students?.id)) return false;
     return true;
   });
 
