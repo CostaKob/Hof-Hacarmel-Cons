@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
-import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check } from "lucide-react";
+import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check, StickyNote } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
@@ -715,13 +715,67 @@ const AdminStudents = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("id, first_name, last_name, national_id, phone, parent_name, parent_phone, city, grade, student_status, is_active, created_at, is_major_student, is_junior_track, has_music_production_course, has_recital_track");
+        .select("id, first_name, last_name, national_id, phone, parent_name, parent_phone, parent_national_id, parent_national_id_2, city, grade, student_status, is_active, created_at, is_major_student, is_junior_track, has_music_production_course, has_recital_track");
       if (error) throw error;
       return (data ?? []).sort((a: any, b: any) =>
         `${a.last_name ?? ""} ${a.first_name ?? ""}`.localeCompare(`${b.last_name ?? ""} ${b.first_name ?? ""}`, "he")
       );
     },
   });
+
+  // Family notes — title shown in bold on the student/enrollment row
+  const familyNoteParentIds = useMemo(() => {
+    const ids = new Set<string>();
+    const collect = (s: any) => {
+      [s?.parent_national_id, s?.parent_national_id_2].forEach((nid: any) => {
+        const id = nid ? String(nid).trim() : "";
+        if (id) ids.add(id);
+      });
+    };
+    allStudents.forEach(collect);
+    rows.forEach((r: any) => collect(r.students));
+    return Array.from(ids);
+  }, [allStudents, rows]);
+
+  const { data: familyNotes = [] } = useQuery({
+    queryKey: ["admin-students-family-notes", selectedYearId, familyNoteParentIds.length],
+    enabled: familyNoteParentIds.length > 0,
+    queryFn: async () => {
+      const out: any[] = [];
+      const CHUNK = 200;
+      for (let i = 0; i < familyNoteParentIds.length; i += CHUNK) {
+        let q = (supabase as any)
+          .from("family_notes")
+          .select("id, title, content, parent_national_id, academic_year_id, created_at")
+          .in("parent_national_id", familyNoteParentIds.slice(i, i + CHUNK))
+          .order("created_at", { ascending: false });
+        if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+        const { data, error } = await q;
+        if (error) throw error;
+        out.push(...(data ?? []));
+      }
+      return out as { id: string; title: string | null; content: string | null; parent_national_id: string; created_at: string }[];
+    },
+  });
+
+  const familyNoteByParentId = useMemo(() => {
+    const map = new Map<string, typeof familyNotes[0]>();
+    for (const n of familyNotes) {
+      if (!map.has(n.parent_national_id)) map.set(n.parent_national_id, n);
+    }
+    return map;
+  }, [familyNotes]);
+
+  const getFamilyNote = useCallback((s: any) => {
+    const ids = [s?.parent_national_id, s?.parent_national_id_2];
+    for (const nid of ids) {
+      const key = nid ? String(nid).trim() : "";
+      if (!key) continue;
+      const n = familyNoteByParentId.get(key);
+      if (n?.title) return n;
+    }
+    return null;
+  }, [familyNoteByParentId]);
 
   const getRegStatus = (s: any): "enrolled" | "registered" | "not_registered" => {
     if (selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0) return "enrolled";
@@ -1214,6 +1268,16 @@ const AdminStudents = () => {
                           {s.parent_name && (<><span>·</span><span>{s.parent_name}</span></>)}
                           {s.parent_phone && (<><span>·</span><PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
                         </div>
+                        {(() => {
+                          const note = getFamilyNote(s);
+                          if (!note?.title) return null;
+                          return (
+                            <p className="text-sm font-bold text-foreground mt-1 flex items-center gap-1">
+                              <StickyNote className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                              {note.title}
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -1314,6 +1378,16 @@ const AdminStudents = () => {
                           return null;
                         })()}
                       </p>
+                      {(() => {
+                        const note = getFamilyNote(r.students);
+                        if (!note?.title) return null;
+                        return (
+                          <p className="text-sm font-bold text-foreground mt-1 flex items-center gap-1">
+                            <StickyNote className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                            {note.title}
+                          </p>
+                        );
+                      })()}
                       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-sm text-muted-foreground mt-0.5">
                         <span>{r.instruments?.name}</span>
                         <span>·</span>
