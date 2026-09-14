@@ -496,24 +496,40 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .branch-contact-header {
-    margin-block-end: 7mm;
+    margin-block-end: 3mm;
+    gap: 1mm !important;
     break-after: avoid;
   }
 
   .branch-contact-header img {
-    max-height: 18mm;
+    max-height: 12mm;
     width: auto;
   }
 
+  .branch-contact-header h1 {
+    font-size: 13pt !important;
+  }
+
+  .branch-contact-header p {
+    font-size: 9pt !important;
+  }
+
   .branch-contact-section {
-    margin-block-end: 6mm;
+    margin-block-end: 3mm;
     border: 1px solid hsl(0 0% 72%) !important;
     border-radius: 2mm !important;
     background: hsl(0 0% 100%) !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+  }
+
+  .branch-contact-section [class*="CardHeader"] {
+    padding: 2mm 3mm !important;
+  }
+
+  .branch-contact-section [class*="CardHeader"] h3,
+  .branch-contact-section [class*="CardHeader"] [class*="CardTitle"] {
+    font-size: 10pt !important;
   }
 
   .branch-contact-section [class*="CardHeader"],
@@ -522,13 +538,23 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .branch-contact-list {
-    font-size: 10pt;
+    font-size: 8.5pt;
+    columns: 2;
+    column-gap: 4mm;
   }
 
   .branch-contact-person {
-    padding-block: 3mm;
+    padding: 1.5mm 3mm !important;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .branch-contact-person [class*="font-semibold"] {
+    font-size: 9pt !important;
+  }
+
+  .branch-contact-person [class*="mt-1"] {
+    margin-top: 0.5mm !important;
   }
 
   .branch-contact-person a,
