@@ -184,36 +184,45 @@ const AdminEnrollments = () => {
         </p>
       ) : (
         <div className="space-y-2">
-          {filtered.map((e: any) => (
-            <div
-              key={e.id}
-              onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground">
-                  {e.students?.first_name} {e.students?.last_name}
-                  <span className="mx-1.5 text-muted-foreground">←</span>
-                  {e.teachers?.first_name} {e.teachers?.last_name}
-                </p>
-                <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                  <span>{e.instruments?.name}</span>
-                  <span>·</span>
-                  <span>{e.schools?.name}</span>
-                  <span>·</span>
-                  <span>{e.lesson_duration_minutes} דק׳</span>
-                  <span>·</span>
-                  <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
+          {filtered.map((e: any) => {
+            const note = notesByParentId.get(e.students?.parent_national_id);
+            return (
+              <div
+                key={e.id}
+                onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
+                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground">
+                    {e.students?.first_name} {e.students?.last_name}
+                    <span className="mx-1.5 text-muted-foreground">←</span>
+                    {e.teachers?.first_name} {e.teachers?.last_name}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                    <span>{e.instruments?.name}</span>
+                    <span>·</span>
+                    <span>{e.schools?.name}</span>
+                    <span>·</span>
+                    <span>{e.lesson_duration_minutes} דק׳</span>
+                    <span>·</span>
+                    <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
+                    {note?.title && (
+                      <>
+                        <span>·</span>
+                        <span className="font-bold text-foreground">{note.title}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 mr-3">
+                  <Badge variant={e.is_active ? "default" : "secondary"} className="rounded-lg">
+                    {e.is_active ? "פעיל" : "לא פעיל"}
+                  </Badge>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0 mr-3">
-                <Badge variant={e.is_active ? "default" : "secondary"} className="rounded-lg">
-                  {e.is_active ? "פעיל" : "לא פעיל"}
-                </Badge>
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </AdminLayout>
