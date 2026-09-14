@@ -1268,6 +1268,16 @@ const AdminStudents = () => {
                           {s.parent_name && (<><span>·</span><span>{s.parent_name}</span></>)}
                           {s.parent_phone && (<><span>·</span><PhoneDisplay phone={s.parent_phone} stopPropagation textClassName="text-sm text-muted-foreground" /></>)}
                         </div>
+                        {(() => {
+                          const note = getFamilyNote(s);
+                          if (!note?.title) return null;
+                          return (
+                            <p className="text-sm font-bold text-foreground mt-1 flex items-center gap-1">
+                              <StickyNote className="h-3.5 w-3.5 shrink-0 text-amber-600" />
+                              {note.title}
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
 
