@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check, StickyNote } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
@@ -113,7 +114,7 @@ const AdminStudents = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, parent_national_id, parent_national_id_2, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track, educational_school), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
+        .select("id, lesson_duration_minutes, is_active, academic_year_id, grade, start_date, end_date, price_per_lesson, total_lessons_allocated, students(id, first_name, last_name, city, is_active, grade, playing_level, student_status, national_id, parent_name, parent_phone, parent_name_2, parent_phone_2, parent_national_id, parent_national_id_2, phone, is_major_student, is_junior_track, has_music_production_course, has_recital_track, educational_school), teachers(id, first_name, last_name), schools(id, name), instruments(id, name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -630,10 +631,12 @@ const AdminStudents = () => {
     [heldLessonsByEnrollment],
   );
 
-  const sendPaymentReminder = useCallback(async (r: any) => {
+  const sendPaymentReminder = useCallback(async (r: any, chosenParent?: { name: string; phone: string }) => {
     const s = r?.students;
     const dates = heldLessonsByEnrollment.get(r.id) ?? [];
-    const parentFirst = String(s?.parent_name ?? "").trim().split(" ")[0] || "";
+    const parentName = chosenParent?.name ?? s?.parent_name ?? "";
+    const parentPhoneRaw = chosenParent?.phone ?? s?.parent_phone ?? "";
+    const parentFirst = String(parentName).trim().split(" ")[0] || "";
     const studentName = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
     const lines: string[] = [];
     lines.push(`שלום ${parentFirst}, מזכירים להסדיר את התשלום לאולפן המוסיקה,`);
@@ -657,11 +660,31 @@ const AdminStudents = () => {
     lines.push("");
     lines.push("תודה מראש, קורין");
     const text = encodeURIComponent(lines.join("\n"));
-    const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
+    const phone = String(parentPhoneRaw ?? "").replace(/\D/g, "").replace(/^0/, "");
     const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
     window.open(url, "_blank");
     if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
   }, [heldLessonsByEnrollment, getActiveLinkPayment, reminderMutation]);
+
+  const [reminderParentPick, setReminderParentPick] = useState<any | null>(null);
+
+  const getReminderParents = useCallback((r: any) => {
+    const s = r?.students;
+    return [
+      { name: String(s?.parent_name ?? "").trim(), phone: String(s?.parent_phone ?? "").trim() },
+      { name: String(s?.parent_name_2 ?? "").trim(), phone: String(s?.parent_phone_2 ?? "").trim() },
+    ].filter((p) => p.phone);
+  }, []);
+
+  const startPaymentReminder = useCallback((r: any) => {
+    const parents = getReminderParents(r);
+    if (parents.length > 1) {
+      setReminderParentPick(r);
+      return;
+    }
+    sendPaymentReminder(r, parents[0]);
+  }, [getReminderParents, sendPaymentReminder]);
+
 
   const getActiveLinkDate = useCallback((r: any) => {
     const created = getActiveLinkCreated(r);
@@ -999,6 +1022,31 @@ const AdminStudents = () => {
       </div>
 
       <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
+
+      <Dialog open={!!reminderParentPick} onOpenChange={(o) => !o && setReminderParentPick(null)}>
+        <DialogContent dir="rtl" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>למי לשלוח את התזכורת?</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2">
+            {reminderParentPick && getReminderParents(reminderParentPick).map((p, i) => (
+              <button
+                key={`${p.phone}-${i}`}
+                type="button"
+                onClick={() => {
+                  const row = reminderParentPick;
+                  setReminderParentPick(null);
+                  sendPaymentReminder(row, p);
+                }}
+                className="rounded-xl border border-border p-3 text-right transition hover:bg-muted/50"
+              >
+                <div className="text-sm font-medium">{p.name || `הורה ${i + 1}`}</div>
+                <div className="text-xs text-muted-foreground" dir="ltr">{p.phone}</div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <div className="mb-4 grid grid-cols-2 md:grid-cols-5 lg:flex lg:flex-wrap gap-2">
@@ -1471,7 +1519,7 @@ const AdminStudents = () => {
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-lg text-[11px] px-2 gap-1 text-emerald-700 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20"
-                              onClick={(ev) => { ev.stopPropagation(); sendPaymentReminder(r); }}
+                              onClick={(ev) => { ev.stopPropagation(); startPaymentReminder(r); }}
                             >
                               <MessageCircle className="h-3.5 w-3.5" />
                               תזכורת בוואטסאפ
