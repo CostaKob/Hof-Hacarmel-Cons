@@ -477,18 +477,20 @@ input[type="time"]::-webkit-datetime-edit {
 
   .branch-contact-page {
     position: absolute;
-    inset: 0;
-    width: 100%;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 182mm;
     min-height: auto;
     color: hsl(0 0% 8%);
     background: hsl(0 0% 100%) !important;
   }
 
   .branch-contact-sheet {
-    width: 100%;
+    width: 182mm;
     max-width: none;
     margin: 0;
     padding: 0;
+    display: block;
   }
 
   .branch-contact-actions {
