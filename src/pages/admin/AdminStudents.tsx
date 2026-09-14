@@ -43,6 +43,7 @@ const AdminStudents = () => {
   const view = searchParams.get("view") || "enrollments"; // enrollments | all
   const statusFilter = searchParams.get("status") || "active";
   const siblingsFilter = searchParams.get("siblings") || "all";
+  const startedFilter = searchParams.get("started") || "all"; // all | started | not_started
 
   const getMultiFilter = useCallback((key: string): string[] => {
     const raw = searchParams.get(key);
@@ -101,6 +102,7 @@ const AdminStudents = () => {
       next.delete("instrument");
       next.delete("reg_type");
       next.delete("siblings");
+      next.delete("started");
       next.set("status", "active");
       return next;
     }, { replace: true });
