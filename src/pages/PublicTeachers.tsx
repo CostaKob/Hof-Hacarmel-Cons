@@ -58,7 +58,7 @@ const PublicTeachers = () => {
             המורים והמורות של האולפן
           </h1>
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            מורים מקצועיים, מנגנים ויוצרים פעילים, עם ניסיון רב בהוראה אישית והכוונה מוסיקלית מכל הסגנונות.
+            צוות מורים מהשורה הראשונה — נגנים ויוצרים פעילים עם ניסיון עשיר בהוראה.
           </p>
         </div>
       </section>
