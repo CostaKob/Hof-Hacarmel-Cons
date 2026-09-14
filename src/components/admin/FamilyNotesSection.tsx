@@ -98,8 +98,10 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
   };
 
   const handleSave = async () => {
-    if (!content.trim()) {
-      toast.error("יש להזין תוכן הערה");
+    const trimmedTitle = title.trim() || null;
+    const trimmedContent = content.trim() || null;
+    if (!trimmedTitle && !trimmedContent) {
+      toast.error("יש להזין כותרת או תוכן");
       return;
     }
     setSubmitting(true);
@@ -107,7 +109,7 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
       if (editing) {
         const { error } = await (supabase as any)
           .from("family_notes")
-          .update({ title: title.trim() || null, content: content.trim() })
+          .update({ title: trimmedTitle, content: trimmedContent })
           .eq("id", editing.id);
         if (error) throw error;
         toast.success("ההערה עודכנה");
@@ -116,8 +118,8 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
           parent_national_id: parentNationalId,
           academic_year_id: yearId ?? null,
           author_user_id: user?.id ?? null,
-          title: title.trim() || null,
-          content: content.trim(),
+          title: trimmedTitle,
+          content: trimmedContent,
         });
         if (error) throw error;
         toast.success("ההערה נשמרה");
