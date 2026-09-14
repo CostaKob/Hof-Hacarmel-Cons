@@ -540,13 +540,20 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .branch-contact-list {
-    font-size: 8.5pt;
-    columns: 2;
+    font-size: 8pt;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
     column-gap: 4mm;
+    border: 0 !important;
+  }
+
+  .branch-contact-list > li {
+    border: 0 !important;
+    border-block-end: 1px solid hsl(0 0% 85%) !important;
   }
 
   .branch-contact-person {
-    padding: 1.5mm 3mm !important;
+    padding: 1mm 3mm !important;
     break-inside: avoid;
     page-break-inside: avoid;
   }
