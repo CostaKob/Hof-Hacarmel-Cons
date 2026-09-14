@@ -35,7 +35,7 @@ interface Props {
 interface FamilyNoteRow {
   id: string;
   title: string | null;
-  content: string;
+  content: string | null;
   created_at: string;
   author_user_id: string | null;
   profiles?: { full_name: string | null } | null;
