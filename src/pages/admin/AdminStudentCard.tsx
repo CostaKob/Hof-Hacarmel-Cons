@@ -49,6 +49,7 @@ const AdminStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const requestedEnrollmentId = (location.state as { enrollmentId?: string } | null)?.enrollmentId;
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [paymentsYearFilter, setPaymentsYearFilter] = useState<string | "all" | null>(null);
