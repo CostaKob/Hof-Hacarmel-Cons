@@ -1022,6 +1022,31 @@ const AdminStudents = () => {
 
       <StudentImportDialog open={importOpen} onOpenChange={setImportOpen} />
 
+      <Dialog open={!!reminderParentPick} onOpenChange={(o) => !o && setReminderParentPick(null)}>
+        <DialogContent dir="rtl" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>למי לשלוח את התזכורת?</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-2">
+            {reminderParentPick && getReminderParents(reminderParentPick).map((p, i) => (
+              <button
+                key={`${p.phone}-${i}`}
+                type="button"
+                onClick={() => {
+                  const row = reminderParentPick;
+                  setReminderParentPick(null);
+                  sendPaymentReminder(row, p);
+                }}
+                className="rounded-xl border border-border p-3 text-right transition hover:bg-muted/50"
+              >
+                <div className="text-sm font-medium">{p.name || `הורה ${i + 1}`}</div>
+                <div className="text-xs text-muted-foreground" dir="ltr">{p.phone}</div>
+              </button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Filters */}
       <div className="mb-4 grid grid-cols-2 md:grid-cols-5 lg:flex lg:flex-wrap gap-2">
         {view === "enrollments" && (
