@@ -659,7 +659,7 @@ const AdminStudents = () => {
     lines.push("");
     lines.push("תודה מראש, קורין");
     const text = encodeURIComponent(lines.join("\n"));
-    const phone = String(s?.parent_phone ?? "").replace(/\D/g, "").replace(/^0/, "");
+    const phone = String(parentPhoneRaw ?? "").replace(/\D/g, "").replace(/^0/, "");
     const url = phone ? `https://wa.me/972${phone}?text=${text}` : `https://wa.me/?text=${text}`;
     window.open(url, "_blank");
     if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
