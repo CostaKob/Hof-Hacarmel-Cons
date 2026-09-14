@@ -12,6 +12,7 @@ import ViewportHeightSync from "@/components/ViewportHeightSync";
 import Index from "./pages/Index";
 import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 import PublicEnsembleContacts from "./pages/PublicEnsembleContacts";
+import PublicBranchContacts from "./pages/PublicBranchContacts";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import AdminYearCalendar from "./pages/admin/AdminYearCalendar";
@@ -151,6 +152,7 @@ const App = () => (
               <Route path="/p/:code" element={<ShortLinkRedirect />} />
               <Route path="/ensemble/:id" element={<PublicEnsembleContacts />} />
               <Route path="/ensemble/:id/transport" element={<PublicEnsembleContacts transportOnly />} />
+              <Route path="/branch/:slug" element={<PublicBranchContacts />} />
               <Route path="/dashboard" element={<Index />} />
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

@@ -3500,6 +3500,7 @@ export type Database = {
           match_reason: string
         }[]
       }
+      get_public_branch_contacts: { Args: { _slug: string }; Returns: Json }
       get_public_ensemble_contacts: {
         Args: { _ensemble_id: string }
         Returns: Json
