@@ -49,6 +49,7 @@ const AdminStudentCard = () => {
   const { studentId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const requestedEnrollmentId = (location.state as { enrollmentId?: string } | null)?.enrollmentId;
   const queryClient = useQueryClient();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [paymentsYearFilter, setPaymentsYearFilter] = useState<string | "all" | null>(null);
@@ -486,7 +487,11 @@ const AdminStudentCard = () => {
             {enrollments.length === 1 ? (
               <EnrollmentReportSection enrollmentId={enrollments[0].id} label={`${(enrollments[0] as any).instruments?.name} — ${(enrollments[0] as any).schools?.name}`} startDate={(enrollments[0] as any).start_date} />
             ) : (
-              <Tabs defaultValue={enrollments[0].id} dir="rtl">
+              <Tabs
+                key={requestedEnrollmentId && enrollments.some((e: any) => e.id === requestedEnrollmentId) ? requestedEnrollmentId : enrollments[0].id}
+                defaultValue={requestedEnrollmentId && enrollments.some((e: any) => e.id === requestedEnrollmentId) ? requestedEnrollmentId : enrollments[0].id}
+                dir="rtl"
+              >
                 <TabsList className="w-full flex-wrap h-auto gap-1">
                   {enrollments.map((e: any) => (
                     <TabsTrigger key={e.id} value={e.id} className="text-xs">

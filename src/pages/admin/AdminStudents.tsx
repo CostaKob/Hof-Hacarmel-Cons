@@ -1296,7 +1296,7 @@ const AdminStudents = () => {
                   onClick={() => {
                     saveListScrollPosition("/admin/students");
                     navigate(`/admin/students/${r.students?.id}`, {
-                      state: { returnTo: `${location.pathname}${location.search}` },
+                      state: { returnTo: `${location.pathname}${location.search}`, enrollmentId: r.id },
                     });
                   }}
                   className={`flex flex-col sm:flex-row sm:items-stretch gap-3 rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!r.students?.is_active ? "opacity-50" : ""}`}
