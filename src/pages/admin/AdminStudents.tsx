@@ -630,10 +630,12 @@ const AdminStudents = () => {
     [heldLessonsByEnrollment],
   );
 
-  const sendPaymentReminder = useCallback(async (r: any) => {
+  const sendPaymentReminder = useCallback(async (r: any, chosenParent?: { name: string; phone: string }) => {
     const s = r?.students;
     const dates = heldLessonsByEnrollment.get(r.id) ?? [];
-    const parentFirst = String(s?.parent_name ?? "").trim().split(" ")[0] || "";
+    const parentName = chosenParent?.name ?? s?.parent_name ?? "";
+    const parentPhoneRaw = chosenParent?.phone ?? s?.parent_phone ?? "";
+    const parentFirst = String(parentName).trim().split(" ")[0] || "";
     const studentName = `${s?.first_name ?? ""} ${s?.last_name ?? ""}`.trim();
     const lines: string[] = [];
     lines.push(`שלום ${parentFirst}, מזכירים להסדיר את התשלום לאולפן המוסיקה,`);
