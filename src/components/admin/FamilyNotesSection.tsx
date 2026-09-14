@@ -176,7 +176,9 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
                   {n.title && (
                     <h3 className="font-semibold text-foreground text-sm">{n.title}</h3>
                   )}
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{n.content}</p>
+                  {n.content && (
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{n.content}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button
