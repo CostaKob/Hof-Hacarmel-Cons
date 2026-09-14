@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +32,7 @@ const AdminEnrollments = () => {
     queryFn: async () => {
       let q = supabase
         .from("enrollments")
-        .select("*, students(first_name, last_name, national_id, parent_name, parent_phone, phone, grade, city), teachers(first_name, last_name), instruments(name), schools(name)")
+        .select("*, students(first_name, last_name, national_id, parent_name, parent_phone, parent_national_id, phone, grade, city), teachers(first_name, last_name), instruments(name), schools(name)")
         .order("created_at", { ascending: false });
       if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
       const { data, error } = await q;
@@ -40,6 +40,39 @@ const AdminEnrollments = () => {
       return data;
     },
   });
+
+  const parentNationalIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const e of enrollments) {
+      const id = (e as any).students?.parent_national_id;
+      if (id) ids.add(id);
+    }
+    return Array.from(ids);
+  }, [enrollments]);
+
+  const { data: familyNotes = [] } = useQuery({
+    queryKey: ["admin-enrollments-family-notes", parentNationalIds, selectedYearId],
+    enabled: parentNationalIds.length > 0,
+    queryFn: async () => {
+      let q = (supabase as any)
+        .from("family_notes")
+        .select("id, title, content, parent_national_id, academic_year_id, created_at")
+        .in("parent_national_id", parentNationalIds)
+        .order("created_at", { ascending: false });
+      if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as { id: string; title: string | null; content: string | null; parent_national_id: string; academic_year_id: string | null; created_at: string }[];
+    },
+  });
+
+  const notesByParentId = useMemo(() => {
+    const map = new Map<string, typeof familyNotes[0]>();
+    for (const n of familyNotes) {
+      if (!map.has(n.parent_national_id)) map.set(n.parent_national_id, n);
+    }
+    return map;
+  }, [familyNotes]);
 
   const { data: teachers = [] } = useQuery({
     queryKey: ["admin-teachers-list"],
@@ -151,36 +184,45 @@ const AdminEnrollments = () => {
         </p>
       ) : (
         <div className="space-y-2">
-          {filtered.map((e: any) => (
-            <div
-              key={e.id}
-              onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
-              className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
-            >
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground">
-                  {e.students?.first_name} {e.students?.last_name}
-                  <span className="mx-1.5 text-muted-foreground">←</span>
-                  {e.teachers?.first_name} {e.teachers?.last_name}
-                </p>
-                <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
-                  <span>{e.instruments?.name}</span>
-                  <span>·</span>
-                  <span>{e.schools?.name}</span>
-                  <span>·</span>
-                  <span>{e.lesson_duration_minutes} דק׳</span>
-                  <span>·</span>
-                  <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
+          {filtered.map((e: any) => {
+            const note = notesByParentId.get(e.students?.parent_national_id);
+            return (
+              <div
+                key={e.id}
+                onClick={() => navigate(`/admin/enrollments/${e.id}/edit`)}
+                className="flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99]"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground">
+                    {e.students?.first_name} {e.students?.last_name}
+                    <span className="mx-1.5 text-muted-foreground">←</span>
+                    {e.teachers?.first_name} {e.teachers?.last_name}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-1.5 text-sm text-muted-foreground mt-0.5">
+                    <span>{e.instruments?.name}</span>
+                    <span>·</span>
+                    <span>{e.schools?.name}</span>
+                    <span>·</span>
+                    <span>{e.lesson_duration_minutes} דק׳</span>
+                    <span>·</span>
+                    <span>{TYPE_LABELS[e.lesson_type] ?? e.lesson_type}</span>
+                    {note?.title && (
+                      <>
+                        <span>·</span>
+                        <span className="font-bold text-foreground">{note.title}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0 mr-3">
+                  <Badge variant={e.is_active ? "default" : "secondary"} className="rounded-lg">
+                    {e.is_active ? "פעיל" : "לא פעיל"}
+                  </Badge>
+                  <ChevronLeft className="h-4 w-4 text-muted-foreground" />
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0 mr-3">
-                <Badge variant={e.is_active ? "default" : "secondary"} className="rounded-lg">
-                  {e.is_active ? "פעיל" : "לא פעיל"}
-                </Badge>
-                <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </AdminLayout>

@@ -35,7 +35,7 @@ interface Props {
 interface FamilyNoteRow {
   id: string;
   title: string | null;
-  content: string;
+  content: string | null;
   created_at: string;
   author_user_id: string | null;
   profiles?: { full_name: string | null } | null;
@@ -98,8 +98,10 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
   };
 
   const handleSave = async () => {
-    if (!content.trim()) {
-      toast.error("יש להזין תוכן הערה");
+    const trimmedTitle = title.trim() || null;
+    const trimmedContent = content.trim() || null;
+    if (!trimmedTitle && !trimmedContent) {
+      toast.error("יש להזין כותרת או תוכן");
       return;
     }
     setSubmitting(true);
@@ -107,7 +109,7 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
       if (editing) {
         const { error } = await (supabase as any)
           .from("family_notes")
-          .update({ title: title.trim() || null, content: content.trim() })
+          .update({ title: trimmedTitle, content: trimmedContent })
           .eq("id", editing.id);
         if (error) throw error;
         toast.success("ההערה עודכנה");
@@ -116,8 +118,8 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
           parent_national_id: parentNationalId,
           academic_year_id: yearId ?? null,
           author_user_id: user?.id ?? null,
-          title: title.trim() || null,
-          content: content.trim(),
+          title: trimmedTitle,
+          content: trimmedContent,
         });
         if (error) throw error;
         toast.success("ההערה נשמרה");
@@ -174,7 +176,9 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
                   {n.title && (
                     <h3 className="font-semibold text-foreground text-sm">{n.title}</h3>
                   )}
-                  <p className="text-sm text-foreground whitespace-pre-wrap">{n.content}</p>
+                  {n.content && (
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{n.content}</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button
@@ -221,7 +225,7 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="family-note-content">תוכן</Label>
+              <Label htmlFor="family-note-content">תוכן (אופציונלי אם יש כותרת)</Label>
               <Textarea
                 id="family-note-content"
                 value={content}
@@ -236,7 +240,7 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               ביטול
             </Button>
-            <Button onClick={handleSave} disabled={submitting || !content.trim()}>
+            <Button onClick={handleSave} disabled={submitting || (!title.trim() && !content.trim())}>
               {editing ? "עדכן" : "הוסף"}
             </Button>
           </DialogFooter>
