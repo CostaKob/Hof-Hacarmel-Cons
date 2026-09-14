@@ -223,7 +223,7 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="family-note-content">תוכן</Label>
+              <Label htmlFor="family-note-content">תוכן (אופציונלי אם יש כותרת)</Label>
               <Textarea
                 id="family-note-content"
                 value={content}
@@ -238,7 +238,7 @@ export function FamilyNotesSection({ parentNationalId, yearId }: Props) {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               ביטול
             </Button>
-            <Button onClick={handleSave} disabled={submitting || !content.trim()}>
+            <Button onClick={handleSave} disabled={submitting || (!title.trim() && !content.trim())}>
               {editing ? "עדכן" : "הוסף"}
             </Button>
           </DialogFooter>
