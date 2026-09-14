@@ -676,6 +676,8 @@ const AdminFamilyCard = () => {
             const rows = t?.enrollments ?? [];
             const childSpecials = specialsByChild.get(c.id) ?? [];
             const childSpecialsTotal = childSpecials.reduce((s, x) => s + x.price, 0);
+            // Hide children that are not registered for the selected year at all
+            if (rows.length === 0 && childSpecials.length === 0) return null;
             const childTotal = (t?.net ?? 0) + childSpecialsTotal;
             // Family payments are stored on one anchor child; split them by the
             // line items so each sibling is credited with their own share.
