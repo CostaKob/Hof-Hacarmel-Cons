@@ -84,6 +84,11 @@ const AdminYearlySummary = () => {
       });
   }, [enrollments, lines]);
 
+  const startedStudentNames = useMemo(() => {
+    // A student who already had a lesson in any instrument counts as started
+    return new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
+  }, [rows]);
+
   const filtered = useMemo(() => {
     return rows
       .filter((r) => {
@@ -96,8 +101,9 @@ const AdminYearlySummary = () => {
         if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
         if (activeFilter === "active" && !r.isActive) return false;
         if (activeFilter === "inactive" && r.isActive) return false;
-        if (startedFilter === "started" && r.totalLessons === 0) return false;
-        if (startedFilter === "not-started" && r.totalLessons > 0) return false;
+        const hasStarted = startedStudentNames.has(r.studentName);
+        if (startedFilter === "started" && !hasStarted) return false;
+        if (startedFilter === "not-started" && hasStarted) return false;
         return true;
       })
       .sort((a, b) => {
@@ -105,7 +111,7 @@ const AdminYearlySummary = () => {
         if (teacherCmp !== 0) return teacherCmp;
         return a.studentName.localeCompare(b.studentName, "he");
       });
-  }, [rows, search, teacherFilter, schoolFilter, activeFilter, startedFilter]);
+  }, [rows, search, teacherFilter, schoolFilter, activeFilter, startedFilter, startedStudentNames]);
 
   const teacherOptions = useMemo(() => {
     const names = new Set(rows.map((r) => r.teacherName).filter(Boolean));
@@ -118,12 +124,10 @@ const AdminYearlySummary = () => {
   }, [rows]);
 
   const stats = useMemo(() => {
-    // A student who already had a lesson in any instrument counts as started
-    const startedNames = new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
-    const started = filtered.filter((r) => r.totalLessons > 0 || startedNames.has(r.studentName));
-    const notStarted = filtered.filter((r) => r.totalLessons === 0 && !startedNames.has(r.studentName));
+    const started = filtered.filter((r) => startedStudentNames.has(r.studentName));
+    const notStarted = filtered.filter((r) => !startedStudentNames.has(r.studentName));
     return { started, notStarted };
-  }, [filtered, rows]);
+  }, [filtered, startedStudentNames]);
 
   const isLoading = eLoading || lLoading;
 
