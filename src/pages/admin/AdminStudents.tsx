@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { MultiSelectFilter } from "@/components/MultiSelectFilter";
 import { Plus, Search, FileSpreadsheet, Users, ListChecks, Music, X, MessageCircle, Check, StickyNote } from "lucide-react";
 import StudentImportDialog from "@/components/admin/StudentImportDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { calcEnrollment } from "@/lib/paymentCalc";
 import { isNoTeacherEnrollment } from "@/lib/constants";
 import { computeStandardDiscounts, type DiscountType } from "@/lib/discounts";
