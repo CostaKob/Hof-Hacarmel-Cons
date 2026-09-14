@@ -89,7 +89,7 @@ const AdminYearlySummary = () => {
     return new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
   }, [rows]);
 
-  const filtered = useMemo(() => {
+  const baseFiltered = useMemo(() => {
     return rows
       .filter((r) => {
         if (search) {
@@ -101,9 +101,6 @@ const AdminYearlySummary = () => {
         if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
         if (activeFilter === "active" && !r.isActive) return false;
         if (activeFilter === "inactive" && r.isActive) return false;
-        const hasStarted = startedStudentNames.has(r.studentName);
-        if (startedFilter === "started" && !hasStarted) return false;
-        if (startedFilter === "not-started" && hasStarted) return false;
         return true;
       })
       .sort((a, b) => {
@@ -111,7 +108,16 @@ const AdminYearlySummary = () => {
         if (teacherCmp !== 0) return teacherCmp;
         return a.studentName.localeCompare(b.studentName, "he");
       });
-  }, [rows, search, teacherFilter, schoolFilter, activeFilter, startedFilter, startedStudentNames]);
+  }, [rows, search, teacherFilter, schoolFilter, activeFilter]);
+
+  const filtered = useMemo(() => {
+    return baseFiltered.filter((r) => {
+      const hasStarted = startedStudentNames.has(r.studentName);
+      if (startedFilter === "started" && !hasStarted) return false;
+      if (startedFilter === "not-started" && hasStarted) return false;
+      return true;
+    });
+  }, [baseFiltered, startedFilter, startedStudentNames]);
 
   const teacherOptions = useMemo(() => {
     const names = new Set(rows.map((r) => r.teacherName).filter(Boolean));
@@ -124,10 +130,10 @@ const AdminYearlySummary = () => {
   }, [rows]);
 
   const stats = useMemo(() => {
-    const started = filtered.filter((r) => startedStudentNames.has(r.studentName));
-    const notStarted = filtered.filter((r) => !startedStudentNames.has(r.studentName));
+    const started = baseFiltered.filter((r) => startedStudentNames.has(r.studentName));
+    const notStarted = baseFiltered.filter((r) => !startedStudentNames.has(r.studentName));
     return { started, notStarted };
-  }, [filtered, startedStudentNames]);
+  }, [baseFiltered, startedStudentNames]);
 
   const isLoading = eLoading || lLoading;
 
@@ -186,7 +192,7 @@ const AdminYearlySummary = () => {
                 className={`rounded-xl border bg-card p-3 text-center transition hover:bg-muted/50 ${startedFilter === "all" ? "ring-2 ring-primary" : ""}`}
               >
                 <p className="text-xs text-muted-foreground">סה״כ רישומים</p>
-                <p className="text-2xl font-semibold">{filtered.length}</p>
+                <p className="text-2xl font-semibold">{baseFiltered.length}</p>
               </button>
               <button
                 type="button"
