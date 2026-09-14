@@ -96,6 +96,8 @@ const AdminYearlySummary = () => {
         if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
         if (activeFilter === "active" && !r.isActive) return false;
         if (activeFilter === "inactive" && r.isActive) return false;
+        if (startedFilter === "started" && r.totalLessons === 0) return false;
+        if (startedFilter === "not-started" && r.totalLessons > 0) return false;
         return true;
       })
       .sort((a, b) => {
@@ -103,7 +105,7 @@ const AdminYearlySummary = () => {
         if (teacherCmp !== 0) return teacherCmp;
         return a.studentName.localeCompare(b.studentName, "he");
       });
-  }, [rows, search, teacherFilter, schoolFilter, activeFilter]);
+  }, [rows, search, teacherFilter, schoolFilter, activeFilter, startedFilter]);
 
   const teacherOptions = useMemo(() => {
     const names = new Set(rows.map((r) => r.teacherName).filter(Boolean));
