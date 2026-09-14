@@ -723,6 +723,60 @@ const AdminStudents = () => {
     },
   });
 
+  // Family notes — title shown in bold on the student/enrollment row
+  const familyNoteParentIds = useMemo(() => {
+    const ids = new Set<string>();
+    const collect = (s: any) => {
+      [s?.parent_national_id, s?.parent_national_id_2].forEach((nid: any) => {
+        const id = nid ? String(nid).trim() : "";
+        if (id) ids.add(id);
+      });
+    };
+    allStudents.forEach(collect);
+    rows.forEach((r: any) => collect(r.students));
+    return Array.from(ids);
+  }, [allStudents, rows]);
+
+  const { data: familyNotes = [] } = useQuery({
+    queryKey: ["admin-students-family-notes", selectedYearId, familyNoteParentIds.length],
+    enabled: familyNoteParentIds.length > 0,
+    queryFn: async () => {
+      const out: any[] = [];
+      const CHUNK = 200;
+      for (let i = 0; i < familyNoteParentIds.length; i += CHUNK) {
+        let q = (supabase as any)
+          .from("family_notes")
+          .select("id, title, content, parent_national_id, academic_year_id, created_at")
+          .in("parent_national_id", familyNoteParentIds.slice(i, i + CHUNK))
+          .order("created_at", { ascending: false });
+        if (selectedYearId) q = q.eq("academic_year_id", selectedYearId);
+        const { data, error } = await q;
+        if (error) throw error;
+        out.push(...(data ?? []));
+      }
+      return out as { id: string; title: string | null; content: string | null; parent_national_id: string; created_at: string }[];
+    },
+  });
+
+  const familyNoteByParentId = useMemo(() => {
+    const map = new Map<string, typeof familyNotes[0]>();
+    for (const n of familyNotes) {
+      if (!map.has(n.parent_national_id)) map.set(n.parent_national_id, n);
+    }
+    return map;
+  }, [familyNotes]);
+
+  const getFamilyNote = useCallback((s: any) => {
+    const ids = [s?.parent_national_id, s?.parent_national_id_2];
+    for (const nid of ids) {
+      const key = nid ? String(nid).trim() : "";
+      if (!key) continue;
+      const n = familyNoteByParentId.get(key);
+      if (n?.title) return n;
+    }
+    return null;
+  }, [familyNoteByParentId]);
+
   const getRegStatus = (s: any): "enrolled" | "registered" | "not_registered" => {
     if (selectedYearId && (enrollmentRowsByStudent.get(s.id)?.length ?? 0) > 0) return "enrolled";
     if (registeredStudentIds.has(s.id)) return "registered";
