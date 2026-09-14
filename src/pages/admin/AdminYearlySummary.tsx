@@ -180,18 +180,30 @@ const AdminYearlySummary = () => {
           <>
             {/* Mini stats */}
             <div className="grid grid-cols-3 gap-3 mb-2">
-              <div className="rounded-xl border bg-card p-3 text-center">
+              <button
+                type="button"
+                onClick={() => setStartedFilter("all")}
+                className={`rounded-xl border bg-card p-3 text-center transition hover:bg-muted/50 ${startedFilter === "all" ? "ring-2 ring-primary" : ""}`}
+              >
                 <p className="text-xs text-muted-foreground">סה״כ רישומים</p>
                 <p className="text-2xl font-semibold">{filtered.length}</p>
-              </div>
-              <div className="rounded-xl border bg-card p-3 text-center">
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartedFilter(startedFilter === "started" ? "all" : "started")}
+                className={`rounded-xl border bg-card p-3 text-center transition hover:bg-green-50 ${startedFilter === "started" ? "ring-2 ring-green-500 bg-green-50" : ""}`}
+              >
                 <p className="text-xs text-muted-foreground">כבר התחילו ללמוד</p>
                 <p className="text-2xl font-semibold text-green-600">{stats.started.length}</p>
-              </div>
-              <div className="rounded-xl border bg-card p-3 text-center">
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartedFilter(startedFilter === "not-started" ? "all" : "not-started")}
+                className={`rounded-xl border bg-card p-3 text-center transition hover:bg-red-50 ${startedFilter === "not-started" ? "ring-2 ring-red-500 bg-red-50" : ""}`}
+              >
                 <p className="text-xs text-muted-foreground">עוד לא התחילו</p>
                 <p className="text-2xl font-semibold text-red-500">{stats.notStarted.length}</p>
-              </div>
+              </button>
             </div>
 
             {stats.notStarted.length > 0 && (
