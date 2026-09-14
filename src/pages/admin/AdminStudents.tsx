@@ -43,6 +43,7 @@ const AdminStudents = () => {
   const view = searchParams.get("view") || "enrollments"; // enrollments | all
   const statusFilter = searchParams.get("status") || "active";
   const siblingsFilter = searchParams.get("siblings") || "all";
+  const startedFilter = searchParams.get("started") || "all"; // all | started | not_started
 
   const getMultiFilter = useCallback((key: string): string[] => {
     const raw = searchParams.get(key);
@@ -101,6 +102,7 @@ const AdminStudents = () => {
       next.delete("instrument");
       next.delete("reg_type");
       next.delete("siblings");
+      next.delete("started");
       next.set("status", "active");
       return next;
     }, { replace: true });
@@ -613,6 +615,21 @@ const AdminStudents = () => {
     return map;
   }, [heldLessonLines]);
 
+  // Students who had at least one lesson this year (for the "started learning" filter)
+  const startedStudentIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows as any[]) {
+      const sid = r?.students?.id;
+      if (sid && (heldLessonsByEnrollment.get(r.id)?.length ?? 0) > 0) set.add(sid);
+    }
+    return set;
+  }, [rows, heldLessonsByEnrollment]);
+
+  const isEnrollmentStarted = useCallback(
+    (enrollmentId: string) => (heldLessonsByEnrollment.get(enrollmentId)?.length ?? 0) > 0,
+    [heldLessonsByEnrollment],
+  );
+
   const sendPaymentReminder = useCallback(async (r: any) => {
     const s = r?.students;
     const dates = heldLessonsByEnrollment.get(r.id) ?? [];
@@ -755,6 +772,8 @@ const AdminStudents = () => {
       if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(s.id)) return false;
+    if (startedFilter === "started" && !startedStudentIds.has(s.id)) return false;
+    if (startedFilter === "not_started" && startedStudentIds.has(s.id)) return false;
     return true;
   });
 
@@ -822,6 +841,8 @@ const AdminStudents = () => {
       if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(r.students?.id)) return false;
+    if (startedFilter === "started" && !isEnrollmentStarted(r.id)) return false;
+    if (startedFilter === "not_started" && isEnrollmentStarted(r.id)) return false;
     return true;
   });
 
@@ -1038,7 +1059,7 @@ const AdminStudents = () => {
           onChange={(v) => setMultiFilter("reg_type", v)}
         />
 
-        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || linkFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
+        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || linkFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || startedFilter !== "all" || statusFilter !== "active" || search) && (
           <Button
             type="button"
             variant="ghost"
@@ -1125,6 +1146,23 @@ const AdminStudents = () => {
               {siblingsCount}
             </Badge>
           </button>
+        </div>
+
+        {/* Started-learning filter */}
+        <div className="col-span-2 md:col-span-5 grid grid-cols-3 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:items-center">
+          {([
+            ["all", "הכל"],
+            ["started", "התחיל/ה ללמוד"],
+            ["not_started", "לא התחיל/ה ללמוד"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setFilter("started", value)}
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${startedFilter === value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
