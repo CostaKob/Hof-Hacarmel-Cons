@@ -52,6 +52,7 @@ const AdminYearlySummary = () => {
   const [teacherFilter, setTeacherFilter] = usePersistedState(routeKey, "teacher", "all");
   const [schoolFilter, setSchoolFilter] = usePersistedState(routeKey, "school", "all");
   const [activeFilter, setActiveFilter] = usePersistedState(routeKey, "active", "active");
+  const [startedFilter, setStartedFilter] = usePersistedState<"all" | "started" | "not-started">(routeKey, "started", "all");
 
   const rows = useMemo<EnrollmentSummaryRow[]>(() => {
     if (!enrollments || !lines) return [];
