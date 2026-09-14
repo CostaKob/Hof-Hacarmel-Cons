@@ -477,18 +477,20 @@ input[type="time"]::-webkit-datetime-edit {
 
   .branch-contact-page {
     position: absolute;
-    inset: 0;
-    width: 100%;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 182mm;
     min-height: auto;
     color: hsl(0 0% 8%);
     background: hsl(0 0% 100%) !important;
   }
 
   .branch-contact-sheet {
-    width: 100%;
+    width: 182mm;
     max-width: none;
     margin: 0;
     padding: 0;
+    display: block;
   }
 
   .branch-contact-actions {
@@ -538,13 +540,20 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .branch-contact-list {
-    font-size: 8.5pt;
-    columns: 2;
+    font-size: 8pt;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
     column-gap: 4mm;
+    border: 0 !important;
+  }
+
+  .branch-contact-list > li {
+    border: 0 !important;
+    border-block-end: 1px solid hsl(0 0% 85%) !important;
   }
 
   .branch-contact-person {
-    padding: 1.5mm 3mm !important;
+    padding: 1mm 3mm !important;
     break-inside: avoid;
     page-break-inside: avoid;
   }
