@@ -160,7 +160,8 @@ const AdminStudentCard = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-students"] });
       toast.success("התלמיד נמחק בהצלחה");
-      const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo
+  const requestedEnrollmentId = (location.state as { enrollmentId?: string } | null)?.enrollmentId
         || sessionStorage.getItem("admin-students-return-url")
         || "/admin/students";
       navigate(returnTo, { replace: true });
