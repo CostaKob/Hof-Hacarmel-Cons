@@ -665,6 +665,26 @@ const AdminStudents = () => {
     if (linkPayment?.id) reminderMutation.mutate({ paymentId: linkPayment.id, sent: true });
   }, [heldLessonsByEnrollment, getActiveLinkPayment, reminderMutation]);
 
+  const [reminderParentPick, setReminderParentPick] = useState<any | null>(null);
+
+  const getReminderParents = useCallback((r: any) => {
+    const s = r?.students;
+    return [
+      { name: String(s?.parent_name ?? "").trim(), phone: String(s?.parent_phone ?? "").trim() },
+      { name: String(s?.parent_name_2 ?? "").trim(), phone: String(s?.parent_phone_2 ?? "").trim() },
+    ].filter((p) => p.phone);
+  }, []);
+
+  const startPaymentReminder = useCallback((r: any) => {
+    const parents = getReminderParents(r);
+    if (parents.length > 1) {
+      setReminderParentPick(r);
+      return;
+    }
+    sendPaymentReminder(r, parents[0]);
+  }, [getReminderParents, sendPaymentReminder]);
+
+
   const getActiveLinkDate = useCallback((r: any) => {
     const created = getActiveLinkCreated(r);
     if (!created) return null;
