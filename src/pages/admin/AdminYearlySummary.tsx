@@ -115,10 +115,12 @@ const AdminYearlySummary = () => {
   }, [rows]);
 
   const stats = useMemo(() => {
-    const started = filtered.filter((r) => r.totalLessons > 0);
-    const notStarted = filtered.filter((r) => r.totalLessons === 0);
+    // A student who already had a lesson in any instrument counts as started
+    const startedNames = new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
+    const started = filtered.filter((r) => r.totalLessons > 0 || startedNames.has(r.studentName));
+    const notStarted = filtered.filter((r) => r.totalLessons === 0 && !startedNames.has(r.studentName));
     return { started, notStarted };
-  }, [filtered]);
+  }, [filtered, rows]);
 
   const isLoading = eLoading || lLoading;
 
