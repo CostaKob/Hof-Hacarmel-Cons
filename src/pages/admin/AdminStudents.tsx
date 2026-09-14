@@ -1059,7 +1059,7 @@ const AdminStudents = () => {
           onChange={(v) => setMultiFilter("reg_type", v)}
         />
 
-        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || linkFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || statusFilter !== "active" || search) && (
+        {(teacherFilter.length > 0 || schoolFilter.length > 0 || eduSchoolFilter.length > 0 || durationFilter.length > 0 || cityFilter.length > 0 || gradeFilter.length > 0 || levelFilter.length > 0 || paymentFilter.length > 0 || linkFilter.length > 0 || trackFilter.length > 0 || instrumentFilter.length > 0 || regTypeFilter.length > 0 || siblingsFilter === "with" || startedFilter !== "all" || statusFilter !== "active" || search) && (
           <Button
             type="button"
             variant="ghost"
@@ -1146,6 +1146,23 @@ const AdminStudents = () => {
               {siblingsCount}
             </Badge>
           </button>
+        </div>
+
+        {/* Started-learning filter */}
+        <div className="col-span-2 md:col-span-5 grid grid-cols-3 gap-1 rounded-xl border border-border bg-card p-1 shadow-sm lg:inline-flex lg:w-auto lg:items-center">
+          {([
+            ["all", "הכל"],
+            ["started", "התחיל/ה ללמוד"],
+            ["not_started", "לא התחיל/ה ללמוד"],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setFilter("started", value)}
+              className={`flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition lg:flex-initial ${startedFilter === value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
 
