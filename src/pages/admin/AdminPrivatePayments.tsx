@@ -458,7 +458,10 @@ const AdminPrivatePayments = () => {
       .map((payment: any) => {
         const studentId = payment.student_id ?? studentIdByEnrollmentId.get(payment.enrollment_id);
         const row = studentId ? rowByStudentId.get(studentId) : undefined;
-        const paidAt = payment.paid_at || payment.payment_date || payment.created_at;
+        // payment_date at cheques is the cheque due date (often future) — don't treat it as the actual payment date
+        const dueDate = payment.payment_date ? new Date(payment.payment_date) : null;
+        const dueInFuture = dueDate && dueDate.getTime() > Date.now();
+        const paidAt = payment.paid_at || (dueInFuture ? null : payment.payment_date) || payment.created_at;
         return { ...payment, studentId, row, paidAt };
       })
       .filter((payment: any) => payment.row && payment.paidAt)
