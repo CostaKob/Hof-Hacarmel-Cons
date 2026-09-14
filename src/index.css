@@ -512,7 +512,8 @@ input[type="time"]::-webkit-datetime-edit {
     background: hsl(0 0% 100%) !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
-    break-inside: auto;
+    break-inside: avoid;
+    page-break-inside: avoid;
   }
 
   .branch-contact-section [class*="CardHeader"],
