@@ -1493,7 +1493,7 @@ const AdminStudents = () => {
                               size="sm"
                               variant="outline"
                               className="h-7 rounded-lg text-[11px] px-2 gap-1 text-emerald-700 border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20"
-                              onClick={(ev) => { ev.stopPropagation(); sendPaymentReminder(r); }}
+                              onClick={(ev) => { ev.stopPropagation(); startPaymentReminder(r); }}
                             >
                               <MessageCircle className="h-3.5 w-3.5" />
                               תזכורת בוואטסאפ
