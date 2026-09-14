@@ -52,6 +52,7 @@ const AdminYearlySummary = () => {
   const [teacherFilter, setTeacherFilter] = usePersistedState(routeKey, "teacher", "all");
   const [schoolFilter, setSchoolFilter] = usePersistedState(routeKey, "school", "all");
   const [activeFilter, setActiveFilter] = usePersistedState(routeKey, "active", "active");
+  const [startedFilter, setStartedFilter] = usePersistedState<"all" | "started" | "not-started">(routeKey, "started", "all");
 
   const rows = useMemo<EnrollmentSummaryRow[]>(() => {
     if (!enrollments || !lines) return [];
@@ -83,6 +84,11 @@ const AdminYearlySummary = () => {
       });
   }, [enrollments, lines]);
 
+  const startedStudentNames = useMemo(() => {
+    // A student who already had a lesson in any instrument counts as started
+    return new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
+  }, [rows]);
+
   const filtered = useMemo(() => {
     return rows
       .filter((r) => {
@@ -95,6 +101,9 @@ const AdminYearlySummary = () => {
         if (schoolFilter !== "all" && r.schoolName !== schoolFilter) return false;
         if (activeFilter === "active" && !r.isActive) return false;
         if (activeFilter === "inactive" && r.isActive) return false;
+        const hasStarted = startedStudentNames.has(r.studentName);
+        if (startedFilter === "started" && !hasStarted) return false;
+        if (startedFilter === "not-started" && hasStarted) return false;
         return true;
       })
       .sort((a, b) => {
@@ -102,7 +111,7 @@ const AdminYearlySummary = () => {
         if (teacherCmp !== 0) return teacherCmp;
         return a.studentName.localeCompare(b.studentName, "he");
       });
-  }, [rows, search, teacherFilter, schoolFilter, activeFilter]);
+  }, [rows, search, teacherFilter, schoolFilter, activeFilter, startedFilter, startedStudentNames]);
 
   const teacherOptions = useMemo(() => {
     const names = new Set(rows.map((r) => r.teacherName).filter(Boolean));
@@ -115,12 +124,10 @@ const AdminYearlySummary = () => {
   }, [rows]);
 
   const stats = useMemo(() => {
-    // A student who already had a lesson in any instrument counts as started
-    const startedNames = new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
-    const started = filtered.filter((r) => r.totalLessons > 0 || startedNames.has(r.studentName));
-    const notStarted = filtered.filter((r) => r.totalLessons === 0 && !startedNames.has(r.studentName));
+    const started = filtered.filter((r) => startedStudentNames.has(r.studentName));
+    const notStarted = filtered.filter((r) => !startedStudentNames.has(r.studentName));
     return { started, notStarted };
-  }, [filtered, rows]);
+  }, [filtered, startedStudentNames]);
 
   const isLoading = eLoading || lLoading;
 
@@ -173,18 +180,30 @@ const AdminYearlySummary = () => {
           <>
             {/* Mini stats */}
             <div className="grid grid-cols-3 gap-3 mb-2">
-              <div className="rounded-xl border bg-card p-3 text-center">
+              <button
+                type="button"
+                onClick={() => setStartedFilter("all")}
+                className={`rounded-xl border bg-card p-3 text-center transition hover:bg-muted/50 ${startedFilter === "all" ? "ring-2 ring-primary" : ""}`}
+              >
                 <p className="text-xs text-muted-foreground">סה״כ רישומים</p>
                 <p className="text-2xl font-semibold">{filtered.length}</p>
-              </div>
-              <div className="rounded-xl border bg-card p-3 text-center">
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartedFilter(startedFilter === "started" ? "all" : "started")}
+                className={`rounded-xl border bg-card p-3 text-center transition hover:bg-green-50 ${startedFilter === "started" ? "ring-2 ring-green-500 bg-green-50" : ""}`}
+              >
                 <p className="text-xs text-muted-foreground">כבר התחילו ללמוד</p>
                 <p className="text-2xl font-semibold text-green-600">{stats.started.length}</p>
-              </div>
-              <div className="rounded-xl border bg-card p-3 text-center">
+              </button>
+              <button
+                type="button"
+                onClick={() => setStartedFilter(startedFilter === "not-started" ? "all" : "not-started")}
+                className={`rounded-xl border bg-card p-3 text-center transition hover:bg-red-50 ${startedFilter === "not-started" ? "ring-2 ring-red-500 bg-red-50" : ""}`}
+              >
                 <p className="text-xs text-muted-foreground">עוד לא התחילו</p>
                 <p className="text-2xl font-semibold text-red-500">{stats.notStarted.length}</p>
-              </div>
+              </button>
             </div>
 
             {stats.notStarted.length > 0 && (
