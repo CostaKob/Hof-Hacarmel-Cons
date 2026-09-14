@@ -17,6 +17,7 @@ import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { useListStatePreservation, usePersistedState } from "@/hooks/useListStatePreservation";
 import { PhoneDisplay } from "@/components/PhoneDisplay";
 import PageTitle from "@/components/PageTitle";
+import SchoolMusicTeachersTab from "@/components/admin/SchoolMusicTeachersTab";
 const DAY_NAMES = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 
 const getDayName = (school: any) => {
@@ -478,7 +479,14 @@ const AdminSchoolMusicSchools = () => {
               תלמידי בית ספר מנגן
             </TabsTrigger>
             <TabsTrigger value="schools" className="flex-1">בתי ספר</TabsTrigger>
+            <TabsTrigger value="teachers" className="flex-1">מורים</TabsTrigger>
         </TabsList>
+
+        {/* ── Teachers Tab ── */}
+        <TabsContent value="teachers">
+          <SchoolMusicTeachersTab />
+        </TabsContent>
+
 
         {/* ── Schools Tab ── */}
         <TabsContent value="schools">
