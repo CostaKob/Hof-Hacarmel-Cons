@@ -615,6 +615,21 @@ const AdminStudents = () => {
     return map;
   }, [heldLessonLines]);
 
+  // Students who had at least one lesson this year (for the "started learning" filter)
+  const startedStudentIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of rows as any[]) {
+      const sid = r?.students?.id;
+      if (sid && (heldLessonsByEnrollment.get(r.id)?.length ?? 0) > 0) set.add(sid);
+    }
+    return set;
+  }, [rows, heldLessonsByEnrollment]);
+
+  const isEnrollmentStarted = useCallback(
+    (enrollmentId: string) => (heldLessonsByEnrollment.get(enrollmentId)?.length ?? 0) > 0,
+    [heldLessonsByEnrollment],
+  );
+
   const sendPaymentReminder = useCallback(async (r: any) => {
     const s = r?.students;
     const dates = heldLessonsByEnrollment.get(r.id) ?? [];
