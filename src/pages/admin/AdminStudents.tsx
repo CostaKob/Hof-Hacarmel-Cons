@@ -772,6 +772,8 @@ const AdminStudents = () => {
       if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(s.id)) return false;
+    if (startedFilter === "started" && !startedStudentIds.has(s.id)) return false;
+    if (startedFilter === "not_started" && startedStudentIds.has(s.id)) return false;
     return true;
   });
 
@@ -839,6 +841,8 @@ const AdminStudents = () => {
       if (!regTypeFilter.includes(rt ?? "unknown")) return false;
     }
     if (siblingsFilter === "with" && !siblingStudentIds.has(r.students?.id)) return false;
+    if (startedFilter === "started" && !isEnrollmentStarted(r.id)) return false;
+    if (startedFilter === "not_started" && isEnrollmentStarted(r.id)) return false;
     return true;
   });
 
