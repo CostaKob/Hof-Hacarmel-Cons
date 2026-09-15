@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import {
   calcTotal,
   getExpectedLessons,
@@ -97,6 +97,18 @@ describe("getExpectedLessons — שיעורים צפויים לפי תאריך �
 // ─── getMonthlyRate ───────────────────────────────────────────────────────────
 
 describe("getMonthlyRate — קצב שיעורים לחודש", () => {
+  // תאריך קבוע כדי שהבדיקות לא יושפעו מהחודש הנוכחי (יולי/אוגוסט מוזזים לספטמבר)
+  const FIXED_NOW = new Date("2025-11-15T12:00:00Z");
+  const START = "2025-10-01"; // monthsPassed = 2
+
+  beforeAll(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+  });
+  afterAll(() => {
+    vi.useRealTimers();
+  });
+
   it("ללא תאריך התחלה — unknown", () => {
     const { status } = getMonthlyRate(10, null);
     expect(status).toBe("unknown");
@@ -108,44 +120,29 @@ describe("getMonthlyRate — קצב שיעורים לחודש", () => {
   });
 
   it("קצב 3.2 ומעלה — good (ירוק)", () => {
-    // הפונקציה מחשבת +1 לחודשים, אז חודש אחד אחורה = monthsPassed=2
-    // צריך >= 3.2×2 = 6.4 → 7 שיעורים → 7/2 = 3.5 → good
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const { status } = getMonthlyRate(7, oneMonthAgo.toISOString().slice(0, 10));
-    expect(status).toBe("good");
+    // 7 / 2 = 3.5 → good
+    expect(getMonthlyRate(7, START).status).toBe("good");
   });
 
   it("קצב בין 2.5 ל-3.2 — medium (צהוב)", () => {
-    // monthsPassed=2 → צריך בין 5 ל-6.4 שיעורים → 5 שיעורים → 5/2 = 2.5 → medium
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const { status } = getMonthlyRate(5, oneMonthAgo.toISOString().slice(0, 10));
-    expect(status).toBe("medium");
+    // 5 / 2 = 2.5 → medium
+    expect(getMonthlyRate(5, START).status).toBe("medium");
   });
 
   it("קצב מתחת ל-2.5 — bad (אדום)", () => {
-    // monthsPassed=2 → צריך < 5 שיעורים → 4 שיעורים → 4/2 = 2 → bad
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const { status } = getMonthlyRate(4, oneMonthAgo.toISOString().slice(0, 10));
-    expect(status).toBe("bad");
+    // 4 / 2 = 2 → bad
+    expect(getMonthlyRate(4, START).status).toBe("bad");
   });
 
   it("0 שיעורים — bad", () => {
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const { status } = getMonthlyRate(0, oneMonthAgo.toISOString().slice(0, 10));
-    expect(status).toBe("bad");
+    expect(getMonthlyRate(0, START).status).toBe("bad");
   });
 
   it("rate הוא מספר חיובי", () => {
-    const now = new Date();
-    const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const { rate } = getMonthlyRate(5, oneMonthAgo.toISOString().slice(0, 10));
-    expect(rate).toBeGreaterThan(0);
+    expect(getMonthlyRate(5, START).rate).toBeGreaterThan(0);
   });
 });
+
 
 // ─── getRateColorClass ────────────────────────────────────────────────────────
 
