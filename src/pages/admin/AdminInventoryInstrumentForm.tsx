@@ -146,9 +146,11 @@ const AdminInventoryInstrumentForm = () => {
       if (!newReturnDate) {
         const { error: updErr } = await supabase
           .from("inventory_instruments")
-          .update({ condition: "loaned" })
+          .update({ condition: "loaned", storage_location_id: null })
           .eq("id", id!);
         if (updErr) throw updErr;
+        setValue("condition", "loaned", { shouldDirty: false });
+        setValue("storage_location_id", null, { shouldDirty: false });
       }
     },
     onSuccess: () => {
