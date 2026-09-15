@@ -111,15 +111,34 @@ function calcTravel(km: number) {
   return Math.round(km * KM_RATE * 100) / 100;
 }
 
+const VIEW_STORAGE_KEY = "salary-report-view";
+
+function loadSavedView(): { year?: number; month?: number; generated?: boolean; freelancers?: boolean } {
+  try {
+    return JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
 const AdminSalaryReport = () => {
   const now = new Date();
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-  const [generated, setGenerated] = useState(false);
+  const saved = useRef(loadSavedView()).current;
+  const [selectedYear, setSelectedYear] = useState(saved.year ?? now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(saved.month ?? now.getMonth());
+  const [generated, setGenerated] = useState(saved.generated ?? false);
   const [exporting, setExporting] = useState(false);
-  const [showFreelancers, setShowFreelancers] = useState(false);
+  const [showFreelancers, setShowFreelancers] = useState(saved.freelancers ?? false);
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  // Remember the last view so returning to the page restores it
+  useEffect(() => {
+    localStorage.setItem(
+      VIEW_STORAGE_KEY,
+      JSON.stringify({ year: selectedYear, month: selectedMonth, generated, freelancers: showFreelancers })
+    );
+  }, [selectedYear, selectedMonth, generated, showFreelancers]);
 
   const monthKey = buildMonthKey(selectedYear, selectedMonth);
 
