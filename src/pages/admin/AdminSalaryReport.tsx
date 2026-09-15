@@ -767,7 +767,7 @@ const AdminSalaryReport = () => {
 
       let fontSize = 10;
       const dbg: Array<{ F: number; w: number; h: number }> = [];
-      for (let F = 22; F >= 10; F--) {
+      for (let F = 40; F >= 10; F--) {
         const { w, h } = measure(F);
         dbg.push({ F, w, h });
         if (h * (usableWidth / w) <= usableHeight) { fontSize = F; break; }
