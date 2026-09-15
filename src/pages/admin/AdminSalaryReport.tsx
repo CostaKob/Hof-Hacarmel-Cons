@@ -372,7 +372,7 @@ const AdminSalaryReport = () => {
   }, [upsertOverride, rows]);
 
   // --- Council broadcast file (קובץ לשידור) ---
-  const handleExportCouncil = async () => {
+  const handleExportCouncil = async (alsoPdf = false) => {
     try {
       const XLSX = await import("xlsx");
       const start = new Date(selectedYear, selectedMonth, 1);
