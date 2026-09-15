@@ -174,6 +174,18 @@ const AdminTeachers = () => {
                 className={`flex items-center justify-between rounded-xl border border-border bg-card p-4 shadow-sm cursor-pointer transition-all hover:shadow-md active:scale-[0.99] ${!t.is_active ? "opacity-50" : ""}`}
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {t.photo_url ? (
+                    <img
+                      src={t.photo_url}
+                      alt={`${t.first_name} ${t.last_name}`}
+                      loading="lazy"
+                      className="h-12 w-12 shrink-0 rounded-full object-cover border border-border shadow-sm"
+                    />
+                  ) : (
+                    <div className="h-12 w-12 shrink-0 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-semibold">
+                      {(t.last_name ?? "").charAt(0)}
+                    </div>
+                  )}
                   <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
                   <div>
                     <p className="font-semibold text-foreground flex items-center gap-1.5">
