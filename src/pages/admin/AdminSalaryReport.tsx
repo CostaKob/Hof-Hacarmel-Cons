@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/useAuth";
+import { useAppLogo } from "@/hooks/useAppLogo";
 
 const MONTH_NAMES = [
   "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
@@ -137,6 +138,22 @@ function loadSavedView(): { year?: number; month?: number; generated?: boolean; 
   }
 }
 
+async function loadImageDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return null;
+  }
+}
+
 const AdminSalaryReport = () => {
   const now = new Date();
   const saved = useRef(loadSavedView()).current;
@@ -149,6 +166,7 @@ const AdminSalaryReport = () => {
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { logoUrl } = useAppLogo();
 
   // Remember the last view so returning to the page restores it
   useEffect(() => {
@@ -626,13 +644,8 @@ const AdminSalaryReport = () => {
   const handleExportPdf = async () => {
     setExporting(true);
     try {
-      // Build a clean HTML table for PDF (no inputs)
-      // Calculate dynamic font size to fit one page
-      const rowCount = rows.length;
-      const fontSize = Math.max(8, Math.min(13, Math.floor(580 / (rowCount + 4))));
-      const pad = Math.max(2, Math.min(5, Math.floor(fontSize * 0.4)));
-      const cellStyle = `border:1px solid #bbb;padding:${pad}px ${pad + 2}px;text-align:center;font-size:${fontSize}px;white-space:nowrap;`;
-      const headerStyle = `${cellStyle}font-weight:bold;background:#e8e8e8;`;
+      const logoDataUrl = await loadImageDataUrl(logoUrl);
+
       const groupBg: Record<string, string> = {
         blue: "background:#eff6ff;", violet: "background:#f5f3ff;",
         emerald: "background:#ecfdf5;", amber: "background:#fffbeb;",
@@ -665,88 +678,150 @@ const AdminSalaryReport = () => {
         { label: "שם משפחה", bg: "" }, { label: "שם פרטי", bg: "" },
       ];
 
-      let html = `<div dir="rtl" style="font-family:Arial,sans-serif;">`;
-      html += `<h2 style="text-align:center;font-size:${fontSize + 4}px;margin-bottom:6px;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</h2>`;
-      html += `<table style="border-collapse:collapse;width:100%;">`;
-      // Group header row
-      html += `<tr>`;
-      for (const g of groupHeaders) html += `<th colspan="${g.cols}" style="${headerStyle}${g.bg}">${g.label}</th>`;
-      html += `</tr>`;
-      // Column header row
-      html += `<tr>`;
-      for (const c of colHeaders) html += `<th style="${headerStyle}${c.bg}">${c.label}</th>`;
-      html += `</tr>`;
-      // Data rows
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i];
-        const salary = calcSalary(r.values);
-        const travel = calcTravel(r.values.km);
-        const v = (n: number) => n ? String(n) : "";
-        const rowBg = i % 2 === 1 ? "background:#fafafa;" : "";
-        html += `<tr style="${rowBg}">`;
-        html += `<td style="${cellStyle}color:#999;">${i + 1}</td>`;
-        html += `<td style="${cellStyle}text-align:right;">${r.lastName}</td>`;
-        html += `<td style="${cellStyle}text-align:right;">${r.firstName}</td>`;
-        html += `<td style="${cellStyle}text-align:right;font-size:${fontSize - 1}px;">${r.nationalId}</td>`;
-        for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${v(r.values[key])}</td>`;
-        for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
-        for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${v(r.values[key])}</td>`;
-        for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${v(r.values[key])}</td>`;
-        html += `<td style="${cellStyle}${groupBg.sky}">${v(r.values.km)}</td>`;
-        html += `<td style="${cellStyle}${groupBg.primary}font-weight:bold;">${salary ? `₪${salary.toLocaleString("he-IL")}` : ""}</td>`;
-        html += `<td style="${cellStyle}${groupBg.primary}">${travel ? `₪${travel.toLocaleString("he-IL")}` : ""}</td>`;
-        html += `<td style="${cellStyle}text-align:right;color:#888;">${r.lastName}</td>`;
-        html += `<td style="${cellStyle}text-align:right;color:#888;">${r.firstName}</td>`;
+      // Build the PDF HTML at a given base font size.
+      // Headers use a smaller font and may wrap, so columns stay narrow
+      // and the data font can be as large as possible.
+      const buildHtml = (F: number) => {
+        const hFont = Math.max(9, Math.round(F * 0.72));
+        const cellStyle = `border:1px solid #aaa;padding:2px 3px;text-align:center;font-size:${F}px;line-height:1.2;white-space:nowrap;`;
+        const headerStyle = `border:1px solid #aaa;padding:2px 4px;text-align:center;font-size:${hFont}px;line-height:1.2;font-weight:bold;background:#e8e8e8;`;
+
+        let html = `<div dir="rtl" style="font-family:Arial,sans-serif;width:max-content;">`;
+        // Logo header — required on every printable form
+        html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin-bottom:${Math.round(F / 4)}px;">`;
+        if (logoDataUrl) html += `<img src="${logoDataUrl}" style="height:${Math.round(F * 1.6)}px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
+        html += `<div style="font-size:${hFont}px;color:#666;">אולפן ומגמת המוסיקה חוף הכרמל</div>`;
+        html += `</div>`;
+        html += `<h2 style="text-align:center;font-size:${F + 3}px;margin:0 0 ${Math.round(F / 4)}px;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</h2>`;
+        html += `<table style="border-collapse:collapse;">`;
+        // Group header row
+        html += `<tr>`;
+        for (const g of groupHeaders) html += `<th colspan="${g.cols}" style="${headerStyle}${g.bg}">${g.label}</th>`;
         html += `</tr>`;
-      }
-      // Totals row
-      html += `<tr style="font-weight:bold;background:#e8e8e8;">`;
-      html += `<td colspan="4" style="${cellStyle}text-align:right;">סה״כ (${rows.length} מורים)</td>`;
-      for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${totals[key] || ""}</td>`;
-      for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${totals[key] || ""}</td>`;
-      for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${totals[key] || ""}</td>`;
-      for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${totals[key] || ""}</td>`;
-      html += `<td style="${cellStyle}${groupBg.sky}">${totals.km || ""}</td>`;
-      html += `<td style="${cellStyle}${groupBg.primary}">${totals.totalSalary ? `₪${totals.totalSalary.toLocaleString("he-IL")}` : ""}</td>`;
-      html += `<td style="${cellStyle}${groupBg.primary}">${totals.totalTravel ? `₪${totals.totalTravel.toLocaleString("he-IL")}` : ""}</td>`;
-      html += `<td colspan="2" style="${cellStyle}"></td>`;
-      html += `</tr>`;
-      html += `</table></div>`;
+        // Column header row
+        html += `<tr>`;
+        for (const c of colHeaders) html += `<th style="${headerStyle}${c.bg}">${c.label}</th>`;
+        html += `</tr>`;
+        // Data rows
+        for (let i = 0; i < rows.length; i++) {
+          const r = rows[i];
+          const salary = calcSalary(r.values);
+          const travel = calcTravel(r.values.km);
+          const v = (n: number) => n ? String(n) : "";
+          const rowBg = i % 2 === 1 ? "background:#fafafa;" : "";
+          html += `<tr style="${rowBg}">`;
+          html += `<td style="${cellStyle}color:#999;">${i + 1}</td>`;
+          html += `<td style="${cellStyle}text-align:right;">${r.lastName}</td>`;
+          html += `<td style="${cellStyle}text-align:right;">${r.firstName}</td>`;
+          html += `<td style="${cellStyle}text-align:right;font-size:${F - 1}px;">${r.nationalId}</td>`;
+          for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${v(r.values[key])}</td>`;
+          for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${v(r.values[key])}</td>`;
+          for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${v(r.values[key])}</td>`;
+          for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${v(r.values[key])}</td>`;
+          html += `<td style="${cellStyle}${groupBg.sky}">${v(r.values.km)}</td>`;
+          html += `<td style="${cellStyle}${groupBg.primary}font-weight:bold;">${salary ? `₪${salary.toLocaleString("he-IL")}` : ""}</td>`;
+          html += `<td style="${cellStyle}${groupBg.primary}">${travel ? `₪${travel.toLocaleString("he-IL")}` : ""}</td>`;
+          html += `<td style="${cellStyle}text-align:right;color:#888;">${r.lastName}</td>`;
+          html += `<td style="${cellStyle}text-align:right;color:#888;">${r.firstName}</td>`;
+          html += `</tr>`;
+        }
+        // Totals row
+        html += `<tr style="font-weight:bold;background:#e8e8e8;">`;
+        html += `<td colspan="4" style="${cellStyle}text-align:right;">סה״כ (${rows.length} מורים)</td>`;
+        for (const key of ["lessons_45","lessons_30","lessons_60"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.blue}">${totals[key] || ""}</td>`;
+        for (const key of ["small_ensemble","large_ensemble","branch_coord","orchestra_conductor","choir_conductor","choir_accompaniment"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.violet}">${totals[key] || ""}</td>`;
+        for (const key of ["school_music_group","school_music_coord"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.emerald}">${totals[key] || ""}</td>`;
+        for (const key of ["activity_days","single_hours"] as FieldKey[]) html += `<td style="${cellStyle}${groupBg.amber}">${totals[key] || ""}</td>`;
+        html += `<td style="${cellStyle}${groupBg.sky}">${totals.km || ""}</td>`;
+        html += `<td style="${cellStyle}${groupBg.primary}">${totals.totalSalary ? `₪${totals.totalSalary.toLocaleString("he-IL")}` : ""}</td>`;
+        html += `<td style="${cellStyle}${groupBg.primary}">${totals.totalTravel ? `₪${totals.totalTravel.toLocaleString("he-IL")}` : ""}</td>`;
+        html += `<td colspan="2" style="${cellStyle}"></td>`;
+        html += `</tr>`;
+        html += `</table></div>`;
+        return html;
+      };
 
-      // Render offscreen — use wide container so table doesn't wrap
-      const container = document.createElement("div");
-      container.style.cssText = "position:absolute;left:-9999px;top:0;width:1800px;";
-      container.innerHTML = html;
-      document.body.appendChild(container);
-
-      const canvas = await html2canvas(container, { scale: 2, backgroundColor: "#ffffff" });
-      document.body.removeChild(container);
-
-      const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 6;
+      const margin = 5;
       const usableWidth = pageWidth - margin * 2;
-      const ratio = usableWidth / canvas.width;
+      const usableHeight = pageHeight - margin * 2;
+
+      // Measure the rendered table at each candidate font size and pick the
+      // largest one whose scaled height still fits a single landscape page.
+      const measure = (F: number) => {
+        const probe = document.createElement("div");
+        probe.style.cssText = "position:absolute;left:-99999px;top:0;width:max-content;";
+        probe.innerHTML = buildHtml(F);
+        document.body.appendChild(probe);
+        const w = Math.max(1, probe.scrollWidth);
+        const h = probe.offsetHeight;
+        document.body.removeChild(probe);
+        return { w, h };
+      };
+
+      let fontSize = 10;
+      const dbg: Array<{ F: number; w: number; h: number }> = [];
+      for (let F = 22; F >= 10; F--) {
+        const { w, h } = measure(F);
+        dbg.push({ F, w, h });
+        if (h * (usableWidth / w) <= usableHeight) { fontSize = F; break; }
+        fontSize = F; // if nothing fits, fall back to the smallest
+      }
+      console.info("[salary-pdf] measurements:", JSON.stringify(dbg), "chosen:", fontSize);
+
+      // Render offscreen at the chosen font size — table sizes to its content
+      const container = document.createElement("div");
+      container.style.cssText = "position:absolute;left:-99999px;top:0;width:max-content;";
+      container.innerHTML = buildHtml(fontSize);
+      document.body.appendChild(container);
+      await document.fonts.ready;
+
+      const scale = 3;
+      const canvas = await html2canvas(container, { scale, backgroundColor: "#ffffff" });
+      const cssWidth = container.scrollWidth;
+      const cssHeight = container.scrollHeight;
+      // Row bottom edges (CSS px) — used to break pages between rows, never mid-row
+      const containerTop = container.getBoundingClientRect().top;
+      const rowBounds = Array.from(container.querySelectorAll("tr"))
+        .map((tr) => tr.getBoundingClientRect().bottom - containerTop)
+        .filter((b) => b > 0 && b < cssHeight - 1)
+        .sort((a, b) => a - b);
+      document.body.removeChild(container);
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const ratio = usableWidth / canvas.width; // mm per canvas px
       const scaledHeight = canvas.height * ratio;
 
-      if (scaledHeight <= pageHeight - margin * 2) {
-        pdf.addImage(imgData, "PNG", margin, margin, usableWidth, scaledHeight);
+      if (scaledHeight <= usableHeight) {
+        pdf.addImage(imgData, "JPEG", margin, margin, usableWidth, scaledHeight);
       } else {
-        let yOffset = 0;
-        const sliceHeight = (pageHeight - margin * 2) / ratio;
-        while (yOffset < canvas.height) {
+        // Multi-page: slice at row boundaries so no row is ever cut in half
+        const cssPageCapacity = usableHeight * (cssWidth / usableWidth); // CSS px per page
+        const capPx = cssPageCapacity * scale;
+        let yStart = 0;
+        let firstPage = true;
+        while (yStart < canvas.height) {
+          let yEnd = Math.min(yStart + capPx, canvas.height);
+          if (yEnd < canvas.height) {
+            // snap back to the last row boundary that fits
+            const limit = (yEnd - yStart) / scale + yStart / scale; // css offset limit
+            const candidates = rowBounds.filter((b) => b <= limit && b > yStart / scale + 1);
+            if (candidates.length > 0) yEnd = candidates[candidates.length - 1] * scale;
+            else yEnd = yStart + capPx; // single row taller than a page — fall back
+          }
           const sliceCanvas = document.createElement("canvas");
           sliceCanvas.width = canvas.width;
-          sliceCanvas.height = Math.min(sliceHeight, canvas.height - yOffset);
+          sliceCanvas.height = Math.min(yEnd - yStart, canvas.height - yStart);
           const ctx = sliceCanvas.getContext("2d")!;
-          ctx.drawImage(canvas, 0, -yOffset);
-          const sliceImg = sliceCanvas.toDataURL("image/png");
+          ctx.drawImage(canvas, 0, -yStart);
+          const sliceImg = sliceCanvas.toDataURL("image/jpeg", 0.92);
           const h = sliceCanvas.height * ratio;
+          if (!firstPage) pdf.addPage();
           pdf.addImage(sliceImg, "PNG", margin, margin, usableWidth, h);
-          yOffset += sliceHeight;
-          if (yOffset < canvas.height) pdf.addPage();
+          firstPage = false;
+          yStart = yEnd;
         }
       }
 
