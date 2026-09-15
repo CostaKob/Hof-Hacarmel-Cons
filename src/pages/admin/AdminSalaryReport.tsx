@@ -30,6 +30,35 @@ const RATES: Record<string, number> = {
 };
 const KM_RATE = 1.1;
 
+// --- Council broadcast file (קובץ לשידור למועצה) ---
+const EVENT_NUMBER = 90226;
+const OFFICE_NUMBER = 1696;
+const SCHOOL_MUSIC_COST_CENTER = 300026;
+const PENSION_PCT = 0.12; // code 325 = 12% of total salary
+
+// Employee code = national ID without its last (check) digit
+function employeeCode(nationalId: string) {
+  const digits = (nationalId || "").replace(/\D/g, "");
+  return digits.length > 1 ? digits.slice(0, -1) : digits;
+}
+
+const COUNCIL_CODES: { key: FieldKey; code: number; tag?: boolean }[] = [
+  { key: "lessons_45", code: 610 },
+  { key: "lessons_30", code: 620 },
+  { key: "lessons_60", code: 618 },
+  { key: "small_ensemble", code: 611 },
+  { key: "large_ensemble", code: 612 },
+  { key: "orchestra_conductor", code: 613 },
+  { key: "choir_conductor", code: 614 },
+  { key: "choir_accompaniment", code: 615 },
+  { key: "school_music_group", code: 611, tag: true },
+  { key: "school_music_coord", code: 616, tag: true },
+  { key: "branch_coord", code: 616 },
+  { key: "activity_days", code: 617 },
+  { key: "single_hours", code: 112 },
+];
+
+
 const FIELD_KEYS = [
   "lessons_45", "lessons_30", "lessons_60",
   "small_ensemble", "large_ensemble",
@@ -342,7 +371,50 @@ const AdminSalaryReport = () => {
     upsertOverride.mutate({ teacherId, field, value, teacherName });
   }, [upsertOverride, rows]);
 
+  // --- Council broadcast file (קובץ לשידור) ---
+  const handleExportCouncil = async () => {
+    try {
+      const XLSX = await import("xlsx");
+      const start = new Date(selectedYear, selectedMonth, 1);
+      const end = new Date(selectedYear, selectedMonth + 1, 0);
+      const header = ["מס' אירוע", "משרד", "זיהוי עובד", "מ.נ", "שם העובד", "סמל", "בתוקף", "בתוקף עד", "קוד עדכון", "סכום", "כמות", "אחוז", "תעריף", "", ""];
+      const data: any[][] = [header];
+
+      const line = (empCode: string, name: string, code: number, amount: number | "", qty: number | "", tag?: boolean) => [
+        EVENT_NUMBER, OFFICE_NUMBER, empCode, 0, name, code, start, end, 1, amount, qty, "", "",
+        tag ? 'ביה"ס מנגן' : "", tag ? SCHOOL_MUSIC_COST_CENTER : "",
+      ];
+
+      for (const r of rows) {
+        const empCode = employeeCode(r.nationalId);
+        const name = `${r.firstName} ${r.lastName}`.trim();
+        const salary = calcSalary(r.values);
+        if (!salary && !r.values.km) continue;
+        if (salary > 0) data.push(line(empCode, name, 325, Math.round(salary * PENSION_PCT * 100) / 100, ""));
+        if (r.values.km > 0) data.push(line(empCode, name, 104, "", r.values.km));
+        for (const { key, code, tag } of COUNCIL_CODES) {
+          const qty = r.values[key] || 0;
+          if (qty > 0) data.push(line(empCode, name, code, "", qty, tag));
+        }
+      }
+
+      if (data.length === 1) {
+        toast.info("אין נתונים לשידור");
+        return;
+      }
+      const ws = XLSX.utils.aoa_to_sheet(data, { cellDates: true });
+      ws["!cols"] = [{ wch: 10 }, { wch: 7 }, { wch: 12 }, { wch: 5 }, { wch: 22 }, { wch: 6 }, { wch: 12 }, { wch: 12 }, { wch: 9 }, { wch: 9 }, { wch: 8 }, { wch: 6 }, { wch: 7 }, { wch: 12 }, { wch: 10 }];
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "קובץ לשידור");
+      XLSX.writeFile(wb, `קובץ_לשידור_${String(selectedMonth + 1).padStart(2, "0")}-${String(selectedYear).slice(2)}.xlsx`);
+      toast.success(`${data.length - 1} שורות יוצאו לשידור`);
+    } catch (err: any) {
+      toast.error(err.message || "שגיאה בייצוא");
+    }
+  };
+
   // --- PDF export ---
+
   const handleExportPdf = async () => {
     setExporting(true);
     try {
@@ -512,6 +584,13 @@ const AdminSalaryReport = () => {
               ייצוא PDF
             </Button>
           )}
+          {generated && (
+            <Button variant="outline" className="rounded-xl gap-2" onClick={handleExportCouncil}>
+              <FileSpreadsheet className="h-4 w-4" />
+              קובץ לשידור למועצה
+            </Button>
+          )}
+
           <div className="flex items-center gap-2 mr-auto">
             <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
             <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג רק עצמאיים</Label>
