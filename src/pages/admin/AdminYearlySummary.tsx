@@ -84,10 +84,8 @@ const AdminYearlySummary = () => {
       });
   }, [enrollments, lines]);
 
-  const startedStudentNames = useMemo(() => {
-    // A student who already had a lesson in any instrument counts as started
-    return new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
-  }, [rows]);
+  // "התחיל ללמוד" נקבע לכל שיוך בנפרד (מורה/כלי), לא ברמת התלמיד
+  const hasStartedRow = (r: EnrollmentSummaryRow) => r.totalLessons > 0;
 
   const baseFiltered = useMemo(() => {
     return rows
@@ -112,12 +110,12 @@ const AdminYearlySummary = () => {
 
   const filtered = useMemo(() => {
     return baseFiltered.filter((r) => {
-      const hasStarted = startedStudentNames.has(r.studentName);
+      const hasStarted = hasStartedRow(r);
       if (startedFilter === "started" && !hasStarted) return false;
       if (startedFilter === "not-started" && hasStarted) return false;
       return true;
     });
-  }, [baseFiltered, startedFilter, startedStudentNames]);
+  }, [baseFiltered, startedFilter]);
 
   const teacherOptions = useMemo(() => {
     const names = new Set(rows.map((r) => r.teacherName).filter(Boolean));
@@ -130,10 +128,10 @@ const AdminYearlySummary = () => {
   }, [rows]);
 
   const stats = useMemo(() => {
-    const started = baseFiltered.filter((r) => startedStudentNames.has(r.studentName));
-    const notStarted = baseFiltered.filter((r) => !startedStudentNames.has(r.studentName));
+    const started = baseFiltered.filter(hasStartedRow);
+    const notStarted = baseFiltered.filter((r) => !hasStartedRow(r));
     return { started, notStarted };
-  }, [baseFiltered, startedStudentNames]);
+  }, [baseFiltered]);
 
   const isLoading = eLoading || lLoading;
 
