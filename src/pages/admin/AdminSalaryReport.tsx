@@ -373,6 +373,14 @@ const AdminSalaryReport = () => {
     });
   }, [teachers, systemDefaults, manualEntries, showFreelancers]);
 
+  // A closed month shows exactly what was saved, not recalculated data
+  const rows: TeacherRow[] = useMemo(() => {
+    if (isClosed && Array.isArray(snapshot?.rows) && (snapshot!.rows as any[]).length) {
+      return snapshot!.rows as unknown as TeacherRow[];
+    }
+    return liveRows;
+  }, [isClosed, snapshot, liveRows]);
+
   // --- Totals ---
   const totals = useMemo(() => {
     const t: Record<FieldKey, number> = {
