@@ -141,9 +141,9 @@ const AdminSalaryReport = () => {
   const { data: enrollments } = useQuery({
     queryKey: ["salary-enrollments"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("enrollments").select("teacher_id, lesson_duration_minutes, is_active, students!inner(is_active)").eq("is_active", true);
+      const { data, error } = await supabase.from("enrollments").select("teacher_id, lesson_duration_minutes, is_active, students!inner(is_active), academic_years!inner(is_active)").eq("is_active", true);
       if (error) throw error;
-      return (data ?? []).filter((e: any) => e.students?.is_active);
+      return (data ?? []).filter((e: any) => e.students?.is_active && e.academic_years?.is_active);
     },
   });
 
