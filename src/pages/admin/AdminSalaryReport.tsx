@@ -215,7 +215,7 @@ const AdminSalaryReport = () => {
   const { data: ensembleStaff } = useQuery({
     queryKey: ["salary-ensemble-staff"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("ensemble_staff").select("teacher_id, role, weekly_hours, ensembles!inner(ensemble_type, is_active)");
+      const { data, error } = await supabase.from("ensemble_staff").select("teacher_id, role, weekly_hours, ensembles!inner(ensemble_type, is_active, ensemble_students(students(grade)))");
       if (error) throw error;
       return (data ?? []).filter((s: any) => s.ensembles?.is_active);
     },
@@ -333,7 +333,18 @@ const AdminSalaryReport = () => {
       // תמיכה גם בסוגים הישנים וגם בסוגים החדשים (ייצוגי/צעיר)
       const isChoir = type.includes("choir") || type.includes("vocal");
       const isOrchestra = type.includes("orchestra") || type.includes("big_band");
-      const isSmall = type.includes("chamber") || type === "small_ensemble";
+      // סיווג הרכב קטן/גדול לפי כיתות המשתתפים: כל ההרכבים של ז׳-יב׳ הם הרכב גדול
+      const gradeNum: Record<string, number> = { "א": 1, "ב": 2, "ג": 3, "ד": 4, "ה": 5, "ו": 6, "ז": 7, "ח": 8, "ט": 9, "י": 10, "יא": 11, "יב": 12, "בוגר": 12 };
+      const participantGrades = ((s as any).ensembles?.ensemble_students ?? [])
+        .map((es: any) => gradeNum[es?.students?.grade ?? ""] ?? 0)
+        .filter((n: number) => n > 0);
+      let isSmall: boolean;
+      if (participantGrades.length > 0) {
+        isSmall = !participantGrades.some((n: number) => n >= 7);
+      } else {
+        // אין נתוני כיתות — fallback לפי סוג ההרכב
+        isSmall = type.includes("chamber") || type === "small_ensemble";
+      }
       if (isChoir) {
         if (s.role === "conductor" || s.role === "instructor") d.choir_conductor += hours;
         else d.choir_accompaniment += hours;
