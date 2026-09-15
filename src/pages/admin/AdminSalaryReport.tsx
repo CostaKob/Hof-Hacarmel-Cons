@@ -628,7 +628,7 @@ const AdminSalaryReport = () => {
                 דוח משכורות — {MONTH_NAMES[selectedMonth]} {selectedYear}
               </h2>
 
-              <div className="relative w-full overflow-auto border rounded-xl">
+              <div className="relative w-full overflow-auto border rounded-xl max-h-[calc(100vh-240px)]">
                 <table className="w-full text-sm border-collapse" dir="rtl">
                   <thead>
                     {/* Group headers */}
