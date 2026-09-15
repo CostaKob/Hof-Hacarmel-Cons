@@ -2077,6 +2077,56 @@ export type Database = {
           },
         ]
       }
+      salary_audit_log: {
+        Row: {
+          action: string
+          changed_by: string | null
+          changed_by_email: string | null
+          created_at: string
+          field: string
+          id: string
+          month_key: string
+          new_value: number | null
+          old_value: number | null
+          teacher_id: string | null
+          teacher_name: string | null
+        }
+        Insert: {
+          action?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          field: string
+          id?: string
+          month_key: string
+          new_value?: number | null
+          old_value?: number | null
+          teacher_id?: string | null
+          teacher_name?: string | null
+        }
+        Update: {
+          action?: string
+          changed_by?: string | null
+          changed_by_email?: string | null
+          created_at?: string
+          field?: string
+          id?: string
+          month_key?: string
+          new_value?: number | null
+          old_value?: number | null
+          teacher_id?: string | null
+          teacher_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salary_audit_log_teacher_id_fkey"
+            columns: ["teacher_id"]
+            isOneToOne: false
+            referencedRelation: "teachers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salary_manual_entries: {
         Row: {
           activity_days: number
@@ -2117,6 +2167,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      salary_month_snapshots: {
+        Row: {
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          id: string
+          month_key: string
+          rows: Json
+          scope: string
+          status: string
+          totals: Json
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          month_key: string
+          rows?: Json
+          scope?: string
+          status?: string
+          totals?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          month_key?: string
+          rows?: Json
+          scope?: string
+          status?: string
+          totals?: Json
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
       }
       school_music_class_groups: {
         Row: {

@@ -7,12 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, FileSpreadsheet, FileDown } from "lucide-react";
+import { Loader2, FileSpreadsheet, FileDown, Lock, Unlock, History, Check } from "lucide-react";
 import { toast } from "sonner";
 import { getMonthRange } from "@/hooks/useTeacherDashboardData";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import PageTitle from "@/components/PageTitle";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useAuth } from "@/hooks/useAuth";
 
 const MONTH_NAMES = [
   "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
@@ -129,8 +133,10 @@ const AdminSalaryReport = () => {
   const [generated, setGenerated] = useState(saved.generated ?? false);
   const [exporting, setExporting] = useState(false);
   const [showFreelancers, setShowFreelancers] = useState(saved.freelancers ?? false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Remember the last view so returning to the page restores it
   useEffect(() => {
@@ -220,6 +226,40 @@ const AdminSalaryReport = () => {
     },
   });
 
+  const scope = showFreelancers ? "freelancers" : "employees";
+
+  // Saved monthly snapshot (draft = autosave, closed = locked)
+  const { data: snapshot } = useQuery({
+    queryKey: ["salary-snapshot", monthKey, scope],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("salary_month_snapshots")
+        .select("*")
+        .eq("month_key", monthKey)
+        .eq("scope", scope)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isClosed = snapshot?.status === "closed";
+
+  const { data: auditLog } = useQuery({
+    queryKey: ["salary-audit", monthKey],
+    enabled: historyOpen,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("salary_audit_log")
+        .select("*")
+        .eq("month_key", monthKey)
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // --- Build system defaults ---
   const systemDefaults = useMemo(() => {
     if (!teachers) return new Map<string, Record<FieldKey, number>>();
@@ -295,7 +335,7 @@ const AdminSalaryReport = () => {
   }, [teachers, enrollments, ensembleStaff, schoolMusicGroups, schoolMusicSchools, branchCoordinators, prevMonthReports]);
 
   // --- Merge with manual overrides ---
-  const rows: TeacherRow[] = useMemo(() => {
+  const liveRows: TeacherRow[] = useMemo(() => {
     if (!teachers) return [];
     const manualMap = new Map<string, Record<string, number>>();
     for (const me of manualEntries ?? []) {
@@ -333,6 +373,14 @@ const AdminSalaryReport = () => {
     });
   }, [teachers, systemDefaults, manualEntries, showFreelancers]);
 
+  // A closed month shows exactly what was saved, not recalculated data
+  const rows: TeacherRow[] = useMemo(() => {
+    if (isClosed && Array.isArray(snapshot?.rows) && (snapshot!.rows as any[]).length) {
+      return snapshot!.rows as unknown as TeacherRow[];
+    }
+    return liveRows;
+  }, [isClosed, snapshot, liveRows]);
+
   // --- Totals ---
   const totals = useMemo(() => {
     const t: Record<FieldKey, number> = {
@@ -353,7 +401,7 @@ const AdminSalaryReport = () => {
 
   // --- Save override ---
   const upsertOverride = useMutation({
-    mutationFn: async ({ teacherId, field, value, teacherName }: { teacherId: string; field: FieldKey; value: number; teacherName: string }) => {
+    mutationFn: async ({ teacherId, field, value, teacherName, oldValue }: { teacherId: string; field: FieldKey; value: number; teacherName: string; oldValue: number }) => {
       const existing = (manualEntries ?? []).find((e) => e.teacher_id === teacherId);
       if (existing) {
         const prev = (existing.overrides as Record<string, number>) ?? {};
@@ -367,16 +415,29 @@ const AdminSalaryReport = () => {
           .insert({ teacher_id: teacherId, month_key: monthKey, overrides: { [field]: value } });
         if (error) throw error;
       }
+      await supabase.from("salary_audit_log").insert({
+        month_key: monthKey,
+        teacher_id: teacherId,
+        teacher_name: teacherName,
+        field: FIELD_LABELS[field] ?? field,
+        old_value: oldValue,
+        new_value: value,
+        action: "edit",
+        changed_by: user?.id ?? null,
+        changed_by_email: user?.email ?? null,
+      });
       return { teacherName, value };
     },
     onSuccess: ({ teacherName, value }) => {
       queryClient.invalidateQueries({ queryKey: ["salary-manual", monthKey] });
+      queryClient.invalidateQueries({ queryKey: ["salary-audit", monthKey] });
       toast.success(`נשמר: ${teacherName} — ${value}`, { duration: 2000 });
     },
     onError: (err: any) => toast.error(err.message),
   });
 
   const handleChange = useCallback((teacherId: string, field: FieldKey, raw: string) => {
+    if (isClosed) return;
     const value = parseFloat(raw) || 0;
     const row = rows.find((r) => r.teacherId === teacherId);
     if (!row) return;
@@ -384,11 +445,77 @@ const AdminSalaryReport = () => {
     const currentStored = row.values[field] ?? 0;
     if (Number(currentStored) === value) return;
     const teacherName = `${row.firstName} ${row.lastName}`.trim();
-    if (!window.confirm(`לשמור שינוי עבור ${teacherName}?\n${field}: ${currentStored || 0} ← ${value}`)) {
+    if (!window.confirm(`לשמור שינוי עבור ${teacherName}?\n${FIELD_LABELS[field] ?? field}: ${currentStored || 0} ← ${value}`)) {
       return;
     }
-    upsertOverride.mutate({ teacherId, field, value, teacherName });
-  }, [upsertOverride, rows]);
+    upsertOverride.mutate({ teacherId, field, value, teacherName, oldValue: Number(currentStored) || 0 });
+  }, [upsertOverride, rows, isClosed]);
+
+  // --- Autosave draft snapshot (so the same table returns on any computer) ---
+  const saveSnapshot = useCallback(async (status: "draft" | "closed") => {
+    const payload: any = {
+      month_key: monthKey,
+      scope,
+      status,
+      rows: liveRows as any,
+      totals: totals as any,
+      updated_by: user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    };
+    if (status === "closed") {
+      payload.closed_at = new Date().toISOString();
+      payload.closed_by = user?.id ?? null;
+    }
+    const { error } = await supabase
+      .from("salary_month_snapshots")
+      .upsert(payload, { onConflict: "month_key,scope" });
+    if (error) throw error;
+  }, [monthKey, scope, liveRows, totals, user?.id]);
+
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  useEffect(() => {
+    if (!generated || isClosed || !liveRows.length) return;
+    const timer = setTimeout(() => {
+      saveSnapshot("draft").then(() => setSavedAt(new Date())).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [generated, isClosed, liveRows, totals, saveSnapshot]);
+
+  const closeMonth = useMutation({
+    mutationFn: async () => {
+      await saveSnapshot("closed");
+      await supabase.from("salary_audit_log").insert({
+        month_key: monthKey, field: "חודש", action: "close",
+        changed_by: user?.id ?? null, changed_by_email: user?.email ?? null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["salary-snapshot", monthKey, scope] });
+      queryClient.invalidateQueries({ queryKey: ["salary-audit", monthKey] });
+      toast.success("החודש נסגר ונשמר");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const reopenMonth = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("salary_month_snapshots")
+        .update({ status: "draft", closed_at: null, closed_by: null })
+        .eq("month_key", monthKey).eq("scope", scope);
+      if (error) throw error;
+      await supabase.from("salary_audit_log").insert({
+        month_key: monthKey, field: "חודש", action: "reopen",
+        changed_by: user?.id ?? null, changed_by_email: user?.email ?? null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["salary-snapshot", monthKey, scope] });
+      queryClient.invalidateQueries({ queryKey: ["salary-audit", monthKey] });
+      toast.success("החודש נפתח מחדש");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   // --- Council broadcast file (קובץ לשידור) ---
   const handleExportCouncil = async () => {
@@ -609,6 +736,29 @@ const AdminSalaryReport = () => {
               קובץ לשידור למועצה
             </Button>
           )}
+          {generated && (
+            <Button variant="outline" className="rounded-xl gap-2" onClick={() => setHistoryOpen(true)}>
+              <History className="h-4 w-4" />
+              היסטוריית שינויים
+            </Button>
+          )}
+          {generated && (
+            isClosed ? (
+              <Button variant="outline" className="rounded-xl gap-2" onClick={() => {
+                if (window.confirm("לפתוח מחדש את החודש לעריכה?")) reopenMonth.mutate();
+              }}>
+                <Unlock className="h-4 w-4" />
+                פתח חודש מחדש
+              </Button>
+            ) : (
+              <Button variant="secondary" className="rounded-xl gap-2" onClick={() => {
+                if (window.confirm("לסגור את החודש? הטבלה תישמר כפי שהיא כעת ולא תשתנה יותר.")) closeMonth.mutate();
+              }} disabled={closeMonth.isPending}>
+                {closeMonth.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                סגור חודש ושמור
+              </Button>
+            )
+          )}
 
           <div className="flex items-center gap-2 mr-auto">
             <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
@@ -618,9 +768,23 @@ const AdminSalaryReport = () => {
 
         {generated && (
           <>
-            <p className="text-sm text-muted-foreground">
-              דוח משכורות ל{MONTH_NAMES[selectedMonth]} {selectedYear} · נסיעות לפי {MONTH_NAMES[new Date(selectedYear, selectedMonth - 1, 1).getMonth()]} {new Date(selectedYear, selectedMonth - 1, 1).getFullYear()}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                דוח משכורות ל{MONTH_NAMES[selectedMonth]} {selectedYear} · נסיעות לפי {MONTH_NAMES[new Date(selectedYear, selectedMonth - 1, 1).getMonth()]} {new Date(selectedYear, selectedMonth - 1, 1).getFullYear()}
+              </span>
+              {isClosed ? (
+                <Badge variant="secondary" className="gap-1">
+                  <Lock className="h-3 w-3" />
+                  חודש סגור{snapshot?.closed_at ? ` · ${new Date(snapshot.closed_at).toLocaleDateString("he-IL")}` : ""}
+                </Badge>
+              ) : savedAt ? (
+                <Badge variant="outline" className="gap-1">
+                  <Check className="h-3 w-3" />
+                  נשמר {savedAt.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                </Badge>
+              ) : null}
+            </div>
+
 
             <div ref={tableRef} className="bg-background">
               {/* PDF title (hidden on screen, visible in capture) */}
@@ -692,7 +856,7 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-blue-50/30 dark:bg-blue-950/10 ${ki === 2 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* Ensembles */}
@@ -700,7 +864,7 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 5 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* School music */}
@@ -708,7 +872,7 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-emerald-50/30 dark:bg-emerald-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* Activity */}
@@ -716,14 +880,14 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-amber-50/30 dark:bg-amber-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* KM */}
                           <td className="p-1 text-center whitespace-nowrap bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">
                             <Input type="number" min={0} step="any" className="w-20 h-8 text-center mx-auto rounded-lg text-sm"
                               defaultValue={r.values.km || ""} placeholder={r.defaults.km ? String(r.defaults.km) : "0"}
-                              onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} />
+                              onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} disabled={isClosed} />
                           </td>
                           {/* Summaries */}
                           <td className="p-2 text-center whitespace-nowrap font-bold bg-primary/5">{fmt(salary)}</td>
@@ -800,6 +964,38 @@ const AdminSalaryReport = () => {
             </div>
           </>
         )}
+
+        <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+          <DialogContent className="max-w-2xl" dir="rtl">
+            <DialogHeader>
+              <DialogTitle>היסטוריית שינויים — {MONTH_NAMES[selectedMonth]} {selectedYear}</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pl-3">
+              {!auditLog?.length ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">אין שינויים רשומים לחודש זה</p>
+              ) : (
+                <ul className="space-y-2">
+                  {auditLog.map((a: any) => (
+                    <li key={a.id} className="rounded-xl border p-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{a.teacher_name || "—"}</span>
+                        <span className="text-muted-foreground">{a.field}</span>
+                        {a.action === "edit" ? (
+                          <span className="font-mono">{a.old_value ?? 0} ← {a.new_value ?? 0}</span>
+                        ) : (
+                          <Badge variant="secondary">{a.action === "close" ? "סגירת חודש" : "פתיחת חודש"}</Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {new Date(a.created_at).toLocaleString("he-IL")} · {a.changed_by_email || "משתמש לא ידוע"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
