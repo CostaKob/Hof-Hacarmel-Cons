@@ -215,7 +215,7 @@ const AdminSalaryReport = () => {
   const { data: ensembleStaff } = useQuery({
     queryKey: ["salary-ensemble-staff"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("ensemble_staff").select("teacher_id, role, weekly_hours, ensembles!inner(ensemble_type, is_active)");
+      const { data, error } = await supabase.from("ensemble_staff").select("teacher_id, role, weekly_hours, ensembles!inner(ensemble_type, is_active, ensemble_students(students(grade)))");
       if (error) throw error;
       return (data ?? []).filter((s: any) => s.ensembles?.is_active);
     },
