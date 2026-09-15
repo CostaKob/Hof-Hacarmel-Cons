@@ -474,6 +474,16 @@ const AdminSalaryReport = () => {
     upsertOverride.mutate({ teacherId, field, value, teacherName, oldValue: Number(currentStored) || 0 });
   }, [upsertOverride, rows, isClosed]);
 
+  // --- Notes (saved with the monthly snapshot) ---
+  const [notes, setNotes] = useState("");
+  const notesLoadedFor = useRef<string>("");
+  useEffect(() => {
+    const k = `${monthKey}|${scope}`;
+    if (notesLoadedFor.current === k) return;
+    notesLoadedFor.current = k;
+    setNotes(((snapshot as any)?.notes as string) ?? "");
+  }, [monthKey, scope, snapshot]);
+
   // --- Autosave draft snapshot (so the same table returns on any computer) ---
   const saveSnapshot = useCallback(async (status: "draft" | "closed") => {
     const payload: any = {
@@ -482,6 +492,7 @@ const AdminSalaryReport = () => {
       status,
       rows: liveRows as any,
       totals: totals as any,
+      notes,
       updated_by: user?.id ?? null,
       updated_at: new Date().toISOString(),
     };
