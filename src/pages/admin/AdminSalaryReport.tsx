@@ -767,6 +767,8 @@ const AdminSalaryReport = () => {
         return { w, h };
       };
 
+      // Ensure web fonts are loaded before measuring, so the fit loop sees real metrics
+      await document.fonts.ready;
       let fontSize = 10;
       const dbg: Array<{ F: number; w: number; h: number }> = [];
       for (let F = 40; F >= 10; F--) {
