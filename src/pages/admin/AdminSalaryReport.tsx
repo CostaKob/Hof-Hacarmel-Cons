@@ -1030,7 +1030,7 @@ const AdminSalaryReport = () => {
                   <thead>
                     <tr className="bg-muted">
                       <th colSpan={GROUPS.length + 2} className="p-2 text-center font-bold border-b border-border">
-                        סה״כ עלות מעביד{scope === "employees" ? " (שכר + 35%, נסיעות ללא תוספת)" : " (עצמאיים — ללא תוספת)"}
+                        סה״כ עלות מעביד
                       </th>
                     </tr>
                     <tr className="bg-muted/60">
