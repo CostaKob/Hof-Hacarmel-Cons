@@ -736,6 +736,29 @@ const AdminSalaryReport = () => {
               קובץ לשידור למועצה
             </Button>
           )}
+          {generated && (
+            <Button variant="outline" className="rounded-xl gap-2" onClick={() => setHistoryOpen(true)}>
+              <History className="h-4 w-4" />
+              היסטוריית שינויים
+            </Button>
+          )}
+          {generated && (
+            isClosed ? (
+              <Button variant="outline" className="rounded-xl gap-2" onClick={() => {
+                if (window.confirm("לפתוח מחדש את החודש לעריכה?")) reopenMonth.mutate();
+              }}>
+                <Unlock className="h-4 w-4" />
+                פתח חודש מחדש
+              </Button>
+            ) : (
+              <Button variant="secondary" className="rounded-xl gap-2" onClick={() => {
+                if (window.confirm("לסגור את החודש? הטבלה תישמר כפי שהיא כעת ולא תשתנה יותר.")) closeMonth.mutate();
+              }} disabled={closeMonth.isPending}>
+                {closeMonth.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                סגור חודש ושמור
+              </Button>
+            )
+          )}
 
           <div className="flex items-center gap-2 mr-auto">
             <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
