@@ -79,6 +79,8 @@ export type RateStatus = "good" | "medium" | "bad" | "unknown";
 export function getMonthlyRate(totalLessons: number, startDate: string | null | undefined): { rate: number; status: RateStatus } {
   if (!startDate) return { rate: 0, status: "unknown" };
   const start = new Date(startDate);
+  // תאריך התחלה ביולי/אוגוסט נחשב כספטמבר (תחילת שנת הלימודים)
+  if (start.getMonth() === 6 || start.getMonth() === 7) start.setMonth(8, 1);
   const today = new Date();
   let monthsPassed =
     (today.getFullYear() - start.getFullYear()) * 12 +
