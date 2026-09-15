@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from "react";
+import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -111,15 +111,34 @@ function calcTravel(km: number) {
   return Math.round(km * KM_RATE * 100) / 100;
 }
 
+const VIEW_STORAGE_KEY = "salary-report-view";
+
+function loadSavedView(): { year?: number; month?: number; generated?: boolean; freelancers?: boolean } {
+  try {
+    return JSON.parse(localStorage.getItem(VIEW_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
 const AdminSalaryReport = () => {
   const now = new Date();
-  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
-  const [generated, setGenerated] = useState(false);
+  const saved = useRef(loadSavedView()).current;
+  const [selectedYear, setSelectedYear] = useState(saved.year ?? now.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(saved.month ?? now.getMonth());
+  const [generated, setGenerated] = useState(saved.generated ?? false);
   const [exporting, setExporting] = useState(false);
-  const [showFreelancers, setShowFreelancers] = useState(false);
+  const [showFreelancers, setShowFreelancers] = useState(saved.freelancers ?? false);
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+
+  // Remember the last view so returning to the page restores it
+  useEffect(() => {
+    localStorage.setItem(
+      VIEW_STORAGE_KEY,
+      JSON.stringify({ year: selectedYear, month: selectedMonth, generated, freelancers: showFreelancers })
+    );
+  }, [selectedYear, selectedMonth, generated, showFreelancers]);
 
   const monthKey = buildMonthKey(selectedYear, selectedMonth);
 
@@ -555,7 +574,7 @@ const AdminSalaryReport = () => {
   const fmt = (n: number) => n ? `₪${n.toLocaleString("he-IL")}` : "–";
 
   return (
-    <AdminLayout title="דוח משכורות" backPath="/admin/exports">
+    <AdminLayout title="דוח משכורות" backPath="/admin/exports" fullWidth>
       <PageTitle title="דוח משכורת" />
       <div className="space-y-6">
         {/* Controls */}
@@ -609,9 +628,9 @@ const AdminSalaryReport = () => {
                 דוח משכורות — {MONTH_NAMES[selectedMonth]} {selectedYear}
               </h2>
 
-              <div className="relative w-full overflow-auto border rounded-xl">
+              <div className="relative w-full overflow-auto border rounded-xl max-h-[calc(100vh-240px)]">
                 <table className="w-full text-sm border-collapse" dir="rtl">
-                  <thead>
+                  <thead className="[&>tr>th]:sticky [&>tr>th]:z-20 [&>tr:first-child>th]:top-0 [&>tr:nth-child(2)>th]:top-[37px] [&>tr>th]:bg-muted">
                     {/* Group headers */}
                     <tr className="bg-muted/70">
                       <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border w-8">#</th>
