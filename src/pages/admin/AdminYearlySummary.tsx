@@ -84,10 +84,8 @@ const AdminYearlySummary = () => {
       });
   }, [enrollments, lines]);
 
-  const startedStudentNames = useMemo(() => {
-    // A student who already had a lesson in any instrument counts as started
-    return new Set(rows.filter((r) => r.totalLessons > 0).map((r) => r.studentName));
-  }, [rows]);
+  // "התחיל ללמוד" נקבע לכל שיוך בנפרד (מורה/כלי), לא ברמת התלמיד
+  const hasStartedRow = (r: EnrollmentSummaryRow) => r.totalLessons > 0;
 
   const baseFiltered = useMemo(() => {
     return rows
