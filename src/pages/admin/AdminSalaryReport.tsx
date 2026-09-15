@@ -410,6 +410,18 @@ const AdminSalaryReport = () => {
     return { ...t, totalSalary, totalTravel };
   }, [rows]);
 
+  // --- Employer cost summary (salary +35%, travel without addition) ---
+  const employerFactor = scope === "employees" ? EMPLOYER_FACTOR : 1;
+  const costSummary = useMemo(() => {
+    const groups = GROUPS.map((g) => {
+      const base = g.fields.reduce((s, f) => s + (totals as any)[f] * (RATES[f] || 0), 0);
+      return { key: g.key, label: g.label, base, cost: Math.round(base * employerFactor * 100) / 100 };
+    });
+    const travel = Math.round(totals.totalTravel * 100) / 100;
+    const total = Math.round((groups.reduce((s, g) => s + g.cost, 0) + travel) * 100) / 100;
+    return { groups, travel, total };
+  }, [totals, employerFactor]);
+
   // --- Save override ---
   const upsertOverride = useMutation({
     mutationFn: async ({ teacherId, field, value, teacherName, oldValue }: { teacherId: string; field: FieldKey; value: number; teacherName: string; oldValue: number }) => {
