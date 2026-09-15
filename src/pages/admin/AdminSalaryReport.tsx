@@ -401,7 +401,7 @@ const AdminSalaryReport = () => {
 
   // --- Save override ---
   const upsertOverride = useMutation({
-    mutationFn: async ({ teacherId, field, value, teacherName }: { teacherId: string; field: FieldKey; value: number; teacherName: string }) => {
+    mutationFn: async ({ teacherId, field, value, teacherName, oldValue }: { teacherId: string; field: FieldKey; value: number; teacherName: string; oldValue: number }) => {
       const existing = (manualEntries ?? []).find((e) => e.teacher_id === teacherId);
       if (existing) {
         const prev = (existing.overrides as Record<string, number>) ?? {};
@@ -415,16 +415,29 @@ const AdminSalaryReport = () => {
           .insert({ teacher_id: teacherId, month_key: monthKey, overrides: { [field]: value } });
         if (error) throw error;
       }
+      await supabase.from("salary_audit_log").insert({
+        month_key: monthKey,
+        teacher_id: teacherId,
+        teacher_name: teacherName,
+        field: FIELD_LABELS[field] ?? field,
+        old_value: oldValue,
+        new_value: value,
+        action: "edit",
+        changed_by: user?.id ?? null,
+        changed_by_email: user?.email ?? null,
+      });
       return { teacherName, value };
     },
     onSuccess: ({ teacherName, value }) => {
       queryClient.invalidateQueries({ queryKey: ["salary-manual", monthKey] });
+      queryClient.invalidateQueries({ queryKey: ["salary-audit", monthKey] });
       toast.success(`נשמר: ${teacherName} — ${value}`, { duration: 2000 });
     },
     onError: (err: any) => toast.error(err.message),
   });
 
   const handleChange = useCallback((teacherId: string, field: FieldKey, raw: string) => {
+    if (isClosed) return;
     const value = parseFloat(raw) || 0;
     const row = rows.find((r) => r.teacherId === teacherId);
     if (!row) return;
@@ -432,11 +445,77 @@ const AdminSalaryReport = () => {
     const currentStored = row.values[field] ?? 0;
     if (Number(currentStored) === value) return;
     const teacherName = `${row.firstName} ${row.lastName}`.trim();
-    if (!window.confirm(`לשמור שינוי עבור ${teacherName}?\n${field}: ${currentStored || 0} ← ${value}`)) {
+    if (!window.confirm(`לשמור שינוי עבור ${teacherName}?\n${FIELD_LABELS[field] ?? field}: ${currentStored || 0} ← ${value}`)) {
       return;
     }
-    upsertOverride.mutate({ teacherId, field, value, teacherName });
-  }, [upsertOverride, rows]);
+    upsertOverride.mutate({ teacherId, field, value, teacherName, oldValue: Number(currentStored) || 0 });
+  }, [upsertOverride, rows, isClosed]);
+
+  // --- Autosave draft snapshot (so the same table returns on any computer) ---
+  const saveSnapshot = useCallback(async (status: "draft" | "closed") => {
+    const payload: any = {
+      month_key: monthKey,
+      scope,
+      status,
+      rows: liveRows as any,
+      totals: totals as any,
+      updated_by: user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    };
+    if (status === "closed") {
+      payload.closed_at = new Date().toISOString();
+      payload.closed_by = user?.id ?? null;
+    }
+    const { error } = await supabase
+      .from("salary_month_snapshots")
+      .upsert(payload, { onConflict: "month_key,scope" });
+    if (error) throw error;
+  }, [monthKey, scope, liveRows, totals, user?.id]);
+
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  useEffect(() => {
+    if (!generated || isClosed || !liveRows.length) return;
+    const timer = setTimeout(() => {
+      saveSnapshot("draft").then(() => setSavedAt(new Date())).catch(() => {});
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [generated, isClosed, liveRows, totals, saveSnapshot]);
+
+  const closeMonth = useMutation({
+    mutationFn: async () => {
+      await saveSnapshot("closed");
+      await supabase.from("salary_audit_log").insert({
+        month_key: monthKey, field: "חודש", action: "close",
+        changed_by: user?.id ?? null, changed_by_email: user?.email ?? null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["salary-snapshot", monthKey, scope] });
+      queryClient.invalidateQueries({ queryKey: ["salary-audit", monthKey] });
+      toast.success("החודש נסגר ונשמר");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const reopenMonth = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("salary_month_snapshots")
+        .update({ status: "draft", closed_at: null, closed_by: null })
+        .eq("month_key", monthKey).eq("scope", scope);
+      if (error) throw error;
+      await supabase.from("salary_audit_log").insert({
+        month_key: monthKey, field: "חודש", action: "reopen",
+        changed_by: user?.id ?? null, changed_by_email: user?.email ?? null,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["salary-snapshot", monthKey, scope] });
+      queryClient.invalidateQueries({ queryKey: ["salary-audit", monthKey] });
+      toast.success("החודש נפתח מחדש");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
 
   // --- Council broadcast file (קובץ לשידור) ---
   const handleExportCouncil = async () => {
