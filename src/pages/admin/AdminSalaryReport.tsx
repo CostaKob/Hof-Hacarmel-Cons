@@ -1008,7 +1008,7 @@ const AdminSalaryReport = () => {
                           <td className="p-2 text-right whitespace-nowrap font-mono text-xs border-l border-border">{r.nationalId}</td>
                           {/* Private lessons */}
                           {(["lessons_45", "lessons_30", "lessons_60"] as FieldKey[]).map((key, ki) => (
-                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-blue-50/30 dark:bg-blue-950/10 ${ki === 2 ? "border-l border-border" : ""}`}>
+                          <td key={key} className={`p-1 text-center whitespace-nowrap ${zebraTint("blue", idx)} ${ki === 2 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
                                 onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
@@ -1016,7 +1016,7 @@ const AdminSalaryReport = () => {
                           ))}
                           {/* Ensembles */}
                           {(["small_ensemble", "large_ensemble", "branch_coord", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] as FieldKey[]).map((key, ki) => (
-                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 5 ? "border-l border-border" : ""}`}>
+                          <td key={key} className={`p-1 text-center whitespace-nowrap ${zebraTint("violet", idx)} ${ki === 5 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
                                 onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
@@ -1024,7 +1024,7 @@ const AdminSalaryReport = () => {
                           ))}
                           {/* School music */}
                           {(["school_music_group", "school_music_coord"] as FieldKey[]).map((key, ki) => (
-                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-emerald-50/30 dark:bg-emerald-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
+                          <td key={key} className={`p-1 text-center whitespace-nowrap ${zebraTint("emerald", idx)} ${ki === 1 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
                                 onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
@@ -1032,14 +1032,14 @@ const AdminSalaryReport = () => {
                           ))}
                           {/* Activity */}
                           {(["activity_days", "single_hours"] as FieldKey[]).map((key, ki) => (
-                            <td key={key} className={`p-1 text-center whitespace-nowrap bg-amber-50/30 dark:bg-amber-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
+                          <td key={key} className={`p-1 text-center whitespace-nowrap ${zebraTint("amber", idx)} ${ki === 1 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
                                 onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* KM */}
-                          <td className="p-1 text-center whitespace-nowrap bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">
+                          <td className={`p-1 text-center whitespace-nowrap ${zebraTint("sky", idx)} border-l border-border`}>
                             <Input type="number" min={0} step="any" className="w-20 h-8 text-center mx-auto rounded-lg text-sm"
                               defaultValue={r.values.km || ""} placeholder={r.defaults.km ? String(r.defaults.km) : "0"}
                               onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} disabled={isClosed} />
