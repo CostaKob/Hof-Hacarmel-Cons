@@ -226,6 +226,40 @@ const AdminSalaryReport = () => {
     },
   });
 
+  const scope = showFreelancers ? "freelancers" : "employees";
+
+  // Saved monthly snapshot (draft = autosave, closed = locked)
+  const { data: snapshot } = useQuery({
+    queryKey: ["salary-snapshot", monthKey, scope],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("salary_month_snapshots")
+        .select("*")
+        .eq("month_key", monthKey)
+        .eq("scope", scope)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const isClosed = snapshot?.status === "closed";
+
+  const { data: auditLog } = useQuery({
+    queryKey: ["salary-audit", monthKey],
+    enabled: historyOpen,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("salary_audit_log")
+        .select("*")
+        .eq("month_key", monthKey)
+        .order("created_at", { ascending: false })
+        .limit(300);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   // --- Build system defaults ---
   const systemDefaults = useMemo(() => {
     if (!teachers) return new Map<string, Record<FieldKey, number>>();
