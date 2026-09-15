@@ -311,11 +311,23 @@ const AdminSalaryReport = () => {
       }
     }
 
-    // School music groups: classes count
+    // School music groups: per teacher+school — sum weekly_hours if set,
+    // otherwise count the school's classes_count ONCE (not per group row).
+    const smPerSchool = new Map<string, { teacherId: string; hours: number; classesCount: number }>();
     for (const g of schoolMusicGroups ?? []) {
-      const d = map.get(g.teacher_id);
+      const key = `${g.teacher_id}|${(g as any).school_music_school_id}`;
+      const entry = smPerSchool.get(key) ?? {
+        teacherId: g.teacher_id,
+        hours: 0,
+        classesCount: (g as any).school_music_schools?.classes_count ?? 0,
+      };
+      entry.hours += (g as any).weekly_hours ?? 0;
+      smPerSchool.set(key, entry);
+    }
+    for (const entry of smPerSchool.values()) {
+      const d = map.get(entry.teacherId);
       if (!d) continue;
-      d.school_music_group += (g as any).weekly_hours ?? (g as any).school_music_schools?.classes_count ?? 0;
+      d.school_music_group += entry.hours > 0 ? entry.hours : entry.classesCount;
     }
     // Coordinators/conductors
     for (const sms of schoolMusicSchools ?? []) {
