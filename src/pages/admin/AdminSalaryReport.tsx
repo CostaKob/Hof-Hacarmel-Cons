@@ -683,8 +683,10 @@ const AdminSalaryReport = () => {
       // and the data font can be as large as possible.
       const buildHtml = (F: number) => {
         const hFont = Math.max(9, Math.round(F * 0.72));
-        const cellStyle = `border:1px solid #aaa;padding:2px 3px;text-align:center;font-size:${F}px;line-height:1.2;white-space:nowrap;`;
-        const headerStyle = `border:1px solid #aaa;padding:2px 4px;text-align:center;font-size:${hFont}px;line-height:1.2;font-weight:bold;background:#e8e8e8;`;
+        // NOTE: never set line-height here — html2canvas misaligns text rows when
+        // line-height is explicitly set (strikethrough effect). Use normal + padding.
+        const cellStyle = `border:1px solid #aaa;padding:3px 3px;text-align:center;font-size:${F}px;white-space:nowrap;`;
+        const headerStyle = `border:1px solid #aaa;padding:3px 4px;text-align:center;font-size:${hFont}px;font-weight:bold;background:#e8e8e8;`;
 
         let html = `<div dir="rtl" style="font-family:Arial,sans-serif;width:max-content;">`;
         // Logo header — required on every printable form
