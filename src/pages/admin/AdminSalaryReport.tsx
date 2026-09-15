@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -33,6 +34,17 @@ const RATES: Record<string, number> = {
   activity_days: 600, single_hours: 75,
 };
 const KM_RATE = 1.1;
+// Employer cost adds 35% on top of salary (travel is excluded)
+const EMPLOYER_FACTOR = 1.35;
+
+const GROUPS: { key: string; label: string; fields: string[] }[] = [
+  { key: "private", label: "פרטנית", fields: ["lessons_45", "lessons_30", "lessons_60"] },
+  { key: "ensembles", label: "הרכבים", fields: ["small_ensemble", "large_ensemble", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] },
+  { key: "coord", label: "ריכוז", fields: ["branch_coord"] },
+  { key: "school_music", label: "בי״ס מנגן", fields: ["school_music_group", "school_music_coord"] },
+  { key: "activity_days", label: "ימי פעילות", fields: ["activity_days"] },
+  { key: "single_hours", label: "שעות פעילות", fields: ["single_hours"] },
+];
 
 // --- Council broadcast file (קובץ לשידור למועצה) ---
 const EVENT_NUMBER = 90226;
@@ -399,6 +411,18 @@ const AdminSalaryReport = () => {
     return { ...t, totalSalary, totalTravel };
   }, [rows]);
 
+  // --- Employer cost summary (salary +35%, travel without addition) ---
+  const employerFactor = scope === "employees" ? EMPLOYER_FACTOR : 1;
+  const costSummary = useMemo(() => {
+    const groups = GROUPS.map((g) => {
+      const base = g.fields.reduce((s, f) => s + (totals as any)[f] * (RATES[f] || 0), 0);
+      return { key: g.key, label: g.label, base, cost: Math.round(base * employerFactor * 100) / 100 };
+    });
+    const travel = Math.round(totals.totalTravel * 100) / 100;
+    const total = Math.round((groups.reduce((s, g) => s + g.cost, 0) + travel) * 100) / 100;
+    return { groups, travel, total };
+  }, [totals, employerFactor]);
+
   // --- Save override ---
   const upsertOverride = useMutation({
     mutationFn: async ({ teacherId, field, value, teacherName, oldValue }: { teacherId: string; field: FieldKey; value: number; teacherName: string; oldValue: number }) => {
@@ -451,6 +475,16 @@ const AdminSalaryReport = () => {
     upsertOverride.mutate({ teacherId, field, value, teacherName, oldValue: Number(currentStored) || 0 });
   }, [upsertOverride, rows, isClosed]);
 
+  // --- Notes (saved with the monthly snapshot) ---
+  const [notes, setNotes] = useState("");
+  const notesLoadedFor = useRef<string>("");
+  useEffect(() => {
+    const k = `${monthKey}|${scope}`;
+    if (notesLoadedFor.current === k) return;
+    notesLoadedFor.current = k;
+    setNotes(((snapshot as any)?.notes as string) ?? "");
+  }, [monthKey, scope, snapshot]);
+
   // --- Autosave draft snapshot (so the same table returns on any computer) ---
   const saveSnapshot = useCallback(async (status: "draft" | "closed") => {
     const payload: any = {
@@ -459,6 +493,7 @@ const AdminSalaryReport = () => {
       status,
       rows: liveRows as any,
       totals: totals as any,
+      notes,
       updated_by: user?.id ?? null,
       updated_at: new Date().toISOString(),
     };
@@ -470,7 +505,7 @@ const AdminSalaryReport = () => {
       .from("salary_month_snapshots")
       .upsert(payload, { onConflict: "month_key,scope" });
     if (error) throw error;
-  }, [monthKey, scope, liveRows, totals, user?.id]);
+  }, [monthKey, scope, liveRows, totals, notes, user?.id]);
 
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   useEffect(() => {
@@ -479,7 +514,22 @@ const AdminSalaryReport = () => {
       saveSnapshot("draft").then(() => setSavedAt(new Date())).catch(() => {});
     }, 1500);
     return () => clearTimeout(timer);
-  }, [generated, isClosed, liveRows, totals, saveSnapshot]);
+  }, [generated, isClosed, liveRows, totals, notes, saveSnapshot]);
+
+  // Notes stay editable even when the month is closed
+  const [notesSavedAt, setNotesSavedAt] = useState<Date | null>(null);
+  useEffect(() => {
+    if (!generated || !isClosed) return;
+    const timer = setTimeout(async () => {
+      const { error } = await supabase
+        .from("salary_month_snapshots")
+        .update({ notes })
+        .eq("month_key", monthKey)
+        .eq("scope", scope);
+      if (!error) setNotesSavedAt(new Date());
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [notes, generated, isClosed, monthKey, scope]);
 
   const closeMonth = useMutation({
     mutationFn: async () => {
@@ -960,6 +1010,65 @@ const AdminSalaryReport = () => {
                     </tr>
                   </tfoot>
                 </table>
+              </div>
+
+              {/* --- סה״כ עלות מעביד --- */}
+              <div className="mt-4 overflow-x-auto rounded-xl border border-border">
+                <table className="w-full text-sm border-collapse" dir="rtl">
+                  <thead>
+                    <tr className="bg-muted">
+                      <th colSpan={GROUPS.length + 2} className="p-2 text-center font-bold border-b border-border">
+                        סה״כ עלות מעביד{scope === "employees" ? " (שכר + 35%, נסיעות ללא תוספת)" : " (עצמאיים — ללא תוספת)"}
+                      </th>
+                    </tr>
+                    <tr className="bg-muted/60">
+                      {costSummary.groups.map((g) => (
+                        <th key={g.key} className="p-2 text-center font-semibold border-b border-l border-border whitespace-nowrap">{g.label}</th>
+                      ))}
+                      <th className="p-2 text-center font-semibold border-b border-l border-border whitespace-nowrap">נסיעות</th>
+                      <th className="p-2 text-center font-semibold border-b border-border whitespace-nowrap">סה״כ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {costSummary.groups.map((g) => (
+                        <td key={g.key} className="p-2 text-center border-l border-border whitespace-nowrap">{fmt(g.cost)}</td>
+                      ))}
+                      <td className="p-2 text-center border-l border-border whitespace-nowrap">{fmt(costSummary.travel)}</td>
+                      <td className="p-2 text-center font-bold bg-primary/10 whitespace-nowrap">{fmt(costSummary.total)}</td>
+                    </tr>
+                    <tr className="text-xs text-muted-foreground">
+                      {costSummary.groups.map((g) => (
+                        <td key={g.key} className="px-2 pb-2 text-center border-l border-border whitespace-nowrap">שכר {fmt(g.base)}</td>
+                      ))}
+                      <td className="px-2 pb-2 text-center border-l border-border">—</td>
+                      <td className="px-2 pb-2 text-center">
+                        {MONTH_NAMES[selectedMonth]} {selectedYear}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* --- הערות --- */}
+              <div className="mt-4 rounded-xl border border-border p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <Label className="font-semibold">הערות {MONTH_NAMES[selectedMonth]} {selectedYear}</Label>
+                  {(isClosed ? notesSavedAt : savedAt) && (
+                    <Badge variant="outline" className="gap-1">
+                      <Check className="h-3 w-3" />
+                      נשמר
+                    </Badge>
+                  )}
+                </div>
+                <Textarea
+                  dir="rtl"
+                  rows={4}
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="הערות לחודש — לדוגמה: מורן בראון +2 בפרטני"
+                  className="rounded-xl"
+                />
               </div>
             </div>
           </>
