@@ -687,8 +687,10 @@ const AdminSalaryReport = () => {
         // line-height is explicitly set (strikethrough effect). Use normal + padding.
         // Padding scales with F so the table's height/width aspect stays constant —
         // this lets the fit loop choose a large font instead of collapsing to 10px.
+        // Headers are nowrap: single-line headers widen the table (helping the
+        // height/width ratio) instead of stacking wrapped lines.
         const cellStyle = `border:1px solid #aaa;padding:${Math.max(1, Math.round(F * 0.05))}px 3px;text-align:center;font-size:${F}px;white-space:nowrap;`;
-        const headerStyle = `border:1px solid #aaa;padding:${Math.max(1, Math.round(F * 0.05))}px 4px;text-align:center;font-size:${hFont}px;font-weight:bold;background:#e8e8e8;`;
+        const headerStyle = `border:1px solid #aaa;padding:${Math.max(1, Math.round(F * 0.05))}px 4px;text-align:center;font-size:${hFont}px;font-weight:bold;background:#e8e8e8;white-space:nowrap;`;
 
         let html = `<div dir="rtl" style="font-family:Arial,sans-serif;width:max-content;">`;
         // Logo header — required on every printable form (compact single line)
