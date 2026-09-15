@@ -61,7 +61,8 @@ const EXPECTED_MONTHS_MAP: Record<number, number> = {
 export function getExpectedLessons(startDate: string | null | undefined): number {
   if (!startDate) return 32;
   const month = new Date(startDate).getMonth() + 1;
-  const months = EXPECTED_MONTHS_MAP[month] ?? 0;
+  // חודשים שמחוץ לשנת הלימודים (יולי/אוגוסט) נחשבים כתחילת שנה מלאה
+  const months = EXPECTED_MONTHS_MAP[month] ?? 10;
   return Math.round(months * 3.2);
 }
 
@@ -78,6 +79,8 @@ export type RateStatus = "good" | "medium" | "bad" | "unknown";
 export function getMonthlyRate(totalLessons: number, startDate: string | null | undefined): { rate: number; status: RateStatus } {
   if (!startDate) return { rate: 0, status: "unknown" };
   const start = new Date(startDate);
+  // תאריך התחלה ביולי/אוגוסט נחשב כספטמבר (תחילת שנת הלימודים)
+  if (start.getMonth() === 6 || start.getMonth() === 7) start.setMonth(8, 1);
   const today = new Date();
   let monthsPassed =
     (today.getFullYear() - start.getFullYear()) * 12 +
