@@ -964,6 +964,38 @@ const AdminSalaryReport = () => {
             </div>
           </>
         )}
+
+        <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+          <DialogContent className="max-w-2xl" dir="rtl">
+            <DialogHeader>
+              <DialogTitle>היסטוריית שינויים — {MONTH_NAMES[selectedMonth]} {selectedYear}</DialogTitle>
+            </DialogHeader>
+            <ScrollArea className="max-h-[60vh] pl-3">
+              {!auditLog?.length ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">אין שינויים רשומים לחודש זה</p>
+              ) : (
+                <ul className="space-y-2">
+                  {auditLog.map((a: any) => (
+                    <li key={a.id} className="rounded-xl border p-3 text-sm">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-medium">{a.teacher_name || "—"}</span>
+                        <span className="text-muted-foreground">{a.field}</span>
+                        {a.action === "edit" ? (
+                          <span className="font-mono">{a.old_value ?? 0} ← {a.new_value ?? 0}</span>
+                        ) : (
+                          <Badge variant="secondary">{a.action === "close" ? "סגירת חודש" : "פתיחת חודש"}</Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        {new Date(a.created_at).toLocaleString("he-IL")} · {a.changed_by_email || "משתמש לא ידוע"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </ScrollArea>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
