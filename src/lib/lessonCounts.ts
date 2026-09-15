@@ -61,7 +61,8 @@ const EXPECTED_MONTHS_MAP: Record<number, number> = {
 export function getExpectedLessons(startDate: string | null | undefined): number {
   if (!startDate) return 32;
   const month = new Date(startDate).getMonth() + 1;
-  const months = EXPECTED_MONTHS_MAP[month] ?? 0;
+  // חודשים שמחוץ לשנת הלימודים (יולי/אוגוסט) נחשבים כתחילת שנה מלאה
+  const months = EXPECTED_MONTHS_MAP[month] ?? 10;
   return Math.round(months * 3.2);
 }
 
