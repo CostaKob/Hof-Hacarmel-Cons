@@ -1,0 +1,1 @@
+ALTER TABLE public.salary_month_snapshots ADD COLUMN IF NOT EXISTS notes text;

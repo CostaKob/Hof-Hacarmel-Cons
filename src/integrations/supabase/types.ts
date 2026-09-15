@@ -2175,6 +2175,7 @@ export type Database = {
           created_at: string
           id: string
           month_key: string
+          notes: string | null
           rows: Json
           scope: string
           status: string
@@ -2188,6 +2189,7 @@ export type Database = {
           created_at?: string
           id?: string
           month_key: string
+          notes?: string | null
           rows?: Json
           scope?: string
           status?: string
@@ -2201,6 +2203,7 @@ export type Database = {
           created_at?: string
           id?: string
           month_key?: string
+          notes?: string | null
           rows?: Json
           scope?: string
           status?: string
