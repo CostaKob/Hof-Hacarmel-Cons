@@ -372,7 +372,7 @@ const AdminSalaryReport = () => {
   }, [upsertOverride, rows]);
 
   // --- Council broadcast file (קובץ לשידור) ---
-  const handleExportCouncil = async (alsoPdf = false) => {
+  const handleExportCouncil = async () => {
     try {
       const XLSX = await import("xlsx");
       const start = new Date(selectedYear, selectedMonth, 1);
@@ -408,7 +408,6 @@ const AdminSalaryReport = () => {
       XLSX.utils.book_append_sheet(wb, ws, "קובץ לשידור");
       XLSX.writeFile(wb, `קובץ_לשידור_${String(selectedMonth + 1).padStart(2, "0")}-${String(selectedYear).slice(2)}.xlsx`);
       toast.success(`${data.length - 1} שורות יוצאו לשידור`);
-      if (alsoPdf) await handleExportPdf();
     } catch (err: any) {
       toast.error(err.message || "שגיאה בייצוא");
     }
@@ -586,15 +585,9 @@ const AdminSalaryReport = () => {
             </Button>
           )}
           {generated && (
-            <Button variant="outline" className="rounded-xl gap-2" onClick={() => handleExportCouncil(false)}>
+            <Button variant="outline" className="rounded-xl gap-2" onClick={handleExportCouncil}>
               <FileSpreadsheet className="h-4 w-4" />
               קובץ לשידור למועצה
-            </Button>
-          )}
-          {generated && (
-            <Button className="rounded-xl gap-2" onClick={() => handleExportCouncil(true)} disabled={exporting}>
-              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-              שידור + PDF לבדיקה
             </Button>
           )}
 
