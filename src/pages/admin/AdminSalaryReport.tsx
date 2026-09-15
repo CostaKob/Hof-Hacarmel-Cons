@@ -695,8 +695,8 @@ const AdminSalaryReport = () => {
         let html = `<div dir="rtl" style="font-family:Arial,sans-serif;width:max-content;">`;
         // Logo header — required on every printable form (compact single line)
         html += `<div style="display:flex;align-items:center;justify-content:center;gap:${Math.round(F / 2)}px;margin-bottom:${Math.round(F / 3)}px;">`;
-        if (logoDataUrl) html += `<img src="${logoDataUrl}" style="height:${Math.round(F * 1.1)}px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
-        html += `<div style="font-size:${F}px;font-weight:bold;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</div>`;
+        if (logoDataUrl) html += `<img src="${logoDataUrl}" style="height:${Math.round(F * 0.9)}px;width:auto;object-fit:contain;" alt="לוגו האולפן" />`;
+        html += `<div style="font-size:${hFont}px;font-weight:bold;">דוח משכורות — ${MONTH_NAMES[selectedMonth]} ${selectedYear}</div>`;
         html += `<div style="font-size:${hFont}px;color:#666;">אולפן ומגמת המוסיקה חוף הכרמל</div>`;
         html += `</div>`;
         html += `<table style="border-collapse:collapse;">`;
