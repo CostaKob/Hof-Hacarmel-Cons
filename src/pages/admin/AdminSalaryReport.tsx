@@ -504,7 +504,7 @@ const AdminSalaryReport = () => {
       .from("salary_month_snapshots")
       .upsert(payload, { onConflict: "month_key,scope" });
     if (error) throw error;
-  }, [monthKey, scope, liveRows, totals, user?.id]);
+  }, [monthKey, scope, liveRows, totals, notes, user?.id]);
 
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   useEffect(() => {
@@ -513,7 +513,22 @@ const AdminSalaryReport = () => {
       saveSnapshot("draft").then(() => setSavedAt(new Date())).catch(() => {});
     }, 1500);
     return () => clearTimeout(timer);
-  }, [generated, isClosed, liveRows, totals, saveSnapshot]);
+  }, [generated, isClosed, liveRows, totals, notes, saveSnapshot]);
+
+  // Notes stay editable even when the month is closed
+  const [notesSavedAt, setNotesSavedAt] = useState<Date | null>(null);
+  useEffect(() => {
+    if (!generated || !isClosed) return;
+    const timer = setTimeout(async () => {
+      const { error } = await supabase
+        .from("salary_month_snapshots")
+        .update({ notes })
+        .eq("month_key", monthKey)
+        .eq("scope", scope);
+      if (!error) setNotesSavedAt(new Date());
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [notes, generated, isClosed, monthKey, scope]);
 
   const closeMonth = useMutation({
     mutationFn: async () => {
