@@ -819,7 +819,7 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-blue-50/30 dark:bg-blue-950/10 ${ki === 2 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* Ensembles */}
@@ -827,7 +827,7 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-violet-50/30 dark:bg-violet-950/10 ${ki === 5 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* School music */}
@@ -835,7 +835,7 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-emerald-50/30 dark:bg-emerald-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* Activity */}
@@ -843,14 +843,14 @@ const AdminSalaryReport = () => {
                             <td key={key} className={`p-1 text-center whitespace-nowrap bg-amber-50/30 dark:bg-amber-950/10 ${ki === 1 ? "border-l border-border" : ""}`}>
                               <Input type="number" min={0} step="any" className="w-16 h-8 text-center mx-auto rounded-lg text-sm"
                                 defaultValue={r.values[key] || ""} placeholder={r.defaults[key] ? String(r.defaults[key]) : "0"}
-                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} />
+                                onBlur={(e) => handleChange(r.teacherId, key, e.target.value)} disabled={isClosed} />
                             </td>
                           ))}
                           {/* KM */}
                           <td className="p-1 text-center whitespace-nowrap bg-sky-50/30 dark:bg-sky-950/10 border-l border-border">
                             <Input type="number" min={0} step="any" className="w-20 h-8 text-center mx-auto rounded-lg text-sm"
                               defaultValue={r.values.km || ""} placeholder={r.defaults.km ? String(r.defaults.km) : "0"}
-                              onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} />
+                              onBlur={(e) => handleChange(r.teacherId, "km", e.target.value)} disabled={isClosed} />
                           </td>
                           {/* Summaries */}
                           <td className="p-2 text-center whitespace-nowrap font-bold bg-primary/5">{fmt(salary)}</td>
