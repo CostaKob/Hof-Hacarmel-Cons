@@ -335,7 +335,7 @@ const AdminSalaryReport = () => {
   }, [teachers, enrollments, ensembleStaff, schoolMusicGroups, schoolMusicSchools, branchCoordinators, prevMonthReports]);
 
   // --- Merge with manual overrides ---
-  const rows: TeacherRow[] = useMemo(() => {
+  const liveRows: TeacherRow[] = useMemo(() => {
     if (!teachers) return [];
     const manualMap = new Map<string, Record<string, number>>();
     for (const me of manualEntries ?? []) {
