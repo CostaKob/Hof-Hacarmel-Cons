@@ -685,8 +685,10 @@ const AdminSalaryReport = () => {
         const hFont = Math.max(9, Math.round(F * 0.72));
         // NOTE: never set line-height here — html2canvas misaligns text rows when
         // line-height is explicitly set (strikethrough effect). Use normal + padding.
-        const cellStyle = `border:1px solid #aaa;padding:0px 3px;text-align:center;font-size:${F}px;white-space:nowrap;`;
-        const headerStyle = `border:1px solid #aaa;padding:1px 4px;text-align:center;font-size:${hFont}px;font-weight:bold;background:#e8e8e8;`;
+        // Padding scales with F so the table's height/width aspect stays constant —
+        // this lets the fit loop choose a large font instead of collapsing to 10px.
+        const cellStyle = `border:1px solid #aaa;padding:${Math.max(1, Math.round(F * 0.05))}px 3px;text-align:center;font-size:${F}px;white-space:nowrap;`;
+        const headerStyle = `border:1px solid #aaa;padding:${Math.max(1, Math.round(F * 0.05))}px 4px;text-align:center;font-size:${hFont}px;font-weight:bold;background:#e8e8e8;`;
 
         let html = `<div dir="rtl" style="font-family:Arial,sans-serif;width:max-content;">`;
         // Logo header — required on every printable form (compact single line)
