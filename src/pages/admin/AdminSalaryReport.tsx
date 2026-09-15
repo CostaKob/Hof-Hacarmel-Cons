@@ -133,8 +133,10 @@ const AdminSalaryReport = () => {
   const [generated, setGenerated] = useState(saved.generated ?? false);
   const [exporting, setExporting] = useState(false);
   const [showFreelancers, setShowFreelancers] = useState(saved.freelancers ?? false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const tableRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   // Remember the last view so returning to the page restores it
   useEffect(() => {
