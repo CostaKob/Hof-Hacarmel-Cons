@@ -630,7 +630,7 @@ const AdminSalaryReport = () => {
 
               <div className="relative w-full overflow-auto border rounded-xl max-h-[calc(100vh-240px)]">
                 <table className="w-full text-sm border-collapse" dir="rtl">
-                  <thead>
+                  <thead className="[&>tr>th]:sticky [&>tr>th]:z-20 [&>tr:first-child>th]:top-0 [&>tr:nth-child(2)>th]:top-[37px] [&>tr>th]:bg-muted">
                     {/* Group headers */}
                     <tr className="bg-muted/70">
                       <th className="p-2 text-center font-bold whitespace-nowrap border-b border-l border-border w-8">#</th>
