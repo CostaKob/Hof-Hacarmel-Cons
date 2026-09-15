@@ -33,6 +33,17 @@ const RATES: Record<string, number> = {
   activity_days: 600, single_hours: 75,
 };
 const KM_RATE = 1.1;
+// Employer cost adds 35% on top of salary (travel is excluded)
+const EMPLOYER_FACTOR = 1.35;
+
+const GROUPS: { key: string; label: string; fields: string[] }[] = [
+  { key: "private", label: "פרטנית", fields: ["lessons_45", "lessons_30", "lessons_60"] },
+  { key: "ensembles", label: "הרכבים", fields: ["small_ensemble", "large_ensemble", "orchestra_conductor", "choir_conductor", "choir_accompaniment"] },
+  { key: "coord", label: "ריכוז", fields: ["branch_coord"] },
+  { key: "school_music", label: "בי״ס מנגן", fields: ["school_music_group", "school_music_coord"] },
+  { key: "activity_days", label: "ימי פעילות", fields: ["activity_days"] },
+  { key: "single_hours", label: "שעות פעילות", fields: ["single_hours"] },
+];
 
 // --- Council broadcast file (קובץ לשידור למועצה) ---
 const EVENT_NUMBER = 90226;
