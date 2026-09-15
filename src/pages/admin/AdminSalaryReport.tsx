@@ -103,6 +103,16 @@ const FIELD_LABELS: Record<FieldKey, string> = {
   km: "ק״מ",
 };
 
+/* פסי זברה בתוך קבוצות הצבע: שורה זוגית = גוון בהיר, שורה אי-זוגית = גוון כהה יותר */
+const GROUP_ZEBRA: Record<string, [string, string]> = {
+  blue: ["bg-blue-50/30 dark:bg-blue-900/15", "bg-blue-100/70 dark:bg-blue-950/40"],
+  violet: ["bg-violet-50/30 dark:bg-violet-900/15", "bg-violet-100/70 dark:bg-violet-950/40"],
+  emerald: ["bg-emerald-50/30 dark:bg-emerald-900/15", "bg-emerald-100/70 dark:bg-emerald-950/40"],
+  amber: ["bg-amber-50/30 dark:bg-amber-900/15", "bg-amber-100/70 dark:bg-amber-950/40"],
+  sky: ["bg-sky-50/30 dark:bg-sky-900/15", "bg-sky-100/70 dark:bg-sky-950/40"],
+};
+const zebraTint = (group: keyof typeof GROUP_ZEBRA, idx: number) => GROUP_ZEBRA[group][idx % 2];
+
 function buildMonthKey(year: number, month: number) {
   return `${year}-${String(month + 1).padStart(2, "0")}`;
 }
