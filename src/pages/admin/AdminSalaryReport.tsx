@@ -408,6 +408,7 @@ const AdminSalaryReport = () => {
       XLSX.utils.book_append_sheet(wb, ws, "קובץ לשידור");
       XLSX.writeFile(wb, `קובץ_לשידור_${String(selectedMonth + 1).padStart(2, "0")}-${String(selectedYear).slice(2)}.xlsx`);
       toast.success(`${data.length - 1} שורות יוצאו לשידור`);
+      if (alsoPdf) await handleExportPdf();
     } catch (err: any) {
       toast.error(err.message || "שגיאה בייצוא");
     }
