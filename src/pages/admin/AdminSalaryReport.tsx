@@ -584,6 +584,13 @@ const AdminSalaryReport = () => {
               ייצוא PDF
             </Button>
           )}
+          {generated && (
+            <Button variant="outline" className="rounded-xl gap-2" onClick={handleExportCouncil}>
+              <FileSpreadsheet className="h-4 w-4" />
+              קובץ לשידור למועצה
+            </Button>
+          )}
+
           <div className="flex items-center gap-2 mr-auto">
             <Switch id="show-freelancers" checked={showFreelancers} onCheckedChange={setShowFreelancers} />
             <Label htmlFor="show-freelancers" className="text-sm cursor-pointer">הצג רק עצמאיים</Label>
