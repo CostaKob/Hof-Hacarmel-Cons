@@ -574,7 +574,7 @@ const AdminSalaryReport = () => {
   const fmt = (n: number) => n ? `₪${n.toLocaleString("he-IL")}` : "–";
 
   return (
-    <AdminLayout title="דוח משכורות" backPath="/admin/exports">
+    <AdminLayout title="דוח משכורות" backPath="/admin/exports" fullWidth>
       <PageTitle title="דוח משכורת" />
       <div className="space-y-6">
         {/* Controls */}
