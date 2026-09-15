@@ -768,9 +768,23 @@ const AdminSalaryReport = () => {
 
         {generated && (
           <>
-            <p className="text-sm text-muted-foreground">
-              דוח משכורות ל{MONTH_NAMES[selectedMonth]} {selectedYear} · נסיעות לפי {MONTH_NAMES[new Date(selectedYear, selectedMonth - 1, 1).getMonth()]} {new Date(selectedYear, selectedMonth - 1, 1).getFullYear()}
-            </p>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>
+                דוח משכורות ל{MONTH_NAMES[selectedMonth]} {selectedYear} · נסיעות לפי {MONTH_NAMES[new Date(selectedYear, selectedMonth - 1, 1).getMonth()]} {new Date(selectedYear, selectedMonth - 1, 1).getFullYear()}
+              </span>
+              {isClosed ? (
+                <Badge variant="secondary" className="gap-1">
+                  <Lock className="h-3 w-3" />
+                  חודש סגור{snapshot?.closed_at ? ` · ${new Date(snapshot.closed_at).toLocaleDateString("he-IL")}` : ""}
+                </Badge>
+              ) : savedAt ? (
+                <Badge variant="outline" className="gap-1">
+                  <Check className="h-3 w-3" />
+                  נשמר {savedAt.toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                </Badge>
+              ) : null}
+            </div>
+
 
             <div ref={tableRef} className="bg-background">
               {/* PDF title (hidden on screen, visible in capture) */}
