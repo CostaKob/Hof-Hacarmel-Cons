@@ -328,15 +328,18 @@ const AdminSalaryReport = () => {
     for (const s of ensembleStaff ?? []) {
       const d = map.get(s.teacher_id);
       if (!d) continue;
-      const type = (s as any).ensembles?.ensemble_type as string;
-      const hours = Number(s.weekly_hours);
-      if (type === "small_ensemble" || type === "chamber_ensemble") d.small_ensemble += hours;
-      else if (type === "large_ensemble") d.large_ensemble += hours;
-      else if (type === "orchestra" || type === "big_band") d.orchestra_conductor += hours;
-      else if (type === "choir") {
+      const type = ((s as any).ensembles?.ensemble_type as string) ?? "";
+      const hours = Number(s.weekly_hours) || 0;
+      // תמיכה גם בסוגים הישנים וגם בסוגים החדשים (ייצוגי/צעיר)
+      const isChoir = type.includes("choir") || type.includes("vocal");
+      const isOrchestra = type.includes("orchestra") || type.includes("big_band");
+      const isSmall = type.includes("chamber") || type === "small_ensemble";
+      if (isChoir) {
         if (s.role === "conductor" || s.role === "instructor") d.choir_conductor += hours;
         else d.choir_accompaniment += hours;
-      }
+      } else if (isOrchestra) d.orchestra_conductor += hours;
+      else if (isSmall) d.small_ensemble += hours;
+      else d.large_ensemble += hours;
     }
 
     // School music groups: per teacher+school — sum weekly_hours if set,
