@@ -110,12 +110,12 @@ const AdminYearlySummary = () => {
 
   const filtered = useMemo(() => {
     return baseFiltered.filter((r) => {
-      const hasStarted = startedStudentNames.has(r.studentName);
+      const hasStarted = hasStartedRow(r);
       if (startedFilter === "started" && !hasStarted) return false;
       if (startedFilter === "not-started" && hasStarted) return false;
       return true;
     });
-  }, [baseFiltered, startedFilter, startedStudentNames]);
+  }, [baseFiltered, startedFilter]);
 
   const teacherOptions = useMemo(() => {
     const names = new Set(rows.map((r) => r.teacherName).filter(Boolean));
