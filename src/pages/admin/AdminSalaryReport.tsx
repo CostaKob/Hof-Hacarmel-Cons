@@ -586,9 +586,15 @@ const AdminSalaryReport = () => {
             </Button>
           )}
           {generated && (
-            <Button variant="outline" className="rounded-xl gap-2" onClick={handleExportCouncil}>
+            <Button variant="outline" className="rounded-xl gap-2" onClick={() => handleExportCouncil(false)}>
               <FileSpreadsheet className="h-4 w-4" />
               קובץ לשידור למועצה
+            </Button>
+          )}
+          {generated && (
+            <Button className="rounded-xl gap-2" onClick={() => handleExportCouncil(true)} disabled={exporting}>
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+              שידור + PDF לבדיקה
             </Button>
           )}
 
