@@ -90,33 +90,45 @@ const AdminInventoryInstrumentForm = () => {
     queryKey: ["loan-student-search", loanSearch],
     enabled: loanSearch.trim().length >= 2 && showAddLoan,
     queryFn: async () => {
-      const term = `%${loanSearch.trim()}%`;
+      const words = loanSearch.trim().split(/\s+/).filter(Boolean);
+      const first = `%${words[0]}%`;
       const [priv, sm] = await Promise.all([
         supabase
           .from("students")
           .select("id, first_name, last_name, national_id")
-          .or(`first_name.ilike.${term},last_name.ilike.${term},national_id.ilike.${term}`)
-          .limit(10),
+          .or(`first_name.ilike.${first},last_name.ilike.${first},national_id.ilike.${first}`)
+          .limit(50),
         supabase
           .from("school_music_students")
           .select("id, student_first_name, student_last_name, student_national_id")
           .or(
-            `student_first_name.ilike.${term},student_last_name.ilike.${term},student_national_id.ilike.${term}`,
+            `student_first_name.ilike.${first},student_last_name.ilike.${first},student_national_id.ilike.${first}`,
           )
-          .limit(10),
+          .limit(50),
       ]);
-      const list: { id: string; name: string; kind: "private" | "school_music" }[] = [];
+      const all: { id: string; name: string; nid: string; kind: "private" | "school_music" }[] = [];
       (priv.data || []).forEach((s: any) =>
-        list.push({ id: s.id, name: `${s.first_name || ""} ${s.last_name || ""}`.trim(), kind: "private" }),
+        all.push({
+          id: s.id,
+          name: `${s.first_name || ""} ${s.last_name || ""}`.trim(),
+          nid: s.national_id || "",
+          kind: "private",
+        }),
       );
       (sm.data || []).forEach((s: any) =>
-        list.push({
+        all.push({
           id: s.id,
           name: `${s.student_first_name || ""} ${s.student_last_name || ""}`.trim(),
+          nid: s.student_national_id || "",
           kind: "school_music",
         }),
       );
-      return list;
+      // every word must appear somewhere in the full name / id (handles "גב הרמן")
+      const matches = all.filter((s) => {
+        const hay = `${s.name} ${s.nid}`.toLowerCase();
+        return words.every((w) => hay.includes(w.toLowerCase()));
+      });
+      return matches.slice(0, 20).map(({ id, name, kind }) => ({ id, name, kind }));
     },
   });
 
@@ -134,9 +146,11 @@ const AdminInventoryInstrumentForm = () => {
       if (!newReturnDate) {
         const { error: updErr } = await supabase
           .from("inventory_instruments")
-          .update({ condition: "loaned" })
+          .update({ condition: "loaned", storage_location_id: null })
           .eq("id", id!);
         if (updErr) throw updErr;
+        setValue("condition", "loaned", { shouldDirty: false });
+        setValue("storage_location_id", null, { shouldDirty: false });
       }
     },
     onSuccess: () => {
