@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import type { RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
+import { logOperation } from "@/lib/operationsLog";
 
 const TEMPLATE_KEY = "bank-refund-letter-template-v2";
 const MAIN_MSG_KEY = "bank-refund-main-message-v2";
