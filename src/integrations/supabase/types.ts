@@ -1471,6 +1471,39 @@ export type Database = {
           },
         ]
       }
+      operations_log: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          details: string | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          title: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          title: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          details?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          title?: string
+        }
+        Relationships: []
+      }
       parents: {
         Row: {
           created_at: string
