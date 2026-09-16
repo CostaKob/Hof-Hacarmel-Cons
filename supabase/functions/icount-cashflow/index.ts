@@ -309,6 +309,8 @@ Deno.serve(async (req: Request) => {
         if (dn) cancelledDocNums.add(dn);
       }
     }
+    // Fully voided transactions net to zero as well — never flag them as gaps.
+    for (const dn of voidedDocNums) cancelledDocNums.add(dn);
 
     let rows: Omit<Row, "source">[] = [];
     const unparsed: string[] = [];
