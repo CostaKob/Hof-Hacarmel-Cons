@@ -79,6 +79,42 @@ const toHebrewYear = (name?: string | null) =>
 const fmt = (n: number) =>
   `₪${n.toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
+/**
+ * A family payment split between several children creates one DB row per child for the
+ * SAME physical cheque. In the family payments view we want the real money: one line per
+ * physical cheque (number + due date), with the per-child split shown as a detail.
+ */
+export interface MergedCheque {
+  key: string;
+  ids: string[];
+  parts: any[];
+  head: any;
+  amount: number;
+}
+
+const mergeChequeRows = (rows: any[]): MergedCheque[] => {
+  const map = new Map<string, MergedCheque>();
+  const order: MergedCheque[] = [];
+  for (const r of rows) {
+    const ref = String(r.reference_number ?? "").trim();
+    const k =
+      isCheckMethod(r.payment_method) && ref
+        ? `chk:${ref}|${String(r.payment_date ?? "").slice(0, 10)}`
+        : `row:${r.id}`;
+    let e = map.get(k);
+    if (!e) {
+      e = { key: k, ids: [], parts: [], head: r, amount: 0 };
+      map.set(k, e);
+      order.push(e);
+    }
+    e.ids.push(r.id);
+    e.parts.push(r);
+    e.amount = Math.round((e.amount + Math.abs(Number(r.amount || 0))) * 100) / 100;
+  }
+  return order;
+};
+
+
 const AdminFamilyCard = () => {
   const { parentNationalId: raw } = useParams();
   const parentNationalId = raw ? decodeURIComponent(raw) : "";
