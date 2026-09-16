@@ -115,6 +115,21 @@ export default function VoidTransactionDialog({
         notes: `${note} — הזיכוי הופק ידנית באייקאונט`,
       } as any);
       if (error) throw error;
+      await logOperation({
+        category: "ביטול עסקה",
+        title: `${target.studentName ?? "תלמיד"} — ביטול ידני ${fmt(target.amount)}`,
+        details: `הזיכוי הופק ידנית באייקאונט ונרשם במערכת${manualDoc.trim() ? ` (קבלת זיכוי ${manualDoc.trim()})` : ""}. סיבה: ${finalReason}.${target.docNumber ? ` קבלה מקורית ${target.docNumber}.` : ""}`,
+        metadata: {
+          mode: "manual",
+          payment_id: target.paymentId,
+          student_id: target.studentId,
+          amount: target.amount,
+          payment_method: target.paymentMethod,
+          source_doc: target.docNumber,
+          credit_doc: manualDoc.trim() || null,
+          reason: finalReason,
+        },
+      });
       return null;
     },
     onSuccess: (data: any) => {
