@@ -1285,28 +1285,33 @@ const AdminFamilyCard = () => {
 
                     {isGroup && isExpanded && (() => {
                       const today = new Date().toISOString().slice(0, 10);
-                      const selectedIds = rows
-                        .filter((r: any) => selectedCheques[r.id])
-                        .map((r: any) => r.id);
-                      const selectedSum = rows
-                        .filter((r: any) => selectedCheques[r.id])
-                        .reduce((s: number, r: any) => s + Math.abs(Number(r.amount || 0)), 0);
+                      const merged = mergeChequeRows(rows);
+                      const selectedMerged = merged.filter((m) => selectedCheques[m.key]);
+                      const selectedIds = selectedMerged.flatMap((m) => m.ids);
+                      const selectedSum = selectedMerged.reduce((s, m) => s + m.amount, 0);
                       return (
                       <div className="border-t border-border px-3 py-2 space-y-1">
-                        {rows.map((r: any, idx: number) => {
+                        {merged.map((m, idx: number) => {
+                          const r = m.head;
                           const rRefunded = payments
-                            .filter((x: any) => x.refund_of_payment_id === r.id)
+                            .filter((x: any) => m.ids.includes(x.refund_of_payment_id))
                             .reduce((s: number, x: any) => s + Math.abs(Number(x.amount || 0)), 0);
-                          const rRemaining = Math.max(0, Number(r.amount || 0) - rRefunded);
                           const rIsCheck = isCheckMethod(r.payment_method);
                           const cStatus: string = r.cheque_status ?? "pending";
                           const isCancelled = cStatus === "cancelled";
                           const isCleared = cStatus === "cleared";
                           const isDue = !isCleared && !isCancelled && String(r.payment_date) <= today;
                           const canSelect = rIsCheck && !isCredit && hasDoc && !isCancelled && !isCleared;
+                          const isSplit = m.parts.length > 1;
+                          const busyIds = (chequeStatusMutation.variables as any)?.id;
+                          const statusBusy = chequeStatusMutation.isPending &&
+                            Array.isArray(busyIds) && busyIds[0] === m.ids[0];
+                          const delVars = deleteRowMutation.variables as any;
+                          const delBusy = deleteRowMutation.isPending &&
+                            Array.isArray(delVars) && delVars[0] === m.ids[0];
                           return (
                             <div
-                              key={r.id}
+                              key={m.key}
                               onClick={() => { setEditingPayment(r); setFamilyCtx(null); setPaymentDialogOpen(true); }}
                               className={`flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs cursor-pointer hover:bg-muted/50 ${isCancelled ? "opacity-60" : ""}`}
                             >
@@ -1314,9 +1319,9 @@ const AdminFamilyCard = () => {
                                 {canSelect && (
                                   <span onClick={(e) => e.stopPropagation()} className="pt-0.5">
                                     <Checkbox
-                                      checked={!!selectedCheques[r.id]}
+                                      checked={!!selectedCheques[m.key]}
                                       onCheckedChange={(v) =>
-                                        setSelectedCheques((s) => ({ ...s, [r.id]: !!v }))
+                                        setSelectedCheques((s) => ({ ...s, [m.key]: !!v }))
                                       }
                                     />
                                   </span>
@@ -1341,8 +1346,16 @@ const AdminFamilyCard = () => {
                                         {isCancelled ? "בוטל" : isCleared ? "נפרע" : isDue ? "אמור להיפרע" : "עתידי"}
                                       </span>
                                     )}
-                                    {!isGroup && rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
+                                    {rRefunded > 0 && <span className="text-amber-700">זוכה {fmt(rRefunded)}</span>}
                                   </div>
+                                  {isSplit && (
+                                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                                      חלוקה פנימית: {m.parts
+                                        .map((part: any) =>
+                                          `${part.student_id ? nameById.get(part.student_id) ?? "" : ""} ${fmt(Math.abs(Number(part.amount || 0)))}`.trim())
+                                        .join(" · ")}
+                                    </p>
+                                  )}
                                   {r.notes && <p className="text-[11px] text-muted-foreground mt-0.5">{r.notes}</p>}
                                 </div>
                               </div>
@@ -1353,10 +1366,10 @@ const AdminFamilyCard = () => {
                                     title={isCleared ? "בטל סימון פירעון" : "סמן כנפרע"}
                                     disabled={chequeStatusMutation.isPending}
                                     onClick={() => chequeStatusMutation.mutate({
-                                      id: r.id,
+                                      id: m.ids,
                                       status: isCleared ? "pending" : "cleared",
                                     })}>
-                                    {chequeStatusMutation.isPending && (chequeStatusMutation.variables as any)?.id === r.id
+                                    {statusBusy
                                       ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                       : <CheckCircle2 className="h-3.5 w-3.5" />}
                                   </Button>
@@ -1366,18 +1379,18 @@ const AdminFamilyCard = () => {
                                   disabled={deleteRowMutation.isPending}
                                   onClick={() => {
                                     if (confirm(rIsCheck
-                                      ? `למחוק את שורת הצ׳ק ${r.reference_number ?? ""} על סך ${fmt(Number(r.amount || 0))}? לא ייווצר מסמך זיכוי. לביטול חשבונאי תקין יש לסמן את הצ׳ק ולהשתמש ב"בטל צ׳קים שנבחרו".`
-                                      : `לבטל שורה זו על סך ${fmt(Number(r.amount || 0))}?`)) {
-                                      deleteRowMutation.mutate(r.id);
+                                      ? `למחוק את הצ׳ק ${r.reference_number ?? ""} על סך ${fmt(m.amount)}? לא ייווצר מסמך זיכוי. לביטול חשבונאי תקין יש לסמן את הצ׳ק ולהשתמש ב"בטל צ׳קים שנבחרו".`
+                                      : `לבטל שורה זו על סך ${fmt(m.amount)}?`)) {
+                                      deleteRowMutation.mutate(m.ids);
                                     }
                                   }}>
-                                  {deleteRowMutation.isPending && deleteRowMutation.variables === r.id
+                                  {delBusy
                                     ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                     : <Trash2 className="h-3.5 w-3.5" />}
                                 </Button>
 
                                 <span className="font-semibold text-foreground whitespace-nowrap" dir="ltr">
-                                  {fmt(Math.abs(Number(r.amount || 0)))}
+                                  {fmt(m.amount)}
                                 </span>
                               </div>
                             </div>
@@ -1385,10 +1398,10 @@ const AdminFamilyCard = () => {
                         })}
 
                         {(() => {
-                          const cleared = rows.filter((r: any) => r.cheque_status === "cleared");
-                          const cancelled = rows.filter((r: any) => r.cheque_status === "cancelled");
-                          const open = rows.filter((r: any) => (r.cheque_status ?? "pending") === "pending");
-                          const sum = (a: any[]) => a.reduce((s, r) => s + Math.abs(Number(r.amount || 0)), 0);
+                          const cleared = merged.filter((m) => m.head.cheque_status === "cleared");
+                          const cancelled = merged.filter((m) => m.head.cheque_status === "cancelled");
+                          const open = merged.filter((m) => (m.head.cheque_status ?? "pending") === "pending");
+                          const sum = (a: MergedCheque[]) => a.reduce((s, m) => s + m.amount, 0);
                           return (
                             <div className="pt-2 mt-1 border-t border-border flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
                               <span>סה״כ עסקה <b className="text-foreground">{fmt(groupTotal)}</b></span>
@@ -1403,6 +1416,7 @@ const AdminFamilyCard = () => {
                             </div>
                           );
                         })()}
+
 
                         {selectedIds.length > 0 && (
                           <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg bg-muted/60 p-2">
