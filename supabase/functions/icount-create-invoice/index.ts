@@ -217,11 +217,29 @@ Deno.serve(async (req: Request) => {
       const desc = buildItemDescription(ref);
       mergedItems.set(desc, (mergedItems.get(desc) ?? 0) + Number(ref.amount || 0));
     }
+const round2 = (n: number) => Math.round(n * 100) / 100;
     const items = [...mergedItems.entries()].map(([description, amount]) => ({
       description,
-      unitprice_incvat: sign * amount,
+      unitprice_incvat: round2(sign * amount),
       quantity: 1,
     }));
+
+    // Make sure the items total matches the paid total exactly — otherwise iCount
+    // rejects the document ("יש הפרש בין הסכום לתשלום והסכום ששולם").
+    const paidTotal = round2(sign * Math.abs(payments.reduce((s, p) => s + Number(p.amount || 0), 0)));
+    if (items.length > 0) {
+      const itemsTotal = round2(items.reduce((s, i) => s + i.unitprice_incvat, 0));
+      const diff = round2(paidTotal - itemsTotal);
+      if (diff !== 0) {
+        // Apply the rounding remainder to the largest-magnitude line.
+        let idx = 0;
+        for (let i = 1; i < items.length; i++) {
+          if (Math.abs(items[i].unitprice_incvat) > Math.abs(items[idx].unitprice_incvat)) idx = i;
+        }
+        items[idx].unitprice_incvat = round2(items[idx].unitprice_incvat + diff);
+      }
+    }
+
 
 
     // iCount doc/create payload — RECEIPT (קבלה) only. For credits — קבלה במינוס.
