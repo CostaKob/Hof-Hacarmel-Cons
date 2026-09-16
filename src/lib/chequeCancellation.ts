@@ -84,9 +84,35 @@ export interface WithdrawalLetterParams {
   contact?: string;
 }
 
+/**
+ * A family payment split between several children produces one DB row per child
+ * for the SAME physical cheque. The letter must list the physical cheque once,
+ * with the full amount the bank will actually see.
+ */
+export function mergePhysicalCheques(items: ChequeLetterItem[]): ChequeLetterItem[] {
+  const out: ChequeLetterItem[] = [];
+  const byKey = new Map<string, ChequeLetterItem>();
+  for (const i of items) {
+    const key = `${(i.chequeNumber || "").trim()}|${(i.dueDate || "").slice(0, 10)}|${i.bank}|${i.branch}|${i.account}`;
+    if (!i.chequeNumber) { out.push({ ...i }); continue; }
+    const prev = byKey.get(key);
+    if (!prev) {
+      const copy = { ...i };
+      byKey.set(key, copy);
+      out.push(copy);
+      continue;
+    }
+    prev.amount = Math.round((prev.amount + i.amount) * 100) / 100;
+    const names = new Set([...(prev.studentName || "").split(" · ").filter(Boolean), ...(i.studentName ? [i.studentName] : [])]);
+    prev.studentName = [...names].join(" · ");
+  }
+  return out;
+}
+
 export function buildChequeWithdrawalLetterHtml(p: WithdrawalLetterParams): string {
-  const total = p.items.reduce((s, i) => s + i.amount, 0);
-  const rows = p.items
+  const items = mergePhysicalCheques(p.items);
+  const total = items.reduce((s, i) => s + i.amount, 0);
+  const rows = items
     .map(
       (i, idx) => `<tr>
       <td>${idx + 1}</td>
@@ -101,6 +127,7 @@ export function buildChequeWithdrawalLetterHtml(p: WithdrawalLetterParams): stri
     </tr>`,
     )
     .join("");
+
 
   return `<!DOCTYPE html><html dir="rtl" lang="he"><head><meta charset="utf-8">
 <title>בקשה למשיכת צ׳קים</title>
@@ -223,7 +250,7 @@ export async function createChequeWithdrawalRequest(p: CreateRequestParams) {
         student_id: p.studentId ?? null,
         academic_year_id: p.academicYearId ?? null,
         doc_type: "cheque_withdrawal_letter",
-        title: `בקשה למשיכת ${p.items.length} צ׳קים — ${p.parentName || ""}`.trim(),
+        title: `בקשה למשיכת ${mergePhysicalCheques(p.items).length} צ׳קים — ${p.parentName || ""}`.trim(),
         parent_name: p.parentName || null,
         refund_amount: total,
         content_html: html,
