@@ -264,7 +264,7 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
     };
 
     // Payment line(s) — total amount across all rows (signed for credits).
-    const signedTotal = sign * Math.abs(totalAmount);
+    const signedTotal = round2(sign * Math.abs(totalAmount));
     if (pm.type === 1) {
       payload.cash = { sum: signedTotal };
     } else if (pm.type === 3) {
