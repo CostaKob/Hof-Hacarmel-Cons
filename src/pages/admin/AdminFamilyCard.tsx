@@ -1421,7 +1421,7 @@ const AdminFamilyCard = () => {
                         {selectedIds.length > 0 && (
                           <div className="mt-2 flex flex-col sm:flex-row sm:items-center gap-2 rounded-lg bg-muted/60 p-2">
                             <span className="text-[11px] text-muted-foreground flex-1">
-                              נבחרו {selectedIds.length} צ׳קים · {fmt(selectedSum)} — ייפתח תהליך משיכה מהבנק עם מכתב להנהלת החשבונות
+                              נבחרו {selectedMerged.length} צ׳קים · {fmt(selectedSum)} — ייפתח תהליך משיכה מהבנק עם מכתב להנהלת החשבונות
                             </span>
                             <div className="flex gap-2">
                               <Button variant="ghost" size="sm" className="h-8 rounded-lg text-xs"
