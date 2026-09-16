@@ -261,11 +261,20 @@ const SchoolMusicRegister = () => {
   });
 
   const instruments = (() => {
-    const seen = new Set<string>();
-    return classGroups
-      .map((g: any) => g.instruments)
-      .filter((i: any) => i && !seen.has(i.id) && seen.add(i.id))
-      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+    const byId = new Map<string, { id: string; name: string; teacherNames: Set<string> }>();
+    for (const g of classGroups as any[]) {
+      if (!g.instruments) continue;
+      let entry = byId.get(g.instruments.id);
+      if (!entry) {
+        entry = { id: g.instruments.id, name: g.instruments.name, teacherNames: new Set() };
+        byId.set(g.instruments.id, entry);
+      }
+      const fullName = [g.teachers?.first_name, g.teachers?.last_name].filter(Boolean).join(" ").trim();
+      if (fullName) entry.teacherNames.add(fullName);
+    }
+    return [...byId.values()]
+      .map((e) => ({ id: e.id, name: e.name, teacherLabel: [...e.teacherNames].join(" / ") }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   })();
 
   const validateField = useCallback((key: string, value: string): string | null => {
@@ -679,7 +688,9 @@ const SchoolMusicRegister = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {instruments.map((i: any) => (
-                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}{i.teacherLabel ? ` - ${i.teacherLabel}` : ""}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
