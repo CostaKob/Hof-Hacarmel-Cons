@@ -322,7 +322,8 @@ Deno.serve(async (req: Request) => {
       if (p.icount_doc_id) studentKeys.add(String(p.icount_doc_id));
       if (p.icount_doc_number) {
         studentKeys.add(String(p.icount_doc_number));
-        if (!isExcludedDoc(String(p.icount_doc_number)) && !isSystemIgnoredDoc(String(p.icount_doc_number))) {
+        if (!isExcludedDoc(String(p.icount_doc_number)) && !isSystemIgnoredDoc(String(p.icount_doc_number)) &&
+            !voidedDocNums.has(String(p.icount_doc_number))) {
           addSystem(String(p.icount_doc_number), Number(p.amount) || 0, "students");
         }
       }
