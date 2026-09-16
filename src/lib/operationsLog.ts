@@ -1,11 +1,48 @@
 // יומן פעולות חריגות — גלוי רק לבעלי תפקיד "owner" (גישה מלאה: קוסטין, עמיר, קורין).
 // ההרשאה נשלטת בטבלת user_roles במסד הנתונים, לא ברשימה קשיחה בקוד.
+//
+// רשומות חדשות נרשמות אוטומטית לטבלת operations_log דרך logOperation().
+// המערך הסטטי למטה הוא תיעוד היסטורי בלבד (לפני שהיומן הפך לאוטומטי).
+
+import { supabase } from "@/integrations/supabase/client";
+
+export type OperationsCategory =
+  | "ביטול עסקה"
+  | "תיקון באג"
+  | "מנגנון מיוחד"
+  | "סנכרון תשלומים"
+  | "החזר כספי";
 
 export interface OperationsLogEntry {
   date: string;
   title: string;
   details: string;
-  category: "ביטול עסקה" | "תיקון באג" | "מנגנון מיוחד" | "סנכרון תשלומים";
+  category: OperationsCategory | string;
+}
+
+/**
+ * רישום אוטומטי של פעולה חריגה ביומן. לא זורק שגיאה — כישלון רישום
+ * לעולם לא יפיל את הפעולה העסקית עצמה.
+ */
+export async function logOperation(params: {
+  category: OperationsCategory;
+  title: string;
+  details?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const { error } = await supabase.from("operations_log").insert({
+      category: params.category,
+      title: params.title,
+      details: params.details ?? null,
+      metadata: (params.metadata ?? {}) as any,
+      created_by: auth?.user?.id ?? null,
+    } as any);
+    if (error) console.warn("[operations log]", error.message);
+  } catch (e) {
+    console.warn("[operations log]", e);
+  }
 }
 
 export const OPERATIONS_LOG: OperationsLogEntry[] = [

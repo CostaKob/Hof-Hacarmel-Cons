@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Loader2, Ban } from "lucide-react";
+import { logOperation } from "@/lib/operationsLog";
 
 export type VoidTarget = {
   paymentId: string;
@@ -81,6 +82,20 @@ export default function VoidTransactionDialog({
             });
         if (error) throw error;
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+        await logOperation({
+          category: "ביטול עסקה",
+          title: `${target.studentName ?? "תלמיד"} — ביטול עסקה ${fmt(target.amount)}`,
+          details: `ביטול אוטומטי דרך המערכת (${isCard ? "זיכוי בכרטיס אשראי דרך הסליקה" : "קבלת זיכוי"}). סיבה: ${finalReason}.${target.docNumber ? ` קבלה מקורית ${target.docNumber}.` : ""}`,
+          metadata: {
+            mode: "auto",
+            payment_id: target.paymentId,
+            student_id: target.studentId,
+            amount: target.amount,
+            payment_method: target.paymentMethod,
+            source_doc: target.docNumber,
+            reason: finalReason,
+          },
+        });
         return data;
       }
 
@@ -101,6 +116,21 @@ export default function VoidTransactionDialog({
         notes: `${note} — הזיכוי הופק ידנית באייקאונט`,
       } as any);
       if (error) throw error;
+      await logOperation({
+        category: "ביטול עסקה",
+        title: `${target.studentName ?? "תלמיד"} — ביטול ידני ${fmt(target.amount)}`,
+        details: `הזיכוי הופק ידנית באייקאונט ונרשם במערכת${manualDoc.trim() ? ` (קבלת זיכוי ${manualDoc.trim()})` : ""}. סיבה: ${finalReason}.${target.docNumber ? ` קבלה מקורית ${target.docNumber}.` : ""}`,
+        metadata: {
+          mode: "manual",
+          payment_id: target.paymentId,
+          student_id: target.studentId,
+          amount: target.amount,
+          payment_method: target.paymentMethod,
+          source_doc: target.docNumber,
+          credit_doc: manualDoc.trim() || null,
+          reason: finalReason,
+        },
+      });
       return null;
     },
     onSuccess: (data: any) => {

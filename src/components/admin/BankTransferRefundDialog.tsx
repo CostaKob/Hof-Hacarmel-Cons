@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { useAppLogo } from "@/hooks/useAppLogo";
 import type { RefundSuccessInfo } from "@/components/admin/RefundSuccessDialog";
+import { logOperation } from "@/lib/operationsLog";
 
 const TEMPLATE_KEY = "bank-refund-letter-template-v2";
 const MAIN_MSG_KEY = "bank-refund-main-message-v2";
@@ -376,6 +377,20 @@ ${summaryHtml}
       });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      await logOperation({
+        category: "החזר כספי",
+        title: `החזר בהעברה בנקאית ₪${Number(refundAmount || 0).toLocaleString()}${accountOwner ? ` — ${accountOwner}` : ""}`,
+        details: `הופקה קבלת זיכוי והוזן החזר בהעברה בנקאית${reference ? ` (אסמכתא ${reference})` : ""}${transferDate ? ` בתאריך ${transferDate}` : ""}.${notes ? ` הערה: ${notes}` : ""}`,
+        metadata: {
+          payment_id: defaults!.paymentId,
+          amount: Number(refundAmount),
+          refund_method: "bank_transfer",
+          reference,
+          transfer_date: transferDate,
+          account_owner: accountOwner,
+          doc_number: data?.doc_number ?? null,
+        },
+      });
       return data;
     },
     onSuccess: (data: any) => {

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logOperation } from "@/lib/operationsLog";
 import { format } from "date-fns";
 import UnifyParentDetailsDialog from "@/components/admin/UnifyParentDetailsDialog";
 import FamilyNotesSection from "@/components/admin/FamilyNotesSection";
@@ -461,6 +462,14 @@ const AdminFamilyCard = () => {
       const { data, error } = await supabase.functions.invoke(fn, { body });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      await logOperation({
+        category: "החזר כספי",
+        title: `זיכוי ₪${Number(amount).toLocaleString()} בכרטיס משפחה`,
+        details: isCc
+          ? "זיכוי בוצע בכרטיס האשראי דרך הסליקה, כולל קבלת זיכוי."
+          : "הופקה קבלת זיכוי (ללא זיכוי בכרטיס).",
+        metadata: { payment_id: paymentId, amount, is_credit_card: isCc, doc_number: data?.doc_number ?? null },
+      });
       return data;
     },
     onSuccess: (data: any, vars) => {
