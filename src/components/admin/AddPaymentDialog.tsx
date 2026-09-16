@@ -497,7 +497,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const sibs = paymentItems.filter((x) => x.studentId === it.studentId);
       const totalDue = sibs.reduce((s, x) => s + x.defaultAmount, 0);
       if (totalDue <= 0) return it;
-      const remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
+      let remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
+      // Agorot-level leftovers from proportional splits are not a real debt.
+      if (remaining < 1) remaining = 0;
       const scale = Math.min(1, remaining / totalDue);
       return { ...it, defaultAmount: Math.round(it.defaultAmount * scale * 100) / 100 };
     });
