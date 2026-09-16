@@ -250,7 +250,7 @@ export async function createChequeWithdrawalRequest(p: CreateRequestParams) {
         student_id: p.studentId ?? null,
         academic_year_id: p.academicYearId ?? null,
         doc_type: "cheque_withdrawal_letter",
-        title: `בקשה למשיכת ${p.items.length} צ׳קים — ${p.parentName || ""}`.trim(),
+        title: `בקשה למשיכת ${mergePhysicalCheques(p.items).length} צ׳קים — ${p.parentName || ""}`.trim(),
         parent_name: p.parentName || null,
         refund_amount: total,
         content_html: html,
