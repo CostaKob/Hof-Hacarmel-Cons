@@ -250,13 +250,55 @@ Deno.serve(async (req: Request) => {
     }
 
 
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // A transaction that was voided in full (credit note covering the whole charge)
+    // never really happened: keep BOTH the original receipt and its credit note out
+    // of the cashflow, otherwise the charge is spread over future installments while
+    // the credit lands in a single month.
+    const voidedDocNums = new Set<string>();
+    {
+      const { data: credits, error: creditsErr } = await supabase
+        .from("student_payments")
+        .select("amount,icount_doc_number,refund_of_payment_id")
+        .eq("transaction_type", "credit")
+        .not("refund_of_payment_id", "is", null);
+      if (creditsErr) {
+        warnings.push(`בדיקת עסקאות מבוטלות נכשלה: ${creditsErr.message}`);
+      } else if (credits?.length) {
+        const originalIds = [...new Set(credits.map((c: any) => c.refund_of_payment_id))];
+        const { data: originals } = await supabase
+          .from("student_payments")
+          .select("id,amount,icount_doc_number")
+          .in("id", originalIds);
+        const byId = new Map((originals ?? []).map((o: any) => [o.id, o]));
+        const creditedByOriginal = new Map<string, number>();
+        for (const c of credits as any[]) {
+          const prev = creditedByOriginal.get(c.refund_of_payment_id) ?? 0;
+          creditedByOriginal.set(c.refund_of_payment_id, prev + Math.abs(Number(c.amount) || 0));
+        }
+        for (const [originalId, credited] of creditedByOriginal) {
+          const orig: any = byId.get(originalId);
+          if (!orig) continue;
+          const origAmount = Math.abs(Number(orig.amount) || 0);
+          if (!origAmount || credited < origAmount - 0.5) continue; // partial refund stays in the report
+          if (orig.icount_doc_number) voidedDocNums.add(String(orig.icount_doc_number).trim());
+          for (const c of credits as any[]) {
+            if (c.refund_of_payment_id === originalId && c.icount_doc_number) {
+              voidedDocNums.add(String(c.icount_doc_number).trim());
+            }
+          }
+        }
+      }
+    }
+
     // doc/search with detail_level 10 already returns the payment breakdown.
     // Cancelled documents are real-world reversals and must not be counted.
     // Legacy test documents (up to the cutoff) are excluded permanently.
     const details = list.filter((d) => {
       const dn = String(d.docnum ?? d.doc_number ?? "").trim();
       return !Number(d.is_cancelled) && !Number(d.is_cancellation) &&
-        !isExcludedDoc(dn);
+        !isExcludedDoc(dn) && !voidedDocNums.has(dn);
     });
     // Cancelled documents and their cancellation receipts net to zero and are
     // intentionally excluded from the cashflow — don't report them as gaps.
