@@ -473,10 +473,11 @@ const AdminFamilyCard = () => {
     onError: (e: any) => toast.error(`שגיאה בזיכוי: ${e?.message ?? ""}`),
   });
 
-  // Delete a single row (e.g. cancel one cheque out of a spread).
+  // Delete a row (or all DB rows of one physical cheque split between children).
   const deleteRowMutation = useMutation({
-    mutationFn: async (paymentId: string) => {
-      const { error } = await supabase.from("student_payments").delete().eq("id", paymentId);
+    mutationFn: async (paymentId: string | string[]) => {
+      const ids = Array.isArray(paymentId) ? paymentId : [paymentId];
+      const { error } = await supabase.from("student_payments").delete().in("id", ids);
       if (error) throw error;
     },
     onSuccess: () => { invalidateFamily(); toast.success("השורה בוטלה"); },
@@ -485,19 +486,21 @@ const AdminFamilyCard = () => {
 
   // Mark a cheque as cleared / not cleared (manual override on top of the date-based hint).
   const chequeStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: "pending" | "cleared" }) => {
+    mutationFn: async ({ id, status }: { id: string | string[]; status: "pending" | "cleared" }) => {
+      const ids = Array.isArray(id) ? id : [id];
       const { error } = await supabase
         .from("student_payments")
         .update({
           cheque_status: status,
           cheque_cleared_at: status === "cleared" ? new Date().toISOString().slice(0, 10) : null,
         } as any)
-        .eq("id", id);
+        .in("id", ids);
       if (error) throw error;
     },
     onSuccess: () => invalidateFamily(),
     onError: (e: any) => toast.error(`שגיאה בעדכון: ${e?.message ?? ""}`),
   });
+
 
   // Stage 1 of the cheque cancellation process: a withdrawal request + a letter to
   // the bookkeeping office. No iCount document is created here.
