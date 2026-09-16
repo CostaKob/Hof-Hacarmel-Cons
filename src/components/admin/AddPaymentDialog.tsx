@@ -443,9 +443,18 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     [paymentItems],
   );
 
-  const { data: priorPayments = [], isFetched: priorPaymentsFetched } = useQuery({
+  const {
+    data: priorPayments = [],
+    isFetched: priorPaymentsFetchedRaw,
+    isFetching: priorPaymentsFetching,
+  } = useQuery({
     queryKey: ["addpay-prior-payments", academicYearId, itemStudentIds],
     enabled: open && !!academicYearId && itemStudentIds.length > 0,
+    // Always hit the server when the dialog opens: a cached snapshot from
+    // before the last payment would pre-fill amounts that were already paid.
+    refetchOnMount: "always",
+    staleTime: 0,
+    gcTime: 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_payments")
@@ -456,6 +465,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       return (data ?? []) as any[];
     },
   });
+  const priorPaymentsFetched = priorPaymentsFetchedRaw && !priorPaymentsFetching;
 
   // paymentItems with defaultAmount scaled down to the remaining balance per child.
   const displayItems: PaymentItem[] = useMemo(() => {
