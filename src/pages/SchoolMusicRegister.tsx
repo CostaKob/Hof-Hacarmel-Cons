@@ -688,7 +688,9 @@ const SchoolMusicRegister = () => {
                 </SelectTrigger>
                 <SelectContent>
                   {instruments.map((i: any) => (
-                    <SelectItem key={i.id} value={i.id}>{i.name}</SelectItem>
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}{i.teacherLabel ? ` - ${i.teacherLabel}` : ""}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
