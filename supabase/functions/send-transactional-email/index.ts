@@ -92,6 +92,8 @@ Deno.serve(async (req) => {
   let messageId: string
   let templateData: Record<string, any> = {}
   let replyTo: string | null = null
+  let logLabel: string | null = null
+  let logMetadata: Record<string, any> | null = null
   try {
     const body = await req.json()
     templateName = body.templateName || body.template_name
@@ -99,6 +101,10 @@ Deno.serve(async (req) => {
     messageId = body.messageId || body.message_id || body.idempotencyKey || body.idempotency_key || crypto.randomUUID()
     idempotencyKey = body.idempotencyKey || body.idempotency_key || messageId
     replyTo = body.replyTo || body.reply_to || null
+    logLabel = body.logLabel || body.log_label || null
+    if (body.logMetadata && typeof body.logMetadata === 'object') {
+      logMetadata = body.logMetadata
+    }
     if (body.templateData && typeof body.templateData === 'object') {
       templateData = body.templateData
     }
@@ -111,6 +117,8 @@ Deno.serve(async (req) => {
       }
     )
   }
+
+  const logName = logLabel || templateName
 
   if (!templateName) {
     return new Response(
@@ -183,7 +191,8 @@ Deno.serve(async (req) => {
     // Log the suppressed attempt
     await supabase.from('email_send_log').insert({
       message_id: messageId,
-      template_name: templateName,
+      template_name: logName,
+      metadata: logMetadata,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
     })
@@ -216,7 +225,8 @@ Deno.serve(async (req) => {
     })
     await supabase.from('email_send_log').insert({
       message_id: messageId,
-      template_name: templateName,
+      template_name: logName,
+      metadata: logMetadata,
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to look up unsubscribe token',
@@ -249,7 +259,8 @@ Deno.serve(async (req) => {
       })
       await supabase.from('email_send_log').insert({
         message_id: messageId,
-        template_name: templateName,
+        template_name: logName,
+      metadata: logMetadata,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to create unsubscribe token',
@@ -278,7 +289,8 @@ Deno.serve(async (req) => {
       })
       await supabase.from('email_send_log').insert({
         message_id: messageId,
-        template_name: templateName,
+        template_name: logName,
+      metadata: logMetadata,
         recipient_email: effectiveRecipient,
         status: 'failed',
         error_message: 'Failed to confirm unsubscribe token storage',
@@ -300,7 +312,8 @@ Deno.serve(async (req) => {
     })
     await supabase.from('email_send_log').insert({
       message_id: messageId,
-      template_name: templateName,
+      template_name: logName,
+      metadata: logMetadata,
       recipient_email: effectiveRecipient,
       status: 'suppressed',
       error_message:
@@ -336,7 +349,8 @@ Deno.serve(async (req) => {
   // Log pending BEFORE enqueue so we have a record even if enqueue crashes
   await supabase.from('email_send_log').insert({
     message_id: messageId,
-    template_name: templateName,
+    template_name: logName,
+      metadata: logMetadata,
     recipient_email: effectiveRecipient,
     status: 'pending',
   })
@@ -369,7 +383,8 @@ Deno.serve(async (req) => {
 
     await supabase.from('email_send_log').insert({
       message_id: messageId,
-      template_name: templateName,
+      template_name: logName,
+      metadata: logMetadata,
       recipient_email: effectiveRecipient,
       status: 'failed',
       error_message: 'Failed to enqueue email',

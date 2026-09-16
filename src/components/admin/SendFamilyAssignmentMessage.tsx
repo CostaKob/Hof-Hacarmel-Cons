@@ -324,6 +324,11 @@ const SendFamilyAssignmentMessage = ({
           templateName: "plain-text",
           recipientEmail: recipient.email,
           replyTo: "musichof@gmail.com",
+          logLabel: "family-assignment",
+          logMetadata: {
+            subject: subject.trim() || "שיוך מורה",
+            recipient_name: (recipient as any)?.label || null,
+          },
           templateData: {
             subject: subject.trim() || "שיוך מורה",
             body: emailBody,

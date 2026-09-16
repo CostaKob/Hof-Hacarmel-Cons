@@ -217,6 +217,8 @@ const AdminBulkMessage = () => {
           recipientEmail: email,
           replyTo: "musichof@gmail.com",
           idempotencyKey: `broadcast-test-${Date.now()}-${email}`,
+          logLabel: "broadcast-test",
+          logMetadata: { subject: subject.trim() },
           templateData: {
             subject: `[בדיקה] ${renderTemplate(subject.trim(), { parentName: "דנה כהן", studentName: "נועם כהן" })}`,
             bodyHtml: renderTemplate(body, { parentName: "דנה כהן", studentName: "נועם כהן" }),
@@ -558,6 +560,8 @@ const AdminBulkMessage = () => {
               recipientEmail: r.email,
               replyTo: "musichof@gmail.com",
               idempotencyKey: `broadcast-${stamp}-${r.email}`,
+              logLabel: "broadcast",
+              logMetadata: { subject: renderTemplate(subject.trim(), r), recipient_name: r.parentName || null },
               templateData: {
                 subject: renderTemplate(subject.trim(), r),
                 bodyHtml: renderTemplate(body, r),

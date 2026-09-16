@@ -58,6 +58,22 @@ const STATUS_LABEL: Record<string, string> = {
   suppressed: "חסום",
 };
 
+const TEMPLATE_LABEL: Record<string, string> = {
+  "teacher-assignment": "הודעת שיוך מורה",
+  "family-assignment": "הודעת שיוך מורה (משפחה)",
+  "broadcast": "דיוור מרוכז",
+  "broadcast-test": "דיוור מרוכז (בדיקה)",
+  "broadcast-message": "דיוור מרוכז",
+  "plain-text": "הודעה להורים",
+  "registration-confirmation": "אישור הרשמה",
+  "admin-new-registration": "הרשמה חדשה (מנהל)",
+  "admin-payment-received": "התקבל תשלום (מנהל)",
+  "payment-link": "קישור לתשלום",
+  system: "מערכת",
+};
+
+const templateLabel = (name: string) => TEMPLATE_LABEL[name] ?? name;
+
 function StatusBadge({ status }: { status: string }) {
   const label = STATUS_LABEL[status] ?? status;
   const cls =
@@ -204,7 +220,7 @@ export default function AdminEmailDashboard() {
                 <SelectContent>
                   <SelectItem value="all">הכל</SelectItem>
                   {templates.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>{templateLabel(t)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -287,6 +303,7 @@ export default function AdminEmailDashboard() {
                       <TableHead className="text-right">תאריך</TableHead>
                       <TableHead className="text-right">נמען</TableHead>
                       <TableHead className="text-right">סוג</TableHead>
+                      <TableHead className="text-right">נושא</TableHead>
                       <TableHead className="text-right">סטטוס</TableHead>
                       <TableHead className="text-right">שגיאה</TableHead>
                     </TableRow>
@@ -298,7 +315,8 @@ export default function AdminEmailDashboard() {
                           {format(new Date(r.created_at), "dd/MM/yyyy HH:mm")}
                         </TableCell>
                         <TableCell className="text-sm">{r.recipient_email}</TableCell>
-                        <TableCell className="text-sm">{r.template_name}</TableCell>
+                        <TableCell className="text-sm">{templateLabel(r.template_name)}</TableCell>
+                        <TableCell className="text-sm max-w-[260px] truncate">{r.metadata?.subject ?? ""}</TableCell>
                         <TableCell><StatusBadge status={r.status} /></TableCell>
                         <TableCell className="text-xs text-red-700 max-w-[260px] truncate">
                           {r.error_message ?? ""}

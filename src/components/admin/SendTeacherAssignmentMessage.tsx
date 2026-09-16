@@ -225,6 +225,12 @@ const SendTeacherAssignmentMessage = ({ open, onOpenChange, student, enrollments
           templateName: "plain-text",
           recipientEmail: recipient.email,
           replyTo: "musichof@gmail.com",
+          logLabel: "teacher-assignment",
+          logMetadata: {
+            subject: `שיוך מורה — ${student.first_name} ${student.last_name}`,
+            student_name: `${student.first_name} ${student.last_name}`,
+            recipient_name: recipient.label || null,
+          },
           templateData: {
             subject: `שיוך מורה — ${student.first_name} ${student.last_name}`,
             body: emailBody,
