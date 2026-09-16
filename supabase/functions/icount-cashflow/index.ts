@@ -297,7 +297,6 @@ Deno.serve(async (req: Request) => {
 
 
     // Classify each row against our own records (students vs school music).
-    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const [sp, smp] = await Promise.all([
       supabase.from("student_payments")
         .select("icount_doc_id,icount_doc_number,amount,payment_date,payment_status")
