@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademicYear } from "@/hooks/useAcademicYear";
@@ -1248,6 +1248,48 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     setChecks(rows);
   };
 
+  // Live preview of the spread: what the first cheque will be and what each of the
+  // remaining cheques will be — so nobody has to reach for a calculator.
+  const chequePlan = useMemo(() => {
+    const n = Math.max(1, parseInt(numChecks) || 1);
+    const total = Math.round(totalSelected * 100) / 100;
+    if (total <= 0) return null;
+    const manual = parseFloat(firstCheckAmount);
+    const hasManual = !Number.isNaN(manual) && manual > 0;
+    if (hasManual && manual > total) return { n, total, invalid: "סכום הצ׳ק הראשון גבוה מסה״כ הפריסה" as string };
+    const remaining = hasManual ? Math.round((total - manual) * 100) / 100 : total;
+    const restCount = hasManual ? n - 1 : n;
+    const baseWhole = restCount > 0 ? Math.floor(remaining / restCount) : 0;
+    const remainder = restCount > 0 ? Math.round((remaining - baseWhole * restCount) * 100) / 100 : 0;
+    const first = hasManual ? manual : Math.round((baseWhole + remainder) * 100) / 100;
+    const second = hasManual ? Math.round((baseWhole + remainder) * 100) / 100 : baseWhole;
+    return {
+      n,
+      total,
+      hasManual,
+      first,
+      second,
+      rest: baseWhole,
+      restCount,
+      hasRemainder: remainder > 0.004,
+      invalid: null as string | null,
+    };
+  }, [numChecks, firstCheckAmount, totalSelected]);
+
+  // Suggest the equal-split first cheque automatically (still fully editable).
+  const suggestedFirstRef = useRef("");
+  useEffect(() => {
+    if (!checksOpen || totalSelected <= 0) return;
+    const n = Math.max(1, parseInt(numChecks) || 1);
+    const total = Math.round(totalSelected * 100) / 100;
+    const baseWhole = Math.floor(total / n);
+    const sug = String(Math.round((total - baseWhole * (n - 1)) * 100) / 100);
+    if (firstCheckAmount === "" || firstCheckAmount === suggestedFirstRef.current) {
+      suggestedFirstRef.current = sug;
+      setFirstCheckAmount(sug);
+    }
+  }, [checksOpen, numChecks, totalSelected]);
+
   const checksTotal = useMemo(
     () => checks.reduce((s, c) => s + (parseFloat(c.amount) || 0), 0),
     [checks],
@@ -1625,7 +1667,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                 {checksOpen && (
                   <div className="space-y-3 pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground">
-                      ניתן להזין סכום לצ׳ק הראשון; אם השדה ריק, הסכום יתחלק שווה בשווה והראשון יספוג את השארית. ניתן לערוך כל שורה ידנית.
+                      סכום הצ׳ק הראשון מוצע אוטומטית לפי חלוקה שווה, וניתן לשנות אותו — החישוב של שאר הצ׳קים יתעדכן מיד. ניתן לערוך כל שורה ידנית.
                     </p>
                     <div className="grid grid-cols-3 gap-2">
                       <div>
@@ -1671,6 +1713,32 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
                         <Input value={bankAccount} onChange={(e) => setBankAccount(e.target.value)} className="h-9" />
                       </div>
                     </div>
+                    {chequePlan && (
+                      <div className="rounded-lg bg-muted/60 p-2 text-[11px] leading-5">
+                        {chequePlan.invalid ? (
+                          <span className="text-destructive font-medium">{chequePlan.invalid}</span>
+                        ) : (
+                          <>
+                            <div>
+                              סה״כ <b>₪{chequePlan.total.toLocaleString()}</b> ב־<b>{chequePlan.n}</b> צ׳קים
+                            </div>
+                            <div>
+                              צ׳ק ראשון <b>₪{chequePlan.first.toLocaleString()}</b>
+                              {chequePlan.restCount > 0 && (
+                                <>
+                                  {" · "}
+                                  {chequePlan.hasManual && chequePlan.hasRemainder && chequePlan.restCount > 1 ? (
+                                    <>צ׳ק שני ₪{chequePlan.second.toLocaleString()} · עוד {chequePlan.restCount - 1} צ׳קים של <b>₪{chequePlan.rest.toLocaleString()}</b></>
+                                  ) : (
+                                    <>עוד {chequePlan.restCount} צ׳קים של <b>₪{(chequePlan.hasManual ? chequePlan.second : chequePlan.rest).toLocaleString()}</b></>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    )}
                     <Button type="button" variant="outline" className="w-full h-10 rounded-xl" onClick={generateChecks} disabled={totalSelected <= 0}>
                       צור פריסה
                     </Button>
