@@ -81,6 +81,20 @@ export default function VoidTransactionDialog({
             });
         if (error) throw error;
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+        await logOperation({
+          category: "ביטול עסקה",
+          title: `${target.studentName ?? "תלמיד"} — ביטול עסקה ${fmt(target.amount)}`,
+          details: `ביטול אוטומטי דרך המערכת (${isCard ? "זיכוי בכרטיס אשראי דרך הסליקה" : "קבלת זיכוי"}). סיבה: ${finalReason}.${target.docNumber ? ` קבלה מקורית ${target.docNumber}.` : ""}`,
+          metadata: {
+            mode: "auto",
+            payment_id: target.paymentId,
+            student_id: target.studentId,
+            amount: target.amount,
+            payment_method: target.paymentMethod,
+            source_doc: target.docNumber,
+            reason: finalReason,
+          },
+        });
         return data;
       }
 
