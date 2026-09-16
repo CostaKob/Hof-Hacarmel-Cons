@@ -993,7 +993,7 @@ const AdminFamilyCard = () => {
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
               <h2 className="font-semibold text-foreground text-base flex items-center gap-2">
-                <Receipt className="h-4 w-4" /> תשלומי משפחה ({payments.length})
+                <Receipt className="h-4 w-4" /> תשלומי משפחה ({mergeChequeRows(payments).length})
               </h2>
               <div className="flex items-center gap-2 flex-wrap">
                 <Select value={paymentSortBy} onValueChange={(v) => setPaymentSortBy(v as any)}>
