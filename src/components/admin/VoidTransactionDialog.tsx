@@ -59,18 +59,31 @@ export default function VoidTransactionDialog({
       const note = `ביטול עסקה — ${finalReason}${target.docNumber ? ` · קבלה מקור ${target.docNumber}` : ""}`;
 
       if (mode === "auto") {
-        const { data, error } = await supabase.functions.invoke("icount-create-refund", {
-          body: {
-            paymentId: target.paymentId,
-            amount: target.amount,
-            reason: `ביטול עסקה — ${finalReason}`,
-            refundMethod: "void",
-          },
-        });
+        // Credit-card transactions must be refunded through the clearing house
+        // (iCount /cc/refund), otherwise only a negative receipt is issued and the
+        // charge stays active under "עסקאות אשראי".
+        const isCard = target.paymentMethod === "credit_card";
+        const { data, error } = isCard
+          ? await supabase.functions.invoke("icount-student-refund-api", {
+              body: {
+                paymentId: target.paymentId,
+                refundAmount: target.amount,
+                reason: `ביטול עסקה — ${finalReason}`,
+              },
+            })
+          : await supabase.functions.invoke("icount-create-refund", {
+              body: {
+                paymentId: target.paymentId,
+                amount: target.amount,
+                reason: `ביטול עסקה — ${finalReason}`,
+                refundMethod: "void",
+              },
+            });
         if (error) throw error;
         if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
         return data;
       }
+
 
       // The credit note was already issued manually in iCount — record it only.
       const { error } = await supabase.from("student_payments").insert({
