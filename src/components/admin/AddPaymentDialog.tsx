@@ -443,9 +443,18 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
     [paymentItems],
   );
 
-  const { data: priorPayments = [], isFetched: priorPaymentsFetched } = useQuery({
+  const {
+    data: priorPayments = [],
+    isFetched: priorPaymentsFetchedRaw,
+    isFetching: priorPaymentsFetching,
+  } = useQuery({
     queryKey: ["addpay-prior-payments", academicYearId, itemStudentIds],
     enabled: open && !!academicYearId && itemStudentIds.length > 0,
+    // Always hit the server when the dialog opens: a cached snapshot from
+    // before the last payment would pre-fill amounts that were already paid.
+    refetchOnMount: "always",
+    staleTime: 0,
+    gcTime: 0,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("student_payments")
@@ -456,6 +465,7 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       return (data ?? []) as any[];
     },
   });
+  const priorPaymentsFetched = priorPaymentsFetchedRaw && !priorPaymentsFetching;
 
   // paymentItems with defaultAmount scaled down to the remaining balance per child.
   const displayItems: PaymentItem[] = useMemo(() => {
@@ -487,7 +497,9 @@ const AddPaymentDialog = ({ open, onOpenChange, studentId, enrollments, editPaym
       const sibs = paymentItems.filter((x) => x.studentId === it.studentId);
       const totalDue = sibs.reduce((s, x) => s + x.defaultAmount, 0);
       if (totalDue <= 0) return it;
-      const remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
+      let remaining = Math.max(0, Math.round((totalDue - paid) * 100) / 100);
+      // Agorot-level leftovers from proportional splits are not a real debt.
+      if (remaining < 1) remaining = 0;
       const scale = Math.min(1, remaining / totalDue);
       return { ...it, defaultAmount: Math.round(it.defaultAmount * scale * 100) / 100 };
     });
