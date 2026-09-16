@@ -376,6 +376,20 @@ ${summaryHtml}
       });
       if (error) throw error;
       if (data?.error) throw new Error(typeof data.error === "string" ? data.error : "iCount error");
+      await logOperation({
+        category: "החזר כספי",
+        title: `החזר בהעברה בנקאית ₪${Number(refundAmount || 0).toLocaleString()}${accountOwner ? ` — ${accountOwner}` : ""}`,
+        details: `הופקה קבלת זיכוי והוזן החזר בהעברה בנקאית${reference ? ` (אסמכתא ${reference})` : ""}${transferDate ? ` בתאריך ${transferDate}` : ""}.${notes ? ` הערה: ${notes}` : ""}`,
+        metadata: {
+          payment_id: defaults!.paymentId,
+          amount: Number(refundAmount),
+          refund_method: "bank_transfer",
+          reference,
+          transfer_date: transferDate,
+          account_owner: accountOwner,
+          doc_number: data?.doc_number ?? null,
+        },
+      });
       return data;
     },
     onSuccess: (data: any) => {
