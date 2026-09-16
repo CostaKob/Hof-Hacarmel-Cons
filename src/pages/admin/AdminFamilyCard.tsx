@@ -1113,11 +1113,15 @@ const AdminFamilyCard = () => {
                           <span className={`text-[11px] px-2 py-0.5 rounded-md border font-medium ${statusClass}`}>
                             {statusLabel}
                           </span>
-                          {isGroup && (
-                            <span className="text-[11px] px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground font-medium">
-                              פריסה · {rows.length} תשלומים
-                            </span>
-                          )}
+                          {isGroup && (() => {
+                            const physical = mergeChequeRows(rows).length;
+                            return (
+                              <span className="text-[11px] px-2 py-0.5 rounded-md border border-border bg-muted text-muted-foreground font-medium">
+                                פריסה · {physical} תשלומים
+                              </span>
+                            );
+                          })()}
+
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           {isCredit ? "זיכוי" : "תשלום"}
