@@ -75,16 +75,33 @@ const AdminInventoryInstrumentForm = () => {
         .update({ loan_date, return_date })
         .eq("id", loanId);
       if (error) throw error;
+
+      // recompute availability: any open loan left for this instrument?
+      const { count } = await supabase
+        .from("instrument_loans")
+        .select("id", { count: "exact", head: true })
+        .eq("inventory_instrument_id", id!)
+        .is("return_date", null);
+      const hasOpen = (count ?? 0) > 0;
+      const { error: updErr } = await supabase
+        .from("inventory_instruments")
+        .update({ condition: hasOpen ? "loaned" : "available" })
+        .eq("id", id!);
+      if (updErr) throw updErr;
+      return hasOpen;
     },
-    onSuccess: () => {
+    onSuccess: (hasOpen) => {
+      setValue("condition", hasOpen ? "loaned" : "available", { shouldDirty: false });
       qc.invalidateQueries({ queryKey: ["instrument-loans", id] });
+      qc.invalidateQueries({ queryKey: ["admin-inventory-instrument", id] });
       qc.invalidateQueries({ queryKey: ["student-instrument-loans"] });
       qc.invalidateQueries({ queryKey: ["admin-inventory-instruments"] });
       setEditingLoanId(null);
-      toast.success("התאריכים עודכנו");
+      toast.success(hasOpen ? "התאריכים עודכנו" : "התאריכים עודכנו והכלי סומן כזמין");
     },
     onError: (e: any) => toast.error(e.message || "שגיאה בעדכון"),
   });
+
 
   const { data: loanStudentResults = [] } = useQuery({
     queryKey: ["loan-student-search", loanSearch],
