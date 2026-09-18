@@ -187,9 +187,11 @@ const AdminTeachers = () => {
                     </div>
                   )}
                   <span className="text-xs text-muted-foreground w-6 shrink-0 text-center">{index + 1}</span>
-                  <div>
-                    <p className="font-semibold text-foreground flex items-center gap-1.5">
-                      <span>{t.last_name} {t.first_name}</span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground flex flex-wrap items-center gap-1.5">
+                      <span className="truncate">{t.last_name} {t.first_name}</span>
+                      {t.is_freelance && <Badge variant="outline" className="rounded-lg text-[10px] px-1.5 py-0">עצמאי</Badge>}
+                      {(t as any).is_office && <Badge variant="outline" className="rounded-lg border-amber-500 text-amber-700 text-[10px] px-1.5 py-0">משרד</Badge>}
                       {isBirthdayToday((t as any).birth_date) && (
                         <span
                           title="יום הולדת היום"
@@ -230,8 +232,6 @@ const AdminTeachers = () => {
 
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  {t.is_freelance && <Badge variant="outline" className="rounded-lg">עצמאי</Badge>}
-                  {(t as any).is_office && <Badge variant="outline" className="rounded-lg border-amber-500 text-amber-700">משרד</Badge>}
                   <Badge variant={t.is_active ? "default" : "secondary"} className="rounded-lg">
                     {t.is_active ? "פעיל" : "לא פעיל"}
                   </Badge>
