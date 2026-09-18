@@ -125,7 +125,7 @@ const GlobalSearch = () => {
           data: SearchResult[] | null;
           error: unknown;
         }>;
-      }).rpc("global_search", { p_query: q });
+      }).rpc("global_search", { p_query: q, p_year_id: selectedYearId });
       if (reqId !== reqIdRef.current) return;
       setResults(!error && data ? data : []);
       setActiveIndex(0);
@@ -134,7 +134,7 @@ const GlobalSearch = () => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [query]);
+  }, [query, selectedYearId]);
 
   const pick = useCallback(
     (r: SearchResult) => {
