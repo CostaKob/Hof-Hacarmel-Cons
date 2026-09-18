@@ -91,7 +91,7 @@ const AdminEnsembleCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true);
       if (error) throw error;
-      return sortByPerson(data);
+      return sortByLastFirst(data);
     },
   });
 
