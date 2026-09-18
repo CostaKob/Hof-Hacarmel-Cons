@@ -118,7 +118,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
       dir="rtl"
       className="flex h-[100svh] min-h-0 flex-col overflow-hidden bg-background"
     >
-      <header className="shrink-0 bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
+      <header className="relative z-30 shrink-0 bg-primary px-4 pb-4 pt-4 text-primary-foreground shadow-md">
         <div className="mx-auto max-w-5xl">
           {/* Utility row: logo/title and year/theme/logout */}
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -221,7 +221,7 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
 
       <main
         data-scroll-container
-        className={`mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-4 py-5 -mt-2 pb-28 md:pb-6 ${
+        className={`relative z-0 mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-contain px-4 py-5 -mt-2 pb-28 md:pb-6 ${
           fullWidth ? "max-w-none" : "max-w-5xl"
         }`}
       >
