@@ -106,7 +106,10 @@ const GlobalSearch = () => {
       </div>
 
       {open && query.trim().length >= 2 && (
-        <div className="absolute inset-x-0 top-full z-50 mt-2 max-h-[60vh] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card text-card-foreground shadow-2xl">
+        <div
+          className="absolute inset-x-0 top-full z-50 mt-2 max-h-[60vh] overflow-y-auto overscroll-contain rounded-xl border border-border shadow-2xl"
+          style={{ backgroundColor: "hsl(var(--card))" }}
+        >
           {grouped.length === 0 && !loading && (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
               לא נמצאו תוצאות עבור &quot;{query.trim()}&quot;
@@ -117,7 +120,10 @@ const GlobalSearch = () => {
             const Icon = meta.icon;
             return (
               <div key={g.kind}>
-                <div className="sticky top-0 flex items-center gap-1.5 border-b border-border bg-muted/80 px-3 py-1.5 text-xs font-semibold text-muted-foreground backdrop-blur">
+                <div
+                  className="sticky top-0 flex items-center gap-1.5 border-b border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+                  style={{ backgroundColor: "hsl(var(--muted))" }}
+                >
                   <Icon className="h-3.5 w-3.5" />
                   {meta.label}
                 </div>
