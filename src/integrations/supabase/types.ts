@@ -1606,6 +1606,33 @@ export type Database = {
         }
         Relationships: []
       }
+      public_teacher_contacts: {
+        Row: {
+          email: string | null
+          first_name: string
+          is_freelance: boolean
+          last_name: string
+          phone: string | null
+          teacher_id: string
+        }
+        Insert: {
+          email?: string | null
+          first_name: string
+          is_freelance?: boolean
+          last_name: string
+          phone?: string | null
+          teacher_id: string
+        }
+        Update: {
+          email?: string | null
+          first_name?: string
+          is_freelance?: boolean
+          last_name?: string
+          phone?: string | null
+          teacher_id?: string
+        }
+        Relationships: []
+      }
       refund_documents: {
         Row: {
           academic_year_id: string | null

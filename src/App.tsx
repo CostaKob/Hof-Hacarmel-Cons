@@ -115,6 +115,8 @@ import AdminInventoryInstruments from "./pages/admin/AdminInventoryInstruments";
 import AdminInventoryInstrumentForm from "./pages/admin/AdminInventoryInstrumentForm";
 import AdminInstrumentStorageLocations from "./pages/admin/AdminInstrumentStorageLocations";
 import PublicTeachers from "./pages/PublicTeachers";
+import PublicTeacherContacts from "./pages/PublicTeacherContacts";
+import AdminTeacherContacts from "./pages/admin/AdminTeacherContacts";
 import TeacherBottomNav from "./components/teacher/TeacherBottomNav";
 import NotFound from "./pages/NotFound";
 
@@ -150,6 +152,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/" element={<Landing />} />
               <Route path="/teachers" element={<PublicTeachers />} />
+              <Route path="/teacher-contacts" element={<PublicTeacherContacts />} />
               <Route path="/p/:code" element={<ShortLinkRedirect />} />
               <Route path="/ensemble/:id" element={<PublicEnsembleContacts />} />
               <Route path="/ensemble/:id/transport" element={<PublicEnsembleContacts transportOnly />} />
@@ -176,6 +179,7 @@ const App = () => (
               <Route path="/admin/teachers/:teacherId/reports" element={<AdminRoute><AdminTeacherReports /></AdminRoute>} />
               <Route path="/admin/teachers/:teacherId/reports/:reportId" element={<AdminRoute><TeacherReportView /></AdminRoute>} />
               <Route path="/admin/teachers/:teacherId/reports/:reportId/edit" element={<AdminRoute><TeacherEditReport /></AdminRoute>} />
+              <Route path="/admin/teacher-contacts" element={<AdminRoute><AdminTeacherContacts /></AdminRoute>} />
               <Route path="/admin/schools" element={<AdminRoute><AdminSchools /></AdminRoute>} />
               <Route path="/admin/schools/new" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />
               <Route path="/admin/schools/:schoolId/edit" element={<AdminRoute><AdminSchoolForm /></AdminRoute>} />

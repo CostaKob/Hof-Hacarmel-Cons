@@ -471,7 +471,9 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .branch-contact-page,
-  .branch-contact-page * {
+  .branch-contact-page *,
+  .teacher-contact-page,
+  .teacher-contact-page * {
     visibility: visible;
   }
 
@@ -483,6 +485,78 @@ input[type="time"]::-webkit-datetime-edit {
     min-height: auto;
     color: hsl(0 0% 8%);
     background: hsl(0 0% 100%) !important;
+  }
+
+  .teacher-contact-page {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 182mm;
+    min-height: auto;
+    color: hsl(0 0% 8%);
+    background: hsl(0 0% 100%) !important;
+  }
+
+  .teacher-contact-sheet {
+    width: 182mm;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .teacher-contact-actions {
+    display: none !important;
+  }
+
+  .teacher-contact-header {
+    margin-block-end: 3mm !important;
+    gap: 0.5mm !important;
+    break-after: avoid;
+  }
+
+  .teacher-contact-header img {
+    max-height: 11mm;
+    width: auto;
+  }
+
+  .teacher-contact-header h1 {
+    font-size: 14pt !important;
+  }
+
+  .teacher-contact-header p {
+    font-size: 8pt !important;
+  }
+
+  .teacher-contact-list {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 1mm 4mm !important;
+  }
+
+  .teacher-contact-person {
+    padding: 1.25mm 2.5mm !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid hsl(0 0% 78%) !important;
+    border-radius: 2mm !important;
+    background: hsl(0 0% 100%) !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+
+  .teacher-contact-person p {
+    font-size: 9pt !important;
+  }
+
+  .teacher-contact-person [class*="mt-2"] {
+    margin-top: 0.5mm !important;
+    gap: 0 !important;
+  }
+
+  .teacher-contact-person a,
+  .teacher-contact-person span {
+    color: hsl(0 0% 8%) !important;
+    font-size: 7.5pt !important;
   }
 
   .branch-contact-sheet {

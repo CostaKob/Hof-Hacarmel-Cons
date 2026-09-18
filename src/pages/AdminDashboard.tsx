@@ -17,6 +17,7 @@ const PRIVATE_LESSONS_SECTIONS: DashboardItem[] = [
   { path: "/admin/families", label: "משפחות", description: "כרטיס הורה מרכזי — שיוכים ותשלומים לפי משפחה", icon: UsersRound },
   { path: "/admin/siblings", label: "אחים ואחיות", description: "חיבור אוטומטי של אחים וטיפול בהתאמות שממתינות לאישור", icon: Users },
   { path: "/admin/teachers", label: "מורים", description: "ניהול מורים, פרטים אישיים ושיוכים", icon: GraduationCap },
+  { path: "/admin/teacher-contacts", label: "דף קשר מורים", description: "פתיחה, שיתוף והדפסה של רשימת המורים הפעילים", icon: ContactRound },
   { path: "/admin/registrations", label: "הרשמות", description: "צפייה וניהול הרשמות חדשות", icon: ClipboardList },
   { path: "/admin/private-payments", label: "תשלומים — שיעורים פרטניים", description: "ריכוז חיובים, פוטנציאל הכנסות ויתרות לגבייה", icon: Wallet },
   { path: "/admin/yearly-summary", label: "נוכחות תלמידים - סיכום שנתי", description: "סיכום שנתי של נוכחות ושיעורים פרטניים", icon: BarChart3 },
