@@ -22,7 +22,7 @@ const PublicTeachers = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_public_teachers");
       if (error) throw error;
-      return (data ?? []) as PublicTeacher[];
+      return sortByLastFirst((data ?? []) as PublicTeacher[]);
     },
   });
 

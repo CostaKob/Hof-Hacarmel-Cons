@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft, FileSpreadsheet, KeyRound } from "lucide-react";
 import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
-import { sortByPerson } from "@/lib/sortHebrew";
+import { sortByLastFirst } from "@/lib/sortHebrew";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
