@@ -3644,6 +3644,17 @@ export type Database = {
           start_date: string
         }[]
       }
+      get_public_teacher_contacts: {
+        Args: never
+        Returns: {
+          email: string
+          first_name: string
+          id: string
+          is_freelance: boolean
+          last_name: string
+          phone: string
+        }[]
+      }
       get_public_teachers: {
         Args: never
         Returns: {
