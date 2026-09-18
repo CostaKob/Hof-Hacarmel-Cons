@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft, FileSpreadsheet, KeyRound } from "lucide-react";
 import TeacherImportDialog from "@/components/admin/TeacherImportDialog";
-import { sortByPerson } from "@/lib/sortHebrew";
+import { sortByLastFirst } from "@/lib/sortHebrew";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -70,7 +70,7 @@ const AdminTeachers = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("teachers").select("*, teacher_instruments(instrument:instruments(name))");
       if (error) throw error;
-      return sortByPerson(data as any);
+      return sortByLastFirst(data as any);
     },
   });
 

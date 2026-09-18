@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search, ChevronLeft } from "lucide-react";
-import { sortByName, sortByPerson } from "@/lib/sortHebrew";
+import { sortByLastFirst, sortByName } from "@/lib/sortHebrew";
 import PageTitle from "@/components/PageTitle";
 
 const TYPE_LABELS: Record<string, string> = { individual: "פרטני", group: "קבוצתי" };
@@ -79,7 +79,7 @@ const AdminEnrollments = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("teachers").select("id, first_name, last_name");
       if (error) throw error;
-      return sortByPerson(data);
+      return sortByLastFirst(data);
     },
   });
 

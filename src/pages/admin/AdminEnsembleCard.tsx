@@ -15,7 +15,7 @@ import { ENSEMBLE_TYPE_LABELS, ENSEMBLE_STAFF_ROLE_LABELS, ENSEMBLE_STAFF_ROLES 
 import { toast } from "sonner";
 import { useState } from "react";
 import EnsembleStudentPicker from "@/components/admin/EnsembleStudentPicker";
-import { sortByPerson } from "@/lib/sortHebrew";
+import { sortByLastFirst, sortByPerson } from "@/lib/sortHebrew";
 
 const AdminEnsembleCard = () => {
   const { id } = useParams<{ id: string }>();
@@ -91,7 +91,7 @@ const AdminEnsembleCard = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("teachers").select("id, first_name, last_name").eq("is_active", true);
       if (error) throw error;
-      return sortByPerson(data);
+      return sortByLastFirst(data);
     },
   });
 

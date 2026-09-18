@@ -7,6 +7,7 @@ import PageTitle from "@/components/PageTitle";
 import PhoneDisplay from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { sortByLastFirst } from "@/lib/sortHebrew";
 
 type TeacherContact = {
   teacher_id: string;
@@ -24,11 +25,9 @@ const PublicTeacherContacts = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("public_teacher_contacts")
-        .select("teacher_id, first_name, last_name, phone, email, is_freelance")
-        .order("last_name")
-        .order("first_name");
+        .select("teacher_id, first_name, last_name, phone, email, is_freelance");
       if (error) throw error;
-      return (data ?? []) as TeacherContact[];
+      return sortByLastFirst((data ?? []) as TeacherContact[]);
     },
   });
 

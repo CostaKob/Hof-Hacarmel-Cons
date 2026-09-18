@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import PageTitle from "@/components/PageTitle";
+import { sortByLastFirst } from "@/lib/sortHebrew";
 import { ArrowRight, User, Music } from "lucide-react";
 
 
@@ -22,7 +23,7 @@ const PublicTeachers = () => {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("get_public_teachers");
       if (error) throw error;
-      return (data ?? []) as PublicTeacher[];
+      return sortByLastFirst((data ?? []) as PublicTeacher[]);
     },
   });
 

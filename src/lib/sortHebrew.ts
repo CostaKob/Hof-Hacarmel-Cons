@@ -11,3 +11,11 @@ export const sortByPerson = <T extends Record<string, any>>(arr: T[] | null | un
       `${b?.first_name || ""} ${b?.last_name || ""}`,
     ),
   );
+
+// Sort by last name first, then first name (Hebrew-aware).
+export const sortByLastFirst = <T extends Record<string, any>>(arr: T[] | null | undefined): T[] =>
+  [...(arr || [])].sort(
+    (a, b) =>
+      cmpHe(a?.last_name || "", b?.last_name || "") ||
+      cmpHe(a?.first_name || "", b?.first_name || ""),
+  );
