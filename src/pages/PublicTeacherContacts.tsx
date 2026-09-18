@@ -7,6 +7,7 @@ import PageTitle from "@/components/PageTitle";
 import PhoneDisplay from "@/components/PhoneDisplay";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { sortByLastFirst } from "@/lib/sortHebrew";
 
 type TeacherContact = {
   teacher_id: string;

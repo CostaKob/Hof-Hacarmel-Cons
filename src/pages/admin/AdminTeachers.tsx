@@ -70,7 +70,7 @@ const AdminTeachers = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("teachers").select("*, teacher_instruments(instrument:instruments(name))");
       if (error) throw error;
-      return sortByPerson(data as any);
+      return sortByLastFirst(data as any);
     },
   });
 
