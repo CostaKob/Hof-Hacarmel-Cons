@@ -14,6 +14,7 @@ import ArchiveYearBanner from "./ArchiveYearBanner";
 import FamilyIcon from "@/components/icons/FamilyIcon";
 import ThemeSwitcher from "@/components/ThemeSwitcher";
 import NotificationsBell from "./NotificationsBell";
+import GlobalSearch from "./GlobalSearch";
 import { useListStatePreservation } from "@/hooks/useListStatePreservation";
 
 type IconComponent = ComponentType<{ className?: string }>;
@@ -200,6 +201,11 @@ const AdminLayout = ({ children, title, backPath, onBack, fullWidth }: AdminLayo
                 <LogOut className="h-5 w-5" />
               </Button>
             </div>
+          </div>
+
+          {/* Global search */}
+          <div className="mt-3">
+            <GlobalSearch />
           </div>
 
           {/* Desktop / tablet navigation — one row */}
