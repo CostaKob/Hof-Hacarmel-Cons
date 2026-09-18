@@ -3773,16 +3773,27 @@ export type Database = {
         }[]
       }
       get_teacher_id_for_user: { Args: { _user_id: string }; Returns: string }
-      global_search: {
-        Args: { p_query: string }
-        Returns: {
-          id: string
-          kind: string
-          path: string
-          subtitle: string
-          title: string
-        }[]
-      }
+      global_search:
+        | {
+            Args: { p_query: string }
+            Returns: {
+              id: string
+              kind: string
+              path: string
+              subtitle: string
+              title: string
+            }[]
+          }
+        | {
+            Args: { p_query: string; p_year_id?: string }
+            Returns: {
+              id: string
+              kind: string
+              path: string
+              subtitle: string
+              title: string
+            }[]
+          }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
