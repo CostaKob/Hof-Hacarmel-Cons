@@ -509,22 +509,22 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .teacher-contact-header {
-    margin-block-end: 3mm !important;
-    gap: 0.5mm !important;
+    margin-block-end: 1.5mm !important;
+    gap: 0.2mm !important;
     break-after: avoid;
   }
 
   .teacher-contact-header img {
-    max-height: 11mm;
+    max-height: 8mm;
     width: auto;
   }
 
   .teacher-contact-header h1 {
-    font-size: 14pt !important;
+    font-size: 12pt !important;
   }
 
   .teacher-contact-header p {
-    font-size: 8pt !important;
+    font-size: 7.5pt !important;
   }
 
   .teacher-contact-list {
@@ -535,7 +535,7 @@ input[type="time"]::-webkit-datetime-edit {
 
   /* בהדפסה: רשימה פשוטה ללא תיבות, צפופה לדף A4 אחד */
   .teacher-contact-person {
-    padding: 0.8mm 0 !important;
+    padding: 0.2mm 0 !important;
     break-inside: avoid;
     page-break-inside: avoid;
     border: 0 !important;
@@ -543,17 +543,17 @@ input[type="time"]::-webkit-datetime-edit {
     background: hsl(0 0% 100%) !important;
     box-shadow: none !important;
     backdrop-filter: none !important;
-    border-block-end: 1px solid hsl(0 0% 88%) !important;
+    border-block-end: 1px solid hsl(0 0% 90%) !important;
   }
 
   .teacher-contact-person p {
-    font-size: 8.5pt !important;
-    line-height: 1.25 !important;
+    font-size: 8pt !important;
+    line-height: 1.15 !important;
     margin: 0 !important;
   }
 
   .teacher-contact-person [class*="mt-2"] {
-    margin-top: 0.3mm !important;
+    margin-top: 0 !important;
     gap: 0 !important;
   }
 
@@ -561,7 +561,7 @@ input[type="time"]::-webkit-datetime-edit {
   .teacher-contact-person span {
     color: hsl(0 0% 8%) !important;
     font-size: 7pt !important;
-    line-height: 1.25 !important;
+    line-height: 1.15 !important;
   }
 
   .branch-contact-sheet {
