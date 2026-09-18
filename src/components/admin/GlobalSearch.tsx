@@ -2,6 +2,7 @@ import { ComponentType, useCallback, useEffect, useLayoutEffect, useMemo, useRef
 import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademicYear } from "@/hooks/useAcademicYear";
 import { Input } from "@/components/ui/input";
 import {
   Search, Loader2, Users, GraduationCap, Building2,
@@ -34,6 +35,7 @@ const KIND_ORDER = Object.keys(KIND_META);
 const GlobalSearch = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { selectedYearId } = useAcademicYear();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
