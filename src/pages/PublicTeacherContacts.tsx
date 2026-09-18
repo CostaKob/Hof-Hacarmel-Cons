@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
-import { BriefcaseBusiness, Loader2, Mail, Printer } from "lucide-react";
+import { Loader2, Mail, Printer } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
 import PageTitle from "@/components/PageTitle";
 import PhoneDisplay from "@/components/PhoneDisplay";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,36 +72,30 @@ const PublicTeacherContacts = () => {
                 key={teacher.teacher_id}
                 className="rounded-xl border border-border bg-card p-4 shadow-sm teacher-contact-person"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-foreground">
-                      <span className="ml-1 text-xs font-normal text-muted-foreground">{index + 1}.</span>
-                      {teacher.first_name} {teacher.last_name}
-                    </p>
-                    <div className="mt-2 flex flex-col items-start gap-1.5 text-sm text-muted-foreground">
-                      {teacher.phone ? (
-                        <PhoneDisplay phone={teacher.phone} showIcon textClassName="text-sm" />
-                      ) : (
-                        <span>ללא טלפון</span>
-                      )}
-                      {teacher.email ? (
-                        <a
-                          href={`mailto:${teacher.email}`}
-                          dir="ltr"
-                          className="inline-flex max-w-full items-center gap-1 text-primary hover:underline"
-                        >
-                          <Mail className="h-3.5 w-3.5 shrink-0" />
-                          <span className="break-all">{teacher.email}</span>
-                        </a>
-                      ) : (
-                        <span>ללא מייל</span>
-                      )}
-                    </div>
+                <div>
+                  <p className="font-semibold text-foreground">
+                    <span className="ml-1 text-xs font-normal text-muted-foreground">{index + 1}.</span>
+                    {teacher.first_name} {teacher.last_name}
+                  </p>
+                  <div className="mt-2 flex flex-col items-start gap-1.5 text-sm text-muted-foreground">
+                    {teacher.phone ? (
+                      <PhoneDisplay phone={teacher.phone} showIcon textClassName="text-sm" />
+                    ) : (
+                      <span>ללא טלפון</span>
+                    )}
+                    {teacher.email ? (
+                      <a
+                        href={`mailto:${teacher.email}`}
+                        dir="ltr"
+                        className="inline-flex max-w-full items-center gap-1 text-primary hover:underline"
+                      >
+                        <Mail className="h-3.5 w-3.5 shrink-0" />
+                        <span className="break-all">{teacher.email}</span>
+                      </a>
+                    ) : (
+                      <span>ללא מייל</span>
+                    )}
                   </div>
-                  <Badge variant={teacher.is_freelance ? "outline" : "secondary"} className="shrink-0 rounded-lg">
-                    <BriefcaseBusiness className="ml-1 h-3 w-3" />
-                    {teacher.is_freelance ? "עצמאי" : "שכיר"}
-                  </Badge>
                 </div>
               </li>
             ))}
