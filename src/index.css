@@ -509,13 +509,13 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .teacher-contact-header {
-    margin-block-end: 4mm !important;
-    gap: 1mm !important;
+    margin-block-end: 3mm !important;
+    gap: 0.5mm !important;
     break-after: avoid;
   }
 
   .teacher-contact-header img {
-    max-height: 13mm;
+    max-height: 11mm;
     width: auto;
   }
 
@@ -530,11 +530,11 @@ input[type="time"]::-webkit-datetime-edit {
   .teacher-contact-list {
     display: grid !important;
     grid-template-columns: 1fr 1fr;
-    gap: 2mm 4mm !important;
+    gap: 1mm 4mm !important;
   }
 
   .teacher-contact-person {
-    padding: 2mm 3mm !important;
+    padding: 1.25mm 2.5mm !important;
     break-inside: avoid;
     page-break-inside: avoid;
     border: 1px solid hsl(0 0% 78%) !important;
@@ -549,8 +549,8 @@ input[type="time"]::-webkit-datetime-edit {
   }
 
   .teacher-contact-person [class*="mt-2"] {
-    margin-top: 1mm !important;
-    gap: 0.5mm !important;
+    margin-top: 0.5mm !important;
+    gap: 0 !important;
   }
 
   .teacher-contact-person a,
